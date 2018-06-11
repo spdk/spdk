@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3f14c670_976998f9",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-06-11T09:29:12Z",
+      "side": 1,
+      "message": "Done. Thanks for reviewing my code.",
+      "parentUuid": "f409dc4d_f93a63d2",
+      "revId": "c89f2ddb66b6663cd25def05a320c205ed05d0e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1fa6c5a9_a4e8240e",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-11T07:49:27Z",
       "side": 1,
       "message": "Is this asynchronous API ? I saw there are callback for this command, so you should call spdk_bdev_io_complete in the callback.",
+      "revId": "c89f2ddb66b6663cd25def05a320c205ed05d0e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71112931_0dc8c1fe",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-06-11T09:29:12Z",
+      "side": 1,
+      "message": "Done. Use previous bdev_iscsi_rw_cb as common callback function.",
+      "parentUuid": "1fa6c5a9_a4e8240e",
       "revId": "c89f2ddb66b6663cd25def05a320c205ed05d0e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
