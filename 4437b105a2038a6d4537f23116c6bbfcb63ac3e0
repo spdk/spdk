@@ -22,6 +22,144 @@
       "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfba4136_a834b701",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:52:41Z",
+      "side": 1,
+      "message": "Remove",
+      "range": {
+        "startLine": 117,
+        "startChar": 4,
+        "endLine": 117,
+        "endChar": 36
+      },
+      "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d23ab075_04abbee1",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:52:41Z",
+      "side": 1,
+      "message": "Remove",
+      "range": {
+        "startLine": 119,
+        "startChar": 8,
+        "endLine": 119,
+        "endChar": 44
+      },
+      "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cbd44d2_7c0ff34a",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:52:41Z",
+      "side": 1,
+      "message": "I think you can remove one indentation by putting checks in a single line, like:\n\nif \u0027method\u0027 in vhost and vhost[\u0027method\u0027] in [\u0027xxx\u0027]:",
+      "range": {
+        "startLine": 120,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 48
+      },
+      "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0bde2a8_958fdd41",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:52:41Z",
+      "side": 1,
+      "message": "Use tabs",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 8
+      },
+      "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60681be3_dd1a0da5",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:52:41Z",
+      "side": 1,
+      "message": "use tabs",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 8
+      },
+      "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "681bfa12_01ca53aa",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:52:41Z",
+      "side": 1,
+      "message": "Why not use $initiator_rpc_py directly instead of assigning it to rpc_py variable?",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 45
+      },
+      "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
