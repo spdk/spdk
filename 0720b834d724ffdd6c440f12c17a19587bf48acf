@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19b3528e_c6b9a26f",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 64
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T13:02:16Z",
+      "side": 1,
+      "message": "Well, to be honest it doesnt clarify much.\nI can see in code that you delete something, but I still don\u0027t understand what and why.\nALso - \"first iteration\"... iteration of what?",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 75
+      },
+      "revId": "0720b834d724ffdd6c440f12c17a19587bf48acf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -280,6 +280,30 @@
     },
     {
       "key": {
+        "uuid": "80a2f4f5_b2ae9a24",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 63
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T13:02:16Z",
+      "side": 1,
+      "message": "IMO there is no real gain here in using indexes (del) vs calling remove and iterating on list. These lists are not that big.",
+      "parentUuid": "9e843a98_662e77f1",
+      "range": {
+        "startLine": 26,
+        "startChar": 16,
+        "endLine": 26,
+        "endChar": 42
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ae9fa77_8b19b1cf",
         "filename": "test/json_config/config_parser.py",
         "patchSetId": 63
