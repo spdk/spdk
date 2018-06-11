@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "784bad59_c4b52b22",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-11T09:54:13Z",
+      "side": 1,
+      "message": "As NVMe can be passed through, need to take care specially here. Tested with Malloc and NVMe SSD backend, it works both.",
+      "range": {
+        "startLine": 874,
+        "startChar": 0,
+        "endLine": 874,
+        "endChar": 30
+      },
+      "revId": "f44ebc2af6546cfaf45e47be64327431b2afd4d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
