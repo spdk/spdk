@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "687dc840_4ad2e918",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-11T18:16:32Z",
+      "side": 1,
+      "message": "if you change this func to include the following it will work in shell mode.  As it is now, if you are in shell mode and do -D it will exit after dumping. If you want I can do some more testing on the cli this evening and make this and any other tweaks needed?\n\n\tstruct cli_context_t *cli_context \u003d arg;\n\tcli_context-\u003ebs \u003d NULL;\n\tcli_context-\u003eaction \u003d CLI_NONE;\n\tcli_start(cli_context, NULL);",
+      "revId": "512b67061b817a2a499c4bea6c0315e988a00e9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
