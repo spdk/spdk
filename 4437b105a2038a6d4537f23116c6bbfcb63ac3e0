@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90fefc61_6da90011",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-11T08:42:45Z",
+      "side": 1,
+      "message": "Artifacts?",
+      "range": {
+        "startLine": 117,
+        "startChar": 4,
+        "endLine": 117,
+        "endChar": 36
+      },
+      "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
