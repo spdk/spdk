@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b4ee695_eef6cd6b",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-11T21:20:13Z",
+      "side": 1,
+      "message": "These probably needs to be zero padded (e.g. \"%016\" PRIX64) - otherwise leading zeroes will be missing; for example, imagine 00000000000000010000000000000001.\n\nAlternatively, you can put the json_write_hex_str() function from nvmf_rpc.c in a common place and use it instead.",
+      "range": {
+        "startLine": 338,
+        "startChar": 49,
+        "endLine": 338,
+        "endChar": 66
+      },
+      "revId": "bd91fd4e98fb4e22b0fd8ad67b3125d795674ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24ba7783_de8c225d",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-11T21:20:13Z",
+      "side": 1,
+      "message": "Same zero-padding issue here.",
+      "range": {
+        "startLine": 344,
+        "startChar": 48,
+        "endLine": 344,
+        "endChar": 57
+      },
+      "revId": "bd91fd4e98fb4e22b0fd8ad67b3125d795674ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
