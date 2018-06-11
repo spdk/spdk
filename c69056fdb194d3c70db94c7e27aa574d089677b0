@@ -256,6 +256,30 @@
     },
     {
       "key": {
+        "uuid": "9e843a98_662e77f1",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 63
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-11T12:50:20Z",
+      "side": 1,
+      "message": "I think that operating on indexes in list is quickest than operating on whole objects.",
+      "parentUuid": "22dd7684_e557d097",
+      "range": {
+        "startLine": 26,
+        "startChar": 16,
+        "endLine": 26,
+        "endChar": 42
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ae9fa77_8b19b1cf",
         "filename": "test/json_config/config_parser.py",
         "patchSetId": 63
