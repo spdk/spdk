@@ -70,6 +70,30 @@
       "revId": "f44ebc2af6546cfaf45e47be64327431b2afd4d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cdb9d72_5293305b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-11T23:42:22Z",
+      "side": 1,
+      "message": "I could potentially see cases for including and not including UNMAP.  But if I had to pick one, I would say that we should count UNMAP - I think it is fairly similar to WRITE and WRITE_ZEROES.  It can definitely impact performance of other clients using the same underlying device.",
+      "parentUuid": "39d1d9fa_66f7ad5a",
+      "range": {
+        "startLine": 874,
+        "startChar": 0,
+        "endLine": 874,
+        "endChar": 30
+      },
+      "revId": "f44ebc2af6546cfaf45e47be64327431b2afd4d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
