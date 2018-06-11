@@ -190,6 +190,11 @@ struct spdk_bs_opts {
 	/** Size of cluster in bytes. Must be multiple of 4KiB page size. */
 	uint32_t cluster_sz;
 
+	/** Size of sector in bytes. Must be multiple of backing device
+	 * sector size and equal or less than page size.
+	 * By default sector size is equal to page_size */
+	uint32_t sector_sz;
+
 	/** Count of the number of pages reserved for metadata */
 	uint32_t num_md_pages;
 
@@ -315,6 +320,15 @@ uint64_t spdk_bs_get_cluster_size(struct spdk_blob_store *bs);
  * \return page size.
  */
 uint64_t spdk_bs_get_page_size(struct spdk_blob_store *bs);
+
+/**
+ * Get the sector size in bytes.
+ *
+ * \param bs blobstore to query.
+ *
+ * \return sector size.
+ */
+uint64_t spdk_bs_get_sector_size(struct spdk_blob_store *bs);
 
 /**
  * Get the number of free clusters.
@@ -630,8 +644,8 @@ void spdk_bs_free_io_channel(struct spdk_io_channel *channel);
  * \param blob Blob to write.
  * \param channel The I/O channel used to submit requests.
  * \param payload The specified buffer which should contain the data to be written.
- * \param offset Offset is in pages from the beginning of the blob.
- * \param length Size of data in pages.
+ * \param offset Offset is in sectors from the beginning of the blob.
+ * \param length Size of data in sectors.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
@@ -645,8 +659,8 @@ void spdk_blob_io_write(struct spdk_blob *blob, struct spdk_io_channel *channel,
  * \param blob Blob to read.
  * \param channel The I/O channel used to submit requests.
  * \param payload The specified buffer which will store the obtained data.
- * \param offset Offset is in pages from the beginning of the blob.
- * \param length Size of data in pages.
+ * \param offset Offset is in sectors from the beginning of the blob.
+ * \param length Size of data in sectors.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
@@ -662,8 +676,8 @@ void spdk_blob_io_read(struct spdk_blob *blob, struct spdk_io_channel *channel,
  * \param channel I/O channel used to submit requests.
  * \param iov The pointer points to an array of iovec structures.
  * \param iovcnt The number of buffers.
- * \param offset Offset is in pages from the beginning of the blob.
- * \param length Size of data in pages.
+ * \param offset Offset is in sectors from the beginning of the blob.
+ * \param length Size of data in sectors.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
@@ -679,8 +693,8 @@ void spdk_blob_io_writev(struct spdk_blob *blob, struct spdk_io_channel *channel
  * \param channel I/O channel used to submit requests.
  * \param iov The pointer points to an array of iovec structures.
  * \param iovcnt The number of buffers.
- * \param offset Offset is in pages from the beginning of the blob.
- * \param length Size of data in pages.
+ * \param offset Offset is in sectors from the beginning of the blob.
+ * \param length Size of data in sectors.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
@@ -694,7 +708,7 @@ void spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
  *
  * \param blob Blob to unmap.
  * \param channel I/O channel used to submit requests.
- * \param offset Offset is in pages from the beginning of the blob.
+ * \param offset Offset is in sectors from the beginning of the blob.
  * \param length Size of unmap area in pages.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
@@ -707,8 +721,8 @@ void spdk_blob_io_unmap(struct spdk_blob *blob, struct spdk_io_channel *channel,
  *
  * \param blob Blob to write.
  * \param channel I/O channel used to submit requests.
- * \param offset Offset is in pages from the beginning of the blob.
- * \param length Size of data in pages.
+ * \param offset Offset is in sectors from the beginning of the blob.
+ * \param length Size of data in sectors.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */

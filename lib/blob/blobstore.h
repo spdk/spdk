@@ -169,6 +169,7 @@ struct spdk_blob_store {
 
 	pthread_mutex_t			used_clusters_mutex;
 
+	uint32_t			sector_sz;
 	uint32_t			cluster_sz;
 	uint64_t			total_clusters;
 	uint64_t			total_data_clusters;
@@ -345,8 +346,9 @@ struct spdk_bs_super_block {
 	uint32_t	used_blobid_mask_len; /* Count, in pages */
 
 	uint64_t        size; /* size of blobstore in bytes */
+	uint32_t	sector_size; /* In bytes */
 
-	uint8_t         reserved[4004];
+	uint8_t         reserved[4000];
 	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");
@@ -405,6 +407,25 @@ static inline uint64_t
 _spdk_bs_dev_page_to_lba(struct spdk_bs_dev *bs_dev, uint64_t page)
 {
 	return page * SPDK_BS_PAGE_SIZE / bs_dev->blocklen;
+}
+
+static inline uint64_t
+_spdk_bs_sector_to_lba(struct spdk_blob_store *bs, uint64_t sector)
+{
+	return sector * bs->sector_sz / bs->dev->blocklen;
+}
+
+static inline uint64_t
+_spdk_bs_sector_to_page(struct spdk_blob_store *bs, uint64_t sector)
+{
+	return sector * bs->sector_sz / SPDK_BS_PAGE_SIZE;
+}
+
+static inline uint64_t
+_spdk_bs_dev_sector_to_lba(struct spdk_blob_store *bs, struct spdk_bs_dev *bs_dev, uint64_t sector)
+{
+	/* TODO: include sector_sz in bs_dev? */
+	return sector * /* bs_dev->sector_sz / */ bs_dev->blocklen;
 }
 
 static inline uint64_t

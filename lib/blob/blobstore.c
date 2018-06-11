@@ -1685,14 +1685,16 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 }
 
 static void
-_spdk_blob_calculate_lba_and_lba_count(struct spdk_blob *blob, uint64_t page, uint64_t length,
+_spdk_blob_calculate_lba_and_lba_count(struct spdk_blob *blob, uint64_t sector, uint64_t length,
 				       uint64_t *lba,	uint32_t *lba_count)
 {
-	*lba_count = _spdk_bs_page_to_lba(blob->bs, length);
+	uint32_t page;
 
+	page = _spdk_bs_sector_to_page(blob->bs, sector);
+	*lba_count = _spdk_bs_sector_to_lba(blob->bs, length);
 	if (!_spdk_bs_page_is_allocated(blob, page)) {
 		assert(blob->back_bs_dev != NULL);
-		*lba = _spdk_bs_dev_page_to_lba(blob->back_bs_dev, page);
+		*lba = _spdk_bs_sector_to_lba(blob->bs, sector);
 		*lba_count = _spdk_bs_blob_lba_to_back_dev_lba(blob, *lba_count);
 	} else {
 		*lba = _spdk_bs_blob_page_to_lba(blob, page);
@@ -2390,6 +2392,7 @@ void
 spdk_bs_opts_init(struct spdk_bs_opts *opts)
 {
 	opts->cluster_sz = SPDK_BLOB_OPTS_CLUSTER_SZ;
+	opts->sector_sz = SPDK_BS_PAGE_SIZE;
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_DEFAULT_CHANNEL_OPS;
@@ -2428,6 +2431,15 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 		/* Cluster size cannot be smaller than page size */
 		SPDK_ERRLOG("Cluster size %" PRIu32 " is smaller than page size %d\n",
 			    opts->cluster_sz, SPDK_BS_PAGE_SIZE);
+		return NULL;
+	}
+	if (opts->sector_sz < dev->blocklen) {
+		SPDK_ERRLOG("Sector size %" PRIu32 " is smaller than device blocksize %" PRIu32 "\n",
+			    opts->sector_sz, dev->blocklen);
+		return NULL;
+	} else 	if (opts->sector_sz > SPDK_BS_PAGE_SIZE) {
+		SPDK_ERRLOG("Sector size %" PRIu32 " is larger than SPDK_BS_PAGE_SIZE %d\n",
+			    opts->sector_sz, SPDK_BS_PAGE_SIZE);
 		return NULL;
 	}
 	bs = calloc(1, sizeof(struct spdk_blob_store));
@@ -3083,6 +3095,19 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->bs->total_clusters = ctx->super->size / ctx->bs->cluster_sz;
 	}
 
+	if (ctx->super->sector_size == 0) {
+		/* Compatibility mode. When sector_size set to 0, load it with SPDK_BS_PAGE_SIZE */
+		ctx->bs->sector_sz = SPDK_BS_PAGE_SIZE;
+	} else if (ctx->bs->dev->blocklen % ctx->super->sector_size != 0 ||
+		   ctx->bs->dev->blocklen < ctx->super->sector_size) {
+		SPDK_NOTICELOG("Wrong sector size, dev sector size: %u, blobstore sector size: %u\n",
+			       ctx->bs->dev->blocklen, ctx->super->sector_size);
+		_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
+		return;
+	} else {
+		ctx->bs->sector_sz = ctx->super->sector_size;
+	}
+
 	/* Parse the super block */
 	ctx->bs->clean = 1;
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
@@ -3531,6 +3556,18 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	} else {
 		bs->md_len = opts.num_md_pages;
 	}
+	if (opts.sector_sz == 0) {
+		/* By default, initialize blobstore with SPDK_BS_PAGE_SIZE */
+		bs->sector_sz = SPDK_BS_PAGE_SIZE;
+	} else if (opts.sector_sz > SPDK_BS_PAGE_SIZE ||
+		   (opts.sector_sz < dev->blocklen && opts.sector_sz > 0) ||
+		   SPDK_BS_PAGE_SIZE % opts.sector_sz != 0) {
+		_spdk_bs_free(bs);
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	} else {
+		bs->sector_sz = opts.sector_sz;
+	}
 
 	rc = spdk_bit_array_resize(&bs->used_md_pages, bs->md_len);
 	if (rc < 0) {
@@ -3570,6 +3607,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->super_blob = bs->super_blob;
 	ctx->super->clean = 0;
 	ctx->super->cluster_size = bs->cluster_sz;
+	ctx->super->sector_size = bs->sector_sz;
 	memcpy(&ctx->super->bstype, &bs->bstype, sizeof(bs->bstype));
 
 	/* Calculate how many pages the metadata consumes at the front
@@ -3947,6 +3985,12 @@ uint64_t
 spdk_bs_get_page_size(struct spdk_blob_store *bs)
 {
 	return SPDK_BS_PAGE_SIZE;
+}
+
+uint64_t
+spdk_bs_get_sector_size(struct spdk_blob_store *bs)
+{
+	return bs->sector_sz;
 }
 
 uint64_t
