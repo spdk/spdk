@@ -37,15 +37,20 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
+#include "spdk/endian.h"
+#include "spdk/crc16.h"
 
 #include "config-host.h"
 #include "fio.h"
 #include "optgroup.h"
 
 #define NVME_IO_ALIGN		4096
+#define FIO_NVME_PI_APPTAG	0x1234
 
 static bool spdk_env_initialized;
 static int spdk_enable_sgl = 0;
+static uint32_t spdk_pract_flag;
+static uint32_t spdk_prchk_flags;
 
 struct spdk_fio_options {
 	void	*pad;	/* off1 used in option descriptions may not be 0 */
@@ -53,12 +58,18 @@ struct spdk_fio_options {
 	int	shm_id;
 	int	enable_sgl;
 	char	*hostnqn;
+	int	pi_act;
+	char	*pi_chk;
 };
 
 struct spdk_fio_request {
 	struct io_u		*io;
 	/** Offset in current iovec, fio only uses 1 vector */
 	uint32_t iov_offset;
+
+	/** Application tag and its mask for NVMe PI */
+	uint16_t		appmask;
+	uint16_t		apptag;
 
 	struct spdk_fio_thread	*fio_thread;
 };
@@ -80,6 +91,8 @@ struct spdk_fio_qpair {
 	struct fio_file		*f;
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_nvme_ns	*ns;
+	uint32_t		io_flags;
+	bool			do_nvme_pi;
 	struct spdk_fio_qpair	*next;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 };
@@ -162,6 +175,45 @@ get_fio_ctrlr(const struct spdk_nvme_transport_id *trid)
 	}
 
 	return NULL;
+}
+
+static bool
+fio_do_nvme_pi_check(struct spdk_fio_qpair *fio_qpair)
+{
+	struct spdk_nvme_ns	*ns = NULL;
+	const struct spdk_nvme_ns_data *nsdata;
+
+	ns = fio_qpair->ns;
+	nsdata = spdk_nvme_ns_get_data(ns);
+
+	if (!spdk_nvme_ns_supports_extended_lba(ns)) {
+		return false;
+	}
+
+	if (spdk_nvme_ns_get_pi_type(ns) ==
+	    SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
+		return false;
+	}
+
+	/* PI locates at the first 8 bytes of metadata,
+	 * doesn't support now
+	 */
+	if (nsdata->dps.md_start) {
+		return false;
+	}
+
+	/* Controller performs PI setup and check */
+	if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRACT) {
+		return false;
+	}
+
+	/* Type3 don't support REFTAG */
+	if (spdk_nvme_ns_get_pi_type(ns) ==
+	    SPDK_NVME_FMT_NVM_PROTECTION_TYPE3) {
+		return false;
+	}
+
+	return true;
 }
 
 static void
@@ -249,6 +301,12 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	fio_qpair->next = fio_thread->fio_qpair;
 	fio_thread->fio_qpair = fio_qpair;
 
+	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
+		fio_qpair->io_flags = spdk_pract_flag | spdk_prchk_flags;
+	}
+
+	fio_qpair->do_nvme_pi = fio_do_nvme_pi_check(fio_qpair);
+
 	f->real_file_size = spdk_nvme_ns_get_size(fio_qpair->ns);
 	if (f->real_file_size <= 0) {
 		g_error = true;
@@ -258,6 +316,23 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	f->filetype = FIO_TYPE_BLOCK;
 	fio_file_set_size_known(f);
+}
+
+static void parse_prchk_flags(const char *prchk_str)
+{
+	if (!prchk_str) {
+		return;
+	}
+
+	if (strstr(prchk_str, "GUARD") != NULL) {
+		spdk_prchk_flags = SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	}
+	if (strstr(prchk_str, "REFTAG") != NULL) {
+		spdk_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	}
+	if (strstr(prchk_str, "APPTAG") != NULL) {
+		spdk_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_APPTAG;
+	}
 }
 
 /* Called once at initialization. This is responsible for gathering the size of
@@ -301,6 +376,8 @@ static int spdk_fio_setup(struct thread_data *td)
 		opts.mem_size = fio_options->mem_size;
 		opts.shm_id = fio_options->shm_id;
 		spdk_enable_sgl = fio_options->enable_sgl;
+		spdk_pract_flag = fio_options->pi_act;
+		parse_prchk_flags(fio_options->pi_chk);
 		if (spdk_env_init(&opts) < 0) {
 			SPDK_ERRLOG("Unable to initialize SPDK env\n");
 			free(fio_thread->iocq);
@@ -434,10 +511,118 @@ static void spdk_fio_io_u_free(struct thread_data *td, struct io_u *io_u)
 	}
 }
 
+static void
+fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
+{
+	struct spdk_nvme_ns	*ns = NULL;
+	struct spdk_fio_request *fio_req = io_u->engine_data;
+	struct spdk_nvme_protection_info *pi;
+	uint16_t crc16;
+	uint32_t i, md_size, sector_size, pi_offset, extended_lba_size, lba_count;
+	uint64_t lba;
+
+	ns = fio_qpair->ns;
+
+	sector_size = spdk_nvme_ns_get_sector_size(ns);
+	md_size = spdk_nvme_ns_get_md_size(ns);
+	extended_lba_size = sector_size + md_size;
+	lba = io_u->offset / extended_lba_size;
+	lba_count = io_u->xfer_buflen / extended_lba_size;
+
+	if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
+		/* Let's use number of lbas for application tag */
+		fio_req->appmask = 0xffff;
+		fio_req->apptag = FIO_NVME_PI_APPTAG;
+	}
+
+	for (i = 0; i < lba_count; i++) {
+		pi_offset = (extended_lba_size * (i + 1)) - 8;
+		pi = (struct spdk_nvme_protection_info *)(io_u->buf + pi_offset);
+		memset(pi, 0, sizeof(*pi));
+
+		if (io_u->ddir == DDIR_WRITE) {
+			if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
+				/* CRC buffer should not include PI */
+				crc16 = spdk_crc16_t10dif(io_u->buf + extended_lba_size * i,
+							  extended_lba_size - 8);
+				to_be16(&pi->guard, crc16);
+			}
+			if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
+				/* Let's use number of lbas for application tag */
+				to_be16(&pi->app_tag, FIO_NVME_PI_APPTAG);
+			}
+			if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) {
+				to_be32(&pi->ref_tag, (uint32_t)lba + i);
+			}
+		}
+	}
+}
+
+static void
+fio_extended_lba_verify_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
+{
+	struct spdk_nvme_ns	*ns = NULL;
+	struct spdk_nvme_protection_info *pi;
+	uint16_t crc16, guard, app_tag;
+	uint32_t i, md_size, sector_size, pi_offset, extended_lba_size, ref_tag, lba_count;
+	uint64_t lba;
+
+	ns = fio_qpair->ns;
+	sector_size = spdk_nvme_ns_get_sector_size(ns);
+	md_size = spdk_nvme_ns_get_md_size(ns);
+	extended_lba_size = sector_size + md_size;
+	lba = io_u->offset / extended_lba_size;
+	lba_count = io_u->xfer_buflen / extended_lba_size;
+
+	for (i = 0; i < lba_count; i++) {
+		pi_offset = (extended_lba_size * (i + 1)) - 8;
+		pi = (struct spdk_nvme_protection_info *)(io_u->buf + pi_offset);
+
+		if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
+			/* CRC buffer should not include last 8 bytes of PI */
+			crc16 = spdk_crc16_t10dif(io_u->buf + extended_lba_size * i,
+						  extended_lba_size - 8);
+			to_be16(&guard, crc16);
+			if (pi->guard != guard) {
+				fprintf(stdout, "Get Guard Error LBA 0x%16.16"PRIx64","
+					" Expected 0x%04x but returned with 0x%04x,"
+					" may read the LBA without write it first\n",
+					lba + i, guard, pi->guard);
+			}
+
+		}
+		if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
+			/* Previously we used the number of lbas as
+			 * application tag for writes
+			 */
+			to_be16(&app_tag, FIO_NVME_PI_APPTAG);
+			if (pi->app_tag != app_tag) {
+				fprintf(stdout, "Get Application Tag Error LBA 0x%16.16"PRIx64","
+					" Expected 0x%04x but returned with 0x%04x,"
+					" may read the LBA without write it first\n",
+					lba + i, app_tag, pi->app_tag);
+			}
+		}
+		if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) {
+			to_be32(&ref_tag, (uint32_t)lba + i);
+			if (pi->ref_tag != ref_tag) {
+				fprintf(stdout, "Get Reference Tag Error LBA 0x%16.16"PRIx64","
+					" Expected 0x%08x but returned with 0x%08x,"
+					" may read the LBA without write it first\n",
+					lba + i, ref_tag, pi->ref_tag);
+			}
+		}
+	}
+}
+
 static void spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_fio_request		*fio_req = ctx;
 	struct spdk_fio_thread		*fio_thread = fio_req->fio_thread;
+
+	if (fio_thread->fio_qpair->do_nvme_pi) {
+		fio_extended_lba_verify_pi(fio_thread->fio_qpair, fio_req->io);
+	}
 
 	assert(fio_thread->iocq_count < fio_thread->iocq_size);
 	fio_thread->iocq[fio_thread->iocq_count++] = fio_req->io;
@@ -504,25 +689,34 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	lba = io_u->offset / block_size;
 	lba_count = io_u->xfer_buflen / block_size;
 
+	// TODO: considering situations that fio will randomize and verify io_u
+	if (fio_qpair->do_nvme_pi) {
+		fio_extended_lba_setup_pi(fio_qpair, io_u);
+	}
+
 	switch (io_u->ddir) {
 	case DDIR_READ:
 		if (!spdk_enable_sgl) {
-			rc = spdk_nvme_ns_cmd_read(ns, fio_qpair->qpair, io_u->buf, lba, lba_count,
-						   spdk_fio_completion_cb, fio_req, 0);
+			rc = spdk_nvme_ns_cmd_read_with_md(ns, fio_qpair->qpair, io_u->buf, NULL, lba, lba_count,
+							   spdk_fio_completion_cb, fio_req,
+							   fio_qpair->io_flags, fio_req->appmask, fio_req->apptag);
 		} else {
-			rc = spdk_nvme_ns_cmd_readv(ns, fio_qpair->qpair, lba,
-						    lba_count, spdk_fio_completion_cb, fio_req, 0,
-						    spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge);
+			rc = spdk_nvme_ns_cmd_readv_with_md(ns, fio_qpair->qpair, lba,
+							    lba_count, spdk_fio_completion_cb, fio_req, fio_qpair->io_flags,
+							    spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, NULL,
+							    fio_req->appmask, fio_req->apptag);
 		}
 		break;
 	case DDIR_WRITE:
 		if (!spdk_enable_sgl) {
-			rc = spdk_nvme_ns_cmd_write(ns, fio_qpair->qpair, io_u->buf, lba, lba_count,
-						    spdk_fio_completion_cb, fio_req, 0);
+			rc = spdk_nvme_ns_cmd_write_with_md(ns, fio_qpair->qpair, io_u->buf, NULL, lba, lba_count,
+							    spdk_fio_completion_cb, fio_req,
+							    fio_qpair->io_flags, fio_req->appmask, fio_req->apptag);
 		} else {
-			rc = spdk_nvme_ns_cmd_writev(ns, fio_qpair->qpair, lba,
-						     lba_count, spdk_fio_completion_cb, fio_req, 0,
-						     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge);
+			rc = spdk_nvme_ns_cmd_writev_with_md(ns, fio_qpair->qpair, lba,
+							     lba_count, spdk_fio_completion_cb, fio_req, fio_qpair->io_flags,
+							     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, NULL,
+							     fio_req->appmask, fio_req->apptag);
 		}
 		break;
 	default:
@@ -682,6 +876,26 @@ static struct fio_option options[] = {
 		.type		= FIO_OPT_STR_STORE,
 		.off1		= offsetof(struct spdk_fio_options, hostnqn),
 		.help		= "Host NQN",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "pi_act",
+		.lname		= "Protection Information Action",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, pi_act),
+		.def		= "1",
+		.help		= "Protection Information Action bit (pi_act=1 or pi_act=0)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "pi_chk",
+		.lname		= "Protection Information Check(GUARD|REFTAG|APPTAG)",
+		.type		= FIO_OPT_STR_STORE,
+		.off1		= offsetof(struct spdk_fio_options, pi_chk),
+		.def		= NULL,
+		.help		= "Control of Protection Information Checking (pi_chk=GUARD|REFTAG|APPTAG)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
