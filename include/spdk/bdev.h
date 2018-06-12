@@ -401,7 +401,17 @@ const struct spdk_uuid *spdk_bdev_get_uuid(const struct spdk_bdev *bdev);
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc);
 
 /**
+ * \defgroup bdev_io_submit_functions bdev I/O Submit Functions
+ *
+ * These functions submit a new I/O request to a bdev.  The I/O request will
+ *  be represented by an spdk_bdev_io structure allocated from a global pool.
+ *  These functions will return -ENOMEM if the spdk_bdev_io pool is empty.
+ */
+
+/**
  * Submit a read request to the bdev on the given channel.
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
@@ -423,6 +433,8 @@ int spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 /**
  * Submit a read request to the bdev on the given channel.
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
@@ -448,6 +460,8 @@ int spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
  * gather list. Some physical devices place memory alignment requirements on
  * data and may not be able to directly transfer into the buffers provided. In
  * this case, the request may fail.
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
@@ -476,6 +490,8 @@ int spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * data and may not be able to directly transfer into the buffers provided. In
  * this case, the request may fail.
  *
+ * \ingroup bdev_io_submit_functions
+ *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param iov A scatter gather list of buffers to be read into.
@@ -499,6 +515,8 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 /**
  * Submit a write request to the bdev on the given channel.
  *
+ * \ingroup bdev_io_submit_functions
+ *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param buf Data buffer to written from.
@@ -520,6 +538,8 @@ int spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 /**
  * Submit a write request to the bdev on the given channel.
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
@@ -546,6 +566,8 @@ int spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  * gather list. Some physical devices place memory alignment requirements on
  * data and may not be able to directly transfer out of the buffers provided. In
  * this case, the request may fail.
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
@@ -575,6 +597,8 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * data and may not be able to directly transfer out of the buffers provided. In
  * this case, the request may fail.
  *
+ * \ingroup bdev_io_submit_functions
+ *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param iov A scatter gather list of buffers to be written from.
@@ -600,6 +624,8 @@ int spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel 
  * Submit a write zeroes request to the bdev on the given channel. This command
  *  ensures that all bytes in the specified range are set to 00h
  *
+ * \ingroup bdev_io_submit_functions
+ *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset The offset, in bytes, from the start of the block device.
@@ -621,6 +647,8 @@ int spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 /**
  * Submit a write zeroes request to the bdev on the given channel. This command
  *  ensures that all bytes in the specified range are set to 00h
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
@@ -645,6 +673,8 @@ int spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_ch
  * deallocate. This notifies the device that the data in the blocks described is no
  * longer valid. Reading blocks that have been unmapped results in indeterminate data.
  *
+ * \ingroup bdev_io_submit_functions
+ *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset The offset, in bytes, from the start of the block device.
@@ -667,6 +697,8 @@ int spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * Submit an unmap request to the block device. Unmap is sometimes also called trim or
  * deallocate. This notifies the device that the data in the blocks described is no
  * longer valid. Reading blocks that have been unmapped results in indeterminate data.
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
@@ -691,6 +723,8 @@ int spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  * caches, data is not guaranteed to be persistent until the completion of a flush
  * request. Call spdk_bdev_has_write_cache() to check if the bdev has a volatile cache.
  *
+ * \ingroup bdev_io_submit_functions
+ *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset The offset, in bytes, from the start of the block device.
@@ -714,6 +748,8 @@ int spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * caches, data is not guaranteed to be persistent until the completion of a flush
  * request. Call spdk_bdev_has_write_cache() to check if the bdev has a volatile cache.
  *
+ * \ingroup bdev_io_submit_functions
+ *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset_blocks The offset, in blocks, from the start of the block device.
@@ -735,6 +771,8 @@ int spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 /**
  * Submit a reset request to the bdev on the given channel.
  *
+ * \ingroup bdev_io_submit_functions
+ *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param cb Called when the request is complete.
@@ -755,6 +793,8 @@ int spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  *
  * The SGL/PRP will be automated generated based on the given buffer,
  * so that portion of the command may be left empty.
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
@@ -780,6 +820,8 @@ int spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc,
  * Submit an NVMe I/O command to the bdev. This passes directly through
  * the block layer to the device. Support for NVMe passthru is optional,
  * indicated by calling spdk_bdev_io_type_supported().
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * The SGL/PRP will be automated generated based on the given buffer,
  * so that portion of the command may be left empty. Also, the namespace
@@ -809,6 +851,8 @@ int spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *bdev_desc,
  * Submit an NVMe I/O command to the bdev. This passes directly through
  * the block layer to the device. Support for NVMe passthru is optional,
  * indicated by calling spdk_bdev_io_type_supported().
+ *
+ * \ingroup bdev_io_submit_functions
  *
  * The SGL/PRP will be automated generated based on the given buffer,
  * so that portion of the command may be left empty. Also, the namespace
