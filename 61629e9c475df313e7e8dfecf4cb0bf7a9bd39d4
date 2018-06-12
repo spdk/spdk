@@ -56,6 +56,24 @@
       "revId": "61629e9c475df313e7e8dfecf4cb0bf7a9bd39d4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf0adcc1_35d4fd1f",
+        "filename": "scripts/rpc/ioat.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-12T22:58:51Z",
+      "side": 1,
+      "message": "OK, just removing args is not meaningful and your feedback is reasonable.",
+      "parentUuid": "601aa0f5_e249bc39",
+      "revId": "61629e9c475df313e7e8dfecf4cb0bf7a9bd39d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
