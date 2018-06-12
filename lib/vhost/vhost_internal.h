@@ -90,8 +90,7 @@
 	(1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_RING_F_INDIRECT_DESC))
 
-#define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
-	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
+#define SPDK_VHOST_DISABLED_FEATURES (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY)
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
@@ -101,7 +100,13 @@ struct spdk_vhost_virtqueue {
 	uint32_t req_cnt;
 
 	/* Request count from last event */
-	uint16_t used_req_cnt;
+	uint32_t used_req_cnt;
+
+	/* If not NULL - points to used index field in avail ring */
+	volatile uint16_t *used_event;
+
+	/* If not NULL - points to avail index field in used ring */
+	volatile uint16_t *avail_event;
 
 	/* How long interrupt is delayed */
 	uint32_t irq_delay_time;
