@@ -1758,6 +1758,10 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	uint64_t len;
 	bool split_request = false;
 
+	if (!desc->write) {
+		return -EBADF;
+	}
+
 	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
 	}
