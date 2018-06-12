@@ -50,6 +50,7 @@ struct bdevperf_task {
 	void				*buf;
 	uint64_t			offset_blocks;
 	TAILQ_ENTRY(bdevperf_task)	link;
+	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 };
 
 static int g_io_size = 0;
@@ -328,9 +329,18 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 }
 
+static void bdevperf_verify_submit_read(void *cb_arg);
+
 static void
 bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 			       void *cb_arg)
+{
+	spdk_bdev_free_io(bdev_io);
+	bdevperf_verify_submit_read(cb_arg);
+}
+
+static void
+bdevperf_verify_submit_read(void *cb_arg)
 {
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
@@ -341,17 +351,26 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 	/* Read the data back in */
 	rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL, task->offset_blocks,
 				   target->io_size_blocks, bdevperf_complete, task);
-	if (rc) {
+	if (rc == -ENOMEM) {
+		task->bdev_io_wait.cb_fn = bdevperf_verify_submit_read;
+		task->bdev_io_wait.cb_arg = task;
+		spdk_bdev_queue_io_wait(target->ch, &task->bdev_io_wait);
+	} else {
 		printf("Failed to submit read: %d\n", rc);
 		target->is_draining = true;
 		g_run_failed = true;
-		return;
 	}
-
-	spdk_bdev_free_io(bdev_io);
 }
 
 static __thread unsigned int seed = 0;
+
+static void
+_bdevperf_submit_single(void *cb_arg)
+{
+	struct bdevperf_task *task = cb_arg;
+
+	bdevperf_submit_single(task->target, task);
+}
 
 static void
 bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
@@ -409,7 +428,12 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 					     target->io_size_blocks, bdevperf_complete, task);
 	}
 
-	if (rc) {
+	if (rc == -ENOMEM) {
+		task->bdev_io_wait.cb_fn = _bdevperf_submit_single;
+		task->bdev_io_wait.cb_arg = task;
+		spdk_bdev_queue_io_wait(ch, &task->bdev_io_wait);
+		return;
+	} else if (rc != 0) {
 		printf("Failed to submit bdev_io: %d\n", rc);
 		target->is_draining = true;
 		g_run_failed = true;
