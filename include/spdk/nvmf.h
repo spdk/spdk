@@ -567,6 +567,15 @@ struct spdk_nvmf_ns *spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subs
 		uint32_t nsid);
 
 /**
+ * Get the maximum number of namespaces allowed in a subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return Maximum number of namespaces allowed in the subsystem, or 0 for unlimited.
+ */
+uint32_t spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem);
+
+/**
  * Get a namespace's NSID.
  *
  * \param ns Namespace to query.
