@@ -486,7 +486,7 @@ static int
 decode_rpc_namespaces(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_namespaces *namespaces = out;
-	char *names[RPC_MAX_NAMESPACES]; /* old format - array of strings (bdev names) */
+	char *names[RPC_MAX_NAMESPACES] = {0}; /* old format - array of strings (bdev names) */
 	size_t i;
 	int rc;
 
