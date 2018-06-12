@@ -109,7 +109,6 @@ static struct spdk_poller *g_hotplug_poller;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
-static TAILQ_HEAD(, nvme_bdev) g_nvme_bdevs = TAILQ_HEAD_INITIALIZER(g_nvme_bdevs);
 
 static int nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_library_init(void);
@@ -227,16 +226,16 @@ bdev_nvme_destruct(void *ctx)
 	struct nvme_ctrlr *nvme_ctrlr = nvme_disk->nvme_ctrlr;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_REMOVE(&g_nvme_bdevs, nvme_disk, link);
 	nvme_ctrlr->ref--;
 	free(nvme_disk->disk.name);
-	free(nvme_disk);
+	memset(nvme_disk, 0, sizeof(*nvme_disk));
 	if (nvme_ctrlr->ref == 0) {
 		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		spdk_io_device_unregister(nvme_ctrlr->ctrlr, bdev_nvme_unregister_cb);
 		spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller);
 		free(nvme_ctrlr->name);
+		free(nvme_ctrlr->bdevs);
 		free(nvme_ctrlr);
 		return 0;
 	}
@@ -822,6 +821,14 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		free((void *)name);
 		return;
 	}
+	nvme_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
+	nvme_ctrlr->bdevs = calloc(nvme_ctrlr->num_ns, sizeof(struct nvme_bdev));
+	if (!nvme_ctrlr->bdevs) {
+		SPDK_ERRLOG("Failed to allocate block devices struct\n");
+		free(nvme_ctrlr);
+		free((void *)name);
+		return;
+	}
 
 	nvme_ctrlr->adminq_timer_poller = NULL;
 	nvme_ctrlr->ctrlr = ctrlr;
@@ -853,14 +860,24 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static void
 remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_bdev *nvme_bdev, *btmp;
+	uint32_t i;
+	struct nvme_ctrlr *nvme_ctrlr;
+	struct nvme_bdev *nvme_bdev;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
-		if (nvme_bdev->nvme_ctrlr->ctrlr == ctrlr) {
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (nvme_ctrlr->ctrlr == ctrlr) {
 			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
-			pthread_mutex_lock(&g_bdev_nvme_mutex);
+			for (i = 0; i < nvme_ctrlr->num_ns; i++) {
+				uint32_t	nsid = i + 1;
+
+				nvme_bdev = &nvme_ctrlr->bdevs[nsid - 1];
+				assert(nvme_bdev->id == nsid);
+				if (nvme_bdev->active) {
+					spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
+				}
+			}
+			return;
 		}
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -884,6 +901,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	struct nvme_probe_ctx	*probe_ctx;
 	struct nvme_ctrlr	*nvme_ctrlr;
 	struct nvme_bdev	*nvme_bdev;
+	uint32_t		i, nsid;
 	size_t			j;
 
 	if (nvme_ctrlr_get(trid) != NULL) {
@@ -918,19 +936,24 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	 * There can be more than one bdev per NVMe controller since one bdev is created per namespace.
 	 */
 	j = 0;
-	TAILQ_FOREACH(nvme_bdev, &g_nvme_bdevs, link) {
-		if (nvme_bdev->nvme_ctrlr == nvme_ctrlr) {
-			if (j < *count) {
-				names[j] = nvme_bdev->disk.name;
-				j++;
-			} else {
-				SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %zu. Unable to return all names of created bdevs\n",
-					    *count);
-				free(probe_ctx);
-				return -1;
-			}
+	for (i = 0; i < nvme_ctrlr->num_ns; i++) {
+		nsid = i + 1;
+		nvme_bdev = &nvme_ctrlr->bdevs[nsid - 1];
+		if (!nvme_bdev->active) {
+			continue;
+		}
+		assert(nvme_bdev->id == nsid);
+		if (j < *count) {
+			names[j] = nvme_bdev->disk.name;
+			j++;
+		} else {
+			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %zu. Unable to return all names of created bdevs\n",
+				    *count);
+			free(probe_ctx);
+			return -1;
 		}
 	}
+
 	*count = j;
 
 	free(probe_ctx);
@@ -1115,10 +1138,8 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 			continue;
 		}
 
-		bdev = calloc(1, sizeof(*bdev));
-		if (!bdev) {
-			break;
-		}
+		bdev = &nvme_ctrlr->bdevs[nsid - 1];
+		bdev->id = nsid;
 
 		bdev->nvme_ctrlr = nvme_ctrlr;
 		bdev->ns = ns;
@@ -1126,7 +1147,6 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 
 		bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
 		if (!bdev->disk.name) {
-			free(bdev);
 			break;
 		}
 		bdev->disk.product_name = "NVMe disk";
@@ -1151,11 +1171,9 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		rc = spdk_bdev_register(&bdev->disk);
 		if (rc) {
 			free(bdev->disk.name);
-			free(bdev);
 			break;
 		}
-
-		TAILQ_INSERT_TAIL(&g_nvme_bdevs, bdev, link);
+		bdev->active = true;
 
 		bdev_created++;
 	}
