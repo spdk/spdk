@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a979795_c6cc9107",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-12T13:56:48Z",
+      "side": 1,
+      "message": "I\u0027m not sure I understand this, can you explain?",
+      "revId": "005c9a5e0f3617fcecdb85f133f2b3ba9d3daadb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7eea5fc4_284e4615",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-12T13:56:48Z",
+      "side": 1,
+      "message": "OK, this too :) Is this patch preparing for adding this capability for real at a later point in time?",
+      "revId": "005c9a5e0f3617fcecdb85f133f2b3ba9d3daadb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
