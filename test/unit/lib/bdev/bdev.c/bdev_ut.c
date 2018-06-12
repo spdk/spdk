@@ -77,19 +77,113 @@ stub_destruct(void *ctx)
 	return 0;
 }
 
+struct bdev_ut_channel {
+	TAILQ_HEAD(, spdk_bdev_io)	outstanding_io;
+	uint32_t			outstanding_io_count;
+};
+
+static uint32_t g_bdev_ut_io_device;
+static struct bdev_ut_channel *g_bdev_ut_channel;
+
+static void
+stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
+{
+	struct bdev_ut_channel *ch = spdk_io_channel_get_ctx(_ch);
+
+	TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
+	ch->outstanding_io_count++;
+}
+
+static uint32_t
+stub_complete_io(uint32_t num_to_complete)
+{
+	struct bdev_ut_channel *ch = g_bdev_ut_channel;
+	struct spdk_bdev_io *bdev_io;
+	uint32_t num_completed = 0;
+
+	while (num_completed < num_to_complete) {
+		if (TAILQ_EMPTY(&ch->outstanding_io)) {
+			break;
+		}
+		bdev_io = TAILQ_FIRST(&ch->outstanding_io);
+		TAILQ_REMOVE(&ch->outstanding_io, bdev_io, module_link);
+		ch->outstanding_io_count--;
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		num_completed++;
+	}
+
+	return num_completed;
+}
+
+static struct spdk_io_channel *
+bdev_ut_get_io_channel(void *ctx)
+{
+	return spdk_get_io_channel(&g_bdev_ut_io_device);
+}
+
 static struct spdk_bdev_fn_table fn_table = {
 	.destruct = stub_destruct,
+	.submit_request = stub_submit_request,
+	.get_io_channel = bdev_ut_get_io_channel,
 };
+
+static int
+bdev_ut_create_ch(void *io_device, void *ctx_buf)
+{
+	struct bdev_ut_channel *ch = ctx_buf;
+
+	CU_ASSERT(g_bdev_ut_channel == NULL);
+	g_bdev_ut_channel = ch;
+
+	TAILQ_INIT(&ch->outstanding_io);
+	ch->outstanding_io_count = 0;
+	return 0;
+}
+
+static void
+bdev_ut_destroy_ch(void *io_device, void *ctx_buf)
+{
+	CU_ASSERT(g_bdev_ut_channel != NULL);
+	g_bdev_ut_channel = NULL;
+}
+
+static int
+bdev_ut_module_init(void)
+{
+	spdk_io_device_register(&g_bdev_ut_io_device, bdev_ut_create_ch, bdev_ut_destroy_ch,
+				sizeof(struct bdev_ut_channel));
+	return 0;
+}
+
+static void
+bdev_ut_module_fini(void)
+{
+}
 
 struct spdk_bdev_module bdev_ut_if = {
 	.name = "bdev_ut",
+	.module_init = bdev_ut_module_init,
+	.module_fini = bdev_ut_module_fini,
 };
 
 static void vbdev_ut_examine(struct spdk_bdev *bdev);
 
+static int
+vbdev_ut_module_init(void)
+{
+	return 0;
+}
+
+static void
+vbdev_ut_module_fini(void)
+{
+}
+
 struct spdk_bdev_module vbdev_ut_if = {
 	.name = "vbdev_ut",
 	.examine = vbdev_ut_examine,
+	.module_init = vbdev_ut_module_init,
+	.module_fini = vbdev_ut_module_fini,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)
@@ -152,6 +246,7 @@ allocate_bdev(char *name)
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
 	bdev->module = &bdev_ut_if;
+	bdev->blockcnt = 1;
 
 	rc = spdk_bdev_register(bdev);
 	CU_ASSERT(rc == 0);
@@ -543,6 +638,110 @@ alias_add_del_test(void)
 	free(bdev[1]);
 }
 
+static void
+io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+bdev_init_cb(void *arg, int rc)
+{
+	CU_ASSERT(rc == 0);
+}
+
+struct bdev_ut_io_wait_entry {
+	struct spdk_bdev_io_wait_entry	entry;
+	struct spdk_io_channel		*io_ch;
+	struct spdk_bdev_desc		*desc;
+	bool				submitted;
+};
+
+static void
+io_wait_cb(void *arg)
+{
+	struct bdev_ut_io_wait_entry *entry = arg;
+	int rc;
+
+	rc = spdk_bdev_read_blocks(entry->desc, entry->io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	entry->submitted = true;
+}
+
+static void
+bdev_io_wait_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 4,
+		.bdev_io_cache_size = 2,
+	};
+	struct bdev_ut_io_wait_entry io_wait_entry;
+	struct bdev_ut_io_wait_entry io_wait_entry2;
+	int rc;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == -ENOMEM);
+
+	io_wait_entry.entry.bdev = bdev;
+	io_wait_entry.entry.cb_fn = io_wait_cb;
+	io_wait_entry.entry.cb_arg = &io_wait_entry;
+	io_wait_entry.io_ch = io_ch;
+	io_wait_entry.desc = desc;
+	io_wait_entry.submitted = false;
+	/* Cannot use the same io_wait_entry for two different calls. */
+	memcpy(&io_wait_entry2, &io_wait_entry, sizeof(io_wait_entry));
+	io_wait_entry2.entry.cb_arg = &io_wait_entry2;
+
+	/* Queue two I/O waits. */
+	rc = spdk_bdev_queue_io_wait(bdev, io_ch, &io_wait_entry.entry);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(io_wait_entry.submitted == false);
+	rc = spdk_bdev_queue_io_wait(bdev, io_ch, &io_wait_entry2.entry);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(io_wait_entry2.submitted == false);
+
+	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
+	CU_ASSERT(io_wait_entry.submitted == true);
+	CU_ASSERT(io_wait_entry2.submitted == false);
+
+	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
+	CU_ASSERT(io_wait_entry2.submitted == true);
+
+	stub_complete_io(4);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -565,7 +764,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
 		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL ||
-		CU_add_test(suite, "get_device_stat", get_device_stat_test) == NULL
+		CU_add_test(suite, "get_device_stat", get_device_stat_test) == NULL ||
+		CU_add_test(suite, "bdev_io_wait", bdev_io_wait_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
