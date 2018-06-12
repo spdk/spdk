@@ -44,6 +44,7 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/json.h"
+#include "spdk/queue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -889,6 +890,16 @@ int spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *bdev_desc,
  * \return -1 on failure, 0 on success.
  */
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
+
+typedef void (*spdk_bdev_io_wait_cb)(void *cb_arg);
+
+struct spdk_bdev_io_wait_entry {
+	spdk_bdev_io_wait_cb			cb_fn;
+	void					*cb_arg;
+	TAILQ_ENTRY(spdk_bdev_io_wait_entry)	link;
+};
+
+int spdk_bdev_queue_io_wait(struct spdk_io_channel *ch, struct spdk_bdev_io_wait_entry *entry);
 
 /**
  * Return I/O statistics for this channel.
