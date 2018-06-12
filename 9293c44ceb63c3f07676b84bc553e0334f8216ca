@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd614aac_84856672",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-12T06:24:29Z",
+      "side": 1,
+      "message": "I think you can just remove this definition, pass 0 in the below API, as we also don\u0027t check this bit in scsi_bdev module.",
+      "revId": "9293c44ceb63c3f07676b84bc553e0334f8216ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
