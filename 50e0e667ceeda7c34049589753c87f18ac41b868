@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e7fec49_17359004",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-12T00:41:26Z",
+      "side": 1,
+      "message": "hold --\u003e holds",
+      "revId": "50e0e667ceeda7c34049589753c87f18ac41b868",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66d5ae39_66ffced7",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-12T00:41:26Z",
+      "side": 1,
+      "message": "do we say \"size of vector\" elsewhere? It\u0027s the \"Number of I/O vectors in the array.\" which I think is a much better description to use everywhere",
+      "revId": "50e0e667ceeda7c34049589753c87f18ac41b868",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
