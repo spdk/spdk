@@ -339,6 +339,17 @@ uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
 uint64_t spdk_bdev_get_qos_ios_per_sec(struct spdk_bdev *bdev);
 
 /**
+ * Set an IOPS-based quality of service rate limit on a bdev.
+ *
+ * \param bdev Block device.
+ * \param ios_per_sec I/O per second limit.
+ * \param cb_fn Callback function to be called when the QoS limit has been updated.
+ * \param cb_arg Argument to pass to cb_fn.
+ */
+void spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
+				  void (*cb_fn)(void *cb_arg, int status), void *cb_arg);
+
+/**
  * Get minimum I/O buffer address alignment for a bdev.
  *
  * \param bdev Block device to query.
@@ -736,17 +747,6 @@ int spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  */
 int spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
-
-/**
- * Set an IOPS-based quality of service rate limit on a bdev.
- *
- * \param bdev Block device.
- * \param ios_per_sec I/O per second limit.
- * \param cb_fn Callback function to be called when the QoS limit has been updated.
- * \param cb_arg Argument to pass to cb_fn.
- */
-void spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
-				  void (*cb_fn)(void *cb_arg, int status), void *cb_arg);
 
 /**
  * Submit an NVMe Admin command to the bdev. This passes directly through
