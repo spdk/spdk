@@ -1115,11 +1115,6 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 			continue;
 		}
 
-		if (!spdk_nvme_ns_is_active(ns)) {
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Skipping inactive NS %d\n", nsid);
-			continue;
-		}
-
 		bdev = calloc(1, sizeof(*bdev));
 		if (!bdev) {
 			break;
