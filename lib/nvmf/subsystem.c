@@ -973,7 +973,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 {
 	struct spdk_nvmf_ns_opts opts;
 	struct spdk_nvmf_ns *ns;
-	uint32_t i;
 	int rc;
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
@@ -1001,33 +1000,28 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	}
 
 	if (opts.nsid == 0) {
-		/* NSID not specified - find a free index */
-		for (i = 0; i < subsystem->max_nsid; i++) {
-			if (_spdk_nvmf_subsystem_get_ns(subsystem, i + 1) == NULL) {
-				opts.nsid = i + 1;
+		/*
+		 * NSID not specified - find a free index.
+		 *
+		 * If no free slots are found, opts.nsid will be subsystem->max_nsid + 1, which will
+		 * expand max_nsid if possible.
+		 */
+		for (opts.nsid = 1; opts.nsid <= subsystem->max_nsid; opts.nsid++) {
+			if (_spdk_nvmf_subsystem_get_ns(subsystem, opts.nsid) == NULL) {
 				break;
 			}
 		}
-		if (opts.nsid == 0) {
-			/* All of the current slots are full */
-			if (TAILQ_EMPTY(&subsystem->ctrlrs) &&
-			    (subsystem->max_allowed_nsid == 0 ||
-			     subsystem->max_nsid < subsystem->max_allowed_nsid)) {
-				/* No controllers are connected and the subsystem is
-				* not at its maximum NSID limit, so the array
-				* can be expanded. */
-				opts.nsid = subsystem->max_nsid + 1;
-			} else {
-				SPDK_ERRLOG("Can't extend NSID range above MaxNamespaces\n");
-				return 0;
-			}
-		}
-	} else {
-		/* Specific NSID requested */
-		if (_spdk_nvmf_subsystem_get_ns(subsystem, opts.nsid)) {
-			SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", opts.nsid);
-			return 0;
-		}
+	}
+
+	/* If a controller is connected, we can't change NN. */
+	if (!TAILQ_EMPTY(&subsystem->ctrlrs) && opts.nsid > subsystem->max_nsid) {
+		SPDK_ERRLOG("Can't extend NSID range while controllers are connected\n");
+		return 0;
+	}
+
+	if (_spdk_nvmf_subsystem_get_ns(subsystem, opts.nsid)) {
+		SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", opts.nsid);
+		return 0;
 	}
 
 	if (opts.nsid > subsystem->max_nsid) {
