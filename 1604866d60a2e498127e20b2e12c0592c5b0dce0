@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "565d87e3_ad422075",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-06-12T12:24:56Z",
+      "side": 1,
+      "message": "Can we put the rename in the separate patch, since, we will also have reset later.",
+      "range": {
+        "startLine": 214,
+        "startChar": 0,
+        "endLine": 214,
+        "endChar": 21
+      },
+      "revId": "1604866d60a2e498127e20b2e12c0592c5b0dce0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e24cd64_0d0c2de4",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-06-12T12:24:56Z",
+      "side": 1,
+      "message": "Do we have the async function in the libiscsi lib?",
+      "range": {
+        "startLine": 298,
+        "startChar": 7,
+        "endLine": 298,
+        "endChar": 37
+      },
+      "revId": "1604866d60a2e498127e20b2e12c0592c5b0dce0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
