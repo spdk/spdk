@@ -16,6 +16,24 @@
       "revId": "9baf67a07c8599767caaf1475fb7cd1ef59fa021",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afcf8765_4eeb169b",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T20:10:15Z",
+      "side": 1,
+      "message": "It is already (it\u0027s just not indented, which makes it unclear).",
+      "parentUuid": "27b09c7c_c57a1ac4",
+      "revId": "9baf67a07c8599767caaf1475fb7cd1ef59fa021",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
