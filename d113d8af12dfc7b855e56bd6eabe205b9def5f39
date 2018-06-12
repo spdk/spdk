@@ -45,6 +45,30 @@
       "revId": "d113d8af12dfc7b855e56bd6eabe205b9def5f39",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27ef0c49_e8444bec",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-12T10:56:15Z",
+      "side": 1,
+      "message": "Please see to function test_json_config. One time it is used for spdk_tgt, another for virtio.",
+      "parentUuid": "9d2230dd_638130f3",
+      "range": {
+        "startLine": 50,
+        "startChar": 1,
+        "endLine": 50,
+        "endChar": 27
+      },
+      "revId": "d113d8af12dfc7b855e56bd6eabe205b9def5f39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
