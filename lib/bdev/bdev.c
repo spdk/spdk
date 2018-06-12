@@ -1818,11 +1818,6 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	uint64_t len;
 	bool split_request = false;
 
-	if (num_blocks > UINT64_MAX / spdk_bdev_get_block_size(bdev)) {
-		SPDK_ERRLOG("length argument out of range in write_zeroes\n");
-		return -ERANGE;
-	}
-
 	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
 	}
