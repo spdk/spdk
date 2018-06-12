@@ -51,7 +51,7 @@ LIBS+= -L/usr/local/lib -lfuse3
 all : $(APP)
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(COPY_MODULES_FILES) $(BLOCKDEV_MODULES_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :
