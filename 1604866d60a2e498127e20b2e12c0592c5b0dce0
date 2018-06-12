@@ -45,6 +45,30 @@
       "revId": "1604866d60a2e498127e20b2e12c0592c5b0dce0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fdd1e47_105c6766",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-06-12T12:27:10Z",
+      "side": 1,
+      "message": "Please ignore this comment, i think it is async function.",
+      "parentUuid": "6e24cd64_0d0c2de4",
+      "range": {
+        "startLine": 298,
+        "startChar": 7,
+        "endLine": 298,
+        "endChar": 37
+      },
+      "revId": "1604866d60a2e498127e20b2e12c0592c5b0dce0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
