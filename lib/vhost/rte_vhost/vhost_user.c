@@ -362,7 +362,7 @@ static int
 vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 {
 	struct vhost_virtqueue *vq;
-	uint64_t len;
+	uint64_t len, vva_len;
 
 	/* Remove from the data plane. */
 	if (dev->flags & VIRTIO_DEV_RUNNING) {
@@ -396,11 +396,15 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 	vq = dev->virtqueue[msg->payload.addr.index];
 
 	len = sizeof(struct vring_avail) + sizeof(uint16_t) * vq->size;
+	if (dev->negotiated_features & (1ULL << VIRTIO_RING_F_EVENT_IDX)) {
+		/* This should be __virtio16 but Ubuntu 14.04 doesn't see this deffinition. */
+		len += sizeof(uint16_t);
+	}
+
+	vva_len = len;
 	vq->avail = (struct vring_avail *)(uintptr_t)qva_to_vva(dev,
-			msg->payload.addr.avail_user_addr, &len);
-	if (vq->avail == 0 ||
-			len != sizeof(struct vring_avail)
-			+ sizeof(uint16_t) * vq->size) {
+			msg->payload.addr.avail_user_addr, &vva_len);
+	if (vq->avail == 0 || len != vva_len) {
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"(%d) failed to find avail ring address.\n",
 			dev->vid);
@@ -409,11 +413,15 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 
 	len = sizeof(struct vring_used) +
 		sizeof(struct vring_used_elem) * vq->size;
-	vq->used = (struct vring_used *)(uintptr_t)qva_to_vva(dev,
-			msg->payload.addr.used_user_addr, &len);
-	if (vq->used == 0 || len != sizeof(struct vring_used) +
-			sizeof(struct vring_used_elem) * vq->size) {
+	if (dev->negotiated_features & (1ULL << VIRTIO_RING_F_EVENT_IDX)) {
+		/* This should be __virtio16 but Ubuntu 14.04 doesn't see this deffinition. */
+		len += sizeof(uint16_t);
+	}
 
+	vva_len = len;
+	vq->used = (struct vring_used *)(uintptr_t)qva_to_vva(dev,
+			msg->payload.addr.used_user_addr, &vva_len);
+	if (vq->used == 0 || len != vva_len) {
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"(%d) failed to find used ring address.\n",
 			dev->vid);

@@ -242,6 +242,28 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue 
 	return 0;
 }
 
+static void
+_spdk_vhost_vq_used_flush(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
+			  bool do_kick)
+{
+	virtqueue->req_cnt += virtqueue->used_req_cnt;
+	virtqueue->used_req_cnt = 0;
+	if (!do_kick) {
+		return;
+	}
+
+	/* We don't want any interrupts in case of event index is enabled. */
+	if (virtqueue->avail_event) {
+		*virtqueue->avail_event = virtqueue->vring.last_avail_idx + virtqueue->vring.size;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
+		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
+		      virtqueue - vdev->virtqueue, virtqueue->vring.last_used_idx);
+
+	eventfd_write(virtqueue->vring.callfd, (eventfd_t)1);
+}
+
 int
 spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue)
 {
@@ -249,14 +271,7 @@ spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtque
 		return 0;
 	}
 
-	virtqueue->req_cnt += virtqueue->used_req_cnt;
-	virtqueue->used_req_cnt = 0;
-
-	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
-		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
-		      virtqueue - vdev->virtqueue, virtqueue->vring.last_used_idx);
-
-	eventfd_write(virtqueue->vring.callfd, (eventfd_t)1);
+	_spdk_vhost_vq_used_flush(vdev, virtqueue, true);
 	return 1;
 }
 
@@ -292,23 +307,80 @@ check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
 	}
 }
 
+static inline bool
+spdk_vhost_vq_used_is_event_needed(struct spdk_vhost_virtqueue *virtqueue)
+{
+	int need_event;
+	uint16_t old_idx;
+
+	/* Nothing to signal. */
+	if (virtqueue->used_req_cnt == 0) {
+		return false;
+	} else if (virtqueue->used_event != NULL) {
+		old_idx = virtqueue->vring.last_used_idx - virtqueue->used_req_cnt;
+
+		/* We use shadow event idx to avoid reading possibly cache-incoherent
+		 * event_idx that's continuously updated by a different CPU.
+		 */
+		need_event = vring_need_event(virtqueue->used_event_shadow, virtqueue->vring.last_used_idx,
+					      old_idx);
+		if (spdk_likely(need_event == 0)) {
+			return 0;
+		}
+
+		virtqueue->used_event_shadow = *virtqueue->used_event;
+		if ((uint16_t)(virtqueue->vring.last_used_idx - virtqueue->used_event_shadow) <=
+		    virtqueue->vring.size) {
+			/* We have read a stale event idx value. It could have been
+			 * crossed either just now or possibly a couple of iterations
+			 * ago. A proper value will be probably set by the driver in
+			 * a few ticks from now. Set our shadow idx to the last used
+			 * idx so that the next I/O will always cross it and will
+			 * read the actual event idx again. Normally we would read it
+			 * from inside of the interrupt handler, but for poll-mode
+			 * we'll have to simply poll it.
+			 *
+			 * Note: An event idx that's more than `vring.size` entries
+			 * behind is not achievable with a properly written interrupt-
+			 * based driver. We use it as a sign of a poll-mode driver,
+			 * which sets an unreachable event idx on purpose.
+			 */
+			virtqueue->used_event_shadow = virtqueue->vring.last_used_idx;
+
+			/* Still, we did cross the shadow event_idx and since the real
+			 * event_idx didn't point to anything newer, we have to
+			 * interrupt now.
+			 */
+			return 1;
+		}
+
+		/* We did cross the shadow event_idx, but the actual event_idx
+		 * pointed to a newer location, so check vring_need_event() again.
+		 */
+		return vring_need_event(virtqueue->used_event_shadow, virtqueue->vring.last_used_idx, old_idx);
+	} else {
+		return !(virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
+	}
+}
+
 void
 spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_virtqueue *virtqueue;
 	uint64_t now;
 	uint16_t q_idx;
+	bool do_kick;
 
 	if (vdev->coalescing_delay_time_base == 0) {
 		for (q_idx = 0; q_idx < vdev->max_queues; q_idx++) {
 			virtqueue = &vdev->virtqueue[q_idx];
 
-			if (virtqueue->vring.desc == NULL ||
-			    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+			if (virtqueue->vring.desc == NULL) {
 				continue;
 			}
 
-			spdk_vhost_vq_used_signal(vdev, virtqueue);
+			do_kick = spdk_vhost_vq_used_is_event_needed(virtqueue);
+			_spdk_vhost_vq_used_flush(vdev, virtqueue, do_kick);
 		}
 	} else {
 		now = spdk_get_ticks();
@@ -317,15 +389,21 @@ spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
 		for (q_idx = 0; q_idx < vdev->max_queues; q_idx++) {
 			virtqueue = &vdev->virtqueue[q_idx];
 
-			/* No need for event right now */
-			if (now < virtqueue->next_event_time ||
-			    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+			if (virtqueue->vring.desc == NULL) {
 				continue;
 			}
 
-			if (!spdk_vhost_vq_used_signal(vdev, virtqueue)) {
+			/* Is it the time for event?
+			 * Force flush to not everflow vring size. This is needed
+			 * for spdk_vhost_vq_used_is_signal_needed() to work correctly
+			 * in case of F_EVENT_IDX is negotiated and mixed poll-interrupt mode
+			 * initiator is used. */
+			if (now < virtqueue->next_event_time && virtqueue->used_req_cnt < virtqueue->vring.size) {
 				continue;
 			}
+
+			do_kick = spdk_vhost_vq_used_is_event_needed(virtqueue);
+			_spdk_vhost_vq_used_flush(vdev, virtqueue, do_kick);
 
 			/* Syscall is quite long so update time */
 			now = spdk_get_ticks();
@@ -1058,6 +1136,7 @@ static int
 start_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_virtqueue *q;
 	int rc = -1;
 	uint16_t i;
 
@@ -1074,50 +1153,64 @@ start_device(int vid)
 		goto out;
 	}
 
-	vdev->max_queues = 0;
-	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
-	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
-		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i].vring)) {
-			continue;
-		}
-
-		if (vdev->virtqueue[i].vring.desc == NULL ||
-		    vdev->virtqueue[i].vring.size == 0) {
-			continue;
-		}
-
-		/* Disable notifications. */
-		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
-			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
-			goto out;
-		}
-
-		vdev->max_queues = i + 1;
-	}
-
 	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
 		goto out;
 	}
 
+	vdev->max_queues = 0;
+	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
+	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
+		q = &vdev->virtqueue[i];
+
+		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
+			continue;
+		}
+
+		if (q->vring.desc == NULL || q->vring.size == 0) {
+			continue;
+		}
+
+		if (spdk_vhost_dev_has_feature(vdev, VIRTIO_RING_F_EVENT_IDX)) {
+			/* used_event and avail_event are published at end of the ring.
+			 *
+			 * FIXME: vring_used_event() and vring_avail_event() can't be used because
+			 * rte_vhost_vring use 'size' unstead of 'num'.
+			 */
+
+			q->used_event = (void *)&q->vring.avail->ring[q->vring.size];
+			q->avail_event = (void *)&q->vring.used->ring[q->vring.size];
+		} else if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
+			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
+			goto out;
+		}
+
+		/*
+		 * Not sure right now but this look like some kind of QEMU bug and guest IO
+		 * might be frozed without kicking all queues after live-migration. This look like
+		 * the previous vhost instance failed to effectively deliver all interrupts before
+		 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
+		 * should be ignored by guest virtio driver.
+		 *
+		 * Tested on QEMU 2.10.91 and 2.11.50.
+		 *
+		 * Calling _spdk_vhost_vq_used_flush() is also needed to set proper state in case
+		 * of VIRTIO_RING_F_EVENT_IDX.
+		 */
+		if (q->vring.callfd != -1) {
+			_spdk_vhost_vq_used_flush(vdev, q, true);
+
+			if (q->used_event) {
+				q->used_event_shadow = q->vring.last_used_idx;
+			}
+		}
+
+		vdev->max_queues = i + 1;
+	}
+
 	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
 		goto out;
-	}
-
-	/*
-	 * Not sure right now but this look like some kind of QEMU bug and guest IO
-	 * might be frozed without kicking all queues after live-migration. This look like
-	 * the previous vhost instance failed to effectively deliver all interrupts before
-	 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
-	 * should be ignored by guest virtio driver.
-	 *
-	 * Tested on QEMU 2.10.91 and 2.11.50.
-	 */
-	for (i = 0; i < vdev->max_queues; i++) {
-		if (vdev->virtqueue[i].vring.callfd != -1) {
-			eventfd_write(vdev->virtqueue[i].vring.callfd, (eventfd_t)1);
-		}
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
