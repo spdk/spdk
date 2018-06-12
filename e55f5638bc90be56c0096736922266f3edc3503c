@@ -1,0 +1,152 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "479fb53f_7ea53e04",
+        "filename": "autobuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T16:54:11Z",
+      "side": 1,
+      "message": "This looks unrelated to Vagrant, but we can change this as a separate patch. (It should be fine the way it is; it will just output a little extra noise in the build log.)",
+      "revId": "e55f5638bc90be56c0096736922266f3edc3503c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bda1d95_5bedddde",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T16:54:11Z",
+      "side": 1,
+      "message": "This part also looks fine, but again, not related to Vagrant.",
+      "revId": "e55f5638bc90be56c0096736922266f3edc3503c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "848d87b7_6b763035",
+        "filename": "scripts/run-spdk-autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T16:54:11Z",
+      "side": 1,
+      "message": "Inconsistent whitespace - please use tabs everywhere.",
+      "revId": "e55f5638bc90be56c0096736922266f3edc3503c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b37cd64_75268094",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T16:54:11Z",
+      "side": 1,
+      "message": "Ruby uses 2-space indent; please avoid tabs here.",
+      "revId": "e55f5638bc90be56c0096736922266f3edc3503c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29418cae_52123854",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T16:54:11Z",
+      "side": 1,
+      "message": "unbuntu -\u003e ubuntu",
+      "range": {
+        "startLine": 16,
+        "startChar": 8,
+        "endLine": 16,
+        "endChar": 17
+      },
+      "revId": "e55f5638bc90be56c0096736922266f3edc3503c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "123acafb_be4768bd",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T16:54:11Z",
+      "side": 1,
+      "message": "We have instructions that expect the SPDK dir to be /spdk inside the VM; is changing this to /home/vagrant/spdk_repo/spdk necessary?",
+      "range": {
+        "startLine": 77,
+        "startChar": 51,
+        "endLine": 77,
+        "endChar": 79
+      },
+      "revId": "e55f5638bc90be56c0096736922266f3edc3503c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3220b53c_83d98813",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T16:54:11Z",
+      "side": 1,
+      "message": "Why are these commented out?",
+      "revId": "e55f5638bc90be56c0096736922266f3edc3503c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a75afbe_46c43ba2",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T16:54:11Z",
+      "side": 1,
+      "message": "Inconsistent whitespace here.",
+      "revId": "e55f5638bc90be56c0096736922266f3edc3503c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
