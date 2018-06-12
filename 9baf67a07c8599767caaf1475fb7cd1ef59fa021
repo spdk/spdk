@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "41bb740d_9e995108",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T20:11:53Z",
+      "side": 1,
+      "message": "This is duplicated - I\u0027ll fix it up.",
+      "revId": "9baf67a07c8599767caaf1475fb7cd1ef59fa021",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27b09c7c_c57a1ac4",
         "filename": "shared_lib/Makefile",
         "patchSetId": 2
