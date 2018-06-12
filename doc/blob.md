@@ -57,6 +57,32 @@ store metadata in the form of key/value pairs with each blob which we'll refer t
 Blobstore owns the entire underlying device which is made up of a private Blobstore metadata region and the collection of
 blobs as managed by the application.
 
+@htmlonly
+
+  <canvas id="blob_hierarchy" width="810" height="110"></canvas>
+
+  <script>
+    let canvas = document.getElementById('blob_hierarchy');
+    let roughCanvas = rough.canvas(canvas);
+
+    // Blob
+    roughCanvas.rectangle(0, 0, 810, 110, { fill: '#7ED3F7', fillStyle: 'solid'});
+
+    for (var i = 0; i < 4; i++) {
+        // Cluster
+        var x = (i * 200) + 5;
+        var y = 5;
+        roughCanvas.rectangle(x, y, 190, 100, { fill: '#00AEEF' });
+
+        for (var j = 0; j < 4; j++) {
+            // Page
+            roughCanvas.rectangle(x + (j * 45) + 5, y + 5, 40, 90, { fill: '#003C71'})
+        }
+    }
+  </script>
+
+@endhtmlonly
+
 ### Atomicity
 
 For all Blobstore operations regarding atomicity, there is a dependency on the underlying device to guarantee atomic
