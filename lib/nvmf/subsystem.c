@@ -1245,3 +1245,9 @@ spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cn
 
 	return NULL;
 }
+
+uint32_t
+spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->max_allowed_nsid;
+}
