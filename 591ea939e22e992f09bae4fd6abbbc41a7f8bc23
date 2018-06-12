@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ce7aba5_a6069cf3",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T17:15:40Z",
+      "side": 1,
+      "message": "This is missing the \"max_namespaces\" parameter.\n\nSee https://review.gerrithub.io/#/c/spdk/spdk/+/414864",
+      "revId": "591ea939e22e992f09bae4fd6abbbc41a7f8bc23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f28d8ea2_7fb7aa51",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T17:15:40Z",
+      "side": 1,
+      "message": "Namespaces now also have a \"uuid\" field.",
+      "revId": "591ea939e22e992f09bae4fd6abbbc41a7f8bc23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
