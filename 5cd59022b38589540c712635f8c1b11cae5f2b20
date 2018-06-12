@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "cc1d95a6_ec72c542",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-12T17:10:12Z",
+      "side": 1,
+      "message": "Use tsc_last to keep the naming consistent",
+      "range": {
+        "startLine": 96,
+        "startChar": 14,
+        "endLine": 96,
+        "endChar": 22
+      },
+      "revId": "5cd59022b38589540c712635f8c1b11cae5f2b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f210474e_2ed60062",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-12T17:10:12Z",
+      "side": 1,
+      "message": "Use a more descriptive name",
+      "range": {
+        "startLine": 417,
+        "startChar": 44,
+        "endLine": 417,
+        "endChar": 47
+      },
+      "revId": "5cd59022b38589540c712635f8c1b11cae5f2b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "48588062_ea7e6f49",
         "filename": "lib/event/reactor.c",
         "patchSetId": 5
