@@ -362,7 +362,7 @@ static int
 vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 {
 	struct vhost_virtqueue *vq;
-	uint64_t len;
+	uint64_t len, vva_len;
 
 	if (dev->has_new_mem_table) {
 		vhost_setup_mem_table(dev);
@@ -397,11 +397,14 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 	vq = dev->virtqueue[msg->payload.addr.index];
 
 	len = sizeof(struct vring_avail) + sizeof(uint16_t) * vq->size;
+	if (dev->negotiated_features & VIRTIO_RING_F_EVENT_IDX) {
+		len += sizeof(__virtio16);
+	}
+
+	vva_len = len;
 	vq->avail = (struct vring_avail *)(uintptr_t)qva_to_vva(dev,
-			msg->payload.addr.avail_user_addr, &len);
-	if (vq->avail == 0 ||
-			len != sizeof(struct vring_avail)
-			+ sizeof(uint16_t) * vq->size) {
+			msg->payload.addr.avail_user_addr, &vva_len);
+	if (vq->avail == 0 || len != vva_len) {
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"(%d) failed to find avail ring address.\n",
 			dev->vid);
@@ -410,11 +413,14 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 
 	len = sizeof(struct vring_used) +
 		sizeof(struct vring_used_elem) * vq->size;
-	vq->used = (struct vring_used *)(uintptr_t)qva_to_vva(dev,
-			msg->payload.addr.used_user_addr, &len);
-	if (vq->used == 0 || len != sizeof(struct vring_used) +
-			sizeof(struct vring_used_elem) * vq->size) {
+	if (dev->negotiated_features & VIRTIO_RING_F_EVENT_IDX) {
+		len += sizeof(__virtio16);
+	}
 
+	vva_len = len;
+	vq->used = (struct vring_used *)(uintptr_t)qva_to_vva(dev,
+			msg->payload.addr.used_user_addr, &vva_len);
+	if (vq->used == 0 || len != vva_len) {
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"(%d) failed to find used ring address.\n",
 			dev->vid);
