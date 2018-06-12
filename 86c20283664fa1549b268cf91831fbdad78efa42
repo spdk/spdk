@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47bbf67a_b2f93486",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T23:41:56Z",
+      "side": 1,
+      "message": "This is missing a comma before the next element.",
+      "revId": "86c20283664fa1549b268cf91831fbdad78efa42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bd1d395_fb5aa440",
+        "filename": "lib/event/subsystems/bdev/bdev_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T23:41:56Z",
+      "side": 1,
+      "message": "You could also just let these be 0, since I assume 0 isn\u0027t a valid setting, but this is fine too.",
+      "revId": "86c20283664fa1549b268cf91831fbdad78efa42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51c9ee69_de0e7540",
+        "filename": "lib/event/subsystems/bdev/bdev_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T23:41:56Z",
+      "side": 1,
+      "message": "You can use spdk_jsonrpc_send_error_response_fmt() here to avoid the extra spdk_sprintf_alloc().",
+      "revId": "86c20283664fa1549b268cf91831fbdad78efa42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
