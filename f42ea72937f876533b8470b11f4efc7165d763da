@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "285e7227_b519a41c",
+        "filename": "lib/event/subsystems/bdev/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-12T19:39:58Z",
+      "side": 1,
+      "message": "It was to help determine if the value was specified or not by the RPC.\n\nI\u0027m changing it in the next version of the patch to be a uint32_t, and use UINT32_MAX as the determining factor.  That just means if someone specifies UINT32_MAX as a value we won\u0027t use it.  :)  But it\u0027s actually better than this version which wouldn\u0027t end up allowing anything bigger than INT32_MAX.",
+      "parentUuid": "7359947a_534148eb",
+      "revId": "f42ea72937f876533b8470b11f4efc7165d763da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cd2e8da_17051f90",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
