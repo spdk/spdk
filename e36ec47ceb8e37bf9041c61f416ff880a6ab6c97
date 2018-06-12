@@ -39,6 +39,30 @@
       "revId": "e36ec47ceb8e37bf9041c61f416ff880a6ab6c97",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1292ca5a_44f44023",
+        "filename": "test/vhost/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-12T11:23:45Z",
+      "side": 1,
+      "message": "This function is similar in some scripts but is not the same and it could be difficult to make common code. I can add this export to run_spdk_tgt bu this export is related to librados.",
+      "parentUuid": "173445bc_e260b607",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 28
+      },
+      "revId": "e36ec47ceb8e37bf9041c61f416ff880a6ab6c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
