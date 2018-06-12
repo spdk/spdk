@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9559c36c_0a80fc2a",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-06-12T04:08:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "626c8b34_89212901",
+      "revId": "a4e97c8ccad3e3afe299276cc674bbd10b9a15b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97647383_d8981687",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 4
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "ec1bb1d9_48d51673",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-06-12T04:08:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "97647383_d8981687",
+      "range": {
+        "startLine": 365,
+        "startChar": 5,
+        "endLine": 365,
+        "endChar": 26
+      },
+      "revId": "a4e97c8ccad3e3afe299276cc674bbd10b9a15b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb0c3086_22ebacee",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 4
@@ -53,6 +95,30 @@
       "writtenOn": "2018-06-11T16:20:35Z",
       "side": 1,
       "message": "Based on my reading of the spec, this means that the device may complete the SYNCHRONIZE CACHE before it actually flushes the data to the medium, which doesn\u0027t sound like what we want.  I think you can just pass 0 here.",
+      "range": {
+        "startLine": 366,
+        "startChar": 5,
+        "endLine": 366,
+        "endChar": 29
+      },
+      "revId": "a4e97c8ccad3e3afe299276cc674bbd10b9a15b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8b29b70_d9f184eb",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-06-12T04:08:05Z",
+      "side": 1,
+      "message": "Done. Thank you for reviewing my code",
+      "parentUuid": "cb0c3086_22ebacee",
       "range": {
         "startLine": 366,
         "startChar": 5,
