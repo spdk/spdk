@@ -3843,6 +3843,8 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
 		return;
 	}
+
+	_spdk_bs_blob_list_remove(origblob);
 	origblob->parent_id = newblob->id;
 
 	/* Create new back_bs_dev for snapshot */
@@ -3883,6 +3885,18 @@ _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bs
 	newblob->back_bs_dev = origblob->back_bs_dev;
 	/* Set invalid flags from origblob */
 	newblob->invalid_flags = origblob->invalid_flags;
+
+	/* inherit parent from original blob if set */
+	newblob->parent_id = origblob->parent_id;
+	if (origblob->parent_id != SPDK_BLOBID_INVALID) {
+		/* Set internal xattr for snapshot id */
+		bserrno = _spdk_blob_set_xattr(newblob, BLOB_SNAPSHOT,
+				&origblob->parent_id, sizeof(spdk_blob_id), true);
+		if (bserrno != 0) {
+			_spdk_bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
+			return;
+		}
+	}
 
 	/* Copy cluster map to snapshot */
 	memcpy(newblob->active.clusters, origblob->active.clusters,
