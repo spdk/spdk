@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cb8e3056_558c60c0",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-12T17:52:52Z",
+      "side": 1,
+      "message": "Agreed.\n\nAlso at line 526, we only need to update \"now\" if took_action \u003d\u003d false.  Otherwise we can just rely on the value of \"now\" that was calculated after either the event or poller ran (lines 504 and 514).",
+      "parentUuid": "bf3024c1_6be312a2",
+      "revId": "165515ec945ceccff5858bffb38ea74ceb29d25e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "829a6d1a_f7add7c2",
         "filename": "lib/event/reactor.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-12T08:33:51Z",
       "side": 1,
       "message": "should we update tsc_stats-\u003eidle_tsc in this path?",
+      "revId": "165515ec945ceccff5858bffb38ea74ceb29d25e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7ce9d91_97796f74",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-12T17:52:52Z",
+      "side": 1,
+      "message": "No - this idle_started is actually not associated at all with the rest of Vishal\u0027s work here.  It is related to putting the reactor to sleep if there are no events or pollers running on this reactor.  Ben and I were just talking about this - really we should remove this code now and when dynamic threading is added, we can put a reactor to sleep if it has no SPDK threads assigned to it.",
+      "parentUuid": "829a6d1a_f7add7c2",
       "revId": "165515ec945ceccff5858bffb38ea74ceb29d25e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
