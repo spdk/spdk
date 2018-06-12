@@ -44,6 +44,7 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/json.h"
+#include "spdk/queue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -888,6 +889,53 @@ int spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *bdev_desc,
  * \param bdev_io I/O request.
  */
 void spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
+
+/**
+ * Block device I/O wait callback
+ *
+ * Callback function to notify when an spdk_bdev_io structure is available
+ * to satisfy a call to one of the @ref bdev_io_submit_functions.
+ */
+typedef void (*spdk_bdev_io_wait_cb)(void *cb_arg);
+
+/**
+ * Structure to register a callback when an spdk_bdev_io becomes available.
+ */
+struct spdk_bdev_io_wait_entry {
+	struct spdk_bdev			*bdev;
+	spdk_bdev_io_wait_cb			cb_fn;
+	void					*cb_arg;
+	TAILQ_ENTRY(spdk_bdev_io_wait_entry)	link;
+};
+
+/**
+ * Add an entry into the calling thread's queue to be notified when an
+ * spdk_bdev_io becomes available.
+ *
+ * When one of the @ref bdev_io_submit_functions returns -ENOMEM, it means
+ * the spdk_bdev_io buffer pool has no available buffers. This function may
+ * be called to register a callback to be notified when a buffer becomes
+ * available on the calling thread.
+ *
+ * The callback function will always be called on the same thread as this
+ * function was called.
+ *
+ * This function must only be called immediately after one of the
+ * @ref bdev_io_submit_functions returns -ENOMEM.
+ *
+ * \param bdev Block device.  The block device that the caller will submit
+ *             an I/O to when the callback is invoked.  Must match the bdev
+ *             member in the entry parameter.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param entry Data structure allocated by the caller specifying the callback
+ *              function and argument.
+ *
+ * \return 0 on success.
+ *         -EINVAL if bdev parameter does not match bdev member in entry
+ *         -EINVAL if an spdk_bdev_io structure was available on this thread.
+ */
+int spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			    struct spdk_bdev_io_wait_entry *entry);
 
 /**
  * Return I/O statistics for this channel.
