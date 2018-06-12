@@ -251,9 +251,16 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		struct spdk_nvmf_ns *ns;
 		struct spdk_nvmf_ns_opts ns_opts;
+		uint32_t max_namespaces;
 
 		spdk_json_write_name(w, "serial_number");
 		spdk_json_write_string(w, spdk_nvmf_subsystem_get_sn(subsystem));
+
+		max_namespaces = spdk_nvmf_subsystem_get_max_namespaces(subsystem);
+		if (max_namespaces != 0) {
+			spdk_json_write_named_uint32(w, "max_namespaces", max_namespaces);
+		}
+
 		spdk_json_write_name(w, "namespaces");
 		spdk_json_write_array_begin(w);
 		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
