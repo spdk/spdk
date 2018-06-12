@@ -96,7 +96,6 @@ struct bdev_iscsi_conn_req {
 	spdk_bdev_iscsi_create_cb		create_cb;
 	spdk_bdev_iscsi_create_cb		create_cb_arg;
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
-	bool					deleted;
 };
 
 static int
@@ -473,7 +472,7 @@ complete_conn_req(struct bdev_iscsi_conn_req *req, struct spdk_bdev *bdev,
 {
 	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
 	req->create_cb(req->create_cb_arg, bdev, status);
-	req->deleted = true;
+	free(req);
 }
 
 static int
@@ -592,10 +591,6 @@ iscsi_bdev_conn_poll(void *arg)
 			if (iscsi_service(req->context, pfd.revents) < 0) {
 				SPDK_ERRLOG("iscsi_service failed: %s\n", iscsi_get_error(req->context));
 			}
-		}
-
-		if (req->deleted) {
-			free(req);
 		}
 	}
 
