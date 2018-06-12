@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f60e357c_b16872af",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T15:50:31Z",
+      "side": 1,
+      "message": "I don\u0027t know if using the lba_count for the app tag makes sense for fio, since it can easily be configured to use a range of blocksizes within a single job.  Maybe that\u0027s OK if we document it.",
+      "revId": "0ffafba18044385b1862c99fcbbc0c30fbf07449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dce20aa4_0e678718",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T15:50:31Z",
+      "side": 1,
+      "message": "Maybe \"Expected\" rather than \"Preferred\"?",
+      "range": {
+        "startLine": 540,
+        "startChar": 7,
+        "endLine": 540,
+        "endChar": 16
+      },
+      "revId": "0ffafba18044385b1862c99fcbbc0c30fbf07449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46f3ea76_9bc99dc4",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T15:50:31Z",
+      "side": 1,
+      "message": "fio_do_nvme_pi_check() looks quite expensive to call for every I/O; can we do some of these checks at startup and store the result in spdk_fio_qpair, for example?",
+      "revId": "0ffafba18044385b1862c99fcbbc0c30fbf07449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
