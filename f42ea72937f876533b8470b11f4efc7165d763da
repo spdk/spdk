@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7359947a_534148eb",
+        "filename": "lib/event/subsystems/bdev/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T18:06:40Z",
+      "side": 1,
+      "message": "These are uint32_t in the bdev options struct; any reason to make them signed here?",
+      "revId": "f42ea72937f876533b8470b11f4efc7165d763da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cd2e8da_17051f90",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T18:06:40Z",
+      "side": 1,
+      "message": "I\u0027d prefer to explicitly name the parameters (for consistency, if nothing else), e.g. bdev_io_pool_size\u003dargs.bdev_io_pool_size.",
+      "range": {
+        "startLine": 115,
+        "startChar": 47,
+        "endLine": 115,
+        "endChar": 69
+      },
+      "revId": "f42ea72937f876533b8470b11f4efc7165d763da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1ad18cd_8ccba9ac",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T18:06:40Z",
+      "side": 1,
+      "message": "If these are meant to be optional, they should have a \u003dNone appended.",
+      "range": {
+        "startLine": 1,
+        "startChar": 29,
+        "endLine": 1,
+        "endChar": 46
+      },
+      "revId": "f42ea72937f876533b8470b11f4efc7165d763da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d54c697_27952e98",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T18:06:40Z",
+      "side": 1,
+      "message": "Also document the args as (optional).",
+      "revId": "f42ea72937f876533b8470b11f4efc7165d763da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
