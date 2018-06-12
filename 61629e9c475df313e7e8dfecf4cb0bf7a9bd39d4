@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1a5e2f3_93d2c03e",
+        "filename": "app/nvmf_tgt/Makefile",
+        "patchSetId": 13
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T17:57:08Z",
+      "side": 1,
+      "message": "This should already be added via $(COPY_MODULES_LINKER_ARGS).",
+      "range": {
+        "startLine": 44,
+        "startChar": 58,
+        "endLine": 44,
+        "endChar": 67
+      },
+      "revId": "61629e9c475df313e7e8dfecf4cb0bf7a9bd39d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15cd443b_cf76b951",
+        "filename": "app/nvmf_tgt/Makefile",
+        "patchSetId": 13
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T17:57:08Z",
+      "side": 1,
+      "message": "The dependency list is missing $(COPY_MODULES_FILES), which is why \u0027make\u0027 does not rebuild nvmf_tgt when the copy engine RPC code changes without \u0027make clean\u0027. This problem is not introduced by this patch, so we could fix it separately.",
+      "revId": "61629e9c475df313e7e8dfecf4cb0bf7a9bd39d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "601aa0f5_e249bc39",
+        "filename": "scripts/rpc/ioat.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T17:57:08Z",
+      "side": 1,
+      "message": "We should put the string splitting code into scripts/rpc.py and pass a Python list of individual PCI addresses as pci_whitelist.",
+      "revId": "61629e9c475df313e7e8dfecf4cb0bf7a9bd39d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
