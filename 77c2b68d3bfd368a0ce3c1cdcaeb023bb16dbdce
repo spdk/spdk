@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24df14a1_b2fc9327",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-12T00:08:46Z",
+      "side": 1,
+      "message": "In change https://review.gerrithub.io/#/c/spdk/spdk/+/414293/ an\nAPI for this purpose was defined.\n\"spdk_thread_get_total_num\". In that function I was planning to use a global variable to keep track of the number of threads instead of locking and counting the number.\n\nI think it would be better to maintain a count that can be directly returned instead of locking and iterating?",
+      "revId": "77c2b68d3bfd368a0ce3c1cdcaeb023bb16dbdce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
