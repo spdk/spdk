@@ -15,40 +15,18 @@
 
 A vhost target provides a local storage service as a process running on a local machine.
 It is capable of exposing virtualized block devices to QEMU instances or other arbitrary
-processes. These processes communicate with the vhost target using the
-[virtio protocol](https://wiki.libvirt.org/page/Virtio), a standardized protocol for
-paravirtualized devices.
+processes.
+
+The following diagram presents how QEMU-based VM communicates with SPDK Vhost-SCSI device.
+
+![QEMU/SPDK vhost data flow](img/qemu_vhost_data_flow.svg)
+
+The diagram, and the vhost protocol itself is described in @ref vhost_processing doc.
 
 SPDK provides an accelerated vhost target by applying the same user space and polling
-techniques as other components in SPDK.  Since SPDK is polling for virtio submissions,
-it can signal the virtio driver to skip notifications on submission.  This avoids VMEXITs on I/O
-submission and can significantly reduce CPU usage in the guest VM on heavy I/O workloads.
-
-The following diagram presents how QEMU-based VM communicates with an SPDK vhost device.
-
-    +-------QEMU-VM--------+             +---------------SPDK-vhost-------------+
-    |                      |             |                                      |
-    |  +----------------+  |             |  +--------------------------------+  |
-    |  |                |  |             |  |                                |  |
-    |  |  Virtio-SCSI   |  |  eventfd    |  |               +-------------+  |  |
-    |  |  Linux driver  |  |  interrupt  |  |  Virtio-SCSI  |             |  |  |
-    |  |                |  <----------------+  device       |  NVMe disk  |  |  |
-    |  +--------^-------+  |             |  |               |             |  |  |
-    |           |          |             |  |               +-------^-----+  |  |
-    +----------------------+             |  |                       |        |  |
-                |                        |  +----------^---------------------+  |
-                |                        |             |            |           |
-                |                        +--------------------------------------+
-                |                                      |            |
-                |                              polling |            | DMA
-                |                                      |            |
-    +-----------v----Shared hugepage memory------------+------------------------+
-    |                                                               |           |
-    |  +----------------------------------+-------------------------v--------+  |
-    +  |            Virtqueues            |              Buffers             |  |
-    |  +----------------------------------+----------------------------------+  |
-    |                                                                           |
-    +---------------------------------------------------------------------------+
+techniques as other components in SPDK.  Since SPDK is polling for vhost submissions,
+it can signal the VM to skip notifications on submission.  This avoids VMEXITs on I/O
+submission and can significantly reduce CPU usage in the VM on heavy I/O workloads.
 
 # Prerequisites {#vhost_prereqs}
 
@@ -135,7 +113,7 @@ will create a 64MB malloc bdev with 512-byte block size.
 scripts/rpc.py construct_malloc_bdev 64 512 -b Malloc0
 ~~~
 
-## Create a virtio device {#vhost_vdev_create}
+## Create a vhost device {#vhost_vdev_create}
 
 ### Vhost-SCSI
 
