@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccb53492_ee77a0a9",
+        "filename": "intel-ipsec-mb",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-12T19:40:32Z",
+      "side": 1,
+      "message": "The version is fixed to this commit - we can definitely update it to the new release if that\u0027s needed for DPDK.",
+      "revId": "2efef39ede03aecb0fa6366c06d7e6b4a436b0cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
