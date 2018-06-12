@@ -112,6 +112,7 @@ struct nvme_rdma_qpair {
 	struct spdk_nvme_rdma_mr_map		*mr_map;
 
 	TAILQ_HEAD(, spdk_nvme_rdma_req)	free_reqs;
+	TAILQ_HEAD(, spdk_nvme_rdma_req)	outstanding_reqs;
 };
 
 struct spdk_nvme_rdma_req {
@@ -172,6 +173,7 @@ nvme_rdma_req_get(struct nvme_rdma_qpair *rqpair)
 	rdma_req = TAILQ_FIRST(&rqpair->free_reqs);
 	if (rdma_req) {
 		TAILQ_REMOVE(&rqpair->free_reqs, rdma_req, link);
+		TAILQ_INSERT_TAIL(&rqpair->outstanding_reqs, rdma_req, link);
 	}
 
 	return rdma_req;
@@ -180,6 +182,7 @@ nvme_rdma_req_get(struct nvme_rdma_qpair *rqpair)
 static void
 nvme_rdma_req_put(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
+	TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
 	TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
 }
 
@@ -401,6 +404,7 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 	}
 
 	TAILQ_INIT(&rqpair->free_reqs);
+	TAILQ_INIT(&rqpair->outstanding_reqs);
 	for (i = 0; i < rqpair->num_entries; i++) {
 		struct spdk_nvme_rdma_req	*rdma_req;
 		struct spdk_nvme_cmd		*cmd;
