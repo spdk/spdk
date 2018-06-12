@@ -51,6 +51,24 @@
       "revId": "9baf67a07c8599767caaf1475fb7cd1ef59fa021",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "590c6f4f_09d236d1",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-12T20:12:49Z",
+      "side": 1,
+      "message": "i completely misread this",
+      "parentUuid": "afcf8765_4eeb169b",
+      "revId": "9baf67a07c8599767caaf1475fb7cd1ef59fa021",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
