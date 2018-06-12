@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "99d4a497_728e5b6e",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 29
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-12T15:16:08Z",
+      "side": 1,
+      "message": "I would have to agree with Pawel on his previous comment here. The locking lvol-\u003emutex around this call in vbdev doesn\u0027t seem like the most elegant solution. Trying to work out if there is a better way to do that.",
+      "range": {
+        "startLine": 212,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 49
+      },
+      "revId": "005c9a5e0f3617fcecdb85f133f2b3ba9d3daadb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2429211b_f845f90d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-12T15:16:08Z",
+      "side": 1,
+      "message": "Can this path be removed, since _vbdev_lvol_close_cb() is no longer used when unregistering ?\nEven better, if moved _vbdev_lvol_close_cb() down and given more appropriate \"examine\" related name.",
+      "range": {
+        "startLine": 501,
+        "startChar": 0,
+        "endLine": 507,
+        "endChar": 2
+      },
+      "revId": "005c9a5e0f3617fcecdb85f133f2b3ba9d3daadb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfa1277c_6d3bfeed",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-12T15:16:08Z",
+      "side": 1,
+      "message": "I don\u0027t think this is needed here.",
+      "range": {
+        "startLine": 561,
+        "startChar": 38,
+        "endLine": 561,
+        "endChar": 71
+      },
+      "revId": "005c9a5e0f3617fcecdb85f133f2b3ba9d3daadb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a979795_c6cc9107",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 29
