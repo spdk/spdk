@@ -749,6 +749,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		}
 		case 't':
+#ifndef DEBUG
+			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
+				argv[0]);
+			usage(app_usage);
+			rval = SPDK_APP_PARSE_ARGS_FAIL;
+			goto parse_done;
+#else
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
@@ -757,13 +764,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto parse_done;
 			}
 			opts->print_level = SPDK_LOG_DEBUG;
-#ifndef DEBUG
-			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
-				argv[0]);
-			usage(app_usage);
-			rval = SPDK_APP_PARSE_ARGS_FAIL;
-			goto parse_done;
-#else
 			break;
 #endif
 		case 'u':
