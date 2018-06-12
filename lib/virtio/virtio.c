@@ -480,7 +480,7 @@ virtqueue_req_flush(struct virtqueue *vq)
 		/* Set used event idx to a value the device will never reach.
 		 * This effectively disables interrupts.
 		 */
-		vring_used_event(&vq->vq_ring) = vq->vq_used_cons_idx - vq->vq_nentries - 1;
+		vring_used_event(&vq->vq_ring) = vq->vq_used_cons_idx + vq->vq_nentries;
 
 		if (!vring_need_event(vring_avail_event(&vq->vq_ring),
 				      vq->vq_avail_idx,
