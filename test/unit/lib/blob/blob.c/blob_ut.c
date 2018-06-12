@@ -4088,13 +4088,13 @@ blob_inflate_rw(void)
 /**
  * Snapshot-clones relation test
  *
- *      snapshot
- *          |
- *     +----+----+
- *     |         |
- *   blob      clone
- *     |
- *  clone2
+ *         snapshot
+ *            |
+ *      +-----+-----+
+ *      |           |
+ *   blob(ro)   snapshot2
+ *      |           |
+ *   clone2      clone
  */
 static void
 blob_relations(void)
@@ -4103,8 +4103,8 @@ blob_relations(void)
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts bs_opts;
 	struct spdk_blob_opts opts;
-	struct spdk_blob *blob, *snapshot, *clone, *clone2;
-	spdk_blob_id blobid, cloneid, snapshotid, cloneid2;
+	struct spdk_blob *blob, *snapshot, *snapshot2, *clone, *clone2;
+	spdk_blob_id blobid, cloneid, snapshotid, cloneid2, snapshotid2;
 	int rc;
 	size_t count;
 	spdk_blob_id ids[10];
@@ -4139,6 +4139,7 @@ blob_relations(void)
 	CU_ASSERT(!spdk_blob_is_thin_provisioned(blob));
 
 	/* blob should not have underlying snapshot nor clones */
+	CU_ASSERT(blob->parent_id == SPDK_BLOBID_INVALID);
 	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == SPDK_BLOBID_INVALID);
 	count = SPDK_COUNTOF(ids);
 	rc = spdk_blob_get_clones(bs, blobid, ids, &count);
@@ -4161,6 +4162,7 @@ blob_relations(void)
 	CU_ASSERT(spdk_blob_is_read_only(snapshot));
 	CU_ASSERT(spdk_blob_is_snapshot(snapshot));
 	CU_ASSERT(!spdk_blob_is_clone(snapshot));
+	CU_ASSERT(snapshot->parent_id == SPDK_BLOBID_INVALID);
 	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, snapshotid) == SPDK_BLOBID_INVALID);
 
 	/* Check if original blob is converted to the clone of snapshot */
@@ -4168,7 +4170,7 @@ blob_relations(void)
 	CU_ASSERT(!spdk_blob_is_snapshot(blob));
 	CU_ASSERT(spdk_blob_is_clone(blob));
 	CU_ASSERT(spdk_blob_is_thin_provisioned(blob));
-
+	CU_ASSERT(blob->parent_id == snapshotid);
 	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == snapshotid);
 
 	count = SPDK_COUNTOF(ids);
@@ -4194,7 +4196,7 @@ blob_relations(void)
 	CU_ASSERT(!spdk_blob_is_snapshot(clone));
 	CU_ASSERT(spdk_blob_is_clone(clone));
 	CU_ASSERT(spdk_blob_is_thin_provisioned(clone));
-
+	CU_ASSERT(clone->parent_id == snapshotid);
 	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, cloneid) == snapshotid);
 
 	count = SPDK_COUNTOF(ids);
@@ -4210,7 +4212,41 @@ blob_relations(void)
 	CU_ASSERT(ids[0] == cloneid || ids[1] == cloneid);
 
 
-	/* 4. Try to create clone from read only blob */
+	/* 4. Create snapshot of the clone */
+
+	spdk_bs_create_snapshot(bs, cloneid, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid2 = g_blobid;
+
+	spdk_bs_open_blob(bs, snapshotid2, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot2 = g_blob;
+
+	CU_ASSERT(spdk_blob_is_read_only(snapshot2));
+	CU_ASSERT(spdk_blob_is_snapshot(snapshot2));
+	CU_ASSERT(spdk_blob_is_clone(snapshot2));
+	CU_ASSERT(snapshot2->parent_id == snapshotid);
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, snapshotid2) == snapshotid);
+
+	/* Check if clone is converted to the clone of snapshot2 and snapshot2
+	 * is a child of snapshot */
+	CU_ASSERT(!spdk_blob_is_read_only(clone));
+	CU_ASSERT(!spdk_blob_is_snapshot(clone));
+	CU_ASSERT(spdk_blob_is_clone(clone));
+	CU_ASSERT(spdk_blob_is_thin_provisioned(clone));
+	CU_ASSERT(clone->parent_id == snapshotid2);
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, cloneid) == snapshotid2);
+
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, snapshotid2, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 1);
+	CU_ASSERT(ids[0] == cloneid);
+
+
+	/* 5. Try to create clone from read only blob */
 
 	/* Mark blob as read only */
 	spdk_blob_set_read_only(blob);
@@ -4262,8 +4298,14 @@ blob_relations(void)
 	spdk_blob_close(snapshot, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
+	spdk_blob_close(snapshot2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
 	/* Try to delete snapshot with created clones */
 	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
+	spdk_bs_delete_blob(bs, snapshotid2, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno != 0);
 
 	spdk_bs_unload(bs, bs_op_complete, NULL);
@@ -4303,7 +4345,7 @@ blob_relations(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(count == 2);
 	CU_ASSERT(ids[0] == blobid || ids[1] == blobid);
-	CU_ASSERT(ids[0] == cloneid || ids[1] == cloneid);
+	CU_ASSERT(ids[0] == snapshotid2 || ids[1] == snapshotid2);
 
 	/* blob */
 	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == snapshotid);
@@ -4314,11 +4356,19 @@ blob_relations(void)
 	CU_ASSERT(ids[0] == cloneid2);
 
 	/* clone */
-	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, cloneid) == snapshotid);
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, cloneid) == snapshotid2);
 	count = SPDK_COUNTOF(ids);
 	rc = spdk_blob_get_clones(bs, cloneid, ids, &count);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(count == 0);
+
+	/* snapshot2 */
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, snapshotid2) == snapshotid);
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, snapshotid2, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 1);
+	CU_ASSERT(ids[0] == cloneid);
 
 	/* clone2 */
 	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, cloneid2) == blobid);
@@ -4327,15 +4377,23 @@ blob_relations(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(count == 0);
 
-	/* Try to delete all blobs */
-	spdk_bs_delete_blob(bs, cloneid, blob_op_complete, NULL);
-	CU_ASSERT(g_bserrno == 0);
+	/* Try to delete all blobs in the worse possible order */
 
-	/* Try to delete snapshot with clones */
 	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno != 0);
 
-	/* Try to delete ro blob with clones */
+	spdk_bs_delete_blob(bs, snapshotid2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
+	spdk_bs_delete_blob(bs, cloneid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, snapshotid2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
 	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno != 0);
 
