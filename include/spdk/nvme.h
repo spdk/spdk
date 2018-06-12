@@ -1223,6 +1223,8 @@ int spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
  * payload memory segment
  * \param metadata virtual address pointer to the metadata payload, the length
  *	           of metadata is specified by spdk_nvme_ns_get_md_size()
+ * \param apptag_mask application tag mask.
+ * \param apptag application tag to use end-to-end protection information.
  *
  * \return 0 if successfully submitted, ENOMEM if an nvme_request
  *	     structure cannot be allocated for the I/O request
@@ -1234,7 +1236,8 @@ int spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
 				    uint64_t lba, uint32_t lba_count,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
 				    spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
-				    spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata);
+				    spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
+				    uint16_t apptag_mask, uint16_t apptag);
 
 /**
  * \brief Submits a write I/O to the specified NVMe namespace.
@@ -1351,6 +1354,8 @@ int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  * payload memory segment
  * \param metadata virtual address pointer to the metadata payload, the length
  *	           of metadata is specified by spdk_nvme_ns_get_md_size()
+ * \param apptag_mask application tag mask.
+ * \param apptag application tag to use end-to-end protection information.
  *
  * \return 0 if successfully submitted, ENOMEM if an nvme_request
  *	     structure cannot be allocated for the I/O request
@@ -1362,7 +1367,8 @@ int spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpa
 				   uint64_t lba, uint32_t lba_count,
 				   spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
 				   spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
-				   spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata);
+				   spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
+				   uint16_t apptag_mask, uint16_t apptag);
 
 /**
  * \brief Submits a read I/O to the specified NVMe namespace.

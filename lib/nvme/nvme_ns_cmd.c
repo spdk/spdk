@@ -674,7 +674,8 @@ spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 			       uint64_t lba, uint32_t lba_count,
 			       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
 			       spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
-			       spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata)
+			       spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
+			       uint16_t apptag_mask, uint16_t apptag)
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
@@ -686,7 +687,7 @@ spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, metadata);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
-			      io_flags, 0, 0, true);
+			      io_flags, apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (spdk_nvme_ns_check_request_length(lba_count,
@@ -784,7 +785,8 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 				uint64_t lba, uint32_t lba_count,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
 				spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
-				spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata)
+				spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
+				uint16_t apptag_mask, uint16_t apptag)
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
@@ -796,7 +798,7 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, metadata);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
-			      io_flags, 0, 0, true);
+			      io_flags, apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (spdk_nvme_ns_check_request_length(lba_count,
