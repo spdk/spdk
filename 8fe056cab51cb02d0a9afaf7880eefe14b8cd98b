@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88a97f5c_6d09a336",
+        "filename": "test/nvmf/jsonnvmf/json_config.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-13T01:19:13Z",
+      "side": 1,
+      "message": "Is this for debug? There will be some workaround to permission error but this looks not necessary. I cherry-picked your patch and by removing these two cats all tests completed successfully.",
+      "range": {
+        "startLine": 19,
+        "startChar": 1,
+        "endLine": 19,
+        "endChar": 22
+      },
+      "revId": "8fe056cab51cb02d0a9afaf7880eefe14b8cd98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b6ddb8c_79a57ed7",
+        "filename": "test/nvmf/jsonnvmf/json_config.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-13T01:19:13Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 22
+      },
+      "revId": "8fe056cab51cb02d0a9afaf7880eefe14b8cd98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
