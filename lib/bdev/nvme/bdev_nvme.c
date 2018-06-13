@@ -126,6 +126,7 @@ static int bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel
 static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
+static int nvme_ctrlr_ns_active_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
 
 static int
 bdev_nvme_get_ctx_size(void)
@@ -685,6 +686,66 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.get_spin_time		= bdev_nvme_get_spin_time,
 };
 
+static int
+nvme_ctrlr_ns_active_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
+{
+	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
+	struct nvme_bdev	*bdev;
+	struct spdk_nvme_ns	*ns;
+	const struct spdk_uuid	*uuid;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	int			rc;
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	if (!ns) {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Skipping invalid NS %d\n", nsid);
+		return -EINVAL;
+	}
+
+	bdev = &nvme_ctrlr->bdevs[nsid - 1];
+	bdev->id = nsid;
+
+	bdev->nvme_ctrlr = nvme_ctrlr;
+	bdev->ns = ns;
+	nvme_ctrlr->ref++;
+
+	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
+	if (!bdev->disk.name) {
+		return -ENOMEM;
+	}
+	bdev->disk.product_name = "NVMe disk";
+
+	bdev->disk.write_cache = 0;
+	if (cdata->vwc.present) {
+		/* Enable if the Volatile Write Cache exists */
+		bdev->disk.write_cache = 1;
+	}
+	bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
+	bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
+	bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
+
+	uuid = spdk_nvme_ns_get_uuid(ns);
+	if (uuid != NULL) {
+		bdev->disk.uuid = *uuid;
+	}
+
+	bdev->disk.ctxt = bdev;
+	bdev->disk.fn_table = &nvmelib_fn_table;
+	bdev->disk.module = &nvme_if;
+	rc = spdk_bdev_register(&bdev->disk);
+	if (rc) {
+		free(bdev->disk.name);
+		memset(bdev, 0, sizeof(*bdev));
+		return rc;
+	}
+	bdev->active = true;
+
+	return 0;
+}
+
+
 static bool
 hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_ctrlr_opts *opts)
@@ -1118,62 +1179,16 @@ bdev_nvme_library_fini(void)
 static int
 nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 {
-	struct nvme_bdev	*bdev;
-	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
-	struct spdk_nvme_ns	*ns;
-	const struct spdk_nvme_ctrlr_data *cdata;
-	const struct spdk_uuid	*uuid;
 	int			rc;
 	int			bdev_created = 0;
 	uint32_t		nsid;
 
-	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-
-	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-		if (!ns) {
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Skipping invalid NS %d\n", nsid);
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_ctrlr->ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(nvme_ctrlr->ctrlr, nsid)) {
+		rc = nvme_ctrlr_ns_active_bdev(nvme_ctrlr, nsid);
+		if (rc != 0) {
 			continue;
 		}
-
-		bdev = &nvme_ctrlr->bdevs[nsid - 1];
-		bdev->id = nsid;
-
-		bdev->nvme_ctrlr = nvme_ctrlr;
-		bdev->ns = ns;
-		nvme_ctrlr->ref++;
-
-		bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
-		if (!bdev->disk.name) {
-			break;
-		}
-		bdev->disk.product_name = "NVMe disk";
-
-		bdev->disk.write_cache = 0;
-		if (cdata->vwc.present) {
-			/* Enable if the Volatile Write Cache exists */
-			bdev->disk.write_cache = 1;
-		}
-		bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
-		bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
-		bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
-
-		uuid = spdk_nvme_ns_get_uuid(ns);
-		if (uuid != NULL) {
-			bdev->disk.uuid = *uuid;
-		}
-
-		bdev->disk.ctxt = bdev;
-		bdev->disk.fn_table = &nvmelib_fn_table;
-		bdev->disk.module = &nvme_if;
-		rc = spdk_bdev_register(&bdev->disk);
-		if (rc) {
-			free(bdev->disk.name);
-			break;
-		}
-		bdev->active = true;
-
 		bdev_created++;
 	}
 
