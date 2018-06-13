@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "df2fde4b_72d3ea91",
+        "filename": "test/nvmf/jsonnvmf/json_config.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-13T09:42:38Z",
+      "side": 1,
+      "message": "Yes, it\u0027s for debugging purposes, TP have some permission issues so this will fail. I\u0027m checking this with Jenkins where there is no problem with cat but test fails for other reason. To run this test locally You should have rdma nic on Your setup https://10.102.17.104:8080/job/NVMeOF_tests/job/nvmf_autotest/3925/console",
+      "parentUuid": "88a97f5c_6d09a336",
+      "range": {
+        "startLine": 19,
+        "startChar": 1,
+        "endLine": 19,
+        "endChar": 22
+      },
+      "revId": "8fe056cab51cb02d0a9afaf7880eefe14b8cd98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b6ddb8c_79a57ed7",
         "filename": "test/nvmf/jsonnvmf/json_config.sh",
         "patchSetId": 15
