@@ -2115,7 +2115,7 @@ spdk_iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 			       struct spdk_iscsi_pdu *rsp_pdu, struct iscsi_param **params,
 			       int alloc_len)
 {
-	int rc = 0;
+	int rc;
 	struct iscsi_bhs_login_rsp *rsph;
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
@@ -2552,19 +2552,17 @@ spdk_get_scsi_task_from_ttt(struct spdk_iscsi_conn *conn,
 {
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_data_in *datain_bhs;
-	struct spdk_iscsi_task *task = NULL;
 
 	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
 		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
 			datain_bhs = (struct iscsi_bhs_data_in *)&pdu->bhs;
 			if (from_be32(&datain_bhs->ttt) == transfer_tag) {
-				task = pdu->task;
-				break;
+				return pdu->task;
 			}
 		}
 	}
 
-	return task;
+	return NULL;
 }
 
 /* This function returns the spdk_scsi_task by searching the snack list via
@@ -2575,18 +2573,16 @@ spdk_get_scsi_task_from_itt(struct spdk_iscsi_conn *conn,
 			    uint32_t task_tag, enum iscsi_op opcode)
 {
 	struct spdk_iscsi_pdu *pdu;
-	struct spdk_iscsi_task *task = NULL;
 
 	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
 		if (pdu->bhs.opcode == opcode &&
 		    pdu->task != NULL &&
 		    pdu->task->tag == task_tag) {
-			task = pdu->task;
-			break;
+			return pdu->task;
 		}
 	}
 
-	return task;
+	return NULL;
 }
 
 static int
@@ -2797,11 +2793,7 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 	}
 	primary->datain_datasn = DataSN;
 
-	if (sent_status) {
-		return 1;
-	}
-
-	return 0;
+	return sent_status;
 }
 
 /*
@@ -2903,7 +2895,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task)
 {
-	int32_t remaining_size = 0;
+	int32_t remaining_size;
 
 	TAILQ_INIT(&task->subtask_list);
 	task->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
@@ -3545,27 +3537,21 @@ spdk_add_transfer_task(struct spdk_iscsi_conn *conn,
 
 void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 {
-	struct spdk_iscsi_task *task;
-	int found = 0;
+	struct spdk_iscsi_task *task, *tmp;
 	int i;
 
 	for (i = 0; i < conn->pending_r2t; i++) {
 		if (conn->outstanding_r2t_tasks[i]->tag == task_tag) {
 			task = conn->outstanding_r2t_tasks[i];
-			conn->outstanding_r2t_tasks[i] = NULL;
 			conn->data_out_cnt -= task->data_out_cnt;
-			found = 1;
+
+			conn->pending_r2t--;
+			for (; i < conn->pending_r2t; i++) {
+				conn->outstanding_r2t_tasks[i] = conn->outstanding_r2t_tasks[i + 1];
+			}
+			conn->outstanding_r2t_tasks[conn->pending_r2t] = NULL;
 			break;
 		}
-	}
-
-	if (found) {
-		for (; i < conn->pending_r2t - 1; i++) {
-			conn->outstanding_r2t_tasks[i] = conn->outstanding_r2t_tasks[i + 1];
-		}
-
-		conn->pending_r2t--;
-		conn->outstanding_r2t_tasks[conn->pending_r2t] = NULL;
 	}
 
 	/*
@@ -3574,8 +3560,7 @@ void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 	 *  sure each of the tasks will fit without the connection's allotment
 	 *  for total R2T tasks.
 	 */
-	while (!TAILQ_EMPTY(&conn->queued_r2t_tasks)) {
-		task = TAILQ_FIRST(&conn->queued_r2t_tasks);
+	TAILQ_FOREACH_SAFE(task, &conn->queued_r2t_tasks, link, tmp) {
 		if (conn->pending_r2t < DEFAULT_MAXR2T) {
 			TAILQ_REMOVE(&conn->queued_r2t_tasks, task, link);
 			spdk_add_transfer_task(conn, task);
@@ -3878,28 +3863,21 @@ spdk_iscsi_remove_r2t_pdu_from_snack_list(struct spdk_iscsi_conn *conn,
 		struct spdk_iscsi_task *task,
 		uint32_t r2t_sn)
 {
-	struct spdk_iscsi_pdu *pdu = NULL;
+	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_r2t *r2t_header;
-	bool found_pdu = false;
 
 	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
 		if (pdu->bhs.opcode == ISCSI_OP_R2T) {
 			r2t_header = (struct iscsi_bhs_r2t *)&pdu->bhs;
 			if (pdu->task == task &&
 			    from_be32(&r2t_header->r2t_sn) == r2t_sn) {
-				found_pdu = true;
-				break;
+				TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
+				return pdu;
 			}
 		}
 	}
 
-	if (found_pdu) {
-		TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
-	} else {
-		pdu = NULL;
-	}
-
-	return pdu;
+	return NULL;
 }
 
 /* This function is used re-send the r2t packet */
@@ -4169,10 +4147,9 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 
 send_r2t_recovery_return:
 	rc = spdk_iscsi_send_r2t_recovery(conn, task, task->acked_r2tsn, true);
-	if (rc < 0) {
-		goto reject_return;
+	if (rc == 0) {
+		return 0;
 	}
-	return rc;
 
 reject_return:
 	rc = spdk_iscsi_reject(conn, pdu, reject_reason);
