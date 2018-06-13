@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0a9e04f_521f7858",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 68
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-13T14:22:47Z",
+      "side": 1,
+      "message": "Still doesnt clarify much. As I wasn\u0027t involved in this I have no idea why we delete something from the config or what is first or second iteration.",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 75
+      },
+      "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af058c77_a5d73a4a",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 68
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-13T14:22:47Z",
+      "side": 1,
+      "message": "Still doesnt clarify much. As I wasn\u0027t involved in this I have no idea why we delete something from the config or what is first or second iteration.",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 75
+      },
+      "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
