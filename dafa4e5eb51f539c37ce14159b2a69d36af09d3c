@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aca6d2a5_b5ddd492",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-13T17:47:37Z",
+      "side": 1,
+      "message": "zeores",
+      "revId": "dafa4e5eb51f539c37ce14159b2a69d36af09d3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
