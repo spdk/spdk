@@ -1084,7 +1084,10 @@ if __name__ == "__main__":
     # vhost
     @call_cmd
     def set_vhost_controller_coalescing(args):
-        rpc.vhost.set_vhost_controller_coalescing(args.client, args)
+        rpc.vhost.set_vhost_controller_coalescing(args.client,
+                                                  ctrlr=args.ctrlr,
+                                                  delay_base_us=args.delay_base_us,
+                                                  iops_threshold=args.iops_threshold)
 
     p = subparsers.add_parser('set_vhost_controller_coalescing', help='Set vhost controller coalescing')
     p.add_argument('ctrlr', help='controller name')
@@ -1094,7 +1097,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_vhost_scsi_controller(args):
-        rpc.vhost.construct_vhost_scsi_controller(args.client, args)
+        rpc.vhost.construct_vhost_scsi_controller(args.client,
+                                                  ctrlr=args.ctrlr,
+                                                  cpumask=args.cpumask)
 
     p = subparsers.add_parser(
         'construct_vhost_scsi_controller', help='Add new vhost controller')
@@ -1104,7 +1109,10 @@ if __name__ == "__main__":
 
     @call_cmd
     def add_vhost_scsi_lun(args):
-        rpc.vhost.add_vhost_scsi_lun(args.client, args)
+        rpc.vhost.add_vhost_scsi_lun(args.client,
+                                     ctrlr=args.ctrlr,
+                                     scsi_target_num=args.scsi_target_num,
+                                     bdev_name=args.bdev_name)
 
     p = subparsers.add_parser('add_vhost_scsi_lun',
                               help='Add lun to vhost controller')
@@ -1115,7 +1123,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def remove_vhost_scsi_target(args):
-        rpc.vhost.remove_vhost_scsi_target(args.client, args)
+        rpc.vhost.remove_vhost_scsi_target(args.client,
+                                           ctrlr=args.ctrlr,
+                                           scsi_target_num=args.scsi_target_num)
 
     p = subparsers.add_parser('remove_vhost_scsi_target', help='Remove target from vhost controller')
     p.add_argument('ctrlr', help='controller name to remove target from')
@@ -1124,7 +1134,11 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_vhost_blk_controller(args):
-        rpc.vhost.construct_vhost_blk_controller(args.client, args)
+        rpc.vhost.construct_vhost_blk_controller(args.client,
+                                                 ctrlr=args.ctrlr,
+                                                 dev_name=args.dev_name,
+                                                 cpumask=args.cpumask,
+                                                 readonly=args.readonly)
 
     p = subparsers.add_parser('construct_vhost_blk_controller', help='Add a new vhost block controller')
     p.add_argument('ctrlr', help='controller name')
@@ -1135,7 +1149,10 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_vhost_nvme_controller(args):
-        rpc.vhost.construct_vhost_nvme_controller(args.client, args)
+        rpc.vhost.construct_vhost_nvme_controller(args.client,
+                                                  ctrlr=args.ctrlr,
+                                                  io_queues=args.io_queues,
+                                                  cpumask=args.cpumask)
 
     p = subparsers.add_parser('construct_vhost_nvme_controller', help='Add new vhost controller')
     p.add_argument('ctrlr', help='controller name')
@@ -1145,7 +1162,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def add_vhost_nvme_ns(args):
-        rpc.vhost.add_vhost_nvme_ns(args.client, args)
+        rpc.vhost.add_vhost_nvme_ns(args.client,
+                                    ctrlr=args.ctrlr,
+                                    bdev_name=args.bdev_name)
 
     p = subparsers.add_parser('add_vhost_nvme_ns', help='Add a Namespace to vhost controller')
     p.add_argument('ctrlr', help='conntroller name where add a Namespace')
@@ -1154,14 +1173,15 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_vhost_controllers(args):
-        print_dict(rpc.vhost.get_vhost_controllers(args.client, args))
+        print_dict(rpc.vhost.get_vhost_controllers(args.client))
 
     p = subparsers.add_parser('get_vhost_controllers', help='List vhost controllers')
     p.set_defaults(func=get_vhost_controllers)
 
     @call_cmd
     def remove_vhost_controller(args):
-        rpc.vhost.remove_vhost_controller(args.client, args)
+        rpc.vhost.remove_vhost_controller(args.client,
+                                          ctrlr=args.ctrlr)
 
     p = subparsers.add_parser('remove_vhost_controller', help='Remove a vhost controller')
     p.add_argument('ctrlr', help='controller name')
@@ -1169,7 +1189,12 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_dev(args):
-        print_dict(rpc.vhost.construct_virtio_dev(args.client, args))
+        print_dict(rpc.vhost.construct_virtio_dev(args.client,
+                                                  trtype=args.trtype,
+                                                  traddr=args.traddr,
+                                                  dev_type=args.dev_type,
+                                                  vq_count=args.vq_count,
+                                                  vq_size=args.vq_size))
 
     p = subparsers.add_parser('construct_virtio_dev', help="""Construct new virtio device using provided
     transport type and device type. In case of SCSI device type this implies scan and add bdevs offered by
@@ -1187,7 +1212,11 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_user_scsi_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_user_scsi_bdev(args.client, args))
+        print_dict(rpc.vhost.construct_virtio_user_scsi_bdev(args.client,
+                                                             path=args.path,
+                                                             name=args.name,
+                                                             vq_count=args.vq_count,
+                                                             vq_size=args.vq_size))
 
     p = subparsers.add_parser('construct_virtio_user_scsi_bdev', help="""Connect to virtio user scsi device.
     This imply scan and add bdevs offered by remote side.
@@ -1201,7 +1230,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_pci_scsi_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_pci_scsi_bdev(args.client, args))
+        print_dict(rpc.vhost.construct_virtio_pci_scsi_bdev(args.client,
+                                                            pci_address=args.pci_address,
+                                                            name=args.name))
 
     p = subparsers.add_parser('construct_virtio_pci_scsi_bdev', help="""Create a Virtio
     SCSI device from a virtio-pci device.""")
@@ -1213,14 +1244,15 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_virtio_scsi_devs(args):
-        print_dict(rpc.vhost.get_virtio_scsi_devs(args.client, args))
+        print_dict(rpc.vhost.get_virtio_scsi_devs(args.client))
 
     p = subparsers.add_parser('get_virtio_scsi_devs', help='List all Virtio-SCSI devices.')
     p.set_defaults(func=get_virtio_scsi_devs)
 
     @call_cmd
     def remove_virtio_scsi_bdev(args):
-        rpc.vhost.remove_virtio_scsi_bdev(args.client, args)
+        rpc.vhost.remove_virtio_scsi_bdev(args.client,
+                                          name=args.name)
 
     p = subparsers.add_parser('remove_virtio_scsi_bdev', help="""Remove a Virtio-SCSI device
     This will delete all bdevs exposed by this device""")
@@ -1229,7 +1261,11 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_user_blk_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_user_blk_bdev(args.client, args))
+        print_dict(rpc.vhost.construct_virtio_user_blk_bdev(args.client,
+                                                            path=args.path,
+                                                            name=args.name,
+                                                            vq_count=args.vq_count,
+                                                            vq_size=args.vq_size))
 
     p = subparsers.add_parser('construct_virtio_user_blk_bdev', help='Connect to a virtio user blk device.')
     p.add_argument('path', help='Path to Virtio BLK socket')
@@ -1240,7 +1276,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_pci_blk_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_pci_blk_bdev(args.client, args))
+        print_dict(rpc.vhost.construct_virtio_pci_blk_bdev(args.client,
+                                                           pci_address=args.pci_address,
+                                                           name=args.name))
 
     p = subparsers.add_parser('construct_virtio_pci_blk_bdev', help='Create a Virtio Blk device from a virtio-pci device.')
     p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or
