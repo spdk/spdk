@@ -122,6 +122,15 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, 
 }
 
 int
+spdk_bdev_writev_blocks_init(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			     struct iovec *iov, int iovcnt,
+			     uint64_t offset_blocks, uint64_t num_blocks,
+			     spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_io **bdev_io)
+{
+	return 0;
+}
+
+int
 spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			struct iovec *iov, int iovcnt,
 			uint64_t offset_blocks, uint64_t num_blocks,
@@ -134,6 +143,15 @@ int
 spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, void *buf,
 		      uint64_t offset_blocks, uint64_t num_blocks,
 		      spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return 0;
+}
+
+int
+spdk_bdev_readv_blocks_init(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt,
+			    uint64_t offset_blocks, uint64_t num_blocks,
+			    spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_io **bdev_io)
 {
 	return 0;
 }
@@ -162,6 +180,11 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return 0;
+}
+
+void spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
+{
+	return;
 }
 
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)

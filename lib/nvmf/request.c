@@ -124,6 +124,19 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, bool is_admin_queue)
 	}
 }
 
+spdk_nvmf_request_exec_status
+spdk_nvmf_request_init(struct spdk_nvmf_request *req)
+{
+	spdk_nvmf_request_exec_status status;
+
+	status = spdk_nvmf_ctrlr_init_io_cmd(req);
+
+	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete(req);
+	}
+	return status;
+}
+
 void
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
@@ -158,7 +171,11 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	} else if (spdk_unlikely(spdk_nvmf_qpair_is_admin_queue(qpair))) {
 		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
 	} else {
-		status = spdk_nvmf_ctrlr_process_io_cmd(req);
+		if (req->bdev_io) {
+			status = spdk_nvmf_ctrlr_submit_io_cmd(req);
+		} else {
+			status = spdk_nvmf_ctrlr_process_io_cmd(req);
+		}
 	}
 
 	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {

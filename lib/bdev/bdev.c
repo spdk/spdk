@@ -1036,7 +1036,7 @@ _spdk_bdev_io_submit(void *ctx)
 	bdev_io->in_submit_request = false;
 }
 
-static void
+void
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
@@ -1680,6 +1680,39 @@ spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return spdk_bdev_readv_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg);
 }
 
+int spdk_bdev_readv_blocks_init(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				struct iovec *iov, int iovcnt,
+				uint64_t offset_blocks, uint64_t num_blocks,
+				spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_io **bdevio)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_io *bdev_io = NULL;
+
+	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+		return -EINVAL;
+	}
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		SPDK_ERRLOG("spdk_bdev_io memory allocation failed during read\n");
+		return -ENOMEM;
+	}
+
+	bdev_io->ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
+	bdev_io->u.bdev.iovs = iov;
+	bdev_io->u.bdev.iovcnt = iovcnt;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->u.bdev.offset_blocks = offset_blocks;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	/* pass bdev_io ownership to the caller */
+	*bdevio = bdev_io;
+
+	return 0;
+}
+
 int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			   struct iovec *iov, int iovcnt,
 			   uint64_t offset_blocks, uint64_t num_blocks,
@@ -1775,6 +1808,44 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	return spdk_bdev_writev_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg);
+}
+
+int
+spdk_bdev_writev_blocks_init(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			     struct iovec *iov, int iovcnt,
+			     uint64_t offset_blocks, uint64_t num_blocks,
+			     spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_io **bdevio)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_io *bdev_io = NULL;
+
+	if (!desc->write) {
+		return -EBADF;
+	}
+
+	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+		return -EINVAL;
+	}
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		SPDK_ERRLOG("bdev_io memory allocation failed during writev\n");
+		return -ENOMEM;
+	}
+
+	bdev_io->ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	bdev_io->u.bdev.iovs = iov;
+	bdev_io->u.bdev.iovcnt = iovcnt;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->u.bdev.offset_blocks = offset_blocks;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	/* pass bdev_io ownership to the caller */
+	*bdevio = bdev_io;
+
+	return 0;
 }
 
 int

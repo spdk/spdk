@@ -409,6 +409,17 @@ struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc);
  */
 
 /**
+ * Submit io request to the bdev on the given channel.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param bdev_io IO Container.
+ *
+ * \return void
+ */
+void spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io);
+
+/**
  * Submit a read request to the bdev on the given channel.
  *
  * \ingroup bdev_io_submit_functions
@@ -482,6 +493,30 @@ int spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    struct iovec *iov, int iovcnt,
 		    uint64_t offset, uint64_t nbytes,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a pre-read request to the bdev on the given channel.
+ * Validates the request and allocates bdev_io and setup data buffers
+ * required to carry out read operation. In case of insufficient
+ * resources, ENOMEM is returned so request can be pended and
+ * retried later.
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iov.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to write.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ * \Param bdev_io Returned to the caller.
+ *
+ * \return 0 on success. Return negated errno on failure.
+ */
+int spdk_bdev_readv_blocks_init(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				struct iovec *iov, int iovcnt,
+				uint64_t offset_blocks, uint64_t num_blocks,
+				spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_io **bdev_io);
 
 /**
  * Submit a read request to the bdev on the given channel. This differs from
@@ -589,6 +624,30 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		     struct iovec *iov, int iovcnt,
 		     uint64_t offset, uint64_t len,
 		     spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a pre-write request to the bdev on the given channel.
+ * Validates the request and allocates bdev_io and data buffers
+ * required to carry out write operation. In case of insufficient
+ * resources, ENOMEM is returned so request can be pended and
+ * retried later.
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iov.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to write.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ * \Param bdev_io Returned to the caller.
+ *
+ * \return 0 on success. Return negated errno on failure.
+ */
+int spdk_bdev_writev_blocks_init(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				 struct iovec *iov, int iovcnt,
+				 uint64_t offset_blocks, uint64_t num_blocks,
+				 spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_io **bdev_io);
 
 /**
  * Submit a write request to the bdev on the given channel. This differs from

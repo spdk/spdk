@@ -118,8 +118,11 @@ struct spdk_nvmf_poll_group {
 };
 
 typedef enum _spdk_nvmf_request_exec_status {
+	SPDK_NVMF_REQUEST_EXEC_STATUS_ERROR = -1,
 	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
 	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
+	SPDK_NVMF_REQUEST_EXEC_STATUS_BUFF_READY,
+	SPDK_NVMF_REQUEST_EXEC_STATUS_BUFF_PENDING
 } spdk_nvmf_request_exec_status;
 
 union nvmf_h2c_msg {
@@ -147,6 +150,7 @@ struct spdk_nvmf_request {
 	union nvmf_c2h_msg		*rsp;
 	struct iovec			iov[SPDK_NVMF_MAX_SGL_ENTRIES];
 	uint32_t			iovcnt;
+	struct spdk_bdev_io	*bdev_io;
 
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
@@ -262,6 +266,7 @@ int spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
 int spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
+spdk_nvmf_request_exec_status spdk_nvmf_request_init(struct spdk_nvmf_request *req);
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
@@ -273,6 +278,8 @@ struct spdk_nvmf_qpair *spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr,
 void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
 int spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req);
 int spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_init_io_cmd(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_submit_io_cmd(struct spdk_nvmf_request *req);
 int spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
 bool spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);
 bool spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr);
@@ -304,5 +311,28 @@ spdk_nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 {
 	return qpair->qid == 0;
 }
+
+static inline bool
+spdk_nvmf_request_is_io_cmd(struct spdk_nvmf_request *req)
+{
+	if (req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC) {
+		return false;
+	}
+
+	return !spdk_nvmf_qpair_is_admin_queue(req->qpair);
+}
+
+#define OBJECT_NVMF_IO				0x30
+
+#define TRACE_GROUP_NVMF			0x3
+#define TRACE_NVMF_IO_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0)
+#define TRACE_RDMA_READ_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x1)
+#define TRACE_RDMA_WRITE_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x2)
+#define TRACE_RDMA_READ_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x3)
+#define TRACE_RDMA_WRITE_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x4)
+#define TRACE_NVMF_LIB_READ_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x5)
+#define TRACE_NVMF_LIB_WRITE_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x6)
+#define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
+#define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
 #endif /* __NVMF_INTERNAL_H__ */

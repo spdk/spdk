@@ -905,7 +905,15 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	void		*buf = NULL;
 	uint32_t	length = rdma_req->req.length;
 	uint32_t	i = 0;
+	spdk_nvmf_request_exec_status status;
 
+	/* Acquire bdev_io for I/O requests */
+	if (spdk_nvmf_request_is_io_cmd(&rdma_req->req)) {
+		status = spdk_nvmf_request_init(&rdma_req->req);
+		if (status != SPDK_NVMF_REQUEST_EXEC_STATUS_BUFF_READY) {
+			return -ENOMEM;
+		}
+	}
 	rdma_req->req.iovcnt = 0;
 	while (length) {
 		buf = spdk_mempool_get(rtransport->data_buf_pool);
@@ -1093,7 +1101,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				break;
 			}
 
-			/* Try to get a data buffer */
+			/* Parse the acquired data buffer */
 			rc = spdk_nvmf_rdma_request_parse_sgl(rtransport, device, rdma_req);
 			if (rc < 0) {
 				TAILQ_REMOVE(&rqpair->ch->pending_data_buf_queue, rdma_req, link);
