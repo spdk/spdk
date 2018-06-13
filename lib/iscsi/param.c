@@ -306,8 +306,9 @@ spdk_iscsi_parse_params(struct iscsi_param **params, const uint8_t *data,
 
 	/* strip the partial text parameters if previous PDU have C enabled */
 	if (partial_parameter && *partial_parameter) {
-		for (i = 0; i < len && data[i] != '\0'; i++)
+		for (i = 0; i < len && data[i] != '\0'; i++) {
 			;
+		}
 		p = spdk_sprintf_alloc("%s%s", *partial_parameter, (const char *)data);
 		if (!p) {
 			return -1;
@@ -335,8 +336,9 @@ spdk_iscsi_parse_params(struct iscsi_param **params, const uint8_t *data,
 		 * reverse iterate the string from the tail not including '\0'
 		 * index of last '\0' is len -1.
 		 */
-		for (i = len - 2; data[i] != '\0' && i > 0; i--)
+		for (i = len - 2; data[i] != '\0' && i > 0; i--) {
 			;
+		}
 		*partial_parameter = xstrdup(&data[i == 0 ? 0 : i + 1]);
 		len = (i == 0 ? 0 : i + 1);
 	}
@@ -601,7 +603,6 @@ spdk_iscsi_special_param_construction(struct spdk_iscsi_conn *conn,
 static int
 spdk_iscsi_construct_data_from_param(struct iscsi_param *param, char *new_val,
 				     char *data, int alloc_len, int total)
-
 {
 	int len;
 
@@ -619,7 +620,6 @@ spdk_iscsi_construct_data_from_param(struct iscsi_param *param, char *new_val,
 		total += len + 1;
 	}
 	return total;
-
 }
 
 /**
@@ -1049,10 +1049,9 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 			/* add_param_value = 0 means updating the value of
 			 *      existed key in the connection's parameters
 			 */
-			if (add_param_value == 0)
-				spdk_iscsi_param_set(params_dst, param->key,
-						     new_val);
-
+			if (add_param_value == 0) {
+				spdk_iscsi_param_set(params_dst, param->key, new_val);
+			}
 			total = spdk_iscsi_construct_data_from_param(param,
 					new_val,
 					data,
