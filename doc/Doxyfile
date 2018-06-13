@@ -782,6 +782,18 @@ WARN_LOGFILE           =
 
 INPUT                  = ../include/spdk \
                          index.md \
+                         \
+                         intro.md \
+                         concepts.md \
+                         user_guides.md \
+                         prog_guides.md \
+                         general.md \
+                         misc.md \
+                         modules.md \
+                         tools.md \
+                         experimental_tools.md \
+                         performance_reports.md \
+                         \
                          about.md \
                          changelog.md \
                          concurrency.md \
