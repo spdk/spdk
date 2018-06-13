@@ -391,52 +391,29 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 		task->iov.iov_len = g_io_size;
 		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
 					     target->io_size_blocks, bdevperf_verify_write_complete, task);
-		if (rc) {
-			printf("Failed to submit writev: %d\n", rc);
-			target->is_draining = true;
-			g_run_failed = true;
-			return;
-		}
 	} else if (g_flush) {
 		rc = spdk_bdev_flush_blocks(desc, ch, task->offset_blocks,
 					    target->io_size_blocks, bdevperf_complete, task);
-		if (rc) {
-			printf("Failed to submit flush: %d\n", rc);
-			target->is_draining = true;
-			g_run_failed = true;
-			return;
-		}
 	} else if (g_unmap) {
 		rc = spdk_bdev_unmap_blocks(desc, ch, task->offset_blocks,
 					    target->io_size_blocks, bdevperf_complete, task);
-		if (rc) {
-			printf("Failed to submit unmap: %d\n", rc);
-			target->is_draining = true;
-			g_run_failed = true;
-			return;
-		}
 	} else if ((g_rw_percentage == 100) ||
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
 		rbuf = g_zcopy ? NULL : task->buf;
 		rc = spdk_bdev_read_blocks(desc, ch, rbuf, task->offset_blocks,
 					   target->io_size_blocks, bdevperf_complete, task);
-		if (rc) {
-			printf("Failed to submit read: %d\n", rc);
-			target->is_draining = true;
-			g_run_failed = true;
-			return;
-		}
 	} else {
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
 		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
 					     target->io_size_blocks, bdevperf_complete, task);
-		if (rc) {
-			printf("Failed to submit writev: %d\n", rc);
-			target->is_draining = true;
-			g_run_failed = true;
-			return;
-		}
+	}
+
+	if (rc) {
+		printf("Failed to submit bdev_io: %d\n", rc);
+		target->is_draining = true;
+		g_run_failed = true;
+		return;
 	}
 
 	target->current_queue_depth++;
