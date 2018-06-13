@@ -1,3 +1,5 @@
+@addtogroup user_guides
+
 # iSCSI Target {#iscsi}
 
 # iSCSI Target Getting Started Guide {#iscsi_getting_started}

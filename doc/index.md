@@ -17,7 +17,9 @@
 - @ref vhost_processing
 - @ref porting
 
-# User Guides {#user_guides}
+# User Guides
+
+@defgroup user_guides
 
 - @ref iscsi
 - @ref nvmf
