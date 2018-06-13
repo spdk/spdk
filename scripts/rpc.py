@@ -831,7 +831,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('set_nvmf_target_options', help='Set NVMf target options')
     p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int)
-    p.add_argument('-p', '--max-qpairs-per-session', help='Max number of SQ and CQ per session', type=int)
+    p.add_argument('-p', '--max-qpairs-per-ctrlr', help='Max number of SQ and CQ per controller', type=int)
     p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int)
     p.add_argument('-i', '--max-io-size', help='Max I/O size', type=int)
     p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int)
