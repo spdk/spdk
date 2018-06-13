@@ -36,6 +36,9 @@ class UIRoot(UINode):
             test = Bdev(bdev)
             yield test
 
+    def get_bdevs_iostat(self, **kwargs):
+        return rpc.bdev.get_bdevs_iostat(self.client, **kwargs)
+
     def split_bdev(self, **kwargs):
         response = rpc.bdev.construct_split_vbdev(self.client, **kwargs)
         return self.print_array(response)

@@ -132,6 +132,13 @@ class UIBdev(UINode):
         self.get_root().refresh()
         self.refresh()
 
+    def ui_command_get_bdev_iostat(self, name=None):
+        if name is None:
+            ret = self.get_root().get_bdevs_iostat()
+        else:
+            ret = self.get_root().get_bdevs_iostat(name=name)
+        self.shell.log.info(json.dumps(ret, indent=2))
+
     def ui_command_split_bdev(self, base_bdev, split_count, split_size_mb=None):
         """
         Construct split block devices from a base bdev.
