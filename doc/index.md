@@ -17,6 +17,10 @@
 - @ref vhost_processing
 - @ref porting
 
+@defgroup user_guides_list User Guides
+@addtogroup user_guides_list
+@copydoc user_guides_list
+
 # User Guides {#user_guides}
 
 - @ref iscsi
@@ -25,6 +29,10 @@
 - @ref bdev
 - @ref blobfs
 - @ref jsonrpc
+
+@defgroup programmer_guides_list Programmer Guides
+@addtogroup programmer_guides_list
+@copydoc programmer_guides_list
 
 # Programmer Guides {#prog_guides}
 
