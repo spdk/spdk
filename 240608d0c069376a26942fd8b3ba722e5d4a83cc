@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba6982ce_a15c32b4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-13T16:43:17Z",
+      "side": 1,
+      "message": "help message also should be changed",
+      "revId": "240608d0c069376a26942fd8b3ba722e5d4a83cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
