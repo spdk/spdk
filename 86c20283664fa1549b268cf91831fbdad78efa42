@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "e474baa1_32cd9e36",
+        "filename": "lib/event/subsystems/bdev/bdev_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-13T00:38:26Z",
+      "side": 1,
+      "message": "0 for cache size is valid - someone may want to not use the cache at all (stupid, but valid).\n\nBut I think setting 0 for bdev_io_pool_size doesn\u0027t really help - what if the user specified 0 explicitly?  I think we want to fail that operation.  If we the rpc_opts member to 0 here, we won\u0027t be able to tell between the case that a user didn\u0027t specify it and the case where they explicitly tried to set it to 0.",
+      "parentUuid": "0bd1d395_fb5aa440",
+      "revId": "86c20283664fa1549b268cf91831fbdad78efa42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51c9ee69_de0e7540",
         "filename": "lib/event/subsystems/bdev/bdev_rpc.c",
         "patchSetId": 3
@@ -47,6 +65,24 @@
       "writtenOn": "2018-06-12T23:41:56Z",
       "side": 1,
       "message": "You can use spdk_jsonrpc_send_error_response_fmt() here to avoid the extra spdk_sprintf_alloc().",
+      "revId": "86c20283664fa1549b268cf91831fbdad78efa42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38aa1704_753daaee",
+        "filename": "lib/event/subsystems/bdev/bdev_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-13T00:38:26Z",
+      "side": 1,
+      "message": "Thanks.",
+      "parentUuid": "51c9ee69_de0e7540",
       "revId": "86c20283664fa1549b268cf91831fbdad78efa42",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
