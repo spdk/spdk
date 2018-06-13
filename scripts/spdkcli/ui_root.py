@@ -65,6 +65,10 @@ class UIRoot(UINode):
         response = rpc.bdev.construct_nvme_bdev(self.client, **kwargs)
         return self.print_array(response)
 
+    def create_null_bdev(self, **kwargs):
+        response = rpc.bdev.construct_null_bdev(self.client, **kwargs)
+        return self.print_array(response)
+
     def get_lvol_stores(self):
         self.current_lvol_stores = rpc.lvol.get_lvol_stores(self.client)
         for lvs in self.current_lvol_stores:
