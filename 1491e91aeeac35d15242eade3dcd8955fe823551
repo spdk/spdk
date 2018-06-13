@@ -68,6 +68,24 @@
       "revId": "1491e91aeeac35d15242eade3dcd8955fe823551",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a699954e_4675620b",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1160,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-13T16:15:25Z",
+      "side": 1,
+      "message": "True.  Can you think of any other cases like this in the I/O path of this or other bdev modules?\n\nI\u0027d really like to fix blobstore so that it doesn\u0027t do allocations like this in the I/O path.  I haven\u0027t thought through exactly how we\u0027d eliminate them in this case, but I guess first step is to figure out how many of these cases we have currently.",
+      "parentUuid": "13a612b6_d9fdb882",
+      "revId": "1491e91aeeac35d15242eade3dcd8955fe823551",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
