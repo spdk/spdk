@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "82035e7f_0d0ca5e7",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-06-13T08:56:16Z",
+      "side": 1,
+      "message": "How about use a 16bit magic number as SPDK FIO-plugin application tag",
+      "parentUuid": "f60e357c_b16872af",
+      "revId": "0ffafba18044385b1862c99fcbbc0c30fbf07449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dce20aa4_0e678718",
         "filename": "examples/nvme/fio_plugin/fio_plugin.c",
         "patchSetId": 3
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "c024efc7_35f2198a",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-06-13T08:56:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dce20aa4_0e678718",
+      "range": {
+        "startLine": 540,
+        "startChar": 7,
+        "endLine": 540,
+        "endChar": 16
+      },
+      "revId": "0ffafba18044385b1862c99fcbbc0c30fbf07449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46f3ea76_9bc99dc4",
         "filename": "examples/nvme/fio_plugin/fio_plugin.c",
         "patchSetId": 3
@@ -53,6 +95,24 @@
       "writtenOn": "2018-06-12T15:50:31Z",
       "side": 1,
       "message": "fio_do_nvme_pi_check() looks quite expensive to call for every I/O; can we do some of these checks at startup and store the result in spdk_fio_qpair, for example?",
+      "revId": "0ffafba18044385b1862c99fcbbc0c30fbf07449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4491ef66_658b0cfe",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-06-13T08:56:16Z",
+      "side": 1,
+      "message": "Yes, add a flag to store the check result whether do PI",
+      "parentUuid": "46f3ea76_9bc99dc4",
       "revId": "0ffafba18044385b1862c99fcbbc0c30fbf07449",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
