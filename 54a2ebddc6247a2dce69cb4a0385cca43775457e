@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e975bc5d_cc1c1070",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-13T23:53:29Z",
+      "side": 1,
+      "message": "I understood that extra mgmt_ch may be consumed in spdk_bdev_channel_create().",
+      "revId": "54a2ebddc6247a2dce69cb4a0385cca43775457e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
