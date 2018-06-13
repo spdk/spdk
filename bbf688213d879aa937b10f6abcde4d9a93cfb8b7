@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "5f07122a_09e606c1",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-13T17:32:09Z",
+      "side": 1,
+      "message": "For reset, the LBAs must correspond only to the start of chunks. That should be mentioned here. Also \"LBAs of sectors\" is redundant - just say LBAs.\n\nMaybe name this parameter:\n\nvoid *lba_list, uint32_t num_lbas\n\nThis matches the wording used in the specification.",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f3db1cc_dff4ab2f",
+        "filename": "lib/nvme/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-13T17:32:09Z",
+      "side": 1,
+      "message": "If you\u0027re going back to fix things, please break this to the next line",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a156094_7effe773",
         "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
         "patchSetId": 1
@@ -16,6 +50,75 @@
       "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ececb05_cc8b9c1b",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-13T17:32:09Z",
+      "side": 1,
+      "message": "I think we could some day do an spdk_nvme_ocssd_ns_cmd_vector_reset_with_md to support that, but it\u0027s ok to skip it for this patch.",
+      "parentUuid": "6a156094_7effe773",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "909c4657_aa21e6d8",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-13T17:32:09Z",
+      "side": 1,
+      "message": "Let\u0027s make this 64 a #define and put it in the specification header, since that\u0027s where it is from.",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e69b67bf_1a35810b",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-13T17:32:09Z",
+      "side": 1,
+      "message": "((uint64_t *)lba_arr)[0]\n\nis more intuitively written as\n\n*((uint64_t *)lba_arr)\n\nfor me, at least.",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19279b11_462c1062",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-13T17:32:09Z",
+      "side": 1,
+      "message": "Instead of PAGE_SIZE, this needs to be using the logical block size, which is stored in ns-\u003esector_size.\n\nI don\u0027t know what a \"namespace\" even is in OCSSD, but I assume this is the right way to get the value.",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
