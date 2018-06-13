@@ -4,7 +4,7 @@ def set_nvmf_target_options(client, args):
     if args.max_queue_depth:
         params['max_queue_depth'] = args.max_queue_depth
     if args.max_qpairs_per_session:
-        params['max_qpairs_per_session'] = args.max_qpairs_per_session
+        params['max_qpairs_per_ctrlr'] = args.max_qpairs_per_ctrlr
     if args.in_capsule_data_size:
         params['in_capsule_data_size'] = args.in_capsule_data_size
     if args.max_io_size:
