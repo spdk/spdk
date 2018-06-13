@@ -71,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "57ec1e7f_40d89576",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1012287
+      },
+      "writtenOn": "2018-06-13T18:26:16Z",
+      "side": 1,
+      "message": "Metadata to reset seems to be crucial since Host FTL needs chunk descriptors to identify the failed chunks if vector reset would return error.",
+      "parentUuid": "6a156094_7effe773",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "909c4657_aa21e6d8",
         "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
         "patchSetId": 1
