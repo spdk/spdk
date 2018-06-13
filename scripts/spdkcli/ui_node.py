@@ -52,6 +52,7 @@ class UIBdevs(UINode):
         UIAIOBdev(self)
         UILvolBdev(self)
         UINvmeBdev(self)
+        UINullBdev(self)
         UISplitBdev(self)
 
     def ui_command_delete(self, name):
@@ -267,6 +268,34 @@ class UINvmeBdev(UIBdev):
         ret_name = self.get_root().create_nvme_bdev(name=name, trtype=trtype,
                                                     traddr=traddr, adrfam=adrfam,
                                                     trsvcid=trsvcid, subnqn=subnqn)
+        self.shell.log.info(ret_name)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UINullBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "Null", parent)
+
+    def ui_command_create(self, name, size, block_size, uuid=None):
+        """
+        Construct a Null bdev.
+
+        Arguments:
+        name - Name to use for bdev.
+        size - Size in megabytes.
+        block_size - Integer, block size to use when constructing bdev.
+        uuid - Optional parameter. Custom UUID to use. If empty then random
+               will be generated.
+        """
+
+        size = self.ui_eval_param(size, "number", None)
+        block_size = self.ui_eval_param(block_size, "number", None)
+        num_blocks = size * 1024 * 1024 // block_size
+
+        ret_name = self.get_root().create_null_bdev(num_blocks=num_blocks,
+                                                    block_size=block_size,
+                                                    name=name, uuid=uuid)
         self.shell.log.info(ret_name)
         self.get_root().refresh()
         self.refresh()
