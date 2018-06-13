@@ -784,6 +784,7 @@ INPUT                  = ../include/spdk \
                          index.md \
                          about.md \
                          changelog.md \
+                         concepts.md \
                          concurrency.md \
                          directory_structure.md \
                          getting_started.md \
@@ -795,18 +796,27 @@ INPUT                  = ../include/spdk \
                          blob.md \
                          blobfs.md \
                          event.md \
+                         experimental_tools.md \
+                         general.md \
+                         intro.md \
                          ioat.md \
                          iscsi.md \
                          jsonrpc.md \
                          lvol.md \
+                         misc.md \
+                         modules.md \
                          nvme.md \
                          nvme-cli.md \
                          nvmf.md \
                          nvmf_tgt_pg.md \
                          peer_2_peer.md \
+                         performance_reports.md \
+                         prog_guides.md \
                          spdkcli.md \
                          ssd_internals.md \
+                         tools.md \
                          userspace.md \
+                         user_guides.md \
                          vagrant.md \
                          vhost.md \
                          vhost_processing.md \
