@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bac07a33_1b1f731c",
+        "filename": "lib/nvme/nvme_ctrlr_ocssd_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012287
+      },
+      "writtenOn": "2018-06-13T23:40:14Z",
+      "side": 1,
+      "message": "This seems to be redundant since ctrlr quirk checks vid already.",
+      "revId": "b86f8e287f834515980bd598d31963e6bc2baedd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
