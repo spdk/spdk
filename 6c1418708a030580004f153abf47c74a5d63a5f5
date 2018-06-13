@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fe07335_fa2e3653",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-13T00:54:44Z",
+      "side": 1,
+      "message": "rc \u003d 1; now \u003d spdk_get_ticks(); took_action \u003d true; may be a little more consistent ordering.",
+      "revId": "6c1418708a030580004f153abf47c74a5d63a5f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fb2591f_983c7ba5",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-13T00:54:44Z",
+      "side": 1,
+      "message": "I think moving \"took_action \u003d true;\" to just after \"now \u003d spdk_get_ticks()\" may improve readability a little.",
+      "range": {
+        "startLine": 521,
+        "startChar": 3,
+        "endLine": 521,
+        "endChar": 22
+      },
+      "revId": "6c1418708a030580004f153abf47c74a5d63a5f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f33b4dd_b8385a3b",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-13T00:54:44Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 541,
+        "startChar": 4,
+        "endLine": 541,
+        "endChar": 23
+      },
+      "revId": "6c1418708a030580004f153abf47c74a5d63a5f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

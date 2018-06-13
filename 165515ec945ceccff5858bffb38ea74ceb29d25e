@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "8d72f024_b9234920",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-13T00:54:44Z",
+      "side": 1,
+      "message": "Thank you, I could understand well by reading Vishal\u0027s updated patch.",
+      "parentUuid": "cb8e3056_558c60c0",
+      "revId": "165515ec945ceccff5858bffb38ea74ceb29d25e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "829a6d1a_f7add7c2",
         "filename": "lib/event/reactor.c",
         "patchSetId": 7
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "No - this idle_started is actually not associated at all with the rest of Vishal\u0027s work here.  It is related to putting the reactor to sleep if there are no events or pollers running on this reactor.  Ben and I were just talking about this - really we should remove this code now and when dynamic threading is added, we can put a reactor to sleep if it has no SPDK threads assigned to it.",
       "parentUuid": "829a6d1a_f7add7c2",
+      "revId": "165515ec945ceccff5858bffb38ea74ceb29d25e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70177370_4109c59d",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-13T00:54:44Z",
+      "side": 1,
+      "message": "I got it.",
+      "parentUuid": "f7ce9d91_97796f74",
       "revId": "165515ec945ceccff5858bffb38ea74ceb29d25e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
