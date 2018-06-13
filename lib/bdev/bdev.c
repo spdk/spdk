@@ -264,10 +264,19 @@ spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
 int
 spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 {
-	if (opts->bdev_io_pool_size < opts->bdev_io_cache_size * spdk_thread_get_count()) {
+	uint32_t min_pool_size;
+
+	/*
+	 * Add 1 to the thread count to account for the extra mgmt_ch that gets created during subsystem
+	 *  initialization.  A second mgmt_ch will be created on the same thread when the application starts
+	 *  but before the deferred put_io_channel event is executed for the first mgmt_ch.
+	 */
+	min_pool_size = opts->bdev_io_cache_size * (spdk_thread_get_count() + 1);
+	if (opts->bdev_io_pool_size < min_pool_size) {
 		SPDK_ERRLOG("bdev_io_pool_size %" PRIu32 " is not compatible with bdev_io_cache_size %" PRIu32
 			    " and %" PRIu32 " threads\n", opts->bdev_io_pool_size, opts->bdev_io_cache_size,
 			    spdk_thread_get_count());
+		SPDK_ERRLOG("bdev_io_pool_size must be at least %" PRIu32 "\n", min_pool_size);
 		return -1;
 	}
 
@@ -512,13 +521,23 @@ static int
 spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
+	struct spdk_bdev_io *bdev_io;
+	uint32_t i;
 
 	STAILQ_INIT(&ch->need_buf_small);
 	STAILQ_INIT(&ch->need_buf_large);
 
 	STAILQ_INIT(&ch->per_thread_cache);
-	ch->per_thread_cache_count = 0;
 	ch->bdev_io_cache_size = g_bdev_opts.bdev_io_cache_size;
+
+	/* Pre-populate bdev_io cache to ensure this thread cannot be starved. */
+	ch->per_thread_cache_count = 0;
+	for (i = 0; i < ch->bdev_io_cache_size; i++) {
+		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+		assert(bdev_io != NULL);
+		ch->per_thread_cache_count++;
+		STAILQ_INSERT_TAIL(&ch->per_thread_cache, bdev_io, internal.buf_link);
+	}
 
 	TAILQ_INIT(&ch->shared_resources);
 
