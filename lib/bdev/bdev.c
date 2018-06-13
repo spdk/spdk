@@ -512,13 +512,23 @@ static int
 spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
+	struct spdk_bdev_io *bdev_io;
+	uint32_t i;
 
 	STAILQ_INIT(&ch->need_buf_small);
 	STAILQ_INIT(&ch->need_buf_large);
 
 	STAILQ_INIT(&ch->per_thread_cache);
-	ch->per_thread_cache_count = 0;
 	ch->bdev_io_cache_size = g_bdev_opts.bdev_io_cache_size;
+
+	/* Pre-populate bdev_io cache to ensure this thread cannot be starved. */
+	ch->per_thread_cache_count = 0;
+	for (i = 0; i < ch->bdev_io_cache_size; i++) {
+		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+		assert(bdev_io != NULL);
+		ch->per_thread_cache_count++;
+		STAILQ_INSERT_TAIL(&ch->per_thread_cache, bdev_io, internal.buf_link);
+	}
 
 	TAILQ_INIT(&ch->shared_resources);
 
