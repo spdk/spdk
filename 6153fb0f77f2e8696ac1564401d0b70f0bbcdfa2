@@ -68,6 +68,30 @@
       "revId": "6153fb0f77f2e8696ac1564401d0b70f0bbcdfa2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be4dcc88_68919efe",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 4034,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-13T16:00:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47c63d60_a7072a80",
+      "range": {
+        "startLine": 4034,
+        "startChar": 0,
+        "endLine": 4034,
+        "endChar": 20
+      },
+      "revId": "6153fb0f77f2e8696ac1564401d0b70f0bbcdfa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

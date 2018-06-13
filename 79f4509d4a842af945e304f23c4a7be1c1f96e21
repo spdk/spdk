@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "f86e9e16_45240e98",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 4166,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-13T16:00:44Z",
+      "side": 1,
+      "message": "Yes, you\u0027re right I\u0027ve made here a mistake for \u0027thin \u003d\u003d false\u0027 and I\u0027ll fix it.\nIf blob-\u003eparent_id !\u003d SPDK_BLOBID_INVALID backing bs_dev is a blob, am I right?",
+      "parentUuid": "d61106a1_fdd8b5bb",
+      "revId": "79f4509d4a842af945e304f23c4a7be1c1f96e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2cab0bdb_45d450c7",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 15
