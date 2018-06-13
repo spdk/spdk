@@ -1136,6 +1136,63 @@ enomem_multi_io_target(void)
 }
 
 static void
+enomem_first_io(void)
+{
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev_shared_resource *shared_resource;
+	struct ut_bdev_channel *ut_ch;
+	const uint32_t IO_ARRAY_SIZE = 64;
+	const uint32_t AVAIL = 20;
+	enum spdk_bdev_io_status status[IO_ARRAY_SIZE];
+	uint32_t i;
+	int rc;
+
+	setup_test();
+
+	set_thread(0);
+	io_ch = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	shared_resource = bdev_ch->shared_resource;
+	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
+
+	/* Force all I/O to be completed with SPDK_BDEV_IO_STATUS_NOMEM status */
+	ut_ch->avail_cnt = 0;
+	status[0] = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[0]);
+	CU_ASSERT(rc == 0);
+
+	/* If it's the only I/O on the bdev, it mustn't land in nomem_io.
+	 * nomem_io is only resent on I/O completions and we won't have any.
+	 */
+	CU_ASSERT(TAILQ_EMPTY(&shared_resource->nomem_io));
+
+	/* The I/O should fail immediately */
+	stub_complete_io(g_bdev.io_target, 1);
+	CU_ASSERT(status[0] == SPDK_BDEV_IO_STATUS_FAILED);
+
+	/* Assuming the previous request didn't land in nomem_io, the following I/O
+	 * should complete just fine. Otherwise it'll be stuck in nomem_io forever,
+	 * rendering the entire device unusable.
+	 */
+	ut_ch->avail_cnt = AVAIL;
+	for (i = 0; i < AVAIL; i++) {
+		status[i] = SPDK_BDEV_IO_STATUS_PENDING;
+		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
+		CU_ASSERT(rc == 0);
+	}
+
+	CU_ASSERT(TAILQ_EMPTY(&shared_resource->nomem_io));
+	stub_complete_io(g_bdev.io_target, AVAIL);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&shared_resource->nomem_io));
+	SPDK_CU_ASSERT_FATAL(shared_resource->io_outstanding == 0);
+
+	spdk_put_io_channel(io_ch);
+	poll_threads();
+	teardown_test();
+}
+
+static void
 qos_dynamic_enable_done(void *cb_arg, int status)
 {
 	int *rc = cb_arg;
@@ -1267,6 +1324,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "enomem", enomem) == NULL ||
 		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL ||
 		CU_add_test(suite, "enomem_multi_io_target", enomem_multi_io_target) == NULL ||
+		CU_add_test(suite, "enomem_first_io", enomem_first_io) == NULL ||
 		CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable) == NULL
 	) {
 		CU_cleanup_registry();
