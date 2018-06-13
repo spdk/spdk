@@ -15,7 +15,7 @@ if [ -s /etc/redhat-release ]; then
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for DPDK
-	yum install -y numactl-devel
+	yum install -y numactl-devel nasm
 	# Additional dependencies for building docs
 	yum install -y doxygen mscgen graphviz
 	# Additional dependencies for building pmem based backends
@@ -29,7 +29,7 @@ elif [ -f /etc/debian_version ]; then
 	# Additional dependencies for NVMe over Fabrics
 	apt-get install -y libibverbs-dev librdmacm-dev
 	# Additional dependencies for DPDK
-	apt-get install -y libnuma-dev
+	apt-get install -y libnuma-dev nasm
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
 	# Additional dependencies for SPDK CLI
@@ -40,14 +40,14 @@ elif [ -f /etc/SuSE-release ]; then
 	# Additional dependencies for NVMe over Fabrics
 	zypper install -y rdma-core-devel
 	# Additional dependencies for DPDK
-	zypper install -y libnuma-devel
+	zypper install -y libnuma-devel nasm
 	# Additional dependencies for building pmem based backends
 	zypper install -y libpmemblk-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
 elif [ $SYSTEM = "FreeBSD" ] ; then
 	pkg install gmake cunit openssl git devel/astyle bash devel/pep8 \
-		python misc/e2fsprogs-libuuid sysutils/sg3_utils
+		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	# Additional dependencies for building docs
 	pkg install doxygen mscgen graphviz
 else
