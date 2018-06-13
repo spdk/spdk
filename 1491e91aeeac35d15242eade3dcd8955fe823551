@@ -50,6 +50,24 @@
       "revId": "1491e91aeeac35d15242eade3dcd8955fe823551",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13a612b6_d9fdb882",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1160,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-13T16:04:14Z",
+      "side": 1,
+      "message": "How about intermittent blobstore allocation failures I was mentioning before?\nE.g. blobstore.c:2141 (current master)\n\n```\nctx \u003d calloc(1, sizeof(struct rw_iov_ctx) + iovcnt * sizeof(struct iovec));\nif (ctx \u003d\u003d NULL) {\n\tcb_fn(cb_arg, -ENOMEM);\n\treturn;\n}\n```",
+      "parentUuid": "a404b4f3_9d6a7fad",
+      "revId": "1491e91aeeac35d15242eade3dcd8955fe823551",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
