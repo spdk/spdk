@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41928e52_52089e3b",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-13T10:28:03Z",
+      "side": 1,
+      "message": "can we use NULL attr in pthread_create instead? This should have the same functionality.",
+      "revId": "1e3ed6c011cbfdaaa8e31b8a9dd5d1b4a8e85c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
