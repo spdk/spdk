@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7fd88d89_74a1ce76",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-13T22:21:42Z",
+      "side": 1,
+      "message": "agr -\u003e arg",
+      "range": {
+        "startLine": 105,
+        "startChar": 10,
+        "endLine": 105,
+        "endChar": 13
+      },
+      "revId": "f5c59ebc7f5472b5cbd44747c0a4f933bbe476dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
