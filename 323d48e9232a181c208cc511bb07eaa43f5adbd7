@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ada5f903_28c449db",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-13T18:13:33Z",
+      "side": 1,
+      "message": "This gets both the client and server addresses",
+      "revId": "323d48e9232a181c208cc511bb07eaa43f5adbd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c355605f_cddc25ad",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-13T18:13:33Z",
+      "side": 1,
+      "message": "This returns the number of events on success.",
+      "revId": "323d48e9232a181c208cc511bb07eaa43f5adbd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
