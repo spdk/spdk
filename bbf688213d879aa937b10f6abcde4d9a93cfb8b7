@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a156094_7effe773",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-06-13T11:31:28Z",
+      "side": 1,
+      "message": "From the public OCSSD 2.0 Spec, vector reset should return chunk status into metadata.\nSince it seems this rule is not welcome to upper layers and firmware, maybe it is OK if we don\u0027t support it.",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8dc651ff_3cccfcbe",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-06-13T11:31:28Z",
+      "side": 1,
+      "message": "this code slice is almost same with spdk_nvme_ocssd_ns_cmd_vector_write_with_md.\nPrefer to combine them into one internal function, looks like this https://review.gerrithub.io/c/spdk/spdk/+/411851/2/lib/nvme/nvme_lnvm.c#124",
+      "range": {
+        "startLine": 139,
+        "startChar": 0,
+        "endLine": 187,
+        "endChar": 1
+      },
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
