@@ -53,6 +53,7 @@ class UIBdevs(UINode):
         UILvolBdev(self)
         UINvmeBdev(self)
         UINullBdev(self)
+        UIErrorBdev(self)
         UISplitBdev(self)
 
     def ui_command_delete(self, name):
@@ -297,6 +298,23 @@ class UINullBdev(UIBdev):
                                                     block_size=block_size,
                                                     name=name, uuid=uuid)
         self.shell.log.info(ret_name)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UIErrorBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "Error", parent)
+
+    def ui_command_create(self, base_name):
+        """
+        Construct a error injection bdev.
+
+        Arguments:
+        base_name - base bdev name on top of which error bdev will be created.
+        """
+
+        self.get_root().create_error_bdev(base_name=base_name)
         self.get_root().refresh()
         self.refresh()
 
