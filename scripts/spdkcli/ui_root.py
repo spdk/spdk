@@ -27,7 +27,7 @@ class UIRoot(UINode):
     def get_bdevs(self, bdev_type):
         self.current_bdevs = rpc.bdev.get_bdevs(self.client)
         # Following replace needs to be done in order for some of the bdev
-        # listings to work.
+        # listings to work: logical volumes, split disk.
         # For example logical volumes: listing in menu is "Logical_Volume"
         # (cannot have space), but the product name in SPDK is "Logical Volume"
         bdev_type = bdev_type.replace("_", " ")
@@ -35,6 +35,10 @@ class UIRoot(UINode):
                            self.current_bdevs):
             test = Bdev(bdev)
             yield test
+
+    def split_bdev(self, **kwargs):
+        response = rpc.bdev.construct_split_vbdev(self.client, **kwargs)
+        return self.print_array(response)
 
     def delete_bdev(self, name):
         rpc.bdev.delete_bdev(self.client, bdev_name=name)
