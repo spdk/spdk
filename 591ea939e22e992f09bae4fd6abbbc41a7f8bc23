@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "d4b7b881_63cda729",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-13T01:12:49Z",
+      "side": 1,
+      "message": "I cherry-picked and this was unused anywhere. Is this related with Daniels\u0027s feedback?",
+      "range": {
+        "startLine": 273,
+        "startChar": 1,
+        "endLine": 273,
+        "endChar": 37
+      },
+      "revId": "591ea939e22e992f09bae4fd6abbbc41a7f8bc23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ce7aba5_a6069cf3",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 23
