@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "738d7662_760e59e3",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 28
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-13T21:11:29Z",
+      "side": 1,
+      "message": "libcrypto is from OpenSSL, and we already require it for the iSCSI target, so we should be able to just add -lcrypto to SYS_LIBS in mk/spdk.common.mk.",
+      "range": {
+        "startLine": 57,
+        "startChar": 28,
+        "endLine": 57,
+        "endChar": 34
+      },
+      "revId": "f5191efe3e39efb5f04423fca93018d3d559ebf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
