@@ -138,6 +138,7 @@ struct spdk_scsi_task {
 	void *bdev_io;
 
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
+	bool outstanding;
 
 	uint32_t abort_id;
 };

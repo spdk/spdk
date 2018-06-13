@@ -47,10 +47,19 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 		return;
 	}
 
+	if (task->ref == 0) {
+		SPDK_ERRLOG("SCSI task is already freed\n");
+		return;
+	}
+
 	task->ref--;
 
 	if (task->ref == 0) {
 		struct spdk_bdev_io *bdev_io = task->bdev_io;
+
+		if (task->outstanding) {
+			SPDK_ERRLOG("Outstanding SCSI task is freed\n");
+		}
 
 		if (bdev_io) {
 			spdk_bdev_free_io(bdev_io);
