@@ -52,6 +52,7 @@ class UIBdevs(UINode):
         UIAIOBdev(self)
         UILvolBdev(self)
         UINvmeBdev(self)
+        UISplitBdev(self)
 
     def ui_command_delete(self, name):
         """
@@ -129,6 +130,36 @@ class UIBdev(UINode):
         """
         self.get_root().delete_bdev(name=name)
         self.get_root().refresh()
+        self.refresh()
+
+    def ui_command_split_bdev(self, base_bdev, split_count, split_size_mb=None):
+        """
+        Construct split block devices from a base bdev.
+
+        Arguments:
+        base_bdev - Name of bdev to split
+        split_count -  Number of split bdevs to create
+        split_size_mb- Size of each split volume in MiB (optional)
+        """
+
+        split_count = self.ui_eval_param(split_count, "number", None)
+        split_size_mb = self.ui_eval_param(split_size_mb, "number", None)
+
+        ret_name = self.get_root().split_bdev(base_bdev=base_bdev,
+                                              split_count=split_count,
+                                              split_size_mb=split_size_mb)
+        self.shell.log.info(ret_name)
+        self.parent.refresh()
+        self.refresh()
+
+    def ui_command_destruct_split_bdev(self, base_bdev):
+        """Destroy split block devices associated with base bdev.
+
+        Args:
+            base_bdev: name of previously split bdev
+        """
+        self.get_root().destruct_split_bdev(base_bdev=base_bdev)
+        self.parent.refresh()
         self.refresh()
 
     def summary(self):
@@ -242,6 +273,11 @@ class UINvmeBdev(UIBdev):
         self.shell.log.info(ret_name)
         self.get_root().refresh()
         self.refresh()
+
+
+class UISplitBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "Split_Disk", parent)
 
 
 class UIBdevObj(UINode):
