@@ -16,6 +16,24 @@
       "revId": "b86f8e287f834515980bd598d31963e6bc2baedd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a56d51d5_2b9f9c63",
+        "filename": "lib/nvme/nvme_ctrlr_ocssd_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-06-14T01:58:22Z",
+      "side": 1,
+      "message": "Currently, only CNEXLABS\u0027s qemu device is tagged with NVME_QUIRK_OCSSD.\nBut, we expect more manufacturers\u0027 devices. just like the TODO notes, not sure what way they will use to verify OCSSD functions.",
+      "parentUuid": "bac07a33_1b1f731c",
+      "revId": "b86f8e287f834515980bd598d31963e6bc2baedd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
