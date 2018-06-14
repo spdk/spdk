@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ff61797_2d81568e",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T19:35:10Z",
+      "side": 1,
+      "message": "nvme_ctrlr_create_bdev?\n\nnvme_ctrlr_ns_active_bdev does not contain a verb - it\u0027s not really clear from the function name exactly what this function does",
+      "revId": "fcd9a2de9a47fd61b05afce98a4492356aa83d51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ea039c9_687a296d",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T19:35:10Z",
+      "side": 1,
+      "message": "i think this error message needs to be adjusted",
+      "revId": "fcd9a2de9a47fd61b05afce98a4492356aa83d51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6060abd5_c8100565",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T19:35:10Z",
+      "side": 1,
+      "message": "should we add a check here that the specified namespace is active?",
+      "revId": "fcd9a2de9a47fd61b05afce98a4492356aa83d51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3842d6da_cf00ca70",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T19:35:10Z",
+      "side": 1,
+      "message": "simpler to just do:\n\nif (rc \u003d\u003d 0) {\n  bdev_created++;\n}",
+      "revId": "fcd9a2de9a47fd61b05afce98a4492356aa83d51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
