@@ -355,27 +355,10 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 static __thread unsigned int seed = 0;
 
 static void
-bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
+bdevperf_prep_task(struct bdevperf_task *task)
 {
-	spdk_bdev_io_completion_cb cb_fn;
-	struct spdk_bdev_desc	*desc;
-	struct spdk_io_channel	*ch;
-	uint64_t		offset_in_ios;
-	void			*rbuf;
-	int			rc;
-
-	desc = target->bdev_desc;
-	ch = target->ch;
-
-	if (!task) {
-		if (!TAILQ_EMPTY(&target->task_list)) {
-			task = TAILQ_FIRST(&target->task_list);
-			TAILQ_REMOVE(&target->task_list, task, link);
-		} else {
-			printf("Task allocation failed\n");
-			abort();
-		}
-	}
+	struct io_target *target = task->target;
+	uint64_t offset_in_ios;
 
 	if (g_is_random) {
 		offset_in_ios = rand_r(&seed) % target->size_in_ios;
@@ -404,6 +387,31 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 		task->iov.iov_len = g_io_size;
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 	}
+}
+
+static void
+bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
+{
+	spdk_bdev_io_completion_cb cb_fn;
+	struct spdk_bdev_desc	*desc;
+	struct spdk_io_channel	*ch;
+	void			*rbuf;
+	int			rc;
+
+	desc = target->bdev_desc;
+	ch = target->ch;
+
+	if (!task) {
+		if (!TAILQ_EMPTY(&target->task_list)) {
+			task = TAILQ_FIRST(&target->task_list);
+			TAILQ_REMOVE(&target->task_list, task, link);
+		} else {
+			printf("Task allocation failed\n");
+			abort();
+		}
+	}
+
+	bdevperf_prep_task(task);
 
 	switch (task->io_type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
