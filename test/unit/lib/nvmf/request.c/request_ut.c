@@ -113,7 +113,7 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
 }
 
 void
-spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair)
 {
 }
 

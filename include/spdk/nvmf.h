@@ -190,6 +190,13 @@ int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_qpair *qpair);
 
 /**
+ * Disconnect an NVMe-oF qpair
+ *
+ * \param qpair The NVMe-oF qpair to disconnect.
+ */
+void spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair);
+
+/**
  * Create an NVMe-oF subsystem.
  *
  * Subsystems are in one of three states: Inactive, Active, Paused. This
@@ -648,13 +655,6 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
  * \return the type of the specified subsystem.
  */
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
-
-/**
- * Disconnect the NVMe-oF controller.
- *
- * \param qpair The NVMe-oF qpair associated with the controller.
- */
-void spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair);
 
 #ifdef __cplusplus
 }

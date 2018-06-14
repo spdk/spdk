@@ -670,7 +670,7 @@ _spdk_nvmf_qpair_deactivate(void *ctx)
 }
 
 void
-spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair)
 {
 	/* Send a message to the thread that owns this qpair */
 	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_deactivate, qpair);
