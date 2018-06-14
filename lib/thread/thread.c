@@ -388,6 +388,7 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 
 	if (!dev) {
 		SPDK_ERRLOG("io_device %p not found\n", io_device);
+		assert(false);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
