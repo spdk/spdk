@@ -40,12 +40,6 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
-struct spdk_nvmf_qpair *
-spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
-{
-	return NULL;
-}
-
 int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
