@@ -576,6 +576,7 @@ static void usage(char *program_name)
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
 	printf("\t\t(only valid with -S)\n");
 	printf("\t[-S Show performance result in real time in seconds]\n");
+	spdk_tracelog_usage(stdout, "-L");
 }
 
 /*
@@ -805,6 +806,7 @@ main(int argc, char **argv)
 	int time_in_sec;
 	uint64_t show_performance_period_in_usec = 0;
 	int rc;
+	bool debug_mode = false;
 
 	/* default value */
 	config_file = NULL;
@@ -815,7 +817,7 @@ main(int argc, char **argv)
 	mix_specified = false;
 	core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:P:S:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:L:M:P:S:")) != -1) {
 		switch (op) {
 		case 'c':
 			config_file = optarg;
@@ -838,6 +840,22 @@ main(int argc, char **argv)
 		case 'w':
 			workload_type = optarg;
 			break;
+		case 'L':
+#ifndef DEBUG
+			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -L flag\n",
+				argv[0]);
+			usage(argv[0]);
+			exit(1);
+#else
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+			}
+
+			debug_mode = true;
+			break;
+#endif
 		case 'M':
 			g_rw_percentage = atoi(optarg);
 			mix_specified = true;
@@ -980,6 +998,9 @@ main(int argc, char **argv)
 	}
 
 	bdevtest_init(config_file, core_mask, &opts);
+	if (debug_mode) {
+		opts.print_level = SPDK_LOG_DEBUG;
+	}
 	opts.rpc_addr = NULL;
 	if (g_mem_size) {
 		opts.mem_size = g_mem_size;
