@@ -41,7 +41,7 @@ SCSI_OBJS = port
 ISCSI_OBJS = md5 param
 LIBS += $(SCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/scsi/%.o)
 LIBS += $(ISCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/iscsi/%.o)
-LIBS += -lcunit -lcrypto $(ENV_LINKER_ARGS)
+LIBS += -lcunit $(ENV_LINKER_ARGS)
 
 TEST_FILE = iscsi_ut.c
 
