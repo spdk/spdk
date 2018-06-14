@@ -74,6 +74,16 @@ def construct_aio_bdev(client, filename, name, block_size=None):
     return client.call('construct_aio_bdev', params)
 
 
+def delete_aio_bdev(client, name):
+    """Remove aio bdev from the system.
+
+    Args:
+        bdev_name: name of aio bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_aio_bdev', params)
+
+
 def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None):
     """Construct NVMe namespace block devices.
 

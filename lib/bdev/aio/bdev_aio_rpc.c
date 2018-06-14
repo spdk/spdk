@@ -34,7 +34,7 @@
 #include "bdev_aio.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
-
+#include "spdk/string.h"
 #include "spdk_internal/log.h"
 
 struct rpc_construct_aio {
@@ -98,3 +98,65 @@ invalid:
 	free_rpc_construct_aio(&req);
 }
 SPDK_RPC_REGISTER("construct_aio_bdev", spdk_rpc_construct_aio_bdev, SPDK_RPC_RUNTIME)
+
+struct rpc_delete_aio {
+	char *name;
+};
+
+static void
+free_rpc_delete_aio(struct rpc_delete_aio *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_delete_aio_decoders[] = {
+	{"name", offsetof(struct rpc_delete_aio, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_rpc_delete_aio_bdev_cb(void *cb_arg, int bdeverrno)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, bdeverrno == 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_rpc_delete_aio_bdev(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct rpc_delete_aio req = {NULL};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_delete_aio_decoders,
+				    SPDK_COUNTOF(rpc_delete_aio_decoders),
+				    &req)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	delete_aio_disk(bdev, _spdk_rpc_delete_aio_bdev_cb, request);
+
+	free_rpc_delete_aio(&req);
+
+	return;
+
+invalid:
+	free_rpc_delete_aio(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("delete_aio_bdev", spdk_rpc_delete_aio_bdev, SPDK_RPC_RUNTIME)

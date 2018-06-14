@@ -51,7 +51,7 @@ def get_bdev_destroy_method(bdev):
                           'construct_rbd_bdev': "delete_bdev",
                           'construct_malloc_bdev': "delete_bdev",
                           'construct_null_bdev': "delete_bdev",
-                          'construct_aio_bdev': "delete_bdev",
+                          'construct_aio_bdev': "delete_aio_bdev",
                           'construct_error_bdev': "delete_bdev",
                           'construct_split_vbdev': "destruct_split_vbdev",
                           'construct_virtio_dev': {
