@@ -4344,6 +4344,11 @@ _spdk_bs_snapshot_freeze_cpl(void *cb_arg, int rc)
 	struct spdk_blob *origblob = ctx->original.blob;
 	struct spdk_blob *newblob = ctx->new.blob;
 
+	if (rc != 0) {
+		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, rc);
+		return;
+	}
+
 	ctx->frozen = true;
 
 	/* set new back_bs_dev for snapshot */
