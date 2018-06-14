@@ -316,7 +316,7 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_array_begin(w, "hosts");
 	for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
 	     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
-		spdk_json_write_named_string(w, "nqn", spdk_nvmf_host_get_nqn(host));
+		spdk_json_write_string(w, spdk_nvmf_host_get_nqn(host));
 	}
 	spdk_json_write_array_end(w);
 	/*         ] "hosts" */
