@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24c15f6c_78a94a52",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T19:30:52Z",
+      "side": 1,
+      "message": "add new line after this declaration",
+      "revId": "b24f4bba1155361e6fa6994b78deb6ec7a990bc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c053ead0_009bd2fe",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 875,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T19:30:52Z",
+      "side": 1,
+      "message": "should we only check nvme_bdev-\u003eactive?\n\nif active \u003d\u003d true, but spdk_nvme_ctrlr_is_active_ns \u003d\u003d false, what would that mean?",
+      "revId": "b24f4bba1155361e6fa6994b78deb6ec7a990bc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e297b852_0270a70f",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T19:30:52Z",
+      "side": 1,
+      "message": "can we just check nvme_bdev-\u003eactive?\n\nwe only create a bdev if the namespace is active, so i\u0027m not sure why we need to check this again here",
+      "revId": "b24f4bba1155361e6fa6994b78deb6ec7a990bc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
