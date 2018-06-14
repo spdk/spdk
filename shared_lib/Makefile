@@ -91,7 +91,6 @@ $(SHARED_LIB): $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(
 		$(filter-out -Wl$(comma)--no-whole-archive,$(LIBS)) \
 		-Wl,--no-whole-archive \
 		-Wl,--version-script=spdk.map \
-		-lcrypto \
 		$(SYS_LIBS)
 
 .PHONY: all clean $(DIRS-y)
