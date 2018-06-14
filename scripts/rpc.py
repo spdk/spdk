@@ -1009,9 +1009,9 @@ if __name__ == "__main__":
     p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int)
     p.add_argument('-p', '--max-qpairs-per-ctrlr', help='Max number of SQ and CQ per controller', type=int)
     p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int)
-    p.add_argument('-i', '--max-io-size', help='Max I/O size', type=int)
+    p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
     p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int)
-    p.add_argument('-u', '--io-unit-size', help='I/O unit size', type=int)
+    p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
     p.set_defaults(func=set_nvmf_target_options)
 
     @call_cmd
@@ -1020,7 +1020,7 @@ if __name__ == "__main__":
                                         acceptor_poll_rate=args.acceptor_poll_rate)
 
     p = subparsers.add_parser('set_nvmf_target_config', help='Set NVMf target config')
-    p.add_argument('-r', '--acceptor-poll-rate', help='How often the acceptor polls for incoming connections', type=int)
+    p.add_argument('-r', '--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
     p.set_defaults(func=set_nvmf_target_config)
 
     @call_cmd

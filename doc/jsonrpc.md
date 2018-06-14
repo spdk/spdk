@@ -77,13 +77,46 @@ Example response:
 }
 ~~~
 
+## start_subsystem_init {#rpc_start_subsystem_init}
+
+Start initialization of SPDK subsystems when it is deferred by starting SPDK application with option -w.
+During its deferral some RPCs can be used to set global parameters for SPDK subsystems.
+This RPC can be called only once.
+
+### Parameters
+
+None
+
+### Response
+
+Completion status of SPDK subsystem initialization is returned as a boolean.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "start_subsystem_init"
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
 
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## set_bdev_options {#rpc_set_bdev_options}
 
 Set global parameters for the block device (bdev) subsystem.  This RPC may only be called
-before subsystems have been initialized.
+before SPDK subsystems have been initialized.
 
 ### Parameters
 
@@ -683,6 +716,84 @@ Example request:
 
 Example response:
 
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## set_nvmf_target_options {#rpc_set_nvmf_target_options}
+
+Set global parameters for the NVMe-oF target.  This RPC may only be called before SPDK subsystems
+have been initialized.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+max_queue_depth         | Optional | number      | Maximum number of outstanding I/Os per queue
+max_qpairs_per_ctrlr    | Optional | number      | Maximum number of SQ and CQ per controller
+in_capsule_data_size    | Optional | number      | Maximum number of in-capsule data size
+max_io_size             | Optional | number      | Maximum I/O size (bytes)
+max_subsystems          | Optional | number      | Maximum number of NVMe-oF subsystems
+io_unit_size            | Optional | number      | I/O unit size (bytes)
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "set_nvmf_target_options",
+  "params": {
+    "in_capsule_data_size": 4096,
+    "io_unit_size": 131072,
+    "max_qpairs_per_ctrlr": 64,
+    "max_queue_depth": 128,
+    "max_io_size": 131072,
+    "max_subsystems": 1024
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## set_nvmf_target_config {#rpc_set_nvmf_target_config}
+
+Set global configuration of NVMe-oF target.  This RPC may only be called before SPDK subsystems
+have been initialized.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+acceptor_poll_rate      | Optional | number      | Polling interval of the acceptor for incoming connections (microseconds)
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "set_nvmf_target_config",
+  "params": {
+    "acceptor_poll_rate": 10000
+  }
+}
+~~~
+
+Example response:
 ~~~
 {
   "jsonrpc": "2.0",
