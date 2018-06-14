@@ -52,6 +52,24 @@
       "revId": "b86f8e287f834515980bd598d31963e6bc2baedd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa26eb21_bec62771",
+        "filename": "lib/nvme/nvme_ctrlr_ocssd_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012287
+      },
+      "writtenOn": "2018-06-14T18:42:46Z",
+      "side": 1,
+      "message": "since the current linux kernel nvme driver relies on quirk and vs[0] as below, the similar approach might be enough.\n---\ncommit 608cc4b14aeadcf3e4dc325fc211b7052e74b50c\nAuthor:     Christoph Hellwig \u003chch@lst.de\u003e\nAuthorDate: Wed Sep 6 11:45:24 2017 +0200\nCommit:     Christoph Hellwig \u003chch@lst.de\u003e\nCommitDate: Mon Sep 11 12:29:36 2017 -0400\n\n    nvme: fix lightnvm check\n    \n    nvme_nvm_ns_supported assumes every device is a pci_dev, which leads to\n    reading an incorrect field, or possible even a dereference of unallocated\n    memory for fabrics controllers.\n    \n    Fix this by introducing a quirk for lighnvm capable devices instead.\n    \n    Signed-off-by: Christoph Hellwig \u003chch@lst.de\u003e\n    Reviewed-by: Matias Bj?ling \u003cmb@lightnvm.io\u003e\n    Reviewed-by: Keith Busch \u003ckeith.busch@intel.com\u003e\n    Reviewed-by: Sagi Grimberg \u003csagi@grimberg.me\u003e\n\ndiff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c\nindex 277a7a0..8040fc1 100644\n--- a/drivers/nvme/host/core.c\n+++ b/drivers/nvme/host/core.c\n@@ -2377,10 +2377,11 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid\n \n        nvme_report_ns_ids(ctrl, ns-\u003ens_id, id, ns-\u003eeui, ns-\u003enguid, \u0026ns-\u003euuid);\n \n-       if (nvme_nvm_ns_supported(ns, id) \u0026\u0026\n-                               nvme_nvm_register(ns, disk_name, node)) {\n-               dev_warn(ctrl-\u003edevice, \"%s: LightNVM init failure\\n\", __func__);\n-               goto out_free_id;\n+       if ((ctrl-\u003equirks \u0026 NVME_QUIRK_LIGHTNVM) \u0026\u0026 id-\u003evs[0] \u003d\u003d 0x1) {\n+               if (nvme_nvm_register(ns, disk_name, node)) {\n+                       dev_warn(ctrl-\u003edevice, \"LightNVM init failure\\n\");\n+                       goto out_free_id;\n+               }\n        }\n \n        disk \u003d alloc_disk_node(0, node);",
+      "parentUuid": "6af9a8e2_ce712fd7",
+      "revId": "b86f8e287f834515980bd598d31963e6bc2baedd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
