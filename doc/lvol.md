@@ -28,6 +28,18 @@ A logical volume block device translates generic SPDK block device I/O (spdk_bde
 Size of the new bdev will be rounded up to nearest multiple of cluster_size.
 By default lvol bdevs claim part of lvol store equal to their set size. When thin provision option is enabled, no space is taken from lvol store until data is written to lvol bdev.
 
+## Thin provisioning {#lvol_thin_provisioning}
+
+Thin provisioned lvols rely on dynamic cluster allocation (e.g. when the first write operation on a cluster is performed), only space required to store data is used and unallocated clusters are obtained from underlying device (e.g. zeroes_dev).
+
+Sample write operations of thin provisioned blob are shown on the diagram below:
+
+![Writing clusters to the thin provisioned blob](lvol_thin_provisioning_write.svg)
+
+Sample read operations and the structure of thin provisioned blob are shown on the diagram below:
+
+![Reading clusters from thin provisioned blob](lvol_thin_provisioning.svg)
+
 ## Snapshots and clone {#lvol_snapshots}
 
 Logical volumes support snapshots and clones functionality. User may at any given time create snapshot of existing logical volume to save a backup of current volume state.
