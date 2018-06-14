@@ -77,9 +77,6 @@ spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
-	transport->ops = ops;
-	transport->tgt = tgt;
-
 	return transport;
 }
 
