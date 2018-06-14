@@ -172,6 +172,15 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_aio_bdev)
 
     @call_cmd
+    def delete_aio_bdev(args):
+        rpc.bdev.delete_aio_bdev(args.client,
+                                 name=args.name)
+
+    p = subparsers.add_parser('delete_aio_bdev', help='Delete an aio disk')
+    p.add_argument('name', help='aio bdev name')
+    p.set_defaults(func=delete_malloc_bdev)
+
+    @call_cmd
     def construct_nvme_bdev(args):
         print_array(rpc.bdev.construct_nvme_bdev(args.client,
                                                  name=args.name,

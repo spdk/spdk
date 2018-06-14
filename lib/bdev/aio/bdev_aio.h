@@ -65,6 +65,10 @@ struct file_disk {
 	bool			block_size_override;
 };
 
+typedef void (*spdk_delete_aio_complete)(void *cb_arg, int bdeverrno);
+
 struct spdk_bdev *create_aio_disk(const char *name, const char *filename, uint32_t block_size);
+
+void delete_aio_disk(struct spdk_bdev *bdev, spdk_delete_aio_complete cb_fn, void *cb_arg);
 
 #endif // SPDK_BDEV_AIO_H
