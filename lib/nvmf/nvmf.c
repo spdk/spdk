@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
+#include "spdk/bit_array.h"
 #include "spdk/conf.h"
 #include "spdk/thread.h"
 #include "spdk/nvmf.h"
@@ -587,6 +588,92 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 	}
 
 	return rc;
+}
+
+static void
+_spdk_nvmf_ctrlr_free(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
+	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
+
+	free(ctrlr);
+}
+
+static void
+_spdk_nvmf_qpair_destroy(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+
+	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
+	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
+
+	spdk_nvmf_transport_qpair_fini(qpair);
+}
+
+static void
+_spdk_nvmf_ctrlr_remove_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	assert(ctrlr != NULL);
+
+	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
+	spdk_bit_array_clear(ctrlr->qpair_mask, qpair->qid);
+
+	/* Send a message to the thread that owns the qpair and destroy it. */
+	qpair->ctrlr = NULL;
+	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_destroy, qpair);
+
+	if (spdk_bit_array_count_set(ctrlr->qpair_mask) == 0) {
+		/* If this was the last queue pair on the controller, also send a message
+		 * to the subsystem to remove the controller. */
+		spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free, ctrlr);
+	}
+}
+
+static void
+_spdk_nvmf_qpair_quiesced(void *cb_arg, int status)
+{
+	struct spdk_nvmf_qpair *qpair = cb_arg;
+
+	/* Send a message to the controller thread to remove the qpair from its internal
+	 * list. */
+	spdk_thread_send_msg(qpair->ctrlr->admin_qpair->group->thread, _spdk_nvmf_ctrlr_remove_qpair,
+			     qpair);
+}
+
+static void
+_spdk_nvmf_qpair_deactivate(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+
+	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
+	qpair->state = SPDK_NVMF_QPAIR_DEACTIVATING;
+
+	if (qpair->ctrlr == NULL) {
+		/* This qpair was never added to a controller. Skip a step
+		 * and destroy it immediately. */
+		_spdk_nvmf_qpair_destroy(qpair);
+		return;
+	}
+
+	/* Check for outstanding I/O */
+	if (!TAILQ_EMPTY(&qpair->outstanding)) {
+		qpair->state_cb = _spdk_nvmf_qpair_quiesced;
+		qpair->state_cb_arg = qpair;
+		return;
+	}
+
+	_spdk_nvmf_qpair_quiesced(qpair, 0);
+}
+
+void
+spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
+{
+	/* Send a message to the thread that owns this qpair */
+	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_deactivate, qpair);
 }
 
 int
