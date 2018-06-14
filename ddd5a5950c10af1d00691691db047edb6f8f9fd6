@@ -45,6 +45,54 @@
       "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7936e5e7_7a3280ac",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 68
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-14T08:11:39Z",
+      "side": 1,
+      "message": "Loading config consists of two levels:\nIteration 1 (level 1): set spdk target by some variables like MaxQueuePerSession.",
+      "parentUuid": "af058c77_a5d73a4a",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 75
+      },
+      "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03743fab_b3c8ff4e",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 68
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-14T08:11:39Z",
+      "side": 1,
+      "message": "Iteration 2: load bdevs like Malloc or Nvme.",
+      "parentUuid": "b0a9e04f_521f7858",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 75
+      },
+      "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
