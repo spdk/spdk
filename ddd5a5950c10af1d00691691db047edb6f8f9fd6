@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "11c1f64b_c2649ced",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 68
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T09:32:18Z",
+      "side": 1,
+      "message": "extract_unneeded_params may be meaningful? unnecessary methods are picked up but not deleted actually.",
+      "range": {
+        "startLine": 6,
+        "startChar": 4,
+        "endLine": 6,
+        "endChar": 26
+      },
+      "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0a9e04f_521f7858",
         "filename": "test/json_config/config_parser.py",
         "patchSetId": 68
