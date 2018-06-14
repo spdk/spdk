@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "34994104_228f2c44",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 29
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-14T09:38:57Z",
+      "side": 1,
+      "message": "One way to tod this would be implement in lvol layer calls like:\n\nspdk_lvol_deletable_and_lock(lvol);\n...\nspdk_lvol_delete_and_unlock(lvol);\nspdk_lvol_unlock(lvol);\n\nBut we think that simpler solution would be to merge lvol and vbdev_lvol layers. This idea is going to be discussed separately.",
+      "parentUuid": "99d4a497_728e5b6e",
+      "range": {
+        "startLine": 212,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 49
+      },
+      "revId": "005c9a5e0f3617fcecdb85f133f2b3ba9d3daadb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2429211b_f845f90d",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 29
