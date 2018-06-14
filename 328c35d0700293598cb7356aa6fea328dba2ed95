@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d53a6955_87f037e6",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-14T13:56:43Z",
+      "side": 1,
+      "message": "SPDK repo is not present on initiator",
+      "parentUuid": "17139019_bcc8e3d9",
+      "range": {
+        "startLine": 21,
+        "startChar": 6,
+        "endLine": 21,
+        "endChar": 56
+      },
+      "revId": "328c35d0700293598cb7356aa6fea328dba2ed95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aeee414f_a2c44116",
         "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
         "patchSetId": 24
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-14T08:20:56Z",
       "side": 1,
       "message": "There is a function in autotest_common.sh for that which you can use",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 34
+      },
+      "revId": "328c35d0700293598cb7356aa6fea328dba2ed95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7debac74_92262a6a",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-14T13:56:43Z",
+      "side": 1,
+      "message": "SPDK repo is not available on initiator",
+      "parentUuid": "aeee414f_a2c44116",
       "range": {
         "startLine": 37,
         "startChar": 0,
@@ -105,6 +153,30 @@
       "writtenOn": "2018-06-14T08:20:56Z",
       "side": 1,
       "message": "Not sure so just asking - is \"| cat\" really needed? Shouldnt this just work with \u003e redirection?",
+      "range": {
+        "startLine": 140,
+        "startChar": 47,
+        "endLine": 140,
+        "endChar": 52
+      },
+      "revId": "328c35d0700293598cb7356aa6fea328dba2ed95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15733c9b_f0d356a0",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-14T13:56:43Z",
+      "side": 1,
+      "message": "This should also work",
+      "parentUuid": "e749acaf_cf5aa202",
       "range": {
         "startLine": 140,
         "startChar": 47,
