@@ -603,9 +603,8 @@ _call_channel(void *ctx)
 
 	if (ch) {
 		i->fn(i);
-	} else {
-		spdk_for_each_channel_continue(i, 0);
 	}
+	spdk_for_each_channel_continue(i, 0);
 }
 
 void
