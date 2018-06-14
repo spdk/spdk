@@ -558,12 +558,12 @@ static void usage(char *program_name)
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
-	printf("\t[-t time in seconds]\n");
 	printf("\t[-P Number of moving average period]\n");
 	printf("\t\t(If set to n, show weighted mean of the previous n IO/s in real time)\n");
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
 	printf("\t\t(only valid with -S)\n");
 	printf("\t[-S Show performance result in real time in seconds]\n");
+	printf("\t[-T time in seconds]\n");
 }
 
 /*
@@ -803,7 +803,7 @@ main(int argc, char **argv)
 	mix_specified = false;
 	core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:P:S:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:m:q:s:w:M:P:S:T:")) != -1) {
 		switch (op) {
 		case 'c':
 			config_file = optarg;
@@ -820,9 +820,6 @@ main(int argc, char **argv)
 		case 's':
 			g_io_size = atoi(optarg);
 			break;
-		case 't':
-			time_in_sec = atoi(optarg);
-			break;
 		case 'w':
 			workload_type = optarg;
 			break;
@@ -838,6 +835,9 @@ main(int argc, char **argv)
 			show_performance_period_in_usec = atoi(optarg) * 1000000;
 			g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
 							    show_performance_period_in_usec);
+			break;
+		case 'T':
+			time_in_sec = atoi(optarg);
 			break;
 		default:
 			usage(argv[0]);
