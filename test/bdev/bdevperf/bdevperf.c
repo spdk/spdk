@@ -49,6 +49,7 @@ struct bdevperf_task {
 	struct io_target		*target;
 	void				*buf;
 	uint64_t			offset_blocks;
+	enum spdk_bdev_io_type		io_type;
 	TAILQ_ENTRY(bdevperf_task)	link;
 };
 
@@ -356,6 +357,7 @@ static __thread unsigned int seed = 0;
 static void
 bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 {
+	spdk_bdev_io_completion_cb cb_fn;
 	struct spdk_bdev_desc	*desc;
 	struct spdk_io_channel	*ch;
 	uint64_t		offset_in_ios;
@@ -389,24 +391,43 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 		memset(task->buf, rand_r(&seed) % 256, g_io_size);
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
-		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
-					     target->io_size_blocks, bdevperf_verify_write_complete, task);
+		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 	} else if (g_flush) {
-		rc = spdk_bdev_flush_blocks(desc, ch, task->offset_blocks,
-					    target->io_size_blocks, bdevperf_complete, task);
+		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
 	} else if (g_unmap) {
-		rc = spdk_bdev_unmap_blocks(desc, ch, task->offset_blocks,
-					    target->io_size_blocks, bdevperf_complete, task);
+		task->io_type = SPDK_BDEV_IO_TYPE_UNMAP;
 	} else if ((g_rw_percentage == 100) ||
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
-		rbuf = g_zcopy ? NULL : task->buf;
-		rc = spdk_bdev_read_blocks(desc, ch, rbuf, task->offset_blocks,
-					   target->io_size_blocks, bdevperf_complete, task);
+		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
+		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
+	}
+
+	switch (task->io_type) {
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
 		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
-					     target->io_size_blocks, bdevperf_complete, task);
+					     target->io_size_blocks, cb_fn, task);
+		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		rc = spdk_bdev_flush_blocks(desc, ch, task->offset_blocks,
+					    target->io_size_blocks, bdevperf_complete, task);
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		rc = spdk_bdev_unmap_blocks(desc, ch, task->offset_blocks,
+					    target->io_size_blocks, bdevperf_complete, task);
+		break;
+	case SPDK_BDEV_IO_TYPE_READ:
+		rbuf = g_zcopy ? NULL : task->buf;
+		rc = spdk_bdev_read_blocks(desc, ch, rbuf, task->offset_blocks,
+					   target->io_size_blocks, bdevperf_complete, task);
+		break;
+	default:
+		assert(false);
+		rc = -EINVAL;
+		break;
 	}
 
 	if (rc) {
