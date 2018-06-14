@@ -400,7 +400,6 @@ channel(void)
 
 	spdk_io_device_unregister(&device1, NULL);
 	spdk_io_device_unregister(&device2, NULL);
-	spdk_io_device_unregister(&device3, NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
 	spdk_free_thread();
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
