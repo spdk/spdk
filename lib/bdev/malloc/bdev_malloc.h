@@ -40,5 +40,6 @@
 
 struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *uuid,
 				     uint64_t num_blocks, uint32_t block_size);
+void delete_malloc_disk(struct spdk_bdev *bdev);
 
 #endif /* SPDK_BDEV_MALLOC_H */

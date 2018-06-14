@@ -448,6 +448,12 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	return &mdisk->disk;
 }
 
+void
+delete_malloc_disk(struct spdk_bdev *bdev)
+{
+	bdev_malloc_destruct(bdev->ctxt);
+}
+
 static int bdev_malloc_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
