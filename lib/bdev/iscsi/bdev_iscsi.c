@@ -63,6 +63,7 @@ static TAILQ_HEAD(, bdev_iscsi_lun) g_iscsi_lun_head = TAILQ_HEAD_INITIALIZER(g_
 static TAILQ_HEAD(, bdev_iscsi_conn_req) g_iscsi_conn_req = TAILQ_HEAD_INITIALIZER(
 			g_iscsi_conn_req);
 static struct spdk_poller *g_conn_poller = NULL;
+static bool g_finish_in_process = false;
 
 struct bdev_iscsi_io {
 	struct spdk_thread *submit_td;
@@ -140,7 +141,7 @@ bdev_iscsi_lun_cleanup(struct bdev_iscsi_lun *lun)
 	TAILQ_REMOVE(&g_iscsi_lun_head, lun, link);
 	iscsi_destroy_context(lun->context);
 	iscsi_free_lun(lun);
-	if (TAILQ_EMPTY(&g_iscsi_lun_head)) {
+	if (TAILQ_EMPTY(&g_iscsi_lun_head) && g_finish_in_process) {
 		bdev_iscsi_finish_done();
 		spdk_bdev_module_finish_done();
 	}
@@ -163,6 +164,12 @@ static void
 bdev_iscsi_finish(void)
 {
 	struct bdev_iscsi_lun *lun, *tmp;
+
+	/*
+	 * Set this flag so that bdev_iscsi_lun_cleanup knows it needs to mark
+	 *  the module finish as done when the TAILQ is not empty.
+	 */
+	g_finish_in_process = true;
 
 	if (TAILQ_EMPTY(&g_iscsi_lun_head)) {
 		bdev_iscsi_finish_done();
