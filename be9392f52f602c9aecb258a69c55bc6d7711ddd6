@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e24d5a93_da93f8f5",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-14T09:25:38Z",
+      "side": 1,
+      "message": "I\u0027m still not clear whether blobstore\u0027s sector size should be set by bs opts. Using the underlying block device formatted sector size seem more intuitive. \n\nIs it necessary to let user create 4KB blobstore on 512B formatted device ?",
+      "range": {
+        "startLine": 193,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 20
+      },
+      "revId": "be9392f52f602c9aecb258a69c55bc6d7711ddd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3775ef2c_be88964c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1691,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-14T09:25:38Z",
+      "side": 1,
+      "message": "This wasn\u0027t added in header file.",
+      "range": {
+        "startLine": 1691,
+        "startChar": 8,
+        "endLine": 1691,
+        "endChar": 31
+      },
+      "revId": "be9392f52f602c9aecb258a69c55bc6d7711ddd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1324015b_818c7f39",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-14T09:25:38Z",
+      "side": 1,
+      "message": "sector ?",
+      "range": {
+        "startLine": 412,
+        "startChar": 8,
+        "endLine": 412,
+        "endChar": 12
+      },
+      "revId": "be9392f52f602c9aecb258a69c55bc6d7711ddd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc7a8956_740aca3b",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-14T09:25:38Z",
+      "side": 1,
+      "message": "Well even this implementation shows that there is 1:1 relation between sector and lba of underlying device. Is this needed ?\n\nUnless you meant to do blobstore-\u003esector_sz / bs_dev-\u003eblocklen, when sector_sz is not reliant on block size of device below ?",
+      "range": {
+        "startLine": 409,
+        "startChar": 0,
+        "endLine": 413,
+        "endChar": 1
+      },
+      "revId": "be9392f52f602c9aecb258a69c55bc6d7711ddd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
