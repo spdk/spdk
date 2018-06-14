@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f90189d_d261ca0f",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-14T22:39:44Z",
+      "side": 1,
+      "message": "Setting the DPDK options this way doesn\u0027t actually work unless they are commented out in the DPDK config file, so this will need more submodule changes before it will actually build the DPDK crypto libs.",
+      "revId": "4d1503179d82cb81316390d1d14af642797c9b1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
