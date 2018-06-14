@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84494eed_f381d3dd",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T17:26:48Z",
+      "side": 1,
+      "message": "I think these should go in class UISplitBdev?  otherwise these commands are available anywhere under Bdev.  That would be inconsistent with other bdev commands.",
+      "revId": "68b22a6e13ce4e28a1878dd367841f8a620e2c86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
