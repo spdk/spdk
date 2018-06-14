@@ -22,6 +22,30 @@
       "revId": "086595cd79cf4f29b624fe85452c3f2622ba32ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c39faed_32116823",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T04:27:55Z",
+      "side": 1,
+      "message": "Thanks for your review Ziye.  My intention is when spdk_bdev_io structure becomes available, it should call this same function again.  Can you clarify which function should go here if it is not _bdevperf_submit_single?  Thanks.",
+      "parentUuid": "68dc7c8d_d4883390",
+      "range": {
+        "startLine": 430,
+        "startChar": 29,
+        "endLine": 430,
+        "endChar": 52
+      },
+      "revId": "086595cd79cf4f29b624fe85452c3f2622ba32ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
