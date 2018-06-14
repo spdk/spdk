@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "ef8547bd_63af0f2e",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-14T17:37:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f2f2723a_407f4795",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f3db1cc_dff4ab2f",
         "filename": "lib/nvme/Makefile",
         "patchSetId": 1
@@ -48,6 +66,24 @@
       "writtenOn": "2018-06-13T17:32:09Z",
       "side": 1,
       "message": "If you\u0027re going back to fix things, please break this to the next line",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b129a13a_c847b8d5",
+        "filename": "lib/nvme/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-14T17:37:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f3db1cc_dff4ab2f",
       "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -125,6 +161,24 @@
     },
     {
       "key": {
+        "uuid": "b75c60ef_10fc2773",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-14T17:37:07Z",
+      "side": 1,
+      "message": "I assume no change is needed for now, ok?",
+      "parentUuid": "5f8871ee_70126749",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "909c4657_aa21e6d8",
         "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
         "patchSetId": 1
@@ -154,6 +208,24 @@
       "side": 1,
       "message": "Ack",
       "parentUuid": "909c4657_aa21e6d8",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4efcdad4_64a5db6b",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-14T17:37:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46dc4d25_f07dbca9",
       "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -195,6 +267,24 @@
     },
     {
       "key": {
+        "uuid": "68235ee0_feb1db3e",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-14T17:37:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2243faf4_b942734c",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19279b11_462c1062",
         "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
         "patchSetId": 1
@@ -206,6 +296,24 @@
       "writtenOn": "2018-06-13T17:32:09Z",
       "side": 1,
       "message": "Instead of PAGE_SIZE, this needs to be using the logical block size, which is stored in ns-\u003esector_size.\n\nI don\u0027t know what a \"namespace\" even is in OCSSD, but I assume this is the right way to get the value.",
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3bdba25_711697a2",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-14T17:37:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19279b11_462c1062",
       "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -232,6 +340,30 @@
       "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6dd2407b_694e374a",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-14T17:37:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8dc651ff_3cccfcbe",
+      "range": {
+        "startLine": 139,
+        "startChar": 0,
+        "endLine": 187,
+        "endChar": 1
+      },
+      "revId": "bbf688213d879aa937b10f6abcde4d9a93cfb8b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
