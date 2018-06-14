@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b160607b_e195948d",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T10:48:11Z",
+      "side": 1,
+      "message": "Is this getbdevs needed?",
+      "range": {
+        "startLine": 50,
+        "startChar": 9,
+        "endLine": 50,
+        "endChar": 18
+      },
+      "revId": "3db9e86d45461db97862188838028b52fe1b5230",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1f5eced_d022ba54",
+        "filename": "test/json_config/spdk_tgt.conf.base",
+        "patchSetId": 70
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T10:48:11Z",
+      "side": 1,
+      "message": "Oh please remove this section or change to Enable No.\nDisable Yes is deprecated in 18.07 and I changed remaining by recent patch.",
+      "revId": "3db9e86d45461db97862188838028b52fe1b5230",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
