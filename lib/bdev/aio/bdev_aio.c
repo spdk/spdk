@@ -547,6 +547,17 @@ error_return:
 	return NULL;
 }
 
+void
+delete_aio_disk(struct spdk_bdev *bdev, spdk_delete_aio_complete cb_fn, void *cb_arg)
+{
+	if (!bdev || bdev->module != &aio_if) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+}
+
 static int
 bdev_aio_initialize(void)
 {

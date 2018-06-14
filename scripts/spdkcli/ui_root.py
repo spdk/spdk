@@ -57,6 +57,9 @@ class UIRoot(UINode):
         response = rpc.bdev.construct_aio_bdev(self.client, **kwargs)
         return self.print_array(response)
 
+    def delete_aio_bdev(self, **kwargs):
+        rpc.bdev.delete_aio_bdev(self.client, **kwargs)
+
     def create_lvol_bdev(self, **kwargs):
         response = rpc.lvol.construct_lvol_bdev(self.client, **kwargs)
         return self.print_array(response)
