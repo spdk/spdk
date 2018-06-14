@@ -564,6 +564,7 @@ static void usage(char *program_name)
 	printf("\t\t(only valid with -S)\n");
 	printf("\t[-S Show performance result in real time in seconds]\n");
 	printf("\t[-T time in seconds]\n");
+	spdk_tracelog_usage(stdout, "-t");
 }
 
 /*
@@ -793,6 +794,7 @@ main(int argc, char **argv)
 	int time_in_sec;
 	uint64_t show_performance_period_in_usec = 0;
 	int rc;
+	bool debug_mode = false;
 
 	/* default value */
 	config_file = NULL;
@@ -803,7 +805,7 @@ main(int argc, char **argv)
 	mix_specified = false;
 	core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "c:d:m:q:s:w:M:P:S:T:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:P:S:T:")) != -1) {
 		switch (op) {
 		case 'c':
 			config_file = optarg;
@@ -820,6 +822,23 @@ main(int argc, char **argv)
 		case 's':
 			g_io_size = atoi(optarg);
 			break;
+		case 't':
+#ifndef DEBUG
+			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
+				argv[0]);
+			usage(argv[0]);
+			exit(1);
+#else
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+
+			}
+
+			debug_mode = true;
+			break;
+#endif
 		case 'w':
 			workload_type = optarg;
 			break;
@@ -968,6 +987,9 @@ main(int argc, char **argv)
 	}
 
 	bdevtest_init(config_file, core_mask, &opts);
+	if (debug_mode) {
+		opts.print_level = SPDK_LOG_DEBUG;
+	}
 	opts.rpc_addr = NULL;
 	if (g_mem_size) {
 		opts.mem_size = g_mem_size;
