@@ -155,6 +155,7 @@ bdev_rbd_init(const char *rbd_pool_name, const char *rbd_name, rbd_image_info_t 
 		goto err;
 	}
 
+	rados_ioctx_destroy(io_ctx);
 	return 0;
 err:
 	rados_ioctx_destroy(io_ctx);
