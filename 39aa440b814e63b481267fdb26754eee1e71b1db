@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dad3fa65_526f2aaa",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-14T19:37:19Z",
+      "side": 1,
+      "message": "The user is supposed to call spdk_for_each_channel_continue() inside the callback - see the docs for spdk_for_each_channel() in thread.h.  This allows the iterator to be used asynchronously.\n\nIf there are any channel iterator functions missing this call, we should fix those rather than changing this function.",
+      "revId": "39aa440b814e63b481267fdb26754eee1e71b1db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
