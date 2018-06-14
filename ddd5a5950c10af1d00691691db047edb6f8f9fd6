@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "4a693096_df622ceb",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T09:30:03Z",
+      "side": 1,
+      "message": "runtime may be better to be added to the name?\nThe file may include RPCs callable during runtime.",
+      "range": {
+        "startLine": 42,
+        "startChar": 76,
+        "endLine": 42,
+        "endChar": 92
+      },
+      "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0a9e04f_521f7858",
         "filename": "test/json_config/config_parser.py",
         "patchSetId": 68
@@ -89,6 +112,75 @@
         "startChar": 0,
         "endLine": 19,
         "endChar": 75
+      },
+      "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3b5b5f0_a447e040",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 68
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T09:30:03Z",
+      "side": 1,
+      "message": "delete_startup_rpcs may be intuitive ?",
+      "range": {
+        "startLine": 20,
+        "startChar": 4,
+        "endLine": 20,
+        "endChar": 15
+      },
+      "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49975059_bac565df",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 68
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T09:30:03Z",
+      "side": 1,
+      "message": "delete_runtime_rpcs may be intuitive ?",
+      "range": {
+        "startLine": 36,
+        "startChar": 4,
+        "endLine": 36,
+        "endChar": 14
+      },
+      "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2c2de8c_b9a4f2ae",
+        "filename": "test/json_config/spdk_tgt.conf.base",
+        "patchSetId": 68
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T09:30:03Z",
+      "side": 1,
+      "message": "Now Ioat is disabled by default. Hence you can remove it.",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 13
       },
       "revId": "ddd5a5950c10af1d00691691db047edb6f8f9fd6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
