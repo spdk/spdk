@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "cb7fef2f_f2b637c5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-14T15:36:58Z",
+      "side": 1,
+      "message": "Just curious. Do you plan to implement only AEAD algorithms or also crypto+auth chains? There\u0027s not many AEAD algorithms supported by DPDK (AES-GCM and AES-CCM) and not by all drivers.",
+      "parentUuid": "2a721e2e_d828d420",
+      "range": {
+        "startLine": 473,
+        "startChar": 0,
+        "endLine": 475,
+        "endChar": 38
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17f74a0b_1ff68921",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 27
