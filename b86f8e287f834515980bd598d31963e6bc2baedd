@@ -34,6 +34,24 @@
       "revId": "b86f8e287f834515980bd598d31963e6bc2baedd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6af9a8e2_ce712fd7",
+        "filename": "lib/nvme/nvme_ctrlr_ocssd_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T18:21:34Z",
+      "side": 1,
+      "message": "I agree with YT though - it seems like NVME_QUIRK_OCSSD is not really useful.  Maybe NVME_QUIRK_OCSSD should be removed then?",
+      "parentUuid": "a56d51d5_2b9f9c63",
+      "revId": "b86f8e287f834515980bd598d31963e6bc2baedd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
