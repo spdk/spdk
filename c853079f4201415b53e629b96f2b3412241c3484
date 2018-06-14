@@ -1,0 +1,146 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c06c9f23_599707d9",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T00:18:00Z",
+      "side": 1,
+      "message": "for example prepare two nows, one is stats_now and another is timer_now.",
+      "range": {
+        "startLine": 474,
+        "startChar": 25,
+        "endLine": 474,
+        "endChar": 28
+      },
+      "revId": "c853079f4201415b53e629b96f2b3412241c3484",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83598f06_9907e19f",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T00:18:00Z",
+      "side": 1,
+      "message": "stats_now \u003d spdk_get_ticks(); reactor_tsc_last \u003d stats_now;",
+      "revId": "c853079f4201415b53e629b96f2b3412241c3484",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21f29053_aeff1e17",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T00:18:00Z",
+      "side": 1,
+      "message": "stats_now \u003d spdk_get_ticks();",
+      "revId": "c853079f4201415b53e629b96f2b3412241c3484",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e881e9c_7f3bb58f",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T00:18:00Z",
+      "side": 1,
+      "message": "stats_now \u003d spdk_get_ticks();",
+      "revId": "c853079f4201415b53e629b96f2b3412241c3484",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40bedb53_e8b3baf2",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T00:18:00Z",
+      "side": 1,
+      "message": "remove if condition and just timer_now \u003d spdk_get_ticks();",
+      "revId": "c853079f4201415b53e629b96f2b3412241c3484",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "423dc4db_18220072",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T00:18:00Z",
+      "side": 1,
+      "message": "if (timer_now \u003e\u003d poller-\u003enext_run_ticks) {",
+      "revId": "c853079f4201415b53e629b96f2b3412241c3484",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71300cec_443a0728",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T00:18:00Z",
+      "side": 1,
+      "message": "stats_now \u003d spdk_get_ticks();",
+      "revId": "c853079f4201415b53e629b96f2b3412241c3484",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b012f1cb_5672db9c",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-14T00:18:00Z",
+      "side": 1,
+      "message": "spdk_reactor_add_tsc_stats(rc, timer_now, reactor);",
+      "revId": "c853079f4201415b53e629b96f2b3412241c3484",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
