@@ -46,6 +46,30 @@
       "revId": "086595cd79cf4f29b624fe85452c3f2622ba32ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e65036d_01879bd7",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-14T04:40:43Z",
+      "side": 1,
+      "message": "I talked with Ziye offline.  I need to make some changes here based on ZIye\u0027s feedback.  Specifically we should not set up the I/O again (i.e pick IO offset) when it is retried.",
+      "parentUuid": "9c39faed_32116823",
+      "range": {
+        "startLine": 430,
+        "startChar": 29,
+        "endLine": 430,
+        "endChar": 52
+      },
+      "revId": "086595cd79cf4f29b624fe85452c3f2622ba32ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
