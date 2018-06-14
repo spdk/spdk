@@ -390,28 +390,17 @@ bdevperf_prep_task(struct bdevperf_task *task)
 }
 
 static void
-bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
+bdevperf_submit_task(struct bdevperf_task *task)
 {
-	spdk_bdev_io_completion_cb cb_fn;
+	struct io_target	*target = task->target;
 	struct spdk_bdev_desc	*desc;
 	struct spdk_io_channel	*ch;
+	spdk_bdev_io_completion_cb cb_fn;
 	void			*rbuf;
 	int			rc;
 
 	desc = target->bdev_desc;
 	ch = target->ch;
-
-	if (!task) {
-		if (!TAILQ_EMPTY(&target->task_list)) {
-			task = TAILQ_FIRST(&target->task_list);
-			TAILQ_REMOVE(&target->task_list, task, link);
-		} else {
-			printf("Task allocation failed\n");
-			abort();
-		}
-	}
-
-	bdevperf_prep_task(task);
 
 	switch (task->io_type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -446,6 +435,23 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 	}
 
 	target->current_queue_depth++;
+}
+
+static void
+bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
+{
+	if (!task) {
+		if (!TAILQ_EMPTY(&target->task_list)) {
+			task = TAILQ_FIRST(&target->task_list);
+			TAILQ_REMOVE(&target->task_list, task, link);
+		} else {
+			printf("Task allocation failed\n");
+			abort();
+		}
+	}
+
+	bdevperf_prep_task(task);
+	bdevperf_submit_task(task);
 }
 
 static void
