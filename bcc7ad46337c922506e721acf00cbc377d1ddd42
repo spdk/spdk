@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7fb67cb_4a526c05",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-14T22:55:04Z",
+      "side": 1,
+      "message": "It might be clearer to declare lba_list as a uint64_t pointer rather than void pointer, if that is always the type it references.  That would also let you get rid of some of the type casts below.",
+      "range": {
+        "startLine": 40,
+        "startChar": 8,
+        "endLine": 40,
+        "endChar": 22
+      },
+      "revId": "bcc7ad46337c922506e721acf00cbc377d1ddd42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1e209b7_cadf5501",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-14T22:55:04Z",
+      "side": 1,
+      "message": "Please use NVME_PAYLOAD_CONTIG() so that the SGL function pointers get initialized to NULL (otherwise they will be left uninitialized and may cause undefined behavior later).",
+      "revId": "bcc7ad46337c922506e721acf00cbc377d1ddd42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
