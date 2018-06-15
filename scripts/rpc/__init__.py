@@ -29,6 +29,30 @@ def get_rpc_methods(client, args):
     return client.call('get_rpc_methods', params)
 
 
+def __json_dump(config, filename, indent):
+    if filename is None:
+        if indent is None:
+            indent = 2
+        elif indent < 0:
+            indent = None
+        json.dump(config, sys.stdout, indent=indent)
+        sys.stdout.write('\n')
+    else:
+        if indent is None or indent < 0:
+            indent = None
+        with open(filename, 'w') as file:
+            json.dump(config, file, indent=indent)
+            file.write('\n')
+
+
+def __json_load(filename):
+    if not filename or filename == '-':
+        return json.load(sys.stdin)
+    else:
+        with open(filename, 'r') as file:
+            return json.load(file)
+
+
 def save_config(client, args):
     config = {
         'subsystems': []
@@ -41,20 +65,7 @@ def save_config(client, args):
         }
         config['subsystems'].append(cfg)
 
-    indent = args.indent
-    if args.filename is None:
-        if indent is None:
-            indent = 2
-        elif indent < 0:
-            indent = None
-        json.dump(config, sys.stdout, indent=indent)
-        sys.stdout.write('\n')
-    else:
-        if indent is None or indent < 0:
-            indent = None
-        with open(args.filename, 'w') as file:
-            json.dump(config, file, indent=indent)
-            file.write('\n')
+    __json_dump(config, args.filename, args.indent)
 
 
 def __load_config_current(client, subsystems):
@@ -103,11 +114,7 @@ def __load_config_all(client, subsystems):
 
 
 def load_config(client, args):
-    if not args.filename or args.filename == '-':
-        json_config = json.load(sys.stdin)
-    else:
-        with open(args.filename, 'r') as file:
-            json_config = json.load(file)
+    json_config = __json_load(args.filename)
 
     if args.current:
         __load_config_current(client, json_config['subsystems'])
@@ -115,14 +122,25 @@ def load_config(client, args):
         __load_config_all(client, json_config['subsystems'])
 
 
+def save_subsystem_config(client, args):
+    cfg = {
+        'subsystem': args.name,
+        'config': client.call('get_subsystem_config', {"name": args.name})
+    }
+
+    __json_dump(cfg, args.filename, args.indent)
+
+
 def load_subsystem_config(client, args):
-    if not args.filename or args.filename == '-':
-        config = json.load(sys.stdin)
+    config = __json_load(args.filename)
+
+    if (args.current):
+        allowed_methods = client.call('get_rpc_methods', {'current': True})
     else:
-        with open(args.filename, 'r') as file:
-            config = json.load(file)
+        allowed_methods = {}
 
     for elem in config['config']:
-        if not elem or 'method' not in elem:
+        if 'method' not in elem or (allowed_methods and elem['method'] not in allowed_methods):
             continue
+
         client.call(elem['method'], elem['params'])
