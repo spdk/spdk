@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "94a97f61_2c20a4cc",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 75
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-15T20:18:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e9abaeba_80981de7",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 58
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33d223e6_2b48544a",
         "filename": "test/json_config/common.sh",
         "patchSetId": 75
@@ -95,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "552bdc52_5c5b7f8a",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 75
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-15T20:18:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "33d223e6_2b48544a",
+      "range": {
+        "startLine": 104,
+        "startChar": 1,
+        "endLine": 104,
+        "endChar": 58
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b0b2a16_5f008896",
         "filename": "test/json_config/config_parser.py",
         "patchSetId": 75
@@ -106,6 +154,30 @@
       "writtenOn": "2018-06-15T14:09:05Z",
       "side": 1,
       "message": "Did you mean \"before start_subsystem_init RPC call\" ?\nPls name this method properly or elaborate in comment what this method do.",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 26
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fd1eb78_cca83eaf",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 75
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-15T20:18:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b0b2a16_5f008896",
       "range": {
         "startLine": 19,
         "startChar": 0,
