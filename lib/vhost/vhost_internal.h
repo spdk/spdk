@@ -150,6 +150,12 @@ struct spdk_vhost_dev {
 
 	const struct spdk_vhost_dev_backend *backend;
 
+	/* Saved orginal values used to setup coalescing to avoid integer
+	 * rounding issues during save/load config.
+	 */
+	uint32_t coalescing_delay_us;
+	uint32_t coalescing_iops_threshold;
+
 	uint32_t coalescing_delay_time_base;
 
 	/* Threshold when event coalescing for virtqueue will be turned on. */
