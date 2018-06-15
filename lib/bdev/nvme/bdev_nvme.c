@@ -792,7 +792,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 static int
 create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
-	     char *name,
+	     const char *name,
 	     const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
@@ -807,7 +807,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_ctrlr->ctrlr = ctrlr;
 	nvme_ctrlr->ref = 0;
 	nvme_ctrlr->trid = *trid;
-	nvme_ctrlr->name = name;
+	nvme_ctrlr->name = strdup(name);
 
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
@@ -1055,14 +1055,28 @@ bdev_nvme_library_init(void)
 		probe_ctx->count++;
 
 		if (probe_ctx->trids[i].trtype != SPDK_NVME_TRANSPORT_PCIE) {
+			struct spdk_nvme_ctrlr *ctrlr;
+			struct spdk_nvme_ctrlr_opts opts;
+
+			if (nvme_ctrlr_get(&probe_ctx->trids[i])) {
+				SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
+					    probe_ctx->trids[i].traddr);
+				rc = -1;
+				goto end;
+			}
+
 			if (probe_ctx->trids[i].subnqn[0] == '\0') {
 				SPDK_ERRLOG("Need to provide subsystem nqn\n");
 				rc = -1;
 				goto end;
 			}
 
-			if (spdk_nvme_probe(&probe_ctx->trids[i], probe_ctx, probe_cb, attach_cb, NULL)) {
-				rc = -1;
+			spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
+
+			ctrlr = spdk_nvme_connect(&probe_ctx->trids[i], &opts, sizeof(opts));
+
+			rc = create_ctrlr(ctrlr, probe_ctx->names[i], &probe_ctx->trids[i]);
+			if (!rc) {
 				goto end;
 			}
 		} else {
