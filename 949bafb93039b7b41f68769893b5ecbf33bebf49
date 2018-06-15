@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "7ac1ef53_7b68a9b8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2295,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-15T16:24:06Z",
+      "side": 1,
+      "message": "The calls from bdev to module in submit functions have spdk_bdev_channel-\u003echannel which is spdk_io_channel, so if same is passed to this API by the module, how you are getting spdk_bdev_channel from \"ch\" argument (it should be spdk_bdev_channel-\u003echannel?)",
+      "parentUuid": "d1eb1aeb_e3bd3401",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e5c3544_2183fc29",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -107,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "4e9cdaba_160e2a79",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2302,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-15T16:24:06Z",
+      "side": 1,
+      "message": "So in this case modules can put asserts if call returns -EINVAL.",
+      "parentUuid": "d994d022_7fc5432f",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0836a00_0c69e535",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -136,6 +172,24 @@
       "side": 1,
       "message": "The nomem_io queue in the bdev layer is separate - will need to add more documentation to clarify this.\n\nThe nomem_io queue in the bdev layer handles the case where a bdev module returns an error because it ran out of per-channel resources.  I don\u0027t think this applies to your module.  But for example, blobstore allocates a finite number of request structures per thread (these structures are internal to blobstore - not spdk_bdev_io structures).  If those run out, the lvol module completes the I/O with ENOMEM and the generic bdev layer will resubmit once some number of I/O are completed on that same channel.",
       "parentUuid": "e0836a00_0c69e535",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17f03caf_77c6286c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2305,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-15T16:24:06Z",
+      "side": 1,
+      "message": "Ok, actually I was trying to find a check in your new code which on new IO arrival from above layers checks if io_wait_queue is not empty, queue the new IO and don\u0027t send to module.",
+      "parentUuid": "6e4ccbfc_3ebff46a",
       "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
