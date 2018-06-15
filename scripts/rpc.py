@@ -140,6 +140,15 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_malloc_bdev)
 
     @call_cmd
+    def delete_malloc_bdev(args):
+        rpc.bdev.delete_malloc_bdev(args.client,
+                                    name=args.name)
+
+    p = subparsers.add_parser('delete_malloc_bdev', help='Delete a malloc disk')
+    p.add_argument('name', help='malloc bdev name')
+    p.set_defaults(func=delete_malloc_bdev)
+
+    @call_cmd
     def construct_null_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print_array(rpc.bdev.construct_null_bdev(args.client,
