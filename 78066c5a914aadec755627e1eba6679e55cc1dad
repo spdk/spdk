@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0782cae7_805a1921",
+        "filename": "test/json_config/virtio.conf.base",
+        "patchSetId": 33
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-15T14:28:58Z",
+      "side": 1,
+      "message": "you can pass \u0027-u\u0027 to disable PCI. Not need to have this config file.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 11
+      },
+      "revId": "78066c5a914aadec755627e1eba6679e55cc1dad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42c10d6c_3dd69052",
+        "filename": "test/json_config/virtio.conf.base",
+        "patchSetId": 33
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-15T14:28:58Z",
+      "side": 1,
+      "message": "It is disabled by default now. Not needed.",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 13
+      },
+      "revId": "78066c5a914aadec755627e1eba6679e55cc1dad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64370963_07505832",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-15T14:28:58Z",
+      "side": 1,
+      "message": "What bug? Some warning?",
+      "range": {
+        "startLine": 38,
+        "startChar": 1,
+        "endLine": 38,
+        "endChar": 60
+      },
+      "revId": "78066c5a914aadec755627e1eba6679e55cc1dad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
