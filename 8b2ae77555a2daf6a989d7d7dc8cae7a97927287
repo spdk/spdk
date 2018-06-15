@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "165feffe_70c361a7",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1418,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T21:37:45Z",
+      "side": 1,
+      "message": "the controller has to be validated here",
+      "revId": "8b2ae77555a2daf6a989d7d7dc8cae7a97927287",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
