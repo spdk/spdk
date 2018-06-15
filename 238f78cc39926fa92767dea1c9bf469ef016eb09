@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7bda276e_ddf649cc",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-06-15T01:29:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "302c27c5_2c3e3c29",
+      "range": {
+        "startLine": 447,
+        "startChar": 26,
+        "endLine": 447,
+        "endChar": 32
+      },
+      "revId": "238f78cc39926fa92767dea1c9bf469ef016eb09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "573eeaf0_12f6f2c3",
         "filename": "include/spdk/scsi.h",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-13T06:29:58Z",
       "side": 1,
       "message": "SCSI task",
+      "range": {
+        "startLine": 448,
+        "startChar": 21,
+        "endLine": 448,
+        "endChar": 27
+      },
+      "revId": "238f78cc39926fa92767dea1c9bf469ef016eb09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07a1e6dd_ad7d7c16",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-06-15T01:29:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "573eeaf0_12f6f2c3",
       "range": {
         "startLine": 448,
         "startChar": 21,
