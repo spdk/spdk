@@ -63,8 +63,8 @@ $rpc_py get_nvmf_subsystems
 
 wait $aerpid
 
-$rpc_py delete_bdev Malloc0
-$rpc_py delete_bdev Malloc1
+$rpc_py delete_malloc_bdev Malloc0
+$rpc_py delete_malloc_bdev Malloc1
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
