@@ -850,37 +850,17 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	}
 }
 
-static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+static int
+create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
+	     char *name,
+	     const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
-	struct nvme_probe_ctx *ctx = cb_ctx;
-	char *name = NULL;
-	size_t i;
-
-	if (ctx) {
-		for (i = 0; i < ctx->count; i++) {
-			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
-				name = strdup(ctx->names[i]);
-				break;
-			}
-		}
-	} else {
-		name = spdk_sprintf_alloc("HotInNvme%d", g_hot_insert_nvme_controller_index++);
-	}
-	if (!name) {
-		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
-		return;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
 
 	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
 	if (nvme_ctrlr == NULL) {
 		SPDK_ERRLOG("Failed to allocate device struct\n");
-		free((void *)name);
-		return;
+		return - 1;
 	}
 	nvme_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	nvme_ctrlr->bdevs = calloc(nvme_ctrlr->num_ns, sizeof(struct nvme_bdev));
@@ -902,9 +882,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	if (nvme_ctrlr_create_bdevs(nvme_ctrlr) != 0) {
 		spdk_io_device_unregister(ctrlr, NULL);
-		free(nvme_ctrlr->name);
 		free(nvme_ctrlr);
-		return;
+		return -1;
 	}
 
 	nvme_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
@@ -915,6 +894,41 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	if (g_action_on_timeout != TIMEOUT_ACTION_NONE) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
 				timeout_cb, NULL);
+	}
+
+	return 0;
+}
+
+static void
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+{
+	struct nvme_probe_ctx *ctx = cb_ctx;
+	char *name = NULL;
+	size_t i;
+	int rc;
+
+	if (ctx) {
+		for (i = 0; i < ctx->count; i++) {
+			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
+				name = strdup(ctx->names[i]);
+				break;
+			}
+		}
+	} else {
+		name = spdk_sprintf_alloc("HotInNvme%d", g_hot_insert_nvme_controller_index++);
+	}
+	if (!name) {
+		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
+		return;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
+
+	rc = create_ctrlr(ctrlr, name, trid);
+	if (rc) {
+		free(name);
+		return;
 	}
 }
 
