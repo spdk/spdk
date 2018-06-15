@@ -469,20 +469,14 @@ spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)
 
 	spdk_json_write_object_begin(ctx->w);
 
-	spdk_json_write_name(ctx->w, "ctrlr");
-	spdk_json_write_string(ctx->w, spdk_vhost_dev_get_name(vdev));
+	spdk_json_write_named_string(ctx->w, "ctrlr", spdk_vhost_dev_get_name(vdev));
+	spdk_json_write_named_string_fmt(ctx->w, "cpumask", "0x%s", spdk_cpuset_fmt(vdev->cpumask));
 
-	spdk_json_write_name(ctx->w, "cpumask");
-	spdk_json_write_string_fmt(ctx->w, "0x%s", spdk_cpuset_fmt(vdev->cpumask));
-
-	spdk_json_write_name(ctx->w, "backend_specific");
-
-	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_object_begin(ctx->w, "backend_specific");
 	spdk_vhost_dump_info_json(vdev, ctx->w);
 	spdk_json_write_object_end(ctx->w);
 
-	spdk_json_write_object_end(ctx->w); // ctrl
-
+	spdk_json_write_object_end(ctx->w);
 	return 0;
 }
 
