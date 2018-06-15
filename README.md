@@ -124,7 +124,7 @@ For example:
 ./configure --with-rdma
 ~~~
 
-Additionally, `CONFIG` options may also be overridden on the `make` command
+Additionally, `CONFIG` options may also be overrriden on the `make` command
 line:
 
 ~~~{.sh}
