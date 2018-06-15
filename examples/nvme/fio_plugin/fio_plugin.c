@@ -71,6 +71,7 @@ struct spdk_fio_ctrlr {
 
 static struct spdk_fio_ctrlr *ctrlr_g;
 static int td_count;
+static pthread_t g_ctrlr_thread_id = 0;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_error;
 
@@ -94,6 +95,44 @@ struct spdk_fio_thread {
 	struct fio_file		*current_f;   // fio_file given by user
 
 };
+
+static void *
+spdk_fio_poll_ctrlrs(void *arg)
+{
+	struct spdk_fio_ctrlr *fio_ctrlr;
+	int oldstate;
+	int rc;
+
+	/* Loop until the thread is cancelled */
+	while (true) {
+		rc = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+		if (rc != 0) {
+			SPDK_ERRLOG("Unable to set cancel state disabled on g_init_thread (%d): %s\n",
+				    rc, spdk_strerror(rc));
+		}
+
+		pthread_mutex_lock(&mutex);
+		fio_ctrlr = ctrlr_g;
+
+		while (fio_ctrlr) {
+			spdk_nvme_ctrlr_process_admin_completions(fio_ctrlr->ctrlr);
+			fio_ctrlr = fio_ctrlr->next;
+		}
+
+		rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
+		if (rc != 0) {
+			SPDK_ERRLOG("Unable to set cancel state enabled on g_init_thread (%d): %s\n",
+				    rc, spdk_strerror(rc));
+		}
+
+		pthread_mutex_unlock(&mutex);
+
+		/* This is a pthread cancellation point and cannot be removed. */
+		sleep(1);
+	}
+
+	return NULL;
+}
 
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
@@ -264,6 +303,12 @@ static int spdk_fio_setup(struct thread_data *td)
 		}
 		spdk_env_initialized = true;
 		spdk_unaffinitize_thread();
+
+		/* Spawn a thread to continue polling the controllers */
+		rc = pthread_create(&g_ctrlr_thread_id, NULL, &spdk_fio_poll_ctrlrs, NULL);
+		if (rc != 0) {
+			SPDK_ERRLOG("Unable to spawn a thread to poll admin queues. They won't be polled.\n");
+		}
 	}
 
 	for_each_file(td, f, i) {
@@ -572,6 +617,10 @@ static void spdk_fio_cleanup(struct thread_data *td)
 	}
 
 	free(fio_thread);
+
+	if (pthread_cancel(g_ctrlr_thread_id) == 0) {
+		pthread_join(g_ctrlr_thread_id, NULL);
+	}
 
 	pthread_mutex_lock(&mutex);
 	td_count--;
