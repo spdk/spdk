@@ -341,6 +341,17 @@ spdk_vbdev_error_create(const char *base_bdev_name)
 	return rc;
 }
 
+void
+spdk_vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete cb_fn, void *cb_arg)
+{
+	if (!vbdev || vbdev->module != &error_if) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	spdk_bdev_unregister(vbdev, cb_fn, cb_arg);
+}
+
 static void
 vbdev_error_clear_config(void)
 {
