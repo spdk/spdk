@@ -790,14 +790,55 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	}
 }
 
+static int
+create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
+	     char *name,
+	     const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("Failed to allocate device struct\n");
+		return - 1;
+	}
+
+	nvme_ctrlr->adminq_timer_poller = NULL;
+	nvme_ctrlr->ctrlr = ctrlr;
+	nvme_ctrlr->ref = 0;
+	nvme_ctrlr->trid = *trid;
+	nvme_ctrlr->name = name;
+
+	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
+				sizeof(struct nvme_io_channel));
+
+	if (nvme_ctrlr_create_bdevs(nvme_ctrlr) != 0) {
+		spdk_io_device_unregister(ctrlr, NULL);
+		free(nvme_ctrlr);
+		return -1;
+	}
+
+	nvme_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
+					  g_nvme_adminq_poll_timeout_us);
+
+	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
+
+	if (g_action_on_timeout != TIMEOUT_ACTION_NONE) {
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
+				timeout_cb, NULL);
+	}
+
+	return 0;
+}
+
 static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct nvme_ctrlr *nvme_ctrlr;
 	struct nvme_probe_ctx *ctx = cb_ctx;
 	char *name = NULL;
 	size_t i;
+	int rc;
 
 	if (ctx) {
 		for (i = 0; i < ctx->count; i++) {
@@ -816,37 +857,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
 
-	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
-	if (nvme_ctrlr == NULL) {
-		SPDK_ERRLOG("Failed to allocate device struct\n");
-		free((void *)name);
+	rc = create_ctrlr(ctrlr, name, trid);
+	if (rc) {
+		free(name);
 		return;
-	}
-
-	nvme_ctrlr->adminq_timer_poller = NULL;
-	nvme_ctrlr->ctrlr = ctrlr;
-	nvme_ctrlr->ref = 0;
-	nvme_ctrlr->trid = *trid;
-	nvme_ctrlr->name = name;
-
-	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
-				sizeof(struct nvme_io_channel));
-
-	if (nvme_ctrlr_create_bdevs(nvme_ctrlr) != 0) {
-		spdk_io_device_unregister(ctrlr, NULL);
-		free(nvme_ctrlr->name);
-		free(nvme_ctrlr);
-		return;
-	}
-
-	nvme_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
-					  g_nvme_adminq_poll_timeout_us);
-
-	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
-
-	if (g_action_on_timeout != TIMEOUT_ACTION_NONE) {
-		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
-				timeout_cb, NULL);
 	}
 }
 
