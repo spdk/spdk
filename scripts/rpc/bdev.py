@@ -158,6 +158,16 @@ def construct_error_bdev(client, base_name):
     return client.call('construct_error_bdev', params)
 
 
+def delete_error_bdev(client, name):
+    """Remove error bdev from the system.
+
+    Args:
+        bdev_name: name of error bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_error_bdev', params)
+
+
 def construct_iscsi_bdev(client, name, url, initiator_iqn):
     """Construct a iSCSI block device.
 

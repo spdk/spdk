@@ -42,6 +42,8 @@ enum vbdev_error_type {
 	VBDEV_IO_PENDING,
 };
 
+typedef void (*spdk_delete_error_complete)(void *cb_arg, int bdeverrno);
+
 /**
  * Create a vbdev on the base bdev to inject error into it.
  *
@@ -49,6 +51,16 @@ enum vbdev_error_type {
  * \return 0 on success or negative on failure.
  */
 int spdk_vbdev_error_create(const char *base_bdev_name);
+
+/**
+ * Delete vbdev used to inject errors.
+ *
+ * \param bdev Pointer to error vbdev.
+ * \param cb_fn Function to call after deletion.
+ * \param cb_arg Arguments to pass to cb_fn.
+ */
+void spdk_vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete cb_fn,
+			     void *cb_arg);
 
 /**
  * Inject error to the base bdev. Users can specify which IO type error is injected,

@@ -113,6 +113,8 @@ for dev in $devs; do
 	echo ""
 done
 
+$rpc_py delete_error_bdev EE_Malloc0
+
 trap - SIGINT SIGTERM EXIT
 
 rm -f $testdir/iscsi.conf

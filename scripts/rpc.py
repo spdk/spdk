@@ -240,6 +240,15 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_error_bdev)
 
     @call_cmd
+    def delete_error_bdev(args):
+        rpc.bdev.delete_error_bdev(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('delete_error_bdev', help='Delete an error bdev')
+    p.add_argument('name', help='error bdev name')
+    p.set_defaults(func=delete_error_bdev)
+
+    @call_cmd
     def construct_iscsi_bdev(args):
         rpc.bdev.construct_iscsi_bdev(args.client,
                                       name=args.name,

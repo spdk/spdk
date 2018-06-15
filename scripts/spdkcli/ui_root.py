@@ -78,6 +78,9 @@ class UIRoot(UINode):
     def create_error_bdev(self, **kwargs):
         response = rpc.bdev.construct_error_bdev(self.client, **kwargs)
 
+    def delete_error_bdev(self, **kwargs):
+        rpc.bdev.delete_error_bdev(self.client, **kwargs)
+
     def get_lvol_stores(self):
         self.current_lvol_stores = rpc.lvol.get_lvol_stores(self.client)
         for lvs in self.current_lvol_stores:
