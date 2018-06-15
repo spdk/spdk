@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6d049e4f_f93e1d77",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-15T00:45:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b9e6120_15dc4b6f",
+      "revId": "39c567d9a8b2c4d2ea6c404dfb108c85eb526131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd8036bd_8172fd29",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-14T17:09:17Z",
       "side": 1,
       "message": "Even though this method doesn\u0027t have any parameters, it would still be good to have an example request/response for consistency:\n\n  {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 1,\n    \"method\": \"start_subsystem_init\"\n  }",
+      "revId": "39c567d9a8b2c4d2ea6c404dfb108c85eb526131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21e15828_2831a34a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-15T00:45:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd8036bd_8172fd29",
       "revId": "39c567d9a8b2c4d2ea6c404dfb108c85eb526131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -99,6 +135,30 @@
     },
     {
       "key": {
+        "uuid": "5ce54500_999a1b54",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-15T00:45:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d2a1eee_28b3ac21",
+      "range": {
+        "startLine": 717,
+        "startChar": 28,
+        "endLine": 717,
+        "endChar": 32
+      },
+      "revId": "39c567d9a8b2c4d2ea6c404dfb108c85eb526131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "30f83320_f91fec21",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 1
@@ -110,6 +170,24 @@
       "writtenOn": "2018-06-14T17:09:17Z",
       "side": 1,
       "message": "This should describe the units (e.g. period in microseconds).\n\nAlso, the parameter name should have underscores, not dashes.",
+      "revId": "39c567d9a8b2c4d2ea6c404dfb108c85eb526131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "298bc0c1_7a18d91c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-15T00:45:05Z",
+      "side": 1,
+      "message": "Thank you.\n\nI wrote \"Polling interval of the acceptor for incoming connections (microseconds)\".",
+      "parentUuid": "30f83320_f91fec21",
       "revId": "39c567d9a8b2c4d2ea6c404dfb108c85eb526131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
