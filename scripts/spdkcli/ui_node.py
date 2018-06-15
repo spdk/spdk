@@ -202,6 +202,17 @@ class UIMallocBdev(UIBdev):
         self.get_root().refresh()
         self.refresh()
 
+    def ui_command_delete(self, name):
+        """
+        Deletes malloc bdev from configuration.
+
+        Arguments:
+        name - Is a unique identifier of the malloc bdev to be deleted - UUID number or name alias.
+        """
+        self.get_root().delete_malloc_bdev(name=name)
+        self.get_root().refresh()
+        self.refresh()
+
 
 class UIAIOBdev(UIBdev):
     def __init__(self, parent):
