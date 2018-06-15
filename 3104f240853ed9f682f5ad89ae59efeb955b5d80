@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63c45968_fa0c3212",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-15T10:11:59Z",
+      "side": 1,
+      "message": "I\u0027d suggest changing to **kwargs and just pass them on to the rpc call. But if you want to keep named arg then look at the next comment...",
+      "range": {
+        "startLine": 56,
+        "startChar": 33,
+        "endLine": 56,
+        "endChar": 37
+      },
+      "revId": "3104f240853ed9f682f5ad89ae59efeb955b5d80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92dfaa60_3a291d9a",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-15T10:11:59Z",
+      "side": 1,
+      "message": "This will produce an error because in rpc/bdev.py keyword argument is \"name\", not \"bdev_name\"",
+      "range": {
+        "startLine": 57,
+        "startChar": 49,
+        "endLine": 57,
+        "endChar": 58
+      },
+      "revId": "3104f240853ed9f682f5ad89ae59efeb955b5d80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
