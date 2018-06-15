@@ -66,12 +66,6 @@ Example response
 }
 ~~~
 
-## delete_bdev {#bdev_ug_delete_bdev}
-
-To remove previously created bdev user can use `delete_bdev` RPC command.
-Bdev can be deleted at any time and this will be fully handled by any upper
-layers. As an argument user should provide bdev name.
-
 # NVMe bdev {#bdev_config_nvme}
 
 There are two ways to create block device based on NVMe device in SPDK. First
@@ -316,4 +310,4 @@ Virtio-Block bdevs are constructed the same way as Virtio-SCSI ones.
 `rpc.py construct_virtio_pci_blk_bdev 0000:01:00.0 VirtioBlk1`
 
 Since they export only a single bdev, the Virtio-Block driver doesn't offer additional
-remove/destruct RPC calls. @ref bdev_ug_delete_bdev should be used instead.
+remove/destruct RPC calls.

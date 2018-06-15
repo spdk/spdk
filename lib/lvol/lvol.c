@@ -85,6 +85,13 @@ _spdk_lvs_free(struct spdk_lvol_store *lvs)
 }
 
 static void
+_spdk_lvol_free(struct spdk_lvol *lvol)
+{
+	free(lvol->unique_id);
+	free(lvol);
+}
+
+static void
 _spdk_lvol_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 {
 	struct spdk_lvol_with_handle_req *req = cb_arg;
@@ -192,7 +199,6 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	lvol->blob = blob;
 	lvol->blob_id = blob_id;
 	lvol->lvol_store = lvs;
-	lvol->close_only = false;
 
 	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0' ||
@@ -218,8 +224,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len > SPDK_LVOL_NAME_MAX) {
 		SPDK_ERRLOG("Cannot assign lvol name\n");
-		free(lvol->unique_id);
-		free(lvol);
+		_spdk_lvol_free(lvol);
 		req->lvserrno = -EINVAL;
 		goto invalid;
 	}
@@ -765,8 +770,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 
 	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
-		free(lvol->unique_id);
-		free(lvol);
+		_spdk_lvol_free(lvol);
 	}
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
@@ -877,8 +881,7 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not close blob on lvol\n");
-		free(lvol->unique_id);
-		free(lvol);
+		_spdk_lvol_free(lvol);
 		goto end;
 	}
 
@@ -905,6 +908,15 @@ end:
 	free(req);
 }
 
+bool
+spdk_lvol_deletable(struct spdk_lvol *lvol)
+{
+	size_t count;
+
+	spdk_blob_get_clones(lvol->lvol_store->blobstore, lvol->blob_id, NULL, &count);
+	return (count == 0);
+}
+
 static void
 _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 {
@@ -913,8 +925,6 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not delete blob on lvol\n");
-		free(lvol->unique_id);
-		free(lvol);
 		goto end;
 	}
 
@@ -928,10 +938,8 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s deleted\n", lvol->unique_id);
 
-	free(lvol->unique_id);
-	free(lvol);
-
 end:
+	_spdk_lvol_free(lvol);
 	req->cb_fn(req->cb_arg, lvolerrno);
 	free(req);
 }
@@ -945,8 +953,7 @@ _spdk_lvol_destroy_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not close blob on lvol\n");
-		free(lvol->unique_id);
-		free(lvol);
+		_spdk_lvol_free(lvol);
 		req->cb_fn(req->cb_arg, lvolerrno);
 		free(req);
 		return;
@@ -1096,10 +1103,8 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
 		return -ENOMEM;
 	}
-
 	lvol->lvol_store = lvs;
 	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
-	lvol->close_only = false;
 	lvol->thin_provision = thin_provision;
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->pending_lvols, lvol, link);
