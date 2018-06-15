@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59043559_4cdd7dd8",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T21:12:53Z",
+      "side": 1,
+      "message": "move this comment to line 80 (just suggesting you do it in this patch since you already need to make another change)",
+      "revId": "8d4d5adb4ce3063c7e66577eec67e2a84e7d77f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab07750_63b6b258",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T21:12:53Z",
+      "side": 1,
+      "message": "declaration is out of place",
+      "revId": "8d4d5adb4ce3063c7e66577eec67e2a84e7d77f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
