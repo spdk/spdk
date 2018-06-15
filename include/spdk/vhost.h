@@ -163,6 +163,18 @@ int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_u
 			      uint32_t iops_threshold);
 
 /**
+ * Get coalescing parameters.
+ *
+ * \see spdk_vhost_set_coalescing
+ *
+ * \param vdev vhost device.
+ * \param delay_base_us Optional pointer to store base delay time.
+ * \param iops_threshold Optional pointer to store IOPS threshold.
+ */
+void spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+			       uint32_t *iops_threshold);
+
+/**
  * Construct an empty vhost SCSI device.  This will create a
  * Unix domain socket together with a vhost-user slave server waiting
  * for a connection on this socket. Creating the vdev does not

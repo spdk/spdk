@@ -338,7 +338,7 @@ spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 			  uint32_t iops_threshold)
 {
 	uint64_t delay_time_base = delay_base_us * spdk_get_ticks_hz() / 1000000ULL;
-	uint32_t io_rate = iops_threshold * SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS / 1000;
+	uint32_t io_rate = iops_threshold * SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS / 1000U;
 
 	if (delay_time_base >= UINT32_MAX) {
 		SPDK_ERRLOG("Delay time of %"PRIu32" is to big\n", delay_base_us);
@@ -351,7 +351,23 @@ spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 
 	vdev->coalescing_delay_time_base = delay_time_base;
 	vdev->coalescing_io_rate_threshold = io_rate;
+
+	vdev->coalescing_delay_us = delay_base_us;
+	vdev->coalescing_iops_threshold = iops_threshold;
 	return 0;
+}
+
+void
+spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+			  uint32_t *iops_threshold)
+{
+	if (delay_base_us) {
+		*delay_base_us = vdev->coalescing_delay_us;
+	}
+
+	if (iops_threshold) {
+		*iops_threshold = vdev->coalescing_iops_threshold;
+	}
 }
 
 /*
@@ -1386,6 +1402,8 @@ static int
 spdk_vhost_config_json_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_write_config_json_ctx *ctx = arg;
+	uint32_t delay_base_us;
+	uint32_t iops_threshold;
 
 	if (vdev == NULL) {
 		spdk_json_write_array_end(ctx->w);
@@ -1395,6 +1413,21 @@ spdk_vhost_config_json_cb(struct spdk_vhost_dev *vdev, void *arg)
 	}
 
 	vdev->backend->write_config_json(vdev, ctx->w);
+
+	spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
+	if (delay_base_us) {
+		spdk_json_write_object_begin(ctx->w);
+		spdk_json_write_named_string(ctx->w, "method", "set_vhost_controller_coalescing");
+
+		spdk_json_write_named_object_begin(ctx->w, "params");
+		spdk_json_write_named_string(ctx->w, "ctrlr", vdev->name);
+		spdk_json_write_named_uint32(ctx->w, "delay_base_us", delay_base_us);
+		spdk_json_write_named_uint32(ctx->w, "iops_threshold", iops_threshold);
+		spdk_json_write_object_end(ctx->w);
+
+		spdk_json_write_object_end(ctx->w);
+	}
+
 	return 0;
 }
 
