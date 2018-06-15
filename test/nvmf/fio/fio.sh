@@ -61,7 +61,7 @@ sleep 3
 set +e
 
 for bdev in $bdevs; do
-	$rpc_py delete_bdev "$bdev"
+	$rpc_py delete_malloc_bdev "$bdev"
 done
 
 wait $fio_pid
