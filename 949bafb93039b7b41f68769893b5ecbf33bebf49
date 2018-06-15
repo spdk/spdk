@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff2e1817_9adeb6ef",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-15T15:51:39Z",
+      "side": 1,
+      "message": "If io_wait_queue has multiple entries, how would it be unplugged from the queue?",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e09b132d_9dc5bad3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2295,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-15T15:51:39Z",
+      "side": 1,
+      "message": "Is this the same ch argument (channel) which bdev layer passed to module during submit_request() function? I hope this should be same and module will call the bdev with the same ch which it got from bdev during submit_request and this ch would be underlying device channel.",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e5c3544_2183fc29",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2302,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-15T15:51:39Z",
+      "side": 1,
+      "message": "When module calls this API to queue the context and it gets -EINVAL, can module then retry the submission of this IO by itself in same context?\nIf yes, then during retrying if it gets -ENOMEM, then again it can call this API to queue?",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0836a00_0c69e535",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2305,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-15T15:51:39Z",
+      "side": 1,
+      "message": "There might be a case where module has queued its context by calling this API because of resource crunch. Now bdev layer should handle that if there is any element in the io_wait_queue then new IOs from top layer (fabric layer) should also get queued behind this so that there should not be any starvation. However I saw there is one more queue for no_memio and a check is there in bdev layer if no_memio has any entries don\u0027t submit the bdev_io to module but did find this similar check for io_wait_queue.",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
