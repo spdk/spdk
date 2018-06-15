@@ -52,6 +52,7 @@ struct spdk_fio_options {
 	int	mem_size;
 	int	shm_id;
 	int	enable_sgl;
+	char	*hostnqn;
 };
 
 struct spdk_fio_request {
@@ -138,6 +139,13 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	struct thread_data	*td = cb_ctx;
+	struct spdk_fio_options *fio_options = td->eo;
+
+	if (fio_options->hostnqn) {
+		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "%s", fio_options->hostnqn);
+	}
+
 	return true;
 }
 
@@ -665,6 +673,15 @@ static struct fio_option options[] = {
 		.type		= FIO_OPT_INT,
 		.off1		= offsetof(struct spdk_fio_options, enable_sgl),
 		.def		= "0",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "hostnqn",
+		.lname		= "Host NQN to use when connecting to controllers.",
+		.type		= FIO_OPT_STR_STORE,
+		.off1		= offsetof(struct spdk_fio_options, hostnqn),
+		.help		= "Host NQN",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
