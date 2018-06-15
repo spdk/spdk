@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "29700c5a_450c76ea",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 75
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-15T14:19:56Z",
+      "side": 1,
+      "message": "It will be used with virtio test as in method test_json_config we use specified rpc.",
+      "parentUuid": "25be31f9_c6d0a4a5",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 70
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e9abaeba_80981de7",
         "filename": "test/json_config/common.sh",
         "patchSetId": 75
