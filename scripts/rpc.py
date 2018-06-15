@@ -73,6 +73,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and tagets using JSON RPC. If no file is
     provided or file is '-' read configuration from stdin.""")
     p.add_argument('-f', '--filename', help="""JSON Configuration file.""")
+    p.add_argument('-c', '--current', help='Load config only loadable in the current state.', action='store_true')
     p.set_defaults(func=load_config)
 
     @call_cmd

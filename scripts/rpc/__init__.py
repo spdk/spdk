@@ -57,14 +57,22 @@ def save_config(client, args):
             file.write('\n')
 
 
-def load_config(client, args):
-    if not args.filename or args.filename == '-':
-        json_config = json.load(sys.stdin)
-    else:
-        with open(args.filename, 'r') as file:
-            json_config = json.load(file)
+def __load_config_current(client, subsystems):
+    allowed_methods = client.call('get_rpc_methods', {'current': True})
 
-    subsystems = json_config['subsystems']
+    for subsystem in list(subsystems):
+        if not subsystem['config']:
+            continue
+
+        config = subsystem['config']
+        for elem in list(config):
+            if 'method' not in elem or elem['method'] not in allowed_methods:
+                continue
+
+            client.call(elem['method'], elem['params'])
+
+
+def __load_config_all(client, subsystems):
     while subsystems:
         allowed_methods = client.call('get_rpc_methods', {'current': True})
         allowed_found = False
@@ -76,7 +84,7 @@ def load_config(client, args):
 
             config = subsystem['config']
             for elem in list(config):
-                if not elem or 'method' not in elem or elem['method'] not in allowed_methods:
+                if 'method' not in elem or elem['method'] not in allowed_methods:
                     continue
 
                 client.call(elem['method'], elem['params'])
@@ -92,6 +100,19 @@ def load_config(client, args):
 
         if subsystems and not allowed_found:
             raise rpc_client.JSONRPCException("Some config left but did not found any allowed method to execute")
+
+
+def load_config(client, args):
+    if not args.filename or args.filename == '-':
+        json_config = json.load(sys.stdin)
+    else:
+        with open(args.filename, 'r') as file:
+            json_config = json.load(file)
+
+    if args.current:
+        __load_config_current(client, json_config['subsystems'])
+    else:
+        __load_config_all(client, json_config['subsystems'])
 
 
 def load_subsystem_config(client, args):
