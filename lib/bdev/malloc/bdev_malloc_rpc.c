@@ -35,7 +35,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/uuid.h"
-
+#include "spdk/string.h"
 #include "spdk_internal/log.h"
 
 struct rpc_construct_malloc {
@@ -106,3 +106,67 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev, SPDK_RPC_RUNTIME)
+
+struct rpc_delete_malloc {
+	char *name;
+};
+
+static void
+free_rpc_delete_malloc(struct rpc_delete_malloc *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_delete_malloc_decoders[] = {
+	{"name", offsetof(struct rpc_delete_malloc, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_rpc_delete_malloc_bdev_cb(void *cb_arg, int bdeverrno)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, bdeverrno == 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_rpc_delete_malloc_bdev(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_delete_malloc req = {NULL};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_delete_malloc_decoders,
+				    SPDK_COUNTOF(rpc_delete_malloc_decoders),
+				    &req)) {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_MALLOC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_BDEV_MALLOC, "bdev '%s' does not exist\n", req.name);
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	delete_malloc_disk(bdev, _spdk_rpc_delete_malloc_bdev_cb, request);
+
+	free_rpc_delete_malloc(&req);
+
+	return;
+
+invalid:
+	free_rpc_delete_malloc(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("delete_malloc_bdev", spdk_rpc_delete_malloc_bdev, SPDK_RPC_RUNTIME)
