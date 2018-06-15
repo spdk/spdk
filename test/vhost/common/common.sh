@@ -635,7 +635,7 @@ function vm_setup()
 	local task_mask=${!qemu_mask_param}
 
 	notice "TASK MASK: $task_mask"
-	local cmd="taskset -a $task_mask $QEMU_PREFIX/bin/qemu-system-x86_64 ${eol}"
+	local cmd="taskset -a -c $task_mask $QEMU_PREFIX/bin/qemu-system-x86_64 ${eol}"
 	local vm_socket_offset=$(( 10000 + 100 * vm_num ))
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))
@@ -648,9 +648,20 @@ function vm_setup()
 	local cpu_num=0
 
 	set +x
-	for ((cpu=0; cpu<$(nproc --all); cpu++))
-	do
-		(($task_mask&1<<$cpu)) && ((cpu_num++)) || :
+	# cpu list for taskset can be comma separated or range
+	# or both at the same time, so first split on commas
+	cpu_list=$(echo $task_mask | tr "," "\n")
+	queue_number=0
+	for c in $cpu_list; do
+		# if range is detected - count how many cpus
+		if [[ $c =~ [0-9]+-[0-9]+ ]]; then
+			val=$(($c-1))
+			val=${val#-}
+		else
+			val=1
+		fi
+		cpu_num=$((cpu_num+val))
+		queue_number=$((queue_number+val))
 	done
 
 	if [ -z $queue_number ]; then
