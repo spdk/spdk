@@ -68,6 +68,30 @@
       "revId": "78066c5a914aadec755627e1eba6679e55cc1dad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66c37191_2728f873",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-15T14:41:44Z",
+      "side": 1,
+      "message": "This  bug I reported on https://tracker.ceph.com/. But is not solved. I think we get rid of this bug when we change ceph version",
+      "parentUuid": "64370963_07505832",
+      "range": {
+        "startLine": 38,
+        "startChar": 1,
+        "endLine": 38,
+        "endChar": 60
+      },
+      "revId": "78066c5a914aadec755627e1eba6679e55cc1dad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
