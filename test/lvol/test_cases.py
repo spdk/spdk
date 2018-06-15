@@ -1773,7 +1773,7 @@ class TestCases(object):
             fail_count += 1
 
         # Delete snapshot
-        fail_count += self.c.delete_bdev(snapshot_bdev['name'])
+        fail_count += self.c.destroy_lvol_bdev(snapshot_bdev['name'])
 
         # Check data consistency
         fail_count += self.c.start_nbd_disk(lvol_clone['name'], nbd_name)
@@ -1790,7 +1790,7 @@ class TestCases(object):
         self.c.stop_nbd_disk(nbd_name)
 
         # Destroy lvol bdev
-        fail_count += self.c.delete_bdev(lvol_bdev['name'])
+        fail_count += self.c.destroy_lvol_bdev(lvol_bdev['name'])
 
         # Destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)

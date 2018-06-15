@@ -66,12 +66,6 @@ Example response
 }
 ~~~
 
-## delete_bdev {#bdev_ug_delete_bdev}
-
-To remove previously created bdev user can use `delete_bdev` RPC command.
-Bdev can be deleted at any time and this will be fully handled by any upper
-layers. As an argument user should provide bdev name.
-
 # NVMe bdev {#bdev_config_nvme}
 
 There are two ways to create block device based on NVMe device in SPDK. First

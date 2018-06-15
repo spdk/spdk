@@ -16,7 +16,7 @@ function remove_backends()
 	echo "INFO: Removing lvol bdevs"
 	for i in `seq 1 $CONNECTION_NUMBER`; do
 		lun="lvs0/lbd_$i"
-		$rpc_py delete_bdev $lun
+		$rpc_py destroy_lvol_bdev $lun
 		echo -e "\tINFO: lvol bdev $lun removed"
 	done
 	sleep 1
