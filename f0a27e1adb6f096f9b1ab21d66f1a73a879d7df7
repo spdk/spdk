@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6635b86_ca6c4887",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T19:01:12Z",
+      "side": 1,
+      "message": "I still think \"thin\" is not a very clear parameter name.  See previous comment on patch #15.  Maybe switch the meaning and name it \"allocate_all\" instead?\n\nReading the changes in blobstore.c really requires a lot of thinking (at least for my feeble brain) and how \"thin\" applies.  For example, what does it mean to specify thin\u003dfalse if I inflate a blob with no parent blob?  Is that legal?\n\nI just think that the first sentence of your description starts with the word \"allocate\" which is really the key word for readers to understand.  I think it will be more clear if this parameter specifies how many clusters it should allocate - allocate all clusters, or only allocate clusters that this blob has unallocated but are allocated in the backing blob?",
+      "revId": "f0a27e1adb6f096f9b1ab21d66f1a73a879d7df7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0555ea1_8d86c968",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T19:01:12Z",
+      "side": 1,
+      "message": "CHANGELOG entry should be added (see comment on patch #15).",
+      "revId": "f0a27e1adb6f096f9b1ab21d66f1a73a879d7df7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2bd8a46_13c64030",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 4685,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T19:01:12Z",
+      "side": 1,
+      "message": "i think this should be !thin",
+      "revId": "f0a27e1adb6f096f9b1ab21d66f1a73a879d7df7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
