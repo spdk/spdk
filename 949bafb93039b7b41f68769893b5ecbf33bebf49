@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "073a1197_7d9a6049",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2295,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T16:56:41Z",
+      "side": 1,
+      "message": "Each bdev effectively has two channels - one for the generic bdev layer (spdk_bdev_channel) and another allocated by the module that is specific to the bdev type (spdk_bdev_channel-\u003echannel).",
+      "parentUuid": "7ac1ef53_7b68a9b8",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e5c3544_2183fc29",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -143,6 +161,24 @@
     },
     {
       "key": {
+        "uuid": "b6914322_8868e20a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2302,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T16:56:41Z",
+      "side": 1,
+      "message": "Correct.  If spdk_bdev_read_blocks (or similar I/O submit function) returns -ENOMEM, and you then immediately call spdk_bdev_queue_io_wait(), it will never return -EINVAL.  An assert() would be appropriate.",
+      "parentUuid": "4e9cdaba_160e2a79",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0836a00_0c69e535",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -190,6 +226,24 @@
       "side": 1,
       "message": "Ok, actually I was trying to find a check in your new code which on new IO arrival from above layers checks if io_wait_queue is not empty, queue the new IO and don\u0027t send to module.",
       "parentUuid": "6e4ccbfc_3ebff46a",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d649aae_c42c7368",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2305,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T16:56:41Z",
+      "side": 1,
+      "message": "We shouldn\u0027t need such a check.  Once an spdk_bdev_io is freed, all queued io_wait entries will have a chance to consume it.  (My next rev of the patch will fix this logic slightly though.)",
+      "parentUuid": "17f03caf_77c6286c",
       "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
