@@ -18,6 +18,16 @@ def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
     return client.call('construct_malloc_bdev', params)
 
 
+def delete_malloc_bdev(client, name):
+    """Delete malloc block devices.
+
+    Args:
+        base_bdev: name of malloc bdev
+    """
+    params = {'name': name}
+    return client.call('delete_malloc_bdev', params)
+
+
 def construct_null_bdev(client, num_blocks, block_size, name, uuid=None):
     """Construct a null block device.
 
