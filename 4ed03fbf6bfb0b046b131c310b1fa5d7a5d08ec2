@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25be31f9_c6d0a4a5",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 75
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-15T14:09:05Z",
+      "side": 1,
+      "message": "What other purpose is for existance of those two variables beside assigning them to rpc_py and clear_config_py. If there is no other reason, please assign rpc_py and clear_config_py here directly.",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 70
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9abaeba_80981de7",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 75
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-15T14:09:05Z",
+      "side": 1,
+      "message": "issue resolved and closed. pls remove.",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 58
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33d223e6_2b48544a",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 75
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-15T14:09:05Z",
+      "side": 1,
+      "message": "issue resolved and closed. pls remove.",
+      "range": {
+        "startLine": 104,
+        "startChar": 1,
+        "endLine": 104,
+        "endChar": 58
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b0b2a16_5f008896",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 75
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-15T14:09:05Z",
+      "side": 1,
+      "message": "Did you mean \"before start_subsystem_init RPC call\" ?\nPls name this method properly or elaborate in comment what this method do.",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 26
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6df1e5d7_9c4f292e",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 75
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-15T14:09:05Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 25
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
