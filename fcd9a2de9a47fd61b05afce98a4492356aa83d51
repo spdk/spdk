@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "8e3429bf_6c4dbb04",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-15T02:07:39Z",
+      "side": 1,
+      "message": "I just removed this check in my previous commit, the caller already do this check before this function, so it should be fine here.",
+      "parentUuid": "6060abd5_c8100565",
+      "revId": "fcd9a2de9a47fd61b05afce98a4492356aa83d51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3842d6da_cf00ca70",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 3
