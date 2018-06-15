@@ -35,6 +35,11 @@ on each call. This allows multiple callers to query I/O statistics without confl
 with each other. Existing users will need to adjust their code to record the previous
 I/O statistics to calculate the delta between calls.
 
+## delete_bdev and destroy_lvol_bdev
+The behaviour of delete_bdev RPC call changed for logical volumes. This call is designed
+for debug purposes only. Interaction with virtual bdevs like lvol deletes bdev, but do not
+remove any data from underlying storage. For that destroy_lvol_bdev should be used.
+
 ### Env
 
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
