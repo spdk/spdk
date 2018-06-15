@@ -114,6 +114,29 @@
       "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9448365a_4be9427e",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 75
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-15T14:17:16Z",
+      "side": 1,
+      "message": "Can you try something like this?\n\ndef filter_methods(data, remove_pre_init):\n\tpre_init_methods \u003d [\n\t\t\u0027set_iscsi_options\u0027,\n\t\t\u0027set_nvmf_target_config\u0027,\n\t\t\u0027set_nvmf_target_options\u0027,\n\t\t\u0027set_bdev_options\u0027\n\t]\n\t\n\tout \u003d []\n\tfor s in data[\u0027subsystems\u0027]:\n\t\tif s[\u0027config\u0027]:\n\t\t\ts_config \u003d []\n\t\t\tfor config in s[\u0027config\u0027]:\n\t\t\t\tm_name \u003d config[\u0027method\u0027]\n\t\t\t\tis_pre_init \u003d m_name in pre_init_methods\n\t\t\t\tif remove_pre_init !\u003d is_pre_init:\n\t\t\t\t\ts_config.append(config)\n\t\t\t\t\tprint \"Adding   method {}\".format(m_name)\n\t\t\t\telse:\n\t\t\t\t\tprint \"Removing method {}\".format(m_name)\n\t\telse:\n\t\t\ts_config \u003d None\t\n\t\t\n\t\tout.append(\n\t\t\t{ \n\t\t\t\u0027subsystem\u0027 : s[\u0027subsystem\u0027],\n\t\t\t\u0027config\u0027 : s_config, \n\t\t\t}\n\t\t)\n\t\t\n\treturn out",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 36
+      },
+      "revId": "4ed03fbf6bfb0b046b131c310b1fa5d7a5d08ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
