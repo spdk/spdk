@@ -126,6 +126,24 @@
     },
     {
       "key": {
+        "uuid": "eb2a3c9b_72e43103",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2295,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-15T20:55:50Z",
+      "side": 1,
+      "message": "No.  In your module, you will be sending an I/O to a member disk.  The channel that you keep stored in your module for the member disk is the bdev channel for that member disk - not the bdev module channel for that member disk.",
+      "parentUuid": "11823d54_cd500f8d",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e5c3544_2183fc29",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
