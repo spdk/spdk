@@ -40,6 +40,11 @@ of new bdev modules. This header includes an interface for the spdk_bdev_part an
 spdk_bdev_part_base objects to enable the creation of multiple virtual bdevs on top of a
 single base bdev.
 
+## delete_bdev and destroy_lvol_bdev
+The behaviour of delete_bdev RPC call changed for logical volumes. This call is designed
+for debug purposes only. Interaction with virtual bdevs like lvol deletes bdev, but do not
+remove any data from underlying storage. For that destroy_lvol_bdev should be used.
+
 ### Env
 
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
