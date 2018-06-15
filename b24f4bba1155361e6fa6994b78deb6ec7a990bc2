@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "d96dceb8_0c586c71",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 875,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-15T02:04:19Z",
+      "side": 1,
+      "message": "yeah, just use nvme_bdev-\u003eactive makes sense.",
+      "parentUuid": "c053ead0_009bd2fe",
+      "revId": "b24f4bba1155361e6fa6994b78deb6ec7a990bc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e297b852_0270a70f",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 2
