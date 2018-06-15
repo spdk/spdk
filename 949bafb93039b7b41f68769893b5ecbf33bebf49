@@ -108,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "11823d54_cd500f8d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2295,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-15T17:22:11Z",
+      "side": 1,
+      "message": "Yes correct, but the \"ch\" argument which module passes as part of this API call will be module specific channel right?\nbut the below line is getting bdev layer generic channel from ch.\nstruct spdk_bdev_channel *channel \u003d spdk_io_channel_get_ctx(ch);",
+      "parentUuid": "073a1197_7d9a6049",
+      "revId": "949bafb93039b7b41f68769893b5ecbf33bebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e5c3544_2183fc29",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
