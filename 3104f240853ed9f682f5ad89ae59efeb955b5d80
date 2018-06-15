@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fd46cf0a_612bb8d7",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-15T10:57:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "63c45968_fa0c3212",
+      "range": {
+        "startLine": 56,
+        "startChar": 33,
+        "endLine": 56,
+        "endChar": 37
+      },
+      "revId": "3104f240853ed9f682f5ad89ae59efeb955b5d80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92dfaa60_3a291d9a",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-15T10:11:59Z",
       "side": 1,
       "message": "This will produce an error because in rpc/bdev.py keyword argument is \"name\", not \"bdev_name\"",
+      "range": {
+        "startLine": 57,
+        "startChar": 49,
+        "endLine": 57,
+        "endChar": 58
+      },
+      "revId": "3104f240853ed9f682f5ad89ae59efeb955b5d80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "428dcc64_de9811d2",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-15T10:57:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "92dfaa60_3a291d9a",
       "range": {
         "startLine": 57,
         "startChar": 49,
