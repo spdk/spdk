@@ -556,10 +556,7 @@ virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16_t nb_pkt
 		num = num - ((vq->vq_used_cons_idx + num) % DESC_PER_CACHELINE);
 	}
 
-	num = virtqueue_dequeue_burst_rx(vq, io, len, num);
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "used:%"PRIu16" dequeue:%"PRIu16"\n", nb_used, num);
-
-	return num;
+	return virtqueue_dequeue_burst_rx(vq, io, len, num);
 }
 
 int
