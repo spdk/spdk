@@ -192,7 +192,8 @@ static bool g_bdev_virtio_finish = false;
 /* Features desired/implemented by this driver. */
 #define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
 	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
-	 1ULL << VIRTIO_SCSI_F_HOTPLUG)
+	 1ULL << VIRTIO_SCSI_F_HOTPLUG		|	\
+	 1ULL << VIRTIO_RING_F_EVENT_IDX)
 
 static void virtio_scsi_dev_unregister_cb(void *io_device);
 static void virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev,

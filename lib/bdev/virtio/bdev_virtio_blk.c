@@ -79,7 +79,8 @@ struct bdev_virtio_blk_io_channel {
 	(1ULL << VIRTIO_BLK_F_BLK_SIZE		|	\
 	 1ULL << VIRTIO_BLK_F_TOPOLOGY		|	\
 	 1ULL << VIRTIO_BLK_F_MQ		|	\
-	 1ULL << VIRTIO_BLK_F_RO)
+	 1ULL << VIRTIO_BLK_F_RO		|	\
+	 1ULL << VIRTIO_RING_F_EVENT_IDX)
 
 static int bdev_virtio_initialize(void);
 static int bdev_virtio_blk_get_ctx_size(void);

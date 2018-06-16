@@ -169,6 +169,7 @@ struct virtqueue {
 
 	uint16_t req_start;
 	uint16_t req_end;
+	uint16_t reqs_finished;
 
 	struct vq_desc_extra vq_descx[0];
 };
