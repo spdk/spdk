@@ -193,16 +193,18 @@ typedef int (*virtio_pci_create_cb)(struct virtio_pci_ctx *pci_ctx, void *ctx);
 uint16_t virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16_t io_cnt);
 
 /**
- * Start a new request on the current vring head position. The request will
- * be bound to given opaque cookie object. All previous requests will be
- * still kept in a ring until they are flushed or the request is aborted.
- * If a previous request is empty (no descriptors have been added) this call
- * will overwrite it. The device owning given virtqueue must be started.
+ * Start a new request on the current vring head position and associate it
+ * with an opaque cookie object. The previous request in given vq will be
+ * made visible to the device in hopes it can be processed early, but there's
+ * no guarantee it will be until the device is notified with \c
+ * virtqueue_req_flush. This behavior is simply an optimization and virtqueues
+ * must always be flushed. Empty requests (with no descriptors added) will be
+ * ignored. The device owning given virtqueue must be started.
  *
  * \param vq virtio queue
- * \param cookie opaque object to bind with this request. Once the request
+ * \param cookie opaque object to associate with this request. Once the request
  * is sent, processed and a response is received, the same object will be
- * returned to the user calling the virtio poll API.
+ * returned to the user after calling the virtio poll API.
  * \param iovcnt number of required iovectors for the request. This can be
  * higher than than the actual number of iovectors to be added.
  * \return 0 on success or negative errno otherwise. If the `iovcnt` is
@@ -212,9 +214,8 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16
 int virtqueue_req_start(struct virtqueue *vq, void *cookie, int iovcnt);
 
 /**
- * Flush a virtqueue. This will make the host device see and process all
- * previously queued requests. An interrupt might be automatically sent if
- * the host device expects it. The device owning given virtqueue must be started.
+ * Flush a virtqueue. This will notify the device if it's required.
+ * The device owning given virtqueue must be started.
  *
  * \param vq virtio queue
  */
