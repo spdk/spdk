@@ -460,9 +460,7 @@ virtqueue_req_flush(struct virtqueue *vq)
 	 * descriptor.
 	 */
 	avail_idx = (uint16_t)(vq->vq_avail_idx & (vq->vq_nentries - 1));
-	if (spdk_unlikely(vq->vq_ring.avail->ring[avail_idx] != vq->req_start)) {
-		vq->vq_ring.avail->ring[avail_idx] = vq->req_start;
-	}
+	vq->vq_ring.avail->ring[avail_idx] = vq->req_start;
 
 	vq->vq_avail_idx++;
 	vq->req_start = VQ_RING_DESC_CHAIN_END;
