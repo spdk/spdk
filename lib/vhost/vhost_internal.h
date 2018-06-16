@@ -102,9 +102,6 @@ struct spdk_vhost_virtqueue {
 	/* Request count from last event */
 	uint16_t used_req_cnt;
 
-	/* Last signaled position in used ring */
-	uint16_t signaled_used_idx;
-
 	/* If not NULL - points to used index field in avail ring */
 	volatile uint16_t *used_event;
 

@@ -246,9 +246,7 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue 
 static void
 _spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue)
 {
-	virtqueue->req_cnt += virtqueue->used_req_cnt;
 	virtqueue->used_req_cnt = 0;
-	virtqueue->signaled_used_idx = virtqueue->vring.last_used_idx;
 	/* We don't want any interrupts in case of event index is enabled. */
 	if (virtqueue->avail_event) {
 		*virtqueue->avail_event = virtqueue->vring.last_avail_idx + virtqueue->vring.size * 2;
@@ -306,12 +304,18 @@ check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
 static inline bool
 spdk_vhost_vq_used_is_signal_needed(struct spdk_vhost_virtqueue *virtqueue)
 {
+	uint16_t used_req_cnt;
+
 	/* Don't have any thing to signal. */
 	if (virtqueue->used_req_cnt == 0) {
 		return false;
 	} else if (virtqueue->used_event != NULL) {
-		return vring_need_event(*virtqueue->used_event, virtqueue->vring.last_used_idx,
-					virtqueue->signaled_used_idx);
+		used_req_cnt = virtqueue->used_req_cnt;
+		virtqueue->req_cnt += used_req_cnt;
+		virtqueue->used_req_cnt = 0;
+		return vring_need_event(*virtqueue->used_event,
+			virtqueue->vring.last_used_idx,
+			virtqueue->vring.last_used_idx - used_req_cnt);
 	} else {
 		return !(virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
 	}
