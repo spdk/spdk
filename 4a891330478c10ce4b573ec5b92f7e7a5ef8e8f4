@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6640f79_d5d38e32",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T17:36:29Z",
+      "side": 1,
+      "message": "Nitpick: I think putting the mutex unlock inside the pthread_setcancelstate() pair would be more consistent, since the lock is inside it.",
+      "revId": "4a891330478c10ce4b573ec5b92f7e7a5ef8e8f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
