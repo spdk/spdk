@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1b0e7d3_a3b61488",
+        "filename": "test/nvmf/jsonnvmf/json_config.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-18T12:18:38Z",
+      "side": 1,
+      "message": "I think we can use test_json_config from common.sh to test nvmf subsystem",
+      "range": {
+        "startLine": 11,
+        "startChar": 1,
+        "endLine": 34,
+        "endChar": 3
+      },
+      "revId": "be29dad64aba2ae2bc62e5268c8f108dd4ab823c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
