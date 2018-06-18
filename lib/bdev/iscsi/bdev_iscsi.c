@@ -751,6 +751,17 @@ err:
 	return rc;
 }
 
+void
+delete_iscsi_disk(struct spdk_bdev *bdev, spdk_delete_iscsi_complete cb_fn, void *cb_arg)
+{
+	if (!bdev || bdev->module != &g_iscsi_bdev_module) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+}
+
 static void
 bdev_iscsi_initialize_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
 {
