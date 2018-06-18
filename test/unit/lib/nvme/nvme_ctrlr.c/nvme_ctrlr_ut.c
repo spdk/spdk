@@ -179,6 +179,12 @@ nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
+int
+nvme_driver_init(void)
+{
+	return 0;
+}
+
 int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		    struct spdk_nvme_ctrlr *ctrlr,
 		    enum spdk_nvme_qprio qprio,

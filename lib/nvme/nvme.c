@@ -283,7 +283,7 @@ nvme_robust_mutex_init_shared(pthread_mutex_t *mtx)
 	return rc;
 }
 
-static int
+int
 nvme_driver_init(void)
 {
 	int ret = 0;
@@ -302,8 +302,6 @@ nvme_driver_init(void)
 	if (spdk_process_is_primary()) {
 		/* The unique named memzone already reserved. */
 		if (g_spdk_nvme_driver != NULL) {
-			assert(g_spdk_nvme_driver->initialized == true);
-
 			return 0;
 		} else {
 			g_spdk_nvme_driver = spdk_memzone_reserve(SPDK_NVME_DRIVER_NAME,
