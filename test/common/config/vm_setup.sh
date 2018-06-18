@@ -98,6 +98,7 @@ else
 fi
 cd spdk
 git submodule update --init --recursive
+./scripts/pkgdep.sh
 cd ~
 
 # The version of iscsiadm that ships with fedora 26 was broken as of November 3 2017.
