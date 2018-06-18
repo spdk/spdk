@@ -16,6 +16,24 @@
       "revId": "02bffeb475813ace6efb0c162c7e25300ce30727",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6ecdbc7_0a1ba04d",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-18T23:13:18Z",
+      "side": 1,
+      "message": "Why does now \u003d spdk_get_ticks() cause a 25% performance drop though?  It can\u0027t just be saving it in a local variable.  It must be the updating \u0027now\u0027 here causes problems elsewhere.\n\nI\u0027d like to understand this more through before we proceed further on committing this patch.",
+      "parentUuid": "52399d79_982c65b1",
+      "revId": "02bffeb475813ace6efb0c162c7e25300ce30727",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
