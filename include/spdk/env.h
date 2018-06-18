@@ -1033,7 +1033,7 @@ int spdk_mem_register(void *vaddr, size_t len);
  * are completed or cancelled before calling this function.
  *
  * \param vaddr Virtual address to unregister.
- * \param leng Length in bytes of the vaddr.
+ * \param len Length in bytes of the vaddr.
  *
  * \return 0 on success, negative errno on failure.
  */

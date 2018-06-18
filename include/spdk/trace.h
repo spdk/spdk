@@ -234,7 +234,7 @@ void spdk_trace_register_object(uint8_t type, char id_prefix);
  * \param new_object New object for the tpoint.
  * \param arg1_is_ptr This argument indicates whether argument1 is a pointer.
  * \param arg1_is_alias This argument indicates whether argument1 is an alias.
- * \param agr1_name Name of argument.
+ * \param arg1_name Name of argument.
  */
 void spdk_trace_register_description(const char *name, const char *short_name,
 				     uint16_t tpoint_id, uint8_t owner_type,
