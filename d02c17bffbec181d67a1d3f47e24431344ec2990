@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c1d0e2a_b993aa16",
+        "filename": "test/bdev/bdevjson/json_config.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T22:27:46Z",
+      "side": 1,
+      "message": "Same as previous review - this should be in autotest_common.sh rather than in one particular test.",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60f5ba86_2e9b39b8",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T22:27:46Z",
+      "side": 1,
+      "message": "Maybe I missed it in a previous comment thread, but is there a reason this is set to 0? We should default all flags to 1 unless there is a pretty good reason to set it to 0.\n\nAt the very least, we need to have this test run on at least one machine before we check it in.",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35f109b4_c46166c4",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T22:27:46Z",
+      "side": 1,
+      "message": "This file probably doesn\u0027t need to be executable.",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f67c1d9_c858885c",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T22:27:46Z",
+      "side": 1,
+      "message": "diff returns a status code (0 means no differences), so you don\u0027t need to use \u0027if\u0027 to compare the output; just running diff by itself should be sufficient if the script is running with set -e (and will also print out the differences as a debugging aid):\n\n    diff $base_json_config $last_json_config",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f87ce61_bb7789c4",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T22:27:46Z",
+      "side": 1,
+      "message": "AIO is only available on Linux, so either we need to only run this whole script on Linux (not FreeBSD), or the AIO part should be under an OS check.",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ace66a18_f6297217",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T22:27:46Z",
+      "side": 1,
+      "message": "PMDK is optional, so we shouldn\u0027t unconditionally run create_pmem_pool.  This needs to check $SPDK_TEST_PMDK somewhere.",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33668a0f_1f5dcd67",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T22:27:46Z",
+      "side": 1,
+      "message": "Same here - Ceph is optional, so we can\u0027t just assume construct_rbd_bdev is available.",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
