@@ -18,7 +18,7 @@ functionality:
 
 Bdev module creates abstraction layer that provides common API for all devices.
 User can use available bdev modules or create own module with any type of
-device underneath (please refer to @ref bdev_module for details). SPDK
+device underneath (please refer to @ref bev_module for details). SPDK
 provides also vbdev modules which creates block devices on existing bdev. For
 example @ref bdev_ug_logical_volumes or @ref bdev_ug_gpt
 
