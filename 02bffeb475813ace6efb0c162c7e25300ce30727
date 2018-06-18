@@ -34,6 +34,47 @@
       "revId": "02bffeb475813ace6efb0c162c7e25300ce30727",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccc0d1ef_3824d4a2",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-18T23:17:12Z",
+      "side": 1,
+      "message": "Your new policy is to update stats for each of event, poller, and timer? It looks that add_tsc_stats is called every after action.\n\nAnd I think calling get_ticks() in the add_tsc_stats() may be clean. Inlining get_ticks() or passing now as arguments may be not so meaningful.",
+      "parentUuid": "52399d79_982c65b1",
+      "revId": "02bffeb475813ace6efb0c162c7e25300ce30727",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87780bbf_bd330084",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-18T23:17:12Z",
+      "side": 1,
+      "message": "updating now at the line 536 affected this now?",
+      "range": {
+        "startLine": 542,
+        "startChar": 48,
+        "endLine": 542,
+        "endChar": 51
+      },
+      "revId": "02bffeb475813ace6efb0c162c7e25300ce30727",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
