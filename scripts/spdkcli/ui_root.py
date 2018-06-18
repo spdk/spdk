@@ -107,6 +107,10 @@ class UIRoot(UINode):
         response = rpc.bdev.construct_pmem_bdev(self.client, **kwargs)
         return response
 
+    def create_rbd_bdev(self, **kwargs):
+        response = rpc.bdev.construct_rbd_bdev(self.client, **kwargs)
+        return response
+
 
 class Bdev(object):
     def __init__(self, bdev_info):
