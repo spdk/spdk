@@ -263,6 +263,15 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_iscsi_bdev)
 
     @call_cmd
+    def delete_iscsi_bdev(args):
+        rpc.bdev.delete_iscsi_bdev(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('delete_iscsi_bdev', help='Delete an iSCSI bdev')
+    p.add_argument('name', help='iSCSI bdev name')
+    p.set_defaults(func=delete_iscsi_bdev)
+
+    @call_cmd
     def construct_pmem_bdev(args):
         print_array(rpc.bdev.construct_pmem_bdev(args.client,
                                                  pmem_file=args.pmem_file,

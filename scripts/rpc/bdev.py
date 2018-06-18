@@ -187,6 +187,16 @@ def construct_iscsi_bdev(client, name, url, initiator_iqn):
     return client.call('construct_iscsi_bdev', params)
 
 
+def delete_iscsi_bdev(client, name):
+    """Remove iSCSI bdev from the system.
+
+    Args:
+        bdev_name: name of iSCSI bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_iscsi_bdev', params)
+
+
 def construct_pmem_bdev(client, pmem_file, name):
     """Construct a libpmemblk block device.
 
