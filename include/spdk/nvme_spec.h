@@ -562,7 +562,8 @@ enum spdk_nvme_status_code_type {
 	SPDK_NVME_SCT_GENERIC		= 0x0,
 	SPDK_NVME_SCT_COMMAND_SPECIFIC	= 0x1,
 	SPDK_NVME_SCT_MEDIA_ERROR	= 0x2,
-	/* 0x3-0x6 - reserved */
+	SPDK_NVME_SCT_PATH		= 0x3,
+	/* 0x4-0x6 - reserved */
 	SPDK_NVME_SCT_VENDOR_SPECIFIC	= 0x7,
 };
 
@@ -667,6 +668,18 @@ enum spdk_nvme_media_error_status_code {
 	SPDK_NVME_SC_COMPARE_FAILURE			= 0x85,
 	SPDK_NVME_SC_ACCESS_DENIED			= 0x86,
 	SPDK_NVME_SC_DEALLOCATED_OR_UNWRITTEN_BLOCK     = 0x87,
+};
+
+/**
+ * Path related status codes
+ */
+enum spdk_nvme_path_status_code {
+	SPDK_NVME_SC_INTERNAL_PATH_ERROR		= 0x00,
+
+	SPDK_NVME_SC_CONTROLLER_PATH_ERROR		= 0x60,
+
+	SPDK_NVME_SC_HOST_PATH_ERROR			= 0x70,
+	SPDK_NVME_SC_ABORTED_BY_HOST			= 0x71,
 };
 
 /**
@@ -1702,7 +1715,11 @@ struct spdk_nvme_error_information_entry {
 	uint64_t		lba;
 	uint32_t		nsid;
 	uint8_t			vendor_specific;
-	uint8_t			reserved[35];
+	uint8_t			trtype;
+	uint8_t			reserved30[2];
+	uint16_t		command_specific;
+	uint16_t		trtype_specific;
+	uint8_t			reserved42[22];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_error_information_entry) == 64, "Incorrect size");
 

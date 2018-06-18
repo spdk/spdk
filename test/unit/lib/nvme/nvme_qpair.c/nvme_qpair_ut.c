@@ -278,6 +278,16 @@ static void test_nvme_completion_is_retry(void)
 	cpl.status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
+	cpl.status.sct = SPDK_NVME_SCT_PATH;
+	cpl.status.sc = SPDK_NVME_SC_INTERNAL_PATH_ERROR;
+	cpl.status.dnr = 0;
+	CU_ASSERT_TRUE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sct = SPDK_NVME_SCT_PATH;
+	cpl.status.sc = SPDK_NVME_SC_INTERNAL_PATH_ERROR;
+	cpl.status.dnr = 1;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
 	cpl.status.sct = SPDK_NVME_SCT_VENDOR_SPECIFIC;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
