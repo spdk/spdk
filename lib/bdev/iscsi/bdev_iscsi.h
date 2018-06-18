@@ -36,6 +36,8 @@
 
 #include "spdk/bdev.h"
 
+typedef void (*spdk_delete_iscsi_complete)(void *cb_arg, int bdeverrno);
+
 /**
  * SPDK bdev iSCSI callback type.
  *
@@ -60,5 +62,14 @@ typedef void (*spdk_bdev_iscsi_create_cb)(void *cb_arg, struct spdk_bdev *bdev, 
  */
 int create_iscsi_disk(const char *bdev_name, const char *initiator_iqn, const char *url,
 		      spdk_bdev_iscsi_create_cb cb_fn, void *cb_arg);
+
+/**
+ * Delete iSCSI bdev.
+ *
+ * \param bdev Pointer to iSCSI bdev.
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+void delete_iscsi_disk(struct spdk_bdev *bdev, spdk_delete_iscsi_complete cb_fn, void *cb_arg);
 
 #endif // SPDK_BDEV_ISCSI_H
