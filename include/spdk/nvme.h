@@ -1462,7 +1462,7 @@ int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
  *        deallocate, which is often referred to as TRIM or UNMAP.
  *
  * \param ns NVMe namespace to submit the DSM request
- * \param type A bit field constructed from \ref enum spdk_nvme_dsm_attribute.
+ * \param type A bit field constructed from \ref spdk_nvme_dsm_attribute.
  * \param qpair I/O queue pair to submit the request
  * \param ranges An array of \ref spdk_nvme_dsm_range elements describing
  *		 the LBAs to operate on.
