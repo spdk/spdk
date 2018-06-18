@@ -83,13 +83,14 @@ LIBS += $(ENV_LINKER_ARGS)
 
 comma := ,
 
-$(SHARED_LIB): $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES) $(NET_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS) $(MAKEFILE_LIST)
+$(SHARED_LIB): $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES) $(NET_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS) $(MAKEFILE_LIST) spdk.map
 	$(Q)echo "  SO $(notdir $@)"; \
 	rm -f $@; \
 	$(CC) -o $@ -shared $(CPPFLAGS) $(LDFLAGS) \
 		-Wl,--whole-archive \
 		$(filter-out -Wl$(comma)--no-whole-archive,$(LIBS)) \
 		-Wl,--no-whole-archive \
+		-Wl,--version-script=spdk.map \
 		-lcrypto \
 		$(SYS_LIBS)
 
