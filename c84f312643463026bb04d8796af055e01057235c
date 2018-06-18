@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95116dcd_d30367d5",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T23:13:09Z",
+      "side": 1,
+      "message": "This probably needs a \u0027sudo\u0027.\n\nWe should also try to remove any redundant package installations from the \u0027dnf install\u0027 list above.",
+      "revId": "c84f312643463026bb04d8796af055e01057235c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
