@@ -52,7 +52,7 @@ ReactorMask 0xF000000
 
 ## Configuring a LUN in the iSCSI Target {#iscsi_lun}
 
-Each LUN in an iSCSI target node is associated with an SPDK block device.  See @ref bdev
+Each LUN in an iSCSI target node is associated with an SPDK block device.  See @ref bdv
 for details on configuring SPDK block devices.  The block device to LUN mappings are specified in the
 configuration file as:
 
