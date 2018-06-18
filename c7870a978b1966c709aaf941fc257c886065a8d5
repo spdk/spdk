@@ -137,6 +137,30 @@
       "revId": "c7870a978b1966c709aaf941fc257c886065a8d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98141ed1_5981c74b",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-18T10:07:08Z",
+      "side": 1,
+      "message": "When inflation is performed there\u0027s no real write.",
+      "parentUuid": "463f03d9_7a24f25a",
+      "range": {
+        "startLine": 33,
+        "startChar": 63,
+        "endLine": 33,
+        "endChar": 67
+      },
+      "revId": "c7870a978b1966c709aaf941fc257c886065a8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
