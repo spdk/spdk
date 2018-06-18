@@ -283,7 +283,7 @@ nvme_robust_mutex_init_shared(pthread_mutex_t *mtx)
 	return rc;
 }
 
-static int
+int
 nvme_driver_init(void)
 {
 	int ret = 0;

@@ -536,6 +536,8 @@ struct nvme_driver {
 
 extern struct nvme_driver *g_spdk_nvme_driver;
 
+int nvme_driver_init(void);
+
 /*
  * Used for the spdk_nvme_connect() public API to save user specified opts.
  */
