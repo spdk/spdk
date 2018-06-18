@@ -93,6 +93,17 @@ class UIRoot(UINode):
     def delete_lvol_store(self, **kwargs):
         rpc.lvol.destroy_lvol_store(self.client, **kwargs)
 
+    def create_pmem_pool(self, **kwargs):
+        response = rpc.pmem.create_pmem_pool(self.client, **kwargs)
+        return response
+
+    def delete_pmem_pool(self, **kwargs):
+        rpc.pmem.delete_pmem_pool(self.client, **kwargs)
+
+    def create_pmem_bdev(self, **kwargs):
+        response = rpc.bdev.construct_pmem_bdev(self.client, **kwargs)
+        return response
+
 
 class Bdev(object):
     def __init__(self, bdev_info):

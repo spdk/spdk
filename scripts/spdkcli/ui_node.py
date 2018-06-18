@@ -55,6 +55,7 @@ class UIBdevs(UINode):
         UINullBdev(self)
         UIErrorBdev(self)
         UISplitBdev(self)
+        UIPmemBdev(self)
 
     def ui_command_delete(self, name):
         """
@@ -343,6 +344,34 @@ class UIErrorBdev(UIBdev):
 class UISplitBdev(UIBdev):
     def __init__(self, parent):
         UIBdev.__init__(self, "Split_Disk", parent)
+
+
+class UIPmemBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "pmemblk", parent)
+
+    def ui_command_create_pmem_pool(self, pmem_file, total_size, block_size):
+        total_size = self.ui_eval_param(total_size, "number", None)
+        block_size = self.ui_eval_param(block_size, "number", None)
+        num_blocks = int((total_size * 1024 * 1024) / block_size)
+
+        self.get_root().create_pmem_pool(pmem_file=pmem_file,
+                                         num_blocks=num_blocks,
+                                         block_size=block_size)
+
+    def ui_command_delete_pmem_pool(self, pmem_file):
+        self.get_root().delete_pmem_pool(pmem_file=pmem_file)
+
+    def ui_command_info_pmem_pool(self, pmem_file):
+        ret = self.get_root().delete_pmem_pool(pmem_file=pmem_file)
+        self.shell.log.info(ret)
+
+    def ui_command_create(self, pmem_file, name):
+        ret_name = self.get_root().create_pmem_bdev(pmem_file=pmem_file,
+                                                    name=name)
+        self.shell.log.info(ret_name)
+        self.get_root().refresh()
+        self.refresh()
 
 
 class UIBdevObj(UINode):
