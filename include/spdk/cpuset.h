@@ -138,7 +138,7 @@ uint32_t spdk_cpuset_count(const struct spdk_cpuset *set);
 /**
  * Convert a CPU set to hex string.
  *
- * \param CPU set.
+ * \param set CPU set.
  *
  * \return a pointer to hexadecimal representation of CPU set. Buffer to store a
  * string is dynamically allocated internally and freed with CPU set object.

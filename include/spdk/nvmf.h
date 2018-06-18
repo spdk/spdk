@@ -326,7 +326,7 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsys
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
  *
  * \param subsystem Subsystem to add host to.
- * \param host_nqn The NQN for the host.
+ * \param hostnqn The NQN for the host.
  *
  * \return 0 on success, or negated errno value on failure.
  */
@@ -339,7 +339,7 @@ int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
  *
  * \param subsystem Subsystem to remove host from.
- * \param host_nqn The NQN for the host.
+ * \param hostnqn The NQN for the host.
  *
  * \return 0 on success, or negated errno value on failure.
  */

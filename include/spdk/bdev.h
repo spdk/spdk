@@ -858,7 +858,7 @@ int spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *bdev_desc,
  * so that portion of the command may be left empty. Also, the namespace
  * id (nsid) will be populated automatically.
  *
- * \param bdev Block device
+ * \param bdev_desc Block device descriptor
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param cmd The raw NVMe command. Must be in the NVM command set.
  * \param buf Data buffer to written from.

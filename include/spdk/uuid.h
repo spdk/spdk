@@ -58,7 +58,7 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_uuid) == 16, "Incorrect size");
 /**
  * Convert UUID in textual format into a spdk_uuid.
  *
- * \param uuid[output] User-provided UUID buffer.
+ * \param[out] uuid User-provided UUID buffer.
  * \param uuid_str UUID in textual format in C string.
  *
  * \return 0 on success, or negative errno on failure.
@@ -89,7 +89,7 @@ int spdk_uuid_compare(const struct spdk_uuid *u1, const struct spdk_uuid *u2);
 /**
  * Generate a new UUID.
  *
- * \param uuid[out] User-provided UUID buffer to fill.
+ * \param[out] uuid User-provided UUID buffer to fill.
  */
 void spdk_uuid_generate(struct spdk_uuid *uuid);
 
