@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5405ae8e_b0a577a6",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-18T08:57:03Z",
+      "side": 1,
+      "message": "Maybe to avoid \"on on-..\", change to \"dynamic\" ?",
+      "range": {
+        "startLine": 33,
+        "startChar": 33,
+        "endLine": 33,
+        "endChar": 42
+      },
+      "revId": "c7870a978b1966c709aaf941fc257c886065a8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7e0b43a_a5458db6",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-18T08:57:03Z",
+      "side": 1,
+      "message": "underlying",
+      "range": {
+        "startLine": 33,
+        "startChar": 220,
+        "endLine": 33,
+        "endChar": 231
+      },
+      "revId": "c7870a978b1966c709aaf941fc257c886065a8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "463f03d9_7a24f25a",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-18T08:57:03Z",
+      "side": 1,
+      "message": "Is this example, are there are other methods ? I think this is the only way.",
+      "range": {
+        "startLine": 33,
+        "startChar": 63,
+        "endLine": 33,
+        "endChar": 67
+      },
+      "revId": "c7870a978b1966c709aaf941fc257c886065a8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64589738_3f066cd8",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-18T08:57:03Z",
+      "side": 1,
+      "message": "Removing \"what means that\" still makes the sentence correct.",
+      "range": {
+        "startLine": 33,
+        "startChar": 128,
+        "endLine": 33,
+        "endChar": 143
+      },
+      "revId": "c7870a978b1966c709aaf941fc257c886065a8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0997971d_dd6713d9",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-18T08:57:03Z",
+      "side": 1,
+      "message": "duplicate \u0027when\u0027",
+      "range": {
+        "startLine": 33,
+        "startChar": 73,
+        "endLine": 33,
+        "endChar": 77
+      },
+      "revId": "c7870a978b1966c709aaf941fc257c886065a8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28c84cc9_65e3632e",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-18T08:57:03Z",
+      "side": 1,
+      "message": "\u0027rely\u0027 ? Not sure though.",
+      "range": {
+        "startLine": 33,
+        "startChar": 23,
+        "endLine": 33,
+        "endChar": 29
+      },
+      "revId": "c7870a978b1966c709aaf941fc257c886065a8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
