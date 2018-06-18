@@ -134,7 +134,7 @@ const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev);
  * Get cpuset of the vhost device.  The cpuset is constant throughout the lifetime
  * of a vdev. It is a subset of SPDK app cpuset vhost was started with.
  *
- * \param dev vhost device.
+ * \param vdev vhost device.
  *
  * \return cpuset of the vdev.
  */
@@ -188,7 +188,7 @@ void spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base
  *
  * \param name name of the vhost device. The name will also be used
  * for socket name, which is exactly \c socket_base_dir/name
- * \param mask string containing cpumask in hex. The leading *0x*
+ * \param cpumask string containing cpumask in hex. The leading *0x*
  * is allowed but not required. The mask itself can be constructed as:
  * ((1 << cpu0) | (1 << cpu1) | ... | (1 << cpuN)).
  *
@@ -268,7 +268,7 @@ int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tg
  *
  * \param name name of the vhost blk device. The name will also be
  * used for socket name, which is exactly \c socket_base_dir/name
- * \param mask string containing cpumask in hex. The leading *0x*
+ * \param cpumask string containing cpumask in hex. The leading *0x*
  * is allowed but not required. The mask itself can be constructed as:
  * ((1 << cpu0) | (1 << cpu1) | ... | (1 << cpuN)).
  * \param dev_name bdev name to associate with this vhost device
@@ -293,7 +293,7 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
  * Get underlying SPDK bdev from vhost blk device. The bdev might be NULL, as it
  * could have been hotremoved.
  *
- * \param ctrl vhost blk device.
+ * \param ctrlr vhost blk device.
  *
  * \return SPDK bdev associated with given vdev.
  */

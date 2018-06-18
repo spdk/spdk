@@ -92,6 +92,8 @@ typedef void (spdk_nvmf_tgt_destroy_done_fn)(void *ctx, int status);
  * Destroy an NVMe-oF target.
  *
  * \param tgt The target to destroy. This releases all resources.
+ * \param cb_fn A callback that will be called once the target is destroyed
+ * \param cb_arg A context argument passed to cb_fn.
  */
 void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 			   spdk_nvmf_tgt_destroy_done_fn cb_fn,
@@ -307,16 +309,17 @@ struct spdk_nvmf_subsystem *spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *t
  *
  * \param tgt The NVMe-oF target to iterate.
  *
- * \return a pointer to the NVMe-oF subsystem on success, or NULL on failure.
+ * \return a pointer to the first NVMe-oF subsystem on success, or NULL on failure.
  */
 struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_first(struct spdk_nvmf_tgt *tgt);
 
 /**
  * Continue iterating over all known subsystems. If no additional subsystems, return NULL.
  *
- * \param tgt The NVMe-oF target to iterate.
+ * \param subsystem Previous subsystem returned from \ref spdk_nvmf_subsystem_get_first or
+ *                  \ref spdk_nvmf_subsystem_get_next.
  *
- * \return a pointer to the NVMe-oF subsystem on success, or NULL on failure.
+ * \return a pointer to the next NVMe-oF subsystem on success, or NULL on failure.
  */
 struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem);
 
@@ -326,7 +329,7 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsys
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
  *
  * \param subsystem Subsystem to add host to.
- * \param host_nqn The NQN for the host.
+ * \param hostnqn The NQN for the host.
  *
  * \return 0 on success, or negated errno value on failure.
  */
@@ -339,7 +342,7 @@ int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
  *
  * \param subsystem Subsystem to remove host from.
- * \param host_nqn The NQN for the host.
+ * \param hostnqn The NQN for the host.
  *
  * \return 0 on success, or negated errno value on failure.
  */
