@@ -1,3 +1,6 @@
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+
 all: doc
 	@:
 
@@ -6,15 +9,15 @@ all: doc
 doc: output
 
 changelog.md: ../CHANGELOG.md
-	sed -e 's/^# Changelog/# Changelog {#changelog}/' \
+	$(Q)sed -e 's/^# Changelog/# Changelog {#changelog}/' \
 	    -e 's/^##/#/' \
 	    -e 's/^# \(\(v..\...\):.*\)/# \1 {#changelog-\2}/' \
 	    -e '/# v..\...:/s/\./-/2' \
 	    < $< > $@
 
 output: Doxyfile changelog.md $(wildcard *.md) $(wildcard ../include/spdk/*.h)
-	rm -rf $@
-	doxygen Doxyfile
+	$(Q)rm -rf $@
+	$(Q)doxygen Doxyfile
 
 clean:
-	rm -rf output changelog.md
+	$(Q)rm -rf output changelog.md
