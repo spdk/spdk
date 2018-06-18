@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "faf7619d_25a951ad",
+        "filename": "include/spdk_internal/virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-18T22:31:22Z",
+      "side": 1,
+      "message": "\"likely won\u0027t be processed\"\n\nThis sounds a bit ambiguous.  Would it be too lengthy to explain it so that it removes the ambiguity?",
+      "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18be8bbf_b6f6fefb",
+        "filename": "include/spdk_internal/virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-18T22:31:22Z",
+      "side": 1,
+      "message": "virtqueue_req_flush",
+      "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a9d424f_1b3c65ff",
+        "filename": "include/spdk_internal/virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-18T22:31:22Z",
+      "side": 1,
+      "message": "same here - \"possibly\" is a bit ambiguous",
+      "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21395a90_149652f3",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-18T22:31:22Z",
+      "side": 1,
+      "message": "Why does the location of this virtio_wmb() change relative to the previous code in virtqueue_req_flush?\n\n(I\u0027m having major deja vu while writing this comment - maybe you answered this question in a different Gerrit review that made similar changes, but I can\u0027t seem to find it.)",
+      "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
