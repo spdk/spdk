@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2bd62dc1_b1a1b4d8",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-18T18:00:44Z",
+      "side": 1,
+      "message": "This should probably be named \"nvme_ctrlr_deactivate_bdev\".\n\nIs marking it as inactive enough? Should the bdev be unregistered entirely?",
+      "revId": "28e4ece28ba3282f067d22a48a889d5738e8ff6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
