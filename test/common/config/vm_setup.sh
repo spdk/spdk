@@ -57,6 +57,7 @@ sudo dnf install -y glib2-devel
 sudo dnf install -y pixman-devel
 sudo dnf install -y libiscsi-devel
 sudo dnf install -y doxygen
+sudo dnf install -y graphviz
 sudo dnf install -y astyle-devel
 sudo dnf install -y python
 sudo dnf install -y python-pep8
