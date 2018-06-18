@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00b17ec2_28bddfd8",
+        "filename": "scripts/rpc/pmem.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-18T17:34:40Z",
+      "side": 1,
+      "message": "I would prefer to pass num_blocks as the parameter to create_pmem_pool for consistency with the other RPC APIs; the rpc.py CLI can still take total_size in MB, but it should convert it before passing it to this function.",
+      "revId": "f2eef2153d5b296610885c90ef18c8af8f056e2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
