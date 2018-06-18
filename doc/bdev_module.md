@@ -18,7 +18,7 @@ how to write a module.
 
 ## Creating A New Module
 
-Block device modules are located in lib/bdev/<module_name> today. It is not
+Block device modules are located in subdirectories under lib/bdev today. It is not
 currently possible to place the code for a bdev module elsewhere, but updates
 to the build system could be made to enable this in the future. To create a
 module, add a new directory with a single C file and a Makefile. A great

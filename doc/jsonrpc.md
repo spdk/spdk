@@ -80,7 +80,7 @@ Example response:
 
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
-## set_bdev_options (#rpc_set_bdev_options}
+## set_bdev_options {#rpc_set_bdev_options}
 
 Set global parameters for the block device (bdev) subsystem.  This RPC may only be called
 before subsystems have been initialized.
