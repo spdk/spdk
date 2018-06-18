@@ -762,29 +762,54 @@ static inline enum spdk_nvme_data_transfer spdk_nvme_opc_get_data_transfer(uint8
 
 enum spdk_nvme_feat {
 	/* 0x00 - reserved */
+
+	/** cdw11 layout defined by \ref spdk_nvme_feat_arbitration */
 	SPDK_NVME_FEAT_ARBITRATION				= 0x01,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_power_management */
 	SPDK_NVME_FEAT_POWER_MANAGEMENT				= 0x02,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_lba_range_type */
 	SPDK_NVME_FEAT_LBA_RANGE_TYPE				= 0x03,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_temperature_threshold */
 	SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD			= 0x04,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_error_recovery */
 	SPDK_NVME_FEAT_ERROR_RECOVERY				= 0x05,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_volatile_write_cache */
 	SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE			= 0x06,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_number_of_queues */
 	SPDK_NVME_FEAT_NUMBER_OF_QUEUES				= 0x07,
 	SPDK_NVME_FEAT_INTERRUPT_COALESCING			= 0x08,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_interrupt_vector_configuration */
 	SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION		= 0x09,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_write_atomicity */
 	SPDK_NVME_FEAT_WRITE_ATOMICITY				= 0x0A,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_async_event_configuration */
 	SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION		= 0x0B,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_autonomous_power_state_transition */
 	SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION	= 0x0C,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_host_mem_buffer */
 	SPDK_NVME_FEAT_HOST_MEM_BUFFER				= 0x0D,
 	SPDK_NVME_FEAT_TIMESTAMP				= 0x0E,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_keep_alive_timer */
 	SPDK_NVME_FEAT_KEEP_ALIVE_TIMER				= 0x0F,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_host_controlled_thermal_management */
 	SPDK_NVME_FEAT_HOST_CONTROLLED_THERMAL_MANAGEMENT	= 0x10,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_non_operational_power_state_config */
 	SPDK_NVME_FEAT_NON_OPERATIONAL_POWER_STATE_CONFIG	= 0x11,
 
+	/* 0x12-0x77 - reserved */
+
+	/* 0x78-0x7F - NVMe-MI features */
+
+	/** cdw11 layout defined by \ref spdk_nvme_feat_software_progress_marker */
 	SPDK_NVME_FEAT_SOFTWARE_PROGRESS_MARKER			= 0x80,
-	/* 0x81-0xBF - command set specific */
+
+	/** cdw11 layout defined by \ref spdk_nvme_feat_host_identifier */
 	SPDK_NVME_FEAT_HOST_IDENTIFIER				= 0x81,
 	SPDK_NVME_FEAT_HOST_RESERVE_MASK			= 0x82,
 	SPDK_NVME_FEAT_HOST_RESERVE_PERSIST			= 0x83,
+
+	/* 0x84-0xBF - command set specific (reserved) */
+
 	/* 0xC0-0xFF - vendor specific */
 };
 
