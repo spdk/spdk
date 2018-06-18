@@ -136,10 +136,10 @@ This command will create a bdev that represents the 'foo' image from a pool call
 # GPT (GUID Partition Table) {#bdev_config_gpt}
 
 The GPT virtual bdev driver is enabled by default and does not require any configuration.
-It will automatically detect @ref bdev_ug_gpt_table on any attached bdev and will create
+It will automatically detect @ref bdev_ug_gpt on any attached bdev and will create
 possibly multiple virtual bdevs.
 
-## SPDK GPT partition table {#bdev_ug_gpt_table}
+## SPDK GPT partition table {#bdev_ug_gpt}
 The SPDK partition type GUID is `7c5222bd-8f5d-4087-9c00-bf9843c7b58c`. Existing SPDK bdevs
 can be exposed as Linux block devices via NBD and then ca be partitioned with
 standard partitioning tools. After partitioning, the bdevs will need to be deleted and

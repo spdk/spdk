@@ -103,7 +103,7 @@ For vhost-blk, bdevs are exposed directly as block devices in the guest OS and a
 not associated at all with SCSI.
 
 SPDK supports several different types of storage backends, including NVMe,
-Linux AIO, malloc ramdisk and Ceph RBD.  Refer to @ref bdev_getting_started for
+Linux AIO, malloc ramdisk and Ceph RBD.  Refer to @ref bdev for
 additional information on configuring SPDK storage backends.
 
 This guide will use a malloc bdev (ramdisk) named Malloc0. The following RPC
