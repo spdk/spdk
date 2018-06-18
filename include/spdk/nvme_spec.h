@@ -796,15 +796,20 @@ enum spdk_nvme_feat {
 	/** cdw11 layout defined by \ref spdk_nvme_feat_non_operational_power_state_config */
 	SPDK_NVME_FEAT_NON_OPERATIONAL_POWER_STATE_CONFIG	= 0x11,
 
+	/* 0x12-0x77 - reserved */
+
+	/* 0x78-0x7F - NVMe-MI features */
+
 	/** cdw11 layout defined by \ref spdk_nvme_feat_software_progress_marker */
 	SPDK_NVME_FEAT_SOFTWARE_PROGRESS_MARKER			= 0x80,
-
-	/* 0x81-0xBF - command set specific */
 
 	/** cdw11 layout defined by \ref spdk_nvme_feat_host_identifier */
 	SPDK_NVME_FEAT_HOST_IDENTIFIER				= 0x81,
 	SPDK_NVME_FEAT_HOST_RESERVE_MASK			= 0x82,
 	SPDK_NVME_FEAT_HOST_RESERVE_PERSIST			= 0x83,
+
+	/* 0x84-0xBF - command set specific (reserved) */
+
 	/* 0xC0-0xFF - vendor specific */
 };
 
