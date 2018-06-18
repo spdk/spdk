@@ -124,7 +124,7 @@ const char *spdk_strerror(int errnum);
 /**
  * Remove trailing newlines from the end of a string in place.
  *
- * Any sequence of trailing \r and \n characters is removed from the end of the
+ * Any sequence of trailing \\r and \\n characters is removed from the end of the
  * string.
  *
  * \param s String to remove newline from.
