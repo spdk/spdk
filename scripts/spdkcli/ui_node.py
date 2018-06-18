@@ -56,6 +56,7 @@ class UIBdevs(UINode):
         UIErrorBdev(self)
         UISplitBdev(self)
         UIPmemBdev(self)
+        UIRbdBdev(self)
 
     def ui_command_delete(self, name):
         """
@@ -369,6 +370,22 @@ class UIPmemBdev(UIBdev):
     def ui_command_create(self, pmem_file, name):
         ret_name = self.get_root().create_pmem_bdev(pmem_file=pmem_file,
                                                     name=name)
+        self.shell.log.info(ret_name)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UIRbdBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "Rbd", parent)
+
+    def ui_command_create(self, pool_name, rbd_name, block_size, name=None):
+        block_size = self.ui_eval_param(block_size, "number", None)
+
+        ret_name = self.get_root().create_rbd_bdev(pool_name=pool_name,
+                                                   rbd_name=rbd_name,
+                                                   block_size=block_size,
+                                                   name=name)
         self.shell.log.info(ret_name)
         self.get_root().refresh()
         self.refresh()
