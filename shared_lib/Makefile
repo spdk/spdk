@@ -90,6 +90,7 @@ $(SHARED_LIB): $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(
 		-Wl,--whole-archive \
 		$(filter-out -Wl$(comma)--no-whole-archive,$(LIBS)) \
 		-Wl,--no-whole-archive \
+		-Wl,--version-script=spdk.map \
 		-lcrypto \
 		$(SYS_LIBS)
 

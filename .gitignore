@@ -7,7 +7,6 @@
 *.kdev4
 *.ko
 *.log
-*.map
 *.o
 *.pyc
 *.so
