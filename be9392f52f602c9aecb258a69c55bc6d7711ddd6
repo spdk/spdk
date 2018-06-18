@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3ad17175_0f18cbaf",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-18T13:57:59Z",
+      "side": 1,
+      "message": "Why it cannot be bigger than page size (but smaller than cluster size)?",
+      "parentUuid": "e24d5a93_da93f8f5",
+      "range": {
+        "startLine": 193,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 20
+      },
+      "revId": "be9392f52f602c9aecb258a69c55bc6d7711ddd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3775ef2c_be88964c",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 1
@@ -45,6 +69,52 @@
       "revId": "be9392f52f602c9aecb258a69c55bc6d7711ddd6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d053719_6d959d02",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1692,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-18T13:57:59Z",
+      "side": 1,
+      "message": "This need to be changed to sectors based.",
+      "range": {
+        "startLine": 1692,
+        "startChar": 5,
+        "endLine": 1692,
+        "endChar": 44
+      },
+      "revId": "be9392f52f602c9aecb258a69c55bc6d7711ddd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "468f802c_5416ea03",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1697,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-18T13:57:59Z",
+      "side": 1,
+      "message": "This need to be changed to sectors based as well.",
+      "range": {
+        "startLine": 1697,
+        "startChar": 9,
+        "endLine": 1697,
+        "endChar": 47
+      },
+      "revId": "be9392f52f602c9aecb258a69c55bc6d7711ddd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
