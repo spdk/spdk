@@ -249,6 +249,14 @@ static const struct nvme_string media_error_status[] = {
 	{ 0xFFFF, "MEDIA ERROR" }
 };
 
+static const struct nvme_string path_status[] = {
+	{ SPDK_NVME_SC_INTERNAL_PATH_ERROR, "INTERNAL PATH ERROR" },
+	{ SPDK_NVME_SC_CONTROLLER_PATH_ERROR, "CONTROLLER PATH ERROR" },
+	{ SPDK_NVME_SC_HOST_PATH_ERROR, "HOST PATH ERROR" },
+	{ SPDK_NVME_SC_ABORTED_BY_HOST, "ABORTED BY HOST" },
+	{ 0xFFFF, "PATH ERROR" }
+};
+
 static const char *
 get_status_string(uint16_t sct, uint16_t sc)
 {
@@ -263,6 +271,9 @@ get_status_string(uint16_t sct, uint16_t sc)
 		break;
 	case SPDK_NVME_SCT_MEDIA_ERROR:
 		entry = media_error_status;
+		break;
+	case SPDK_NVME_SCT_PATH:
+		entry = path_status;
 		break;
 	case SPDK_NVME_SCT_VENDOR_SPECIFIC:
 		return "VENDOR SPECIFIC";
@@ -316,6 +327,17 @@ nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 		case SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR:
 		case SPDK_NVME_SC_LBA_OUT_OF_RANGE:
 		case SPDK_NVME_SC_CAPACITY_EXCEEDED:
+		default:
+			return false;
+		}
+	case SPDK_NVME_SCT_PATH:
+		/*
+		 * Per NVMe TP 4028 (Path and Transport Error Enhancments), retries should be
+		 * based on the setting of the DNR bit for Internal Path Error
+		 */
+		switch ((int)cpl->status.sc) {
+		case SPDK_NVME_SC_INTERNAL_PATH_ERROR:
+			return !cpl->status.dnr;
 		default:
 			return false;
 		}
