@@ -813,6 +813,7 @@ enum spdk_nvme_feat {
 	/* 0xC0-0xFF - vendor specific */
 };
 
+/** Bit set of attributes for DATASET MANAGEMENT commands. */
 enum spdk_nvme_dsm_attribute {
 	SPDK_NVME_DSM_ATTR_INTEGRAL_READ		= 0x1,
 	SPDK_NVME_DSM_ATTR_INTEGRAL_WRITE		= 0x2,
