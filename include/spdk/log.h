@@ -144,7 +144,7 @@ int spdk_log_set_trace_flag(const char *flag);
 /**
  * Clear a trace flag.
  *
- * \flag Trace flag to clear.
+ * \param flag Trace flag to clear.
  *
  * \return 0 on success, -1 on failure.
  */
