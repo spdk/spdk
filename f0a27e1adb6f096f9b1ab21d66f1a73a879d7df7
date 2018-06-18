@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "696dd609_a9a6f5a7",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-18T07:55:06Z",
+      "side": 1,
+      "message": "I\u0027ll add it as a new API. It should solve most of these problems.",
+      "parentUuid": "a6635b86_ca6c4887",
+      "revId": "f0a27e1adb6f096f9b1ab21d66f1a73a879d7df7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0555ea1_8d86c968",
         "filename": "include/spdk/blob.h",
         "patchSetId": 24
