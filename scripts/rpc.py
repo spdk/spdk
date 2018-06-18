@@ -938,7 +938,10 @@ if __name__ == "__main__":
     # pmem
     @call_cmd
     def create_pmem_pool(args):
-        rpc.pmem.create_pmem_pool(args.client, args)
+        rpc.pmem.create_pmem_pool(args.client,
+                                  pmem_file=args.pmem_file,
+                                  total_size=args.total_size,
+                                  block_size=args.block_size)
 
     p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
@@ -948,7 +951,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def pmem_pool_info(args):
-        print_dict(rpc.pmem.pmem_pool_info(args.client, args))
+        print_dict(rpc.pmem.pmem_pool_info(args.client,
+                                           pmem_file=args.pmem_file))
 
     p = subparsers.add_parser('pmem_pool_info', help='Display pmem pool info and check consistency')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
@@ -956,7 +960,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def delete_pmem_pool(args):
-        rpc.pmem.delete_pmem_pool(args.client, args)
+        rpc.pmem.delete_pmem_pool(args.client,
+                                  pmem_file=args.pmem_file)
 
     p = subparsers.add_parser('delete_pmem_pool', help='Delete pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
