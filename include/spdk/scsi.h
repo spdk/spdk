@@ -178,6 +178,7 @@ void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
  *		      responsible for managing the memory containing this list.
  *		      lun_id_list[x] is the LUN ID for lun_list[x].
  * \param num_luns Number of entries in lun_list and lun_id_list.
+ * \param protocol_id SCSI SPC protocol identifier to report in INQUIRY data
  * \param hotremove_cb Callback to lun hotremoval. Will be called
  *		       once hotremove is first triggered.
  * \param hotremove_ctx Additional argument to hotremove_cb
