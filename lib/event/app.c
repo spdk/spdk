@@ -641,7 +641,7 @@ usage(void (*app_usage)(void))
 	printf(" -w         wait for RPCs to initialize subsystems\n");
 	printf(" -B addr    pci addr to blacklist\n");
 	printf(" -W addr    pci addr to whitelist (-B and -W cannot be used at the same time)\n");
-	spdk_tracelog_usage(stdout, "-t");
+	spdk_tracelog_usage(stdout, "-L");
 	if (app_usage) {
 		app_usage();
 	}
@@ -748,24 +748,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->mem_size = (int) mem_size_mb;
 			break;
 		}
-		case 't':
-#ifndef DEBUG
-			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
-				argv[0]);
-			usage(app_usage);
-			rval = SPDK_APP_PARSE_ARGS_FAIL;
-			goto parse_done;
-#else
-			rc = spdk_log_set_trace_flag(optarg);
-			if (rc < 0) {
-				fprintf(stderr, "unknown flag\n");
-				usage(app_usage);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
-			}
-			opts->print_level = SPDK_LOG_DEBUG;
-			break;
-#endif
 		case 'u':
 			opts->no_pci = true;
 			break;
@@ -788,6 +770,24 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto parse_done;
 			}
 			break;
+		case 'L':
+#ifndef DEBUG
+			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -L flag\n",
+				argv[0]);
+			usage(app_usage);
+			rval = SPDK_APP_PARSE_ARGS_FAIL;
+			goto parse_done;
+#else
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(app_usage);
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
+			opts->print_level = SPDK_LOG_DEBUG;
+			break;
+#endif
 		case 'W':
 			if (opts->pci_blacklist) {
 				free(opts->pci_blacklist);
