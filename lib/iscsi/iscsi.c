@@ -2714,7 +2714,7 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 			}
 		} else {
 			/* handle the case that it is a primary task which has subtasks */
-			if (primary->scsi.transfer_len != task->scsi.length) {
+			if (primary->scsi.transfer_len != primary->scsi.length) {
 				conn->data_in_cnt--;
 			}
 		}
@@ -2747,17 +2747,17 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 		offset = i * conn->sess->MaxBurstLength;
 		sequence_end = DMIN32(((i + 1) * conn->sess->MaxBurstLength),
 				      transfer_len);
-		datain_flag &= ~ISCSI_FLAG_FINAL;
-		datain_flag &= ~ISCSI_DATAIN_STATUS;
 
 		/* send data splitted by segment_len */
 		for (; offset < sequence_end; offset += segment_len) {
 			len = DMIN32(segment_len, (sequence_end - offset));
 
+			datain_flag &= ~ISCSI_FLAG_FINAL;
+			datain_flag &= ~ISCSI_DATAIN_STATUS;
+
 			if (offset + len == sequence_end) {
 				/* last PDU in a sequence */
 				datain_flag |= ISCSI_FLAG_FINAL;
-				datain_flag &= ~ISCSI_DATAIN_STATUS;
 				if (task->scsi.sense_data_len == 0) {
 					/* The last pdu in all data-in pdus */
 					if ((offset + len) == transfer_len &&
@@ -2766,9 +2766,6 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 						sent_status = 1;
 					}
 				}
-			} else {
-				datain_flag &= ~ISCSI_FLAG_FINAL;
-				datain_flag &= ~ISCSI_DATAIN_STATUS;
 			}
 
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer=%d, Offset=%d, Len=%d\n",
