@@ -48,7 +48,40 @@ extern "C" {
 
 struct spdk_thread;
 struct spdk_io_channel_iter;
-struct spdk_poller;
+
+enum spdk_poller_state {
+	/* The poller is registered with a reactor but not currently executing its fn. */
+	SPDK_POLLER_STATE_WAITING,
+
+	/* The poller is currently running its fn. */
+	SPDK_POLLER_STATE_RUNNING,
+
+	/* The poller was unregistered during the execution of its fn. */
+	SPDK_POLLER_STATE_UNREGISTERED,
+};
+
+/**
+ * Callback function for a poller.
+ *
+ * \param ctx Context passed as arg to spdk_poller_register().
+ * \return 0 to indicate that polling took place but no events were found;
+ * positive to indicate that polling took place and some events were processed;
+ * negative if the poller does not provide spin-wait information.
+ */
+typedef int (*spdk_poller_fn)(void *ctx);
+
+struct spdk_poller {
+	TAILQ_ENTRY(spdk_poller)        tailq;
+	uint32_t                        lcore;
+
+	/* Current state of the poller; should only be accessed from the poller's thread. */
+	enum spdk_poller_state          state;
+
+	uint64_t                        period_ticks;
+	uint64_t                        next_run_tick;
+	spdk_poller_fn                  fn;
+	void                            *arg;
+};
 
 /**
  * Callback function for a thread.
@@ -67,15 +100,6 @@ typedef void (*spdk_thread_fn)(void *ctx);
 typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
 				     void *thread_ctx);
 
-/**
- * Callback function for a poller.
- *
- * \param ctx Context passed as arg to spdk_poller_register().
- * \return 0 to indicate that polling took place but no events were found;
- * positive to indicate that polling took place and some events were processed;
- * negative if the poller does not provide spin-wait information.
- */
-typedef int (*spdk_poller_fn)(void *ctx);
 
 /**
  * Function to be called to start a poller for the thread.
@@ -241,6 +265,111 @@ void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, v
  * called on each thread.
  */
 void spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl);
+
+/**
+ * Returns the first spdk_thread that was created
+ *
+ * \return spdk_thread Pointer to the first thread.
+ */
+struct spdk_thread *spdk_thread_get_init(void);
+
+/**
+ * Returns the next spdk_thread from the list
+ *
+ * \param thread Pointer to the "previous" thread.
+ * \return spdk_thread Pointer to the next thread from the
+ * internal list.
+ */
+struct spdk_thread *spdk_thread_get_next(struct spdk_thread *thread);
+
+/**
+ * Returns the spdk_thread given the thread id.
+ *
+ * \param thread_id The id of the thread
+ * \return spdk_thread Pointer to the thread with the
+ * given id.
+ */
+struct spdk_thread *spdk_thread_find_id(unsigned thread_id);
+
+/**
+ * Returns the spdk_thread_id given the thread.
+ *
+ * \param thread Pointer to the spdk_thread
+ * \return int ID of the thread.
+ */
+unsigned int spdk_thread_get_id(struct spdk_thread *thread);
+
+/**
+ * Returns the socket-id given the thread.
+ *
+ * \param thread Pointer to the spdk_thread
+ * \return int Socket-id on which this thread was
+ * ORIGINALLY created.
+ */
+uint32_t spdk_thread_get_socket_id(struct spdk_thread *thread);
+
+/**
+ * Returns the Polling delay us for the thread poller
+ *
+ * \param thread Pointer to the spdk_thread
+ * \return int The maximum delay (in usec) for polling.
+ */
+uint32_t spdk_thread_get_max_delay_us(struct spdk_thread *thread);
+
+/**
+ * Returns the Event ring contained in the thread
+ *
+ * \param thread Pointer to the spdk_thread
+ * \return spdk_ring The pointer to the event ring within the thread
+ */
+struct spdk_ring *spdk_thread_get_events(struct spdk_thread *thread);
+
+/**
+ * Inserts a poller in either the threads active or timer queues.
+ * Depending on the poller periodic_ticks, the right queue is chosen.
+ *
+ * \param thread Pointer to the spdk_thread
+ * \param poller The poller to be inserted
+ * \param now The spdk_ticks at the point where this call was made
+ * for insertion
+ * \return void
+ */
+void spdk_thread_insert_poller(struct spdk_thread *thread,
+			       struct spdk_poller *poller, uint64_t now);
+
+/**
+ * Removes a poller from either the threads active or timer queues.
+ *
+ * \param thread Pointer to the spdk_thread
+ * \param poller The poller to be removed
+ * \return void
+ */
+void spdk_thread_remove_poller(struct spdk_thread *thread,
+			       struct spdk_poller *poller);
+
+/**
+ * Returns the active poller (head of the active poller ring)
+ *
+ * \param thread Pointer to the spdk_thread
+ * \return spdk_poller A pointer to the poller object
+ */
+struct spdk_poller *spdk_thread_get_active_poller(struct spdk_thread *thread);
+
+/**
+ * Returns the timer poller (head of the timer poller ring)
+ *
+ * \param thread Pointer to the spdk_thread
+ * \return spdk_poller A pointer to the timer poller object
+ */
+struct spdk_poller *spdk_thread_get_timer_poller(struct spdk_thread *thread);
+
+/**
+ * If the application decides to use this as a virtual thread, then, certain
+ * fields inside the thread structure need to get initialized.
+ *
+ */
+void spdk_thread_initialize(struct spdk_thread *thread,
+			    uint32_t socket_id, uint32_t max_delay_us);
 
 /**
  * Register a poller on the current thread.

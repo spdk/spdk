@@ -106,6 +106,12 @@ void spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_cha
 	cb_fn(cb_arg, g_inflate_rc);
 }
 
+struct spdk_ring *
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
+{
+	return NULL;
+}
+
 void
 spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *b,
 		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
