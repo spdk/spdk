@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6abb569f_a52649fc",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T20:58:39Z",
+      "side": 1,
+      "message": "I don\u0027t think this works.  The RPC code always runs on the master core, so this will always return the data for the reactor running on the master core.\n\nI think you should go back to passing an lcore ID to specify which lcore you want to get data for.  I talked with Daniel and it should be fine (certainly on x86) to read this data from a different core than may be updating it.  Should be OK on arm64 and ppc64 too.",
+      "revId": "99b1acea4e65b4f0ad865a0eb1f5de23cc35f819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b408477d_566fc167",
+        "filename": "scripts/rpc/app.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T20:58:39Z",
+      "side": 1,
+      "message": "I think if it is omitted, it should be all cores.  Then we don\u0027t need to use a special -1 value.\n\nAlso not all applications will use core 0.",
+      "revId": "99b1acea4e65b4f0ad865a0eb1f5de23cc35f819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
