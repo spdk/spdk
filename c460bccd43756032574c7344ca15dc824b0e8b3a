@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f99ae82a_1e6efd15",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T23:44:57Z",
+      "side": 1,
+      "message": "I think this should return int if the core_id is not valid.  See other comments on this patch and next.",
+      "revId": "c460bccd43756032574c7344ca15dc824b0e8b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "caf28223_d3db4ced",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T23:44:57Z",
+      "side": 1,
+      "message": "we need to return an error code here if the core specified is not valid (meaning not in the applications core mask)\n\nyou can do:\n\nif (!spdk_cpuset_get_cpu(g_spdk_app_core_mask, core)) {\n  return -1;\n}",
+      "revId": "c460bccd43756032574c7344ca15dc824b0e8b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
