@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "daad0a8a_3b24661a",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T20:33:01Z",
+      "side": 1,
+      "message": "Should this just say \"Delete a malloc block device\"?  Not \"devices\" - since it can only delete one.\n\nWhile here, you should also fix the \"List of created block devices\" in the return statement for construct_malloc_bdev.  It just returns the name of the one created block device.",
+      "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "937762d9_5b78e4da",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T20:33:01Z",
+      "side": 1,
+      "message": "base_bdev?",
+      "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3cbc1c3_994b1a55",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T20:33:01Z",
+      "side": 1,
+      "message": "I think I would feel better if we changed this name from bdevs to malloc_bdevs.  When it just says \"bdevs\" it indicates it could include other types of bdevs in the future.  I actually had to look to make sure we never call this script with $bdevs already defined (i.e. to include an NVMe namespace or something).",
+      "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
