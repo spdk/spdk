@@ -305,12 +305,6 @@ struct spdk_bdev_io {
 	/** The bdev I/O channel that this was submitted on. */
 	struct spdk_bdev_channel *io_submit_ch;
 
-	/** User function that will be called when this completes */
-	spdk_bdev_io_completion_cb cb;
-
-	/** Context that will be passed to the completion callback */
-	void *caller_ctx;
-
 	/** Error information from a device */
 	union {
 		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
@@ -394,6 +388,12 @@ struct spdk_bdev_io {
 	 *  must not read or write to these fields.
 	 */
 	struct __bdev_io_internal_fields {
+		/** User function that will be called when this completes */
+		spdk_bdev_io_completion_cb cb;
+
+		/** Context that will be passed to the completion callback */
+		void *caller_ctx;
+
 		/** Current tsc at submit time. Used to calculate latency at completion. */
 		uint64_t submit_tsc;
 
