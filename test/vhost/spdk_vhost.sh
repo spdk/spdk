@@ -4,10 +4,10 @@ source "$rootdir/test/common/autotest_common.sh"
 
 set -e
 
-DEFAULT_VM_IMAGE="/home/sys_sgsw/vhost_vm_image.qcow2"
-CENTOS_VM_IMAGE="/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
-DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
-CENTOS_FIO_BIN="/home/sys_sgsw/fio_ubuntu_bak"
+DEFAULT_VM_IMAGE="/home/${USER}/vhost_vm_image.qcow2"
+CENTOS_VM_IMAGE="/home/${USER}/spdk_vhost_CentOS_vm_image.qcow2"
+DEFAULT_FIO_BIN="/home/${USER}/fio_ubuntu"
+CENTOS_FIO_BIN="/home/${USER}/fio_ubuntu_bak"
 
 case $1 in
 	-h|--help)

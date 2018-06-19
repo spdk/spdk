@@ -11,7 +11,7 @@ function usage()
 	echo "Script for running vhost initiator tests."
 	echo "Usage: $(basename $1) [-h|--help] [--fiobin=PATH]"
 	echo "-h, --help            Print help and exit"
-	echo "    --vm_image=PATH   Path to VM image used in these tests [default=/home/sys_sgsw/vhost_vm_image.qcow2]"
+	echo "    --vm_image=PATH   Path to VM image used in these tests [default=/home/${USER}/vhost_vm_image.qcow2]"
 	echo "    --fiobin=PATH     Path to fio binary on host [default=/usr/src/fio/fio]"
 }
 
@@ -37,7 +37,7 @@ RPC_PY="$ROOT_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 FIO_BIN="/usr/src/fio/fio"
 virtio_bdevs=""
 virtio_with_unmap=""
-os_image="/home/sys_sgsw/vhost_vm_image.qcow2"
+os_image="/home/${USER}/vhost_vm_image.qcow2"
 
 if [ ! -x $FIO_BIN ]; then
 	error "Invalid path of fio binary"
