@@ -4,7 +4,13 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
-spdk_nvme_cli="/home/sys_sgsw/nvme-cli"
+
+if [ -z "${DEPENDENCY_DIR}" ]; then
+        echo DEPENDENCY_DIR not defined!
+        exit 1
+fi
+
+spdk_nvme_cli="${DEPENDENCY_DIR}/nvme-cli"
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512

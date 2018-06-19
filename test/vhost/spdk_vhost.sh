@@ -4,10 +4,15 @@ source "$rootdir/test/common/autotest_common.sh"
 
 set -e
 
-DEFAULT_VM_IMAGE="/home/sys_sgsw/vhost_vm_image.qcow2"
-CENTOS_VM_IMAGE="/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
-DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
-CENTOS_FIO_BIN="/home/sys_sgsw/fio_ubuntu_bak"
+if [ -z "${DEPENDENCY_DIR}" ]; then
+        echo DEPENDENCY_DIR not defined!
+        exit 1
+fi
+
+DEFAULT_VM_IMAGE="${DEPENDENCY_DIR}/vhost_vm_image.qcow2"
+CENTOS_VM_IMAGE="${DEPENDENCY_DIR}/spdk_vhost_CentOS_vm_image.qcow2"
+DEFAULT_FIO_BIN="${DEPENDENCY_DIR}/fio_ubuntu"
+CENTOS_FIO_BIN="${DEPENDENCY_DIR}/fio_ubuntu_bak"
 
 case $1 in
 	-h|--help)

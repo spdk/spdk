@@ -186,9 +186,9 @@ for (( i=0; i<$vm_count; i++)); do
 
     setup_cmd="vm_setup --disk-type=$ctrl_type --force=$i"
     if [[ $i%2 -ne 0 ]] && [[ $multi_os ]]; then
-        setup_cmd+=" --os=/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
+        setup_cmd+=" --os=${HOME}/spdk_vhost_CentOS_vm_image.qcow2"
     else
-        setup_cmd+=" --os=/home/sys_sgsw/vhost_vm_image.qcow2"
+        setup_cmd+=" --os=${HOME}/vhost_vm_image.qcow2"
     fi
 
     # Create single SCSI controller or multiple BLK controllers for this VM
