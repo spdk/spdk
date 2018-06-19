@@ -52,6 +52,11 @@ extern "C" {
 #endif
 
 /**
+ *  \brief A spdk_thread represents a virtual thread that runs on a OS/Bare-Metal/DPDK thread.
+ */
+struct spdk_thread;
+
+/**
  * Event handler function.
  *
  * \param arg1 Argument 1.

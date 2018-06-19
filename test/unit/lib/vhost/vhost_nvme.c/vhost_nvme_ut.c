@@ -73,6 +73,8 @@ DEFINE_STUB(spdk_conf_section_get_intval, int, (struct spdk_conf_section *sp, co
 DEFINE_STUB_V(spdk_bdev_io_get_nvme_status, (const struct spdk_bdev_io *bdev_io, int *sct, int *sc))
 DEFINE_STUB(spdk_conf_section_get_nval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx), NULL);
+DEFINE_STUB(spdk_ring_create, struct spdk_ring *, (enum spdk_ring_type type, size_t count,
+		int socket_id), NULL);
 
 SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
 
