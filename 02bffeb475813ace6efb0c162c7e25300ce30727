@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "f623ebeb_528d31b0",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T16:25:56Z",
+      "side": 1,
+      "message": "I\u0027ve root caused the problem.\n\npoller-\u003efn may take a lot of time to execute.  Especially for QoS tests - when the QoS timer expires, the timeout function will submit a bunch more I/O.\n\nWhen we insert the timer back into the list, we want to add the time slice to the known time *before* the timeout function executed.  Otherwise the timeout function will not execute as often as expected.  For example, if the timeout function takes 40us to execute, and the timer is 1ms - if we update the current time before calling spdk_poller_insert_timer, the timer will execute every 1040us, not every 1000us.\n\nSo after poller-\u003efn executes, you should save \"now\" into a temporary variable, set now \u003d spdk_get_ticks() and call spdk_reactor_add_tsc_stats() with \"now\".  But then below, use the temporary variable when calling spdk_poller_insert_timer.",
+      "parentUuid": "ccc0d1ef_3824d4a2",
+      "revId": "02bffeb475813ace6efb0c162c7e25300ce30727",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87780bbf_bd330084",
         "filename": "lib/event/reactor.c",
         "patchSetId": 11
