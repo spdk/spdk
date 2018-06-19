@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a645379d_5371e0dc",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:48:25Z",
+      "side": 1,
+      "message": "I think this should just say:\n\nAllocate all clusters in this blob.  Data for allocated clusters is copied from backing blob(s) if they exist.\n\n(This covers case where user inflates a thin provisioned blob with no backing blob.)",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "774151da_1b5b7b7f",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:48:25Z",
+      "side": 1,
+      "message": "This call removes all dependencies on any backing blobs.\n\n(I think you can remove the \"without loss of consistency\" phrase - my suggested wording above covers that data is copied as needed.)",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7da8b9a2_1f9ba5ec",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:48:25Z",
+      "side": 1,
+      "message": "Wording should talk about how it only removes one level of dependency.  Maybe also that it allocates and copies data for any clusters that are allocated in the parent blob.\n\nWhat happens if blobid is specified which has no parent blob?  We should document that here too.",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57141800_22f2cbee",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4603,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:48:25Z",
+      "side": 1,
+      "message": "Lines 4604-4609 can now just be simplified to:\n\n_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3019d6c9_d30092dc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4634,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:48:25Z",
+      "side": 1,
+      "message": "We don\u0027t need to set blob-\u003estate here.  This already gets done when setting the xattr.  (But you can keep it here if you like - this was in the original code too.)",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2c937c6_c033c0f5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4654,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:48:25Z",
+      "side": 1,
+      "message": "should we set _blob-\u003eparent_id \u003d SPDK_BLOBID_INVALID?",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14828915_e0111141",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4658,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:48:25Z",
+      "side": 1,
+      "message": "if we do spdk_bs_blob_decouple_parent(), and this blob has no parent, can we do this cast?\n\nI think you need to check _blob-\u003eparent_id first - like you had to do in _spdk_bs_cluster_needs_allocation()",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b573e8b_48c465ac",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4660,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:48:25Z",
+      "side": 1,
+      "message": "\"should\" is too ambiguous.\n\nI think you mean to say \"We must change the parent of the inflated blob\".",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
