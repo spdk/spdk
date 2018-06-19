@@ -1080,8 +1080,8 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 		  spdk_bdev_io_completion_cb cb)
 {
 	bdev_io->bdev = bdev;
-	bdev_io->caller_ctx = cb_arg;
-	bdev_io->cb = cb;
+	bdev_io->internal.caller_ctx = cb_arg;
+	bdev_io->internal.cb = cb;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->internal.in_submit_request = false;
 	bdev_io->internal.buf = NULL;
@@ -2373,11 +2373,11 @@ _spdk_bdev_io_complete(void *ctx)
 	}
 #endif
 
-	assert(bdev_io->cb != NULL);
+	assert(bdev_io->internal.cb != NULL);
 	assert(spdk_get_thread() == spdk_io_channel_get_thread(bdev_io->ch->channel));
 
-	bdev_io->cb(bdev_io, bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
-		    bdev_io->caller_ctx);
+	bdev_io->internal.cb(bdev_io, bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
+			     bdev_io->internal.caller_ctx);
 }
 
 static void
@@ -3099,7 +3099,7 @@ spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *c
 	uint64_t len;
 
 	if (!success) {
-		bdev_io->cb = bdev_io->u.bdev.stored_user_cb;
+		bdev_io->internal.cb = bdev_io->u.bdev.stored_user_cb;
 		_spdk_bdev_io_complete(bdev_io);
 		return;
 	}
