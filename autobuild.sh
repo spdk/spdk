@@ -113,7 +113,7 @@ if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
 		echo "Doxygen errors found!"
 		exit 1
 	fi
-	if hash pdflatex; then
+	if hash pdflatex 2>/dev/null; then
 		$MAKE -C "$rootdir"/doc/output/latex --no-print-directory $MAKEFLAGS &>> "$out"/doxygen.log
 	fi
 	mkdir -p "$out"/doc
