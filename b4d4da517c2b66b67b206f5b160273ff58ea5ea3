@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3540f248_61d4f39e",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:11:58Z",
+      "side": 1,
+      "message": "doesn\u0027t the spdk_sp_fd check below (line 368) already do this?",
+      "revId": "b4d4da517c2b66b67b206f5b160273ff58ea5ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a1ef4cd_4c2345a0",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:11:58Z",
+      "side": 1,
+      "message": "The name of this function doesn\u0027t seem right.  Would spdk_nbd_check_kernel_start() be better?",
+      "revId": "b4d4da517c2b66b67b206f5b160273ff58ea5ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5a02558_4b7d8702",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T21:11:58Z",
+      "side": 1,
+      "message": "I think you can just do:\n\nif [ -s /tmp/nbdtest ]; then",
+      "revId": "b4d4da517c2b66b67b206f5b160273ff58ea5ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
