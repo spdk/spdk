@@ -183,6 +183,11 @@ enum spdk_nvme_transport_type {
 	 * RDMA Transport (RoCE, iWARP, etc.)
 	 */
 	SPDK_NVME_TRANSPORT_RDMA = SPDK_NVMF_TRTYPE_RDMA,
+
+	/**
+	 * Fibre Channel (FC) Transport
+	 */
+	SPDK_NVME_TRANSPORT_FC = SPDK_NVMF_TRTYPE_FC,
 };
 
 /**
@@ -210,14 +215,14 @@ struct spdk_nvme_transport_id {
 	 * Transport address of the NVMe-oF endpoint. For transports which use IP
 	 * addressing (e.g. RDMA), this should be an IP address. For PCIe, this
 	 * can either be a zero length string (the whole bus) or a PCI address
-	 * in the format DDDD:BB:DD.FF or DDDD.BB.DD.FF
+	 * in the format DDDD:BB:DD.FF or DDDD.BB.DD.FF. For FC this is the WWN.
 	 */
 	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 
 	/**
 	 * Transport service id of the NVMe-oF endpoint.  For transports which use
 	 * IP addressing (e.g. RDMA), this field shoud be the port number. For PCIe,
-	 * this is always a zero length string.
+	 * this is always a zero length string.  For FC this is filled with spaces.
 	 */
 	char trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
 
@@ -241,7 +246,7 @@ struct spdk_nvme_transport_id {
  * ------------ | -----
  * trtype       | Transport type (e.g. PCIe, RDMA)
  * adrfam       | Address family (e.g. IPv4, IPv6)
- * traddr       | Transport address (e.g. 0000:04:00.0 for PCIe or 192.168.100.8 for RDMA)
+ * traddr       | Transport address (e.g. 0000:04:00.0 for PCIe, 192.168.100.8 for RDMA, or WWN for FC)
  * trsvcid      | Transport service identifier (e.g. 4420)
  * subnqn       | Subsystem NQN
  *

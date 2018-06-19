@@ -647,6 +647,8 @@ spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const
 		*trtype = SPDK_NVME_TRANSPORT_PCIE;
 	} else if (strcasecmp(str, "RDMA") == 0) {
 		*trtype = SPDK_NVME_TRANSPORT_RDMA;
+	} else if (strcasecmp(str, "FC") == 0) {
+		*trtype = SPDK_NVME_TRANSPORT_FC;
 	} else {
 		return -ENOENT;
 	}
@@ -661,6 +663,8 @@ spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 		return "PCIe";
 	case SPDK_NVME_TRANSPORT_RDMA:
 		return "RDMA";
+	case SPDK_NVME_TRANSPORT_FC:
+		return "FC";
 	default:
 		return NULL;
 	}
