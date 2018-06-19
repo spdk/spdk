@@ -9,9 +9,10 @@ if [ -s /etc/redhat-release ]; then
 		# Add EPEL repository for CUnit-devel
 		yum --enablerepo=extras install -y epel-release
 	fi
-	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
+	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel \
 		git astyle python-pep8 lcov python clang-analyzer libuuid-devel \
 		sg3_utils libiscsi-devel
+	yum install -y --allowerasing openssl-devel
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for DPDK
