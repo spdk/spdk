@@ -1026,10 +1026,10 @@ _spdk_bdev_io_submit(void *ctx)
 	struct spdk_io_channel *ch = bdev_ch->channel;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
-	bdev_io->submit_tsc = spdk_get_ticks();
+	bdev_io->internal.submit_tsc = spdk_get_ticks();
 	bdev_ch->io_outstanding++;
 	shared_resource->io_outstanding++;
-	bdev_io->in_submit_request = true;
+	bdev_io->internal.in_submit_request = true;
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		if (spdk_likely(TAILQ_EMPTY(&shared_resource->nomem_io))) {
 			bdev->fn_table->submit_request(ch, bdev_io);
@@ -1049,7 +1049,7 @@ _spdk_bdev_io_submit(void *ctx)
 		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
-	bdev_io->in_submit_request = false;
+	bdev_io->internal.in_submit_request = false;
 }
 
 static void
@@ -1082,9 +1082,9 @@ spdk_bdev_io_submit_reset(struct spdk_bdev_io *bdev_io)
 
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
-	bdev_io->in_submit_request = true;
+	bdev_io->internal.in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
-	bdev_io->in_submit_request = false;
+	bdev_io->internal.in_submit_request = false;
 }
 
 static void
@@ -1096,7 +1096,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->caller_ctx = cb_arg;
 	bdev_io->cb = cb;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
-	bdev_io->in_submit_request = false;
+	bdev_io->internal.in_submit_request = false;
 	bdev_io->internal.buf = NULL;
 	bdev_io->io_submit_ch = NULL;
 }
@@ -2340,7 +2340,7 @@ _spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
-	if (spdk_unlikely(bdev_io->in_submit_request || bdev_io->io_submit_ch)) {
+	if (spdk_unlikely(bdev_io->internal.in_submit_request || bdev_io->io_submit_ch)) {
 		/*
 		 * Send the completion to the thread that originally submitted the I/O,
 		 * which may not be the current thread in the case of QoS.
@@ -2364,12 +2364,12 @@ _spdk_bdev_io_complete(void *ctx)
 		case SPDK_BDEV_IO_TYPE_READ:
 			bdev_io->ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 			bdev_io->ch->stat.num_read_ops++;
-			bdev_io->ch->stat.read_latency_ticks += (spdk_get_ticks() - bdev_io->submit_tsc);
+			bdev_io->ch->stat.read_latency_ticks += (spdk_get_ticks() - bdev_io->internal.submit_tsc);
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
 			bdev_io->ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 			bdev_io->ch->stat.num_write_ops++;
-			bdev_io->ch->stat.write_latency_ticks += (spdk_get_ticks() - bdev_io->submit_tsc);
+			bdev_io->ch->stat.write_latency_ticks += (spdk_get_ticks() - bdev_io->internal.submit_tsc);
 			break;
 		default:
 			break;
