@@ -379,14 +379,14 @@ spdk_bdev_get_by_name(const char *bdev_name)
 static void
 spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf)
 {
-	assert(bdev_io->get_buf_cb != NULL);
+	assert(bdev_io->internal.get_buf_cb != NULL);
 	assert(buf != NULL);
 	assert(bdev_io->u.bdev.iovs != NULL);
 
-	bdev_io->buf = buf;
+	bdev_io->internal.buf = buf;
 	bdev_io->u.bdev.iovs[0].iov_base = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
-	bdev_io->u.bdev.iovs[0].iov_len = bdev_io->buf_len;
-	bdev_io->get_buf_cb(bdev_io->ch->channel, bdev_io);
+	bdev_io->u.bdev.iovs[0].iov_len = bdev_io->internal.buf_len;
+	bdev_io->internal.get_buf_cb(bdev_io->ch->channel, bdev_io);
 }
 
 static void
@@ -400,10 +400,10 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 
 	assert(bdev_io->u.bdev.iovcnt == 1);
 
-	buf = bdev_io->buf;
+	buf = bdev_io->internal.buf;
 	ch = bdev_io->ch->shared_resource->mgmt_ch;
 
-	if (bdev_io->buf_len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
+	if (bdev_io->internal.buf_len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &ch->need_buf_small;
 	} else {
@@ -440,8 +440,8 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	assert(len <= SPDK_BDEV_LARGE_BUF_MAX_SIZE);
 	mgmt_ch = bdev_io->ch->shared_resource->mgmt_ch;
 
-	bdev_io->buf_len = len;
-	bdev_io->get_buf_cb = cb;
+	bdev_io->internal.buf_len = len;
+	bdev_io->internal.get_buf_cb = cb;
 	if (len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &mgmt_ch->need_buf_small;
@@ -943,7 +943,7 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io != NULL);
 	assert(bdev_io->status != SPDK_BDEV_IO_STATUS_PENDING);
 
-	if (bdev_io->buf != NULL) {
+	if (bdev_io->internal.buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
 	}
 
@@ -1084,7 +1084,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->cb = cb;
 	bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->in_submit_request = false;
-	bdev_io->buf = NULL;
+	bdev_io->internal.buf = NULL;
 	bdev_io->io_submit_ch = NULL;
 }
 

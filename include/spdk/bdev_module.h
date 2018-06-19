@@ -398,15 +398,6 @@ struct spdk_bdev_io {
 		} nvme_passthru;
 	} u;
 
-	/** bdev allocated memory associated with this request */
-	void *buf;
-
-	/** requested size of the buffer associated with this I/O */
-	uint64_t buf_len;
-
-	/** Callback for when buf is allocated */
-	spdk_bdev_io_get_buf_cb get_buf_cb;
-
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
@@ -417,6 +408,15 @@ struct spdk_bdev_io {
 	 *  must not read or write to these fields.
 	 */
 	struct __bdev_io_internal_fields {
+		/** bdev allocated memory associated with this request */
+		void *buf;
+
+		/** requested size of the buffer associated with this I/O */
+		uint64_t buf_len;
+
+		/** Callback for when buf is allocated */
+		spdk_bdev_io_get_buf_cb get_buf_cb;
+
 		/** Entry to the list need_buf of struct spdk_bdev. */
 		STAILQ_ENTRY(spdk_bdev_io) buf_link;
 	} internal;
