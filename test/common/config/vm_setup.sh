@@ -17,7 +17,6 @@
 #     intel_iommu=on kvm-intel.nested=1
 
 # We have made a lot of progress with removing hardcoded paths from the tests,
-# but it may be easiest if you create your user with the name sys_sgsw for now.
 
 set -e
 
@@ -59,10 +58,14 @@ sudo dnf install -y automake
 sudo dnf install -y libtool
 sudo dnf install -y libmount-devel
 sudo dnf install -y isns-utils-devel
-sudo dnf install -y pmempool
+sudo dnf install -y  pmempool
+sudo dnf install -y --allowerasing openssl-devel
+sudo dnf install -y tsocks
 sudo dnf install -y perl-open
 sudo dnf install -y glib2-devel
 sudo dnf install -y pixman-devel
+sudo dnf install -y libiscsi-devel
+sudo dnf install -y iscsi-initiator-utils
 sudo dnf install -y astyle-devel
 sudo dnf install -y elfutils-libelf-devel
 sudo dnf install -y flex
@@ -170,37 +173,49 @@ fi
 cd "$SPDK_QEMU_BRANCH"
 if hash tsocks 2> /dev/null; then
     git_param="--with-git='tsocks git'"
+else
+    git_param=""
 fi
+
 ./configure "$git_param" --prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa
 make -j${jobs}
 sudo make install
 cd ~
 
 # Vector packet processing (VPP) is installed for use with iSCSI tests.
-git clone https://gerrit.fd.io/r/vpp
-cd vpp
-git checkout v18.01.1
-# VPP 18.01.1 does not support OpenSSL 1.1.
-# For compilation, a compatibility package is used temporarily.
-sudo dnf install -y --allowerasing compat-openssl10-devel
-# Installing required dependencies for building VPP
-yes | make install-dep
+if [ -d vpp ]; then
+    echo "vpp already cloned."
+    if [ ! -d vpp/build-root ]; then
+        echo "build-root has not been done"
+        echo "remove the `pwd` and start again"
+	exit 1
+    fi
+else
+    git clone https://gerrit.fd.io/r/vpp
+    cd vpp
+    git checkout v18.01.1
+    # VPP 18.01.1 does not support OpenSSL 1.1.
+    # For compilation, a compatibility package is used temporarily.
+    sudo dnf install -y --allowerasing compat-openssl10-devel
+    # Installing required dependencies for building VPP
+    yes | make install-dep
 
-make pkg-rpm -j${jobs}
-# Reinstall latest OpenSSL devel package.
-sudo dnf install -y --allowerasing openssl-devel
-cd build-root
-sudo dnf install -y \
-		./vpp-lib-18.01.1-release.x86_64.rpm \
-		./vpp-devel-18.01.1-release.x86_64.rpm \
-		./vpp-18.01.1-release.x86_64.rpm
-# Since hugepage configuration is done via spdk/scripts/setup.sh,
-# this default config is not needed.
-#
-# NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
-# very low count and cause issues with hugepage total sizes above 1GB.
-sudo rm -f /etc/sysctl.d/80-vpp.conf
-cd ~
+    make pkg-rpm -j${jobs}
+    # Reinstall latest OpenSSL devel package.
+    sudo dnf install -y --allowerasing openssl-devel
+    cd build-root
+    sudo dnf install -y \
+        ./vpp-lib-18.01.1-release.x86_64.rpm \
+        ./vpp-devel-18.01.1-release.x86_64.rpm \
+        ./vpp-18.01.1-release.x86_64.rpm
+    # Since hugepage configuration is done via spdk/scripts/setup.sh,
+    # this default config is not needed.
+    #
+    # NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
+    # very low count and cause issues with hugepage total sizes above 1GB.
+    sudo rm -f /etc/sysctl.d/80-vpp.conf
+    cd ~
+fi
 
 # We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
 # to later. Cloning from git is just future proofing the machines.
@@ -214,7 +229,6 @@ cd libiscsi
 ./configure --prefix=/usr/local/libiscsi
 make -j${jobs}
 sudo make install
-
 
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
 # By setting any one of the values below to 0, you can skip that specific test. If you are
