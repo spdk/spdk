@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "abbed29a_8598251a",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-06-19T21:01:53Z",
+      "side": 1,
+      "message": "Actually that was from one of the comment from Shuhei that says let\u0027s have (now, spdk_reactor_add_tsc_stats, took_action) one after the other.",
+      "parentUuid": "7c40227a_5d7bfe38",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "637846df_fbffcf37",
         "filename": "lib/event/reactor.c",
         "patchSetId": 12
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "70bced83_372b8e1d",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-06-19T21:01:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "637846df_fbffcf37",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "863b0743_6246aadd",
         "filename": "lib/event/reactor.c",
         "patchSetId": 12
@@ -47,6 +83,24 @@
       "writtenOn": "2018-06-19T20:51:06Z",
       "side": 1,
       "message": "Suggest putting a comment here explaining why you need tmp_timer_tsc.  This might trip someone else in the future who foolishly thinks it\u0027s not needed.  :-)\n\nMaybe:\n\nSave the tsc from before poller-\u003efn was executed.  We want to use the current time for idle/busy accounting, but want to use the older time to reinsert the poller below.",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e599fb62_17bd14eb",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-06-19T21:01:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "863b0743_6246aadd",
       "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
