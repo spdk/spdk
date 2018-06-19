@@ -16,6 +16,24 @@
       "revId": "28e4ece28ba3282f067d22a48a889d5738e8ff6c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9408a42_57e96eb1",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-19T04:06:17Z",
+      "side": 1,
+      "message": "I think it\u0027s make sense to unregister bdev here. I\u0027ll add it.",
+      "parentUuid": "2bd62dc1_b1a1b4d8",
+      "revId": "28e4ece28ba3282f067d22a48a889d5738e8ff6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
