@@ -49,13 +49,13 @@ $rootdir/examples/nvme/identify/identify -r "\
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2014-08.org.nvmexpress.discovery" -t all
+        subnqn:nqn.2014-08.org.nvmexpress.discovery" -L all
 $rootdir/examples/nvme/identify/identify -r "\
         trtype:RDMA \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" -t all
+        subnqn:nqn.2016-06.io.spdk:cnode1" -L all
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
