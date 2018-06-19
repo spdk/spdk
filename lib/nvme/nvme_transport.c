@@ -57,11 +57,13 @@ nvme_transport_unknown(enum spdk_nvme_transport_type trtype)
 #define TRANSPORT_FABRICS_RDMA(func_name, args)	case SPDK_NVME_TRANSPORT_RDMA: SPDK_UNREACHABLE();
 #define TRANSPORT_RDMA_AVAILABLE		false
 #endif
+#define TRANSPORT_FABRICS_FC(func_name, args)	case SPDK_NVME_TRANSPORT_FC: SPDK_UNREACHABLE();
 #define NVME_TRANSPORT_CALL(trtype, func_name, args)		\
 	do {							\
 		switch (trtype) {				\
 		TRANSPORT_PCIE(func_name, args)			\
 		TRANSPORT_FABRICS_RDMA(func_name, args)		\
+		TRANSPORT_FABRICS_FC(func_name, args)		\
 		TRANSPORT_DEFAULT(trtype)			\
 		}						\
 		SPDK_UNREACHABLE();				\
@@ -76,6 +78,9 @@ spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 
 	case SPDK_NVME_TRANSPORT_RDMA:
 		return TRANSPORT_RDMA_AVAILABLE;
+
+	case SPDK_NVME_TRANSPORT_FC:
+		return false;
 	}
 
 	return false;
