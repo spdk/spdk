@@ -91,6 +91,7 @@ struct nvme_probe_ctx {
 	size_t count;
 	struct spdk_nvme_transport_id trids[NVME_MAX_CONTROLLERS];
 	const char *names[NVME_MAX_CONTROLLERS];
+	const char *hostnqn;
 };
 
 enum timeout_action {
@@ -106,6 +107,7 @@ static int g_nvme_adminq_poll_timeout_us = 0;
 static bool g_nvme_hotplug_enabled = false;
 static int g_nvme_hotplug_poll_timeout_us = 0;
 static struct spdk_poller *g_hotplug_poller;
+static char *g_nvme_hostnqn = NULL;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
@@ -773,6 +775,7 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	struct nvme_probe_ctx *ctx = cb_ctx;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Probing device %s\n", trid->traddr);
 
@@ -784,7 +787,6 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		bool claim_device = false;
-		struct nvme_probe_ctx *ctx = cb_ctx;
 		size_t i;
 
 		for (i = 0; i < ctx->count; i++) {
@@ -798,6 +800,10 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
 			return false;
 		}
+	}
+
+	if (ctx->hostnqn) {
+		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "%s", ctx->hostnqn);
 	}
 
 	return true;
@@ -967,7 +973,8 @@ bdev_nvme_hotplug(void *arg)
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char *base_name,
-		      const char **names, size_t *count)
+		      const char **names, size_t *count,
+		      const char *hostnqn)
 {
 	struct nvme_probe_ctx	*probe_ctx;
 	struct nvme_ctrlr	*nvme_ctrlr;
@@ -989,6 +996,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	probe_ctx->count = 1;
 	probe_ctx->trids[0] = *trid;
 	probe_ctx->names[0] = base_name;
+	probe_ctx->hostnqn = hostnqn;
 	if (spdk_nvme_probe(trid, probe_ctx, probe_cb, attach_cb, NULL)) {
 		SPDK_ERRLOG("Failed to probe for new devices\n");
 		free(probe_ctx);
@@ -1111,6 +1119,11 @@ bdev_nvme_library_init(void)
 		g_nvme_hotplug_poll_timeout_us = 100000;
 	}
 
+	g_nvme_hostnqn = spdk_conf_section_get_val(sp, "HostNQN");
+	if (g_nvme_hostnqn) {
+		probe_ctx->hostnqn = g_nvme_hostnqn;
+	}
+
 	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
 		if (val == NULL) {
@@ -1152,6 +1165,10 @@ bdev_nvme_library_init(void)
 			}
 
 			spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
+
+			if (probe_ctx->hostnqn != NULL) {
+				snprintf(opts.hostnqn, sizeof(opts.hostnqn), "%s", probe_ctx->hostnqn);
+			}
 
 			ctrlr = spdk_nvme_connect(&probe_ctx->trids[i], &opts, sizeof(opts));
 			if (ctrlr == NULL) {
@@ -1531,6 +1548,9 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 		"# Set how often the hotplug is processed for insert and remove events."
 		"# Units in microseconds.\n");
 	fprintf(fp, "HotplugPollRate %d\n", g_nvme_hotplug_poll_timeout_us);
+	if (g_nvme_hostnqn) {
+		fprintf(fp, "HostNQN %s\n",  g_nvme_hostnqn);
+	}
 
 	fprintf(fp, "\n");
 }
