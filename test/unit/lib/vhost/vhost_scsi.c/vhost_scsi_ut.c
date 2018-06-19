@@ -68,6 +68,8 @@ DEFINE_STUB_P(spdk_scsi_dev_construct, struct spdk_scsi_dev, (const char *name,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *), void *hotremove_ctx), {0});
 DEFINE_STUB(spdk_scsi_dev_add_port, int, (struct spdk_scsi_dev *dev, uint64_t id, const char *name),
 	    0);
+DEFINE_STUB(spdk_ring_create, struct spdk_ring *, (enum spdk_ring_type type, size_t count,
+		int socket_id), NULL);
 
 SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
 

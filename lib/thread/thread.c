@@ -35,6 +35,7 @@
 
 #include "spdk/thread.h"
 #include "spdk/log.h"
+#include "spdk/env.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -72,10 +73,163 @@ struct spdk_thread {
 	TAILQ_HEAD(, spdk_io_channel) io_channels;
 	TAILQ_ENTRY(spdk_thread) tailq;
 	char *name;
+	/*
+	 * Contains pollers actively running on this thread.  Pollers
+	 *  are run round-robin. The thread takes one poller from the head
+	 *  of the ring, executes it, then puts it back at the tail of
+	 *  the ring.
+	 */
+	TAILQ_HEAD(, spdk_poller)           active_pollers;
+
+	/*
+	 * Contains pollers running on this thread with a periodic timer.
+	 */
+	TAILQ_HEAD(thread_timer_pollers_head, spdk_poller)  timer_pollers;
+
+	/*
+	 * These are the events that are to be processed by this thread.
+	 */
+	struct spdk_ring                *events;
+	uint32_t socket_id;
+	uint32_t max_delay_us;
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 static uint32_t g_thread_count = 0;
+static struct spdk_thread *spdk_init_thread = NULL;
+
+struct spdk_thread *
+spdk_thread_get_init(void)
+{
+	return spdk_init_thread;
+}
+
+struct spdk_thread *
+spdk_thread_get_next(struct spdk_thread *thread)
+{
+	struct spdk_thread *temp;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	temp = TAILQ_NEXT(thread, tailq);
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	return temp;
+}
+
+unsigned int
+spdk_thread_get_id(struct spdk_thread *thread)
+{
+	return (unsigned int)thread->thread_id;
+}
+
+uint32_t
+spdk_thread_get_socket_id(struct spdk_thread *thread)
+{
+	return thread->socket_id;
+}
+
+struct spdk_ring *
+spdk_thread_get_events(struct spdk_thread *thread)
+{
+	return thread->events;
+}
+
+uint32_t
+spdk_thread_get_max_delay_us(struct spdk_thread *thread)
+{
+	return thread->max_delay_us;
+}
+
+struct spdk_poller *
+spdk_thread_get_active_poller(struct spdk_thread *thread)
+{
+	return TAILQ_FIRST(&thread->active_pollers);
+}
+
+struct spdk_poller *
+spdk_thread_get_timer_poller(struct spdk_thread *thread)
+{
+	return TAILQ_FIRST(&thread->timer_pollers);
+}
+
+void
+spdk_thread_remove_poller(struct spdk_thread *thread, struct spdk_poller *poller)
+{
+	/* Poller is not running currently, so just free it. */
+	if (poller->period_ticks) {
+		TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+	} else {
+		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+	}
+}
+
+void
+spdk_thread_insert_poller(struct spdk_thread *thread, struct spdk_poller *poller,
+			  uint64_t now)
+{
+	struct spdk_poller *iter;
+	uint64_t next_run_tick;
+
+	if (poller->period_ticks) {
+		next_run_tick = now + poller->period_ticks;
+		poller->next_run_tick = next_run_tick;
+
+		/*
+		 * Insert poller in the thread's timer_pollers list in sorted order by next scheduled
+		 * run time.
+		 */
+		TAILQ_FOREACH_REVERSE(iter, &thread->timer_pollers, thread_timer_pollers_head, tailq) {
+			if (iter->next_run_tick <= next_run_tick) {
+				TAILQ_INSERT_AFTER(&thread->timer_pollers, iter, poller, tailq);
+				return;
+			}
+		}
+
+		/* No earlier pollers were found, so this poller must be the new head */
+		TAILQ_INSERT_HEAD(&thread->timer_pollers, poller, tailq);
+	} else {
+		TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
+	}
+}
+
+void spdk_thread_initialize(struct spdk_thread *thread, uint32_t socket_id,
+			    uint32_t max_delay_us)
+{
+#define SPDK_THREAD_EVENT_RING_SIZE 65536
+	/*
+	 * Change the thread context to the thread itself
+	 * instead of the reactor.
+	 */
+	/* thread->thread_ctx = thread; */
+	thread->socket_id = socket_id;
+	thread->max_delay_us = max_delay_us;
+	/*
+	 * What socket-id do we use here?
+	 * The idea here is that the thread can keep moving around between sockets. So, picking
+	 * a socket for getting the event ring makes NOT much sense for a virtual thread.
+	 * But, if the thread is attached to a bare metal (DPDK) thread forever, then,
+	 * we can get the benefits if we specify the socket and not sacrifice performance.
+	 */
+	thread->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, SPDK_THREAD_EVENT_RING_SIZE, socket_id);
+}
+
+struct spdk_thread *
+spdk_thread_find_id(unsigned long thread_id)
+{
+	struct spdk_thread *thread;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+
+	thread = NULL;
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		if (thread->thread_id == (pthread_t)thread_id) {
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	return thread;
+}
 
 static struct spdk_thread *
 _get_thread(void)
@@ -143,6 +297,13 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		_set_thread_name(name);
 		thread->name = strdup(name);
 	}
+
+	if (!spdk_init_thread) {
+		spdk_init_thread = thread;
+	}
+
+	TAILQ_INIT(&thread->active_pollers);
+	TAILQ_INIT(&thread->timer_pollers);
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 

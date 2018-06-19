@@ -48,30 +48,6 @@
 #define SPDK_EVENT_BATCH_SIZE		8
 #define SPDK_SEC_TO_USEC		1000000ULL
 
-enum spdk_poller_state {
-	/* The poller is registered with a reactor but not currently executing its fn. */
-	SPDK_POLLER_STATE_WAITING,
-
-	/* The poller is currently running its fn. */
-	SPDK_POLLER_STATE_RUNNING,
-
-	/* The poller was unregistered during the execution of its fn. */
-	SPDK_POLLER_STATE_UNREGISTERED,
-};
-
-struct spdk_poller {
-	TAILQ_ENTRY(spdk_poller)	tailq;
-	uint32_t			lcore;
-
-	/* Current state of the poller; should only be accessed from the poller's thread. */
-	enum spdk_poller_state		state;
-
-	uint64_t			period_ticks;
-	uint64_t			next_run_tick;
-	spdk_poller_fn			fn;
-	void				*arg;
-};
-
 enum spdk_reactor_state {
 	SPDK_REACTOR_STATE_INVALID = 0,
 	SPDK_REACTOR_STATE_INITIALIZED = 1,
@@ -117,6 +93,15 @@ struct spdk_reactor {
 	struct spdk_mempool				*event_mempool;
 
 	uint64_t					max_delay_us;
+
+	/* true if a base virtual thread is created for this reactor */
+	bool base_thread_created;
+
+	/* The spdk_thread associated with the reactor. This is in the first iteration
+	 * of this code change. In a subsequent patch this 1-1 relationship between the
+	 * reactor and the spdk_thread will be broken.
+	 */
+	struct spdk_thread *thread;
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor *g_reactors;
@@ -173,8 +158,8 @@ spdk_event_call(struct spdk_event *event)
 
 	reactor = spdk_reactor_get(event->lcore);
 
-	assert(reactor->events != NULL);
-	rc = spdk_ring_enqueue(reactor->events, (void **)&event, 1);
+	rc = spdk_ring_enqueue(spdk_thread_get_events(reactor->thread), (void **)&event, 1);
+
 	if (rc != 1) {
 		assert(false);
 	}
@@ -257,6 +242,137 @@ _spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poll
 	TAILQ_INSERT_HEAD(&reactor->timer_pollers, poller, tailq);
 }
 
+static inline uint32_t
+_spdk_thread_event_queue_run_batch(struct spdk_thread *thread)
+{
+	unsigned count, i;
+	void *events[SPDK_EVENT_BATCH_SIZE];
+
+#ifdef DEBUG
+	/*
+	 * spdk_ring_dequeue() fills events and returns how many entries it wrote,
+	 * so we will never actually read uninitialized data from events, but just to be sure
+	 * (and to silence a static analyzer false positive), initialize the array to NULL pointers.
+	 */
+	memset(events, 0, sizeof(events));
+#endif
+
+	count = spdk_ring_dequeue(spdk_thread_get_events(thread), events, SPDK_EVENT_BATCH_SIZE);
+	if (count == 0) {
+		return 0;
+	}
+
+	for (i = 0; i < count; i++) {
+		struct spdk_event *event = events[i];
+
+		assert(event != NULL);
+		event->fn(event->arg1, event->arg2);
+	}
+
+	spdk_mempool_put_bulk(g_spdk_event_mempool[spdk_thread_get_socket_id(thread)], events, count);
+
+	return count;
+}
+
+static int
+_spdk_virt_thread_poll(void *arg)
+{
+	struct spdk_thread      *thread = arg;
+	struct spdk_poller      *poller;
+	uint32_t                event_count;
+	uint64_t                idle_started, now;
+	uint64_t                spin_cycles, sleep_cycles;
+	uint32_t                sleep_us;
+
+	spin_cycles = SPDK_REACTOR_SPIN_TIME_USEC * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	sleep_cycles = spdk_thread_get_max_delay_us(thread) * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	idle_started = 0;
+
+	while (1) {
+		bool took_action = false;
+
+		event_count = _spdk_thread_event_queue_run_batch(thread);
+		if (event_count > 0) {
+			took_action = true;
+		}
+
+		poller = spdk_thread_get_active_poller(thread);
+		if (poller) {
+			spdk_thread_remove_poller(thread, poller);
+			poller->state = SPDK_POLLER_STATE_RUNNING;
+			poller->fn(poller->arg);
+			if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+				free(poller);
+			} else {
+				poller->state = SPDK_POLLER_STATE_WAITING;
+				spdk_thread_insert_poller(thread, poller, spdk_get_ticks());
+			}
+			took_action = true;
+		}
+
+		poller = spdk_thread_get_timer_poller(thread);
+		if (poller) {
+			now = spdk_get_ticks();
+
+			if (now >= poller->next_run_tick) {
+				spdk_thread_remove_poller(thread, poller);
+				poller->state = SPDK_POLLER_STATE_RUNNING;
+				poller->fn(poller->arg);
+				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+					free(poller);
+				} else {
+					poller->state = SPDK_POLLER_STATE_WAITING;
+					spdk_thread_insert_poller(thread, poller, now);
+				}
+				took_action = true;
+			}
+		}
+
+		if (took_action) {
+			/* We were busy this loop iteration. Reset the idle timer. */
+			idle_started = 0;
+		} else if (idle_started == 0) {
+			/* We were previously busy, but this loop we took no actions. */
+			idle_started = spdk_get_ticks();
+		}
+
+		/* Determine if the thread can sleep */
+		if (sleep_cycles && idle_started) {
+			now = spdk_get_ticks();
+			if (now >= (idle_started + spin_cycles)) {
+				sleep_us = spdk_thread_get_max_delay_us(thread);
+
+				poller = spdk_thread_get_timer_poller(thread);
+				if (poller) {
+					/* There are timers registered, so don't sleep beyond
+					 * when the next timer should fire */
+					if (poller->next_run_tick < (now + sleep_cycles)) {
+						if (poller->next_run_tick <= now) {
+							sleep_us = 0;
+						} else {
+							sleep_us = ((poller->next_run_tick - now) *
+								    SPDK_SEC_TO_USEC) / spdk_get_ticks_hz();
+						}
+					}
+				}
+
+				if (sleep_us > 0) {
+					usleep(sleep_us);
+				}
+
+			}
+		}
+
+		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
+			break;
+		}
+
+	}
+
+	return 0;
+}
+
+
 static struct spdk_poller *
 _spdk_reactor_start_poller(void *thread_ctx,
 			   spdk_poller_fn fn,
@@ -290,11 +406,7 @@ _spdk_reactor_start_poller(void *thread_ctx,
 		poller->period_ticks = 0;
 	}
 
-	if (poller->period_ticks) {
-		_spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
-	} else {
-		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
-	}
+	spdk_thread_insert_poller(reactor->thread, poller, spdk_get_ticks());
 
 	return poller;
 }
@@ -316,14 +428,70 @@ _spdk_reactor_stop_poller(struct spdk_poller *poller, void *thread_ctx)
 		poller->state = SPDK_POLLER_STATE_UNREGISTERED;
 	} else {
 		/* Poller is not running currently, so just free it. */
-		if (poller->period_ticks) {
-			TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
-		} else {
-			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
-		}
+		spdk_thread_remove_poller(reactor->thread, poller);
 
 		free(poller);
 	}
+}
+
+static int
+_spdk_reactor_add_thread_poller(struct spdk_reactor *reactor, struct spdk_thread *thread)
+{
+	struct spdk_poller *poller;
+
+	poller = calloc(1, sizeof(*poller));
+	if (poller == NULL) {
+		SPDK_ERRLOG("Poller memory allocation failed\n");
+		return -1;
+	}
+
+	poller->lcore = reactor->lcore;
+	poller->state = SPDK_POLLER_STATE_WAITING;
+	poller->fn = _spdk_virt_thread_poll;
+	poller->arg = thread;
+
+	TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
+	return 0;
+}
+
+static void
+_spdk_reactor_free_thread_poller(struct spdk_reactor *reactor)
+{
+	struct spdk_poller *poller;
+
+	poller = TAILQ_FIRST(&reactor->active_pollers);
+	if (poller) {
+		TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
+		free(poller);
+	}
+}
+
+struct spdk_thread *
+spdk_reactor_allocate_init_thread(void)
+{
+	struct spdk_reactor *reactor = spdk_reactor_get(spdk_env_get_current_core());
+	struct spdk_thread *thread;
+	char                    thread_name[32];
+
+	snprintf(thread_name, sizeof(thread_name), "thread_%u", reactor->lcore);
+
+	reactor->base_thread_created = true;
+
+	if ((thread = spdk_allocate_thread(_spdk_reactor_send_msg,
+					   _spdk_reactor_start_poller,
+					   _spdk_reactor_stop_poller,
+					   reactor, thread_name)) == NULL) {
+		return NULL;
+	}
+	reactor->thread = thread;
+
+	/*
+	 * Add a poller function that will iterate through the thread loop.
+	 */
+	(void)_spdk_reactor_add_thread_poller(reactor, thread);
+
+	spdk_thread_initialize(thread, reactor->socket_id, reactor->max_delay_us);
+	return thread;
 }
 
 static int
@@ -480,13 +648,32 @@ _spdk_reactor_run(void *arg)
 	uint32_t		sleep_us;
 	int			rc = -1;
 	char			thread_name[32];
+	struct spdk_thread *thread;
 
-	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-	if (spdk_allocate_thread(_spdk_reactor_send_msg,
-				 _spdk_reactor_start_poller,
-				 _spdk_reactor_stop_poller,
-				 reactor, thread_name) == NULL) {
-		return -1;
+
+	snprintf(thread_name, sizeof(thread_name), "thread_%u", reactor->lcore);
+
+	/* First Iteration: A reactor will have, one virtual thread that is running
+	 * on it.
+	 * In subsequent patches, this will change:
+	 * Apps can create virtual threads and add them to the
+	 * reactor poll ring as needed. This function will set up the base
+	 * virtual thread per reactor.
+	 */
+	if (!(reactor->base_thread_created)) {
+		if ((thread = spdk_allocate_thread(_spdk_reactor_send_msg,
+						   _spdk_reactor_start_poller,
+						   _spdk_reactor_stop_poller,
+						   reactor, thread_name)) == NULL) {
+			return -1;
+		}
+		reactor->thread = thread;
+		spdk_thread_initialize(thread, reactor->socket_id, reactor->max_delay_us);
+		/*
+		 * Add a poller function that will iterate through the thread loop.
+		 */
+		(void)_spdk_reactor_add_thread_poller(reactor, thread);
+		reactor->base_thread_created = true;
 	}
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);
@@ -596,6 +783,7 @@ _spdk_reactor_run(void *arg)
 	}
 
 	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
+	_spdk_reactor_free_thread_poller(reactor);
 	spdk_free_thread();
 	return 0;
 }
@@ -685,6 +873,16 @@ spdk_reactors_start(void)
 			}
 		}
 		spdk_cpuset_set_cpu(g_spdk_app_core_mask, i, true);
+	}
+
+	/* A temporary way to enforce fencing. We want the master reactor/thread
+	 * to run only after all the other reactors and their threads
+	 * have been instantiated. Else, the first poller function in the master
+	 * reactor may post events to other cores before the threads have been
+	 * created. Once subsequent patches go in, the events will not be posted
+	 * to the cores (but to threads). We can remove this fence.
+	 */
+	while (!((spdk_reactor_get(spdk_env_get_last_core()))->base_thread_created)) {
 	}
 
 	/* Start the master reactor */

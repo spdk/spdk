@@ -63,6 +63,8 @@ DEFINE_STUB_P(spdk_bdev_get_io_channel, struct spdk_io_channel, (struct spdk_bde
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 512);
 DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 0x1);
 DEFINE_STUB(spdk_bdev_has_write_cache, bool, (const struct spdk_bdev *bdev), false);
+DEFINE_STUB(spdk_ring_create, struct spdk_ring *, (enum spdk_ring_type type, size_t count,
+		int socket_id), NULL);
 
 SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
 
