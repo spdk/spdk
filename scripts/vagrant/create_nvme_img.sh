@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+echo "Enter $0"
+
 WHICH_OS=`lsb_release -i | awk '{print $3}'`
 nvme_disk='/var/lib/libvirt/images/nvme_disk.img'
 
@@ -10,3 +12,5 @@ fi
 
 chmod 777 $nvme_disk
 chown qemu:qemu $nvme_disk
+
+echo "Leave $0"
