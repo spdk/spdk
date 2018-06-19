@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c40227a_5d7bfe38",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T20:51:06Z",
+      "side": 1,
+      "message": "I think you can keep took_action \u003d true in its original location.\n\nOr if not, why does it need to be moved?",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "637846df_fbffcf37",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T20:51:06Z",
+      "side": 1,
+      "message": "You can just declare the local variable here, with a newline after it - since it\u0027s only needed in this one small portion of the function.",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "863b0743_6246aadd",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T20:51:06Z",
+      "side": 1,
+      "message": "Suggest putting a comment here explaining why you need tmp_timer_tsc.  This might trip someone else in the future who foolishly thinks it\u0027s not needed.  :-)\n\nMaybe:\n\nSave the tsc from before poller-\u003efn was executed.  We want to use the current time for idle/busy accounting, but want to use the older time to reinsert the poller below.",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "540c71f0_e0b834ad",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T20:51:06Z",
+      "side": 1,
+      "message": "same here - took_action assignment doesn\u0027t need to be moved",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
