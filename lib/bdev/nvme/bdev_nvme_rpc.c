@@ -56,6 +56,7 @@ struct rpc_construct_nvme {
 	char *traddr;
 	char *trsvcid;
 	char *subnqn;
+	char *hostnqn;
 };
 
 static void
@@ -67,6 +68,7 @@ free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 	free(req->traddr);
 	free(req->trsvcid);
 	free(req->subnqn);
+	free(req->hostnqn);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
@@ -77,6 +79,7 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"adrfam", offsetof(struct rpc_construct_nvme, adrfam), spdk_json_decode_string, true},
 	{"trsvcid", offsetof(struct rpc_construct_nvme, trsvcid), spdk_json_decode_string, true},
 	{"subnqn", offsetof(struct rpc_construct_nvme, subnqn), spdk_json_decode_string, true},
+	{"hostnqn", offsetof(struct rpc_construct_nvme, hostnqn), spdk_json_decode_string, true}
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -130,7 +133,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	count = NVME_MAX_BDEVS_PER_RPC;
-	if (spdk_bdev_nvme_create(&trid, req.name, names, &count)) {
+	if (spdk_bdev_nvme_create(&trid, req.name, names, &count, req.hostnqn)) {
 		goto invalid;
 	}
 

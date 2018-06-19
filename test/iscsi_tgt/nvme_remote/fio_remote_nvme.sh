@@ -31,6 +31,7 @@ function run_nvme_remote() {
 
 	if [ "$1" = "remote" ]; then
 		echo "[NVMe]" >> $testdir/iscsi.conf.tmp
+		echo "  HostNQN nqn.2016-06.io.spdk:host1" >> $testdir/iscsi.conf.tmp
 		echo "  TransportID \"trtype:RDMA adrfam:ipv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420 subnqn:nqn.2016-06.io.spdk:cnode1\" Nvme0" >> $testdir/iscsi.conf.tmp
 	fi
 	# Start the iSCSI target without using stub
