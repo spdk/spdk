@@ -207,7 +207,7 @@ int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
  * Get the logical unit of the given SCSI device whose id is lun_id.
  *
  * \param dev SCSI device.
- * \param id Id of the logical unit.
+ * \param lun_id Id of the logical unit.
  *
  * \return the logical unit on success, or NULL on failure.
  */
@@ -363,7 +363,7 @@ void spdk_scsi_port_free(struct spdk_scsi_port **pport);
 /**
  * Get the name of the SCSI port.
  *
- * \param SCSI port to query.
+ * \param port SCSI port to query.
  *
  * \return the name of the SCSI port.
  */

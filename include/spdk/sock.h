@@ -54,7 +54,7 @@ struct spdk_sock_group;
  * \param saddr A pointer to the buffer to hold the address of server.
  * \param slen Length of the buffer 'saddr'.
  * \param caddr A pointer to the buffer to hold the address of client.
- * \param slen Length of the buffer 'caddr'.
+ * \param clen Length of the buffer 'caddr'.
  *
  * \return 0 on success, -1 on failure.
  */
