@@ -2759,18 +2759,11 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 				datain_flag |= ISCSI_FLAG_FINAL;
 				datain_flag &= ~ISCSI_DATAIN_STATUS;
 				if (task->scsi.sense_data_len == 0) {
-					switch (task->scsi.status) {
-					case SPDK_SCSI_STATUS_GOOD:
-					case SPDK_SCSI_STATUS_CONDITION_MET:
-					case SPDK_SCSI_STATUS_INTERMEDIATE:
-					case SPDK_SCSI_STATUS_INTERMEDIATE_CONDITION_MET:
-						/* The last pdu in all data-in pdus */
-						if ((offset + len) == transfer_len &&
-						    (primary->bytes_completed ==
-						     primary->scsi.transfer_len)) {
-							datain_flag |= ISCSI_DATAIN_STATUS;
-							sent_status = 1;
-						}
+					/* The last pdu in all data-in pdus */
+					if ((offset + len) == transfer_len &&
+					    (primary->bytes_completed == primary->scsi.transfer_len)) {
+						datain_flag |= ISCSI_DATAIN_STATUS;
+						sent_status = 1;
 					}
 				}
 			} else {
