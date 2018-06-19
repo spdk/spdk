@@ -1439,7 +1439,7 @@ usage(const char *program_name)
 	printf("     subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
 	printf("    Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
 
-	spdk_tracelog_usage(stdout, "-t");
+	spdk_tracelog_usage(stdout, "-L");
 
 	printf(" -i         shared memory group ID\n");
 	printf(" -p         core number in decimal to run this application which started from 0\n");
@@ -1457,7 +1457,7 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:i:p:r:t:xH")) != -1) {
+	while ((op = getopt(argc, argv, "d:i:p:r:xHL:")) != -1) {
 		switch (op) {
 		case 'd':
 			g_dpdk_mem = atoi(optarg);
@@ -1479,7 +1479,10 @@ parse_args(int argc, char **argv)
 				return 1;
 			}
 			break;
-		case 't':
+		case 'x':
+			g_hex_dump = true;
+			break;
+		case 'L':
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
@@ -1488,15 +1491,13 @@ parse_args(int argc, char **argv)
 			}
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
 #ifndef DEBUG
-			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -L flag.\n",
 				argv[0]);
 			usage(argv[0]);
 			return 0;
 #endif
 			break;
-		case 'x':
-			g_hex_dump = true;
-			break;
+
 		case 'H':
 		default:
 			usage(argv[0]);
