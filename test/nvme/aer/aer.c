@@ -293,7 +293,7 @@ usage(const char *program_name)
 	printf("     subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
 	printf("    Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
 
-	spdk_tracelog_usage(stdout, "-t");
+	spdk_tracelog_usage(stdout, "-L");
 
 	printf(" -v         verbose (enable warnings)\n");
 	printf(" -H         show this usage\n");
@@ -307,12 +307,18 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "n:r:t:H:T")) != -1) {
+	while ((op = getopt(argc, argv, "n:r:HL:T")) != -1) {
 		switch (op) {
 		case 'n':
 			expected_ns_test = atoi(optarg);
 			break;
-		case 't':
+		case 'r':
+			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
+				fprintf(stderr, "Error parsing transport address\n");
+				return 1;
+			}
+			break;
+		case 'L':
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
@@ -321,17 +327,11 @@ parse_args(int argc, char **argv)
 			}
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
 #ifndef DEBUG
-			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -L flag.\n",
 				argv[0]);
 			usage(argv[0]);
 			return 0;
 #endif
-			break;
-		case 'r':
-			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
-				fprintf(stderr, "Error parsing transport address\n");
-				return 1;
-			}
 			break;
 		case 'T':
 			enable_temp_test = 1;
