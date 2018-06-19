@@ -52,6 +52,8 @@ DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *, (struct spdk_con
 DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
 DEFINE_STUB(spdk_conf_section_get_intval, int, (struct spdk_conf_section *sp, const char *key), -1);
+DEFINE_STUB(spdk_ring_create, struct spdk_ring *, (enum spdk_ring_type type, size_t count,
+		int socket_id), NULL);
 
 struct ut_bdev {
 	struct spdk_bdev	bdev;

@@ -69,6 +69,12 @@ _fs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	fn(ctx);
 }
 
+struct spdk_ring *
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
+{
+	return NULL;
+}
+
 struct ut_request {
 	fs_request_fn fn;
 	void *arg;

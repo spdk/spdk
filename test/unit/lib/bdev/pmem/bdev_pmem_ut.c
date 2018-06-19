@@ -44,6 +44,8 @@ DEFINE_STUB(spdk_conf_section_get_nval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx), NULL);
 DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
+DEFINE_STUB(spdk_ring_create, struct spdk_ring *, (enum spdk_ring_type type, size_t count,
+		int socket_id), NULL);
 
 static struct spdk_bdev_module *g_bdev_pmem_module;
 static int g_bdev_module_cnt;

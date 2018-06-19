@@ -41,6 +41,7 @@
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/rpc.h"
+#include "spdk/thread.h"
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
@@ -65,6 +66,7 @@ static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
 static struct spdk_app_opts g_default_opts;
+static struct spdk_thread *g_spdk_init_thread;
 
 int
 spdk_app_get_shm_id(void)
@@ -544,10 +546,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		goto app_start_log_close_err;
 	}
 
-	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
-		goto app_start_trace_cleanup_err;
-	}
-
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
 	g_spdk_app.shm_id = opts->shm_id;
@@ -555,10 +553,22 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
 	g_delay_subsystem_init = opts->delay_subsystem_init;
+
+	/* Create the base virtual thread (this is the equivalent thread
+	 * for core 0). There is a chicken and egg problem here.
+	 * We need to put in a couple of events into the master reactor
+	 * (or the first virtual thread) before the other threads are started.
+	 */
+	g_spdk_init_thread = spdk_reactor_allocate_init_thread();
+
 	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
 
 	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
 					      (void *)opts->rpc_addr, NULL);
+
+	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
+		goto app_start_trace_cleanup_err;
+	}
 
 	if (!g_delay_subsystem_init) {
 		spdk_subsystem_init(rpc_start_event);

@@ -133,6 +133,11 @@ DEFINE_STUB(spdk_nvmf_request_abort,
 	    (struct spdk_nvmf_request *req),
 	    -1);
 
+DEFINE_STUB(spdk_ring_create,
+	    struct spdk_ring *,
+	    (enum spdk_ring_type type, size_t count, int socket_id),
+	    NULL);
+
 static void
 ctrlr_ut_pass_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
