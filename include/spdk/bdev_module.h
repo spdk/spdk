@@ -311,17 +311,6 @@ struct spdk_bdev_io {
 	/** Context that will be passed to the completion callback */
 	void *caller_ctx;
 
-	/** Current tsc at submit time. Used to calculate latency at completion. */
-	uint64_t submit_tsc;
-
-	/**
-	 * Set to true while the bdev module submit_request function is in progress.
-	 *
-	 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
-	 * or if completion must be deferred via an event.
-	 */
-	bool in_submit_request;
-
 	/** Error information from a device */
 	union {
 		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
@@ -405,6 +394,17 @@ struct spdk_bdev_io {
 	 *  must not read or write to these fields.
 	 */
 	struct __bdev_io_internal_fields {
+		/** Current tsc at submit time. Used to calculate latency at completion. */
+		uint64_t submit_tsc;
+
+		/**
+		 * Set to true while the bdev module submit_request function is in progress.
+		 *
+		 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
+		 * or if completion must be deferred via an event.
+		 */
+		bool in_submit_request;
+
 		/** Status for the IO */
 		int8_t status;
 
