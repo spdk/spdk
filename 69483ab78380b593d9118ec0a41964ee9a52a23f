@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "306a3a5c_74c9bb58",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T23:51:57Z",
+      "side": 1,
+      "message": "I don\u0027t think this will work if user specifies core_id \u003d 0.  You should instead set req.core_id \u003d UINT32_MAX before calling spdk_json_decode_object.  Then if it still is set to UINT32_MAX here, you know the user did not specify a core ID and you can just iterate through all of them.",
+      "revId": "69483ab78380b593d9118ec0a41964ee9a52a23f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aeb82a04_9cbef1e1",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T23:51:57Z",
+      "side": 1,
+      "message": "remove this check here and instead have spdk_rpc_dump_reactor_tsc_stats_info return an error code and check that instead\n\nthen you don\u0027t need the core_count variable at all - you can just depend on spdk_reactor_get_tsc_stats to do the core id validation for you",
+      "revId": "69483ab78380b593d9118ec0a41964ee9a52a23f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9cd3b3d_756c38ab",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T23:51:57Z",
+      "side": 1,
+      "message": "help\u003d\u0027Reactor core ID.  If omitted, get stats for all reactor cores.\u0027",
+      "revId": "69483ab78380b593d9118ec0a41964ee9a52a23f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13d61c59_2f246f57",
+        "filename": "scripts/rpc/app.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-19T23:51:57Z",
+      "side": 1,
+      "message": "Current \u003d\u003e Cumulated?",
+      "revId": "69483ab78380b593d9118ec0a41964ee9a52a23f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
