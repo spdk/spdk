@@ -322,9 +322,6 @@ struct spdk_bdev_io {
 	 */
 	bool in_submit_request;
 
-	/** Status for the IO */
-	int8_t status;
-
 	/** Error information from a device */
 	union {
 		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
@@ -408,6 +405,9 @@ struct spdk_bdev_io {
 	 *  must not read or write to these fields.
 	 */
 	struct __bdev_io_internal_fields {
+		/** Status for the IO */
+		int8_t status;
+
 		/** bdev allocated memory associated with this request */
 		void *buf;
 

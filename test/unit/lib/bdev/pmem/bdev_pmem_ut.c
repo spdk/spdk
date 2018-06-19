@@ -267,7 +267,7 @@ pmemblk_check(const char *path, size_t bsize)
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
-	bdev_io->status = status;
+	bdev_io->internal.status = status;
 }
 
 int
@@ -353,10 +353,10 @@ bdev_submit_request(struct spdk_bdev *bdev, int16_t io_type, uint64_t offset_blo
 	 * Set status to value that shouldn't be returned
 	 */
 	bio.type = io_type;
-	bio.status = SPDK_BDEV_IO_STATUS_PENDING;
+	bio.internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 	bio.bdev = bdev;
 	bdev_pmem_submit_request(NULL, &bio);
-	return bio.status;
+	return bio.internal.status;
 }
 
 

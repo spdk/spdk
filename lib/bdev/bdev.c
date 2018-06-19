@@ -945,7 +945,7 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev_mgmt_channel *ch = bdev_io->ch->shared_resource->mgmt_ch;
 
 	assert(bdev_io != NULL);
-	assert(bdev_io->status != SPDK_BDEV_IO_STATUS_PENDING);
+	assert(bdev_io->internal.status != SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev_io->internal.buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
@@ -1058,7 +1058,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_thread *thread = spdk_io_channel_get_thread(bdev_io->ch->channel);
 
-	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev_io->ch->flags & BDEV_CH_QOS_ENABLED) {
 		if (thread == bdev->qos->thread) {
@@ -1080,7 +1080,7 @@ spdk_bdev_io_submit_reset(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
 	struct spdk_io_channel *ch = bdev_ch->channel;
 
-	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
@@ -1095,7 +1095,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->bdev = bdev;
 	bdev_io->caller_ctx = cb_arg;
 	bdev_io->cb = cb;
-	bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
+	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->in_submit_request = false;
 	bdev_io->internal.buf = NULL;
 	bdev_io->io_submit_ch = NULL;
@@ -2327,9 +2327,9 @@ _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, link);
 		bdev_io->ch->io_outstanding++;
 		shared_resource->io_outstanding++;
-		bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 		bdev->fn_table->submit_request(bdev_io->ch->channel, bdev_io);
-		if (bdev_io->status == SPDK_BDEV_IO_STATUS_NOMEM) {
+		if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
 			break;
 		}
 	}
@@ -2359,7 +2359,7 @@ _spdk_bdev_io_complete(void *ctx)
 		return;
 	}
 
-	if (bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
 			bdev_io->ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
@@ -2399,7 +2399,7 @@ _spdk_bdev_io_complete(void *ctx)
 	assert(bdev_io->cb != NULL);
 	assert(spdk_get_thread() == spdk_io_channel_get_thread(bdev_io->ch->channel));
 
-	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS,
+	bdev_io->cb(bdev_io, bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
 		    bdev_io->caller_ctx);
 }
 
@@ -2437,7 +2437,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
-	bdev_io->status = status;
+	bdev_io->internal.status = status;
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
 		bool unlock_channels = false;
@@ -2489,16 +2489,16 @@ spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_s
 				  enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq)
 {
 	if (sc == SPDK_SCSI_STATUS_GOOD) {
-		bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else {
-		bdev_io->status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
 		bdev_io->error.scsi.sc = sc;
 		bdev_io->error.scsi.sk = sk;
 		bdev_io->error.scsi.asc = asc;
 		bdev_io->error.scsi.ascq = ascq;
 	}
 
-	spdk_bdev_io_complete(bdev_io, bdev_io->status);
+	spdk_bdev_io_complete(bdev_io, bdev_io->internal.status);
 }
 
 void
@@ -2510,7 +2510,7 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 	assert(asc != NULL);
 	assert(ascq != NULL);
 
-	switch (bdev_io->status) {
+	switch (bdev_io->internal.status) {
 	case SPDK_BDEV_IO_STATUS_SUCCESS:
 		*sc = SPDK_SCSI_STATUS_GOOD;
 		*sk = SPDK_SCSI_SENSE_NO_SENSE;
@@ -2539,14 +2539,14 @@ void
 spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc)
 {
 	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
-		bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else {
 		bdev_io->error.nvme.sct = sct;
 		bdev_io->error.nvme.sc = sc;
-		bdev_io->status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
 	}
 
-	spdk_bdev_io_complete(bdev_io, bdev_io->status);
+	spdk_bdev_io_complete(bdev_io, bdev_io->internal.status);
 }
 
 void
@@ -2555,10 +2555,10 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 	assert(sct != NULL);
 	assert(sc != NULL);
 
-	if (bdev_io->status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
+	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
 		*sct = bdev_io->error.nvme.sct;
 		*sc = bdev_io->error.nvme.sc;
-	} else if (bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+	} else if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		*sct = SPDK_NVME_SCT_GENERIC;
 		*sc = SPDK_NVME_SC_SUCCESS;
 	} else {
