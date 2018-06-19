@@ -37,6 +37,47 @@
     },
     {
       "key": {
+        "uuid": "5df2cd16_4755478f",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-19T23:06:28Z",
+      "side": 1,
+      "message": "reactor_add_tsc_stats() is called in the if block of took_action first.\nBut reactor_add_tsc_stats() is decoupled with took_action now.\nHence as Jim says, you can move took_action to the original position.\nSorry for my wrong feedback.",
+      "parentUuid": "abbed29a_8598251a",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "edfb5906_32bbaeba",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-19T23:06:28Z",
+      "side": 1,
+      "message": "I understood that this technique is not to make gap between timer and event/poller.",
+      "range": {
+        "startLine": 528,
+        "startChar": 3,
+        "endLine": 528,
+        "endChar": 30
+      },
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "637846df_fbffcf37",
         "filename": "lib/event/reactor.c",
         "patchSetId": 12
@@ -107,6 +148,24 @@
     },
     {
       "key": {
+        "uuid": "5459ce0e_e2a7ca07",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-19T23:06:28Z",
+      "side": 1,
+      "message": "This is just a comment and please don\u0027t take it.\n\nyou don\u0027t have to use now to update next_run_tick actually. updating by\n while (rdtsc \u003e\u003d next_run_tick) { next_run_tick +\u003d period_ticks }\nmay be better way in SMT or general OS/hypervisor world.\nThis may not apply to SPDK though.",
+      "parentUuid": "e599fb62_17bd14eb",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "540c71f0_e0b834ad",
         "filename": "lib/event/reactor.c",
         "patchSetId": 12
@@ -118,6 +177,24 @@
       "writtenOn": "2018-06-19T20:51:06Z",
       "side": 1,
       "message": "same here - took_action assignment doesn\u0027t need to be moved",
+      "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a149ceb0_18af5d3d",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-19T23:06:28Z",
+      "side": 1,
+      "message": "same as above.",
+      "parentUuid": "540c71f0_e0b834ad",
       "revId": "1cb735f77cdd73ad261f5e11eebcbd0c3b2037ac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
