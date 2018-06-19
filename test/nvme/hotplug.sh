@@ -72,9 +72,9 @@ function devices_delete() {
 }
 
 password=$1
-base_img=/home/sys_sgsw/fedora24.img
-test_img=/home/sys_sgsw/fedora24_test.img
-qemu_pidfile=/home/sys_sgsw/qemupid
+base_img=/home/${USER}/fedora24.img
+test_img=/home/${USER}/fedora24_test.img
+qemu_pidfile=/home/${USER}/qemupid
 
 if [ ! -e "$base_img" ]; then
 	echo "Hotplug VM image not found; skipping test"
