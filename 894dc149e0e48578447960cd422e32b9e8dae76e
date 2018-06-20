@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12a2ce4d_e190cf18",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T00:11:10Z",
+      "side": 1,
+      "message": "I think you need to check if ctrlr \u003d\u003d NULL here?  create_ctrlr doesn\u0027t check it, and neither do some of the functions that create_ctrlr calls.",
+      "revId": "894dc149e0e48578447960cd422e32b9e8dae76e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
