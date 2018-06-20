@@ -49,33 +49,57 @@ static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
 
 #define NUM_TRANSPORTS (SPDK_COUNTOF(g_transport_ops))
 
-struct spdk_nvmf_transport *
-spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
-			   enum spdk_nvme_transport_type type)
+static inline const struct spdk_nvmf_transport_ops *
+spdk_nvmf_get_transport_opts(enum spdk_nvme_transport_type type)
 {
 	size_t i;
+	for (i = 0; i != NUM_TRANSPORTS; i++) {
+		if (g_transport_ops[i]->type == type) {
+			return g_transport_ops[i];
+		}
+	}
+	return NULL;
+}
+
+struct spdk_nvmf_transport *
+spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
+			   struct spdk_nvmf_transport_opts *tprt_opts)
+{
 	const struct spdk_nvmf_transport_ops *ops = NULL;
 	struct spdk_nvmf_transport *transport;
 
-	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (g_transport_ops[i]->type == type) {
-			ops = g_transport_ops[i];
-			break;
-		}
+	if (tprt_opts == NULL) {
+		SPDK_ERRLOG("Transport opts required.\n");
+		return NULL;
 	}
 
+	if ((tprt_opts->max_io_size % tprt_opts->io_unit_size != 0) ||
+	    (tprt_opts->max_io_size / tprt_opts->io_unit_size >
+	     SPDK_NVMF_MAX_SGL_ENTRIES)) {
+		SPDK_ERRLOG("%s: invalid IO size, MaxIO:%d, UnitIO:%d, MaxSGL:%d\n",
+			    spdk_nvme_transport_id_trtype_str(type),
+			    tprt_opts->max_io_size,
+			    tprt_opts->io_unit_size,
+			    SPDK_NVMF_MAX_SGL_ENTRIES);
+		return NULL;
+	}
+
+	ops = spdk_nvmf_get_transport_opts(type);
 	if (!ops) {
 		SPDK_ERRLOG("Transport type %s unavailable.\n",
 			    spdk_nvme_transport_id_trtype_str(type));
 		return NULL;
 	}
 
-	transport = ops->create(tgt);
+	transport = ops->create(tprt_opts);
 	if (!transport) {
 		SPDK_ERRLOG("Unable to create new transport of type %s\n",
 			    spdk_nvme_transport_id_trtype_str(type));
 		return NULL;
 	}
+
+	transport->ops = ops;
+	transport->tprt_opts = *tprt_opts;
 
 	return transport;
 }
@@ -182,4 +206,21 @@ bool
 spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
 {
 	return qpair->transport->ops->qpair_is_idle(qpair);
+}
+
+bool
+spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
+			      struct spdk_nvmf_transport_opts *tprt_opts)
+{
+	const struct spdk_nvmf_transport_ops *ops;
+
+	ops = spdk_nvmf_get_transport_opts(type);
+	if (!ops) {
+		SPDK_ERRLOG("Transport type %s unavailable.\n",
+			    spdk_nvme_transport_id_trtype_str(type));
+		return false;
+	}
+
+	ops->opts_init(tprt_opts);
+	return true;
 }

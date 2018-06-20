@@ -61,14 +61,19 @@ struct spdk_nvmf_host;
 struct spdk_nvmf_listener;
 struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
+struct spdk_nvmf_transport;
 
-struct spdk_nvmf_tgt_opts {
+struct spdk_nvmf_transport_opts {
 	uint16_t max_queue_depth;
 	uint16_t max_qpairs_per_ctrlr;
 	uint32_t in_capsule_data_size;
 	uint32_t max_io_size;
-	uint32_t max_subsystems;
 	uint32_t io_unit_size;
+	uint32_t max_aq_depth;
+};
+
+struct spdk_nvmf_tgt_opts {
+	uint32_t max_subsystems;
 };
 /**
  * Initialize the default value of opts.
@@ -123,16 +128,11 @@ typedef void (*spdk_nvmf_tgt_listen_done_fn)(void *ctx, int status);
  *
  * \param tgt The target associated with this listen address.
  * \param trid The address to listen at.
- * \param cb_fn A callback that will be called once the target is listening
- * \param cb_arg A context argument passed to cb_fn.
  *
- * \return void. The callback status argument will be 0 on success
- *	   or a negated errno on failure.
+ * \return 0 on success or a negated errno on failure.
  */
-void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
-			  struct spdk_nvme_transport_id *trid,
-			  spdk_nvmf_tgt_listen_done_fn cb_fn,
-			  void *cb_arg);
+int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
+			 struct spdk_nvme_transport_id *trid);
 
 /**
  * Function to be called for each newly discovered qpair.
@@ -666,6 +666,80 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
  * \return the type of the specified subsystem.
  */
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Create a protocol transport
+ *
+ * \param trtype The transport type to create
+ * \param tprt_opts The transport options (e.g. max_io_size)
+ *
+ * \return new transport or NULL if create fails
+ */
+struct spdk_nvmf_transport *spdk_nvmf_transport_create(enum spdk_nvme_transport_type trtype,
+		struct spdk_nvmf_transport_opts *tprt_opts);
+
+/**
+ * Destroy a protocol transport
+ *
+ * \param transport The transport to destory
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport);
+
+/**
+ * Get an existing transport from the target
+ *
+ * \param trtype The transport type to get
+ *
+ * \return the transport or NULL if not found
+ */
+struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
+		enum spdk_nvme_transport_type);
+
+/**
+ * Function to be called once transport add is complete
+ *
+ * \param cb_arg Callback argument passed to this function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_nvmf_tgt_add_transport_done_fn)(void *cb_arg, int status);
+
+/**
+ * Add a transport to a target
+ *
+ * \param transport The transport to add
+ * \param cb_fn A callback that will be called once the transport is created
+ * \param cb_arg A context argument passed to cb_fn.
+ *
+ * \return void. The callback status argument will be 0 on success
+ *	   or a negated errno on failure.
+ */
+void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
+				 struct spdk_nvmf_transport *transport,
+				 spdk_nvmf_tgt_add_transport_done_fn cb_fn,
+				 void *cb_arg);
+
+/**
+ * Initialize transport options
+ *
+ * \param trtype The transport type to create
+ * \param tprt_opts The transport options (e.g. max_io_size)
+ *
+ * \return bool. true if successful, false is transport type
+ *	   not found.
+ */
+bool
+spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
+			      struct spdk_nvmf_transport_opts *tprt_opts);
+
+/**
+ * Write NVMe-oF target's transport configurations into provided JSON context.
+ * \param w JSON write context
+ * \param tgt The NVMe-oF target
+ */
+void
+spdk_nvmf_tgt_transport_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
 
 #ifdef __cplusplus
 }
