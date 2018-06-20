@@ -304,13 +304,5 @@ void spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt, spdk_vhost_dev_fn 
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
-int spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf);
-int spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd);
-int spdk_vhost_nvme_get_cap(int vid, uint64_t *cap);
-int spdk_vhost_nvme_controller_construct(void);
-int spdk_vhost_nvme_tgt_construct(const char *name, const char *cpumask, uint32_t io_queues);
-int spdk_vhost_nvme_tgt_remove(struct spdk_vhost_tgt *vtgt);
-int spdk_vhost_nvme_tgt_add_ns(struct spdk_vhost_tgt *vtgt,
-			       const char *bdev_name);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
