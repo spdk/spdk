@@ -2479,7 +2479,7 @@ static void
 _spdk_bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
-	uint32_t i, j;
+	uint32_t i;
 	int rc;
 
 	/* The type must be correct */
@@ -2500,13 +2500,9 @@ _spdk_bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 		return;
 	}
 
-	for (i = 0; i < ctx->mask->length / 8; i++) {
-		uint8_t segment = ctx->mask->mask[i];
-		for (j = 0; segment; j++) {
-			if (segment & 1U) {
-				spdk_bit_array_set(ctx->bs->used_blobids, (i * 8) + j);
-			}
-			segment >>= 1U;
+	for (i = 0; i < ctx->mask->length; i++) {
+		if (ctx->mask->mask[i / 8] & (1U << (i % 8))) {
+			spdk_bit_array_set(ctx->bs->used_blobids, i);
 		}
 	}
 
@@ -2518,7 +2514,7 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint64_t		lba, lba_count, mask_size;
-	uint32_t		i, j;
+	uint32_t		i;
 	int			rc;
 
 	/* The type must be correct */
@@ -2537,15 +2533,11 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	}
 
 	ctx->bs->num_free_clusters = ctx->bs->total_clusters;
-	for (i = 0; i < ctx->mask->length / 8; i++) {
-		uint8_t segment = ctx->mask->mask[i];
-		for (j = 0; segment && (j < 8); j++) {
-			if (segment & 1U) {
-				spdk_bit_array_set(ctx->bs->used_clusters, (i * 8) + j);
-				assert(ctx->bs->num_free_clusters > 0);
-				ctx->bs->num_free_clusters--;
-			}
-			segment >>= 1U;
+	for (i = 0; i < ctx->mask->length; i++) {
+		if (ctx->mask->mask[i / 8] & (1U << (i % 8))) {
+			spdk_bit_array_set(ctx->bs->used_clusters, i);
+			assert(ctx->bs->num_free_clusters > 0);
+			ctx->bs->num_free_clusters--;
 		}
 	}
 
@@ -2569,7 +2561,7 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint64_t		lba, lba_count, mask_size;
-	uint32_t		i, j;
+	uint32_t		i;
 	int			rc;
 
 	/* The type must be correct */
@@ -2587,13 +2579,9 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
-	for (i = 0; i < ctx->mask->length / 8; i++) {
-		uint8_t segment = ctx->mask->mask[i];
-		for (j = 0; segment && (j < 8); j++) {
-			if (segment & 1U) {
-				spdk_bit_array_set(ctx->bs->used_md_pages, (i * 8) + j);
-			}
-			segment >>= 1U;
+	for (i = 0; i < ctx->mask->length; i++) {
+		if (ctx->mask->mask[i / 8] & (1U << (i % 8))) {
+			spdk_bit_array_set(ctx->bs->used_md_pages, i);
 		}
 	}
 	spdk_dma_free(ctx->mask);
