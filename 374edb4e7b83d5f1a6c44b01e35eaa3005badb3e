@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8443977_b4b3ea16",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-20T16:22:36Z",
+      "side": 1,
+      "message": "This line is failing in the test pool because everything including the shell variable is preserved in the single quotes. If you replace this line with:\nconfig_params+\u003d\u0027 --with-vtune\u003d/home/\u0027${USER}\u0027/vtune_codes\u0027\nIt should work.",
+      "revId": "374edb4e7b83d5f1a6c44b01e35eaa3005badb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
