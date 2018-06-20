@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "be58b5c1_6a94f0d3",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-20T19:15:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a645379d_5371e0dc",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "774151da_1b5b7b7f",
         "filename": "include/spdk/blob.h",
         "patchSetId": 26
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-19T21:48:25Z",
       "side": 1,
       "message": "This call removes all dependencies on any backing blobs.\n\n(I think you can remove the \"without loss of consistency\" phrase - my suggested wording above covers that data is copied as needed.)",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb4620b4_dc6f7a29",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-20T19:15:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "774151da_1b5b7b7f",
       "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7753e4f5_05a23ee9",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-20T19:15:12Z",
+      "side": 1,
+      "message": "I think that if blob have no parent, decouple_parent should fail. This call have a sense only if we know the relations and can decide if we need to decouple something.",
+      "parentUuid": "7da8b9a2_1f9ba5ec",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "57141800_22f2cbee",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 26
@@ -64,6 +118,24 @@
       "writtenOn": "2018-06-19T21:48:25Z",
       "side": 1,
       "message": "Lines 4604-4609 can now just be simplified to:\n\n_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ad76ad8_b9260ab3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4603,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-20T19:15:12Z",
+      "side": 1,
+      "message": "We may remove _spdk_bs_inflate_blob_sync at all.",
+      "parentUuid": "57141800_22f2cbee",
       "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "13aae5be_fddcc73b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4634,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-20T19:15:12Z",
+      "side": 1,
+      "message": "I\u0027ll remove it. In the original code that had some sense while we\u0027ve changed invalid_flag directly. Here it\u0027s just redundant.",
+      "parentUuid": "3019d6c9_d30092dc",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2c937c6_c033c0f5",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 26
@@ -98,6 +188,24 @@
       "writtenOn": "2018-06-19T21:48:25Z",
       "side": 1,
       "message": "should we set _blob-\u003eparent_id \u003d SPDK_BLOBID_INVALID?",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cb834a6_ce1ab522",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4654,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-20T19:15:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c2c937c6_c033c0f5",
       "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "02659650_cb8671c8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4658,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-20T19:15:12Z",
+      "side": 1,
+      "message": "Yes, I\u0027ll check it on the beginning in _spdk_bs_inflate_blob_open_cpl. We don\u0027t need to do this all stuff with cluster checking and so on. I think decouple_parent should fail if blob have no parent.",
+      "parentUuid": "14828915_e0111141",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b573e8b_48c465ac",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 26
@@ -132,6 +258,24 @@
       "writtenOn": "2018-06-19T21:48:25Z",
       "side": 1,
       "message": "\"should\" is too ambiguous.\n\nI think you mean to say \"We must change the parent of the inflated blob\".",
+      "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ac69664_99bb61e8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 4660,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-20T19:15:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6b573e8b_48c465ac",
       "revId": "b1b9903a9ffea62ab8f288ae2ff64c2417311e46",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
