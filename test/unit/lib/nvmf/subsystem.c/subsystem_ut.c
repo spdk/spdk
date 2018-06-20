@@ -93,7 +93,8 @@ static struct spdk_nvmf_transport g_transport = {};
 
 struct spdk_nvmf_transport *
 spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
-			   enum spdk_nvme_transport_type type)
+			   enum spdk_nvme_transport_type type,
+			   struct spdk_nvmf_transport_opts *opts)
 {
 	if (type == SPDK_NVME_TRANSPORT_RDMA) {
 		g_transport.tgt = tgt;
