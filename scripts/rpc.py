@@ -375,7 +375,24 @@ if __name__ == "__main__":
 
     # iSCSI
     def set_iscsi_options(args):
-        rpc.iscsi.set_iscsi_options(args.client, args)
+        rpc.iscsi.set_iscsi_options(
+            args.client,
+            auth_file=args.auth_file,
+            node_base=args.node_base,
+            nop_timeout=args.nop_timeout,
+            nop_in_interval=args.nop_in_interval,
+            no_discovery_auth=args.no_discovery_auth,
+            req_discovery_auth=args.req_discovery_auth,
+            req_discovery_auth_mutual=args.req_discovery_auth_mutual,
+            discovery_auth_group=args.discovery_auth_group,
+            max_sessions=args.max_sessions,
+            max_connections_per_session=args.max_connections_per_session,
+            default_time2wait=args.default_time2wait,
+            default_time2retain=args.default_time2retain,
+            immediate_data=args.immediate_data,
+            error_recovery_level=args.error_recovery_level,
+            allow_duplicated_isid=args.allow_duplicated_isid,
+            min_connections_per_session=args.min_connections_per_session)
 
     p = subparsers.add_parser('set_iscsi_options', help="""Set options of iSCSI subsystem""")
     p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file for discovery session')
@@ -401,7 +418,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_portal_groups(args):
-        print_dict(rpc.iscsi.get_portal_groups(args.client, args))
+        print_dict(rpc.iscsi.get_portal_groups(args.client))
 
     p = subparsers.add_parser(
         'get_portal_groups', help='Display current portal group configuration')
@@ -409,7 +426,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_initiator_groups(args):
-        print_dict(rpc.iscsi.get_initiator_groups(args.client, args))
+        print_dict(rpc.iscsi.get_initiator_groups(args.client))
 
     p = subparsers.add_parser('get_initiator_groups',
                               help='Display current initiator group configuration')
@@ -417,14 +434,36 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_target_nodes(args):
-        print_dict(rpc.iscsi.get_target_nodes(args.client, args))
+        print_dict(rpc.iscsi.get_target_nodes(args.client))
 
     p = subparsers.add_parser('get_target_nodes', help='Display target nodes')
     p.set_defaults(func=get_target_nodes)
 
     @call_cmd
     def construct_target_node(args):
-        rpc.iscsi.construct_target_node(args.client, args)
+        luns = []
+        for u in args.bdev_name_id_pairs.strip().split(" "):
+            bdev_name, lun_id = u.split(":")
+            luns.append({"bdev_name": bdev_name, "lun_id": int(lun_id)})
+
+        pg_ig_maps = []
+        for u in args.pg_ig_mappings.strip().split(" "):
+            pg, ig = u.split(":")
+            pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
+
+        rpc.iscsi.construct_target_node(
+            args.client,
+            luns=luns,
+            pg_ig_maps=pg_ig_maps,
+            name=args.name,
+            alias_name=args.alias_name,
+            queue_depth=args.queue_depth,
+            chap_group=args.chap_group,
+            disable_chap=args.disable_chap,
+            require_chap=args.require_chap,
+            mutual_chap=args.mutual_chap,
+            header_digest=args.header_digest,
+            data_digest=args.data_digest)
 
     p = subparsers.add_parser('construct_target_node',
                               help='Add a target node')
@@ -458,7 +497,11 @@ if __name__ == "__main__":
 
     @call_cmd
     def target_node_add_lun(args):
-        rpc.iscsi.target_node_add_lun(args.client, args)
+        rpc.iscsi.target_node_add_lun(
+            args.client,
+            name=args.name,
+            bdev_name=args.bdev_name,
+            lun_id=args.lun_id)
 
     p = subparsers.add_parser('target_node_add_lun', help='Add LUN to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
@@ -470,7 +513,14 @@ if __name__ == "__main__":
 
     @call_cmd
     def add_pg_ig_maps(args):
-        rpc.iscsi.add_pg_ig_maps(args.client, args)
+        pg_ig_maps = []
+        for u in args.pg_ig_mappings.strip().split(" "):
+            pg, ig = u.split(":")
+            pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
+        rpc.iscsi.add_pg_ig_maps(
+            args.client,
+            pg_ig_maps=pg_ig_maps,
+            name=args.name)
 
     p = subparsers.add_parser('add_pg_ig_maps', help='Add PG-IG maps to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
@@ -483,7 +533,12 @@ if __name__ == "__main__":
 
     @call_cmd
     def delete_pg_ig_maps(args):
-        rpc.iscsi.delete_pg_ig_maps(args.client, args)
+        pg_ig_maps = []
+        for u in args.pg_ig_mappings.strip().split(" "):
+            pg, ig = u.split(":")
+            pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
+        rpc.iscsi.delete_pg_ig_maps(
+            args.client, pg_ig_maps=pg_ig_maps, name=args.name)
 
     p = subparsers.add_parser('delete_pg_ig_maps', help='Delete PG-IG maps from the target node')
     p.add_argument('name', help='Target node name (ASCII)')
@@ -496,7 +551,21 @@ if __name__ == "__main__":
 
     @call_cmd
     def add_portal_group(args):
-        rpc.iscsi.add_portal_group(args.client, args)
+        portals = []
+        for p in args.portal_list:
+            ip, separator, port_cpumask = p.rpartition(':')
+            split_port_cpumask = port_cpumask.split('@')
+            if len(split_port_cpumask) == 1:
+                port = port_cpumask
+                portals.append({'host': ip, 'port': port})
+            else:
+                port = split_port_cpumask[0]
+                cpumask = split_port_cpumask[1]
+                portals.append({'host': ip, 'port': port, 'cpumask': cpumask})
+        rpc.iscsi.add_portal_group(
+            args.client,
+            portals=portals,
+            tag=args.tag)
 
     p = subparsers.add_parser('add_portal_group', help='Add a portal group')
     p.add_argument(
@@ -508,7 +577,17 @@ if __name__ == "__main__":
 
     @call_cmd
     def add_initiator_group(args):
-        rpc.iscsi.add_initiator_group(args.client, args)
+        initiators = []
+        netmasks = []
+        for i in args.initiator_list.strip().split(' '):
+            initiators.append(i)
+        for n in args.netmask_list.strip().split(' '):
+            netmasks.append(n)
+        rpc.iscsi.add_initiator_group(
+            args.client,
+            tag=args.tag,
+            initiators=initiators,
+            netmasks=netmasks)
 
     p = subparsers.add_parser('add_initiator_group',
                               help='Add an initiator group')
@@ -522,7 +601,21 @@ if __name__ == "__main__":
 
     @call_cmd
     def add_initiators_to_initiator_group(args):
-        rpc.iscsi.add_initiators_to_initiator_group(args.client, args)
+        initiators = None
+        netmasks = None
+        if args.initiator_list:
+            initiators = []
+            for i in args.initiator_list.strip().split(' '):
+                initiators.append(i)
+        if args.netmask_list:
+            netmasks = []
+            for n in args.netmask_list.strip().split(' '):
+                netmasks.append(n)
+        rpc.iscsi.add_initiators_to_initiator_group(
+            args.client,
+            tag=args.tag,
+            initiators=initiators,
+            netmasks=netmasks)
 
     p = subparsers.add_parser('add_initiators_to_initiator_group',
                               help='Add initiators to an existing initiator group')
@@ -536,7 +629,21 @@ if __name__ == "__main__":
 
     @call_cmd
     def delete_initiators_from_initiator_group(args):
-        rpc.iscsi.delete_initiators_from_initiator_group(args.client, args)
+        initiators = None
+        netmasks = None
+        if args.initiator_list:
+            initiators = []
+            for i in args.initiator_list.strip().split(' '):
+                initiators.append(i)
+        if args.netmask_list:
+            netmasks = []
+            for n in args.netmask_list.strip().split(' '):
+                netmasks.append(n)
+        rpc.iscsi.delete_initiators_from_initiator_group(
+            args.client,
+            tag=args.tag,
+            initiators=initiators,
+            netmasks=netmasks)
 
     p = subparsers.add_parser('delete_initiators_from_initiator_group',
                               help='Delete initiators from an existing initiator group')
@@ -550,7 +657,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def delete_target_node(args):
-        rpc.iscsi.delete_target_node(args.client, args)
+        rpc.iscsi.delete_target_node(
+            args.client, target_node_name=args.target_node_name)
 
     p = subparsers.add_parser('delete_target_node',
                               help='Delete a target node')
@@ -560,7 +668,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def delete_portal_group(args):
-        rpc.iscsi.delete_portal_group(args.client, args)
+        rpc.iscsi.delete_portal_group(args.client, tag=args.tag)
 
     p = subparsers.add_parser('delete_portal_group',
                               help='Delete a portal group')
@@ -570,7 +678,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def delete_initiator_group(args):
-        rpc.iscsi.delete_initiator_group(args.client, args)
+        rpc.iscsi.delete_initiator_group(args.client, tag=args.tag)
 
     p = subparsers.add_parser('delete_initiator_group',
                               help='Delete an initiator group')
@@ -580,7 +688,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_iscsi_connections(args):
-        print_dict(rpc.iscsi.get_iscsi_connections(args.client, args))
+        print_dict(rpc.iscsi.get_iscsi_connections(args.client))
 
     p = subparsers.add_parser('get_iscsi_connections',
                               help='Display iSCSI connections')
@@ -588,14 +696,14 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_iscsi_global_params(args):
-        print_dict(rpc.iscsi.get_iscsi_global_params(args.client, args))
+        print_dict(rpc.iscsi.get_iscsi_global_params(args.client))
 
     p = subparsers.add_parser('get_iscsi_global_params', help='Display iSCSI global parameters')
     p.set_defaults(func=get_iscsi_global_params)
 
     @call_cmd
     def get_scsi_devices(args):
-        print_dict(rpc.iscsi.get_scsi_devices(args.client, args))
+        print_dict(rpc.iscsi.get_scsi_devices(args.client))
 
     p = subparsers.add_parser('get_scsi_devices', help='Display SCSI devices')
     p.set_defaults(func=get_scsi_devices)
