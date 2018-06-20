@@ -2492,10 +2492,10 @@ spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_s
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
-		bdev_io->error.scsi.sc = sc;
-		bdev_io->error.scsi.sk = sk;
-		bdev_io->error.scsi.asc = asc;
-		bdev_io->error.scsi.ascq = ascq;
+		bdev_io->internal.error.scsi.sc = sc;
+		bdev_io->internal.error.scsi.sk = sk;
+		bdev_io->internal.error.scsi.asc = asc;
+		bdev_io->internal.error.scsi.ascq = ascq;
 	}
 
 	spdk_bdev_io_complete(bdev_io, bdev_io->internal.status);
@@ -2521,10 +2521,10 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 		spdk_scsi_nvme_translate(bdev_io, sc, sk, asc, ascq);
 		break;
 	case SPDK_BDEV_IO_STATUS_SCSI_ERROR:
-		*sc = bdev_io->error.scsi.sc;
-		*sk = bdev_io->error.scsi.sk;
-		*asc = bdev_io->error.scsi.asc;
-		*ascq = bdev_io->error.scsi.ascq;
+		*sc = bdev_io->internal.error.scsi.sc;
+		*sk = bdev_io->internal.error.scsi.sk;
+		*asc = bdev_io->internal.error.scsi.asc;
+		*ascq = bdev_io->internal.error.scsi.ascq;
 		break;
 	default:
 		*sc = SPDK_SCSI_STATUS_CHECK_CONDITION;
@@ -2541,8 +2541,8 @@ spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc)
 	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else {
-		bdev_io->error.nvme.sct = sct;
-		bdev_io->error.nvme.sc = sc;
+		bdev_io->internal.error.nvme.sct = sct;
+		bdev_io->internal.error.nvme.sc = sc;
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
 	}
 
@@ -2556,8 +2556,8 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 	assert(sc != NULL);
 
 	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
-		*sct = bdev_io->error.nvme.sct;
-		*sc = bdev_io->error.nvme.sc;
+		*sct = bdev_io->internal.error.nvme.sct;
+		*sc = bdev_io->internal.error.nvme.sc;
 	} else if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		*sct = SPDK_NVME_SCT_GENERIC;
 		*sc = SPDK_NVME_SC_SUCCESS;
