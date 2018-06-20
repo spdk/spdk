@@ -65,6 +65,14 @@
 
 # Define NVMf protocol global options
 [Nvmf]
+  # Set how often the acceptor polls for incoming connections. The acceptor is also
+  # responsible for polling existing connections that have gone idle. 0 means continuously
+  # poll. Units in microseconds.
+  AcceptorPollRate 10000
+
+[Transport]
+  Type RDMA
+
   # Set the maximum number of submission and completion queues per session.
   # Setting this to '8', for example, allows for 8 submission and 8 completion queues
   # per session.
@@ -80,10 +88,7 @@
   # Set the maximum I/O size. Must be a multiple of 4096.
   #MaxIOSize 131072
 
-  # Set how often the acceptor polls for incoming connections. The acceptor is also
-  # responsible for polling existing connections that have gone idle. 0 means continuously
-  # poll. Units in microseconds.
-  AcceptorPollRate 10000
+  #IOUnitSize 131072
 
 [Nvme]
   # NVMe Device Whitelist
