@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2494066e_16b3320f",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T22:22:06Z",
+      "side": 1,
+      "message": "just put tsc_stats on the stack",
+      "revId": "9452793dfe29fb3ce6a33b4a7ad239bc72eef5f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a0128da_8b6dd603",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T22:22:06Z",
+      "side": 1,
+      "message": "remove the calloc",
+      "revId": "9452793dfe29fb3ce6a33b4a7ad239bc72eef5f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac4c3cc0_89b4cbab",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T22:22:06Z",
+      "side": 1,
+      "message": "get the stats before the spdk_json_write_object_begin\n\nand do \u0026tsc_stats so you don\u0027t have to do a memory allocation\n\nthen if rc !\u003d 0, return rc\n\nthat avoids us writing garbage data into the rpc buffers",
+      "revId": "9452793dfe29fb3ce6a33b4a7ad239bc72eef5f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41c32268_8a33a32d",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T22:22:06Z",
+      "side": 1,
+      "message": "remove this free",
+      "revId": "9452793dfe29fb3ce6a33b4a7ad239bc72eef5f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e79dfd9b_346f2bba",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T22:22:06Z",
+      "side": 1,
+      "message": "just make this if (rc !\u003d 0)\n\nI would also remove the ERRLOG - if the caller asks for a bad core ID, they will get an error message - we don\u0027t need to put one in the ERRLOG too (I know there are a lot of other places in SPDK where we do something similar but we\u0027re trying to clean them up)",
+      "revId": "9452793dfe29fb3ce6a33b4a7ad239bc72eef5f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5edba8bc_5763af32",
+        "filename": "scripts/rpc/app.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T22:22:06Z",
+      "side": 1,
+      "message": "i don\u0027t think this needs to be changed\n\nif core_id:\n\nshould be fine",
+      "revId": "9452793dfe29fb3ce6a33b4a7ad239bc72eef5f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
