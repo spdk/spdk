@@ -434,6 +434,7 @@ void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
 void spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno);
 int spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 			int base_bdev_count);
+int spdk_vbdev_add_base_bdev(struct spdk_bdev *vbdev, struct spdk_bdev *bdev);
 
 void spdk_bdev_module_examine_done(struct spdk_bdev_module *module);
 void spdk_bdev_module_init_done(struct spdk_bdev_module *module);

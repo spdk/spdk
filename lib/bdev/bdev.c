@@ -2758,6 +2758,61 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 }
 
 static void
+spdk_bdev_remove_from_vbdevs(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev *vbdev;
+	size_t i, j, k;
+	bool found;
+
+	if (bdev->vbdevs_cnt == 0) {
+		assert(bdev->vbdevs == NULL);
+		return;
+	}
+
+	/* Iterate over virtual bdevs to remove bdev from them. */
+	for (i = 0; i < bdev->vbdevs_cnt; i++) {
+		found = false;
+		vbdev = bdev->vbdevs[i];
+
+		pthread_mutex_lock(&vbdev->mutex);
+		for (j = 0; j < vbdev->base_bdevs_cnt; j++) {
+			if (vbdev->base_bdevs[j] != bdev) {
+				continue;
+			}
+
+			for (k = j; k + 1 < vbdev->base_bdevs_cnt; k++) {
+				vbdev->base_bdevs[k] = vbdev->base_bdevs[k + 1];
+			}
+
+			vbdev->base_bdevs_cnt--;
+			if (vbdev->base_bdevs_cnt > 0) {
+				struct spdk_bdev **bdevs;
+
+				bdevs = realloc(vbdev->base_bdevs, vbdev->base_bdevs_cnt * sizeof(*bdevs));
+				/* It would be odd if shrinking memory block fails. */
+				assert(bdevs);
+				vbdev->base_bdevs = bdevs;
+			} else {
+				free(vbdev->base_bdevs);
+				vbdev->base_bdevs = NULL;
+			}
+
+			found = true;
+			break;
+		}
+		pthread_mutex_unlock(&vbdev->mutex);
+
+		if (!found) {
+			SPDK_WARNLOG("Bdev '%s' is not base bdev of '%s'.\n", bdev->name, vbdev->name);
+		}
+	}
+
+	free(bdev->vbdevs);
+	bdev->vbdevs = NULL;
+	bdev->vbdevs_cnt = 0;
+}
+
+static void
 spdk_vbdev_remove_base_bdevs(struct spdk_bdev *vbdev)
 {
 	struct spdk_bdev **bdevs;
@@ -2799,9 +2854,62 @@ spdk_vbdev_remove_base_bdevs(struct spdk_bdev *vbdev)
 		}
 	}
 
-	free(vbdev->base_bdevs);
-	vbdev->base_bdevs = NULL;
-	vbdev->base_bdevs_cnt = 0;
+	if (vbdev->base_bdevs) {
+		free(vbdev->base_bdevs);
+		vbdev->base_bdevs = NULL;
+		vbdev->base_bdevs_cnt = 0;
+	}
+}
+
+int
+spdk_vbdev_add_base_bdev(struct spdk_bdev *vbdev, struct spdk_bdev *bdev)
+{
+	struct spdk_bdev **bdevs, **vbdevs;
+	size_t i;
+
+	for (i = 0; i < vbdev->base_bdevs_cnt; i++) {
+		if (vbdev->base_bdevs[i] == bdev) {
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV,
+				      "Base bdev %s is already present under vbdev %s\n",
+				      spdk_bdev_get_name(bdev), spdk_bdev_get_name(vbdev));
+			return 0;
+		}
+	}
+
+	bdevs = realloc(vbdev->base_bdevs,
+			(vbdev->base_bdevs_cnt + 1) * sizeof(*vbdev->base_bdevs));
+	if (NULL == bdevs) {
+		SPDK_ERRLOG("%s - realloc() failed\n", vbdev->name);
+		return -ENOMEM;
+	}
+
+	bdevs[vbdev->base_bdevs_cnt ++] = bdev;
+	vbdev->base_bdevs = bdevs;
+
+	/* Add vbdev to the base bdev unless present
+	 * (may happen if base bdev has been removed
+	 * w/o being unregistered)
+	 */
+	for (i = 0; i < bdev->vbdevs_cnt; i++) {
+		if (bdev->vbdevs[i] == vbdev) {
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV,
+				      "Vbdev %s is already present as bdev %s's vbdev\n",
+				      spdk_bdev_get_name(vbdev), spdk_bdev_get_name(bdev));
+			return 0;
+		}
+	}
+
+	vbdevs = realloc(bdev->vbdevs, (bdev->vbdevs_cnt + 1) * sizeof(*vbdevs));
+	if (!vbdevs) {
+		SPDK_ERRLOG("%s - realloc() failed\n", bdev->name);
+		spdk_vbdev_remove_base_bdevs(vbdev);
+		return -ENOMEM;
+	}
+
+	vbdevs[bdev->vbdevs_cnt ++] = vbdev;
+	bdev->vbdevs = vbdevs;
+
+	return 0;
 }
 
 static int
@@ -2936,6 +3044,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, link);
 	pthread_mutex_unlock(&bdev->mutex);
 
+	spdk_bdev_remove_from_vbdevs(bdev);
 	spdk_bdev_fini(bdev);
 }
 
