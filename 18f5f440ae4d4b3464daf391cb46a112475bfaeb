@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79b79f5c_15ed257b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T19:32:24Z",
+      "side": 1,
+      "message": "Hi Helloway,\n\nThere are lots of changes in this file that are completely unrelated to iSCSI RPC changes.  Please remove those changes from this patch.  This patch should only focus on what is mentioned in the commit message.\n\nThanks,\n\n-Jim",
+      "revId": "18f5f440ae4d4b3464daf391cb46a112475bfaeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "530aea2d_3ae09adc",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T19:32:24Z",
+      "side": 1,
+      "message": "Many of the arguments here have incorrect help messages (queue_depth, header_digest, data_digest, mutual_chap).",
+      "revId": "18f5f440ae4d4b3464daf391cb46a112475bfaeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
