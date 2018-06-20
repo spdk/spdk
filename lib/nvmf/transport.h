@@ -42,6 +42,7 @@
 struct spdk_nvmf_transport {
 	struct spdk_nvmf_tgt			*tgt;
 	const struct spdk_nvmf_transport_ops	*ops;
+	struct spdk_nvmf_transport_opts		tprt_opts;
 
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
 };
@@ -53,9 +54,14 @@ struct spdk_nvmf_transport_ops {
 	enum spdk_nvme_transport_type type;
 
 	/**
+	 * Initialize transport options to default value
+	 */
+	void (*opts_init)(struct spdk_nvmf_transport_opts *tprt_opts);
+
+	/**
 	 * Create a transport for the given target
 	 */
-	struct spdk_nvmf_transport *(*create)(struct spdk_nvmf_tgt *tgt);
+	struct spdk_nvmf_transport *(*create)(struct spdk_nvmf_transport_opts *tprt_opts);
 
 	/**
 	 * Destroy the transport
@@ -137,9 +143,6 @@ struct spdk_nvmf_transport_ops {
 	bool (*qpair_is_idle)(struct spdk_nvmf_qpair *qpair);
 };
 
-struct spdk_nvmf_transport *spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
-		enum spdk_nvme_transport_type type);
-int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport);
 
 int spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			       const struct spdk_nvme_transport_id *trid);
@@ -173,6 +176,9 @@ int spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair);
 
 bool spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair);
+
+bool spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
+				   struct spdk_nvmf_transport_opts *tprt_opts);
 
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 
