@@ -2528,6 +2528,26 @@ _spdk_bs_set_mask(struct spdk_bit_array *array, struct spdk_bs_md_mask *mask)
 	}
 }
 
+static int
+_spdk_bs_load_mask(struct spdk_bit_array **array_ptr, struct spdk_bs_md_mask *mask)
+{
+	struct spdk_bit_array *array;
+	uint32_t i;
+
+	if (spdk_bit_array_resize(array_ptr, mask->length) < 0) {
+		return -ENOMEM;
+	}
+
+	array = *array_ptr;
+	for (i = 0; i < mask->length; i++) {
+		if (mask->mask[i / 8] & (1U << (i % 8))) {
+			spdk_bit_array_set(array, i);
+		}
+	}
+
+	return 0;
+}
+
 static void
 _spdk_bs_write_super(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
 		     struct spdk_bs_super_block *super, spdk_bs_sequence_cpl cb_fn, void *cb_arg)
@@ -2665,7 +2685,6 @@ static void
 _spdk_bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
-	uint32_t i;
 	int rc;
 
 	/* The type must be correct */
@@ -2679,17 +2698,11 @@ _spdk_bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 	 * (in pages) of the metadata region */
 	assert(ctx->mask->length == ctx->super->md_len);
 
-	rc = spdk_bit_array_resize(&ctx->bs->used_blobids, ctx->mask->length);
+	rc = _spdk_bs_load_mask(&ctx->bs->used_blobids, ctx->mask);
 	if (rc < 0) {
 		spdk_dma_free(ctx->mask);
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(seq, ctx, rc);
 		return;
-	}
-
-	for (i = 0; i < ctx->mask->length; i++) {
-		if (ctx->mask->mask[i / 8] & (1U << (i % 8))) {
-			spdk_bit_array_set(ctx->bs->used_blobids, i);
-		}
 	}
 
 	_spdk_bs_load_complete(seq, ctx, bserrno);
@@ -2700,7 +2713,6 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint64_t		lba, lba_count, mask_size;
-	uint32_t		i;
 	int			rc;
 
 	/* The type must be correct */
@@ -2711,17 +2723,11 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	/* The length of the mask must be exactly equal to the total number of clusters */
 	assert(ctx->mask->length == ctx->bs->total_clusters);
 
-	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);
+	rc = _spdk_bs_load_mask(&ctx->bs->used_clusters, ctx->mask);
 	if (rc < 0) {
 		spdk_dma_free(ctx->mask);
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(seq, ctx, rc);
 		return;
-	}
-
-	for (i = 0; i < ctx->mask->length; i++) {
-		if (ctx->mask->mask[i / 8] & (1U << (i % 8))) {
-			spdk_bit_array_set(ctx->bs->used_clusters, i);
-		}
 	}
 
 	ctx->bs->num_free_clusters = spdk_bit_array_count_clear(ctx->bs->used_clusters);
@@ -2747,7 +2753,6 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint64_t		lba, lba_count, mask_size;
-	uint32_t		i;
 	int			rc;
 
 	/* The type must be correct */
@@ -2758,18 +2763,13 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	/* The length of the mask must be exactly equal to the size (in pages) of the metadata region */
 	assert(ctx->mask->length == ctx->super->md_len);
 
-	rc = spdk_bit_array_resize(&ctx->bs->used_md_pages, ctx->mask->length);
+	rc = _spdk_bs_load_mask(&ctx->bs->used_md_pages, ctx->mask);
 	if (rc < 0) {
 		spdk_dma_free(ctx->mask);
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(seq, ctx, rc);
 		return;
 	}
 
-	for (i = 0; i < ctx->mask->length; i++) {
-		if (ctx->mask->mask[i / 8] & (1U << (i % 8))) {
-			spdk_bit_array_set(ctx->bs->used_md_pages, i);
-		}
-	}
 	spdk_dma_free(ctx->mask);
 
 	/* Read the used clusters mask */
