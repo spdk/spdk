@@ -566,7 +566,7 @@ _spdk_blob_serialize_extent(const struct spdk_blob *blob,
 	struct spdk_blob_md_descriptor_extent *desc;
 	size_t cur_sz;
 	uint64_t i, extent_idx;
-	uint32_t lba, lba_per_cluster, lba_count;
+	uint64_t lba, lba_per_cluster, lba_count;
 
 	/* The buffer must have room for at least one extent */
 	cur_sz = sizeof(struct spdk_blob_md_descriptor) + sizeof(desc->extents[0]);

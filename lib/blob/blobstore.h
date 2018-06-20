@@ -426,7 +426,7 @@ _spdk_bs_dev_lba_to_page(struct spdk_bs_dev *bs_dev, uint64_t lba)
 static inline uint64_t
 _spdk_bs_cluster_to_page(struct spdk_blob_store *bs, uint32_t cluster)
 {
-	return cluster * bs->pages_per_cluster;
+	return (uint64_t)cluster * bs->pages_per_cluster;
 }
 
 static inline uint32_t
@@ -440,7 +440,7 @@ _spdk_bs_page_to_cluster(struct spdk_blob_store *bs, uint64_t page)
 static inline uint64_t
 _spdk_bs_cluster_to_lba(struct spdk_blob_store *bs, uint32_t cluster)
 {
-	return cluster * (bs->cluster_sz / bs->dev->blocklen);
+	return (uint64_t)cluster * (bs->cluster_sz / bs->dev->blocklen);
 }
 
 static inline uint32_t
