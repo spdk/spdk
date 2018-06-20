@@ -117,7 +117,7 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 	return cb(arg);
 }
 
-static struct spdk_vhost_dev_backend g_vdev_backend;
+static struct spdk_vhost_tgt_backend g_vtgt_backend;
 
 static int
 test_setup(void)
@@ -126,32 +126,36 @@ test_setup(void)
 }
 
 static int
-alloc_vdev(struct spdk_vhost_dev **vdev_p, const char *name, const char *cpumask)
+alloc_vtgt(struct spdk_vhost_tgt **vtgt_p, const char *name, const char *cpumask)
 {
-	struct spdk_vhost_dev *vdev = NULL;
+	struct spdk_vhost_tgt *vtgt;
 	int rc;
 
-	/* spdk_vhost_dev must be allocated on a cache line boundary. */
-	rc = posix_memalign((void **)&vdev, 64, sizeof(*vdev));
-	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(vdev != NULL);
-	memset(vdev, 0, sizeof(*vdev));
-	rc = spdk_vhost_dev_register(vdev, name, cpumask, &g_vdev_backend);
+	vtgt = calloc(1, sizeof(*vtgt));
+	SPDK_CU_ASSERT_FATAL(vtgt != NULL);
+	rc = spdk_vhost_tgt_register(vtgt, name, cpumask, &g_vtgt_backend);
 	if (rc == 0) {
-		*vdev_p = vdev;
+		*vtgt_p = vtgt;
 	} else {
-		free(vdev);
-		*vdev_p = NULL;
+		free(vtgt);
+		*vtgt_p = NULL;
 	}
 
 	return rc;
 }
 
-static void
-start_vdev(struct spdk_vhost_dev *vdev)
+static struct spdk_vhost_dev *
+vtgt_create_dev(struct spdk_vhost_tgt *vtgt)
 {
-	vdev->vid = 0;
-	vdev->lcore = 0;
+	struct spdk_vhost_dev *vdev = NULL;
+	int rc;
+
+	assert(vtgt->vdev == NULL);
+	/* spdk_vhost_dev must be allocated on a cache line boundary. */
+	rc = posix_memalign((void **)&vdev, 64, sizeof(*vdev));
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(vdev != NULL);
+	memset(vdev, 0, sizeof(*vdev));
 	vdev->mem = calloc(1, sizeof(*vdev->mem) + 2 * sizeof(struct rte_vhost_mem_region));
 	SPDK_CU_ASSERT_FATAL(vdev->mem != NULL);
 	vdev->mem->nregions = 2;
@@ -161,36 +165,49 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	vdev->mem->regions[1].guest_phys_addr = 0x400000;
 	vdev->mem->regions[1].size = 0x400000; /* 4 MB */
 	vdev->mem->regions[1].host_user_addr = 0x2000000;
+
+	vdev->vtgt = vtgt;
+	vdev->vid = 0;
+	vdev->name = spdk_sprintf_alloc("%s_%d", vtgt->name, vdev->vid);
+	SPDK_CU_ASSERT_FATAL(vdev->name != NULL);
+	vdev->lcore = 0;
+	vtgt->vdev = vdev;
+
+	return vdev;
 }
 
 static void
-stop_vdev(struct spdk_vhost_dev *vdev)
+remove_dev(struct spdk_vhost_dev *vdev)
 {
+	vdev->vtgt->vdev = NULL;
 	free(vdev->mem);
-	vdev->mem = NULL;
-	vdev->vid = -1;
+	free(vdev->name);
+	free(vdev);
 }
 
 static void
-cleanup_vdev(struct spdk_vhost_dev *vdev)
+cleanup_vtgt(struct spdk_vhost_tgt *vtgt)
 {
-	stop_vdev(vdev);
-	spdk_vhost_dev_unregister(vdev);
-	free(vdev);
+	if (vtgt->vdev) {
+		remove_dev(vtgt->vdev);
+	}
+	spdk_vhost_tgt_unregister(vtgt);
+	free(vtgt);
 }
 
 static void
 desc_to_iov_test(void)
 {
+	struct spdk_vhost_tgt *vtgt;
 	struct spdk_vhost_dev *vdev;
 	struct iovec iov[SPDK_VHOST_IOVS_MAX];
 	uint16_t iov_index;
 	struct vring_desc desc;
 	int rc;
 
-	rc = alloc_vdev(&vdev, "vdev_name_0", "0x1");
-	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
-	start_vdev(vdev);
+	rc = alloc_vtgt(&vtgt, "vtgt_name_0", "0x1");
+	SPDK_CU_ASSERT_FATAL(rc == 0 && vtgt);
+	vdev = vtgt_create_dev(vtgt);
 
 	/* Test simple case where iov falls fully within a 2MB page. */
 	desc.addr = 0x110000;
@@ -255,7 +272,7 @@ desc_to_iov_test(void)
 	CU_ASSERT(iov[1].iov_len == 0x10000);
 	memset(iov, 0, sizeof(iov));
 
-	cleanup_vdev(vdev);
+	cleanup_vtgt(vtgt);
 
 	CU_ASSERT(true);
 }
@@ -263,44 +280,47 @@ desc_to_iov_test(void)
 static void
 create_controller_test(void)
 {
-	struct spdk_vhost_dev *vdev, *vdev2;
+	struct spdk_vhost_tgt *vtgt, *vtgt2;
 	int ret;
 	char long_name[PATH_MAX];
 
 	/* NOTE: spdk_app_get_core_mask stub always sets coremask 0x01 */
 
 	/* Create device with no name */
-	ret = alloc_vdev(&vdev, NULL, "0x1");
+	ret = alloc_vtgt(&vtgt, NULL, "0x1");
 	CU_ASSERT(ret != 0);
 
 	/* Create device with incorrect cpumask */
-	ret = alloc_vdev(&vdev, "vdev_name_0", "0x2");
+	ret = alloc_vtgt(&vtgt, "vtgt_name_0", "0x2");
 	CU_ASSERT(ret != 0);
 
 	/* Create device with too long name and path */
 	memset(long_name, 'x', sizeof(long_name));
 	long_name[PATH_MAX - 1] = 0;
 	snprintf(dev_dirname, sizeof(dev_dirname), "some_path/");
-	ret = alloc_vdev(&vdev, long_name, "0x1");
+	ret = alloc_vtgt(&vtgt, long_name, "0x1");
 	CU_ASSERT(ret != 0);
 	dev_dirname[0] = 0;
 
 	/* Create device when device name is already taken */
-	ret = alloc_vdev(&vdev, "vdev_name_0", "0x1");
-	SPDK_CU_ASSERT_FATAL(ret == 0 && vdev);
-	ret = alloc_vdev(&vdev2, "vdev_name_0", "0x1");
+	ret = alloc_vtgt(&vtgt, "vtgt_name_0", "0x1");
+	SPDK_CU_ASSERT_FATAL(ret == 0 && vtgt);
+	ret = alloc_vtgt(&vtgt2, "vtgt_name_0", "0x1");
 	CU_ASSERT(ret != 0);
-	cleanup_vdev(vdev);
+	cleanup_vtgt(vtgt);
 }
 
 static void
 dev_find_by_vid_test(void)
 {
+	struct spdk_vhost_tgt *vtgt;
 	struct spdk_vhost_dev *vdev, *tmp;
 	int rc;
 
-	rc = alloc_vdev(&vdev, "vdev_name_0", "0x1");
-	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
+	rc = alloc_vtgt(&vtgt, "vtgt_name_0", "0x1");
+	SPDK_CU_ASSERT_FATAL(rc == 0 && vtgt);
+	vdev = vtgt_create_dev(vtgt);
+	SPDK_CU_ASSERT_FATAL(vdev);
 
 	tmp = spdk_vhost_dev_find_by_vid(vdev->vid);
 	CU_ASSERT(tmp == vdev);
@@ -309,24 +329,24 @@ dev_find_by_vid_test(void)
 	tmp = spdk_vhost_dev_find_by_vid(vdev->vid + 0xFF);
 	CU_ASSERT(tmp == NULL);
 
-	cleanup_vdev(vdev);
+	cleanup_vtgt(vtgt);
 }
 
 static void
 remove_controller_test(void)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 	int ret;
 
-	ret = alloc_vdev(&vdev, "vdev_name_0", "0x1");
-	SPDK_CU_ASSERT_FATAL(ret == 0 && vdev);
+	ret = alloc_vtgt(&vtgt, "vtgt_name_0", "0x1");
+	SPDK_CU_ASSERT_FATAL(ret == 0 && vtgt);
 
 	/* Remove device when controller is in use */
-	start_vdev(vdev);
-	ret = spdk_vhost_dev_unregister(vdev);
+	vtgt_create_dev(vtgt);
+	ret = spdk_vhost_tgt_unregister(vtgt);
 	CU_ASSERT(ret != 0);
 
-	cleanup_vdev(vdev);
+	cleanup_vtgt(vtgt);
 }
 
 int
