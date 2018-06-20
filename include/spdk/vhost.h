@@ -93,52 +93,52 @@ void spdk_vhost_config_json(struct spdk_json_write_ctx *w, struct spdk_event *do
 void spdk_vhost_shutdown_cb(void);
 
 /**
- * SPDK vhost device (vdev).  An equivalent of Virtio device.
- * Both virtio-blk and virtio-scsi devices are represented by this
- * struct. For virtio-scsi a single vhost device (also called SCSI
+ * SPDK vhost target (vtgt).  An equivalent of Virtio device.
+ * Both vhost block and vhost SCSI targets are represented by this
+ * struct. For vhost SCSI a single vhost target (also called SCSI
  * controller) may contain multiple SCSI targets (devices), each of
  * which may contain multiple logical units (SCSI LUNs). For now
  * only one LUN per target is available.
  *
- * All vdev-changing functions operate directly on this object.
- * Note that \c spdk_vhost_dev cannot be acquired. This object is
+ * All vtgt-changing functions operate directly on this object.
+ * Note that \c spdk_vhost_tgt cannot be acquired. This object is
  * only accessible as a callback parameter via \c
- * spdk_vhost_call_external_event and it's derivatives. This ensures
- * that all access to the vdev is piped through a single,
+ * spdk_vhost_call_external_event and its derivatives. This ensures
+ * that all access to the vtgt is piped through a single,
  * thread-safe API.
  */
-struct spdk_vhost_dev;
+struct spdk_vhost_tgt;
 
 /**
  * Synchronized vhost event used for user callbacks.
  *
- * \param vdev vhost device.
+ * \param vtgt vhost target.
  * \param arg user-provided parameter.
  *
  * \return 0 on success, -1 on failure.
  */
-typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *vdev, void *arg);
+typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_tgt *vtgt, void *arg);
 
 /**
  * Get the name of the vhost device.  This is equal to the filename
  * of socket file. The name is constant throughout the lifetime of
- * a vdev.
+ * a vtgt.
  *
- * \param vdev vhost device.
+ * \param vtgt vhost device.
  *
- * \return name of the vdev.
+ * \return name of the vtgt.
  */
-const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev);
+const char *spdk_vhost_tgt_get_name(struct spdk_vhost_tgt *vtgt);
 
 /**
- * Get cpuset of the vhost device.  The cpuset is constant throughout the lifetime
- * of a vdev. It is a subset of SPDK app cpuset vhost was started with.
+ * Get cpuset of the vhost target.  The cpuset is constant throughout the lifetime
+ * of a vtgt. It is a subset of SPDK app cpuset vhost was started with.
  *
- * \param vdev vhost device.
+ * \param vtgt vhost target.
  *
- * \return cpuset of the vdev.
+ * \return cpuset of the vtgt.
  */
-const struct spdk_cpuset *spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev);
+const struct spdk_cpuset *spdk_vhost_tgt_get_cpumask(struct spdk_vhost_tgt *vtgt);
 
 /**
  * By default, events are generated when asked, but for high queue depth and
@@ -155,11 +155,11 @@ const struct spdk_cpuset *spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev
  *   delay = delay_base * (iops - iops_threshold) / iops_threshold;
  * }
  *
- * \param vdev vhost device.
+ * \param vtgt vhost target.
  * \param delay_base_us Base delay time in microseconds. If 0, coalescing is disabled.
  * \param iops_threshold IOPS threshold when coalescing is activated.
  */
-int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+int spdk_vhost_set_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t delay_base_us,
 			      uint32_t iops_threshold);
 
 /**
@@ -167,26 +167,26 @@ int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_u
  *
  * \see spdk_vhost_set_coalescing
  *
- * \param vdev vhost device.
+ * \param vtgt vhost target.
  * \param delay_base_us Optional pointer to store base delay time.
  * \param iops_threshold Optional pointer to store IOPS threshold.
  */
-void spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+void spdk_vhost_get_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t *delay_base_us,
 			       uint32_t *iops_threshold);
 
 /**
- * Construct an empty vhost SCSI device.  This will create a
+ * Construct an empty vhost SCSI target.  This will create a
  * Unix domain socket together with a vhost-user slave server waiting
- * for a connection on this socket. Creating the vdev does not
+ * for a connection on this socket. Creating the vtgt does not
  * start any I/O pollers and does not hog the CPU. I/O processing
  * starts after receiving proper message on the created socket.
  * See QEMU's vhost-user documentation for details.
  * All physical devices have to be separately attached to this
- * vdev via \c spdk_vhost_scsi_dev_add_tgt().
+ * target via \c spdk_vhost_scsi_tgt_add_tgt().
  *
  * This function is thread-safe.
  *
- * \param name name of the vhost device. The name will also be used
+ * \param name name of the vhost target. The name will also be used
  * for socket name, which is exactly \c socket_base_dir/name
  * \param cpumask string containing cpumask in hex. The leading *0x*
  * is allowed but not required. The mask itself can be constructed as:
@@ -194,85 +194,84 @@ void spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base
  *
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
+int spdk_vhost_scsi_tgt_construct(const char *name, const char *cpumask);
 
 /**
- * Construct and attach new SCSI target to the vhost SCSI device
- * on given (unoccupied) slot.  The device will be created with a single
+ * Construct and attach new SCSI target to the vhost SCSI target
+ * on given (unoccupied) slot.  The target will be created with a single
  * LUN0 associated with given SPDK bdev. Currently only one LUN per
  * device is supported.
  *
- * If vhost SCSI device has an active socket connection, it is
+ * If the vhost SCSI target has an active socket connection, it is
  * required that it has negotiated \c VIRTIO_SCSI_F_HOTPLUG feature
  * flag. Otherwise an -ENOTSUP error code is returned.
  *
- * \param vdev vhost SCSI device.
+ * \param vtgt vhost SCSI target.
  * \param scsi_tgt_num slot to attach to.
  * \param bdev_name name of the SPDK bdev to associate with SCSI LUN0.
  *
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
+int spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 				const char *bdev_name);
 
 /**
- * Get SCSI target from vhost SCSI device on given slot. Max
- * number of available slots is defined by.
- * \c SPDK_VHOST_SCSI_CTRLR_MAX_DEVS.
+ * Get SCSI target from vhost SCSI target on given slot. Max number of available
+ * slots is defined by \c SPDK_VHOST_SCSI_CTRLR_MAX_DEVS.
  *
- * \param vdev vhost SCSI device.
+ * \param vtgt vhost SCSI target.
  * \param num slot id.
  *
  * \return SCSI device on given slot or NULL.
  */
-struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num);
+struct spdk_scsi_dev *spdk_vhost_scsi_tgt_get_tgt(struct spdk_vhost_tgt *vtgt, uint8_t num);
 
 /**
- * Detach and destruct SCSI target from a vhost SCSI device.
+ * Detach and destruct SCSI target from a vhost SCSI target.
  *
- * If vhost SCSI device has an active socket connection, it is
+ * If vhost SCSI target has an active socket connection, it is
  * required that it has negotiated \c VIRTIO_SCSI_F_HOTPLUG feature
- * flag.Otherwise an -ENOTSUP error code is returned. If the flag has
- * been negotiated, the device will be marked to be deleted. Actual
- * deletion is deferred until after all pending I/O to this device
+ * flag. Otherwise an -ENOTSUP error code is returned. If the flag has
+ * been negotiated, the SCSI target will be marked to be deleted. Actual
+ * deletion is deferred until after all pending I/O to this vhost target
  * has finished.
  *
- * Once the target has been deleted (whether or not vhost SCSI
- * device is in use) given callback will be called.
+ * Once the target has been deleted (whether or not vhost SCSI target
+ * is in use) given callback will be called.
  *
- * \param vdev vhost SCSI device
+ * \param vtgt vhost SCSI target
  * \param scsi_tgt_num slot id to delete target from
  * \param cb_fn callback to be fired once target has been successfully
  * deleted. The first parameter of callback function is the vhost SCSI
- * device, the second is user provided argument *cb_arg*.
+ * target, the second is user provided argument *cb_arg*.
  * \param cb_arg parameter to be passed to *cb_fn*.
  *
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
+int spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 				   spdk_vhost_event_fn cb_fn, void *cb_arg);
 
 /**
- * Construct a vhost blk device.  This will create a Unix domain
- * socket together with a vhost-user slave server waiting for a
- * connection on this socket. Creating the vdev does not start
+ * Construct a vhost block target.  This will create a Unix domain
+ * socket together with a Vhost-user Slave server waiting for a
+ * connection on this socket. Creating the vtgt does not start
  * any I/O pollers and does not hog the CPU. I/O processing starts
  * after receiving proper message on the created socket.
- * See QEMU's vhost-user documentation for details. Vhost blk
- * device is tightly associated with given SPDK bdev. Given
- * bdev can not be changed, unless it has been hotremoved. This
- * would result in all I/O failing with virtio \c VIRTIO_BLK_S_IOERR
+ * See QEMU's vhost-user documentation for details. vhost block
+ * target is tightly associated with given SPDK bdev. The associated
+ * bdev can not be changed, unless it is hotremoved. This would
+ * result in all I/O failing with virtio \c VIRTIO_BLK_S_IOERR
  * error code.
  *
  * This function is thread-safe.
  *
- * \param name name of the vhost blk device. The name will also be
+ * \param name name of the vhost block target. The name will also be
  * used for socket name, which is exactly \c socket_base_dir/name
  * \param cpumask string containing cpumask in hex. The leading *0x*
  * is allowed but not required. The mask itself can be constructed as:
  * ((1 << cpu0) | (1 << cpu1) | ... | (1 << cpuN)).
- * \param dev_name bdev name to associate with this vhost device
- * \param readonly if set, all writes to the device will fail with
+ * \param dev_name bdev name to associate with this vhost target
+ * \param readonly if set, all writes to the target will fail with
  * \c VIRTIO_BLK_S_IOERR error code.
  *
  * \return 0 on success, negative errno on error.
@@ -281,50 +280,48 @@ int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *
 			     bool readonly);
 
 /**
- * Remove a vhost device. The device must not have any open connections on it's socket.
+ * Remove a vhost target. The device must not have any open connections on its socket.
  *
- * \param vdev vhost blk device.
+ * \param vtgt vhost target.
  *
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
+int spdk_vhost_tgt_remove(struct spdk_vhost_tgt *vtgt);
 
 /**
- * Get underlying SPDK bdev from vhost blk device. The bdev might be NULL, as it
+ * Get underlying SPDK bdev from vhost block target. The bdev might be NULL, as it
  * could have been hotremoved.
  *
- * \param ctrlr vhost blk device.
+ * \param vtgt vhost block target.
  *
- * \return SPDK bdev associated with given vdev.
+ * \return SPDK bdev associated with given vtgt.
  */
-struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
+struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_tgt *vtgt);
 
 /**
- * Call function on reactor of given vhost device. If device is not in use, the
- * event will be called right away on the caller's thread.
+ * Call function on reactor of given vhost target. If the target is not in use,
+ * the event will be called right away on the caller's thread.
  *
  * This function is thread safe.
  *
- * \param vdev_name name of the vhost device to run this event on.
+ * \param vtgt_name name of the vhost target to run this event on.
  * \param fn function to be called. The first parameter of callback function is
- * either actual spdk_vhost_dev pointer or NULL in case vdev with given name doesn't
+ * either actual spdk_vhost_tgt pointer or NULL in case vtgt with given name doesn't
  * exist. The second param is user provided argument *arg*.
  * \param arg parameter to be passed to *fn*.
  */
-void spdk_vhost_call_external_event(const char *vdev_name, spdk_vhost_event_fn fn, void *arg);
+void spdk_vhost_call_external_event(const char *vtgt_name, spdk_vhost_event_fn fn, void *arg);
 
 /**
- * Call function for each available vhost device on
- * it's reactor.  This will call given function in a chain,
- * meaning that each callback will be called after the
- * previous one has finished. After given function has
- * been called for all vdevs, it will be called once
- * again with first param - vhost device- set to NULL.
+ * Call function for each available vhost target on its reactor.  This will call
+ * given function in a chain, meaning that each callback will be called after the
+ * previous one has finished. After given function has been called for all targets,
+ * it will be called once again with first param - vhost target - set to NULL.
  *
  * This function is thread safe.
  *
- * \param fn function to be called for each vdev. The first param will be
- * either vdev pointer or NULL. The second param is user provided argument *arg*.
+ * \param fn function to be called for each vtgt. The first param will be
+ * either vtgt pointer or NULL. The second param is user provided argument *arg*.
  * \param arg parameter to be passed to *fn*.
  */
 void spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg);
