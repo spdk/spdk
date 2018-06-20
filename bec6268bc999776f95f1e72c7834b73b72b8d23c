@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8841c400_1c7fbc93",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1540,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T00:17:36Z",
+      "side": 1,
+      "message": "should we write HostNQN here?  (I know we\u0027re doing away with this eventually)\n\nNote: there\u0027s no \"set_bdev_nvme_options\" JSON RPC yet, so this is the only place currently to dump global options",
+      "revId": "bec6268bc999776f95f1e72c7834b73b72b8d23c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
