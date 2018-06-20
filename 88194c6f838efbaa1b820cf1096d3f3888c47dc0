@@ -50,6 +50,24 @@
       "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21076146_d5c73705",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-20T07:10:38Z",
+      "side": 1,
+      "message": "I\u0027d additionally suggest changing this to\nbdevs\u003d...\nbdevs+\u003d...\n\nUsing empty variable in that way on line 33 was pretty confusing to me to be honest",
+      "parentUuid": "a3cbc1c3_994b1a55",
+      "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
