@@ -188,6 +188,7 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 {
 	struct rte_mempool *mp;
 	size_t tmp;
+	char pool_name[128];
 
 	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
 		socket_id = SOCKET_ID_ANY;
@@ -206,6 +207,13 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 	mp = rte_mempool_create(name, count, ele_size, cache_size,
 				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
 				socket_id, MEMPOOL_F_NO_PHYS_CONTIG);
+
+	if (!mp && spdk_process_is_primary() == false) {
+		snprintf(pool_name, sizeof(pool_name), "%s_%d", name, (int)getpid());
+		mp = rte_mempool_create(pool_name, count, ele_size, cache_size,
+					0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init,
+					obj_init_arg, socket_id, MEMPOOL_F_NO_PHYS_CONTIG);
+	}
 
 	return (struct spdk_mempool *)mp;
 }
