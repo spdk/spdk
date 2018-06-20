@@ -87,6 +87,24 @@
     },
     {
       "key": {
+        "uuid": "7fdf1abb_e64b6e5c",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-20T07:32:26Z",
+      "side": 1,
+      "message": "+1 for OS check",
+      "parentUuid": "9f87ce61_bb7789c4",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ace66a18_f6297217",
         "filename": "test/json_config/common.sh",
         "patchSetId": 78
@@ -104,6 +122,24 @@
     },
     {
       "key": {
+        "uuid": "03a372c6_4bc28190",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-20T07:32:26Z",
+      "side": 1,
+      "message": "I think that SPDK_TEST_PMDK check is not needed as this is only a test run conditional variable.\nWhat I think we should really check are the parameters which we use in ./configure to build SPDK with dependencies, so for example in this case:\nif [ -f /usr/include/libpmemblk.h ]",
+      "parentUuid": "ace66a18_f6297217",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33668a0f_1f5dcd67",
         "filename": "test/json_config/common.sh",
         "patchSetId": 78
@@ -115,6 +151,24 @@
       "writtenOn": "2018-06-18T22:27:46Z",
       "side": 1,
       "message": "Same here - Ceph is optional, so we can\u0027t just assume construct_rbd_bdev is available.",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8c7837f_f3e71137",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-20T07:32:26Z",
+      "side": 1,
+      "message": "Yes, same here, but check either CONFIG file for RBD option of check if files in /usr/include exist",
+      "parentUuid": "33668a0f_1f5dcd67",
       "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
