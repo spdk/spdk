@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14f29fb5_20fb0159",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1468,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T20:36:00Z",
+      "side": 1,
+      "message": "i\u0027m curious - why is this one needed?  this can only get called when we persist a blob to disk, but if we get to where we will persist a blob to disk, shouldn\u0027t we have already seen size\u003d\u003d0 and updated it when we loaded the super block?",
+      "revId": "2949b105375138c7da53d17e16f81d194aff62c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "542dc705_3dd75fb2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 3108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T20:36:00Z",
+      "side": 1,
+      "message": "This removes setting super-\u003eclean \u003d 0 and bs-\u003eclean \u003d 0.  If you feel that\u0027s no longer needed when used_blobid_mask_len \u003d\u003d 0, it should be fixed in a separate patch.",
+      "revId": "2949b105375138c7da53d17e16f81d194aff62c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
