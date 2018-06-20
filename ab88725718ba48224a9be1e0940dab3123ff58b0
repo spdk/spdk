@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dda4dff4_4fd13d15",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T19:39:11Z",
+      "side": 1,
+      "message": "Should these also be uint64_t?\n\nlba_per_cluster should never overflow.  But it seems like lba_count could.  In fact I\u0027m trying to figure out why it didn\u0027t on your system with the 4GB SSD.\n\nOh wait - this is the problem on the submitter\u0027s issue I\u0027ll bet!  lba_count overflows from additions in line 687, so instead of length X we get length (X - clusters in 2GB) at line 708.\n\nIf we get the submitters blobcli -D data, it should confirm it.  Is your SSD formatted to 4KB sectors by chance?",
+      "revId": "ab88725718ba48224a9be1e0940dab3123ff58b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
