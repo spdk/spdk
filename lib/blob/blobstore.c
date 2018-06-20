@@ -2718,14 +2718,14 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 		return;
 	}
 
-	ctx->bs->num_free_clusters = ctx->bs->total_clusters;
 	for (i = 0; i < ctx->mask->length; i++) {
 		if (ctx->mask->mask[i / 8] & (1U << (i % 8))) {
 			spdk_bit_array_set(ctx->bs->used_clusters, i);
-			assert(ctx->bs->num_free_clusters > 0);
-			ctx->bs->num_free_clusters--;
 		}
 	}
+
+	ctx->bs->num_free_clusters = spdk_bit_array_count_clear(ctx->bs->used_clusters);
+	assert(ctx->bs->num_free_clusters <= ctx->bs->total_clusters);
 
 	spdk_dma_free(ctx->mask);
 
