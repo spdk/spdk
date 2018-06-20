@@ -46,6 +46,30 @@
       "revId": "d601e73037761a7b6f1e366e3bc50a674a6ca108",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83a872d7_7f749613",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T23:03:15Z",
+      "side": 1,
+      "message": "Would it be more intuitive for this to return just the name, instead of the name as a single-element list?\n\nI guess all of our bdev modules do this?  At least malloc and null - I haven\u0027t checked the others.",
+      "parentUuid": "1fd27b6c_2c826a2d",
+      "range": {
+        "startLine": 28,
+        "startChar": 8,
+        "endLine": 28,
+        "endChar": 12
+      },
+      "revId": "d601e73037761a7b6f1e366e3bc50a674a6ca108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
