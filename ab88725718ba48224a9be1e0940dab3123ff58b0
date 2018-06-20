@@ -16,6 +16,24 @@
       "revId": "ab88725718ba48224a9be1e0940dab3123ff58b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b51ad98_661e180e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-20T19:42:05Z",
+      "side": 1,
+      "message": "Yes, my SSD has 4K sectors.",
+      "parentUuid": "dda4dff4_4fd13d15",
+      "revId": "ab88725718ba48224a9be1e0940dab3123ff58b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
