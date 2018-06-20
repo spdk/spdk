@@ -31,8 +31,9 @@ nvmfpid=$!
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
-$rpc_py set_nvmf_target_options -u 8192 -p 4
+$rpc_py set_nvmf_target_options
 $rpc_py start_subsystem_init
+$rpc_py nvmf_transport_create -t RDMA -u 8192 -p 4
 timing_exit start_nvmf_tgt
 
 bdevs="$bdevs $($rpc_py construct_malloc_bdev 64 512)"
