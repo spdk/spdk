@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c216778c_d94e7d24",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1691,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-20T20:49:28Z",
+      "side": 1,
+      "message": "The documentation (and purpose) of this function is to allow bdev modules to allocate the data buffers. But this function never calls into the bdev modules to perform an allocation.",
+      "revId": "537c5fa00c8563502d361004547277fb8e2b7c68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
