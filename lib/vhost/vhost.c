@@ -87,9 +87,6 @@ const struct vhost_device_ops g_spdk_vhost_ops = {
 	.set_config = set_config,
 	.new_connection = new_connection,
 	.destroy_connection = destroy_connection,
-	.vhost_nvme_admin_passthrough = spdk_vhost_nvme_admin_passthrough,
-	.vhost_nvme_set_cq_call = spdk_vhost_nvme_set_cq_call,
-	.vhost_nvme_get_cap = spdk_vhost_nvme_get_cap,
 };
 
 static TAILQ_HEAD(, spdk_vhost_tgt) g_spdk_vhost_tgts = TAILQ_HEAD_INITIALIZER(
@@ -1430,12 +1427,6 @@ spdk_vhost_init(void)
 	ret = spdk_vhost_blk_controller_construct();
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
-		return -1;
-	}
-
-	ret = spdk_vhost_nvme_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost NVMe controllers\n");
 		return -1;
 	}
 
