@@ -299,12 +299,6 @@ struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
 
-	/** The bdev I/O channel that this was handled on. */
-	struct spdk_bdev_channel *ch;
-
-	/** The bdev I/O channel that this was submitted on. */
-	struct spdk_bdev_channel *io_submit_ch;
-
 	/** Error information from a device */
 	union {
 		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
@@ -388,6 +382,12 @@ struct spdk_bdev_io {
 	 *  must not read or write to these fields.
 	 */
 	struct __bdev_io_internal_fields {
+		/** The bdev I/O channel that this was handled on. */
+		struct spdk_bdev_channel *ch;
+
+		/** The bdev I/O channel that this was submitted on. */
+		struct spdk_bdev_channel *io_submit_ch;
+
 		/** User function that will be called when this completes */
 		spdk_bdev_io_completion_cb cb;
 
