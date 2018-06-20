@@ -96,7 +96,7 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 			memset(entry, 0, sizeof(*entry));
 			entry->portid = numrec;
 			entry->cntlid = 0xffff;
-			entry->asqsz = tgt->opts.max_queue_depth;
+			entry->asqsz = listener->transport->tprt_opts.max_aq_depth;
 			entry->subtype = subsystem->subtype;
 			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
