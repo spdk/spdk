@@ -271,7 +271,7 @@ bdev_io_tailq_cnt(bdev_io_tailq_t *tailq)
 	struct spdk_bdev_io *io;
 	uint32_t cnt = 0;
 
-	TAILQ_FOREACH(io, tailq, link) {
+	TAILQ_FOREACH(io, tailq, internal.link) {
 		cnt++;
 	}
 
