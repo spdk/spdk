@@ -626,9 +626,27 @@ struct spdk_thread *spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io);
  */
 int spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size);
 
+/**
+ * Translates NVMe status codes to SCSI status information.
+ *
+ * The codes are stored in the user supplied integers.
+ *
+ * \param bdev_io I/O containing status codes to translate.
+ * \param sc SCSI Status Code will be stored here.
+ * \param sk SCSI Sense Key will be stored here.
+ * \param asc SCSI Additional Sense Code will be stored here.
+ * \param ascq SCSI Additional Sense Code Qualifier will be stored here.
+ */
 void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			      int *sc, int *sk, int *asc, int *ascq);
 
+/**
+ * Add the given module to the list of registered modules.
+ * This function should be invoked by referencing the macro
+ * SPDK_BDEV_MODULE_REGISTER in the module c file.
+ *
+ * \param bdev_module Module to be added.
+ */
 void spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module);
 
 /**
@@ -678,9 +696,47 @@ struct spdk_bdev_part_channel {
 
 typedef TAILQ_HEAD(bdev_part_tailq, spdk_bdev_part)	SPDK_BDEV_PART_TAILQ;
 
+/**
+ * Free the base corresponding to one or more spdk_bdev_part.
+ *
+ * \param base The base to free.
+ */
 void spdk_bdev_part_base_free(struct spdk_bdev_part_base *base);
+
+/**
+ * Free an spdk_bdev_part context.
+ *
+ * \param part The part to free.
+ *
+ * \return 1 always. To indicate that the operation is asynchronous.
+ */
 int spdk_bdev_part_free(struct spdk_bdev_part *part);
+
+/**
+ * Calls spdk_bdev_unregister on the bdev for each part associated with base_bdev.
+ *
+ * \param base_bdev The spdk_bdev upon which an spdk_bdev-part_base is built
+ * \param tailq The list of spdk_bdev_part bdevs associated with this base bdev.
+ */
 void spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tailq *tailq);
+
+/**
+ * Construct a new spdk_bdev_part_base on top of the provided bdev.
+ *
+ * \param base User allocated spdk_bdev_part_base to be filled by this function.
+ * \param bdev The spdk_bdev upon which this base will be built.
+ * \param remove_cb Function to be called upon hotremove of the bdev.
+ * \param module The module to which this bdev base belongs.
+ * \param fn_table Function table for communicating with the bdev backend.
+ * \param tailq The head of the list of all spdk_bdev_part structures registered to this base's module.
+ * \param free_fn User provided function to free base related context upon bdev removal or shutdown.
+ * \param channel_size Channel size in bytes.
+ * \param ch_create_cb Called after a new channel is allocated.
+ * \param ch_destroy_cb Called upon channel deletion.
+ *
+ * \return 0 on success
+ * \return -1 if the underlying bdev cannot be opened.
+ */
 int spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev *bdev,
 				  spdk_bdev_remove_cb_t remove_cb,
 				  struct spdk_bdev_module *module,
@@ -690,9 +746,34 @@ int spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_
 				  uint32_t channel_size,
 				  spdk_io_channel_create_cb ch_create_cb,
 				  spdk_io_channel_destroy_cb ch_destroy_cb);
+
+/**
+ * Create a logical spdk_bdev_part on top of a base.
+ *
+ * \param part The part object allocated by the user.
+ * \param base The base from which to create the part.
+ * \param name The name of the new spdk_bdev_part.
+ * \param offset_blocks The offset into the base bdev at which this part begins.
+ * \param num_blocks The number of blocks that this part will span.
+ * \param product_name Unique name for this type of block device.
+ *
+ * \return 0 on success.
+ * \return -1 if the bases underlying bdev cannot be claimed by the current module.
+ */
 int spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base *base,
 			     char *name, uint64_t offset_blocks, uint64_t num_blocks,
 			     char *product_name);
+
+/**
+ * Forwards I/O from an spdk_bdev_part to the underlying base bdev.
+ *
+ * This function will apply the offset_blocks the user provided to
+ * spdk_bdev_part_construct to the I/O. The user should not manually
+ * apply this offset before submitting any I/O through this function.
+ *
+ * \param ch The I/O channel associated with the spdk_bdev_part.
+ * \param bdev_io The I/O to be submitted to the underlying bdev.
+ */
 void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io);
 
 
