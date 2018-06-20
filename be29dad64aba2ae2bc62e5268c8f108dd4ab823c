@@ -22,6 +22,30 @@
       "revId": "be29dad64aba2ae2bc62e5268c8f108dd4ab823c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c68be62_f2dca209",
+        "filename": "test/nvmf/jsonnvmf/json_config.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-20T13:36:04Z",
+      "side": 1,
+      "message": "I could add this but I think that we should also test loading configuration to the fresh spdk_tgt (when app is waiting to initialize subsystems)",
+      "parentUuid": "a1b0e7d3_a3b61488",
+      "range": {
+        "startLine": 11,
+        "startChar": 1,
+        "endLine": 34,
+        "endChar": 3
+      },
+      "revId": "be29dad64aba2ae2bc62e5268c8f108dd4ab823c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
