@@ -1,0 +1,141 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c1d68fe_01920198",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T13:51:40Z",
+      "side": 1,
+      "message": "Double new line",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fda7acb2_cc0afda0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1167,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T13:51:40Z",
+      "side": 1,
+      "message": "Double new line",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb8010a0_6b17a436",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T13:51:40Z",
+      "side": 1,
+      "message": "Shouldn\u0027t there be pthread_mutex_destroy(lvol-\u003emutex) somewhere in spdk_lvol_destroy() path?",
+      "range": {
+        "startLine": 1107,
+        "startChar": 1,
+        "endLine": 1107,
+        "endChar": 45
+      },
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38240096_7e4b25f0",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T13:51:40Z",
+      "side": 1,
+      "message": "unnecessary whitespace change",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a26eeba4_25f33109",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T13:51:40Z",
+      "side": 1,
+      "message": "Contrary to another comment (see lvol_ut.c), this return value changes path of vbdev_lvol_destroy() function.\n\nThis could be tested in UT. Possibly by extending spdk_lvol_create_clone() stub ?",
+      "range": {
+        "startLine": 445,
+        "startChar": 1,
+        "endLine": 445,
+        "endChar": 13
+      },
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8c94a63_5c594885",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T13:51:40Z",
+      "side": 1,
+      "message": "The UT in this file only check the explicit path of lvol destruction using vbdev_lvol_destroy(), right ?\n\nWhat about when doing unregister (bdev-\u003edestruct()) ? The vbdev_lvol_unregister() path ?",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5322414f_c65dff6a",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T13:51:40Z",
+      "side": 1,
+      "message": "I see Paul\u0027s point, that this expansion of UT does not add much.\nOn the other hand since spdk_lvol_deletable() is basically just exposing if spdk_blob_get_clones() returns non-zero. It doesn\u0027t have a lot of logic behind it, nor is used within lvol.c.\n\nAt this time spdk_bs_create_clone() might be expanded, so this stub would return proper value. Not sure if this changes the usefulness of this UT anyway.\n\nI\u0027m fine with this staying as is.",
+      "range": {
+        "startLine": 232,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 10
+      },
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
