@@ -299,28 +299,6 @@ struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
 
-	/** Error information from a device */
-	union {
-		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
-		struct {
-			/** NVMe status code type */
-			uint8_t sct;
-			/** NVMe status code */
-			uint8_t sc;
-		} nvme;
-		/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
-		struct {
-			/** SCSI status code */
-			uint8_t sc;
-			/** SCSI sense key */
-			uint8_t sk;
-			/** SCSI additional sense code */
-			uint8_t asc;
-			/** SCSI additional sense code qualifier */
-			uint8_t ascq;
-		} scsi;
-	} error;
-
 	/** Enumerated value representing the I/O type. */
 	uint8_t type;
 
@@ -379,6 +357,28 @@ struct spdk_bdev_io {
 	 *  must not read or write to these fields.
 	 */
 	struct __bdev_io_internal_fields {
+		/** Error information from a device */
+		union {
+			/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
+			struct {
+				/** NVMe status code type */
+				uint8_t sct;
+				/** NVMe status code */
+				uint8_t sc;
+			} nvme;
+			/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
+			struct {
+				/** SCSI status code */
+				uint8_t sc;
+				/** SCSI sense key */
+				uint8_t sk;
+				/** SCSI additional sense code */
+				uint8_t asc;
+				/** SCSI additional sense code qualifier */
+				uint8_t ascq;
+			} scsi;
+		} error;
+
 		/** The bdev I/O channel that this was handled on. */
 		struct spdk_bdev_channel *ch;
 
