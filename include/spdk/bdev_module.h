@@ -429,17 +429,103 @@ struct spdk_bdev_io {
 	/* No members may be added after driver_ctx! */
 };
 
+/**
+ * Register a new bdev.
+ *
+ * \param bdev Block device to register.
+ *
+ * \return 0 on success.
+ * \return -EINVAL if the bdev name is NULL.
+ * \return -EEXIST if a bdev or bdev alias with the same name already exists.
+ */
 int spdk_bdev_register(struct spdk_bdev *bdev);
+
+/**
+ * Unregister a bdev
+ *
+ * \param bdev Block device to unregister.
+ * \param cb_fn Callback function to be called when the unregister is complete.
+ * \param cb_arg Argument to be supplied to cb_fn
+ */
 void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
+
+/**
+ * Invokes the unregister callback of a bdev backing a virtual bdev.
+ * To be called when a vbdev's destruct function is executed asynchronously.
+ * This is done when events need to be completed before the underlying bdev
+ * is ready to be unregistered, such as unregistering the vbdev as an io_device.
+ * A bdev invoking this function should return 1 from it's destruct function to
+ * indicate the asynchronous nature of the destruct path. All other's should return
+ * 0 upon completion.
+ *
+ * \param bdev Block device that was destroyed.
+ * \param bdeverrno Error code returned from bdev's destruct callback.
+ */
 void spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno);
+
+/**
+ * Register a virtual bdev.
+ *
+ * \param vbdev Virtual bdev to register.
+ * \param base_bdevs Array of bdevs upon which this vbdev is based.
+ * \param base_bdev_count Number of bdevs in base_bdevs.
+ *
+ *
+ * \return 0 on success
+ * \return -EINVAL if the bdev name is NULL.
+ * \return -EEXIST if the bdev already exists.
+ * \return -ENOMEM if allocation of the base_bdevs array or the base bdevs vbdevs array fails.
+ */
 int spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 			int base_bdev_count);
 
+/**
+ * Indicate to the bdev layer that the module is done examining a bdev.
+ * To be called synchronously or asynchronously in response to the
+ * module's examine function being called.
+ *
+ * \param module Pointer to the module completing the examination.
+ */
 void spdk_bdev_module_examine_done(struct spdk_bdev_module *module);
+
+/**
+ * Indicate to the bdev layer that the module is done initializing.
+ * To be called synchronously or asynchronously in response to the
+ * module_init function being called.
+ *
+ * \param module Pointer to the module completing the initialization.
+ */
 void spdk_bdev_module_init_done(struct spdk_bdev_module *module);
+
+/**
+ * Indicate to the bdev layer that the module has completed
+ * any cleanup activities before the application closes.
+ * To be called either synchronously or asynchronously
+ * in response to the module_fini function being called.
+ *
+ */
 void spdk_bdev_module_finish_done(void);
+
+/**
+ * Called by a bdev module to lay exclusive write claim to a bdev.
+ * Also upgrades that bdev's descriptor to have write access.
+ *
+ * \param bdev Block device to be claimed.
+ * \param desc Descriptor for the above block device.
+ * \param module Bdev module attempting to claim bdev.
+ *
+ *
+ * \return 0 on success
+ * \return -EPERM if the bdev is already claimed by another module.
+ */
 int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				struct spdk_bdev_module *module);
+
+/**
+ * Called to release a write claim on a block device.
+ *
+ * \param bdev Block device to be released.
+ */
 void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
 
 /**
@@ -449,7 +535,6 @@ void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
  * \param bdev Block device to query.
  * \param alias Alias to be added to list.
  *
- * Return codes
  * \return 0 on success
  * \return -EEXIST if alias already exists as name or alias on any bdev
  * \return -ENOMEM if memory cannot be allocated to store alias
@@ -491,6 +576,12 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
  */
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
 
+/**
+ * Complete a bdev_io
+ *
+ * \param bdev_io I/O to complete.
+ * \param status The I/O completion status.
+ */
 void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
 
