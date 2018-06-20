@@ -38,8 +38,8 @@ void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io, int *sc, int *sk,
 			 int *asc, int *ascq)
 {
-	int nvme_sct = bdev_io->error.nvme.sct;
-	int nvme_sc = bdev_io->error.nvme.sc;
+	int nvme_sct = bdev_io->internal.error.nvme.sct;
+	int nvme_sc = bdev_io->internal.error.nvme.sc;
 
 	switch (nvme_sct) {
 	case SPDK_NVME_SCT_GENERIC:
