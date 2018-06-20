@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a73ffe63_6a5386c6",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T07:33:50Z",
+      "side": 1,
+      "message": "Done\n\n\"List of created block devices\" fixed in separate patch here - https://review.gerrithub.io/#/c/spdk/spdk/+/416081/",
+      "parentUuid": "daad0a8a_3b24661a",
+      "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "937762d9_5b78e4da",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-19T20:33:01Z",
       "side": 1,
       "message": "base_bdev?",
+      "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "199bdcb9_d1644a65",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T07:33:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "937762d9_5b78e4da",
       "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -65,6 +101,42 @@
       "side": 1,
       "message": "I\u0027d additionally suggest changing this to\nbdevs\u003d...\nbdevs+\u003d...\n\nUsing empty variable in that way on line 33 was pretty confusing to me to be honest",
       "parentUuid": "a3cbc1c3_994b1a55",
+      "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d0e6999_14ffe456",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T07:33:50Z",
+      "side": 1,
+      "message": "I agree, changed to malloc_bdevs. Removed the empty variable on this line (33), since it caused confusion.",
+      "parentUuid": "a3cbc1c3_994b1a55",
+      "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0cff000_d3c372ce",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-20T07:33:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "21076146_d5c73705",
       "revId": "88194c6f838efbaa1b820cf1096d3f3888c47dc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
