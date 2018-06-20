@@ -16,6 +16,24 @@
       "revId": "c84f312643463026bb04d8796af055e01057235c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2bc3821_1dec4e22",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-20T00:47:32Z",
+      "side": 1,
+      "message": "I agree.  This change kind of wrecks havoc with change \n\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/414861/",
+      "parentUuid": "95116dcd_d30367d5",
+      "revId": "c84f312643463026bb04d8796af055e01057235c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
