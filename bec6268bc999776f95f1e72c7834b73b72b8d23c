@@ -16,6 +16,24 @@
       "revId": "bec6268bc999776f95f1e72c7834b73b72b8d23c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdd67cca_d8deca36",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1540,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-20T18:29:27Z",
+      "side": 1,
+      "message": "I added this in. It\u0027s a little complicated because in the configuration file you can only set a HostNQN globally. But in the RPCs I allowed you to set your HostNQN for each device individually. But this should correctly dump out the HostNQN into the configuration file if the user specified it via the configuration file to begin with at least.",
+      "parentUuid": "8841c400_1c7fbc93",
+      "revId": "bec6268bc999776f95f1e72c7834b73b72b8d23c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
