@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78f1dd35_d40e2be6",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T22:43:15Z",
+      "side": 1,
+      "message": "subsystem \u003d\u003e subsystems",
+      "revId": "e1f70c325b2bcdbdcc880159670b1732d214debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd1fd660_95f9c309",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T22:43:15Z",
+      "side": 1,
+      "message": "Maybe we remove this?  Pending discussion on previous patch.",
+      "revId": "e1f70c325b2bcdbdcc880159670b1732d214debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7b8143d_1b32fb35",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-20T22:43:15Z",
+      "side": 1,
+      "message": "maybe json_load and json_dump functions in a separate patch?",
+      "revId": "e1f70c325b2bcdbdcc880159670b1732d214debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
