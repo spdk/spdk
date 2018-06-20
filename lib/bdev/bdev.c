@@ -1008,7 +1008,7 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 		}
 
 		bdev_io = TAILQ_FIRST(&qos->queued);
-		TAILQ_REMOVE(&qos->queued, bdev_io, link);
+		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
 		qos->io_submitted_this_timeslice++;
 		qos->byte_submitted_this_timeslice += _spdk_bdev_get_io_size_in_byte(bdev_io);
 		ch->io_outstanding++;
@@ -1036,14 +1036,14 @@ _spdk_bdev_io_submit(void *ctx)
 		} else {
 			bdev_ch->io_outstanding--;
 			shared_resource->io_outstanding--;
-			TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, link);
+			TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, internal.link);
 		}
 	} else if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
 		bdev_ch->io_outstanding--;
 		shared_resource->io_outstanding--;
-		TAILQ_INSERT_TAIL(&bdev->qos->queued, bdev_io, link);
+		TAILQ_INSERT_TAIL(&bdev->qos->queued, bdev_io, internal.link);
 		_spdk_bdev_qos_io_submit(bdev_ch);
 	} else {
 		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
@@ -1349,9 +1349,9 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_io *bdev_io, *tmp;
 
-	TAILQ_FOREACH_SAFE(bdev_io, queue, link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, queue, internal.link, tmp) {
 		if (bdev_io->internal.ch == ch) {
-			TAILQ_REMOVE(queue, bdev_io, link);
+			TAILQ_REMOVE(queue, bdev_io, internal.link);
 			/*
 			 * spdk_bdev_io_complete() assumes that the completed I/O had
 			 *  been submitted to the bdev module.  Since in this case it
@@ -2013,7 +2013,7 @@ _spdk_bdev_reset_dev(struct spdk_io_channel_iter *i, int status)
 	struct spdk_bdev_io *bdev_io;
 
 	bdev_io = TAILQ_FIRST(&ch->queued_resets);
-	TAILQ_REMOVE(&ch->queued_resets, bdev_io, link);
+	TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
 	spdk_bdev_io_submit_reset(bdev_io);
 }
 
@@ -2042,7 +2042,7 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 		 * just take it anyway. */
 		pthread_mutex_lock(&channel->bdev->mutex);
 		if (channel->bdev->qos->ch == channel) {
-			TAILQ_SWAP(&channel->bdev->qos->queued, &tmp_queued, spdk_bdev_io, link);
+			TAILQ_SWAP(&channel->bdev->qos->queued, &tmp_queued, spdk_bdev_io, internal.link);
 		}
 		pthread_mutex_unlock(&channel->bdev->mutex);
 	}
@@ -2106,7 +2106,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	pthread_mutex_lock(&bdev->mutex);
-	TAILQ_INSERT_TAIL(&channel->queued_resets, bdev_io, link);
+	TAILQ_INSERT_TAIL(&channel->queued_resets, bdev_io, internal.link);
 	pthread_mutex_unlock(&bdev->mutex);
 
 	_spdk_bdev_channel_start_reset(channel);
@@ -2324,7 +2324,7 @@ _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 
 	while (!TAILQ_EMPTY(&shared_resource->nomem_io)) {
 		bdev_io = TAILQ_FIRST(&shared_resource->nomem_io);
-		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, link);
+		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, internal.link);
 		bdev_io->internal.ch->io_outstanding++;
 		shared_resource->io_outstanding++;
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
@@ -2464,7 +2464,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		shared_resource->io_outstanding--;
 
 		if (spdk_unlikely(status == SPDK_BDEV_IO_STATUS_NOMEM)) {
-			TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, link);
+			TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, internal.link);
 			/*
 			 * Wait for some of the outstanding I/O to complete before we
 			 *  retry any of the nomem_io.  Normally we will wait for
