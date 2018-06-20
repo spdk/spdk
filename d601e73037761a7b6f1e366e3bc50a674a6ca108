@@ -22,6 +22,30 @@
       "revId": "d601e73037761a7b6f1e366e3bc50a674a6ca108",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fd27b6c_2c826a2d",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-20T21:37:43Z",
+      "side": 1,
+      "message": "There is only one bdev created, but the return value of this function is still a list, right? (The JSON-RPC method returns an array for consistency with the other construct_*_bdev methods.)\n\nscripts/rpc.py uses print_array() on the result of this function, which prints it out in a space-separated list, so it won\u0027t be obvious from the command line, but it is still a list at the Python API level.",
+      "parentUuid": "b4694e59_dd522166",
+      "range": {
+        "startLine": 28,
+        "startChar": 8,
+        "endLine": 28,
+        "endChar": 12
+      },
+      "revId": "d601e73037761a7b6f1e366e3bc50a674a6ca108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
