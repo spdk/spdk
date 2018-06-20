@@ -1139,20 +1139,10 @@ if __name__ == "__main__":
     @call_cmd
     def set_nvmf_target_options(args):
         rpc.nvmf.set_nvmf_target_options(args.client,
-                                         max_queue_depth=args.max_queue_depth,
-                                         max_qpairs_per_ctrlr=args.max_qpairs_per_ctrlr,
-                                         in_capsule_data_size=args.in_capsule_data_size,
-                                         max_io_size=args.max_io_size,
-                                         max_subsystems=args.max_subsystems,
-                                         io_unit_size=args.io_unit_size)
+                                         max_subsystems=args.max_subsystems)
 
     p = subparsers.add_parser('set_nvmf_target_options', help='Set NVMf target options')
-    p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int)
-    p.add_argument('-p', '--max-qpairs-per-ctrlr', help='Max number of SQ and CQ per controller', type=int)
-    p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int)
-    p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
     p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int)
-    p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
     p.set_defaults(func=set_nvmf_target_options)
 
     @call_cmd
@@ -1163,6 +1153,27 @@ if __name__ == "__main__":
     p = subparsers.add_parser('set_nvmf_target_config', help='Set NVMf target config')
     p.add_argument('-r', '--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
     p.set_defaults(func=set_nvmf_target_config)
+
+    @call_cmd
+    def nvmf_transport_create(args):
+        rpc.nvmf.nvmf_transport_create(args.client,
+                                       trtype=args.trtype,
+                                       max_queue_depth=args.max_queue_depth,
+                                       max_qpairs_per_ctrlr=args.max_qpairs_per_ctrlr,
+                                       in_capsule_data_size=args.in_capsule_data_size,
+                                       max_io_size=args.max_io_size,
+                                       io_unit_size=args.io_unit_size,
+                                       max_aq_depth=args.max_aq_depth)
+
+    p = subparsers.add_parser('nvmf_transport_create', help='Create NVMf transport')
+    p.add_argument('-t', '--trtype', help='Transport type (ex. RDMA)', type=str, required=True)
+    p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int)
+    p.add_argument('-p', '--max-qpairs-per-ctrlr', help='Max number of SQ and CQ per controller', type=int)
+    p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int)
+    p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
+    p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
+    p.add_argument('-a', '--max_aq_depth', help='Max number of admin cmds per AQ', type=int)
+    p.set_defaults(func=nvmf_transport_create)
 
     @call_cmd
     def get_nvmf_subsystems(args):

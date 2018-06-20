@@ -283,10 +283,9 @@ test_connect(void)
 	admin_qpair.group = &group;
 
 	memset(&tgt, 0, sizeof(tgt));
-	tgt.opts.max_queue_depth = 64;
-	tgt.opts.max_qpairs_per_ctrlr = 3;
-
 	memset(&transport, 0, sizeof(transport));
+	transport.tprt_opts.max_queue_depth = 64;
+	transport.tprt_opts.max_qpairs_per_ctrlr = 3;
 	transport.tgt = &tgt;
 
 	memset(&qpair, 0, sizeof(qpair));

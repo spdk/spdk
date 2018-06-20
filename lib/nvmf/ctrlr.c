@@ -152,9 +152,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		       struct spdk_nvmf_fabric_connect_data *connect_data)
 {
 	struct spdk_nvmf_ctrlr	*ctrlr;
-	struct spdk_nvmf_tgt	*tgt;
-
-	tgt = subsystem->tgt;
 
 	ctrlr = calloc(1, sizeof(*ctrlr));
 	if (ctrlr == NULL) {
@@ -165,7 +162,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	req->qpair->ctrlr = ctrlr;
 	ctrlr->subsys = subsystem;
 
-	ctrlr->qpair_mask = spdk_bit_array_create(tgt->opts.max_qpairs_per_ctrlr);
+	ctrlr->qpair_mask = spdk_bit_array_create(req->qpair->transport->tprt_opts.max_qpairs_per_ctrlr);
 	if (!ctrlr->qpair_mask) {
 		SPDK_ERRLOG("Failed to allocate controller qpair mask\n");
 		free(ctrlr);
@@ -177,14 +174,17 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
 
 	/* Subtract 1 for admin queue, 1 for 0's based */
-	ctrlr->feat.number_of_queues.bits.ncqr = tgt->opts.max_qpairs_per_ctrlr - 1 - 1;
-	ctrlr->feat.number_of_queues.bits.nsqr = tgt->opts.max_qpairs_per_ctrlr - 1 - 1;
+	ctrlr->feat.number_of_queues.bits.ncqr = req->qpair->transport->tprt_opts.max_qpairs_per_ctrlr - 1 -
+			1;
+	ctrlr->feat.number_of_queues.bits.nsqr = req->qpair->transport->tprt_opts.max_qpairs_per_ctrlr - 1 -
+			1;
 
 	memcpy(ctrlr->hostid, connect_data->hostid, sizeof(ctrlr->hostid));
 
 	ctrlr->vcprop.cap.raw = 0;
 	ctrlr->vcprop.cap.bits.cqr = 1; /* NVMe-oF specification required */
-	ctrlr->vcprop.cap.bits.mqes = tgt->opts.max_queue_depth - 1; /* max queue depth */
+	ctrlr->vcprop.cap.bits.mqes = req->qpair->transport->tprt_opts.max_queue_depth -
+				      1; /* max queue depth */
 	ctrlr->vcprop.cap.bits.ams = 0; /* optional arb mechanisms */
 	ctrlr->vcprop.cap.bits.to = 1; /* ready timeout - 500 msec units */
 	ctrlr->vcprop.cap.bits.dstrd = 0; /* fixed to 0 for NVMe-oF */
@@ -375,9 +375,9 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	 * SQSIZE is a 0-based value, so it must be at least 1 (minimum queue depth is 2) and
 	 *  strictly less than max_queue_depth.
 	 */
-	if (cmd->sqsize == 0 || cmd->sqsize >= tgt->opts.max_queue_depth) {
+	if (cmd->sqsize == 0 || cmd->sqsize >= qpair->transport->tprt_opts.max_queue_depth) {
 		SPDK_ERRLOG("Invalid SQSIZE %u (min 1, max %u)\n",
-			    cmd->sqsize, tgt->opts.max_queue_depth - 1);
+			    cmd->sqsize, qpair->transport->tprt_opts.max_queue_depth - 1);
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, sqsize);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -1150,19 +1150,18 @@ static int
 spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
-	struct spdk_nvmf_tgt *tgt = subsystem->tgt;
 
 	/*
 	 * Common fields for discovery and NVM subsystems
 	 */
 	spdk_strcpy_pad(cdata->fr, FW_VERSION, sizeof(cdata->fr), ' ');
-	assert((tgt->opts.max_io_size % 4096) == 0);
-	cdata->mdts = spdk_u32log2(tgt->opts.max_io_size / 4096);
+	assert((ctrlr->admin_qpair->transport->tprt_opts.max_io_size % 4096) == 0);
+	cdata->mdts = spdk_u32log2(ctrlr->admin_qpair->transport->tprt_opts.max_io_size / 4096);
 	cdata->cntlid = ctrlr->cntlid;
 	cdata->ver = ctrlr->vcprop.vs;
 	cdata->lpa.edlp = 1;
 	cdata->elpe = 127;
-	cdata->maxcmd = tgt->opts.max_queue_depth;
+	cdata->maxcmd = ctrlr->admin_qpair->transport->tprt_opts.max_queue_depth;
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;
@@ -1205,7 +1204,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
 
 		/* TODO: this should be set by the transport */
-		cdata->nvmf_specific.ioccsz += tgt->opts.in_capsule_data_size / 16;
+		cdata->nvmf_specific.ioccsz += ctrlr->admin_qpair->transport->tprt_opts.in_capsule_data_size / 16;
 
 		cdata->oncs.dsm = spdk_nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = spdk_nvmf_ctrlr_write_zeroes_supported(ctrlr);
