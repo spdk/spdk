@@ -63,7 +63,7 @@ DEFINE_STUB(spdk_vhost_vq_used_signal, int, (struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_virtqueue *virtqueue), 0);
 DEFINE_STUB_V(spdk_vhost_dev_used_signal, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB_V(spdk_vhost_dev_mem_register, (struct spdk_vhost_dev *vdev));
-DEFINE_STUB_P(spdk_vhost_dev_find, struct spdk_vhost_dev, (const char *ctrlr_name), {0});
+DEFINE_STUB_P(spdk_vhost_tgt_find, struct spdk_vhost_tgt, (const char *ctrlr_name), {0});
 DEFINE_STUB_P(spdk_conf_first_section, struct spdk_conf_section, (struct spdk_conf *cp), {0});
 DEFINE_STUB(spdk_conf_section_match_prefix, bool, (const struct spdk_conf_section *sp,
 		const char *name_prefix), false);
@@ -74,14 +74,14 @@ DEFINE_STUB(spdk_conf_section_get_boolval, bool, (struct spdk_conf_section *sp, 
 DEFINE_STUB_P(spdk_conf_section_get_nmval, char, (struct spdk_conf_section *sp, const char *key,
 		int idx1, int idx2), {0});
 DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
-DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
+DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_tgt *vtgt, spdk_vhost_event_fn cb_fn,
 		void *arg, unsigned timeout_sec, const char *errmsg), 0);
 DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
 DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (void *event_ctx, int response));
 DEFINE_STUB_V(spdk_vhost_lock, (void));
 DEFINE_STUB_V(spdk_vhost_unlock, (void));
 DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
-DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *ctrlr_name, spdk_vhost_event_fn fn,
+DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *vtgt_name, spdk_vhost_event_fn fn,
 		void *arg));
 DEFINE_STUB(spdk_vhost_vring_desc_has_next, bool, (struct vring_desc *cur_desc), false);
 DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len),
@@ -89,33 +89,33 @@ DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t add
 DEFINE_STUB(spdk_scsi_dev_get_id, int, (const struct spdk_scsi_dev *dev), {0});
 
 /* This sets spdk_vhost_dev_unregister to either to fail or success */
-DEFINE_STUB(spdk_vhost_dev_unregister_fail, bool, (void), false);
+DEFINE_STUB(spdk_vhost_tgt_unregister_fail, bool, (void), false);
 /* This sets spdk_vhost_dev_register to either to fail or success */
-DEFINE_STUB(spdk_vhost_dev_register_fail, bool, (void), false);
+DEFINE_STUB(spdk_vhost_tgt_register_fail, bool, (void), false);
 
-static struct spdk_vhost_dev *g_spdk_vhost_device;
+static struct spdk_vhost_tgt *g_spdk_vhost_target;
 int
-spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			const struct spdk_vhost_dev_backend *backend)
+spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name, const char *mask_str,
+			const struct spdk_vhost_tgt_backend *backend)
 {
-	if (spdk_vhost_dev_register_fail()) {
+	if (spdk_vhost_tgt_register_fail()) {
 		return -1;
 	}
 
-	vdev->backend = backend;
-	g_spdk_vhost_device = vdev;
-	vdev->registered = true;
+	vtgt->backend = backend;
+	g_spdk_vhost_target = vtgt;
+	vtgt->registered = true;
 	return 0;
 }
 
 int
-spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
+spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt)
 {
-	if (spdk_vhost_dev_unregister_fail()) {
+	if (spdk_vhost_tgt_unregister_fail()) {
 		return -1;
 	}
 
-	free(vdev->name);
-	g_spdk_vhost_device = NULL;
+	free(vtgt->name);
+	g_spdk_vhost_target = NULL;
 	return 0;
 }
