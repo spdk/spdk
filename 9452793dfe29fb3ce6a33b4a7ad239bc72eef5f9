@@ -101,6 +101,24 @@
       "revId": "9452793dfe29fb3ce6a33b4a7ad239bc72eef5f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9e83711_92c29c14",
+        "filename": "scripts/rpc/app.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-06-20T23:51:28Z",
+      "side": 1,
+      "message": "I think core_id will not get passed if user specifies core_id \u003d 0 for core 0 stats only.",
+      "parentUuid": "5edba8bc_5763af32",
+      "revId": "9452793dfe29fb3ce6a33b4a7ad239bc72eef5f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
