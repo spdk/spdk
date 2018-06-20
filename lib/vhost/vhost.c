@@ -48,11 +48,11 @@ static uint32_t *g_num_ctrlrs;
 static char dev_dirname[PATH_MAX] = "";
 
 struct spdk_vhost_dev_event_ctx {
-	/** Pointer to the controller obtained before enqueuing the event */
-	struct spdk_vhost_dev *vdev;
+	/** Pointer to the target obtained before enqueuing the event */
+	struct spdk_vhost_tgt *vtgt;
 
-	/** ID of the vdev to send event to. */
-	unsigned vdev_id;
+	/** ID of the vtgt to send event to. */
+	unsigned vtgt_id;
 
 	/** User callback function to be executed on given lcore. */
 	spdk_vhost_event_fn cb_fn;
@@ -84,8 +84,8 @@ const struct vhost_device_ops g_spdk_vhost_ops = {
 	.vhost_nvme_get_cap = spdk_vhost_nvme_get_cap,
 };
 
-static TAILQ_HEAD(, spdk_vhost_dev) g_spdk_vhost_devices = TAILQ_HEAD_INITIALIZER(
-			g_spdk_vhost_devices);
+static TAILQ_HEAD(, spdk_vhost_tgt) g_spdk_vhost_tgts = TAILQ_HEAD_INITIALIZER(
+			g_spdk_vhost_tgts);
 static pthread_mutex_t g_spdk_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len)
@@ -335,9 +335,10 @@ spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
 }
 
 int
-spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+spdk_vhost_set_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t delay_base_us,
 			  uint32_t iops_threshold)
 {
+	struct spdk_vhost_dev *vdev;
 	uint64_t delay_time_base = delay_base_us * spdk_get_ticks_hz() / 1000000ULL;
 	uint32_t io_rate = iops_threshold * SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS / 1000U;
 
@@ -350,24 +351,30 @@ spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 		return -EINVAL;
 	}
 
-	vdev->coalescing_delay_time_base = delay_time_base;
-	vdev->coalescing_io_rate_threshold = io_rate;
+	vtgt->coalescing_delay_time_base = delay_time_base;
+	vtgt->coalescing_io_rate_threshold = io_rate;
 
-	vdev->coalescing_delay_us = delay_base_us;
-	vdev->coalescing_iops_threshold = iops_threshold;
+	vtgt->coalescing_delay_us = delay_base_us;
+	vtgt->coalescing_iops_threshold = iops_threshold;
+
+	vdev = vtgt->vdev;
+	if (vdev) {
+		vdev->coalescing_delay_time_base = vtgt->coalescing_delay_time_base;
+		vdev->coalescing_io_rate_threshold = vtgt->coalescing_io_rate_threshold;
+	}
 	return 0;
 }
 
 void
-spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+spdk_vhost_get_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t *delay_base_us,
 			  uint32_t *iops_threshold)
 {
 	if (delay_base_us) {
-		*delay_base_us = vdev->coalescing_delay_us;
+		*delay_base_us = vtgt->coalescing_delay_us;
 	}
 
 	if (iops_threshold) {
-		*iops_threshold = vdev->coalescing_iops_threshold;
+		*iops_threshold = vtgt->coalescing_iops_threshold;
 	}
 }
 
@@ -489,14 +496,14 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 	return 0;
 }
 
-static struct spdk_vhost_dev *
-spdk_vhost_dev_find_by_id(unsigned id)
+static struct spdk_vhost_tgt *
+spdk_vhost_tgt_find_by_id(unsigned id)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 
-	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (vdev->id == id) {
-			return vdev;
+	TAILQ_FOREACH(vtgt, &g_spdk_vhost_tgts, tailq) {
+		if (vtgt->id == id) {
+			return vtgt;
 		}
 	}
 
@@ -506,11 +513,11 @@ spdk_vhost_dev_find_by_id(unsigned id)
 static struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 
-	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (vdev->vid == vid) {
-			return vdev;
+	TAILQ_FOREACH(vtgt, &g_spdk_vhost_tgts, tailq) {
+		if (vtgt->vdev && vtgt->vdev->vid == vid) {
+			return vtgt->vdev;
 		}
 	}
 
@@ -575,19 +582,19 @@ spdk_vhost_free_reactor(uint32_t lcore)
 	g_num_ctrlrs[lcore]--;
 }
 
-struct spdk_vhost_dev *
-spdk_vhost_dev_find(const char *ctrlr_name)
+struct spdk_vhost_tgt *
+spdk_vhost_tgt_find(const char *vtgt_name)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 	size_t dev_dirname_len = strlen(dev_dirname);
 
-	if (strncmp(ctrlr_name, dev_dirname, dev_dirname_len) == 0) {
-		ctrlr_name += dev_dirname_len;
+	if (strncmp(vtgt_name, dev_dirname, dev_dirname_len) == 0) {
+		vtgt_name += dev_dirname_len;
 	}
 
-	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (strcmp(vdev->name, ctrlr_name) == 0) {
-			return vdev;
+	TAILQ_FOREACH(vtgt, &g_spdk_vhost_tgts, tailq) {
+		if (strcmp(vtgt->name, vtgt_name) == 0) {
+			return vtgt;
 		}
 	}
 
@@ -636,8 +643,9 @@ _start_rte_driver(void *arg)
 }
 
 int
-spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			const struct spdk_vhost_dev_backend *backend)
+spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name,
+			const char *mask_str,
+			const struct spdk_vhost_tgt_backend *backend)
 {
 	static unsigned ctrlr_num;
 	char path[PATH_MAX];
@@ -645,11 +653,11 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	struct spdk_cpuset *cpumask;
 	int rc;
 
-	assert(vdev);
+	assert(vtgt);
 
-	/* We expect devices inside g_spdk_vhost_devices to be sorted in ascending
-	 * order in regard of vdev->id. For now we always set vdev->id = ctrlr_num++
-	 * and append each vdev to the very end of g_spdk_vhost_devices list.
+	/* We expect targets inside g_spdk_vhost_tgts to be sorted in ascending
+	 * order in regard of vtgt->id. For now we always set vtgt->id = ctrlr_num++
+	 * and append each vtgt to the very end of g_spdk_vhost_tgts list.
 	 * This is required for foreach vhost events to work.
 	 */
 	if (ctrlr_num == UINT_MAX) {
@@ -675,7 +683,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 		goto out;
 	}
 
-	if (spdk_vhost_dev_find(name)) {
+	if (spdk_vhost_tgt_find(name)) {
 		SPDK_ERRLOG("vhost controller %s already exists.\n", name);
 		rc = -EEXIST;
 		goto out;
@@ -740,24 +748,19 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 		goto out;
 	}
 
-	vdev->name = strdup(name);
-	vdev->path = strdup(path);
-	vdev->id = ctrlr_num++;
-	vdev->vid = -1;
-	vdev->lcore = -1;
-	vdev->cpumask = cpumask;
-	vdev->registered = true;
-	vdev->backend = backend;
+	vtgt->name = strdup(name);
+	vtgt->path = strdup(path);
+	vtgt->id = ctrlr_num++;
+	vtgt->cpumask = cpumask;
+	vtgt->registered = true;
+	vtgt->backend = backend;
 
-	spdk_vhost_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
+	spdk_vhost_set_coalescing(vtgt, SPDK_VHOST_COALESCING_DELAY_BASE_US,
 				  SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
-	vdev->next_stats_check_time = 0;
-	vdev->stats_check_interval = SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS * spdk_get_ticks_hz() /
-				     1000UL;
 
-	TAILQ_INSERT_TAIL(&g_spdk_vhost_devices, vdev, tailq);
+	TAILQ_INSERT_TAIL(&g_spdk_vhost_tgts, vtgt, tailq);
 
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: new controller added\n", vdev->name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: new controller added\n", vtgt->name);
 	return 0;
 
 out:
@@ -766,37 +769,37 @@ out:
 }
 
 int
-spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
+spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt)
 {
-	if (vdev->vid != -1) {
-		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
+	if (vtgt->vdev) {
+		SPDK_ERRLOG("Controller %s has still valid connection.\n", vtgt->name);
 		return -EBUSY;
 	}
 
-	if (vdev->registered && rte_vhost_driver_unregister(vdev->path) != 0) {
+	if (vtgt->registered && rte_vhost_driver_unregister(vtgt->path) != 0) {
 		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
 			    "Check if domain socket %s still exists\n",
-			    vdev->name, vdev->path);
+			    vtgt->name, vtgt->path);
 		return -EIO;
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: removed\n", vdev->name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: removed\n", vtgt->name);
 
-	free(vdev->name);
-	free(vdev->path);
-	spdk_cpuset_free(vdev->cpumask);
-	TAILQ_REMOVE(&g_spdk_vhost_devices, vdev, tailq);
+	free(vtgt->name);
+	free(vtgt->path);
+	spdk_cpuset_free(vtgt->cpumask);
+	TAILQ_REMOVE(&g_spdk_vhost_tgts, vtgt, tailq);
 	return 0;
 }
 
-static struct spdk_vhost_dev *
-spdk_vhost_dev_next(unsigned i)
+static struct spdk_vhost_tgt *
+spdk_vhost_tgt_next(unsigned i)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 
-	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (vdev->id > i) {
-			return vdev;
+	TAILQ_FOREACH(vtgt, &g_spdk_vhost_tgts, tailq) {
+		if (vtgt->id > i) {
+			return vtgt;
 		}
 	}
 
@@ -804,17 +807,17 @@ spdk_vhost_dev_next(unsigned i)
 }
 
 const char *
-spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev)
+spdk_vhost_tgt_get_name(struct spdk_vhost_tgt *vtgt)
 {
-	assert(vdev != NULL);
-	return vdev->name;
+	assert(vtgt != NULL);
+	return vtgt->name;
 }
 
 const struct spdk_cpuset *
-spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
+spdk_vhost_tgt_get_cpumask(struct spdk_vhost_tgt *vtgt)
 {
-	assert(vdev != NULL);
-	return vdev->cpumask;
+	assert(vtgt != NULL);
+	return vtgt->cpumask;
 }
 
 static uint32_t
@@ -855,14 +858,14 @@ spdk_vhost_event_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_dev_event_ctx *ctx = arg1;
 
-	ctx->cb_fn(ctx->vdev, ctx);
+	ctx->cb_fn(ctx->vtgt, ctx);
 }
 
 static void
 spdk_vhost_event_async_fn(void *arg1, void *arg2)
 {
 	struct spdk_vhost_dev_event_ctx *ctx = arg1;
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 	struct spdk_event *ev;
 
 	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
@@ -871,26 +874,26 @@ spdk_vhost_event_async_fn(void *arg1, void *arg2)
 		return;
 	}
 
-	vdev = spdk_vhost_dev_find_by_id(ctx->vdev_id);
-	if (vdev != ctx->vdev) {
-		/* vdev has been changed after enqueuing this event */
-		vdev = NULL;
+	vtgt = spdk_vhost_tgt_find_by_id(ctx->vtgt_id);
+	if (vtgt != ctx->vtgt) {
+		/* vtgt has been changed after enqueuing this event */
+		vtgt = NULL;
 	}
 
-	ctx->cb_fn(vdev, arg2);
+	ctx->cb_fn(vtgt, arg2);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 
 	free(ctx);
 }
 
-static void spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
+static void spdk_vhost_external_event_foreach_continue(struct spdk_vhost_tgt *vtgt,
 		spdk_vhost_event_fn fn, void *arg);
 
 static void
 spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 {
 	struct spdk_vhost_dev_event_ctx *ctx = arg1;
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 	struct spdk_event *ev;
 
 	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
@@ -900,24 +903,24 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 		return;
 	}
 
-	vdev = spdk_vhost_dev_find_by_id(ctx->vdev_id);
-	if (vdev == ctx->vdev) {
-		ctx->cb_fn(vdev, arg2);
+	vtgt = spdk_vhost_tgt_find_by_id(ctx->vtgt_id);
+	if (vtgt == ctx->vtgt) {
+		ctx->cb_fn(vtgt, arg2);
 	} else {
-		/* ctx->vdev is probably a dangling pointer at this point.
+		/* ctx->vtgt is probably a dangling pointer at this point.
 		 * It must have been removed in the meantime, so we just skip
 		 * it in our foreach chain. */
 	}
 
-	vdev = spdk_vhost_dev_next(ctx->vdev_id);
-	spdk_vhost_external_event_foreach_continue(vdev, ctx->cb_fn, arg2);
+	vtgt = spdk_vhost_tgt_next(ctx->vtgt_id);
+	spdk_vhost_external_event_foreach_continue(vtgt, ctx->cb_fn, arg2);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 
 	free(ctx);
 }
 
 static int
-spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
+spdk_vhost_event_send(struct spdk_vhost_tgt *vtgt, spdk_vhost_event_fn cb_fn,
 		      unsigned timeout_sec, const char *errmsg)
 {
 	struct spdk_vhost_dev_event_ctx ev_ctx = {0};
@@ -925,15 +928,16 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 	struct timespec timeout;
 	int rc;
 
+	assert(vtgt->vdev);
 	rc = sem_init(&ev_ctx.sem, 0, 0);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
 		return -errno;
 	}
 
-	ev_ctx.vdev = vdev;
+	ev_ctx.vtgt = vtgt;
 	ev_ctx.cb_fn = cb_fn;
-	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
+	ev = spdk_event_allocate(vtgt->vdev->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
 	assert(ev);
 	spdk_event_call(ev);
 
@@ -951,13 +955,15 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 }
 
 static int
-spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
+spdk_vhost_event_async_send(struct spdk_vhost_tgt *vtgt,
+			    spdk_vhost_event_fn cb_fn, void *arg,
 			    bool foreach)
 {
 	struct spdk_vhost_dev_event_ctx *ev_ctx;
 	struct spdk_event *ev;
 	spdk_event_fn fn;
 
+	assert(vtgt->vdev);
 	ev_ctx = calloc(1, sizeof(*ev_ctx));
 	if (ev_ctx == NULL) {
 		SPDK_ERRLOG("Failed to alloc vhost event.\n");
@@ -965,12 +971,12 @@ spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_
 		return -ENOMEM;
 	}
 
-	ev_ctx->vdev = vdev;
-	ev_ctx->vdev_id = vdev->id;
+	ev_ctx->vtgt = vtgt;
+	ev_ctx->vtgt_id = vtgt->id;
 	ev_ctx->cb_fn = cb_fn;
 
 	fn = foreach ? spdk_vhost_event_async_foreach_fn : spdk_vhost_event_async_fn;
-	ev = spdk_event_allocate(ev_ctx->vdev->lcore, fn, ev_ctx, arg);
+	ev = spdk_event_allocate(ev_ctx->vtgt->vdev->lcore, fn, ev_ctx, arg);
 	assert(ev);
 	spdk_event_call(ev);
 
@@ -981,6 +987,7 @@ static void
 stop_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 	struct rte_vhost_vring *q;
 	int rc;
 	uint16_t i;
@@ -999,7 +1006,8 @@ stop_device(int vid)
 		return;
 	}
 
-	rc = spdk_vhost_event_send(vdev, vdev->backend->stop_device, 3, "stop device");
+	vtgt = vdev->vtgt;
+	rc = spdk_vhost_event_send(vtgt, vtgt->backend->stop_device, 3, "stop device");
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1025,6 +1033,7 @@ static int
 start_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 	int rc = -1;
 	uint16_t i;
 
@@ -1036,6 +1045,7 @@ start_device(int vid)
 		goto out;
 	}
 
+	vtgt = vdev->vtgt;
 	if (vdev->lcore != -1) {
 		SPDK_ERRLOG("Controller %s already loaded.\n", vdev->name);
 		goto out;
@@ -1072,6 +1082,12 @@ start_device(int vid)
 		goto out;
 	}
 
+	vdev->coalescing_delay_time_base = vtgt->coalescing_delay_time_base;
+	vdev->coalescing_io_rate_threshold = vtgt->coalescing_io_rate_threshold;
+	vdev->next_stats_check_time = 0;
+	vdev->stats_check_interval = SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS * spdk_get_ticks_hz() /
+				     1000UL;
+
 	/*
 	 * Not sure right now but this look like some kind of QEMU bug and guest IO
 	 * might be frozed without kicking all queues after live-migration. This look like
@@ -1087,9 +1103,10 @@ start_device(int vid)
 		}
 	}
 
-	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
+	vdev->lcore = spdk_vhost_allocate_reactor(vtgt->cpumask);
 	spdk_vhost_dev_mem_register(vdev);
-	rc = spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
+
+	rc = spdk_vhost_event_send(vtgt, vtgt->backend->start_device, 3, "start device");
 	if (rc != 0) {
 		spdk_vhost_dev_mem_unregister(vdev);
 		free(vdev->mem);
@@ -1106,6 +1123,7 @@ static int
 get_config(int vid, uint8_t *config, uint32_t len)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 	int rc = -1;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
@@ -1115,8 +1133,9 @@ get_config(int vid, uint8_t *config, uint32_t len)
 		goto out;
 	}
 
-	if (vdev->backend->vhost_get_config) {
-		rc = vdev->backend->vhost_get_config(vdev, config, len);
+	vtgt = vdev->vtgt;
+	if (vtgt->backend->vhost_get_config) {
+		rc = vtgt->backend->vhost_get_config(vtgt, config, len);
 	}
 
 out:
@@ -1128,6 +1147,7 @@ static int
 set_config(int vid, uint8_t *config, uint32_t offset, uint32_t size, uint32_t flags)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 	int rc = -1;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
@@ -1137,8 +1157,9 @@ set_config(int vid, uint8_t *config, uint32_t offset, uint32_t size, uint32_t fl
 		goto out;
 	}
 
-	if (vdev->backend->vhost_set_config) {
-		rc = vdev->backend->vhost_set_config(vdev, config, offset, size, flags);
+	vtgt = vdev->vtgt;
+	if (vtgt->backend->vhost_set_config) {
+		rc = vtgt->backend->vhost_set_config(vtgt, config, offset, size, flags);
 	}
 
 out:
@@ -1173,11 +1194,11 @@ spdk_vhost_set_socket_path(const char *basename)
 static void *
 session_shutdown(void *arg)
 {
-	struct spdk_vhost_dev *vdev = NULL;
+	struct spdk_vhost_tgt *vtgt = NULL;
 
-	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		rte_vhost_driver_unregister(vdev->path);
-		vdev->registered = false;
+	TAILQ_FOREACH(vtgt, &g_spdk_vhost_tgts, tailq) {
+		rte_vhost_driver_unregister(vtgt->path);
+		vtgt->registered = false;
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Exiting\n");
@@ -1186,48 +1207,67 @@ session_shutdown(void *arg)
 }
 
 void
-spdk_vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+spdk_vhost_dump_info_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w)
 {
-	assert(vdev->backend->dump_info_json != NULL);
-	vdev->backend->dump_info_json(vdev, w);
+	assert(vtgt->backend->dump_info_json != NULL);
+	vtgt->backend->dump_info_json(vtgt, w);
 }
 
 int
-spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
+spdk_vhost_tgt_remove(struct spdk_vhost_tgt *vtgt)
 {
-	return vdev->backend->remove_device(vdev);
+	return vtgt->backend->remove_target(vtgt);
 }
 
 static int
 new_connection(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 	char ifname[PATH_MAX];
+	int rc = -1;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
 		SPDK_ERRLOG("Couldn't get a valid ifname for device with vid %d\n", vid);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return -1;
+		goto err;
 	}
 
-	vdev = spdk_vhost_dev_find(ifname);
-	if (vdev == NULL) {
+	vtgt = spdk_vhost_tgt_find(ifname);
+	if (vtgt == NULL) {
 		SPDK_ERRLOG("Couldn't find device with vid %d to create connection for.\n", vid);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return -1;
+		goto err;
 	}
 
 	/* since pollers are not running it safe not to use spdk_event here */
-	if (vdev->vid != -1) {
+	if (vtgt->vdev) {
 		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return -1;
+		goto err;
 	}
 
+	vdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_dev) + vtgt->backend->dev_ctx_size,
+				SPDK_CACHE_LINE_SIZE, NULL);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("vdev calloc failed.\n");
+		goto err;
+	}
+
+	vdev->name = spdk_sprintf_alloc("%s_d%d", vtgt->name, vid);
+	if (vtgt->vdev) {
+		SPDK_ERRLOG("vdev name alloc failed.\n");
+		spdk_dma_free(vdev);
+		goto err;
+	}
+
+	vdev->vtgt = vtgt;
 	vdev->vid = vid;
+	vdev->lcore = -1;
+	vtgt->vdev = vdev;
+
+	rc = 0;
+err:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
-	return 0;
+	return rc;
 }
 
 static void
@@ -1244,62 +1284,64 @@ destroy_connection(int vid)
 	}
 
 	/* since pollers are not running it safe not to use spdk_event here */
-	vdev->vid = -1;
+	vdev->vtgt->vdev = NULL;
+	free(vdev->name);
+	spdk_dma_free(vdev);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
 void
-spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, void *arg)
+spdk_vhost_call_external_event(const char *vtgt_name, spdk_vhost_event_fn fn, void *arg)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev = spdk_vhost_dev_find(ctrlr_name);
+	vtgt = spdk_vhost_tgt_find(vtgt_name);
 
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		fn(NULL, arg);
 		return;
 	}
 
-	if (vdev->lcore == -1) {
-		fn(vdev, arg);
+	if (vtgt->vdev == NULL || vtgt->vdev->lcore == -1) {
+		fn(vtgt, arg);
 	} else {
-		spdk_vhost_event_async_send(vdev, fn, arg, false);
+		spdk_vhost_event_async_send(vtgt, fn, arg, false);
 	}
 
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
 static void
-spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
+spdk_vhost_external_event_foreach_continue(struct spdk_vhost_tgt *vtgt,
 		spdk_vhost_event_fn fn, void *arg)
 {
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		fn(NULL, arg);
 		return;
 	}
 
-	while (vdev->lcore == -1) {
-		fn(vdev, arg);
-		vdev = spdk_vhost_dev_next(vdev->id);
-		if (vdev == NULL) {
+	while (vtgt->vdev == NULL || vtgt->vdev->lcore == -1) {
+		fn(vtgt, arg);
+		vtgt = spdk_vhost_tgt_next(vtgt->id);
+		if (vtgt == NULL) {
 			fn(NULL, arg);
 			return;
 		}
 	}
 
-	spdk_vhost_event_async_send(vdev, fn, arg, true);
+	spdk_vhost_event_async_send(vtgt, fn, arg, true);
 }
 
 void
 spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev = TAILQ_FIRST(&g_spdk_vhost_devices);
-	spdk_vhost_external_event_foreach_continue(vdev, fn, arg);
+	vtgt = TAILQ_FIRST(&g_spdk_vhost_tgts);
+	spdk_vhost_external_event_foreach_continue(vtgt, fn, arg);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
@@ -1365,16 +1407,16 @@ spdk_vhost_init(void)
 }
 
 static int
-_spdk_vhost_fini_remove_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
+_spdk_vhost_fini_remove_vtgt_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	spdk_vhost_fini_cb fini_cb = arg;
 
-	if (vdev != NULL) {
-		spdk_vhost_dev_remove(vdev);
+	if (vtgt != NULL) {
+		spdk_vhost_tgt_remove(vtgt);
 		return 0;
 	}
 
-	/* All devices are removed now. */
+	/* All targets are removed now. */
 	free(g_num_ctrlrs);
 	fini_cb();
 	return 0;
@@ -1385,7 +1427,7 @@ _spdk_vhost_fini(void *arg1, void *arg2)
 {
 	spdk_vhost_fini_cb fini_cb = arg1;
 
-	spdk_vhost_call_external_event_foreach(_spdk_vhost_fini_remove_vdev_cb, fini_cb);
+	spdk_vhost_call_external_event_foreach(_spdk_vhost_fini_remove_vtgt_cb, fini_cb);
 }
 
 void
@@ -1415,28 +1457,28 @@ struct spdk_vhost_write_config_json_ctx {
 };
 
 static int
-spdk_vhost_config_json_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_vhost_config_json_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct spdk_vhost_write_config_json_ctx *ctx = arg;
 	uint32_t delay_base_us;
 	uint32_t iops_threshold;
 
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		spdk_json_write_array_end(ctx->w);
 		spdk_event_call(ctx->done_ev);
 		free(ctx);
 		return 0;
 	}
 
-	vdev->backend->write_config_json(vdev, ctx->w);
+	vtgt->backend->write_config_json(vtgt, ctx->w);
 
-	spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
+	spdk_vhost_get_coalescing(vtgt, &delay_base_us, &iops_threshold);
 	if (delay_base_us) {
 		spdk_json_write_object_begin(ctx->w);
 		spdk_json_write_named_string(ctx->w, "method", "set_vhost_controller_coalescing");
 
 		spdk_json_write_named_object_begin(ctx->w, "params");
-		spdk_json_write_named_string(ctx->w, "ctrlr", vdev->name);
+		spdk_json_write_named_string(ctx->w, "ctrlr", vtgt->name);
 		spdk_json_write_named_uint32(ctx->w, "delay_base_us", delay_base_us);
 		spdk_json_write_named_uint32(ctx->w, "iops_threshold", iops_threshold);
 		spdk_json_write_object_end(ctx->w);

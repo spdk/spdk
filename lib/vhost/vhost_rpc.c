@@ -77,7 +77,7 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_construct(req.ctrlr, req.cpumask);
+	rc = spdk_vhost_scsi_tgt_construct(req.ctrlr, req.cpumask);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -124,19 +124,19 @@ static const struct spdk_json_object_decoder rpc_vhost_add_lun[] = {
 };
 
 static int
-spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_add_vhost_scsi_ctrlr_lun *rpc = arg;
 	struct spdk_jsonrpc_request *request = rpc->request;
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		rc = -ENODEV;
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_add_tgt(vdev, rpc->scsi_target_num, rpc->bdev_name);
+	rc = spdk_vhost_scsi_tgt_add_tgt(vtgt, rpc->scsi_target_num, rpc->bdev_name);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -220,7 +220,7 @@ static const struct spdk_json_object_decoder rpc_vhost_remove_target[] = {
 };
 
 static int
-spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_remove_vhost_scsi_ctrlr_target *rpc = arg;
 	struct spdk_jsonrpc_request *request = rpc->request;
@@ -239,18 +239,18 @@ spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_dev *vdev, void *a
 }
 
 static int
-spdk_rpc_remove_vhost_scsi_target_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_remove_vhost_scsi_target_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_remove_vhost_scsi_ctrlr_target *rpc = arg;
 	struct spdk_jsonrpc_request *request = rpc->request;
 	int rc;
 
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		rc = -ENODEV;
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_remove_tgt(vdev, rpc->scsi_target_num,
+	rc = spdk_vhost_scsi_tgt_remove_tgt(vtgt, rpc->scsi_target_num,
 					    spdk_rpc_remove_vhost_scsi_target_finish_cb, rpc);
 	if (rc < 0) {
 		goto invalid;
@@ -381,19 +381,19 @@ free_rpc_remove_vhost_ctrlr(struct rpc_remove_vhost_ctrlr *req)
 }
 
 static int
-spdk_rpc_remove_vhost_controller_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_remove_vhost_controller_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_remove_vhost_ctrlr *ctx = arg;
 	struct spdk_jsonrpc_request *request = ctx->request;
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		rc = -ENODEV;
 		goto invalid;
 	}
 
-	rc = spdk_vhost_dev_remove(vdev);
+	rc = spdk_vhost_tgt_remove(vtgt);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -456,31 +456,31 @@ struct rpc_get_vhost_ctrlrs {
 };
 
 static int
-spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_get_vhost_ctrlrs *ctx = arg;
 	uint32_t delay_base_us, iops_threshold;
 
 
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		spdk_json_write_array_end(ctx->w);
 		spdk_jsonrpc_end_result(ctx->request, ctx->w);
 		free(ctx);
 		return 0;
 	}
 
-	spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
+	spdk_vhost_get_coalescing(vtgt, &delay_base_us, &iops_threshold);
 
 	spdk_json_write_object_begin(ctx->w);
 
-	spdk_json_write_named_string(ctx->w, "ctrlr", spdk_vhost_dev_get_name(vdev));
-	spdk_json_write_named_string_fmt(ctx->w, "cpumask", "0x%s", spdk_cpuset_fmt(vdev->cpumask));
+	spdk_json_write_named_string(ctx->w, "ctrlr", spdk_vhost_tgt_get_name(vtgt));
+	spdk_json_write_named_string_fmt(ctx->w, "cpumask", "0x%s", spdk_cpuset_fmt(vtgt->cpumask));
 	spdk_json_write_named_uint32(ctx->w, "delay_base_us", delay_base_us);
 	spdk_json_write_named_uint32(ctx->w, "iops_threshold", iops_threshold);
-	spdk_json_write_named_string(ctx->w, "socket", vdev->path);
+	spdk_json_write_named_string(ctx->w, "socket", vtgt->path);
 
 	spdk_json_write_named_object_begin(ctx->w, "backend_specific");
-	spdk_vhost_dump_info_json(vdev, ctx->w);
+	spdk_vhost_dump_info_json(vtgt, ctx->w);
 	spdk_json_write_object_end(ctx->w);
 
 	spdk_json_write_object_end(ctx->w);
@@ -548,18 +548,18 @@ free_rpc_set_vhost_controllers_event_coalescing(struct rpc_vhost_ctrlr_coalescin
 }
 
 static int
-spdk_rpc_set_vhost_controller_coalescing_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_set_vhost_controller_coalescing_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_vhost_ctrlr_coalescing *req = arg;
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		rc = -ENODEV;
 		goto invalid;
 	}
 
-	rc = spdk_vhost_set_coalescing(vdev, req->delay_base_us, req->iops_threshold);
+	rc = spdk_vhost_set_coalescing(vtgt, req->delay_base_us, req->iops_threshold);
 	if (rc) {
 		goto invalid;
 	}
@@ -646,7 +646,7 @@ spdk_rpc_construct_vhost_nvme_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_nvme_dev_construct(req.ctrlr, req.cpumask, req.io_queues);
+	rc = spdk_vhost_nvme_tgt_construct(req.ctrlr, req.cpumask, req.io_queues);
 	if (rc < 0) {
 		free_rpc_vhost_nvme_ctrlr(&req);
 		goto invalid;
@@ -691,19 +691,19 @@ static const struct spdk_json_object_decoder rpc_vhost_nvme_add_ns[] = {
 };
 
 static int
-spdk_rpc_add_vhost_nvme_ns_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_add_vhost_nvme_ns_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_add_vhost_nvme_ctrlr_ns *rpc = arg;
 	struct spdk_jsonrpc_request *request = rpc->request;
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		rc = -ENODEV;
 		goto invalid;
 	}
 
-	rc = spdk_vhost_nvme_dev_add_ns(vdev, rpc->bdev_name);
+	rc = spdk_vhost_nvme_tgt_add_ns(vtgt, rpc->bdev_name);
 	if (rc < 0) {
 		goto invalid;
 	}
