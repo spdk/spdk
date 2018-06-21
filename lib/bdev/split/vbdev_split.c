@@ -53,7 +53,7 @@ struct spdk_vbdev_split_config {
 	unsigned split_count;
 	uint64_t split_size_mb;
 
-	struct spdk_bdev_part_base split_base;
+	struct spdk_bdev_part_base *split_base;
 	bool removed;
 
 	TAILQ_ENTRY(spdk_vbdev_split_config) tailq;
@@ -84,17 +84,6 @@ static struct spdk_bdev_module split_if = {
 
 SPDK_BDEV_MODULE_REGISTER(&split_if)
 
-static void
-vbdev_split_base_free(struct spdk_bdev_part_base *base)
-{
-	struct spdk_vbdev_split_config *cfg = SPDK_CONTAINEROF(base, struct spdk_vbdev_split_config,
-					      split_base);
-
-	if (cfg->removed) {
-		vbdev_split_del_config(cfg);
-	}
-}
-
 static int
 vbdev_split_destruct(void *ctx)
 {
@@ -121,12 +110,13 @@ static int
 vbdev_split_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev_part *part = ctx;
+	struct spdk_bdev *split_base_bdev = spdk_bdev_part_base_get_bdev(part->base);
 
 	spdk_json_write_name(w, "split");
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, spdk_bdev_get_name(part->base->bdev));
+	spdk_json_write_string(w, spdk_bdev_get_name(split_base_bdev));
 	spdk_json_write_name(w, "offset_blocks");
 	spdk_json_write_uint64(w, part->offset_blocks);
 
@@ -158,6 +148,8 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 	int rc;
 	char *name;
 	struct spdk_bdev *base_bdev;
+	struct spdk_bdev *split_base_bdev;
+	struct bdev_part_tailq *split_base_tailq;
 
 	assert(cfg->split_count > 0);
 
@@ -193,14 +185,14 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 		      " split_size_blocks: %" PRIu64 "\n",
 		      spdk_bdev_get_name(base_bdev), split_count, split_size_blocks);
 
-	rc = spdk_bdev_part_base_construct(&cfg->split_base, base_bdev,
-					   vbdev_split_base_bdev_hotremove_cb,
-					   &split_if, &vbdev_split_fn_table,
-					   &g_split_disks, vbdev_split_base_free,
-					   sizeof(struct vbdev_split_channel), NULL, NULL);
-	if (rc) {
+	cfg->split_base = spdk_bdev_part_base_construct(base_bdev,
+			  vbdev_split_base_bdev_hotremove_cb,
+			  &split_if, &vbdev_split_fn_table,
+			  &g_split_disks,
+			  sizeof(struct vbdev_split_channel), NULL, NULL);
+	if (!cfg->split_base) {
 		SPDK_ERRLOG("Cannot construct bdev part base\n");
-		return rc;
+		return -ENOMEM;
 	}
 
 	offset_blocks = 0;
@@ -222,7 +214,7 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 			goto err;
 		}
 
-		rc = spdk_bdev_part_construct(d, &cfg->split_base, name, offset_blocks, split_size_blocks,
+		rc = spdk_bdev_part_construct(d, cfg->split_base, name, offset_blocks, split_size_blocks,
 					      "Split Disk");
 		if (rc) {
 			SPDK_ERRLOG("could not construct bdev part\n");
@@ -237,8 +229,10 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 
 	return 0;
 err:
+	split_base_bdev = spdk_bdev_part_base_get_bdev(cfg->split_base);
+	split_base_tailq = spdk_bdev_part_base_get_tailq(cfg->split_base);
 	cfg->removed = true;
-	spdk_bdev_part_base_hotremove(cfg->split_base.bdev, cfg->split_base.tailq);
+	spdk_bdev_part_base_hotremove(split_base_bdev, split_base_tailq);
 	return rc;
 }
 
@@ -253,9 +247,14 @@ vbdev_split_del_config(struct spdk_vbdev_split_config *cfg)
 static void
 vbdev_split_destruct_config(struct spdk_vbdev_split_config *cfg)
 {
+	struct spdk_bdev *split_base_bdev;
+	struct bdev_part_tailq *split_base_tailq;
+
 	cfg->removed = true;
-	if (cfg->split_base.ref) {
-		spdk_bdev_part_base_hotremove(cfg->split_base.bdev, cfg->split_base.tailq);
+	if (cfg->split_base != NULL && spdk_bdev_part_base_get_ref(cfg->split_base)) {
+		split_base_bdev = spdk_bdev_part_base_get_bdev(cfg->split_base);
+		split_base_tailq = spdk_bdev_part_base_get_tailq(cfg->split_base);
+		spdk_bdev_part_base_hotremove(split_base_bdev, split_base_tailq);
 	} else {
 		vbdev_split_del_config(cfg);
 	}
@@ -409,7 +408,7 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 	struct spdk_vbdev_split_config *cfg = vbdev_split_config_find_by_base_name(bdev->name);
 
 	if (cfg != NULL && cfg->removed == false) {
-		assert(cfg->split_base.ref == 0);
+		assert(cfg->split_base == NULL || spdk_bdev_part_base_get_ref(cfg->split_base));
 
 		if (vbdev_split_create(cfg)) {
 			SPDK_ERRLOG("could not split bdev %s\n", bdev->name);
