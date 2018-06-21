@@ -500,9 +500,9 @@ function discover_bdevs()
 
 	# Get all of the bdevs
 	if [ -z "$rpc_server" ]; then
-		$rootdir/scripts/rpc.py get_bdevs
+		$rootdir/scripts/rpc.py -v get_bdevs
 	else
-		$rootdir/scripts/rpc.py -s "$rpc_server" get_bdevs
+		$rootdir/scripts/rpc.py -v -s "$rpc_server" get_bdevs
 	fi
 
 	# Shut down the bdev service
