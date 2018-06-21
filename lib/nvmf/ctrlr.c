@@ -570,6 +570,7 @@ spdk_nvmf_property_get(struct spdk_nvmf_request *req)
 	if (cmd->attrib.size != SPDK_NVMF_PROP_SIZE_4 &&
 	    cmd->attrib.size != SPDK_NVMF_PROP_SIZE_8) {
 		SPDK_ERRLOG("Invalid size value %d\n", cmd->attrib.size);
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -584,6 +585,7 @@ spdk_nvmf_property_get(struct spdk_nvmf_request *req)
 	if (cmd->attrib.size != prop->size) {
 		SPDK_ERRLOG("offset 0x%x size mismatch: cmd %u, prop %u\n",
 			    cmd->ofst, cmd->attrib.size, prop->size);
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -609,6 +611,7 @@ spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 	prop = find_prop(cmd->ofst);
 	if (prop == NULL || prop->set_cb == NULL) {
 		SPDK_ERRLOG("Invalid offset 0x%x\n", cmd->ofst);
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -617,6 +620,7 @@ spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 	if (cmd->attrib.size != prop->size) {
 		SPDK_ERRLOG("offset 0x%x size mismatch: cmd %u, prop %u\n",
 			    cmd->ofst, cmd->attrib.size, prop->size);
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -628,6 +632,7 @@ spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 
 	if (!prop->set_cb(ctrlr, value)) {
 		SPDK_ERRLOG("prop set_cb failed\n");
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
