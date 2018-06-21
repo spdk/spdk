@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "21e09f65_c7e9edf8",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T00:13:32Z",
+      "side": 1,
+      "message": "Does NetApp have a use case for populate (and commit)?  I guess I don\u0027t follow where we will use this.  If it\u0027s truly zero copy, then the data should always be populated and will be directly committing anything it writes.",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "940b3c43_5348e233",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
