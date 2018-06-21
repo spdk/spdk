@@ -466,7 +466,7 @@ spdk_bdev_module_get_max_ctx_size(void)
 	struct spdk_bdev_module *bdev_module;
 	int max_bdev_module_size = 0;
 
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		if (bdev_module->get_ctx_size && bdev_module->get_ctx_size() > max_bdev_module_size) {
 			max_bdev_module_size = bdev_module->get_ctx_size();
 		}
@@ -480,7 +480,7 @@ spdk_bdev_config_text(FILE *fp)
 {
 	struct spdk_bdev_module *bdev_module;
 
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		if (bdev_module->config_text) {
 			bdev_module->config_text(fp);
 		}
@@ -506,7 +506,7 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		if (bdev_module->config_json) {
 			bdev_module->config_json(w);
 		}
@@ -586,7 +586,7 @@ spdk_bdev_init_complete(int rc)
 	 * For modules that need to know when subsystem init is complete,
 	 * inform them now.
 	 */
-	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
+	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		if (m->init_complete) {
 			m->init_complete();
 		}
@@ -614,8 +614,8 @@ spdk_bdev_module_action_complete(void)
 	 * exist, return immediately since we cannot finish bdev subsystem
 	 * initialization until all are completed.
 	 */
-	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
-		if (m->action_in_progress > 0) {
+	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, internal.tailq) {
+		if (m->internal.action_in_progress > 0) {
 			return;
 		}
 	}
@@ -631,8 +631,8 @@ spdk_bdev_module_action_complete(void)
 static void
 spdk_bdev_module_action_done(struct spdk_bdev_module *module)
 {
-	assert(module->action_in_progress > 0);
-	module->action_in_progress--;
+	assert(module->internal.action_in_progress > 0);
+	module->internal.action_in_progress--;
 	spdk_bdev_module_action_complete();
 }
 
@@ -654,7 +654,7 @@ spdk_bdev_modules_init(void)
 	struct spdk_bdev_module *module;
 	int rc = 0;
 
-	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
+	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		rc = module->module_init();
 		if (rc != 0) {
 			break;
@@ -822,7 +822,7 @@ spdk_bdev_module_finish_iter(void *arg)
 	if (!g_resume_bdev_module) {
 		bdev_module = TAILQ_FIRST(&g_bdev_mgr.bdev_modules);
 	} else {
-		bdev_module = TAILQ_NEXT(g_resume_bdev_module, tailq);
+		bdev_module = TAILQ_NEXT(g_resume_bdev_module, internal.tailq);
 	}
 
 	while (bdev_module) {
@@ -843,7 +843,7 @@ spdk_bdev_module_finish_iter(void *arg)
 			return;
 		}
 
-		bdev_module = TAILQ_NEXT(bdev_module, tailq);
+		bdev_module = TAILQ_NEXT(bdev_module, internal.tailq);
 	}
 
 	g_resume_bdev_module = NULL;
@@ -2737,9 +2737,9 @@ spdk_bdev_start(struct spdk_bdev *bdev)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
 
-	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
+	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		if (module->examine) {
-			module->action_in_progress++;
+			module->internal.action_in_progress++;
 			module->examine(bdev);
 		}
 	}
@@ -3087,7 +3087,7 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 	}
 
 	if (bdev_module->async_init) {
-		bdev_module->action_in_progress = 1;
+		bdev_module->internal.action_in_progress = 1;
 	}
 
 	/*
@@ -3096,9 +3096,9 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 	 *  register physical bdevs.
 	 */
 	if (bdev_module->examine != NULL) {
-		TAILQ_INSERT_HEAD(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
+		TAILQ_INSERT_HEAD(&g_bdev_mgr.bdev_modules, bdev_module, internal.tailq);
 	} else {
-		TAILQ_INSERT_TAIL(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
+		TAILQ_INSERT_TAIL(&g_bdev_mgr.bdev_modules, bdev_module, internal.tailq);
 	}
 }
 
@@ -3107,7 +3107,7 @@ spdk_bdev_module_list_find(const char *name)
 {
 	struct spdk_bdev_module *bdev_module;
 
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		if (strcmp(name, bdev_module->name) == 0) {
 			break;
 		}

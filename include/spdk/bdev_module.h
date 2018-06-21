@@ -106,14 +106,6 @@ struct spdk_bdev_module {
 	void (*examine)(struct spdk_bdev *bdev);
 
 	/**
-	 * Count of bdev inits/examinations in progress. Used by generic bdev
-	 * layer and must not be modified by bdev modules.
-	 *
-	 * \note Used internally by bdev subsystem, don't change this value in bdev module.
-	 */
-	uint32_t action_in_progress;
-
-	/**
 	 * Denotes if the module_init function may complete asynchronously. If set to true,
 	 * the module initialization has to be explicitly completed by calling
 	 * spdk_bdev_module_init_done().
@@ -127,7 +119,21 @@ struct spdk_bdev_module {
 	 */
 	bool async_fini;
 
-	TAILQ_ENTRY(spdk_bdev_module) tailq;
+	/**
+	 * Fields that are used by the internal bdev subsystem. Bdev modules
+	 *  must not read or write to these fields.
+	 */
+	struct __bdev_module_internal_fields {
+		/**
+		 * Count of bdev inits/examinations in progress. Used by generic bdev
+		 * layer and must not be modified by bdev modules.
+		 *
+		 * \note Used internally by bdev subsystem, don't change this value in bdev module.
+		 */
+		uint32_t action_in_progress;
+
+		TAILQ_ENTRY(spdk_bdev_module) tailq;
+	} internal;
 };
 
 typedef void (*spdk_bdev_unregister_cb)(void *cb_arg, int rc);
