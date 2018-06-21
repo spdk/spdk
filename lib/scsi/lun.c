@@ -187,7 +187,6 @@ spdk_scsi_lun_remove(struct spdk_scsi_lun *lun)
 	spdk_scsi_lun_free_io_channel(lun);
 
 	spdk_bdev_close(lun->bdev_desc);
-	spdk_poller_unregister(&lun->hotremove_poller);
 
 	spdk_scsi_dev_delete_lun(lun->dev, lun);
 	free(lun);
@@ -198,9 +197,12 @@ spdk_scsi_lun_hot_remove_poll(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
-	if (!spdk_scsi_lun_has_pending_tasks(lun)) {
-		spdk_scsi_lun_remove(lun);
+	if (spdk_scsi_lun_has_pending_tasks(lun)) {
+		return -1;
 	}
+
+	spdk_poller_unregister(&lun->hotremove_poller);
+	spdk_scsi_lun_remove(lun);
 
 	return -1;
 }
