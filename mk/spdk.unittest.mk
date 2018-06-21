@@ -40,7 +40,7 @@ C_SRCS = $(TEST_FILE)
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-SPDK_LIB_LIST += thread util log spdk_mock
+SPDK_LIB_LIST += thread util log spdk_mock sock
 
 LIBS += -lcunit $(SPDK_LIB_LINKER_ARGS)
 
