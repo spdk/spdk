@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef7b283c_8a5a64bd",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T03:52:49Z",
+      "side": 1,
+      "message": "I would just say \"register a new bdev\".\n\nThis matches the function name and is the logical opposite of spdk_bdev_unregister.\n\nI know the function calls the internal spdk_bdev_init and spdk_bdev_start, but I think using those terms in the public API might be more confusing.",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "643f00d1_068f6182",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T03:52:49Z",
+      "side": 1,
+      "message": "if a bdev or bdev alias with the same name already exists",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "befda621_6934c811",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T03:52:49Z",
+      "side": 1,
+      "message": "Arguments \u003d\u003e Argument",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "870fee7a_83b2b71d",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T03:52:49Z",
+      "side": 1,
+      "message": "We need to explain more here why and when this should be called.  I think it\u0027s only done from the lvol bdev module right now.  Take a look at the code and you can also ping Tomek, Maciek and/or Piotr P. if you have questions.",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ee3b455_f114f623",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T03:52:49Z",
+      "side": 1,
+      "message": "I think you can remove \"Return codes\" - but maybe check the documentation output to see how it looks",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2129899_ea7764f3",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T03:52:49Z",
+      "side": 1,
+      "message": "Not always - sometimes this is done asynchronously.  For example, when the lvol examine function is called, we have to do asynchronous reads to know if an lvolstore is on the bdev being examined.",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0d5c125_c9d5f13a",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T03:52:49Z",
+      "side": 1,
+      "message": "I don\u0027t think this is always true either - there are cases where this can be done asynchronously (i.e. not necessarily at the end of the modules init function).",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "108c0ab9_c92920ac",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T03:52:49Z",
+      "side": 1,
+      "message": "This is done in response to the module_fini callback function getting called.  Also may be called asynchronously (i.e. not in the module_fini callback itself).",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21c2cd7c_14df4873",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T03:52:49Z",
+      "side": 1,
+      "message": "Also automatically upgrades desc to write access.",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
