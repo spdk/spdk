@@ -72,19 +72,28 @@ def save_config(client, args):
 def load_config(client, args):
     json_config = _json_load(args.filename)
 
+    # remove subsystems with no config
     subsystems = json_config['subsystems']
+    for subsystem in list(subsystems):
+        if not subsystem['config']:
+            subsystems.remove(subsystem)
+
+    # check if methods in the config file are known
+    allowed_methods = client.call('get_rpc_methods')
+    for subsystem in list(subsystems):
+        config = subsystem['config']
+        for elem in list(config):
+            if 'method' not in elem or elem['method'] not in allowed_methods:
+                raise rpc_client.JSONRPCException("Unknown method was included in the config file")
+
     while subsystems:
         allowed_methods = client.call('get_rpc_methods', {'current': True})
         allowed_found = False
 
         for subsystem in list(subsystems):
-            if not subsystem['config']:
-                subsystems.remove(subsystem)
-                continue
-
             config = subsystem['config']
             for elem in list(config):
-                if not elem or 'method' not in elem or elem['method'] not in allowed_methods:
+                if 'method' not in elem or elem['method'] not in allowed_methods:
                     continue
 
                 client.call(elem['method'], elem['params'])
@@ -98,8 +107,11 @@ def load_config(client, args):
             client.call('start_subsystem_init')
             allowed_found = True
 
-        if subsystems and not allowed_found:
-            raise rpc_client.JSONRPCException("Some config left but did not found any allowed method to execute")
+        if not allowed_found:
+            break
+
+    if subsystems:
+        print("Some configs were skipped because the RPC state that can call them passed over.")
 
 
 def load_subsystem_config(client, args):
