@@ -117,8 +117,8 @@ part_test(void)
 	bdev_base.module = &bdev_ut_if;
 	rc = spdk_bdev_register(&bdev_base);
 	CU_ASSERT(rc == 0);
-	spdk_bdev_part_base_construct(base, &bdev_base, NULL, &vbdev_ut_if,
-				      &part_fn_table, &tailq, __base_free, 0, NULL, NULL);
+	base = spdk_bdev_part_base_construct(&bdev_base, NULL, &vbdev_ut_if,
+					     &part_fn_table, &tailq, __base_free, 0, NULL, NULL);
 
 	spdk_bdev_part_construct(&part1, base, "test1", 0, 100, "test");
 	spdk_bdev_part_construct(&part2, base, "test2", 100, 100, "test");
