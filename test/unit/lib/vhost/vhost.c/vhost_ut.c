@@ -105,6 +105,7 @@ DEFINE_STUB(spdk_vhost_scsi_controller_construct, int, (void), 0);
 DEFINE_STUB(spdk_vhost_blk_controller_construct, int, (void), 0);
 DEFINE_STUB(spdk_vhost_nvme_admin_passthrough, int, (int vid, void *cmd, void *cqe, void *buf), 0);
 DEFINE_STUB(spdk_vhost_nvme_set_cq_call, int, (int vid, uint16_t qid, int fd), 0);
+DEFINE_STUB(spdk_vhost_nvme_set_bar_mr, int, (int vid, void *bar, uint64_t bar_size), 0);
 DEFINE_STUB(spdk_vhost_nvme_get_cap, int, (int vid, uint64_t *cap), 0);
 DEFINE_STUB(spdk_vhost_nvme_controller_construct, int, (void), 0);
 DEFINE_STUB(rte_vhost_set_vhost_vring_last_idx, int,
