@@ -110,9 +110,19 @@ def load_config(client, args):
 
 
 def load_subsystem_config(client, args):
-    config = __json_load(args.filename)
+    json_config = __json_load(args.filename)
+    allowed_methods = client.call('get_rpc_methods', {'current': True})
 
-    for elem in config['config']:
-        if not elem or 'method' not in elem:
+    if not json_config['config']:
+        return
+
+    config = json_config['config']
+    for elem in list(config):
+        if 'method' not in elem or elem['method'] not in allowed_methods:
             continue
+
         client.call(elem['method'], elem['params'])
+        config.remove(elem)
+
+    if config:
+        print("Some configs not loadable in the current RPC state were skipped")
