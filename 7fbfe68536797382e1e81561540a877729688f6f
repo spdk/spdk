@@ -116,6 +116,24 @@
     },
     {
       "key": {
+        "uuid": "3b021511_0cd8d451",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-21T07:08:01Z",
+      "side": 1,
+      "message": "Isn\u0027t the behaviour of bdev-\u003edestruct() going to be deprecated?",
+      "parentUuid": "e8c94a63_5c594885",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5322414f_c65dff6a",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 31
