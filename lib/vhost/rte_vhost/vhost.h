@@ -200,6 +200,8 @@ struct virtio_net {
 	uint32_t		max_guest_pages;
 	struct guest_page       *guest_pages;
 	int                     has_new_mem_table;
+	void			*bar_addr;
+	uint64_t		bar_size;
 	struct VhostUserMemory  mem_table;
 	int                     mem_table_fds[VHOST_MEMORY_MAX_NREGIONS];
 } __rte_cache_aligned;
