@@ -114,6 +114,15 @@ def load_config(client, args):
         print("Some configs were skipped because the RPC state that can call them passed over.")
 
 
+def save_subsystem_config(client, args):
+    cfg = {
+        'subsystem': args.name,
+        'config': client.call('get_subsystem_config', {"name": args.name})
+    }
+
+    _json_dump(cfg, args.filename, args.indent)
+
+
 def load_subsystem_config(client, args):
     subsystem = _json_load(args.filename)
 
