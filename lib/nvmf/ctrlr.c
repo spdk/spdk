@@ -1211,6 +1211,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->cqes.max = 4;
 		cdata->nn = subsystem->max_nsid;
 		cdata->vwc.present = 1;
+		cdata->vwc.flush_broadcast = SPDK_NVME_FLUSH_BROADCAST_NOT_SUPPORTED;
 
 		cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
 		cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
