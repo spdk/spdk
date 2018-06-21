@@ -152,10 +152,12 @@ pmemblk_open(const char *path, size_t bsize)
 
 	return pool;
 }
-void
+
+int
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
 {
 	cb(NULL, bdev_io);
+	return 0;
 }
 
 static void
