@@ -46,7 +46,7 @@ elif [ -f /etc/SuSE-release ]; then
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
 elif [ $SYSTEM = "FreeBSD" ] ; then
-	pkg install -y gmake cunit openssl git devel/astyle bash devel/pep8 \
+	pkg install -y gmake cunit openssl git devel/astyle bash devel/pep8 py27-pycodestyle \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	# Additional dependencies for building docs
 	pkg install -y doxygen mscgen graphviz
