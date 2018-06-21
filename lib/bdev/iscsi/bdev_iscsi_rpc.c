@@ -76,9 +76,7 @@ construct_iscsi_bdev_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
 			return;
 		}
 
-		spdk_json_write_array_begin(w);
 		spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-		spdk_json_write_array_end(w);
 		spdk_jsonrpc_end_result(request, w);
 	}
 }
