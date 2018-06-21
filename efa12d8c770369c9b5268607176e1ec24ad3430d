@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eaf0ed2e_2bbeafb2",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T21:11:55Z",
+      "side": 1,
+      "message": "I think FC should be zero length string, just like PCIe.",
+      "revId": "efa12d8c770369c9b5268607176e1ec24ad3430d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
