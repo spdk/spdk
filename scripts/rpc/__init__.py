@@ -29,6 +29,31 @@ def get_rpc_methods(client, args):
     return client.call('get_rpc_methods', params)
 
 
+def _json_dump(config, filename, indent):
+    if filename is None:
+        if indent is None:
+            indent = 2
+        elif indent < 0:
+            indent = None
+        json.dump(config, sys.stdout, indent=indent)
+        sys.stdout.write('\n')
+    else:
+        if indent is None or indent < 0:
+            indent = None
+        with open(filename, 'w') as file:
+            json.dump(config, file, indent=indent)
+            file.write('\n')
+
+
+def _json_load(filename):
+    if not filename or filename == '-':
+        return json.load(sys.stdin)
+
+    else:
+        with open(filename, 'r') as file:
+            return json.load(file)
+
+
 def save_config(client, args):
     config = {
         'subsystems': []
@@ -41,28 +66,11 @@ def save_config(client, args):
         }
         config['subsystems'].append(cfg)
 
-    indent = args.indent
-    if args.filename is None:
-        if indent is None:
-            indent = 2
-        elif indent < 0:
-            indent = None
-        json.dump(config, sys.stdout, indent=indent)
-        sys.stdout.write('\n')
-    else:
-        if indent is None or indent < 0:
-            indent = None
-        with open(args.filename, 'w') as file:
-            json.dump(config, file, indent=indent)
-            file.write('\n')
+    _json_dump(config, args.filename, args.indent)
 
 
 def load_config(client, args):
-    if not args.filename or args.filename == '-':
-        json_config = json.load(sys.stdin)
-    else:
-        with open(args.filename, 'r') as file:
-            json_config = json.load(file)
+    json_config = _json_load(args.filename)
 
     subsystems = json_config['subsystems']
     while subsystems:
@@ -95,11 +103,7 @@ def load_config(client, args):
 
 
 def load_subsystem_config(client, args):
-    if not args.filename or args.filename == '-':
-        config = json.load(sys.stdin)
-    else:
-        with open(args.filename, 'r') as file:
-            config = json.load(file)
+    config = _json_load(args.filename)
 
     for elem in config['config']:
         if not elem or 'method' not in elem:
