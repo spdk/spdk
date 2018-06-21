@@ -215,8 +215,8 @@ is_base_bdev(struct spdk_bdev *base, struct spdk_bdev *vbdev)
 	size_t i;
 	int found = 0;
 
-	for (i = 0; i < vbdev->base_bdevs_cnt; i++) {
-		found += vbdev->base_bdevs[i] == base;
+	for (i = 0; i < vbdev->internal.base_bdevs_cnt; i++) {
+		found += vbdev->internal.base_bdevs[i] == base;
 	}
 
 	CU_ASSERT(found <= 1);
@@ -250,7 +250,7 @@ allocate_bdev(char *name)
 
 	rc = spdk_bdev_register(bdev);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(bdev->base_bdevs_cnt == 0);
+	CU_ASSERT(bdev->internal.base_bdevs_cnt == 0);
 	CU_ASSERT(bdev->vbdevs_cnt == 0);
 
 	return bdev;
@@ -278,7 +278,7 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 
 	rc = spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(bdev->base_bdevs_cnt > 0);
+	CU_ASSERT(bdev->internal.base_bdevs_cnt > 0);
 	CU_ASSERT(bdev->vbdevs_cnt == 0);
 
 	CU_ASSERT(check_base_and_vbdev(base1, bdev) == true);
@@ -301,7 +301,7 @@ free_bdev(struct spdk_bdev *bdev)
 static void
 free_vbdev(struct spdk_bdev *bdev)
 {
-	CU_ASSERT(bdev->base_bdevs_cnt != 0);
+	CU_ASSERT(bdev->internal.base_bdevs_cnt != 0);
 	spdk_bdev_unregister(bdev, NULL, NULL);
 	memset(bdev, 0xFF, sizeof(*bdev));
 	free(bdev);
