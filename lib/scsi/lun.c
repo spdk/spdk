@@ -215,13 +215,8 @@ _spdk_scsi_lun_hot_remove(void *arg1)
 		lun->hotremove_cb(lun, lun->hotremove_ctx);
 	}
 
-	if (spdk_scsi_lun_has_pending_tasks(lun) ||
-	    lun->io_channel != NULL) {
-		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_hot_remove_poll,
-					lun, 10);
-	} else {
-		spdk_scsi_lun_remove(lun);
-	}
+	lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_hot_remove_poll,
+				lun, 10);
 }
 
 static void
@@ -241,11 +236,7 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
 	}
 
 	thread = spdk_io_channel_get_thread(lun->io_channel);
-	if (thread != spdk_get_thread()) {
-		spdk_thread_send_msg(thread, _spdk_scsi_lun_hot_remove, lun);
-	} else {
-		_spdk_scsi_lun_hot_remove(lun);
-	}
+	spdk_thread_send_msg(thread, _spdk_scsi_lun_hot_remove, lun);
 }
 
 /**
