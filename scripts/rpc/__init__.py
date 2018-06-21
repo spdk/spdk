@@ -68,37 +68,45 @@ def save_config(client, args):
     __json_dump(config, args.filename, args.indent)
 
 
+def __load_config(client, subsystems, allowed_methods):
+    for subsystem in list(subsystems):
+        if not subsystem['config']:
+            subsystems.remove(subsystem)
+            continue
+
+        config = subsystem['config']
+        for elem in list(config):
+            if 'method' not in elem or elem['method'] not in allowed_methods:
+                continue
+
+            client.call(elem['method'], elem['params'])
+            config.remove(elem)
+
+        if not config:
+            subsystems.remove(subsystem)
+
+    return subsystems
+
+
 def load_config(client, args):
     json_config = __json_load(args.filename)
 
     subsystems = json_config['subsystems']
-    while subsystems:
-        allowed_methods = client.call('get_rpc_methods', {'current': True})
-        allowed_found = False
+    allowed_methods = client.call('get_rpc_methods', {'current': True})
 
-        for subsystem in list(subsystems):
-            if not subsystem['config']:
-                subsystems.remove(subsystem)
-                continue
+    if 'start_subsystem_init' not in allowed_methods:
+        print("Subsystems have been initialized and some configs are skipped to load")
+        __load_config(client, subsystems, allowed_methods)
+        return
 
-            config = subsystem['config']
-            for elem in list(config):
-                if not elem or 'method' not in elem or elem['method'] not in allowed_methods:
-                    continue
+    subsystems = __load_config(client, subsystems, allowed_methods)
+    client.call('start_subsystem_init')
 
-                client.call(elem['method'], elem['params'])
-                config.remove(elem)
-                allowed_found = True
+    allowed_methods = client.call('get_rpc_methods', {'current': True})
+    subsystems = __load_config(client, subsystems, allowed_methods)
 
-            if not config:
-                subsystems.remove(subsystem)
-
-        if 'start_subsystem_init' in allowed_methods:
-            client.call('start_subsystem_init')
-            allowed_found = True
-
-        if subsystems and not allowed_found:
-            raise rpc_client.JSONRPCException("Some config left but did not found any allowed method to execute")
+    if subsystems:
+        raise rpc_client.JSONRPCException("Loading configs was done but some configs were left")
 
 
 def load_subsystem_config(client, args):
