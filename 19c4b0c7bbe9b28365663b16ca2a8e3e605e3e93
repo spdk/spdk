@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9c104ff2_9bec36eb",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-06-21T19:49:54Z",
+      "side": 1,
+      "message": "We will need to expand on ZOPY_START and ZCOPY_END to indicate if this is a READ or a WRITE operation. The semantics are quite different when it comes to READ-START and WRITE-START. Similarly, the ZCOPY-END for READ and WRITE are different.\nCan I suggest that we either add IO type within zcopy union or expand these ENUMS.",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "21e09f65_c7e9edf8",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 3
@@ -31,6 +48,24 @@
       "side": 1,
       "message": "This is tricky. There are a few considerations when implementing a bdev module that supports this zcopy interface. For the simplest bdev modules, like the malloc bdev example I show in the next patch in the series, each block is represented by a fixed region in memory. In that case, zcopy start can return a pointer directly to the backing memory and the user can memcpy into and out of the region. Populate and commit do nothing in this scenario.\n\nThere are a few other designs that want to support zcopy though. For example, the malloc bdev, using the strategy I\u0027m currently employing, isn\u0027t able to provide any atomicity guarantees. If it was instead implemented as a linked list of block-sized buffers with some associated LBA to buffer mapping, then on a zcopy start a new buffer could be obtained, optionally populated with the live data, and passed to the user, and then the updates only made \"live\" on zcopy_end when commit is set to true. That is still zero copy on commit at least because the commit just updates metadata. This design also allows for stronger atomicity guarantees. It so happens that this is how the pmem bdev module works - it never writes in place.\n\nThere are other designs that cache data in memory. In these cases, if the data the user is requesting is not already in cache, populating it may be an expensive operation. If the user intends to overwrite the data entirely with new data, it can skip that step. Similarly on zcopy_end, if the user only read from the buffer, it does not need to go through the work of making the data persistent (which may require flushing to disk).",
       "parentUuid": "21e09f65_c7e9edf8",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13314fec_03564228",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-06-21T19:49:54Z",
+      "side": 1,
+      "message": "I think I understand Ben\u0027s intent of Populate vs Commit. Netapp will be using Commit where as malloc will be using populate. Similarly pmem when modified to acquire in place buffers will use commit. Is that correct?",
+      "parentUuid": "e82f0ac9_e43ff49b",
       "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
