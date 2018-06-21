@@ -40,6 +40,7 @@
 #define SPDK_ENV_H
 
 #include "spdk/stdinc.h"
+#include "spdk/log.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,6 +73,7 @@ struct spdk_env_opts {
 	int			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;
+	enum spdk_log_level	print_level;
 	size_t			num_pci_addr;
 	struct spdk_pci_addr	*pci_blacklist;
 	struct spdk_pci_addr	*pci_whitelist;
