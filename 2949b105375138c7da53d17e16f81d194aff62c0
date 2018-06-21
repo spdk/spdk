@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "77e5f16d_1e21945d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1468,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-21T07:00:47Z",
+      "side": 1,
+      "message": "As Ben suggested we never write super block during spdk_bs_load (even if size or blobid mask were not set). Superblock structure is freed after initial blobstore loading, so we have to set size again during first super_block write.",
+      "parentUuid": "14f29fb5_20fb0159",
+      "revId": "2949b105375138c7da53d17e16f81d194aff62c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "542dc705_3dd75fb2",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 15
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-20T20:36:00Z",
       "side": 1,
       "message": "This removes setting super-\u003eclean \u003d 0 and bs-\u003eclean \u003d 0.  If you feel that\u0027s no longer needed when used_blobid_mask_len \u003d\u003d 0, it should be fixed in a separate patch.",
+      "revId": "2949b105375138c7da53d17e16f81d194aff62c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02693697_d0ff95f5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 3108,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-21T07:00:47Z",
+      "side": 1,
+      "message": "As mentioned in previous comment ctx-\u003esuper if freed after bs init and write_super is no longer called here.\nsettting bs-\u003eclean also breaks the logic, because we write super block only first time we change any metadata (and therefore when bs-\u003eclean \u003d\u003d 1)\n\nTo fix that in separate patch I have to probably revert to patchset 11 (before Ben\u0027s feedback). Then provide this code in separate patch. Do you think that is ok?",
+      "parentUuid": "542dc705_3dd75fb2",
       "revId": "2949b105375138c7da53d17e16f81d194aff62c0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
