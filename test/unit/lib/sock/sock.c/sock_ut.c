@@ -36,8 +36,8 @@
 
 #include "spdk_cunit.h"
 
-#include "net/sock.c"
-#include "net/posix/posix.c"
+#include "sock/sock.c"
+#include "sock/posix/posix.c"
 
 #define UT_IP	"test_ip"
 #define UT_PORT	1234
