@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "053e3231_997aedce",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T21:31:41Z",
+      "side": 1,
+      "message": "Hi John,\n\nIs this needed?  setup.sh now primarily uses HUGEMEM, not NRHUGE.  This also doesn\u0027t seem related to this patch.\n\n-Jim",
+      "revId": "ac92578cec325edfaa4037cc9f50c52ec5482828",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70c8c4d9_7d52e473",
         "filename": "test/nvme/spdk_nvme_cli.sh",
         "patchSetId": 4
@@ -19,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "c5c8ca00_d2028163",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T21:31:41Z",
+      "side": 1,
+      "message": "Good question.  SPDK has a fork of nvme-cli which uses the SPDK NVMe driver instead of using the Linux kernel/ioctl interface.  That is expected to already be checked out when running this script.\n\nI\u0027m not saying that\u0027s right or ideal - just what it is currently.  I say we add comments to explain it in a separate patch.",
+      "parentUuid": "70c8c4d9_7d52e473",
+      "revId": "ac92578cec325edfaa4037cc9f50c52ec5482828",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f7414478_99cd8910",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 4
@@ -30,6 +65,24 @@
       "writtenOn": "2018-06-21T14:44:18Z",
       "side": 1,
       "message": "Another private nvme-cli.  Why?",
+      "revId": "ac92578cec325edfaa4037cc9f50c52ec5482828",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11b43191_f3212279",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T21:31:41Z",
+      "side": 1,
+      "message": "Same as previous file.",
+      "parentUuid": "f7414478_99cd8910",
       "revId": "ac92578cec325edfaa4037cc9f50c52ec5482828",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
