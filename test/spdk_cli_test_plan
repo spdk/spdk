@@ -1,0 +1,51 @@
+We can create spdk setup using SPDK CLI in command line 
+then compare an output file fith expected results using 'match' app
+e. g.  
+./scripts/spdkcli.py bdevs/Malloc create 32 512 Malloc0 
+./scripts/spdkcli.py / ll > tc1.test
+./scripts/spdkcli.py /bdevs/Malloc/Malloc0 show_details > tc2.test
+./test/app/match/match -v tc1.test.match
+etc.
+
+Test plan would include:
+1. create test setup using SPDK CLI in command line 
+	- bdevs: nvme, malloc, lvol, split disks
+	- vhost: block, scsi 
+2. check output with match 
+	- ll (check tree structure)
+	- show_details
+3. delete previously created setup using SPDK CLI in command line 
+4. check output with match 
+
+Create spdk setup using rpc methods then check if SPDK CLI is displaying 
+bdevs/controllers correctly by comparing output file with expected results
+e. g.
+./scripts/rpc.py construct_malloc_bdev 32 4096 --name Malloc0
+./scripts/spdkcli.py / ll > tc1.test
+./scripts/spdkcli.py /bdevs/Malloc/Malloc0 show_details > tc2.test
+./test/app/match/match -v tc1.test.match
+etc.
+
+5. create test setup using rpc commands
+	- bdevs: nvme, malloc, lvol, split disks
+	- vhost: block, scsi 
+6. match output with match
+	- ll (check tree structure)
+	- show_details
+7. delete previously created setup using rpc commands
+8. match output with match
+
+We could test if SPDK CLI returns proper error codes if we try to make 
+invalid operation. Apparently exit status depends on python version used so this is optional
+e. g.
+./scripts/spdkcli.py /bdevs/Malloc create 32 512 Malloc2
+Malloc2
+echo $?
+0
+./scripts/spdkcli.py /bdevs/Malloc create 32 512 Malloc2
+bdev.c:2490:spdk_bdev_init: *ERROR*: Bdev name:Malloc2 already exists
+
+echo $?
+0
+ 
+9. optional: negative cases, check status code if expecting error
