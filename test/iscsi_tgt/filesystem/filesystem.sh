@@ -125,7 +125,7 @@ rm -rf /mnt/device
 
 trap - SIGINT SIGTERM EXIT
 
-remove_backends
 iscsicleanup
+remove_backends
 killprocess $pid
 timing_exit filesystem
