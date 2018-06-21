@@ -1424,12 +1424,6 @@ spdk_vhost_init(void)
 		return -1;
 	}
 
-	ret = spdk_vhost_blk_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
-		return -1;
-	}
-
 	return 0;
 }
 
