@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b54da18_30d9220b",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T21:36:05Z",
+      "side": 1,
+      "message": "Some of these are already installed by pkgdep.sh - we recently cleaned up vm_setup.sh to remove those already covered by pkgdep.sh.",
+      "revId": "8216b10bdd007b171d471e376b3075a489221c91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
