@@ -86,10 +86,10 @@ $fio_py 262144 16 randwrite 10
 sync
 
 trap - SIGINT SIGTERM EXIT
-remove_backends
 
 rm -f $testdir/iscsi.conf
 rm -f ./local-job*
 iscsicleanup
+remove_backends
 killprocess $iscsipid
 timing_exit multiconnection
