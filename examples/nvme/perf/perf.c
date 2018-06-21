@@ -183,6 +183,7 @@ static bool g_no_pci;
 static bool g_warn;
 
 static const char *g_core_mask;
+bool debug_mode = false;
 
 struct trid_entry {
 	struct spdk_nvme_transport_id	trid;
@@ -931,6 +932,8 @@ static void usage(char *program_name)
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i shared memory group ID]\n");
+	printf("\t");
+	spdk_tracelog_usage(stdout, "-T");
 }
 
 static void
@@ -1230,6 +1233,7 @@ parse_args(int argc, char **argv)
 	const char *workload_type;
 	int op;
 	bool mix_specified = false;
+	int rc;
 
 	/* default value */
 	g_queue_depth = 0;
@@ -1240,7 +1244,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:e:i:lm:q:r:s:t:w:DLM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:e:i:lm:q:r:s:t:w:DLM:T:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1291,6 +1295,21 @@ parse_args(int argc, char **argv)
 			g_rw_percentage = atoi(optarg);
 			mix_specified = true;
 			break;
+		case 'T':
+#ifndef DEBUG
+			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -T flag\n",
+				argv[0]);
+			usage(argv[0]);
+			exit(1);
+#else
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+			}
+			debug_mode = true;
+			break;
+#endif
 		default:
 			usage(argv[0]);
 			return 1;
@@ -1617,6 +1636,9 @@ int main(int argc, char **argv)
 		rc = -1;
 		goto cleanup;
 	}
+	if (debug_mode) {
+		opts.print_level = SPDK_LOG_DEBUG;
+	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
 
@@ -1650,6 +1672,18 @@ int main(int argc, char **argv)
 	}
 
 	printf("Initialization complete. Launching workers.\n");
+
+	if (opts.print_level > SPDK_LOG_WARN &&
+	    isatty(STDERR_FILENO) &&
+	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
+		printf("Warning: printing stderr to console terminal without -q option specified.\n");
+		printf("Suggest using -q to disable logging to stderr and monitor syslog, or\n");
+		printf("redirect stderr to a file.\n");
+		printf("(Delaying for 10 seconds...)\n");
+		sleep(10);
+	}
+
+	spdk_log_set_print_level(opts.print_level);
 
 	/* Launch all of the slave workers */
 	master_core = spdk_env_get_current_core();
