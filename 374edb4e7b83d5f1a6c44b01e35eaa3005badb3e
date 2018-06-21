@@ -16,6 +16,24 @@
       "revId": "374edb4e7b83d5f1a6c44b01e35eaa3005badb3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61c18743_7f0efa00",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-21T05:14:14Z",
+      "side": 1,
+      "message": "OK I fixed this.",
+      "parentUuid": "b8443977_b4b3ea16",
+      "revId": "374edb4e7b83d5f1a6c44b01e35eaa3005badb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
