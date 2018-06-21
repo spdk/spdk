@@ -297,7 +297,6 @@ int spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name, const
 int spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt);
 
 int spdk_vhost_scsi_controller_construct(void);
-int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_info_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w);
 void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 void spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt, spdk_vhost_dev_fn fn, void *arg);
