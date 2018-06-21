@@ -36,7 +36,6 @@
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
-#include "spdk/env.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
@@ -909,7 +908,7 @@ static void usage(char *program_name)
 	printf("\t[-l enable latency tracking via ssd (if supported), default: disabled]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
-	printf("\t\t(default: 1)]\n");
+	printf("\t\t(default: 1)\n");
 	printf("\t[-D disable submission queue in controller memory buffer, default: enabled]\n");
 	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
