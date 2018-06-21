@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "908c1509_39716476",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T20:52:38Z",
+      "side": 1,
+      "message": "* Free",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aaceb510_4a58f1bd",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T20:52:38Z",
+      "side": 1,
+      "message": "Return code can be removed",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90007960_ce5b68ee",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T20:52:38Z",
+      "side": 1,
+      "message": "/param ch_destroy_cb\n\nYou should rebase this from latest master - Doxygen will now fail the build for some of these.  You can also run make in the doc directory yourself before pushing the code to see if it finds some of these errors for you.",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "782982bb_7aaa0bba",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T20:52:38Z",
+      "side": 1,
+      "message": "remove this",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4162204_688fac4d",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T20:52:38Z",
+      "side": 1,
+      "message": "remove this",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
