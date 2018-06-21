@@ -212,7 +212,7 @@ static int
 vbdev_error_destruct(void *ctx)
 {
 	struct error_disk *error_disk = ctx;
-	struct spdk_bdev *base_bdev = error_disk->part.base->bdev;
+	struct spdk_bdev *base_bdev = spdk_bdev_part_base_get_bdev(error_disk->part.base);
 	int rc;
 
 	rc = vbdev_error_config_remove(base_bdev->name);
@@ -227,12 +227,13 @@ static int
 vbdev_error_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct error_disk *error_disk = ctx;
+	struct spdk_bdev *base_bdev = spdk_bdev_part_base_get_bdev(error_disk->part.base);
 
 	spdk_json_write_name(w, "error_disk");
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, error_disk->part.base->bdev->name);
+	spdk_json_write_string(w, base_bdev->name);
 
 	spdk_json_write_object_end(w);
 
@@ -267,20 +268,14 @@ _spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	char *name;
 	int rc;
 
-	base = calloc(1, sizeof(*base));
+	base = spdk_bdev_part_base_construct(base_bdev,
+					     spdk_vbdev_error_base_bdev_hotremove_cb,
+					     &error_if, &vbdev_error_fn_table,
+					     &g_error_disks, spdk_error_free_base,
+					     sizeof(struct error_channel), NULL, NULL);
 	if (!base) {
-		SPDK_ERRLOG("Memory allocation failure\n");
-		return -1;
-	}
-
-	rc = spdk_bdev_part_base_construct(base, base_bdev,
-					   spdk_vbdev_error_base_bdev_hotremove_cb,
-					   &error_if, &vbdev_error_fn_table,
-					   &g_error_disks, spdk_error_free_base,
-					   sizeof(struct error_channel), NULL, NULL);
-	if (rc) {
 		SPDK_ERRLOG("could not construct part base for bdev %s\n", spdk_bdev_get_name(base_bdev));
-		return rc;
+		return -ENOMEM;
 	}
 
 	disk = calloc(1, sizeof(*disk));
