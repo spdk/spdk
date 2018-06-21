@@ -16,6 +16,58 @@
       "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a147960_56d29076",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1838,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T00:05:16Z",
+      "side": 1,
+      "message": "But the bdev layer can\u0027t enforce how the caller will use the buffer that is returned.  So we can only use the zcopy API on write-enabled descriptors.",
+      "parentUuid": "940b3c43_5348e233",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8679c5a4_ae52eb57",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1848,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T00:05:16Z",
+      "side": 1,
+      "message": "duing \u003d\u003e during\nwritev \u003d\u003e zcopy_start\n\nBut really I think we should remove this ERRLOG altogether - I removed them as part of the recent spdk_bdev_queue_io_wait patch.",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c54eef92_e977fb6f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1884,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T00:05:16Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
