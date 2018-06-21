@@ -267,6 +267,7 @@ void spdk_vhost_unlock(void);
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
 int spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf);
 int spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd);
+int spdk_vhost_nvme_set_bar_mr(int vid, void *bar_addr, uint64_t bar_size);
 int spdk_vhost_nvme_get_cap(int vid, uint64_t *cap);
 int spdk_vhost_nvme_controller_construct(void);
 int spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t io_queues);
