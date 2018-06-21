@@ -88,6 +88,7 @@ fi
 timing_exit nbd_gpt
 
 timing_enter bdev_svc
+discover_bdevs $rootdir $testdir/bdev.conf
 bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claimed == false)')
 timing_exit bdev_svc
 
