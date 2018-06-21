@@ -16,6 +16,24 @@
       "revId": "6626ae08e9bf8055e0cf54fa732521fb18658df4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "178e696f_6bddee0d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-21T03:00:29Z",
+      "side": 1,
+      "message": "Thank you for your nice proposal.\n\nI couldn\u0027t keep the current loop structure.\nBut additional RPC states will not probable for now and I hope the new one is simple enough.",
+      "parentUuid": "e88704f6_93d00808",
+      "revId": "6626ae08e9bf8055e0cf54fa732521fb18658df4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
