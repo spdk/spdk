@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ce09319_adf5fa3e",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T00:11:01Z",
+      "side": 1,
+      "message": "Should we set iovcnt here? Or just check/assert that it\u0027s 1?\n\nI guess I was thinking that modules shouldn\u0027t set iovcnt.  See the SPDK_BDEV_IO_TYPE_READ case above.",
+      "revId": "d18c58cf045abe8947fd68665cecddf08ee5efad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
