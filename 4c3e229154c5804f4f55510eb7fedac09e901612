@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c2c86797_59af5b47",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T17:31:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef7b283c_8a5a64bd",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "643f00d1_068f6182",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-21T03:52:49Z",
       "side": 1,
       "message": "if a bdev or bdev alias with the same name already exists",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a394b16a_16e4f3f8",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T17:31:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "643f00d1_068f6182",
       "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "81b3d093_47b6d9a0",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T17:31:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "befda621_6934c811",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "870fee7a_83b2b71d",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2018-06-21T03:52:49Z",
       "side": 1,
       "message": "We need to explain more here why and when this should be called.  I think it\u0027s only done from the lvol bdev module right now.  Take a look at the code and you can also ping Tomek, Maciek and/or Piotr P. if you have questions.",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de19b183_9d879c46",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T17:31:54Z",
+      "side": 1,
+      "message": "Thanks, that\u0027s a good point. I looked into it a little deeper, and I think that I understand it now. Pretty much all of the virtual bdevs use this call through the part module. It is used when the destruct call from a bdev module requires some kind of asynchronous preparation before the underlying bdev can be unregistered. I also e-mailed Piotr to get some more insight.",
+      "parentUuid": "870fee7a_83b2b71d",
       "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "578d237a_4fc2aae0",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T17:31:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6ee3b455_f114f623",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2129899_ea7764f3",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 2
@@ -98,6 +188,24 @@
       "writtenOn": "2018-06-21T03:52:49Z",
       "side": 1,
       "message": "Not always - sometimes this is done asynchronously.  For example, when the lvol examine function is called, we have to do asynchronous reads to know if an lvolstore is on the bdev being examined.",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63933bf8_e6b8d3f0",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T17:31:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e2129899_ea7764f3",
       "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "49aa7b41_c0927bbb",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T17:31:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b0d5c125_c9d5f13a",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "108c0ab9_c92920ac",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 2
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "602a1db1_f548d07e",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T17:31:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "108c0ab9_c92920ac",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21c2cd7c_14df4873",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 2
@@ -149,6 +293,24 @@
       "writtenOn": "2018-06-21T03:52:49Z",
       "side": 1,
       "message": "Also automatically upgrades desc to write access.",
+      "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a7fa97f_fc462f09",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T17:31:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "21c2cd7c_14df4873",
       "revId": "4c3e229154c5804f4f55510eb7fedac09e901612",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
