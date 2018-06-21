@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "940b3c43_5348e233",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1838,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-21T00:02:25Z",
+      "side": 1,
+      "message": "I could be reading this wrong, but couldn\u0027t you technically use this zero copy operation to get a read only buffer? For example, if populate was true, this would simply return the values inside the blocks, then you could filter out the condition if (!desc-\u003ewrite \u0026\u0026 commit).",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
