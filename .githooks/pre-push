@@ -14,17 +14,23 @@
 #
 
 rc=0
+SYSTEM=`uname -s`
 
 # Redirect output to stderr.
 exec 1>&2
 
+if [ "$SYSTEM" = "FreeBSD" ]; then
+	MAKE="gmake MAKE=gmake -j ${nproc}"
+	COMP="clang"
+else
+	MAKE="make -j ${nproc}"
+	COMP="gcc"
+fi
 
-MAKE="make -j ${nproc}"
-
-echo "Running make with gcc ..."
-echo "make clean " > make.log
+echo "Running make with $COMP ..."
+echo "${MAKE} clean " > make.log
 $MAKE clean  >> make.log 2>&1
-echo "make CONFIG_DEBUG=n CONFIG_WERROR=y " >> make.log
+echo "${MAKE} CONFIG_DEBUG=n CONFIG_WERROR=y " >> make.log
 $MAKE CONFIG_DEBUG=n CONFIG_WERROR=y  >> make.log 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then
@@ -37,9 +43,9 @@ if [ $rc -ne 0 ]; then
 	exit $rc
 fi
 
-echo "make clean " >> make.log
+echo "${MAKE} clean " >> make.log
 $MAKE clean  >> make.log 2>&1
-echo "make CONFIG_DEBUG=y CONFIG_WERROR=y " >> make.log
+echo "${MAKE} CONFIG_DEBUG=y CONFIG_WERROR=y " >> make.log
 $MAKE CONFIG_DEBUG=y CONFIG_WERROR=y  >> make.log 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then
@@ -66,8 +72,14 @@ if [ $rc -ne 0 ]; then
 	exit $rc
 fi
 
-echo "make clean " >> make.log
+echo "$MAKE clean " >> make.log
 $MAKE clean  >> make.log 2>&1
+
+if [ "$SYSTEM" = "FreeBSD" ]; then
+	echo
+        echo "Pushing to $1 $2"
+        exit $rc
+fi
 
 if ! hash clang 2>/dev/null; then
 	echo "clang not found; skipping the clang tests"
@@ -119,7 +131,7 @@ if [ $rc -ne 0 ]; then
 	exit $rc
 fi
 
-$MAKE clean CC=clang CXX=clang++ 2> /dev/null
+${MAKE} clean CC=clang CXX=clang++ 2> /dev/null
 
 echo "Pushing to $1 $2"
 
