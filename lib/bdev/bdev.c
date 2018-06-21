@@ -1101,10 +1101,31 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.io_submit_ch = NULL;
 }
 
+static bool
+_spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+{
+	return bdev->fn_table->io_type_supported(bdev->ctxt, io_type);
+}
+
 bool
 spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
 {
-	return bdev->fn_table->io_type_supported(bdev->ctxt, io_type);
+	bool supported;
+
+	supported = _spdk_bdev_io_type_supported(bdev, io_type);
+
+	if (!supported) {
+		switch (io_type) {
+		case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+			/* The bdev layer will emulate write zeroes as long as write is supported. */
+			supported = _spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE);
+			break;
+		default:
+			break;
+		}
+	}
+
+	return supported;
 }
 
 int
@@ -1867,13 +1888,13 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	bdev_io->internal.ch = channel;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 
-	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+	if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
 		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
 		bdev_io->u.bdev.num_blocks = num_blocks;
 		bdev_io->u.bdev.iovs = NULL;
 		bdev_io->u.bdev.iovcnt = 0;
 
-	} else {
+	} else if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE)) {
 		assert(spdk_bdev_get_block_size(bdev) <= ZERO_BUFFER_SIZE);
 
 		len = spdk_bdev_get_block_size(bdev) * num_blocks;
@@ -1891,6 +1912,9 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		bdev_io->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev);
 		bdev_io->u.bdev.split_remaining_num_blocks = num_blocks - bdev_io->u.bdev.num_blocks;
 		bdev_io->u.bdev.split_current_offset_blocks = offset_blocks + bdev_io->u.bdev.num_blocks;
+	} else {
+		spdk_bdev_free_io(bdev_io);
+		return -ENOTSUP;
 	}
 
 	if (split_request) {
