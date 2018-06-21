@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-LIBNAME = net_posix
+LIBNAME = sock_posix
 C_SRCS = posix.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

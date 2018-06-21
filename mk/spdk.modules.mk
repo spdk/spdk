@@ -62,8 +62,8 @@ BLOCKDEV_MODULES_LIST += bdev_pmem
 BLOCKDEV_MODULES_DEPS += -lpmemblk
 endif
 
-NET_MODULES_LIST = net
-NET_MODULES_LIST += net_posix
+NET_MODULES_LIST = net sock
+NET_MODULES_LIST += sock_posix
 
 ifeq ($(CONFIG_VPP),y)
 ifneq ($(CONFIG_VPP_DIR),)
@@ -72,7 +72,7 @@ NET_MODULES_DEPS += -l:libvppcom.a -l:libvlibmemoryclient.a
 else
 NET_MODULES_DEPS = -lvppcom
 endif
-NET_MODULES_LIST += net_vpp
+NET_MODULES_LIST += sock_vpp
 endif
 
 COPY_MODULES_LIST = copy_ioat ioat

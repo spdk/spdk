@@ -36,6 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS += vpp.c
 
-LIBNAME = net_vpp
+LIBNAME = sock_vpp
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
