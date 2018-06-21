@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "b1a0ed44_9fde015a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-06-21T07:03:25Z",
+      "side": 1,
+      "message": "The commit message can be \"Add cleanup.sh to remove shared memory files\". Then add more detail in the lines below.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 74
+      },
+      "revId": "ffec932eb66370eeb4615205304fef398bdf641d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c180db2_a3226fd6",
+        "filename": "scripts/cleanup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-06-21T07:03:25Z",
+      "side": 1,
+      "message": "Add echo line to print some useful message for users.",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 27
+      },
+      "revId": "ffec932eb66370eeb4615205304fef398bdf641d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c9a45f2d_2246392f",
         "filename": "scripts/cleanup.sh",
         "patchSetId": 3
@@ -13,6 +59,23 @@
       "writtenOn": "2018-06-21T06:42:57Z",
       "side": 1,
       "message": "Hi, Dong, did you test if it can remove the .pid and conns. file",
+      "revId": "ffec932eb66370eeb4615205304fef398bdf641d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a69814cf_508fd1b4",
+        "filename": "scripts/cleanup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-06-21T07:03:25Z",
+      "side": 1,
+      "message": "same as the line above, adding echo line.",
       "revId": "ffec932eb66370eeb4615205304fef398bdf641d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
