@@ -675,21 +675,15 @@ spdk_bdev_io_from_ctx(void *ctx)
 
 struct spdk_bdev_part_base;
 
-typedef void (*spdk_bdev_part_base_free_fn)(struct spdk_bdev_part_base *base);
+struct spdk_bdev *spdk_bdev_part_base_get_bdev(struct spdk_bdev_part_base *part_base);
 
-struct spdk_bdev_part_base {
-	struct spdk_bdev		*bdev;
-	struct spdk_bdev_desc		*desc;
-	uint32_t			ref;
-	uint32_t			channel_size;
-	spdk_bdev_part_base_free_fn	base_free_fn;
-	bool				claimed;
-	struct spdk_bdev_module		*module;
-	struct spdk_bdev_fn_table	*fn_table;
-	struct bdev_part_tailq		*tailq;
-	spdk_io_channel_create_cb	ch_create_cb;
-	spdk_io_channel_destroy_cb	ch_destroy_cb;
-};
+struct spdk_bdev_desc *spdk_bdev_part_base_get_desc(struct spdk_bdev_part_base *part_base);
+
+struct bdev_part_tailq *spdk_bdev_part_base_get_tailq(struct spdk_bdev_part_base *part_base);
+
+uint32_t spdk_bdev_part_base_get_ref(struct spdk_bdev_part_base *part_base);
+
+typedef void (*spdk_bdev_part_base_free_fn)(struct spdk_bdev_part_base *base);
 
 struct spdk_bdev_part {
 	struct spdk_bdev		bdev;
@@ -734,13 +728,11 @@ void spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part
 /**
  * Construct a new spdk_bdev_part_base on top of the provided bdev.
  *
- * \param base User allocated spdk_bdev_part_base to be filled by this function.
  * \param bdev The spdk_bdev upon which this base will be built.
  * \param remove_cb Function to be called upon hotremove of the bdev.
  * \param module The module to which this bdev base belongs.
  * \param fn_table Function table for communicating with the bdev backend.
  * \param tailq
- * \param free_fn User provided function to free base related context upon bdev removal or shutdown.
  * \param channel_size Channel size in bytes.
  * \param ch_create_cb Called after a new channel is allocated.
  * \param ch_destroy_cb Called upon channel deletion.
@@ -748,15 +740,14 @@ void spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part
  * \return 0 on success
  * \return -1 if the underlying bdev cannot be opened.
  */
-int spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev *bdev,
-				  spdk_bdev_remove_cb_t remove_cb,
-				  struct spdk_bdev_module *module,
-				  struct spdk_bdev_fn_table *fn_table,
-				  struct bdev_part_tailq *tailq,
-				  spdk_bdev_part_base_free_fn free_fn,
-				  uint32_t channel_size,
-				  spdk_io_channel_create_cb ch_create_cb,
-				  spdk_io_channel_destroy_cb ch_destroy_cb);
+struct spdk_bdev_part_base *spdk_bdev_part_base_construct(struct spdk_bdev *bdev,
+		spdk_bdev_remove_cb_t remove_cb,
+		struct spdk_bdev_module *module,
+		struct spdk_bdev_fn_table *fn_table,
+		struct bdev_part_tailq *tailq,
+		uint32_t channel_size,
+		spdk_io_channel_create_cb ch_create_cb,
+		spdk_io_channel_destroy_cb ch_destroy_cb);
 
 /**
  * Create a logical spdk_bdev_part on top of a base.
