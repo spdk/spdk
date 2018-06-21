@@ -40,6 +40,7 @@
 #define SPDK_ENV_H
 
 #include "spdk/stdinc.h"
+#include "spdk/log.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,6 +73,7 @@ struct spdk_env_opts {
 	int			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;
+	enum spdk_log_level		print_level;
 	size_t			num_pci_addr;
 	struct spdk_pci_addr	*pci_blacklist;
 	struct spdk_pci_addr	*pci_whitelist;
@@ -94,7 +96,6 @@ struct spdk_env_opts {
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
  * \param flags Combination of SPDK_MALLOC flags (\ref SPDK_MALLOC_DMA, \ref SPDK_MALLOC_SHARE).
- * At least one flag must be specified.
  *
  * \return a pointer to the allocated memory buffer.
  */
@@ -602,6 +603,17 @@ int spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 int spdk_pci_virtio_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
+ * Get PCI device from the given address.
+ *
+ * \param pci_addr A pointer to the PCI address struct.
+ *
+ * \return a pointer to the PCI device or NULL if no devide is found at the given
+ * address.
+ */
+struct spdk_pci_device *spdk_pci_get_device(struct spdk_pci_addr *pci_addr)
+__attribute__((deprecated));
+
+/**
  * Get a mapping of the virtual address to the BAR of the PCI device.
  *
  * \param dev PCI device.
@@ -1007,12 +1019,10 @@ int spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uin
  *
  * \param map Memory map.
  * \param vaddr Virtual address.
- * \param size Size of memory region.
  *
- * \return the translation of vaddr stored in the map, or default_translation
- * as specified in spdk_mem_map_alloc() if vaddr is not present in the map.
+ * \return the translation of 2MB hugepage mapping.
  */
-uint64_t spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t size);
+uint64_t spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr);
 
 /**
  * Register the specified memory region for address translation.
@@ -1033,7 +1043,7 @@ int spdk_mem_register(void *vaddr, size_t len);
  * are completed or cancelled before calling this function.
  *
  * \param vaddr Virtual address to unregister.
- * \param len Length in bytes of the vaddr.
+ * \param leng Length in bytes of the vaddr.
  *
  * \return 0 on success, negative errno on failure.
  */
