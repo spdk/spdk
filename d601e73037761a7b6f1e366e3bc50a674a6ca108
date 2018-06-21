@@ -70,6 +70,30 @@
       "revId": "d601e73037761a7b6f1e366e3bc50a674a6ca108",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37559018_5ef074d6",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-21T10:57:25Z",
+      "side": 1,
+      "message": "Yup, most of the bdev modules did this. None of them should, except split_vbdev and nvme_bdev.\n\nThe updated patch set actually follows through and (almost all) bdev modules now return just a string.",
+      "parentUuid": "83a872d7_7f749613",
+      "range": {
+        "startLine": 28,
+        "startChar": 8,
+        "endLine": 28,
+        "endChar": 12
+      },
+      "revId": "d601e73037761a7b6f1e366e3bc50a674a6ca108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
