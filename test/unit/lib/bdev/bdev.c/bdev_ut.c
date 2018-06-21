@@ -1253,14 +1253,12 @@ bdev_io_alignment(void)
 	rc = spdk_bdev_write_blocks(desc, io_ch, buf, 0, 1, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	stub_complete_io(1);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 
 	rc = spdk_bdev_read_blocks(desc, io_ch, buf, 0, 1, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	stub_complete_io(1);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 
 	/* Pass unaligned single buffer with no alignment required */
 	alignment = 1;
@@ -1286,8 +1284,7 @@ bdev_io_alignment(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 1);
 	CU_ASSERT(g_bdev_io->u.bdev.iovs == &g_bdev_io->internal.bounce_iov);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 	stub_complete_io(1);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 0);
 
@@ -1295,8 +1292,7 @@ bdev_io_alignment(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 1);
 	CU_ASSERT(g_bdev_io->u.bdev.iovs == &g_bdev_io->internal.bounce_iov);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 	stub_complete_io(1);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 0);
 
@@ -1308,8 +1304,7 @@ bdev_io_alignment(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 1);
 	CU_ASSERT(g_bdev_io->u.bdev.iovs == &g_bdev_io->internal.bounce_iov);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 	stub_complete_io(1);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 0);
 
@@ -1317,8 +1312,7 @@ bdev_io_alignment(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 1);
 	CU_ASSERT(g_bdev_io->u.bdev.iovs == &g_bdev_io->internal.bounce_iov);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 	stub_complete_io(1);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 0);
 
@@ -1378,8 +1372,7 @@ bdev_io_alignment(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == iovcnt);
 	CU_ASSERT(g_bdev_io->u.bdev.iovs == &g_bdev_io->internal.bounce_iov);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 	stub_complete_io(1);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 0);
 
@@ -1387,8 +1380,7 @@ bdev_io_alignment(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == iovcnt);
 	CU_ASSERT(g_bdev_io->u.bdev.iovs == &g_bdev_io->internal.bounce_iov);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 	stub_complete_io(1);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 0);
 
@@ -1403,8 +1395,7 @@ bdev_io_alignment(void)
 	rc = spdk_bdev_readv(desc, io_ch, iovs, iovcnt, 0, 512, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 0);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 	stub_complete_io(1);
 
 	/* Pass iov without allocated buffer with 1024 alignment required */
@@ -1418,8 +1409,7 @@ bdev_io_alignment(void)
 	rc = spdk_bdev_readv(desc, io_ch, iovs, iovcnt, 0, 512, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_io->internal.orig_iovcnt == 0);
-	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
-				    alignment));
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io, alignment));
 	stub_complete_io(1);
 
 	spdk_put_io_channel(io_ch);
