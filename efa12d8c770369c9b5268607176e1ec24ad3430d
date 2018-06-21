@@ -16,6 +16,24 @@
       "revId": "efa12d8c770369c9b5268607176e1ec24ad3430d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7917e5e9_8432a752",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T21:14:05Z",
+      "side": 1,
+      "message": "I know the spec says this is all spaces for FC, but we can fill that out inside the SPDK code.  Less for the caller to worry about when using FC.",
+      "parentUuid": "eaf0ed2e_2bbeafb2",
+      "revId": "efa12d8c770369c9b5268607176e1ec24ad3430d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
