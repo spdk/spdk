@@ -84,7 +84,8 @@ static const char *vhost_message_str[VHOST_USER_MAX] = {
 	[VHOST_USER_NVME_SET_CQ_CALL] = "VHOST_USER_NVME_SET_CQ_CALL",
 	[VHOST_USER_NVME_GET_CAP] = "VHOST_USER_NVME_GET_CAP",
 	[VHOST_USER_NVME_START_STOP] = "VHOST_USER_NVME_START_STOP",
-	[VHOST_USER_NVME_IO_CMD] = "VHOST_USER_NVME_IO_CMD"
+	[VHOST_USER_NVME_IO_CMD] = "VHOST_USER_NVME_IO_CMD",
+	[VHOST_USER_NVME_SET_BAR_MR] = "VHOST_USER_NVME_SET_BAR_MR"
 };
 
 static uint64_t
@@ -138,6 +139,11 @@ vhost_backend_cleanup(struct virtio_net *dev)
 	if (dev->log_addr) {
 		munmap((void *)(uintptr_t)dev->log_addr, dev->log_size);
 		dev->log_addr = 0;
+	}
+	if (dev->bar_addr) {
+		munmap((void *)(uintptr_t)dev->bar_addr, dev->bar_size);
+		dev->bar_addr = NULL;
+		dev->bar_size = 0;
 	}
 }
 
@@ -1119,6 +1125,90 @@ vhost_user_nvme_get_cap(struct virtio_net *dev, uint64_t *cap)
 	return -1;
 }
 
+static int
+vhost_user_nvme_set_bar_mr(struct virtio_net *dev, struct VhostUserMsg *pmsg)
+{
+	struct VhostUserMemory mem_table;
+	int fd = pmsg->fds[0];
+	void *mmap_addr;
+	uint64_t mmap_size;
+	uint64_t mmap_offset;
+	uint64_t alignment;
+	struct rte_vhost_mem_region reg;
+	int ret = 0;
+
+	memcpy(&mem_table, &pmsg->payload.memory, sizeof(mem_table));
+
+	reg.guest_phys_addr = mem_table.regions[0].guest_phys_addr;
+	reg.guest_user_addr = mem_table.regions[0].userspace_addr;
+	reg.size            = mem_table.regions[0].memory_size;
+	reg.fd              = fd;
+	mmap_offset = mem_table.regions[0].mmap_offset;
+	mmap_size   = reg.size + mmap_offset;
+
+	alignment = get_blk_size(fd);
+	if (alignment == (uint64_t)-1) {
+		RTE_LOG(ERR, VHOST_CONFIG,
+			"couldn't get hugepage size through fstat\n");
+			return -1;
+	}
+	mmap_size = RTE_ALIGN_CEIL(mmap_size, alignment);
+
+	mmap_addr = mmap(NULL, mmap_size, PROT_READ | PROT_WRITE,
+			 MAP_SHARED | MAP_POPULATE, fd, 0);
+
+	if (mmap_addr == MAP_FAILED) {
+		RTE_LOG(ERR, VHOST_CONFIG,
+			"mmap region failed.\n");
+		return -1;
+	}
+
+	if (madvise(mmap_addr, mmap_size, MADV_DONTDUMP) != 0) {
+		RTE_LOG(INFO, VHOST_CONFIG,
+			"MADV_DONTDUMP advice setting failed.\n");
+	}
+
+	reg.mmap_addr = mmap_addr;
+	reg.mmap_size = mmap_size;
+	reg.host_user_addr = (uint64_t)(uintptr_t)mmap_addr +
+				      mmap_offset;
+
+	RTE_LOG(INFO, VHOST_CONFIG,
+			"BAR memory region %u, size: 0x%" PRIx64 "\n"
+			"\t guest physical addr: 0x%" PRIx64 "\n"
+			"\t guest virtual  addr: 0x%" PRIx64 "\n"
+			"\t host  virtual  addr: 0x%" PRIx64 "\n"
+			"\t mmap addr : 0x%" PRIx64 "\n"
+			"\t mmap size : 0x%" PRIx64 "\n"
+			"\t mmap align: 0x%" PRIx64 "\n"
+			"\t mmap off  : 0x%" PRIx64 "\n",
+			0, reg.size,
+			reg.guest_phys_addr,
+			reg.guest_user_addr,
+			reg.host_user_addr,
+			(uint64_t)(uintptr_t)mmap_addr,
+			mmap_size,
+			alignment,
+			mmap_offset);
+
+	if (dev->bar_addr) {
+		munmap((void *)(uintptr_t)dev->bar_addr, dev->bar_size);
+	}
+	dev->bar_addr = (void *)(uintptr_t)reg.host_user_addr;
+	dev->bar_size = reg.mmap_size;
+
+	if (dev->notify_ops->vhost_nvme_set_bar_mr) {
+		ret = dev->notify_ops->vhost_nvme_set_bar_mr(dev->vid, dev->bar_addr, dev->bar_size);
+		if (ret) {
+			munmap((void *)(uintptr_t)dev->bar_addr, dev->bar_size);
+			dev->bar_addr = NULL;
+			dev->bar_size = 0;
+		}
+	}
+
+	return ret;
+}
+
 int
 vhost_user_msg_handler(int vid, int fd)
 {
@@ -1242,6 +1332,9 @@ vhost_user_msg_handler(int vid, int fd)
 		tail_head = msg.payload.nvme_io.tail_head;
 		is_submission_queue = (msg.payload.nvme_io.queue_type == VHOST_USER_NVME_SUBMISSION_QUEUE) ? true : false;
 		vhost_user_nvme_io_request_passthrough(dev, qid, tail_head, is_submission_queue);
+		break;
+	case VHOST_USER_NVME_SET_BAR_MR:
+		ret = vhost_user_nvme_set_bar_mr(dev, &msg);
 		break;
 	case VHOST_USER_GET_FEATURES:
 		msg.payload.u64 = vhost_user_get_features(dev);
