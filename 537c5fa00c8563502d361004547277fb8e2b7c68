@@ -16,6 +16,23 @@
       "revId": "537c5fa00c8563502d361004547277fb8e2b7c68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c48fa661_b7eaf620",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1691,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-06-21T02:11:20Z",
+      "side": 1,
+      "message": "Yes Ben. That is the intent. I wanted to validate the intended code flow to articulate how bdev_io will be populated using these APIs. I did not wanted to complete a full working set as these are quite different from what you originally proposed for zero copy APIs. \nI was thinking I can submit the changes in 2 iterations, (1) bdev_io gets initialized/acquired in the NEED-BUFFER state (2) Move Data buffer allocations to these routines and populate bdev_io with the data buffer and get rid of iovec[] in request structure.\nPlease let me know if you concur with the proposed code flow.",
+      "revId": "537c5fa00c8563502d361004547277fb8e2b7c68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
