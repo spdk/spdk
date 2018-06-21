@@ -124,11 +124,11 @@ if __name__ == "__main__":
     @call_cmd
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
-        print_array(rpc.bdev.construct_malloc_bdev(args.client,
-                                                   num_blocks=num_blocks,
-                                                   block_size=args.block_size,
-                                                   name=args.name,
-                                                   uuid=args.uuid))
+        print(rpc.bdev.construct_malloc_bdev(args.client,
+                                             num_blocks=num_blocks,
+                                             block_size=args.block_size,
+                                             name=args.name,
+                                             uuid=args.uuid))
 
     p = subparsers.add_parser('construct_malloc_bdev',
                               help='Add a bdev with malloc backend')
@@ -151,11 +151,11 @@ if __name__ == "__main__":
     @call_cmd
     def construct_null_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
-        print_array(rpc.bdev.construct_null_bdev(args.client,
-                                                 num_blocks=num_blocks,
-                                                 block_size=args.block_size,
-                                                 name=args.name,
-                                                 uuid=args.uuid))
+        print(rpc.bdev.construct_null_bdev(args.client,
+                                           num_blocks=num_blocks,
+                                           block_size=args.block_size,
+                                           name=args.name,
+                                           uuid=args.uuid))
 
     p = subparsers.add_parser('construct_null_bdev',
                               help='Add a bdev with null backend')
@@ -168,10 +168,10 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_aio_bdev(args):
-        print_array(rpc.bdev.construct_aio_bdev(args.client,
-                                                filename=args.filename,
-                                                name=args.name,
-                                                block_size=args.block_size))
+        print(rpc.bdev.construct_aio_bdev(args.client,
+                                          filename=args.filename,
+                                          name=args.name,
+                                          block_size=args.block_size))
 
     p = subparsers.add_parser('construct_aio_bdev',
                               help='Add a bdev with aio backend')
@@ -215,11 +215,11 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_rbd_bdev(args):
-        print_array(rpc.bdev.construct_rbd_bdev(args.client,
-                                                name=args.name,
-                                                pool_name=args.pool_name,
-                                                rbd_name=args.rbd_name,
-                                                block_size=args.block_size))
+        print(rpc.bdev.construct_rbd_bdev(args.client,
+                                          name=args.name,
+                                          pool_name=args.pool_name,
+                                          rbd_name=args.rbd_name,
+                                          block_size=args.block_size))
 
     p = subparsers.add_parser('construct_rbd_bdev',
                               help='Add a bdev with ceph rbd backend')
@@ -231,8 +231,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_error_bdev(args):
-        rpc.bdev.construct_error_bdev(args.client,
-                                      base_name=args.base_name)
+        print(rpc.bdev.construct_error_bdev(args.client,
+                                            base_name=args.base_name))
 
     p = subparsers.add_parser('construct_error_bdev',
                               help='Add bdev with error injection backend')
@@ -250,10 +250,10 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_iscsi_bdev(args):
-        rpc.bdev.construct_iscsi_bdev(args.client,
-                                      name=args.name,
-                                      url=args.url,
-                                      initiator_iqn=args.initiator_iqn)
+        print(rpc.bdev.construct_iscsi_bdev(args.client,
+                                            name=args.name,
+                                            url=args.url,
+                                            initiator_iqn=args.initiator_iqn))
 
     p = subparsers.add_parser('construct_iscsi_bdev',
                               help='Add bdev with iSCSI initiator backend')
@@ -273,9 +273,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_pmem_bdev(args):
-        print_array(rpc.bdev.construct_pmem_bdev(args.client,
-                                                 pmem_file=args.pmem_file,
-                                                 name=args.name))
+        print(rpc.bdev.construct_pmem_bdev(args.client,
+                                           pmem_file=args.pmem_file,
+                                           name=args.name))
 
     p = subparsers.add_parser('construct_pmem_bdev', help='Add a bdev with pmem backend')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
@@ -284,9 +284,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_passthru_bdev(args):
-        print_array(rpc.bdev.construct_passthru_bdev(args.client,
-                                                     base_bdev_name=args.base_bdev_name,
-                                                     passthru_bdev_name=args.passthru_bdev_name))
+        print(rpc.bdev.construct_passthru_bdev(args.client,
+                                               base_bdev_name=args.base_bdev_name,
+                                               passthru_bdev_name=args.passthru_bdev_name))
 
     p = subparsers.add_parser('construct_passthru_bdev',
                               help='Add a pass through bdev on existing bdev')
@@ -659,10 +659,10 @@ if __name__ == "__main__":
     # lvol
     @call_cmd
     def construct_lvol_store(args):
-        print_array(rpc.lvol.construct_lvol_store(args.client,
-                                                  bdev_name=args.bdev_name,
-                                                  lvs_name=args.lvs_name,
-                                                  cluster_sz=args.cluster_sz))
+        print(rpc.lvol.construct_lvol_store(args.client,
+                                            bdev_name=args.bdev_name,
+                                            lvs_name=args.lvs_name,
+                                            cluster_sz=args.cluster_sz))
 
     p = subparsers.add_parser('construct_lvol_store', help='Add logical volume store on base bdev')
     p.add_argument('bdev_name', help='base bdev name')
@@ -683,12 +683,12 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_lvol_bdev(args):
-        print_array(rpc.lvol.construct_lvol_bdev(args.client,
-                                                 lvol_name=args.lvol_name,
-                                                 size=args.size * 1024 * 1024,
-                                                 thin_provision=args.thin_provision,
-                                                 uuid=args.uuid,
-                                                 lvs_name=args.lvs_name))
+        print(rpc.lvol.construct_lvol_bdev(args.client,
+                                           lvol_name=args.lvol_name,
+                                           size=args.size * 1024 * 1024,
+                                           thin_provision=args.thin_provision,
+                                           uuid=args.uuid,
+                                           lvs_name=args.lvs_name))
 
     p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
@@ -700,9 +700,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def snapshot_lvol_bdev(args):
-        rpc.lvol.snapshot_lvol_bdev(args.client,
-                                    lvol_name=args.lvol_name,
-                                    snapshot_name=args.snapshot_name)
+        print(rpc.lvol.snapshot_lvol_bdev(args.client,
+                                          lvol_name=args.lvol_name,
+                                          snapshot_name=args.snapshot_name))
 
     p = subparsers.add_parser('snapshot_lvol_bdev', help='Create a snapshot of an lvol bdev')
     p.add_argument('lvol_name', help='lvol bdev name')
@@ -711,9 +711,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def clone_lvol_bdev(args):
-        rpc.lvol.clone_lvol_bdev(args.client,
-                                 snapshot_name=args.snapshot_name,
-                                 clone_name=args.clone_name)
+        print(rpc.lvol.clone_lvol_bdev(args.client,
+                                       snapshot_name=args.snapshot_name,
+                                       clone_name=args.clone_name))
 
     p = subparsers.add_parser('clone_lvol_bdev', help='Create a clone of an lvol snapshot')
     p.add_argument('snapshot_name', help='lvol snapshot name')
@@ -794,10 +794,10 @@ if __name__ == "__main__":
     # split
     @call_cmd
     def construct_split_vbdev(args):
-        print_dict(rpc.bdev.construct_split_vbdev(args.client,
-                                                  base_bdev=args.base_bdev,
-                                                  split_count=args.split_count,
-                                                  split_size_mb=args.split_size_mb))
+        print_array(rpc.bdev.construct_split_vbdev(args.client,
+                                                   base_bdev=args.base_bdev,
+                                                   split_count=args.split_count,
+                                                   split_size_mb=args.split_size_mb))
 
     p = subparsers.add_parser('construct_split_vbdev', help="""Add given disk name to split config. If bdev with base_name
     name exist the split bdevs will be created right away, if not split bdevs will be created when base bdev became
@@ -1312,11 +1312,11 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_user_blk_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_user_blk_bdev(args.client,
-                                                            path=args.path,
-                                                            name=args.name,
-                                                            vq_count=args.vq_count,
-                                                            vq_size=args.vq_size))
+        print(rpc.vhost.construct_virtio_user_blk_bdev(args.client,
+                                                       path=args.path,
+                                                       name=args.name,
+                                                       vq_count=args.vq_count,
+                                                       vq_size=args.vq_size))
 
     p = subparsers.add_parser('construct_virtio_user_blk_bdev', help='Connect to a virtio user blk device.')
     p.add_argument('path', help='Path to Virtio BLK socket')
@@ -1327,9 +1327,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_pci_blk_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_pci_blk_bdev(args.client,
-                                                           pci_address=args.pci_address,
-                                                           name=args.name))
+        print(rpc.vhost.construct_virtio_pci_blk_bdev(args.client,
+                                                      pci_address=args.pci_address,
+                                                      name=args.name))
 
     p = subparsers.add_parser('construct_virtio_pci_blk_bdev', help='Create a Virtio Blk device from a virtio-pci device.')
     p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or

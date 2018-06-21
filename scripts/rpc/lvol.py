@@ -40,6 +40,9 @@ def construct_lvol_bdev(client, lvol_name, size, thin_provision=False, uuid=None
         lvs_name: name of logical volume store to create logical volume on (optional)
 
     Either uuid or lvs_name must be specified, but not both.
+
+    Returns:
+        Name of created logical volume block device.
     """
     if (uuid and lvs_name) or (not uuid and not lvs_name):
         raise ValueError("Either uuid or lvs_name must be specified, but not both")
@@ -60,6 +63,9 @@ def snapshot_lvol_bdev(client, lvol_name, snapshot_name):
     Args:
         lvol_name: logical volume to create a snapshot from
         snapshot_name: name for the newly created snapshot
+
+    Returns:
+        Name of created logical volume snapshot.
     """
     params = {
         'lvol_name': lvol_name,
@@ -74,6 +80,9 @@ def clone_lvol_bdev(client, snapshot_name, clone_name):
     Args:
         snapshot_name: snapshot to clone
         clone_name: name of logical volume to create
+
+    Returns:
+        Name of created logical volume clone.
     """
     params = {
         'snapshot_name': snapshot_name,

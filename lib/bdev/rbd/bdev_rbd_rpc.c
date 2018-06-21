@@ -86,9 +86,7 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_json_write_array_begin(w);
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	return;
 

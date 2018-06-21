@@ -107,9 +107,7 @@ _spdk_rpc_lvol_store_construct_cb(void *cb_arg, struct spdk_lvol_store *lvol_sto
 		return;
 	}
 
-	spdk_json_write_array_begin(w);
 	spdk_json_write_string(w, lvol_store_uuid);
-	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	return;
 
@@ -358,9 +356,7 @@ _spdk_rpc_construct_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvole
 		return;
 	}
 
-	spdk_json_write_array_begin(w);
 	spdk_json_write_string(w, lvol->bdev->name);
-	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	return;
 
@@ -447,9 +443,7 @@ _spdk_rpc_snapshot_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvoler
 		return;
 	}
 
-	spdk_json_write_array_begin(w);
 	spdk_json_write_string(w, lvol->bdev->name);
-	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	return;
 
@@ -535,9 +529,7 @@ _spdk_rpc_clone_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno
 		return;
 	}
 
-	spdk_json_write_array_begin(w);
 	spdk_json_write_string(w, lvol->bdev->name);
-	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	return;
 

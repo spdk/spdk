@@ -25,7 +25,7 @@ def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
         uuid: UUID of block device (optional)
 
     Returns:
-        List of created block devices.
+        Name of created block device.
     """
     params = {'num_blocks': num_blocks, 'block_size': block_size}
     if name:
@@ -55,7 +55,7 @@ def construct_null_bdev(client, num_blocks, block_size, name, uuid=None):
         uuid: UUID of block device (optional)
 
     Returns:
-        List of created block devices.
+        Name of created block device.
     """
     params = {'name': name, 'num_blocks': num_blocks,
               'block_size': block_size}
@@ -73,7 +73,7 @@ def construct_aio_bdev(client, filename, name, block_size=None):
         block_size: block size of device (optional; autodetected if omitted)
 
     Returns:
-        List of created block devices.
+        Name of created block device.
     """
     params = {'name': name,
               'filename': filename}
@@ -95,7 +95,7 @@ def delete_aio_bdev(client, name):
 
 
 def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None):
-    """Construct NVMe namespace block devices.
+    """Construct NVMe namespace block device.
 
     Args:
         name: bdev name prefix; "n" + namespace ID will be appended to create unique names
@@ -106,7 +106,7 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
         subnqn: subsystem NQN to connect to (optional)
 
     Returns:
-        List of created block devices.
+        Name of created block device.
     """
     params = {'name': name,
               'trtype': trtype,
@@ -134,7 +134,7 @@ def construct_rbd_bdev(client, pool_name, rbd_name, block_size, name=None):
         name: name of block device (optional)
 
     Returns:
-        List of created block devices.
+        Name of created block device.
     """
     params = {
         'pool_name': pool_name,
@@ -177,7 +177,7 @@ def construct_iscsi_bdev(client, name, url, initiator_iqn):
         initiator_iqn: IQN name to be used by initiator
 
     Returns:
-        List of created block devices.
+        Name of created block device.
     """
     params = {
         'name': name,
@@ -205,7 +205,7 @@ def construct_pmem_bdev(client, pmem_file, name):
         name: name of block device
 
     Returns:
-        List of created block devices.
+        Name of created block device.
     """
     params = {
         'pmem_file': pmem_file,
@@ -222,7 +222,7 @@ def construct_passthru_bdev(client, base_bdev_name, passthru_bdev_name):
         passthru_bdev_name: name of block device
 
     Returns:
-        List of created block devices.
+        Name of created block device.
     """
     params = {
         'base_bdev_name': base_bdev_name,
