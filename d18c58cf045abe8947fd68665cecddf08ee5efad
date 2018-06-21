@@ -16,6 +16,24 @@
       "revId": "d18c58cf045abe8947fd68665cecddf08ee5efad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6a2c2db_af9d117d",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-21T16:24:48Z",
+      "side": 1,
+      "message": "I think these requests are fundamentally different than the read/write case. In the read/write case, the user is (potentially) providing the data buffer, or an iov describing the data buffer, and so the module can\u0027t change it. In this case, the request can be thought of as essentially a request to fill out the iov descriptors.\n\nThis particular module does assert that iovcnt is already set to 1 in the read case if the first iov element\u0027s pointer is NULL. I think that is primarily a sanity check, though. If the first element has a NULL pointer, we expect to be in this scenario where the user only has one iov element for us to fill out. I don\u0027t think that assert has deeper meaning beyond confirming we\u0027re in our hacked-up zcopy scenario on the read path.\n\nWith this zcopy functionality, we could go through and systematically eliminate uses of read with a NULL pointer in order to clean that up.",
+      "parentUuid": "1ce09319_adf5fa3e",
+      "revId": "d18c58cf045abe8947fd68665cecddf08ee5efad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
