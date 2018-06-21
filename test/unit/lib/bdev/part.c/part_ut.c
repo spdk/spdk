@@ -94,12 +94,6 @@ static struct spdk_bdev_fn_table part_fn_table = {
 };
 
 static void
-__base_free(struct spdk_bdev_part_base *base)
-{
-	free(base);
-}
-
-static void
 part_test(void)
 {
 	struct spdk_bdev_part_base	*base;
@@ -109,16 +103,16 @@ part_test(void)
 	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
 	int rc;
 
-	base = calloc(1, sizeof(*base));
-	SPDK_CU_ASSERT_FATAL(base != NULL);
-
 	bdev_base.name = "base";
 	bdev_base.fn_table = &base_fn_table;
 	bdev_base.module = &bdev_ut_if;
 	rc = spdk_bdev_register(&bdev_base);
 	CU_ASSERT(rc == 0);
-	spdk_bdev_part_base_construct(base, &bdev_base, NULL, &vbdev_ut_if,
-				      &part_fn_table, &tailq, __base_free, 0, NULL, NULL);
+	base = spdk_bdev_part_base_construct(&bdev_base, NULL, &vbdev_ut_if,
+					     &part_fn_table, NULL, NULL,
+					     &tailq, 0, NULL, NULL);
+
+	SPDK_CU_ASSERT_FATAL(base != NULL);
 
 	spdk_bdev_part_construct(&part1, base, "test1", 0, 100, "test");
 	spdk_bdev_part_construct(&part2, base, "test2", 100, 100, "test");
