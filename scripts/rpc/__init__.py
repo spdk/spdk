@@ -109,6 +109,15 @@ def load_config(client, args):
         raise rpc_client.JSONRPCException("Loading configs was done but some configs were left")
 
 
+def save_subsystem_config(client, args):
+    cfg = {
+        'subsystem': args.name,
+        'config': client.call('get_subsystem_config', {"name": args.name})
+    }
+
+    __json_dump(cfg, args.filename, args.indent)
+
+
 def load_subsystem_config(client, args):
     json_config = __json_load(args.filename)
     allowed_methods = client.call('get_rpc_methods', {'current': True})
