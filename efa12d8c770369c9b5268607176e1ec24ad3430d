@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d1f47a73_9fc3b6d3",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-21T21:27:46Z",
+      "side": 1,
+      "message": "You are correct.  This is the format specified by the FC-NVMe spec, and the is what we implement.  The text here is just a comment.  The term \"WWN\" is commonly understood by FC driver writers, but I agree something a little more clear should be said here in this comment.\n\nJohn Barnard: can we refer quote the the exact language from the FC-NVMe or NVMe-oF spec here in this comment so people don\u0027t get confused?",
+      "parentUuid": "de72dc74_25ca7d61",
+      "revId": "efa12d8c770369c9b5268607176e1ec24ad3430d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eaf0ed2e_2bbeafb2",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 1
