@@ -40,6 +40,45 @@
 
 #include "spdk/bdev_module.h"
 
+struct spdk_bdev_part_base {
+	struct spdk_bdev		*bdev;
+	struct spdk_bdev_desc		*desc;
+	uint32_t			ref;
+	uint32_t			channel_size;
+	spdk_bdev_part_base_free_fn	base_free_fn;
+	void				*free_fn_ctx;
+	bool				claimed;
+	struct spdk_bdev_module		*module;
+	struct spdk_bdev_fn_table	*fn_table;
+	struct bdev_part_tailq		*tailq;
+	spdk_io_channel_create_cb	ch_create_cb;
+	spdk_io_channel_destroy_cb	ch_destroy_cb;
+};
+
+struct spdk_bdev *
+spdk_bdev_part_base_get_bdev(struct spdk_bdev_part_base *part_base)
+{
+	return part_base->bdev;
+}
+
+struct spdk_bdev_desc *
+spdk_bdev_part_base_get_desc(struct spdk_bdev_part_base *part_base)
+{
+	return part_base->desc;
+}
+
+struct bdev_part_tailq *
+spdk_bdev_part_base_get_tailq(struct spdk_bdev_part_base *part_base)
+{
+	return part_base->tailq;
+}
+
+uint32_t
+spdk_bdev_part_base_get_ref(struct spdk_bdev_part_base *part_base)
+{
+	return part_base->ref;
+}
+
 void
 spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)
 {
@@ -47,7 +86,12 @@ spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)
 		spdk_bdev_close(base->desc);
 		base->desc = NULL;
 	}
-	base->base_free_fn(base);
+
+	if (base->base_free_fn != NULL) {
+		base->base_free_fn(base->free_fn_ctx);
+	}
+
+	free(base);
 }
 
 static void
@@ -206,16 +250,22 @@ spdk_bdev_part_channel_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(ch->base_ch);
 }
 
-int
-spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev *bdev,
+struct spdk_bdev_part_base *
+	spdk_bdev_part_base_construct(struct spdk_bdev *bdev,
 			      spdk_bdev_remove_cb_t remove_cb, struct spdk_bdev_module *module,
 			      struct spdk_bdev_fn_table *fn_table, struct bdev_part_tailq *tailq,
-			      spdk_bdev_part_base_free_fn free_fn,
+			      spdk_bdev_part_base_free_fn free_fn, void *free_fn_ctx,
 			      uint32_t channel_size, spdk_io_channel_create_cb ch_create_cb,
 			      spdk_io_channel_destroy_cb ch_destroy_cb)
 {
 	int rc;
+	struct spdk_bdev_part_base *base;
 
+	base = calloc(1, sizeof(*base));
+	if (!base) {
+		SPDK_ERRLOG("Memory allocation failure\n");
+		return NULL;
+	}
 	fn_table->get_io_channel = spdk_bdev_part_get_io_channel;
 	fn_table->io_type_supported = spdk_bdev_part_io_type_supported;
 
@@ -225,20 +275,21 @@ spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev
 	base->module = module;
 	base->fn_table = fn_table;
 	base->tailq = tailq;
+	base->base_free_fn = free_fn;
+	base->free_fn_ctx = free_fn_ctx;
 	base->claimed = false;
 	base->channel_size = channel_size;
 	base->ch_create_cb = ch_create_cb;
 	base->ch_destroy_cb = ch_destroy_cb;
-	base->base_free_fn = free_fn;
 
 	rc = spdk_bdev_open(bdev, false, remove_cb, bdev, &base->desc);
 	if (rc) {
 		spdk_bdev_part_base_free(base);
 		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
-		return -1;
+		return NULL;
 	}
 
-	return 0;
+	return base;
 }
 
 int
