@@ -59,6 +59,30 @@
     },
     {
       "key": {
+        "uuid": "02eea800_70fdd049",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-21T13:04:38Z",
+      "side": 1,
+      "message": "Looking around the code, the previous suggestion might have been too tame even.\n\nThere are quite a few places where struct spdk_lvol is freed, *most of them* should destroy the mutex too. Maybe it would be time to have _spdk_lvol_free(), that would free lvol, lvol-\u003eunique_id and lvol-\u003emutex ? [Separate before this one would suit it best]\n\nThere is lvol allocation path that does not go through spdk_lvol_create() in _spdk_load_next_lvol(). This is done during lvs load. Mutex init should be there too.",
+      "parentUuid": "bb8010a0_6b17a436",
+      "range": {
+        "startLine": 1107,
+        "startChar": 1,
+        "endLine": 1107,
+        "endChar": 45
+      },
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38240096_7e4b25f0",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 31
@@ -87,6 +111,30 @@
       "writtenOn": "2018-06-20T13:51:40Z",
       "side": 1,
       "message": "Contrary to another comment (see lvol_ut.c), this return value changes path of vbdev_lvol_destroy() function.\n\nThis could be tested in UT. Possibly by extending spdk_lvol_create_clone() stub ?",
+      "range": {
+        "startLine": 445,
+        "startChar": 1,
+        "endLine": 445,
+        "endChar": 13
+      },
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43a036d5_f07d291b",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-21T13:04:38Z",
+      "side": 1,
+      "message": "\u003e Contrary to another comment (see lvol_ut.c), this return value\n \u003e changes path of vbdev_lvol_destroy() function.\n \u003e \n \u003e This could be tested in UT. Possibly by extending spdk_lvol_create_clone()\n \u003e stub ?\n\nYou don\u0027t agree ? Any comment ?",
+      "parentUuid": "a26eeba4_25f33109",
       "range": {
         "startLine": 445,
         "startChar": 1,
@@ -146,6 +194,24 @@
       "side": 1,
       "message": "Don\u0027t think so. Aren\u0027t there is still hot-remove and shutdown cases, which do no delete the lvol on disk but just clean up structures.",
       "parentUuid": "3b021511_0cd8d451",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55776e86_589330cb",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-21T13:04:38Z",
+      "side": 1,
+      "message": "\u003e Don\u0027t think so. Aren\u0027t there is still hot-remove and shutdown\n \u003e cases, which do no delete the lvol on disk but just clean up\n \u003e structures.\n\nReading my own comment again, it might have been worder better.\n\nI think the bdev-\u003edestruct() path will not be deprecated, since it is used in hot-remove and shutdown (app or just unloading lvs).\nAm I missing something in this assumption ?",
+      "parentUuid": "91f923fd_5147a589",
       "revId": "7fbfe68536797382e1e81561540a877729688f6f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
