@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3490b1b8_54f1576b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-21T02:58:00Z",
+      "side": 1,
+      "message": "No.\n\nCurrent load_subsystem_config can load only a subsystem. I think save_subsystem_config will save only a subsystem.\n\nIf we want to save multiple subsystems, we can use save_config instead.\n\nget_bdevs RPC also supports a bdev or all bdevs.\n\nEven if necessary, I want to do in a separate patch.",
+      "parentUuid": "78f1dd35_d40e2be6",
+      "revId": "e1f70c325b2bcdbdcc880159670b1732d214debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd1fd660_95f9c309",
         "filename": "scripts/rpc.py",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "1244bdbf_a729f13d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-21T02:58:00Z",
+      "side": 1,
+      "message": "I removed this. Please check the previous patch.",
+      "parentUuid": "bd1fd660_95f9c309",
+      "revId": "e1f70c325b2bcdbdcc880159670b1732d214debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7b8143d_1b32fb35",
         "filename": "scripts/rpc/__init__.py",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2018-06-20T22:43:15Z",
       "side": 1,
       "message": "maybe json_load and json_dump functions in a separate patch?",
+      "revId": "e1f70c325b2bcdbdcc880159670b1732d214debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "919b5fb7_73e19e80",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-21T02:58:00Z",
+      "side": 1,
+      "message": "I did in a separate patch. Thank you.",
+      "parentUuid": "c7b8143d_1b32fb35",
       "revId": "e1f70c325b2bcdbdcc880159670b1732d214debc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
