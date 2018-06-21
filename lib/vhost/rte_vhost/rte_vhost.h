@@ -106,6 +106,7 @@ struct vhost_device_ops {
 	int (*features_changed)(int vid, uint64_t features);
 	int (*vhost_nvme_admin_passthrough)(int vid, void *cmd, void *cqe, void *buf);
 	int (*vhost_nvme_set_cq_call)(int vid, uint16_t qid, int fd);
+	int (*vhost_nvme_set_bar_mr)(int vid, void *bar_addr, uint64_t bar_size);
 	int (*vhost_nvme_get_cap)(int vid, uint64_t *cap);
 
 	int (*new_connection)(int vid);
