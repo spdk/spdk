@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb01e084_4ecdc8b9",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-21T18:42:36Z",
+      "side": 1,
+      "message": "I would get rid of these three variables.  Just do:\n\nspdk_json_write_uint64(w, tsc_stats.busy_tsc);\n\nSimilar for idle and unknown.",
+      "revId": "b3a20290fb1b019929fd7eca735fb6e35554c53d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
