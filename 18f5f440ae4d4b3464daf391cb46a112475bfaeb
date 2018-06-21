@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1c879912_f2e52e8d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1012355
+      },
+      "writtenOn": "2018-06-21T01:55:37Z",
+      "side": 1,
+      "message": "Hi, Jim\nThanks. This problem may be caused by format checking, I will restore it back next patch.",
+      "parentUuid": "79b79f5c_15ed257b",
+      "revId": "18f5f440ae4d4b3464daf391cb46a112475bfaeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "530aea2d_3ae09adc",
         "filename": "scripts/rpc/iscsi.py",
         "patchSetId": 1
