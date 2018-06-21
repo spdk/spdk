@@ -431,7 +431,7 @@ def verify_add_delete_ip_address(rpc_py):
                "add ip {} to nic {} failed.".format(faked_ip, x["name"]))
         try:
             check_call(ping_cmd.split())
-        except:
+        except BaseException:
             verify(False, 1,
                    "ping ip {} for {} was failed(adding was successful)".format
                    (faked_ip, x["name"]))

@@ -50,6 +50,6 @@ if __name__ == "__main__":
             print("RESULT: Some test cases FAIL")
             print(tc_failed)
             sys.exit(1)
-    except:
+    except BaseException:
         print("Test: {num_test} - FAIL".format(num_test=num_test))
         sys.exit(1)
