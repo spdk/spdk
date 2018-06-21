@@ -856,6 +856,55 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	}
 }
 
+static void
+nvme_ctrlr_deactivate_bdev(struct nvme_bdev *bdev)
+{
+	spdk_bdev_unregister(&bdev->disk, NULL, NULL);
+	bdev->active = false;
+}
+
+static void
+nvme_ctrlr_update_ns_bdevs(struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
+	uint32_t		i;
+	struct nvme_bdev	*bdev;
+
+	for (i = 0; i < nvme_ctrlr->num_ns; i++) {
+		uint32_t	nsid = i + 1;
+
+		bdev = &nvme_ctrlr->bdevs[i];
+		if (!bdev->active && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+			SPDK_NOTICELOG("NSID %u to be added\n", nsid);
+			nvme_ctrlr_create_bdev(nvme_ctrlr, nsid);
+		}
+
+		if (bdev->active && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+			SPDK_NOTICELOG("NSID %u Bdev %s is removed\n", nsid, bdev->disk.name);
+			nvme_ctrlr_deactivate_bdev(bdev);
+		}
+	}
+
+}
+
+static void
+aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_ctrlr *nvme_ctrlr		= arg;
+	union spdk_nvme_async_event_completion	event;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_WARNLOG("AER request execute failed");
+		return;
+	}
+
+	event.raw = cpl->cdw0;
+	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
+	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
+		nvme_ctrlr_update_ns_bdevs(nvme_ctrlr);
+	}
+}
+
 static int
 create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	     const char *name,
@@ -900,6 +949,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
 				timeout_cb, NULL);
 	}
+
+	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_ctrlr);
 
 	return 0;
 }
