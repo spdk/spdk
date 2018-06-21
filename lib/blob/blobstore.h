@@ -170,7 +170,7 @@ struct spdk_blob_store {
 	uint64_t			total_clusters;
 	uint64_t			total_data_clusters;
 	uint64_t			num_free_clusters;
-	uint32_t			pages_per_cluster;
+	uint64_t			pages_per_cluster;
 
 	spdk_blob_id			super_blob;
 	struct spdk_bs_type		bstype;
@@ -399,7 +399,7 @@ _spdk_bs_dev_page_to_lba(struct spdk_bs_dev *bs_dev, uint64_t page)
 	return page * SPDK_BS_PAGE_SIZE / bs_dev->blocklen;
 }
 
-static inline uint32_t
+static inline uint64_t
 _spdk_bs_lba_to_page(struct spdk_blob_store *bs, uint64_t lba)
 {
 	uint64_t	lbas_per_page;
@@ -465,7 +465,7 @@ _spdk_bs_blob_lba_from_back_dev_lba(struct spdk_blob *blob, uint64_t lba)
 
 /* End basic conversions */
 
-static inline uint32_t
+static inline uint64_t
 _spdk_bs_blobid_to_page(spdk_blob_id id)
 {
 	return id & 0xFFFFFFFF;
@@ -476,8 +476,11 @@ _spdk_bs_blobid_to_page(spdk_blob_id id)
  * code assumes blob id == page_idx.
  */
 static inline spdk_blob_id
-_spdk_bs_page_to_blobid(uint32_t page_idx)
+_spdk_bs_page_to_blobid(uint64_t page_idx)
 {
+	if (page_idx > UINT32_MAX) {
+		return SPDK_BLOBID_INVALID;
+	}
 	return SPDK_BLOB_BLOBID_HIGH_BIT | page_idx;
 }
 
@@ -485,10 +488,10 @@ _spdk_bs_page_to_blobid(uint32_t page_idx)
  * start of that page.
  */
 static inline uint64_t
-_spdk_bs_blob_page_to_lba(struct spdk_blob *blob, uint32_t page)
+_spdk_bs_blob_page_to_lba(struct spdk_blob *blob, uint64_t page)
 {
 	uint64_t	lba;
-	uint32_t	pages_per_cluster;
+	uint64_t	pages_per_cluster;
 
 	pages_per_cluster = blob->bs->pages_per_cluster;
 
@@ -504,9 +507,9 @@ _spdk_bs_blob_page_to_lba(struct spdk_blob *blob, uint32_t page)
  * next cluster boundary.
  */
 static inline uint32_t
-_spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint32_t page)
+_spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint64_t page)
 {
-	uint32_t	pages_per_cluster;
+	uint64_t	pages_per_cluster;
 
 	pages_per_cluster = blob->bs->pages_per_cluster;
 
@@ -515,9 +518,9 @@ _spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint32_t page)
 
 /* Given a page offset into a blob, look up the number of pages into blob to beginning of current cluster */
 static inline uint32_t
-_spdk_bs_page_to_cluster_start(struct spdk_blob *blob, uint32_t page)
+_spdk_bs_page_to_cluster_start(struct spdk_blob *blob, uint64_t page)
 {
-	uint32_t	pages_per_cluster;
+	uint64_t	pages_per_cluster;
 
 	pages_per_cluster = blob->bs->pages_per_cluster;
 
@@ -526,10 +529,10 @@ _spdk_bs_page_to_cluster_start(struct spdk_blob *blob, uint32_t page)
 
 /* Given a page offset into a blob, look up if it is from allocated cluster. */
 static inline bool
-_spdk_bs_page_is_allocated(struct spdk_blob *blob, uint32_t page)
+_spdk_bs_page_is_allocated(struct spdk_blob *blob, uint64_t page)
 {
 	uint64_t	lba;
-	uint32_t	pages_per_cluster;
+	uint64_t	pages_per_cluster;
 
 	pages_per_cluster = blob->bs->pages_per_cluster;
 
