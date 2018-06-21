@@ -219,12 +219,6 @@ struct spdk_bdev {
 	/** Number of blocks */
 	uint64_t blockcnt;
 
-	/** Quality of service parameters */
-	struct spdk_bdev_qos *qos;
-
-	/** True if the state of the QoS is being modified */
-	bool qos_mod_in_progress;
-
 	/** write cache enabled, not used at the moment */
 	int write_cache;
 
@@ -254,40 +248,50 @@ struct spdk_bdev {
 	/** function table for all LUN ops */
 	const struct spdk_bdev_fn_table *fn_table;
 
-	/** Mutex protecting claimed */
-	pthread_mutex_t mutex;
-
-	/** The bdev status */
-	enum spdk_bdev_status status;
-
-	/** The array of block devices that this block device is built on top of (if any). */
-	struct spdk_bdev **base_bdevs;
-	size_t base_bdevs_cnt;
-
-
 	/** The array of virtual block devices built on top of this block device. */
 	struct spdk_bdev **vbdevs;
 	size_t vbdevs_cnt;
 
-	/**
-	 * Pointer to the module that has claimed this bdev for purposes of creating virtual
-	 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
+	/** Fields that are used internally by the bdev subsystem.  Bdev modules
+	 *  must not read or write to these fields.
 	 */
-	struct spdk_bdev_module *claim_module;
+	struct __bdev_internal_fields {
+		/** Quality of service parameters */
+		struct spdk_bdev_qos *qos;
 
-	/** Callback function that will be called after bdev destruct is completed. */
-	spdk_bdev_unregister_cb	unregister_cb;
+		/** True if the state of the QoS is being modified */
+		bool qos_mod_in_progress;
 
-	/** Unregister call context */
-	void *unregister_ctx;
+		/** Mutex protecting claimed */
+		pthread_mutex_t mutex;
 
-	/** List of open descriptors for this block device. */
-	TAILQ_HEAD(, spdk_bdev_desc) open_descs;
+		/** The bdev status */
+		enum spdk_bdev_status status;
 
-	TAILQ_ENTRY(spdk_bdev) link;
+		/** The array of block devices that this block device is built on top of (if any). */
+		struct spdk_bdev **base_bdevs;
+		size_t base_bdevs_cnt;
 
-	/** points to a reset bdev_io if one is in progress. */
-	struct spdk_bdev_io *reset_in_progress;
+		/**
+		 * Pointer to the module that has claimed this bdev for purposes of creating virtual
+		 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
+		 */
+		struct spdk_bdev_module *claim_module;
+
+		/** Callback function that will be called after bdev destruct is completed. */
+		spdk_bdev_unregister_cb	unregister_cb;
+
+		/** Unregister call context */
+		void *unregister_ctx;
+
+		/** List of open descriptors for this block device. */
+		TAILQ_HEAD(, spdk_bdev_desc) open_descs;
+
+		TAILQ_ENTRY(spdk_bdev) link;
+
+		/** points to a reset bdev_io if one is in progress. */
+		struct spdk_bdev_io *reset_in_progress;
+	} internal;
 };
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
@@ -350,7 +354,8 @@ struct spdk_bdev_io {
 	/** It may be used by modules to put the bdev_io into its own list. */
 	TAILQ_ENTRY(spdk_bdev_io) module_link;
 
-	/** Fields that are used internally by the bdev subsystem.  Bdev modules
+	/**
+	 *  Fields that are used internally by the bdev subsystem.  Bdev modules
 	 *  must not read or write to these fields.
 	 */
 	struct __bdev_io_internal_fields {

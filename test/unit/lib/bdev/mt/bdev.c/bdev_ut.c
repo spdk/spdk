@@ -450,7 +450,7 @@ aborted_reset(void)
 	CU_ASSERT(io_ch[0] != NULL);
 	spdk_bdev_reset(g_desc, io_ch[0], aborted_reset_done, &status1);
 	poll_threads();
-	CU_ASSERT(g_bdev.bdev.reset_in_progress != NULL);
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress != NULL);
 
 	/*
 	 * First reset has been submitted on ch0.  Now submit a second
@@ -462,32 +462,32 @@ aborted_reset(void)
 	CU_ASSERT(io_ch[1] != NULL);
 	spdk_bdev_reset(g_desc, io_ch[1], aborted_reset_done, &status2);
 	poll_threads();
-	CU_ASSERT(g_bdev.bdev.reset_in_progress != NULL);
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress != NULL);
 
 	/*
 	 * Now destroy ch1.  This will abort the queued reset.  Check that
 	 *  the second reset was completed with failed status.  Also check
-	 *  that bdev->reset_in_progress != NULL, since the original reset
-	 *  has not been completed yet.  This ensures that the bdev code is
-	 *  correctly noticing that the failed reset is *not* the one that
-	 *  had been submitted to the bdev module.
+	 *  that bdev->internal.reset_in_progress != NULL, since the
+	 *  original reset has not been completed yet.  This ensures that
+	 *  the bdev code is correctly noticing that the failed reset is
+	 *  *not* the one that had been submitted to the bdev module.
 	 */
 	set_thread(1);
 	spdk_put_io_channel(io_ch[1]);
 	poll_threads();
 	CU_ASSERT(status2 == SPDK_BDEV_IO_STATUS_FAILED);
-	CU_ASSERT(g_bdev.bdev.reset_in_progress != NULL);
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress != NULL);
 
 	/*
 	 * Now complete the first reset, verify that it completed with SUCCESS
-	 *  status and that bdev->reset_in_progress is also set back to NULL.
+	 *  status and that bdev->internal.reset_in_progress is also set back to NULL.
 	 */
 	set_thread(0);
 	spdk_put_io_channel(io_ch[0]);
 	stub_complete_io(g_bdev.io_target, 0);
 	poll_threads();
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
-	CU_ASSERT(g_bdev.bdev.reset_in_progress == NULL);
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress == NULL);
 
 	teardown_test();
 }
@@ -618,15 +618,15 @@ basic_qos(void)
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
-	bdev->qos = calloc(1, sizeof(*bdev->qos));
-	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
-	TAILQ_INIT(&bdev->qos->queued);
+	bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
+	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
+	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
 	 * Enable both IOPS and bandwidth rate limits.
 	 * In this case, both rate limits will take equal effect.
 	 */
-	bdev->qos->iops_rate_limit = 2000; /* 2 I/O per millisecond */
-	bdev->qos->byte_rate_limit = 8192000; /* 8K byte per millisecond with 4K block size */
+	bdev->internal.qos->iops_rate_limit = 2000; /* 2 I/O per millisecond */
+	bdev->internal.qos->byte_rate_limit = 8192000; /* 8K byte per millisecond with 4K block size */
 
 	g_get_io_channel = true;
 
@@ -682,7 +682,7 @@ basic_qos(void)
 	/* Close the descriptor, which should stop the qos channel */
 	spdk_bdev_close(g_desc);
 	poll_threads();
-	CU_ASSERT(bdev->qos->ch == NULL);
+	CU_ASSERT(bdev->internal.qos->ch == NULL);
 
 	spdk_bdev_open(bdev, true, NULL, NULL, &g_desc);
 
@@ -698,7 +698,7 @@ basic_qos(void)
 	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
 
 	/* Confirm that the qos thread is now thread 1 */
-	CU_ASSERT(bdev->qos->ch == bdev_ch[1]);
+	CU_ASSERT(bdev->internal.qos->ch == bdev_ch[1]);
 
 	/* Tear down the channels */
 	set_thread(0);
@@ -726,15 +726,15 @@ io_during_qos_queue(void)
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
-	bdev->qos = calloc(1, sizeof(*bdev->qos));
-	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
-	TAILQ_INIT(&bdev->qos->queued);
+	bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
+	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
+	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
 	 * Enable both IOPS and bandwidth rate limits.
 	 * In this case, IOPS rate limit will take effect first.
 	 */
-	bdev->qos->iops_rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
-	bdev->qos->byte_rate_limit = 8192000; /* 8K byte per millisecond with 4K block size */
+	bdev->internal.qos->iops_rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
+	bdev->internal.qos->byte_rate_limit = 8192000; /* 8K byte per millisecond with 4K block size */
 
 	g_get_io_channel = true;
 
@@ -814,15 +814,15 @@ io_during_qos_reset(void)
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
-	bdev->qos = calloc(1, sizeof(*bdev->qos));
-	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
-	TAILQ_INIT(&bdev->qos->queued);
+	bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
+	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
+	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
 	 * Enable both IOPS and bandwidth rate limits.
 	 * In this case, bandwidth rate limit will take effect first.
 	 */
-	bdev->qos->iops_rate_limit = 2000; /* 2000 I/O per second, or 2 per millisecond */
-	bdev->qos->byte_rate_limit = 4096000; /* 4K byte per millisecond with 4K block size */
+	bdev->internal.qos->iops_rate_limit = 2000; /* 2000 I/O per second, or 2 per millisecond */
+	bdev->internal.qos->byte_rate_limit = 4096000; /* 4K byte per millisecond with 4K block size */
 
 	g_get_io_channel = true;
 
