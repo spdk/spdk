@@ -134,6 +134,24 @@
     },
     {
       "key": {
+        "uuid": "91f923fd_5147a589",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-21T07:35:07Z",
+      "side": 1,
+      "message": "Don\u0027t think so. Aren\u0027t there is still hot-remove and shutdown cases, which do no delete the lvol on disk but just clean up structures.",
+      "parentUuid": "3b021511_0cd8d451",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5322414f_c65dff6a",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 31
