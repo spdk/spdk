@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "de72dc74_25ca7d61",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-21T21:18:49Z",
+      "side": 1,
+      "message": "The spec draft I have says:\n\n\u003e Transport Address: shall be set to “nn-0xWWNN:pn-0xWWPN” where:\n\u003e a) WWNN is the Node_Name of the target NVMe_Port; and\n\u003e b) WWPN is the N_Port_Name of the target NVMe_Port.\n\u003e The WWNN and WWPN are the ACSII values of the sixteen hex digits of the Name_Identifiers.\n\nI\u0027m not sure if \"WWN\" is sufficient to describe this format, but I\u0027ll defer to the FC experts here...",
+      "revId": "efa12d8c770369c9b5268607176e1ec24ad3430d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eaf0ed2e_2bbeafb2",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 1
@@ -31,6 +48,23 @@
       "side": 1,
       "message": "I know the spec says this is all spaces for FC, but we can fill that out inside the SPDK code.  Less for the caller to worry about when using FC.",
       "parentUuid": "eaf0ed2e_2bbeafb2",
+      "revId": "efa12d8c770369c9b5268607176e1ec24ad3430d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c821d2ac_cc7365b7",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-21T21:18:49Z",
+      "side": 1,
+      "message": "This can just be an empty string for FC as well, I think (we will handle converting from this C null-terminated string to a NVMe-spec space-padded ASCII string internally as needed).",
       "revId": "efa12d8c770369c9b5268607176e1ec24ad3430d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
