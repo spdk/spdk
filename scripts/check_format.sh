@@ -110,13 +110,21 @@ else
 fi
 rm -f scripts/posix.log
 
-if hash pep8; then
+if hash pep8 2>/dev/null; then
+	PEP8=pep8
+fi
+
+if hash pycodestyle 2>/dev/null; then
+	PEP8=pycodestyle
+fi
+
+if [ ! -z ${PEP8} ]; then
 	echo -n "Checking Python style..."
 
 	PEP8_ARGS+=" --max-line-length=140"
 
 	error=0
-	git ls-files '*.py' | xargs -n1 pep8 $PEP8_ARGS > pep8.log || error=1
+	git ls-files '*.py' | xargs -n1 $PEP8 $PEP8_ARGS > pep8.log || error=1
 	if [ $error -ne 0 ]; then
 		echo " Python formatting errors detected"
 		cat pep8.log

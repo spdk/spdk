@@ -22,7 +22,7 @@ def main():
     root_node = UIRoot(args.socket, shell)
     try:
         root_node.refresh()
-    except:
+    except BaseException:
         pass
 
     if len(args.commands) > 0:
