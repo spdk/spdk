@@ -195,6 +195,18 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 		return NULL;
 	}
 
+	tgt->data_buf_pool = spdk_mempool_create("spdk_nvmf_tgt",
+			     tgt->opts.max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
+			     tgt->opts.io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
+			     SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+			     SPDK_ENV_SOCKET_ID_ANY);
+	if (!tgt->data_buf_pool) {
+		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+		free(tgt->subsystems);
+		free(tgt);
+		return NULL;
+	}
+
 	spdk_io_device_register(tgt,
 				spdk_nvmf_tgt_create_poll_group,
 				spdk_nvmf_tgt_destroy_poll_group,
@@ -241,6 +253,14 @@ spdk_nvmf_tgt_destroy_cb(void *io_device)
 	destroy_cb_fn = tgt->destroy_cb_fn;
 	destroy_cb_arg = tgt->destroy_cb_arg;
 
+	if (spdk_mempool_count(tgt->data_buf_pool) != (tgt->opts.max_queue_depth * 4)) {
+		SPDK_ERRLOG("tgt buffer pool count is %zu but should be %u\n",
+			    spdk_mempool_count(tgt->data_buf_pool),
+			    tgt->opts.max_queue_depth * 4);
+	}
+
+	spdk_mempool_free(tgt->data_buf_pool);
+
 	free(tgt);
 
 	if (destroy_cb_fn) {
@@ -257,6 +277,18 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 	tgt->destroy_cb_arg = cb_arg;
 
 	spdk_io_device_unregister(tgt, spdk_nvmf_tgt_destroy_cb);
+}
+
+void *
+spdk_nvmf_tgt_get_data_buf(struct spdk_nvmf_tgt *tgt)
+{
+	return spdk_mempool_get(tgt->data_buf_pool);
+}
+
+void
+spdk_nvmf_tgt_put_data_buf(struct spdk_nvmf_tgt *tgt, void *buf)
+{
+	spdk_mempool_put(tgt->data_buf_pool, buf);
 }
 
 struct spdk_nvmf_tgt_listen_ctx {

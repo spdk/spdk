@@ -45,6 +45,13 @@
 
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
+/* AIO backend requires block size aligned data buffers,
+ * extra 4KiB aligned data buffer should work for most devices.
+ */
+#define SHIFT_4KB			12
+#define NVMF_DATA_BUFFER_ALIGNMENT	(1 << SHIFT_4KB)
+#define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1)
+
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
@@ -78,6 +85,8 @@ struct spdk_nvmf_tgt {
 
 	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
 	void					*destroy_cb_arg;
+
+	struct spdk_mempool			*data_buf_pool;
 };
 
 struct spdk_nvmf_host {
@@ -266,6 +275,10 @@ int spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
 int spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
+
+void *spdk_nvmf_tgt_get_data_buf(struct spdk_nvmf_tgt *tgt);
+void spdk_nvmf_tgt_put_data_buf(struct spdk_nvmf_tgt *tgt, void *buf);
+
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
