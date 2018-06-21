@@ -138,6 +138,23 @@
       "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c37733fa_b01189a0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1895,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-06-21T20:41:50Z",
+      "side": 1,
+      "message": "The callback can become overloaded and is a function of success of failure of this submission. In other words, if data buffer allocation fails, then the callback should free the bdev_io and return DATA_BUFFER_PENDING to transport for retry. If success, I\u0027m guessing this bdev_io is reused and submit_io is directly called. or Do you anticipate that we create a new bdev_io in each submission leg.\n\nIf latter, then it kind of introduces few error paths where in REQUEST abort can leave data buffer unreleased as the context is stored only in the bdevio.",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
