@@ -1,5 +1,7 @@
 # Changelog
 
+## v18.04.2: Maintenance Release
+
 ## v18.04.1: Maintenance Release
 
 SPDK v18.04.1 is a bug fix and maintenance release.
