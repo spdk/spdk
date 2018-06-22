@@ -36,6 +36,8 @@
   #
   # Assign 20000 IOPS for the Malloc0 block device
   Limit_IOPS Malloc0 20000
+  # Assign 10000 read only IOPS for the AIO0 block device
+  Limit_Read_IOPS AIO0 10000
   #
   # Bandwidth limit must be 10 (MB) or greater and be
   # multiple of 10
