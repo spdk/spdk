@@ -78,6 +78,9 @@ class UIRoot(UINode):
         response = rpc.bdev.construct_nvme_bdev(self.client, **kwargs)
         return response
 
+    def delete_nvme_controller(self, **kwargs):
+        rpc.bdev.delete_nvme_controller(self.client, **kwargs)
+
     def create_null_bdev(self, **kwargs):
         response = rpc.bdev.construct_null_bdev(self.client, **kwargs)
         return response
