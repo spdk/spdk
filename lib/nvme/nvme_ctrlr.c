@@ -784,6 +784,23 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "MDTS max_xfer_size %u\n", ctrlr->max_xfer_size);
 	}
 
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cdata.cntlid);
+	if (ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		ctrlr->cntlid = ctrlr->cdata.cntlid;
+	} else {
+		/*
+		 * Fabrics controllers should already have CNTLID from the Connect command.
+		 *
+		 * If CNTLID from Connect doesn't match CNTLID in the Identify Controller data,
+		 * trust the one from Connect.
+		 */
+		if (ctrlr->cntlid != ctrlr->cdata.cntlid) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME,
+				      "Identify CNTLID 0x%04" PRIx16 " != Connect CNTLID 0x%04" PRIx16 "\n",
+				      ctrlr->cdata.cntlid, ctrlr->cntlid);
+		}
+	}
+
 	return 0;
 }
 
