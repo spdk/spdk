@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccc93a4c_d6f9d530",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-22T15:05:14Z",
+      "side": 1,
+      "message": "This file looks good, but formatting does not quite fit usual coding style. Even though it passes check format.\n\nPlease add new lines where needed - such as after declarations, after if block etc.",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 155,
+        "endChar": 1
+      },
+      "revId": "7319b643f57c97bb53e710b25737e092f42aa3b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
