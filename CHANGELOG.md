@@ -101,8 +101,9 @@ notification that the set of initialization examine() calls is complete.
 The bdev layer now allows modules to provide an optional per-bdev UUID, which can be retrieved with
 the spdk_bdev_get_uuid() function.
 
-Enforcement of IOPS limits for quality of service (QoS) has been added to the bdev layer. See the
-[set_bdev_qos_limit_iops](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit_iops) documentation
+Enforcement of IOPS and bandwidth limits for quality of service (QoS) has been added to the bdev layer.
+See the [set_bdev_qos_limit_iops](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit_iops) and
+[set_bdev_qos_limit_bwps](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit_bwps) documentation
 for more details.
 
 ### RPC
