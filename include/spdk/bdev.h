@@ -115,6 +115,10 @@ enum spdk_bdev_qos_rate_limit_type {
 	SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT,
 	/** Byte per second rate limit for both read and write */
 	SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT,
+	/** Byte per second rate limit for read only */
+	SPDK_BDEV_QOS_R_BPS_RATE_LIMIT,
+	/** Byte per second rate limit for write only */
+	SPDK_BDEV_QOS_W_BPS_RATE_LIMIT,
 	/** Keep last */
 	SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES
 };
