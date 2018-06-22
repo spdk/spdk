@@ -638,6 +638,8 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 rw_ios_per_sec          | Optional | number      | Number of R/W I/Os per second to allow. 0 means unlimited.
+r_ios_per_sec           | Optional | number      | Number of Read I/Os per second to allow. 0 means unlimited.
+w_ios_per_sec           | Optional | number      | Number of Write I/Os per second to allow. 0 means unlimited.
 rw_mbytes_per_sec       | Optional | number      | Number of R/W megabytes per second to allow. 0 means unlimited.
 
 ### Example
@@ -651,6 +653,8 @@ Example request:
   "params": {
     "name": "Malloc0"
     "rw_ios_per_sec": 20000
+    "r_ios_per_sec": 10000
+    "w_ios_per_sec": 10000
     "rw_mbytes_per_sec": 100
   }
 }
