@@ -70,6 +70,8 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_BYTES_PER_SEC		(10 * 1024 * 1024)
 
 static const char *qos_type_str[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES] = {"Limit_IOPS",
+								       "Limit_Read_IOPS",
+								       "Limit_Write_IOPS",
 								       "Limit_BPS"
 								      };
 
@@ -1005,10 +1007,31 @@ _spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
 
 	switch (limit) {
 	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
 		return true;
 	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
 		return false;
 	case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
+	default:
+		return false;
+	}
+}
+
+static bool
+_spdk_bdev_is_read_io(struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		if (bdev_io->u.nvme_passthru.cmd.opc == SPDK_NVME_OPC_READ) {
+			return true;
+		} else {
+			return false;
+		}
+	case SPDK_BDEV_IO_TYPE_READ:
+		return true;
 	default:
 		return false;
 	}
@@ -1062,6 +1085,11 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 		qos->submitted_this_timeslice[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT]++;
 		qos->submitted_this_timeslice[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] +=
 			_spdk_bdev_get_io_size_in_byte(bdev_io);
+		if (_spdk_bdev_is_read_io(bdev_io) == true) {
+			qos->submitted_this_timeslice[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT]++;
+		} else {
+			qos->submitted_this_timeslice[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT]++;
+		}
 		ch->io_outstanding++;
 		shared_resource->io_outstanding++;
 		bdev->fn_table->submit_request(ch->channel, bdev_io);
