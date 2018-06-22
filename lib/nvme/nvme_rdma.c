@@ -1003,76 +1003,6 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 	return 0;
 }
 
-static int
-nvme_rdma_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
-			      uint32_t offset, uint8_t size, uint64_t value)
-{
-	struct spdk_nvmf_fabric_prop_set_cmd cmd = {};
-	struct nvme_completion_poll_status status;
-	int rc;
-
-	cmd.opcode = SPDK_NVME_OPC_FABRIC;
-	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET;
-	cmd.ofst = offset;
-	cmd.attrib.size = size;
-	cmd.value.u64 = value;
-
-	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
-					   NULL, 0,
-					   nvme_completion_poll_cb, &status);
-
-	if (rc < 0) {
-		SPDK_ERRLOG("failed to send nvmf_fabric_prop_set_cmd\n");
-		return -1;
-	}
-
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("nvme_rdma_fabric_prop_get_cmd failed\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
-nvme_rdma_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
-			      uint32_t offset, uint8_t size, uint64_t *value)
-{
-	struct spdk_nvmf_fabric_prop_set_cmd cmd = {};
-	struct nvme_completion_poll_status status;
-	struct spdk_nvmf_fabric_prop_get_rsp *response;
-	int rc;
-
-	cmd.opcode = SPDK_NVME_OPC_FABRIC;
-	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
-	cmd.ofst = offset;
-	cmd.attrib.size = size;
-
-	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
-					   NULL, 0, nvme_completion_poll_cb,
-					   &status);
-
-	if (rc < 0) {
-		SPDK_ERRLOG("failed to send nvme_rdma_fabric_prop_get_cmd\n");
-		return -1;
-	}
-
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("nvme_rdma_fabric_prop_get_cmd failed\n");
-		return -1;
-	}
-
-	response = (struct spdk_nvmf_fabric_prop_get_rsp *)&status.cpl;
-
-	if (!size) {
-		*value = response->value.u32.low;
-	} else {
-		*value = response->value.u64;
-	}
-
-	return 0;
-}
-
 static struct spdk_nvme_qpair *
 nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			     uint16_t qid, uint32_t qsize,
@@ -1424,32 +1354,25 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_rdma_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
-	return nvme_rdma_fabric_prop_set_cmd(ctrlr, offset, SPDK_NVMF_PROP_SIZE_4, value);
+	return nvme_fabric_ctrlr_set_reg_4(ctrlr, offset, value);
 }
 
 int
 nvme_rdma_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
 {
-	return nvme_rdma_fabric_prop_set_cmd(ctrlr, offset, SPDK_NVMF_PROP_SIZE_8, value);
+	return nvme_fabric_ctrlr_set_reg_8(ctrlr, offset, value);
 }
 
 int
 nvme_rdma_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
 {
-	uint64_t tmp_value;
-	int rc;
-	rc = nvme_rdma_fabric_prop_get_cmd(ctrlr, offset, SPDK_NVMF_PROP_SIZE_4, &tmp_value);
-
-	if (!rc) {
-		*value = (uint32_t)tmp_value;
-	}
-	return rc;
+	return nvme_fabric_ctrlr_get_reg_4(ctrlr, offset, value);
 }
 
 int
 nvme_rdma_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
 {
-	return nvme_rdma_fabric_prop_get_cmd(ctrlr, offset, SPDK_NVMF_PROP_SIZE_8, value);
+	return nvme_fabric_ctrlr_get_reg_8(ctrlr, offset, value);
 }
 
 int
