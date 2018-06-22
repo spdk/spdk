@@ -509,6 +509,16 @@ static const struct spdk_json_object_decoder rpc_set_bdev_qos_limit_decoders[] =
 		spdk_json_decode_uint64, true
 	},
 	{
+		"r_ios_per_sec", offsetof(struct rpc_set_bdev_qos_limit,
+					  limits[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT]),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"w_ios_per_sec", offsetof(struct rpc_set_bdev_qos_limit,
+					  limits[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT]),
+		spdk_json_decode_uint64, true
+	},
+	{
 		"rw_mbytes_per_sec", offsetof(struct rpc_set_bdev_qos_limit,
 					      limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT]),
 		spdk_json_decode_uint64, true
@@ -543,7 +553,6 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_set_bdev_qos_limit req = {NULL, {UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX}};
 	struct spdk_bdev *bdev;
-	bool valid_limit = false;
 	int i;
 
 	if (spdk_json_decode_object(params, rpc_set_bdev_qos_limit_decoders,
@@ -563,11 +572,11 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 		if (req.limits[i] != UINT64_MAX) {
-			valid_limit = true;
+			break;
 		}
 	}
 
-	if (valid_limit == false) {
+	if (i == SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES) {
 		SPDK_ERRLOG("no rate limits specified\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "No rate limits specified");
