@@ -1,7 +1,7 @@
 # NVMe over Fabrics Target {#nvmf}
 
 @sa @ref nvme_fabrics_host
-
+@sa @ref nvmf_tgt_tracepoints
 
 # NVMe-oF Target Getting Started Guide {#nvmf_getting_started}
 
@@ -234,48 +234,5 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 
 ## Enabling NVMe-oF target tracepoints for offline analysis and debug {#nvmf_trace}
 
-SPDK has a tracing framework for capturing low-level event information at runtime.  The NVMe-oF
-target is instrumented with tracepoints to enable analysis of both performance and application
-crashes.  (Note: the SPDK tracing framework should still be considered experimental.  Work to
-formalize and document the framework is in progress.)
-
-To enable the instrumentation, start the target with the -e parameter:
-
-~~~{.sh}
-app/nvmf_tgt/nvmf_tgt -e 0xFFFF
-~~~
-
-Information about the shared memory file will appear in the log:
-
-~~~{.sh}
-app.c: 527:spdk_app_setup_trace: *NOTICE*: Tracepoint Group Mask 0xFFFF specified.
-app.c: 531:spdk_app_setup_trace: *NOTICE*: Use 'spdk_trace -s nvmf -p 24147' to capture a snapshot of events at runtime.
-app.c: 533:spdk_app_setup_trace: *NOTICE*: Or copy /dev/shm/nvmf_trace.pid24147 for offline analysis/debug.
-~~~
-
-Note that when tracepoints are enabled, the shared memory files are not deleted when the application
-exits.  This ensures the file can be used for analysis after the applicatione exits.  On Linux, the
-shared memory files are in /dev/shm, and can be deleted manually to free shm space if needed.  A system
-reboot will also free all of the /dev/shm files.
-
-The spdk_trace program can be found in the app/trace directory.  To analyze the tracepoints on the same
-system running the NVMe-oF target, simply execute the command line shown in the log:
-
-~~~{.sh}
-app/trace/spdk_trace -s nvmf -p 24147
-~~~
-
-To analyze the tracepoints on a different system, first prepare the tracepoint file for transfer.  The
-tracepoint file can be large, but usually compresses very well.  This step can also be used to prepare
-a tracepoint file to attach to a GitHub issue for debugging NVMe-oF application crashes.
-
-~~~{.sh}
-bzip2 -c /dev/shm/nvmf_trace.pid24147 > /tmp/trace.bz2
-~~~
-
-After transferring the /tmp/trace.bz2 tracepoint file to a different system:
-
-~~~{.sh}
-bunzip2 /tmp/trace.bz2
-app/trace/spdk_trace -f /tmp/trace
-~~~
+SPDK has a tracing framework for capturing low-level event information at runtime.
+@ref nvmf_tgt_tracepoints enable analysis of both performance and application crashes.
