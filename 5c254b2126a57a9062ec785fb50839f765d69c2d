@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "517f3ae6_6bdf1f6d",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T17:15:42Z",
+      "side": 1,
+      "message": "Why is this needed in this patch?  Users should be using HUGEMEM instead.  (I made similar comment in previous revision.)",
+      "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a908498_fafede45",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T17:15:42Z",
+      "side": 1,
+      "message": "We shouldn\u0027t need these if autotest_common.sh is included - that script will make suer DEPENDENCY_DIR is defined.\n\nI mean - this works, but it\u0027s just extra code that\u0027s not needed.",
+      "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bcbefe2_f489eafa",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T17:15:42Z",
+      "side": 1,
+      "message": "Argh - these scripts don\u0027t use autotest_common.sh.  I don\u0027t think ${HOME} will work here - these scripts run in the test pool as root.  I\u0027ll send an e-mail to one of our validation guys to fix this.\n\nMaybe just keep /home/sys_sgsw here for now (and the next file) so we can get the rest of this patch checked in?",
+      "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
