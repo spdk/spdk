@@ -101,6 +101,66 @@ invalid:
 }
 SPDK_RPC_REGISTER("construct_pmem_bdev", spdk_rpc_construct_pmem_bdev, SPDK_RPC_RUNTIME)
 
+struct rpc_delete_pmem {
+	char *name;
+};
+
+static void
+free_rpc_delete_pmem(struct rpc_delete_pmem *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_delete_pmem_decoders[] = {
+	{"name", offsetof(struct rpc_delete_pmem, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_rpc_delete_pmem_bdev_cb(void *cb_arg, int bdeverrno)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, bdeverrno == 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_rpc_delete_pmem_bdev(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_delete_pmem req = {NULL};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_delete_pmem_decoders,
+				    SPDK_COUNTOF(rpc_delete_pmem_decoders),
+				    &req)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	spdk_delete_pmem_bdev(bdev, _spdk_rpc_delete_pmem_bdev_cb, request);
+	free_rpc_delete_pmem(&req);
+	return;
+
+invalid:
+	free_rpc_delete_pmem(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("delete_pmem_bdev", spdk_rpc_delete_pmem_bdev, SPDK_RPC_RUNTIME)
+
 struct rpc_create_pmem_pool {
 	char *pmem_file;
 	uint64_t num_blocks;
