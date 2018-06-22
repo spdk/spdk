@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f5af5596_fdbc3f3f",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-22T18:48:55Z",
+      "side": 1,
+      "message": "Where is that fork?  Is it on Github?   Ah. There it is.\n\nhttps://github.com/spdk/nvme-cli\n\nI think we should add this to the vm_setup.sh (too to be fedora_setup.sh) localization change.",
+      "parentUuid": "c5c8ca00_d2028163",
+      "revId": "ac92578cec325edfaa4037cc9f50c52ec5482828",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f7414478_99cd8910",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 4

@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "be5494ac_316ea79b",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-22T18:48:55Z",
+      "side": 1,
+      "message": "We\u0027ve agreed to keep this.  This is only debug code used to stop the error from happening sooner.",
+      "parentUuid": "5a908498_fafede45",
+      "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bcbefe2_f489eafa",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 5
@@ -47,6 +65,24 @@
       "writtenOn": "2018-06-22T17:15:42Z",
       "side": 1,
       "message": "Argh - these scripts don\u0027t use autotest_common.sh.  I don\u0027t think ${HOME} will work here - these scripts run in the test pool as root.  I\u0027ll send an e-mail to one of our validation guys to fix this.\n\nMaybe just keep /home/sys_sgsw here for now (and the next file) so we can get the rest of this patch checked in?",
+      "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbc70973_9750bb92",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-22T18:48:55Z",
+      "side": 1,
+      "message": "Agreed, I\u0027m going to remove this file from the patch",
+      "parentUuid": "9bcbefe2_f489eafa",
       "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
