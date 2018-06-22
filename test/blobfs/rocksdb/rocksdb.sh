@@ -25,6 +25,8 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 
+rpc_py="python $rootdir/scripts/rpc.py"
+
 DB_BENCH_DIR=/usr/src/rocksdb
 DB_BENCH=$DB_BENCH_DIR/db_bench
 ROCKSDB_CONF=$testdir/rocksdb.conf
@@ -130,6 +132,8 @@ trap - SIGINT SIGTERM EXIT
 
 run_bsdump
 rm -f $ROCKSDB_CONF
+
+$rpc_py delete_nvme_bdev "Nvme0n1"
 
 report_test_completion "blobfs"
 timing_exit rocksdb
