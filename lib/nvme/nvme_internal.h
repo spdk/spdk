@@ -464,6 +464,8 @@ struct spdk_nvme_ctrlr {
 
 	uint16_t			max_sges;
 
+	uint16_t			cntlid;
+
 	/** Controller support flags */
 	uint64_t			flags;
 
