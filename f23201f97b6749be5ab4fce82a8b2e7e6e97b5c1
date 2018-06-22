@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c3c26ab_1fbf98e6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2748,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T22:12:04Z",
+      "side": 1,
+      "message": "if (bdev-\u003eclaim_module) {\n  return;\n}\n\nThen you don\u0027t have to indent the examine_disk loop.",
+      "revId": "f23201f97b6749be5ab4fce82a8b2e7e6e97b5c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbb97b7c_914e4fca",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T22:12:04Z",
+      "side": 1,
+      "message": "I think this one should be examine_config",
+      "revId": "f23201f97b6749be5ab4fce82a8b2e7e6e97b5c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
