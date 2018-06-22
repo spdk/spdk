@@ -267,6 +267,14 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 			spdk_json_write_name(w, "rw_mbytes_per_sec");
 			spdk_json_write_uint64(w, qos_limits[i]);
 			break;
+		case SPDK_BDEV_QOS_R_BPS_RATE_LIMIT:
+			spdk_json_write_name(w, "r_mbytes_per_sec");
+			spdk_json_write_uint64(w, qos_limits[i]);
+			break;
+		case SPDK_BDEV_QOS_W_BPS_RATE_LIMIT:
+			spdk_json_write_name(w, "w_mbytes_per_sec");
+			spdk_json_write_uint64(w, qos_limits[i]);
+			break;
 		}
 	}
 	spdk_json_write_object_end(w);
