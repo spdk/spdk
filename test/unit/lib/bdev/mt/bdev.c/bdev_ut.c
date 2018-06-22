@@ -1171,17 +1171,37 @@ qos_dynamic_enable(void)
 
 	set_thread(0);
 
-	/* Enable QoS */
+	/* Enable QoS: IOPS rate limit */
 	status = -1;
-	spdk_bdev_set_qos_limit_iops(bdev, 10000, qos_dynamic_enable_done, &status);
+	spdk_bdev_set_qos_rate_limit(bdev, 10000, SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);
 	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
 	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
 
-	/* Disable QoS */
+	/* Enable QoS: Byte per second rate limit */
 	status = -1;
-	spdk_bdev_set_qos_limit_iops(bdev, 0, qos_dynamic_enable_done, &status);
+	spdk_bdev_set_qos_rate_limit(bdev, 10, SPDK_BDEV_QOS_RW_BYTEPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Disable QoS: IOPS rate limit */
+	status = -1;
+	spdk_bdev_set_qos_rate_limit(bdev, 0, SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Disable QoS: Byte per second rate limit */
+	status = -1;
+	spdk_bdev_set_qos_rate_limit(bdev, 0, SPDK_BDEV_QOS_RW_BYTEPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);
 	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) == 0);
@@ -1189,7 +1209,8 @@ qos_dynamic_enable(void)
 
 	/* Disable QoS again */
 	status = -1;
-	spdk_bdev_set_qos_limit_iops(bdev, 0, qos_dynamic_enable_done, &status);
+	spdk_bdev_set_qos_rate_limit(bdev, 0, SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0); /* This should succeed */
 	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) == 0);
@@ -1197,7 +1218,8 @@ qos_dynamic_enable(void)
 
 	/* Enable QoS on thread 0 */
 	status = -1;
-	spdk_bdev_set_qos_limit_iops(bdev, 10000, qos_dynamic_enable_done, &status);
+	spdk_bdev_set_qos_rate_limit(bdev, 10000, SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);
 	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
@@ -1206,7 +1228,8 @@ qos_dynamic_enable(void)
 	/* Disable QoS on thread 1 */
 	set_thread(1);
 	status = -1;
-	spdk_bdev_set_qos_limit_iops(bdev, 0, qos_dynamic_enable_done, &status);
+	spdk_bdev_set_qos_rate_limit(bdev, 0, SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
 	/* Don't poll yet. This should leave the channels with QoS enabled */
 	CU_ASSERT(status == -1);
 	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
@@ -1214,7 +1237,8 @@ qos_dynamic_enable(void)
 
 	/* Enable QoS. This should immediately fail because the previous disable QoS hasn't completed. */
 	second_status = 0;
-	spdk_bdev_set_qos_limit_iops(bdev, 10000, qos_dynamic_enable_done, &second_status);
+	spdk_bdev_set_qos_rate_limit(bdev, 10, SPDK_BDEV_QOS_RW_BYTEPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &second_status);
 	poll_threads();
 	CU_ASSERT(status == 0); /* The disable should succeed */
 	CU_ASSERT(second_status < 0); /* The enable should fail */
@@ -1223,7 +1247,8 @@ qos_dynamic_enable(void)
 
 	/* Enable QoS on thread 1. This should succeed now that the disable has completed. */
 	status = -1;
-	spdk_bdev_set_qos_limit_iops(bdev, 10000, qos_dynamic_enable_done, &status);
+	spdk_bdev_set_qos_rate_limit(bdev, 10000, SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);
 	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
