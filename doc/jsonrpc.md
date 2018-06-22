@@ -180,7 +180,7 @@ Example response:
     "get_initiator_groups",
     "set_iscsi_options",
     "set_bdev_options",
-    "set_bdev_qos_limit_iops",
+    "set_bdev_qos_limit",
     "delete_bdev",
     "get_bdevs_config",
     "get_bdevs",
@@ -568,16 +568,18 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 
-## set_bdev_qos_limit_iops {#rpc_set_bdev_qos_limit_iops}
+## set_bdev_qos_limit {#rpc_set_bdev_qos_limit}
 
-Set an IOPS-based quality of service rate limit on a bdev.
+Set the quality of service rate limit on a bdev. Default is IOPS based.
 
 ### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
-ios_per_sec             | Required | number      | Number of I/Os per second to allow. 0 means unlimited.
+limit_per_sec           | Required | number      | Rate limit per second to allow. 0 means unlimited. For IOPS, >=10000. For BPS, >=10(MB).
+limit_type              | Optional | string      | Type of rate limit (IOPS, BPS). Default is IOPS.
+
 
 ### Example
 
@@ -586,10 +588,11 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "set_bdev_qos_limit_iops",
+  "method": "set_bdev_qos_limit",
   "params": {
     "name": "Malloc0"
-    "ios_per_sec": 20000
+    "limit_per_sec": 20000
+    "limit_type": "IOPS"
   }
 }
 ~~~
