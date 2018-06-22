@@ -5,6 +5,7 @@ set -e
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
+rpc_py="python $rootdir/scripts/rpc.py"
 
 function run_fio()
 {
@@ -41,6 +42,8 @@ function nbd_function_test() {
 		waitforlisten $nbd_pid $rpc_server
 
 		nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
+
+		$rpc_py -s $rpc_server delete_passthru_bdev TestPT
 
 		killprocess $nbd_pid
 	fi
