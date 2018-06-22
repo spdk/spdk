@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cff502bd_1e95ec9b",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 936,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T18:09:52Z",
+      "side": 1,
+      "message": "This should be -L for consistency with the other tools.",
+      "revId": "504ea49ff92496d8e68560ba4ab3b3bb79016e0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24fb6dff_4523a0e0",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T18:09:52Z",
+      "side": 1,
+      "message": "Log print level has nothing to do with the environment abstraction layer.",
+      "revId": "504ea49ff92496d8e68560ba4ab3b3bb79016e0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
