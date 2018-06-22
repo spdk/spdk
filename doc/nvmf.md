@@ -1,7 +1,7 @@
 # NVMe over Fabrics Target {#nvmf}
 
 @sa @ref nvme_fabrics_host
-
+@sa @ref nvmf_tgt_tracepoints
 
 # NVMe-oF Target Getting Started Guide {#nvmf_getting_started}
 

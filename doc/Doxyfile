@@ -816,6 +816,7 @@ INPUT                  = ../include/spdk \
                          nvme-cli.md \
                          nvmf.md \
                          nvmf_tgt_pg.md \
+			 nvmf_tracing.md \
                          peer_2_peer.md \
                          spdkcli.md \
                          ssd_internals.md \
