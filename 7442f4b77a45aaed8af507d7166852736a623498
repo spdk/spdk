@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aafafe83_0883f68c",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T16:49:53Z",
+      "side": 1,
+      "message": "it\u0027s -\u003e its",
+      "range": {
+        "startLine": 457,
+        "startChar": 54,
+        "endLine": 457,
+        "endChar": 58
+      },
+      "revId": "7442f4b77a45aaed8af507d7166852736a623498",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d77d551_5111136c",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T16:49:53Z",
+      "side": 1,
+      "message": "others",
+      "range": {
+        "startLine": 458,
+        "startChar": 62,
+        "endLine": 458,
+        "endChar": 69
+      },
+      "revId": "7442f4b77a45aaed8af507d7166852736a623498",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19a2eb8d_1be0d50b",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T16:49:53Z",
+      "side": 1,
+      "message": "I would word this somewhat differently - maybe something like:\n\n\"A bdev module that has an asynchronous destruction process should return 1 from its destruct function and then call this function when destruction is complete.  Bdev modules that do not need asynchronous destruct should return 0 from the destruct function.\"\n\n(Feel free to tweak the wording, but I think something like this conveys the intent better.)",
+      "revId": "7442f4b77a45aaed8af507d7166852736a623498",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "597ad969_646caf0f",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T16:49:53Z",
+      "side": 1,
+      "message": "Remove extra blank line here",
+      "revId": "7442f4b77a45aaed8af507d7166852736a623498",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
