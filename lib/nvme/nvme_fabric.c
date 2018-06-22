@@ -37,6 +37,9 @@
 
 #include "nvme_internal.h"
 
+#include "spdk/endian.h"
+#include "spdk/string.h"
+
 static int
 nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 			 uint32_t offset, uint8_t size, uint64_t value)
@@ -136,4 +139,131 @@ int
 nvme_fabric_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
 {
 	return nvme_fabric_prop_get_cmd(ctrlr, offset, SPDK_NVMF_PROP_SIZE_8, value);
+}
+
+static void
+nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
+			   void *cb_ctx, spdk_nvme_probe_cb probe_cb)
+{
+	struct spdk_nvme_transport_id trid;
+	uint8_t *end;
+	size_t len;
+
+	memset(&trid, 0, sizeof(trid));
+
+	if (entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		SPDK_WARNLOG("Skipping unsupported discovery service referral\n");
+		return;
+	} else if (entry->subtype != SPDK_NVMF_SUBTYPE_NVME) {
+		SPDK_WARNLOG("Skipping unknown subtype %u\n", entry->subtype);
+		return;
+	}
+
+	trid.trtype = entry->trtype;
+	if (!spdk_nvme_transport_available(trid.trtype)) {
+		SPDK_WARNLOG("NVMe transport type %u not available; skipping probe\n",
+			     trid.trtype);
+		return;
+	}
+
+	trid.adrfam = entry->adrfam;
+
+	/* Ensure that subnqn is null terminated. */
+	end = memchr(entry->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
+	if (!end) {
+		SPDK_ERRLOG("Discovery entry SUBNQN is not null terminated\n");
+		return;
+	}
+	len = end - entry->subnqn;
+	memcpy(trid.subnqn, entry->subnqn, len);
+	trid.subnqn[len] = '\0';
+
+	/* Convert traddr to a null terminated string. */
+	len = spdk_strlen_pad(entry->traddr, sizeof(entry->traddr), ' ');
+	memcpy(trid.traddr, entry->traddr, len);
+	if (spdk_str_chomp(trid.traddr) != 0) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Trailing newlines removed from discovery TRADDR\n");
+	}
+
+	/* Convert trsvcid to a null terminated string. */
+	len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
+	memcpy(trid.trsvcid, entry->trsvcid, len);
+	if (spdk_str_chomp(trid.trsvcid) != 0) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Trailing newlines removed from discovery TRSVCID\n");
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
+		      trid.subnqn, trid.trtype,
+		      trid.traddr, trid.trsvcid);
+
+	nvme_ctrlr_probe(&trid, NULL, probe_cb, cb_ctx);
+}
+
+static int
+nvme_fabric_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
+				   void *log_page, uint32_t size, uint64_t offset)
+{
+	struct nvme_completion_poll_status status;
+	int rc;
+
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY, 0, log_page, size, offset,
+					      nvme_completion_poll_cb, &status);
+	if (rc < 0) {
+		return -1;
+	}
+
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int
+nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
+			   void *cb_ctx, spdk_nvme_probe_cb probe_cb)
+{
+	struct spdk_nvmf_discovery_log_page *log_page;
+	struct spdk_nvmf_discovery_log_page_entry *log_page_entry;
+	char buffer[4096];
+	int rc;
+	uint64_t i, numrec, buffer_max_entries_first, buffer_max_entries, log_page_offset = 0;
+	uint64_t remaining_num_rec = 0;
+	uint16_t recfmt;
+
+	buffer_max_entries_first = (sizeof(buffer) - offsetof(struct spdk_nvmf_discovery_log_page,
+				    entries[0])) /
+				   sizeof(struct spdk_nvmf_discovery_log_page_entry);
+	buffer_max_entries = sizeof(buffer) / sizeof(struct spdk_nvmf_discovery_log_page_entry);
+	do {
+		rc = nvme_fabric_get_discovery_log_page(ctrlr, buffer, sizeof(buffer), log_page_offset);
+		if (rc < 0) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Get Log Page - Discovery error\n");
+			return rc;
+		}
+
+		if (!remaining_num_rec) {
+			log_page = (struct spdk_nvmf_discovery_log_page *)buffer;
+			recfmt = from_le16(&log_page->recfmt);
+			if (recfmt != 0) {
+				SPDK_ERRLOG("Unrecognized discovery log record format %" PRIu16 "\n", recfmt);
+				return -EPROTO;
+			}
+			remaining_num_rec = log_page->numrec;
+			log_page_offset = offsetof(struct spdk_nvmf_discovery_log_page, entries[0]);
+			log_page_entry = &log_page->entries[0];
+			numrec = spdk_min(remaining_num_rec, buffer_max_entries_first);
+		} else {
+			numrec = spdk_min(remaining_num_rec, buffer_max_entries);
+			log_page_entry = (struct spdk_nvmf_discovery_log_page_entry *)buffer;
+		}
+
+		for (i = 0; i < numrec; i++) {
+			nvme_fabric_discover_probe(log_page_entry++, cb_ctx, probe_cb);
+		}
+		remaining_num_rec -= numrec;
+		log_page_offset += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);
+	} while (remaining_num_rec != 0);
+
+	return 0;
 }
