@@ -749,10 +749,10 @@ if __name__ == "__main__":
     # split
     @call_cmd
     def construct_split_vbdev(args):
-        print_dict(rpc.bdev.construct_split_vbdev(args.client,
-                                                  base_bdev=args.base_bdev,
-                                                  split_count=args.split_count,
-                                                  split_size_mb=args.split_size_mb))
+        print_array(rpc.bdev.construct_split_vbdev(args.client,
+                                                   base_bdev=args.base_bdev,
+                                                   split_count=args.split_count,
+                                                   split_size_mb=args.split_size_mb))
 
     p = subparsers.add_parser('construct_split_vbdev', help="""Add given disk name to split config. If bdev with base_name
     name exist the split bdevs will be created right away, if not split bdevs will be created when base bdev became
