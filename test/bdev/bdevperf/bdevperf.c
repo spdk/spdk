@@ -449,6 +449,17 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 	}
 }
 
+static void
+bdevperf_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	if (!success) {
+		bdevperf_complete(bdev_io, success, cb_arg);
+		return;
+	}
+
+	spdk_bdev_zcopy_end(bdev_io, false, bdevperf_complete, cb_arg);
+}
+
 static __thread unsigned int seed = 0;
 
 static void
@@ -528,7 +539,6 @@ bdevperf_submit_task(void *arg)
 	struct spdk_bdev_desc	*desc;
 	struct spdk_io_channel	*ch;
 	spdk_bdev_io_completion_cb cb_fn;
-	void			*rbuf;
 	int			rc = 0;
 
 	desc = target->bdev_desc;
@@ -558,9 +568,13 @@ bdevperf_submit_task(void *arg)
 						   target->io_size_blocks, bdevperf_complete, task);
 		break;
 	case SPDK_BDEV_IO_TYPE_READ:
-		rbuf = g_zcopy ? NULL : task->buf;
-		rc = spdk_bdev_read_blocks(desc, ch, rbuf, task->offset_blocks,
-					   target->io_size_blocks, bdevperf_complete, task);
+		if (g_zcopy) {
+			rc = spdk_bdev_zcopy_start(desc, ch, task->offset_blocks, target->io_size_blocks,
+						   true, bdevperf_zcopy_complete, task);
+		} else {
+			rc = spdk_bdev_read_blocks(desc, ch, task->buf, task->offset_blocks,
+						   target->io_size_blocks, bdevperf_complete, task);
+		}
 		break;
 	default:
 		assert(false);
