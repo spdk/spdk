@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19b587cc_f8253b88",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T18:04:41Z",
+      "side": 1,
+      "message": "I think this is indicating which phase of the zcopy is happening, so maybe \"start\" would be clearer to match the names of the _start/_end APIs?",
+      "range": {
+        "startLine": 393,
+        "startChar": 8,
+        "endLine": 393,
+        "endChar": 16
+      },
+      "revId": "667bf36d5558c562b9f3129d48525b0507ceb782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
