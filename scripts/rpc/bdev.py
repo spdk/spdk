@@ -261,6 +261,16 @@ def construct_passthru_bdev(client, base_bdev_name, passthru_bdev_name):
     return client.call('construct_passthru_bdev', params)
 
 
+def delete_passthru_bdev(client, name):
+    """Remove passthru bdev from the system.
+
+    Args:
+        bdev_name: name of passthru bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_passthru_bdev', params)
+
+
 def construct_split_vbdev(client, base_bdev, split_count, split_size_mb=None):
     """Construct split block devices from a base bdev.
 
