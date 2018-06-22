@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea61627d_63652ea5",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-22T16:34:23Z",
+      "side": 1,
+      "message": "In Python a single leading underscore has meaning (the function won\u0027t be exported in response to from rpc import * statements), but double leading underscore does not. I think you want just one underscore on these function names.",
+      "revId": "11bb8d82973d5bcf10a917aef855846dcd9f82ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
