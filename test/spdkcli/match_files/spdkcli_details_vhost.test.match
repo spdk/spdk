@@ -1,5 +1,9 @@
 {
   "aliases": [],
+  "assigned_rate_limits": {
+    "rw_ios_per_sec": $(N),
+    "rw_mbytes_per_sec": $(N)
+  },
   "block_size": $(N),
   "claimed": false,
   "driver_specific": {
