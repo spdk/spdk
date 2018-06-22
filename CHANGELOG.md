@@ -22,6 +22,12 @@ does not at this time confer any SPDK ABI compatibility claims.
 
 spdk_bdev_alias_del_all() was added to delete all alias from block device.
 
+Enforcement of bandwidth limits for quality of service (QoS) has been added to the bdev layer.
+See the new [set_bdev_qos_limit](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit)
+documentation for more details. The previous set_bdev_qos_limit_iops RPC method introduced at
+18.04 release has been deprecated. The new set_bdev_qos_limit PRC method can support both
+bandwidth and IOPS limits.
+
 ### iscsi
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
