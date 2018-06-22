@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c607be5_0de961a5",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-22T15:08:21Z",
+      "side": 1,
+      "message": "Air tight code, not much you can fit between the lines :)\n\nPlease add new lines where appropriate.",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 80
+      },
+      "revId": "29bbdb88d3c7eb97f87c95cda758a0fe3c616dfd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
