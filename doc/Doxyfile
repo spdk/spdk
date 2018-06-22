@@ -821,6 +821,7 @@ INPUT                  += \
                          nvme-cli.md \
                          nvmf.md \
                          nvmf_tgt_pg.md \
+			 nvmf_tracing.md \
                          peer_2_peer.md \
                          porting.md \
                          spdkcli.md \
