@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6410590c_c6a3ce5f",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-22T08:50:37Z",
+      "side": 1,
+      "message": "If lvolerrno is \u003c 0 we will never destroy mutex. You can move it (along with both \"free\") after \"end:\".",
+      "range": {
+        "startLine": 939,
+        "startChar": 1,
+        "endLine": 939,
+        "endChar": 37
+      },
+      "revId": "cae6c6cce760c1a6ae7157f2661188c897b224fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
