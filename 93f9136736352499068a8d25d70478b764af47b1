@@ -16,6 +16,24 @@
       "revId": "93f9136736352499068a8d25d70478b764af47b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77dc2f6f_783621a7",
+        "filename": "lib/nvme/nvme_fabric.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T23:51:19Z",
+      "side": 1,
+      "message": "value is already a uint64_t here (so the types match); get_reg_4 needs a temporary uint64_t pointer to pass as the parameter to the common prop_get_cmd function, which it then converts to a uint32_t value for the caller.",
+      "parentUuid": "5cd70f8e_f0ee8822",
+      "revId": "93f9136736352499068a8d25d70478b764af47b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
