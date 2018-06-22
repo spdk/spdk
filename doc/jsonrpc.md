@@ -568,9 +568,9 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 
-## set_bdev_qos_limit_iops {#rpc_set_bdev_qos_limit_iops}
+## set_bdev_qos_limit {#rpc_set_bdev_qos_limit}
 
-Set an IOPS-based quality of service rate limit on a bdev.
+Set the quality of service rate limit on a bdev. Default is IOPS based.
 
 ### Parameters
 
@@ -578,6 +578,8 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 ios_per_sec             | Required | number      | Number of I/Os per second to allow. 0 means unlimited.
+limit_type              | Optional | string      | Type of rate limit (IOPS, BPS). Default is IOPS.
+
 
 ### Example
 
@@ -590,6 +592,7 @@ Example request:
   "params": {
     "name": "Malloc0"
     "ios_per_sec": 20000
+    "limit_type": "IOPS"
   }
 }
 ~~~
