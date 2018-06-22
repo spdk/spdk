@@ -58,7 +58,7 @@ timing_exit fio_test
 iscsicleanup
 
 for pmem in $PMEM_BDEVS; do
-	$rpc_py delete_bdev $pmem
+	$rpc_py delete_pmem_bdev $pmem
 done
 
 for i in `seq 1 $TGT_NR`; do

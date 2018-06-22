@@ -385,6 +385,17 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 	return 0;
 }
 
+void
+spdk_delete_pmem_disk(struct spdk_bdev *bdev, spdk_delete_pmem_complete cb_fn, void *cb_arg)
+{
+	if (!bdev || bdev->module != &pmem_if) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+}
+
 static void
 bdev_pmem_read_conf(void)
 {
