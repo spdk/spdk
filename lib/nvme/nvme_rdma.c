@@ -596,73 +596,6 @@ nvme_rdma_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, 
 }
 
 static int
-nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
-{
-	struct nvme_completion_poll_status status;
-	struct spdk_nvmf_fabric_connect_rsp *rsp;
-	struct spdk_nvmf_fabric_connect_cmd cmd;
-	struct spdk_nvmf_fabric_connect_data *nvmf_data;
-	struct spdk_nvme_ctrlr *ctrlr;
-	int rc = 0;
-
-	ctrlr = rqpair->qpair.ctrlr;
-	if (!ctrlr) {
-		return -1;
-	}
-
-	nvmf_data = spdk_dma_zmalloc(sizeof(*nvmf_data), 0, NULL);
-	if (!nvmf_data) {
-		SPDK_ERRLOG("nvmf_data allocation error\n");
-		rc = -1;
-		return rc;
-	}
-
-	memset(&cmd, 0, sizeof(cmd));
-
-	cmd.opcode = SPDK_NVME_OPC_FABRIC;
-	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
-	cmd.qid = rqpair->qpair.id;
-	cmd.sqsize = rqpair->num_entries - 1;
-	cmd.kato = ctrlr->opts.keep_alive_timeout_ms;
-
-	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
-		nvmf_data->cntlid = 0xFFFF;
-	} else {
-		nvmf_data->cntlid = ctrlr->cntlid;
-	}
-
-	SPDK_STATIC_ASSERT(sizeof(nvmf_data->hostid) == sizeof(ctrlr->opts.extended_host_id),
-			   "host ID size mismatch");
-	memcpy(nvmf_data->hostid, ctrlr->opts.extended_host_id, sizeof(nvmf_data->hostid));
-	snprintf(nvmf_data->hostnqn, sizeof(nvmf_data->hostnqn), "%s", ctrlr->opts.hostnqn);
-	snprintf(nvmf_data->subnqn, sizeof(nvmf_data->subnqn), "%s", ctrlr->trid.subnqn);
-
-	rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, &rqpair->qpair,
-					(struct spdk_nvme_cmd *)&cmd,
-					nvmf_data, sizeof(*nvmf_data),
-					nvme_completion_poll_cb, &status);
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_nvme_rdma_req_fabric_connect failed\n");
-		rc = -1;
-		goto ret;
-	}
-
-	if (spdk_nvme_wait_for_completion(&rqpair->qpair, &status)) {
-		SPDK_ERRLOG("Connect command failed\n");
-		return -1;
-	}
-
-	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
-		rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status.cpl;
-		ctrlr->cntlid = rsp->status_code_specific.success.cntlid;
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cntlid);
-	}
-ret:
-	spdk_dma_free(nvmf_data);
-	return rc;
-}
-
-static int
 nvme_rdma_mr_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 			enum spdk_mem_map_notify_action action,
 			void *vaddr, size_t size)
@@ -868,7 +801,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
-	rc = nvme_rdma_qpair_fabric_connect(rqpair);
+	rc = nvme_fabric_qpair_connect(&rqpair->qpair, rqpair->num_entries);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
