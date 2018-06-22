@@ -656,6 +656,17 @@ spdk_bdev_rbd_create(const char *name, const char *pool_name, const char *rbd_na
 	return &rbd->disk;
 }
 
+void
+bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn, void *cb_arg)
+{
+	if (!bdev || bdev->module != &rbd_if) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+}
+
 static int
 bdev_rbd_library_init(void)
 {
