@@ -569,6 +569,17 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 	return 0;
 }
 
+void
+delete_passthru_disk(struct spdk_bdev *bdev, spdk_delete_passthru_complete cb_fn, void *cb_arg)
+{
+	if (!bdev || bdev->module != &passthru_if) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+}
+
 /* Because we specified this function in our pt bdev function table when we
  * registered our pt bdev, we'll get this call anytime a new bdev shows up.
  * Here we need to decide if we care about it and if so what to do. We
