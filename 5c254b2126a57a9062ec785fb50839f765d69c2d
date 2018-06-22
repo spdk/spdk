@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb4d19bc_20a5587d",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-22T19:12:04Z",
+      "side": 0,
+      "message": "Like we talked about in the meeting, we need to leave this in for compatibility with the latest qemu. If this line is broken, we should fix it in another patch.",
+      "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

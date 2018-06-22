@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0ce5642_83787969",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-22T19:12:04Z",
+      "side": 1,
+      "message": "Most of these added items are already included in pkgdep.sh. you can get rid of all of them except the following:\nopenssl-devel\ntsocks\nperl-switch\nlibrdmacm-utils\nlibibverbs-utils",
+      "revId": "061d573bd77c61236b502e80ccc006b8d2cd51e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
