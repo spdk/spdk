@@ -1039,6 +1039,8 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+struct spdk_nvme_hooks;
+
 #ifdef __cplusplus
 }
 #endif
