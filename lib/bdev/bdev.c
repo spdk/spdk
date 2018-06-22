@@ -70,6 +70,8 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_BYTES_PER_SEC		(10 * 1024 * 1024)
 
 static const char *qos_type_str[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES] = {"Limit_IOPS",
+								       "Limit_Read_IOPS",
+								       "Limit_Write_IOPS",
 								       "Limit_BPS"
 								      };
 
@@ -1005,6 +1007,8 @@ _spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
 
 	switch (limit) {
 	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
 		return true;
 	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
 		return false;
@@ -1014,27 +1018,22 @@ _spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
 	}
 }
 
-static void
-_spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, uint64_t io_size_in_byte)
+static bool
+_spdk_bdev_is_read_io(struct spdk_bdev_io *bdev_io)
 {
-	int i = 0;
-
-	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		if (qos->rate_limits[i] <= 0) {
-			continue;
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		if (bdev_io->u.nvme_passthru.cmd.opc == SPDK_NVME_OPC_READ) {
+			return true;
+		} else {
+			return false;
 		}
-
-		switch (i) {
-		case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
-			qos->submitted_this_timeslice[i]++;
-			break;
-		case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
-			qos->submitted_this_timeslice[i] += io_size_in_byte;
-			break;
-		case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
-		default:
-			break;
-		}
+	case SPDK_BDEV_IO_TYPE_READ:
+		return true;
+	default:
+		return false;
 	}
 }
 
@@ -1059,35 +1058,95 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+_spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, bool is_read_io, uint64_t io_size_in_byte)
+{
+	int i = 0;
+
+	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
+		if (qos->rate_limits[i] <= 0) {
+			continue;
+		}
+
+		switch (i) {
+		case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+			qos->submitted_this_timeslice[i]++;
+			break;
+		case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+			if (is_read_io == true) {
+				qos->submitted_this_timeslice[i]++;
+			}
+			break;
+		case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
+			if (is_read_io == false) {
+				qos->submitted_this_timeslice[i]++;
+			}
+			break;
+		case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+			qos->submitted_this_timeslice[i] += io_size_in_byte;
+			break;
+		case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
+		default:
+			break;
+		}
+	}
+}
+
+static void
 _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 {
-	struct spdk_bdev_io		*bdev_io = NULL;
+	struct spdk_bdev_io		*bdev_io = NULL, *tmp = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
 	struct spdk_bdev_qos		*qos = bdev->internal.qos;
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 	int				i = 0;
-	bool				no_more_ios = false;
+	bool				submit_io = true, is_read_io = true;
+	bool				no_submit_read_io = false, no_submit_write_io = false;
 	uint64_t			io_size_in_byte = 0;
 
-	while (!TAILQ_EMPTY(&qos->queued)) {
+	TAILQ_FOREACH_SAFE(bdev_io, &qos->queued, internal.link, tmp) {
+		if (no_submit_read_io == true && no_submit_write_io == true) {
+			break;
+		}
+
+		submit_io = true;
+		is_read_io = _spdk_bdev_is_read_io(bdev_io);
+		io_size_in_byte = _spdk_bdev_get_io_size_in_byte(bdev_io);
+
+		/* Check whether this IO allowed to submit */
+		if (is_read_io == true && no_submit_read_io == true) {
+			continue;
+		}
+		if (is_read_io == false && no_submit_write_io == true) {
+			continue;
+		}
 		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
+			if (is_read_io == true && i == SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT) {
+				continue;
+			}
+			if (is_read_io == false && i == SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT) {
+				continue;
+			}
+
 			if (qos->max_limits_per_timeslice[i] > 0 &&
 			    qos->submitted_this_timeslice[i] >= qos->max_limits_per_timeslice[i]) {
-				no_more_ios = true;
+				submit_io = false;
+				if (is_read_io == true) {
+					no_submit_read_io = true;
+				} else {
+					no_submit_write_io = true;
+				}
 				break;
 			}
 		}
 
-		if (no_more_ios == true) {
-			break;
+		if (submit_io == false) {
+			continue;
 		}
 
-		bdev_io = TAILQ_FIRST(&qos->queued);
-		io_size_in_byte = _spdk_bdev_get_io_size_in_byte(bdev_io);
 		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
 		ch->io_outstanding++;
 		shared_resource->io_outstanding++;
-		_spdk_bdev_qos_update_per_io(qos, io_size_in_byte);
+		_spdk_bdev_qos_update_per_io(qos, is_read_io, io_size_in_byte);
 		bdev->fn_table->submit_request(ch->channel, bdev_io);
 	}
 }
