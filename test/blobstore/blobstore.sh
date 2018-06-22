@@ -6,6 +6,8 @@ if [ $SYSTEM = "FreeBSD" ] ; then
     exit 0
 fi
 
+rpc_py="python $rootdir/scripts/rpc.py"
+
 set -xe
 
 testdir=$(readlink -f $(dirname $0))
@@ -32,6 +34,8 @@ sed -i 's/[[:space:]]*$//' $testdir/btest.out
 # it to a file so we can compare and confirm basic read and write
 $rootdir/test/app/match/match -v $testdir/btest.out.match
 diff $testdir/test.pattern $testdir/test.pattern.blob
+
+$rpc_py delete_nvme_bdev "Nvme0n1"
 
 rm -rf $testdir/btest.out
 rm -rf $testdir/blobcli.conf
