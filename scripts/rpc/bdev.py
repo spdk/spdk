@@ -158,6 +158,16 @@ def construct_rbd_bdev(client, pool_name, rbd_name, block_size, name=None):
     return client.call('construct_rbd_bdev', params)
 
 
+def delete_rbd_bdev(client, name):
+    """Remove rbd bdev from the system.
+
+    Args:
+        name: name of rbd bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_rbd_bdev', params)
+
+
 def construct_error_bdev(client, base_name):
     """Construct an error injection block device.
 
