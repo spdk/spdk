@@ -46,6 +46,30 @@
       "revId": "c613b5cc9f69829d587444b89cb8afcd824ac496",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b4a66d4_25cac5dc",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 1694,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-22T01:27:22Z",
+      "side": 1,
+      "message": "Thank you. Yes, but I understood your explanation means that even if do_not_submit is false, completion status will be changed to error. Am I understanding correctly?",
+      "parentUuid": "65c83814_78cfc47c",
+      "range": {
+        "startLine": 1691,
+        "startChar": 58,
+        "endLine": 1694,
+        "endChar": 57
+      },
+      "revId": "c613b5cc9f69829d587444b89cb8afcd824ac496",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
