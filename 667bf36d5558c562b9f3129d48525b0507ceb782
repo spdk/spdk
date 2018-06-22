@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "9ba062ce_2c98c2a2",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T21:23:33Z",
+      "side": 1,
+      "message": "\\return\n\nDoxygen apparently doesn\u0027t care but I think it looks better.",
+      "revId": "667bf36d5558c562b9f3129d48525b0507ceb782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f75e1d74_d059d776",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T21:23:33Z",
+      "side": 1,
+      "message": "zopy \u003d\u003e zcopy",
+      "revId": "667bf36d5558c562b9f3129d48525b0507ceb782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae24e7e7_fabfda0f",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T21:23:33Z",
+      "side": 1,
+      "message": "\\return",
+      "revId": "667bf36d5558c562b9f3129d48525b0507ceb782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19b587cc_f8253b88",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 5
@@ -19,6 +70,23 @@
         "endLine": 393,
         "endChar": 16
       },
+      "revId": "667bf36d5558c562b9f3129d48525b0507ceb782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a0b1673_5520d6f3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1860,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T21:23:33Z",
+      "side": 1,
+      "message": "(just placing this comment somewhat randomly)\n\nspdk_bdev_free_io() should probably add a check and/or assert for type \u003d\u003d ZCOPY \u0026\u0026 allocate \u003d\u003d true.  spdk_bdev_free_io shouldn\u0027t be called in that case.\n\nI was thinking it would be great if we could just call zcopy_end internally, and let the user call spdk_bdev_free_io on a ZCOPY io.  But then you can\u0027t pass the commit flag.",
       "revId": "667bf36d5558c562b9f3129d48525b0507ceb782",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
