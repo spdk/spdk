@@ -115,6 +115,10 @@ done
 
 $rpc_py delete_error_bdev EE_Malloc0
 
+if [ -z "$NO_NVME" ]; then
+$rpc_py delete_nvme_bdev Nvme0n1
+fi
+
 trap - SIGINT SIGTERM EXIT
 
 rm -f $testdir/iscsi.conf
