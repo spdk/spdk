@@ -46,7 +46,7 @@ function blk_hotremove_tc1() {
     traddr=""
     # 1. Run the command to hot remove NVMe disk.
     get_traddr "Nvme0"
-    delete_nvme "Nvme0n1"
+    delete_nvme "Nvme0"
     # 2. If vhost had crashed then tests would stop running
     sleep 1
     add_nvme "HotInNvme0" "$traddr"
@@ -73,7 +73,7 @@ function blk_hotremove_tc2() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove NVMe disk.
-    delete_nvme "HotInNvme0n1"
+    delete_nvme "HotInNvme0"
     local retcode=0
     wait_for_finish $last_pid || retcode=$?
     # 5. Check that fio job run on hot-removed device stopped.
@@ -115,7 +115,7 @@ function blk_hotremove_tc3() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove of first NVMe disk.
-    delete_nvme "HotInNvme1n1"
+    delete_nvme "HotInNvme1"
     local retcode=0
     wait_for_finish $last_pid || retcode=$?
     # 6. Check that fio job run on hot-removed device stopped.
@@ -162,7 +162,7 @@ function blk_hotremove_tc4() {
     sleep 3
     prepare_fio_cmd_tc1 "0 1"
     # 5. Run the command to hot remove of first NVMe disk.
-    delete_nvme "HotInNvme2n1"
+    delete_nvme "HotInNvme2"
     local retcode_vm0=0
     local retcode_vm1=0
     wait_for_finish $last_pid_vm0 || retcode_vm0=$?
@@ -206,7 +206,7 @@ function blk_hotremove_tc5() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove of first NVMe disk.
-    delete_nvme "HotInNvme3n1"
+    delete_nvme "HotInNvme3"
     local retcode=0
     wait_for_finish $last_pid || retcode=$?
     # 5. Check that fio job run on hot-removed device stopped.

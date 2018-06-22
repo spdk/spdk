@@ -17,6 +17,10 @@ function remove_backends()
 
 	echo "INFO: Removing lvol stores"
 	$rpc_py destroy_lvol_store -l lvs_0
+
+	echo "INFO: Removing NVMe"
+	$rpc_py delete_nvme_controller -c Nvme0
+
 	return 0
 }
 
