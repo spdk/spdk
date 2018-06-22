@@ -1039,6 +1039,17 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
+void
+spdk_bdev_nvme_delete(struct spdk_bdev *bdev, spdk_delete_nvme_complete cb_fn, void *cb_arg)
+{
+	if (!bdev || bdev->module != &nvme_if) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+}
+
 static int
 bdev_nvme_library_init(void)
 {
