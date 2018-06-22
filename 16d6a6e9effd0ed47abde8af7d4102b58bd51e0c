@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d877fbe9_4457536e",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T21:15:15Z",
+      "side": 1,
+      "message": "Shuhei means spdk_json_write_named_uint32 (and named_uint64).\n\nIt further simplifies the code.",
+      "parentUuid": "42ae9824_578f7587",
+      "revId": "16d6a6e9effd0ed47abde8af7d4102b58bd51e0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98b41582_fa1a7c46",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 12
@@ -47,6 +65,24 @@
       "writtenOn": "2018-06-22T09:16:09Z",
       "side": 1,
       "message": "This RPC outputs raw TSC counts. Will you help user by providing a way/hint to get TSC frequency or output converted counts?\n\nIn bdev, get_spin_time for VTUME looks the unit is microsecond.\n\nWill you explain the reason why raw TSC counts is used without any frequency information?",
+      "revId": "16d6a6e9effd0ed47abde8af7d4102b58bd51e0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8062e0ab_4e77afd1",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T21:15:15Z",
+      "side": 1,
+      "message": "Good point.  We should return TSC Hz as another field in this RPC.  Then the caller can do the conversion.",
+      "parentUuid": "19c555da_23dd597d",
       "revId": "16d6a6e9effd0ed47abde8af7d4102b58bd51e0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
