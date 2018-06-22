@@ -76,15 +76,15 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 # Limit the I/O rate by RPC, then confirm the observed rate matches.
-$rpc_py set_bdev_qos_limit_iops Malloc0 $IOPS_LIMIT
+$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
 check_qos_works_well true $IOPS_LIMIT Malloc0
 
 # Now disable the rate limiting, and confirm the observed rate is not limited anymore.
-$rpc_py set_bdev_qos_limit_iops Malloc0 0
+$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 0
 check_qos_works_well false $IOPS_LIMIT Malloc0
 
 # Limit the I/O rate again.
-$rpc_py set_bdev_qos_limit_iops Malloc0 $IOPS_LIMIT
+$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
 check_qos_works_well true $IOPS_LIMIT Malloc0
 echo "I/O rate limiting tests successful"
 

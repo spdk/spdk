@@ -68,7 +68,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_BYTES_PER_SEC		(10 * 1024 * 1024)
 
 static const char *qos_conf_type[] = {"Limit_IOPS", "Limit_BPS"};
-static const char *qos_rpc_type[] = {"qos_ios_per_sec"};
+static const char *qos_rpc_type[] = {"rw_ios_per_sec", "rw_mbytes_per_sec"};
 
 TAILQ_HEAD(spdk_bdev_list, spdk_bdev);
 
@@ -1017,23 +1017,6 @@ _spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
 	}
 }
 
-static bool
-_spdk_bdev_qos_io_to_limit(struct spdk_bdev_io *bdev_io)
-{
-	switch (bdev_io->type) {
-	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
-	case SPDK_BDEV_IO_TYPE_NVME_IO:
-	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
-	case SPDK_BDEV_IO_TYPE_READ:
-	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		return true;
-	default:
-		return false;
-	}
-}
-
 static uint64_t
 _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 {
@@ -1051,6 +1034,23 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 		return bdev_io->u.bdev.num_blocks * bdev->blocklen;
 	default:
 		return 0;
+	}
+}
+
+static bool
+_spdk_bdev_qos_io_to_limit(struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		return true;
+	default:
+		return false;
 	}
 }
 
@@ -1087,8 +1087,8 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 	int				i;
 	bool				to_limit_io;
-	bool				no_more_ios = false;
 	uint64_t			io_size_in_byte;
+	bool				no_more_ios = false;
 
 	while (!TAILQ_EMPTY(&qos->queued)) {
 		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
@@ -1411,11 +1411,40 @@ spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+spdk_bdev_qos_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	int i;
+	struct spdk_bdev_qos *qos = bdev->internal.qos;
+	uint64_t limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
+
+	if (!qos) {
+		return;
+	}
+
+	spdk_bdev_get_qos_rate_limits(bdev, limits);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "set_bdev_qos_limit");
+	spdk_json_write_name(w, "params");
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", bdev->name);
+	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
+		spdk_json_write_named_uint64(w, qos_rpc_type[i], limits[i]);
+	}
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 void
 spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
 	assert(bdev != NULL);
 	assert(w != NULL);
+
+	spdk_bdev_qos_config_json(bdev, w);
 
 	if (bdev->fn_table->write_config_json) {
 		bdev->fn_table->write_config_json(bdev, w);
@@ -1924,6 +1953,10 @@ spdk_bdev_get_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits)
 		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 			if (bdev->internal.qos->rate_limits[i].limit != UINT64_MAX) {
 				limits[i] = bdev->internal.qos->rate_limits[i].limit;
+				if (_spdk_bdev_qos_is_iops_rate_limit(i) == false) {
+					/* Change from Byte to Megabyte which is user visible. */
+					limits[i] = limits[i] / 1024 / 1024;
+				}
 			}
 		}
 	}
