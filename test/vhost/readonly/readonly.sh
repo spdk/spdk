@@ -126,4 +126,7 @@ if [[ -z $x ]]; then
 fi
 
 blk_ro_tc1
+
+$rpc_py delete_nvme_controller -b Nvme0n1
+
 spdk_vhost_kill
