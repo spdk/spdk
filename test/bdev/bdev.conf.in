@@ -35,6 +35,8 @@
   # Assign 100 (MB) bandwidth for the Malloc3 block
   # device
   Limit_BPS Malloc3 100
+  # Assign 50 (MB) read only bandwidth for the AIO0 block device
+  Limit_Read_BPS AIO0 50
 
 [RAID0]
   Name raid0
