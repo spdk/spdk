@@ -22,6 +22,30 @@
       "revId": "5dd219084b54a85223cde0413fb53d024b77606a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a04ca3e_1c7461b2",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-22T12:06:37Z",
+      "side": 1,
+      "message": "It is used in clean_bdev_subsystem_config.",
+      "parentUuid": "29844182_4f6154aa",
+      "range": {
+        "startLine": 148,
+        "startChar": 1,
+        "endLine": 148,
+        "endChar": 6
+      },
+      "revId": "5dd219084b54a85223cde0413fb53d024b77606a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
