@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7711bbc_e5018c8e",
+        "filename": "doc/lvol.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-22T16:16:51Z",
+      "side": 1,
+      "message": "Add clusters so that this reads \" ..unallocated clusters ..\"",
+      "range": {
+        "startLine": 33,
+        "startChar": 180,
+        "endLine": 33,
+        "endChar": 181
+      },
+      "revId": "7ba91657bf2810c16131061479fe8f169f3ce95e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94c268de_4d6f6d07",
+        "filename": "doc/lvol.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-22T16:16:51Z",
+      "side": 1,
+      "message": "Can you also show a sample write operation? Or is that covered in the section \"Inflation\"? If its covered else where, maybe just mentioning that its covered else where is enough.",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 6
+      },
+      "revId": "7ba91657bf2810c16131061479fe8f169f3ce95e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
