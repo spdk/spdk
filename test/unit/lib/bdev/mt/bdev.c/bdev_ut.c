@@ -614,13 +614,16 @@ basic_qos(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable both IOPS and bandwidth rate limits.
-	 * In this case, both rate limits will take equal effect.
+	 * Enable read/write IOPS, read only byte per second and
+	 * read/write byte per second rate limits.
+	 * In this case, all rate limits will take equal effect.
 	 */
-	/* 2000 I/O per second, or 2 per millisecond */
+	/* 2000 read/write I/O per second, or 2 per millisecond */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT].limit = 2000;
-	/* 8K byte per millisecond with 4K block size */
+	/* 8K read/write byte per millisecond with 4K block size */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT].limit = 8192000;
+	/* 8K read only byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT].limit = 8192000;
 
 	g_get_io_channel = true;
 
@@ -712,7 +715,7 @@ io_during_qos_queue(void)
 	struct spdk_io_channel *io_ch[2];
 	struct spdk_bdev_channel *bdev_ch[2];
 	struct spdk_bdev *bdev;
-	enum spdk_bdev_io_status status0, status1;
+	enum spdk_bdev_io_status status0, status1, status2;
 	int rc;
 
 	setup_test();
@@ -724,13 +727,19 @@ io_during_qos_queue(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable both IOPS and bandwidth rate limits.
-	 * In this case, IOPS rate limit will take effect first.
+	 * Enable read/write IOPS, read only byte per sec, write only
+	 * byte per sec and read/write byte per sec rate limits.
+	 * In this case, both read only and write only byte per sec
+	 * rate limit will take effect.
 	 */
-	/* 1000 I/O per second, or 1 per millisecond */
-	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT].limit = 1000;
+	/* 4000 read/write I/O per second, or 4 per millisecond */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT].limit = 4000;
 	/* 8K byte per millisecond with 4K block size */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT].limit = 8192000;
+	/* 4K byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT].limit = 4096000;
+	/* 4K byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT].limit = 4096000;
 
 	g_get_io_channel = true;
 
@@ -745,7 +754,7 @@ io_during_qos_queue(void)
 	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
 	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_QOS_ENABLED);
 
-	/* Send two I/O */
+	/* Send two read I/Os */
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status1);
 	CU_ASSERT(rc == 0);
@@ -755,6 +764,11 @@ io_during_qos_queue(void)
 	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	/* Send one write I/O */
+	status2 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_write_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(status2 == SPDK_BDEV_IO_STATUS_PENDING);
 
 	/* Complete any I/O that arrived at the disk */
 	poll_threads();
@@ -764,12 +778,14 @@ io_during_qos_queue(void)
 	stub_complete_io(g_bdev.io_target, 0);
 	poll_threads();
 
-	/* Only one of the I/O should complete. (logical XOR) */
+	/* Only one of the two read I/Os should complete. (logical XOR) */
 	if (status0 == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
 	} else {
 		CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 	}
+	/* The write I/O should complete. */
+	CU_ASSERT(status2 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	/* Advance in time by a millisecond */
 	spdk_delay_us(1000);
@@ -782,7 +798,7 @@ io_during_qos_queue(void)
 	stub_complete_io(g_bdev.io_target, 0);
 	poll_threads();
 
-	/* Now the second I/O should be done */
+	/* Now the second read I/O should be done */
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
@@ -814,13 +830,17 @@ io_during_qos_reset(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable both IOPS and bandwidth rate limits.
-	 * In this case, bandwidth rate limit will take effect first.
+	 * Enable read/write IOPS, write only byte per sec and
+	 * read/write byte per second rate limits.
+	 * In this case, read/write byte per second rate limit will
+	 * take effect first.
 	 */
-	/* 2000 I/O per second, or 2 per millisecond */
+	/* 2000 read/write I/O per second, or 2 per millisecond */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT].limit = 2000;
 	/* 4K byte per millisecond with 4K block size */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT].limit = 4096000;
+	/* 8K byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT].limit = 8192000;
 
 	g_get_io_channel = true;
 
@@ -837,11 +857,11 @@ io_during_qos_reset(void)
 
 	/* Send two I/O. One of these gets queued by QoS. The other is sitting at the disk. */
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status1);
+	rc = spdk_bdev_write_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status1);
 	CU_ASSERT(rc == 0);
 	set_thread(0);
 	status0 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status0);
+	rc = spdk_bdev_write_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status0);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1178,12 +1198,16 @@ qos_dynamic_enable(void)
 	set_thread(0);
 
 	/*
-	 * Enable QoS: IOPS and byte per second rate limits.
+	 * Enable QoS: Read/Write IOPS, Read/Write byte,
+	 * Read only byte and Write only byte per second
+	 * rate limits.
 	 * More than 10 I/Os allowed per timeslice.
 	 */
 	status = -1;
 	limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 10000;
 	limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = 100;
+	limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT] = 100;
+	limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT] = 10;
 	spdk_bdev_set_qos_rate_limits(bdev, limits, qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);
@@ -1222,18 +1246,23 @@ qos_dynamic_enable(void)
 	CU_ASSERT(bdev_io_status[1] == SPDK_BDEV_IO_STATUS_PENDING);
 	poll_threads();
 
-	/* Disable QoS: IOPS rate limit */
+	/*
+	 * Disable QoS: Read/Write IOPS, Read/Write byte,
+	 * Read only byte rate limits
+	 */
 	status = -1;
 	limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 0;
+	limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = 0;
+	limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT] = 0;
 	spdk_bdev_set_qos_rate_limits(bdev, limits, qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);
 	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
 	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
 
-	/* Disable QoS: Byte per second rate limit */
+	/* Disable QoS: Write only Byte per second rate limit */
 	status = -1;
-	limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = 0;
+	limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT] = 0;
 	spdk_bdev_set_qos_rate_limits(bdev, limits, qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);
