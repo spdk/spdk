@@ -36,7 +36,8 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_vhost.h>
+#include <rte_config.h>
+#include <rte_vhost2.h>
 
 #include "spdk_internal/log.h"
 #include "spdk/event.h"
@@ -98,14 +99,13 @@ struct spdk_vhost_dev;
  * \param vdev vhost device. If all devices have been iterated through,
  * this function will be called one last time with vdev == NULL.
  * \param arg user-provided parameter.
- *
- * \return 0 on success, -1 on failure.
  */
-typedef int (*spdk_vhost_dev_fn)(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev,
+typedef void (*spdk_vhost_dev_fn)(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev,
 				 void *arg);
 
 struct spdk_vhost_virtqueue {
-	struct rte_vhost_vring vring;
+	struct rte_vhost2_vq *rte_vq;
+
 	void *tasks;
 
 	/* Request count from last stats check */
@@ -126,13 +126,17 @@ struct spdk_vhost_tgt_backend {
 	size_t dev_ctx_size;
 
 	/**
-	 * Callbacks for starting and pausing the device.
-	 * The first param is struct spdk_vhost_tgt *.
-	 * The second one is event context that has to be
-	 * passed to spdk_vhost_dev_backend_event_done().
+	 * The following functions need to be asynchronously
+	 * completed with spdk_vhost_dev_backend_event_done().
 	 */
-	spdk_vhost_dev_fn start_device;
-	spdk_vhost_dev_fn stop_device;
+	void (*device_create)(struct spdk_vhost_dev *vdev);
+	void (*device_features_changed)(struct spdk_vhost_dev *vdev,
+			uint64_t features);
+	void (*start_queue)(struct spdk_vhost_dev *vdev,
+			    struct spdk_vhost_virtqueue *vq);
+	void (*stop_queue)(struct spdk_vhost_dev *vdev,
+			   struct spdk_vhost_virtqueue *vq);
+	void (*device_destroy)(struct spdk_vhost_dev *vdev);
 
 	int (*vhost_get_config)(struct spdk_vhost_tgt *vtgt, uint8_t *config, uint32_t len);
 	int (*vhost_set_config)(struct spdk_vhost_tgt *vtgt, uint8_t *config,
@@ -151,7 +155,6 @@ struct spdk_vhost_tgt {
 	unsigned id;
 
 	struct spdk_cpuset *cpumask;
-	bool registered;
 
 	const struct spdk_vhost_tgt_backend *backend;
 
@@ -169,22 +172,25 @@ struct spdk_vhost_tgt {
 	/* Active devices built on top of this target. */
 	TAILQ_HEAD(, spdk_vhost_dev) vdevs;
 
+	bool force_removal;
+	void (*unregister_cpl_fn)(struct spdk_vhost_tgt *vtgt);
+
 	TAILQ_ENTRY(spdk_vhost_tgt) tailq;
 };
 
 struct spdk_vhost_dev {
+	struct rte_vhost2_dev *rte_vdev;
+
 	/* Parent vhost target */
 	struct spdk_vhost_tgt *vtgt;
 
-	struct rte_vhost_memory *mem;
-
-	char *name;
+	/* Currently registered memory */
+	struct rte_vhost2_memory *mem;
 
 	/* Target-unique device ID. Read-only. */
 	unsigned id;
 
-	/* rte_vhost device ID */
-	int vid;
+	char *name;
 
 	/* Logical core ID this device is polling on. -1 if not polling */
 	int32_t lcore;
@@ -202,9 +208,10 @@ struct spdk_vhost_dev {
 	/* Interval used for event coalescing checking. */
 	uint64_t stats_check_interval;
 
-	uint16_t max_queues;
-
 	uint64_t negotiated_features;
+
+	void (*op_cpl_cb)(struct spdk_vhost_dev *vdev, void *arg);
+	void *op_cpl_ctx;
 
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
@@ -213,7 +220,9 @@ struct spdk_vhost_dev {
 
 struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *vtgt_name);
 
-void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len);
+void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev,
+		struct spdk_vhost_virtqueue *vq,
+		uint64_t addr, uint32_t len);
 
 uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
 				      uint16_t reqs_len);
@@ -275,8 +284,9 @@ int spdk_vhost_vring_desc_get_next(struct vring_desc **desc,
 				   struct vring_desc *desc_table, uint32_t desc_table_size);
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
-int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
-				 uint16_t *iov_index, const struct vring_desc *desc);
+int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
+				 struct iovec *iov, uint16_t *iov_index,
+				 const struct vring_desc *desc);
 
 static inline bool __attribute__((always_inline))
 spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
@@ -286,12 +296,15 @@ spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 
 int spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name, const char *mask_str,
 			    const struct spdk_vhost_tgt_backend *backend, uint64_t features);
-int spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt);
-
+int spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt,
+		void (*cpl_fn)(struct spdk_vhost_tgt *vtgt));
 int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_info_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w);
-void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
+void spdk_vhost_dev_set_op_cpl_fn(struct spdk_vhost_dev *vdev,
+		void (*op_cpl_cb)(struct spdk_vhost_dev *vdev, void *arg),
+		void *op_cpl_ctx);
+void spdk_vhost_dev_backend_event_done(struct spdk_vhost_dev *vdev, int rc);
 void spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt, spdk_vhost_dev_fn fn, void *arg);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);

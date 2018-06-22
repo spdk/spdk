@@ -48,7 +48,7 @@ ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
 
 ifeq ($(CONFIG_VHOST),y)
-SPDK_LIB_LIST += vhost rte_vhost event_vhost
+SPDK_LIB_LIST += vhost event_vhost
 endif
 
 endif
