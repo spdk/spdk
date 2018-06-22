@@ -177,6 +177,24 @@
     },
     {
       "key": {
+        "uuid": "ca48a133_cd2a8bce",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1882,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-22T16:50:40Z",
+      "side": 1,
+      "message": "I just uploaded a new revision that takes the bdev_io returned by spdk_bdev_zcopy_start as an argument to spdk_bdev_zcopy_end.",
+      "parentUuid": "3facbe0e_a9245679",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c54eef92_e977fb6f",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
