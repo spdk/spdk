@@ -1,5 +1,9 @@
 {
   "aliases": [],
+  "assigned_rate_limits": {
+    "rw_ios_per_sec": $(N),
+    "rw_mbytes_per_sec": $(N)
+  },
   "block_size": $(N),
   "claimed": false,
   "driver_specific": {
@@ -11,7 +15,6 @@
   "name": "Nvme0n1p0",
   "num_blocks": $(N),
   "product_name": "Split Disk",
-  "qos_ios_per_sec": 0,
   "supported_io_types": {
     "flush": $(S),
     "nvme_admin": $(S),
