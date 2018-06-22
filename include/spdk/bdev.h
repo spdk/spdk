@@ -105,6 +105,16 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
+/** bdev QoS rate limit type */
+enum spdk_bdev_qos_rate_limit_type {
+	/** IOPS rate limit for both read and write */
+	SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT = 0,
+	/** Byte per second rate limit for both read and write */
+	SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT,
+	/** Keep last */
+	SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES
+};
+
 /**
  * Block device completion callback.
  *
@@ -329,25 +339,27 @@ uint32_t spdk_bdev_get_block_size(const struct spdk_bdev *bdev);
 uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
 
 /**
- * Get IOs per second of block device for the QoS rate limiting.
+ * Get the quality of service rate limits on a bdev.
  *
  * \param bdev Block device to query.
- * \return IOs per second.
+ * \param limits Pointer to the QoS rate limits array which holding the limits.
  *
- * Return 0 for no QoS enforced on the queried block device.
+ * The limits are ordered based on the @ref spdk_bdev_qos_rate_limit_type enum.
  */
-uint64_t spdk_bdev_get_qos_ios_per_sec(struct spdk_bdev *bdev);
+void spdk_bdev_get_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits);
 
 /**
- * Set an IOPS-based quality of service rate limit on a bdev.
+ * Set the quality of service rate limits on a bdev.
  *
  * \param bdev Block device.
- * \param ios_per_sec I/O per second limit.
+ * \param limits Pointer to the QoS rate limits array which holding the limits.
  * \param cb_fn Callback function to be called when the QoS limit has been updated.
  * \param cb_arg Argument to pass to cb_fn.
+ *
+ * The limits are ordered based on the @ref spdk_bdev_qos_rate_limit_type enum.
  */
-void spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
-				  void (*cb_fn)(void *cb_arg, int status), void *cb_arg);
+void spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
+				   void (*cb_fn)(void *cb_arg, int status), void *cb_arg);
 
 /**
  * Get minimum I/O buffer address alignment for a bdev.
