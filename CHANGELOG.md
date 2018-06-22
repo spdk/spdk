@@ -35,6 +35,12 @@ currently marked as experimental.  Do not use in production.
 The RAID virtual bdev module is now always enabled by default.  The configure --with-raid and
 --without-raid options are now ignored and deprecated and will be removed in the next release.
 
+Enforcement of bandwidth limits for quality of service (QoS) has been added to the bdev layer.
+See the new [set_bdev_qos_limit](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit)
+documentation for more details. The previous set_bdev_qos_limit_iops RPC method introduced at
+18.04 release has been deprecated. The new set_bdev_qos_limit RPC method can support both
+bandwidth and IOPS limits.
+
 ### Environment Abstraction Layer and Event Framework
 
 The size parameter of spdk_mem_map_translate is now a pointer. This allows the
