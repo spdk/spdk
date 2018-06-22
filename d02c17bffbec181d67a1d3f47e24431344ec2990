@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "158dae5e_6dbc66ea",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-22T11:30:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5f67c1d9_c858885c",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f87ce61_bb7789c4",
         "filename": "test/json_config/common.sh",
         "patchSetId": 78
@@ -99,6 +117,24 @@
       "side": 1,
       "message": "+1 for OS check",
       "parentUuid": "9f87ce61_bb7789c4",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97142459_29789a48",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-22T11:30:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7fdf1abb_e64b6e5c",
       "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -140,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "6463f91b_68748d40",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-22T11:30:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "03a372c6_4bc28190",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33668a0f_1f5dcd67",
         "filename": "test/json_config/common.sh",
         "patchSetId": 78
@@ -168,6 +222,24 @@
       "writtenOn": "2018-06-20T07:32:26Z",
       "side": 1,
       "message": "Yes, same here, but check either CONFIG file for RBD option of check if files in /usr/include exist",
+      "parentUuid": "33668a0f_1f5dcd67",
+      "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a5e0520_09ed15a1",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-22T11:30:09Z",
+      "side": 1,
+      "message": "Done",
       "parentUuid": "33668a0f_1f5dcd67",
       "revId": "d02c17bffbec181d67a1d3f47e24431344ec2990",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
