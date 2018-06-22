@@ -352,6 +352,19 @@ def set_bdev_qos_limit_iops(client, name, ios_per_sec):
     return client.call('set_bdev_qos_limit_iops', params)
 
 
+def set_bdev_qos_limit_bps(client, name, mbytes_per_sec):
+    """Set QoS megabytes per second limit on a block device.
+
+    Args:
+        name: name of block device
+        mbytes_per_sec: megabytes per second limit (>=10, example: 100). 0 means unlimited.
+    """
+    params = {}
+    params['name'] = name
+    params['mbytes_per_sec'] = mbytes_per_sec
+    return client.call('set_bdev_qos_limit_bps', params)
+
+
 def apply_firmware(client, bdev_name, filename):
     """Download and commit firmware to NVMe device.
 

@@ -29,6 +29,10 @@ on each call. This allows multiple callers to query I/O statistics without confl
 with each other. Existing users will need to adjust their code to record the previous
 I/O statistics to calculate the delta between calls.
 
+Enforcement of bandwidth limits for quality of service (QoS) has been added to the bdev layer.
+See the [set_bdev_qos_limit_bps](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit_bps)
+documentation for more details.
+
 ### Env
 
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of

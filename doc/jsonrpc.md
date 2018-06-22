@@ -291,6 +291,41 @@ Example response:
 }
 ~~~
 
+## set_bdev_qos_limit_bps {#rpc_set_bdev_qos_limit_bps}
+
+Set a megabytes per second based quality of service rate limit on a bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+mbytes_per_sec          | Required | number      | Number of megabytes per second to allow. 0 means unlimited.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "set_bdev_qos_limit_bps",
+  "params": {
+    "name": "Malloc0"
+    "mbytes_per_sec": 100
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
 ## get_nvmf_subsystems method {#rpc_get_nvmf_subsystems}
