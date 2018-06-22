@@ -78,8 +78,12 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_BYTES_PER_SEC		(10 * 1024 * 1024)
 #define SPDK_BDEV_QOS_LIMIT_NOT_DEFINED		UINT64_MAX
 
-static const char *qos_conf_type[] = {"Limit_IOPS", "Limit_BPS"};
-static const char *qos_rpc_type[] = {"rw_ios_per_sec", "rw_mbytes_per_sec"};
+static const char *qos_conf_type[] = {"Limit_IOPS", "Limit_Read_IOPS", "Limit_Write_IOPS",
+				      "Limit_BPS"
+				     };
+static const char *qos_rpc_type[] = {"rw_ios_per_sec", "r_ios_per_sec", "w_ios_per_sec",
+				     "rw_mbytes_per_sec"
+				    };
 
 TAILQ_HEAD(spdk_bdev_list, spdk_bdev);
 
@@ -1060,6 +1064,8 @@ _spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
 
 	switch (limit) {
 	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
 		return true;
 	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
 		return false;
@@ -1085,6 +1091,62 @@ _spdk_bdev_qos_io_to_limit(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static bool
+_spdk_bdev_is_read_io(struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		/* Bit 1 (0x2) set for read operation */
+		if (bdev_io->u.nvme_passthru.cmd.opc & SPDK_NVME_OPC_READ) {
+			return true;
+		} else {
+			return false;
+		}
+	case SPDK_BDEV_IO_TYPE_READ:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static bool
+_spdk_bdev_qos_skip_check(enum spdk_bdev_qos_rate_limit_type type, bool read_io)
+{
+	if (type == SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT && read_io == false) {
+		return true;
+	}
+
+	if (type == SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT && read_io == true) {
+		return true;
+	}
+
+	return false;
+}
+
+static bool
+_spdk_bdev_qos_submit_io(struct spdk_bdev_qos *qos, bool read_io)
+{
+	int i;
+
+	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
+		if (qos->rate_limits[i].limit == UINT64_MAX || qos->rate_limits[i].limit == 0) {
+			continue;
+		}
+
+		if (_spdk_bdev_qos_skip_check(i, read_io) == true) {
+			continue;
+		}
+
+		if (qos->rate_limits[i].max_per_timeslice > 0 &&
+		    (qos->rate_limits[i].remaining_this_timeslice <= 0)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 static uint64_t
 _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 {
@@ -1105,7 +1167,34 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 }
 
 static void
-_spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, uint64_t io_size_in_byte)
+_spdk_bdev_qos_count_io(enum spdk_bdev_qos_rate_limit_type type, struct spdk_bdev_qos *qos,
+			bool is_read_io, uint64_t io_size_in_byte)
+{
+	switch (type) {
+	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+		qos->rate_limits[type].remaining_this_timeslice--;
+		break;
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+		if (is_read_io == true) {
+			qos->rate_limits[type].remaining_this_timeslice--;
+		}
+		break;
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
+		if (is_read_io == false) {
+			qos->rate_limits[type].remaining_this_timeslice--;
+		}
+		break;
+	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+		qos->rate_limits[type].remaining_this_timeslice -= io_size_in_byte;
+		break;
+	case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
+	default:
+		break;
+	}
+}
+
+static void
+_spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, bool is_read_io, uint64_t io_size_in_byte)
 {
 	int i;
 
@@ -1114,49 +1203,48 @@ _spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, uint64_t io_size_in_byte
 			continue;
 		}
 
-		switch (i) {
-		case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
-			qos->rate_limits[i].remaining_this_timeslice--;
-			break;
-		case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
-			qos->rate_limits[i].remaining_this_timeslice -= io_size_in_byte;
-			break;
-		case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
-		default:
-			break;
-		}
+		_spdk_bdev_qos_count_io(i, qos, is_read_io, io_size_in_byte);
 	}
 }
 
 static void
 _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 {
-	struct spdk_bdev_io		*bdev_io = NULL;
+	struct spdk_bdev_io		*bdev_io = NULL, *tmp = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
 	struct spdk_bdev_qos		*qos = bdev->internal.qos;
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
-	int				i;
-	bool				to_limit_io;
 	uint64_t			io_size_in_byte;
+	bool				read_io;
+	bool				submit_read_io = true, submit_write_io = true;
 
-	while (!TAILQ_EMPTY(&qos->queued)) {
-		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-			if (qos->rate_limits[i].max_per_timeslice > 0 &&
-			    (qos->rate_limits[i].remaining_this_timeslice <= 0)) {
-				return;
+	TAILQ_FOREACH_SAFE(bdev_io, &qos->queued, internal.link, tmp) {
+		if (submit_read_io == false && submit_write_io == false) {
+			return;
+		}
+
+		read_io = _spdk_bdev_is_read_io(bdev_io);
+		if (submit_read_io == false && read_io == true) {
+			continue;
+		}
+		if (submit_write_io == false && read_io == false) {
+			continue;
+		}
+
+		if (_spdk_bdev_qos_submit_io(qos, read_io) == true) {
+			TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
+			ch->io_outstanding++;
+			shared_resource->io_outstanding++;
+			if (_spdk_bdev_qos_io_to_limit(bdev_io) == true) {
+				io_size_in_byte = _spdk_bdev_get_io_size_in_byte(bdev_io);
+				_spdk_bdev_qos_update_per_io(qos, read_io, io_size_in_byte);
 			}
+			bdev->fn_table->submit_request(ch->channel, bdev_io);
+		} else if (read_io == true) {
+			submit_read_io = false;
+		} else {
+			submit_write_io = false;
 		}
-
-		bdev_io = TAILQ_FIRST(&qos->queued);
-		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
-		ch->io_outstanding++;
-		shared_resource->io_outstanding++;
-		to_limit_io = _spdk_bdev_qos_io_to_limit(bdev_io);
-		if (to_limit_io == true) {
-			io_size_in_byte = _spdk_bdev_get_io_size_in_byte(bdev_io);
-			_spdk_bdev_qos_update_per_io(qos, io_size_in_byte);
-		}
-		bdev->fn_table->submit_request(ch->channel, bdev_io);
 	}
 }
 
