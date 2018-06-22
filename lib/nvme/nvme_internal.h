@@ -684,6 +684,8 @@ int	nvme_fabric_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, 
 int	nvme_fabric_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
 int	nvme_fabric_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
 int	nvme_fabric_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value);
+int	nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr, void *cb_ctx,
+				   spdk_nvme_probe_cb probe_cb);
 
 static inline struct nvme_request *
 nvme_allocate_request(struct spdk_nvme_qpair *qpair,
