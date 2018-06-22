@@ -235,6 +235,32 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_nvme_bdev)
 
     @call_cmd
+    def delete_nvme_controller(args):
+        rpc.bdev.delete_nvme_controller(args.client,
+                                        name=args.name,
+                                        bdev_name=args.bdev_name,
+                                        trtype=args.trtype,
+                                        traddr=args.traddr,
+                                        adrfam=args.adrfam,
+                                        trsvcid=args.trsvcid,
+                                        subnqn=args.subnqn)
+
+    p = subparsers.add_parser('delete_nvme_controller',
+                              help='Delete a NVMe controller using transport ID, controller name or bdev name')
+    p.add_argument('-c', '--name', help="Name of the controller")
+    p.add_argument('-b', '--bdev_name', help="Name of one of the bdevs present on the controller that should be removed")
+    p.add_argument('-t', '--trtype',
+                   help='NVMe-oF target trtype: e.g., rdma, pcie')
+    p.add_argument('-a', '--traddr',
+                   help='NVMe-oF target address: e.g., an ip address or BDF')
+    p.add_argument('-f', '--adrfam',
+                   help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+    p.add_argument('-s', '--trsvcid',
+                   help='NVMe-oF target trsvcid: e.g., a port number')
+    p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
+    p.set_defaults(func=delete_nvme_controller)
+
+    @call_cmd
     def construct_rbd_bdev(args):
         print(rpc.bdev.construct_rbd_bdev(args.client,
                                           name=args.name,
