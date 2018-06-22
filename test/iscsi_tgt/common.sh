@@ -19,6 +19,8 @@ function create_veth_interfaces() {
 	ip netns del $TARGET_NAMESPACE || true
 	ip link delete $INITIATOR_INTERFACE || true
 
+	trap "cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
+
 	# Create veth (Virtual ethernet) interface pair
 	ip link add $INITIATOR_INTERFACE type veth peer name $TARGET_INTERFACE
 	ip addr add $INITIATOR_IP/24 dev $INITIATOR_INTERFACE
@@ -32,7 +34,9 @@ function create_veth_interfaces() {
 	$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
 	$TARGET_NS_CMD ip link set $TARGET_INTERFACE up
 
-	trap "cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
+	# Verify connectivity
+	ping -c 1 $TARGET_IP
+	ip netns exec $TARGET_NAMESPACE ping -c 1 $INITIATOR_IP
 }
 
 function cleanup_veth_interfaces() {
