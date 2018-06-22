@@ -822,7 +822,8 @@ INPUT                  = ../include/spdk \
                          vagrant.md \
                          vhost.md \
                          vhost_processing.md \
-                         virtio.md
+                         virtio.md \
+			 nvmf_tracing.md
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
