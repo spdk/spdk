@@ -2,9 +2,11 @@
   "aliases": [],
   "assigned_rate_limits": {
     "r_ios_per_sec": $(N),
+    "r_mbytes_per_sec": $(N),
     "rw_ios_per_sec": $(N),
     "rw_mbytes_per_sec": $(N),
-    "w_ios_per_sec": $(N)
+    "w_ios_per_sec": $(N),
+    "w_mbytes_per_sec": $(N)
   },
   "block_size": $(N),
   "claimed": false,
