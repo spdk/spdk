@@ -11,6 +11,16 @@ def create_pmem_pool(client, pmem_file, num_blocks, block_size):
     return client.call('create_pmem_pool', params)
 
 
+def delete_pmem_bdev(client, name):
+    """Remove pmem bdev from the system.
+
+    Args:
+        bdev_name: name of pmem bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_pmem_bdev', params)
+
+
 def pmem_pool_info(client, pmem_file):
     """Get details about pmem pool.
     Args:
