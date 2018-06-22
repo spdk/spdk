@@ -1064,6 +1064,12 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+/** Initialize controller's hooks
+ *
+ * \param src_addr of the controller
+ */
+void *spdk_init_hook(struct sockaddr *src_addr);
+
 #ifdef __cplusplus
 }
 #endif

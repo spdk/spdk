@@ -58,12 +58,14 @@ nvme_transport_unknown(enum spdk_nvme_transport_type trtype)
 #define TRANSPORT_RDMA_AVAILABLE		false
 #endif
 #define TRANSPORT_FABRICS_FC(func_name, args)	case SPDK_NVME_TRANSPORT_FC: SPDK_UNREACHABLE();
+#define TRANSPORT_HOOKS(func_name, args) case SPDK_NVME_TRANSPORT_HOOKS: return nvme_ ## func_name args;
 #define NVME_TRANSPORT_CALL(trtype, func_name, args)		\
 	do {							\
 		switch (trtype) {				\
 		TRANSPORT_PCIE(func_name, args)			\
 		TRANSPORT_FABRICS_RDMA(func_name, args)		\
 		TRANSPORT_FABRICS_FC(func_name, args)		\
+		TRANSPORT_HOOKS(func_name, args)                \
 		TRANSPORT_DEFAULT(trtype)			\
 		}						\
 		SPDK_UNREACHABLE();				\
@@ -81,6 +83,9 @@ spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 
 	case SPDK_NVME_TRANSPORT_FC:
 		return false;
+
+	case SPDK_NVME_TRANSPORT_HOOKS:
+		return true;
 	}
 
 	return false;
@@ -216,4 +221,10 @@ int32_t
 nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	NVME_TRANSPORT_CALL(qpair->trtype, qpair_process_completions, (qpair, max_completions));
+}
+
+struct spdk_nvme_hooks *
+nvme_transport_init_hooks(enum spdk_nvme_transport_type trtype, struct sockaddr *src_addr)
+{
+	NVME_TRANSPORT_CALL(trtype, ctrlr_init_hooks, (src_addr));
 }

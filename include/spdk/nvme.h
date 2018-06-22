@@ -51,6 +51,36 @@ extern "C" {
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
 extern int32_t		spdk_nvme_retry_count;
 
+struct ibv_context;
+struct ibv_pd;
+struct ibv_mr;
+struct spdk_nvme_transport_id;
+
+/**
+ * Global hook functions
+ */
+struct spdk_nvme_hooks {
+	/**
+	* Opaque user context passed to all hook functions.
+	*/
+	void *hook_ctx;
+
+	/**
+	* Initializing controller's hook context.
+	*/
+	void (*get_hook_ctx)(void *hook_ctx, const struct spdk_nvme_transport_id *trid);
+
+	/**
+	* Get a InfiniBand Verbs protection domain when connecting to an RDMA NVMe-oF target.
+	*/
+	struct ibv_pd *(* get_ibv_pd)(void *hook_ctx, struct ibv_context *verbs,
+				      const struct spdk_nvme_transport_id *trid);
+
+	/**
+	* Get an InfiniBand Verbs memory region for a buffer.
+	*/
+	uint64_t (* get_rkey)(void *hook_ctx, void *buf, size_t size);
+};
 
 
 /**
@@ -190,6 +220,11 @@ enum spdk_nvme_transport_type {
 	 * Fibre Channel (FC) Transport
 	 */
 	SPDK_NVME_TRANSPORT_FC = SPDK_NVMF_TRTYPE_FC,
+
+	/**
+	* Ctrl Hook Transport
+	*/
+	SPDK_NVME_TRANSPORT_HOOKS = 333333,
 };
 
 /**
@@ -1964,7 +1999,6 @@ int spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
 		uint8_t opc);
-
 
 #ifdef __cplusplus
 }

@@ -406,7 +406,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[iter]);
 		if (base_bdev == NULL) {
 			check_and_remove_raid_bdev(&g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev -
-										      1]);
+						   1]);
 			raid_bdev_config_cleanup();
 			free(base_bdevs);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "base bdev not found");
@@ -421,7 +421,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		 */
 		if (raid_bdev_add_base_device(base_bdev)) {
 			check_and_remove_raid_bdev(&g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev -
-										      1]);
+						   1]);
 			raid_bdev_config_cleanup();
 			free(base_bdevs);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

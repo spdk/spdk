@@ -128,7 +128,7 @@ endif
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)
-# RDMA Userspace Verbs Library
+i# RDMA Userspace Verbs Library
 ifneq ("$(wildcard /usr/lib/libibverbs.*)","")
 LIBS += -libverbs
 endif

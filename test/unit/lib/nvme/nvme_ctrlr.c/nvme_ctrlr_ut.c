@@ -179,6 +179,12 @@ nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
+struct spdk_nvme_hooks *
+nvme_transport_init_hooks(struct spdk_nvme_qpair *qpair, struct sockaddr *src_addr)
+{
+	return NULL;
+}
+
 int
 nvme_driver_init(void)
 {

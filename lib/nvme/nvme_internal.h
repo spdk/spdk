@@ -446,6 +446,11 @@ struct spdk_nvme_ctrlr_process {
 	spdk_nvme_timeout_cb		timeout_cb_fn;
 	void				*timeout_cb_arg;
 	uint64_t			timeout_ticks;
+
+	/**
+	* Pre-registered InfiniBand Verbs protection domain and memory region.
+	*/
+	struct spdk_nvme_hooks          *ctrlr_hook;
 };
 
 /*
@@ -697,6 +702,8 @@ int	nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr, void *cb_ctx,
 				   spdk_nvme_probe_cb probe_cb);
 int	nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries);
 
+struct spdk_nvme_hooks *nvme_ctrlr_init_hooks(struct sockaddr *src_addr);
+
 static inline struct nvme_request *
 nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 		      const struct nvme_payload *payload, uint32_t payload_size,
@@ -840,7 +847,8 @@ struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	int nvme_ ## name ## _qpair_reset(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_fail(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req); \
-	int32_t nvme_ ## name ## _qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions);
+	int32_t nvme_ ## name ## _qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions); \
+	struct spdk_nvme_hooks* nvme_ ## name ## _init_hooks(enum spdk_nvme_transport_type trtype, struct sockaddr *src_addr);
 
 DECLARE_TRANSPORT(transport) /* generic transport dispatch functions */
 DECLARE_TRANSPORT(pcie)
