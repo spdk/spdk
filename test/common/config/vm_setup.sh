@@ -20,9 +20,12 @@
 
 set -e
 
+VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
+
 UPGRADE=false
 INSTALL=false
 CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi"
+CONF_PATH="${VM_SETUP_PATH}/vm_setup.conf"
 
 function usage()
 {
@@ -30,14 +33,15 @@ function usage()
     echo "Please run this script as your regular user. The script will make calls to sudo as needed."
     echo ""
     echo "./vm_setup.sh"
-    echo "\t-h --help"
-    echo "\t-u --upgrade Run dnf upgrade"
-    echo "\t-i --install-deps Install dnf based dependencies"
-    echo "\t-t --test-conf List of test configurations to enable (${CONF})"
+    echo "  -h --help"
+    echo "  -u --upgrade Run dnf upgrade"
+    echo "  -i --install-deps Install dnf based dependencies"
+    echo "  -t --test-conf List of test configurations to enable (${CONF})"
+    echo "  -c --conf-path Path to configuration file"
     exit 0
 }
 
-while getopts 'iuht:-:' optchar; do
+while getopts 'iuht:c:-:' optchar; do
     case "$optchar" in
         -)
         case "$OPTARG" in
@@ -45,6 +49,7 @@ while getopts 'iuht:-:' optchar; do
             upgrade) UPGRADE=true;;
             install-deps) INSTALL=true;;
             test-conf=*) CONF="${OPTARG#*=}";;
+            conf-path=*) CONF_PATH="${OPTARG#*=}";;
             *) echo "Invalid argument '$OPTARG'"
             usage;;
         esac
@@ -53,10 +58,18 @@ while getopts 'iuht:-:' optchar; do
     u) UPGRADE=true;;
     i) INSTALL=true;;
     t) CONF="$OPTARG";;
+    c) CONF_PATH="$OPTARG";;
     *) echo "Invalid argument '$OPTARG'"
     usage;;
     esac
 done
+
+if [ ! -f "$CONF_PATH" ]; then
+	echo Configuration file does not exist: "$CONF_PATH"
+	exit 1
+fi
+
+source "$CONF_PATH"
 
 jobs=$(($(nproc)*2))
 
@@ -76,9 +89,10 @@ mkdir -p output
 if [ -d spdk ]; then
     echo "spdk source already present, not cloning"
 else
-    git clone https://review.gerrithub.io/spdk/spdk
+    git clone "${GIT_REPO_SPDK}"
 fi
 cd spdk
+git config submodule.dpdk.url "${GIT_REPO_DPDK}"
 git submodule update --init --recursive
 
 if $INSTALL; then
@@ -132,7 +146,7 @@ if [ $(echo $CONF | grep librxe) ]; then
         if [ -d librxe-dev ]; then
             echo "librxe-dev source already present, not cloning"
         else
-            git clone https://github.com/SoftRoCE/librxe-dev.git
+            git clone "${GIT_REPO_LIBRXE}"
         fi
 
         cd librxe-dev
@@ -158,7 +172,7 @@ if [ $(echo $CONF | grep iscsi) ]; then
             rpm2cpio $(ls) | cpio -idmv
             mkdir -p patches
             mv 00* patches/
-            git clone https://github.com/open-iscsi/open-iscsi
+            git clone "${GIT_REPO_OPEN_ISCSI}"
 
             cd open-iscsi
 
@@ -186,7 +200,7 @@ if [ $(echo $CONF | grep rocksdb) ]; then
 
     # Rocksdb is installed for use with the blobfs tests.
     if [ ! -d /usr/src/rocksdb ]; then
-        git clone https://review.gerrithub.io/spdk/rocksdb
+	git clone "${GIT_REPO_ROCKSDB}"
         git -C ./rocksdb checkout spdk-v5.6.1
         sudo mv rocksdb /usr/src/
     else
@@ -199,7 +213,7 @@ if [ $(echo $CONF | grep fio) ]; then
 
     if [ ! -d /usr/src/fio ]; then
         if [ ! -d fio ]; then
-            git clone http://git.kernel.dk/fio.git
+            git clone "${GIT_REPO_FIO}"
             sudo mv fio /usr/src/
         else
             sudo mv fio /usr/src/
@@ -222,7 +236,7 @@ cd ~
 if [ $(echo $CONF | grep flamegraph) ]; then
 
     if [ ! -d /usr/local/FlameGraph ]; then
-        git clone https://github.com/brendangregg/FlameGraph.git
+        git clone "${GIT_REPO_FLAMEGRAPH}"
         mkdir -p /usr/local
         sudo mv FlameGraph /usr/local/FlameGraph
     else
@@ -236,7 +250,7 @@ if [ $(echo $CONF | grep qemu) ]; then
     mkdir -p qemu
     cd qemu
     if [ ! -d "$SPDK_QEMU_BRANCH" ]; then
-        git clone https://github.com/spdk/qemu -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
+        git clone "${GIT_REPO_QEMU}" -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
     else
         echo "qemu already checked out. Skipping"
     fi
@@ -270,7 +284,7 @@ if [ $(echo $CONF | grep vpp) ]; then
             exit 1
         fi
     else
-        git clone https://gerrit.fd.io/r/vpp
+        git clone "${GIT_REPO_VPP}"
         cd vpp
         git checkout v18.01.1
         # VPP 18.01.1 does not support OpenSSL 1.1.
@@ -302,7 +316,7 @@ if [ $(echo $CONF | grep libiscsi) ]; then
     # We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
     # to later. Cloning from git is just future proofing the machines.
     if [ ! -d libiscsi ]; then
-        git clone https://github.com/sahlberg/libiscsi
+        git clone "${GIT_REPO_LIBISCSI}"
     else
         echo "libiscsi already checked out. Skipping"
     fi
