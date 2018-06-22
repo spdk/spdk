@@ -180,6 +180,10 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 	timing_exit integrity_lvol_blk
 
+	timing_enter spdk_cli
+	run_test ./test/spdkcli/spdkcli.sh
+	timing_exit spdk_cli
+
 	timing_exit vhost
 fi
 
