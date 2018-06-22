@@ -39,14 +39,14 @@ def delete_subbdevs(args, bdev, rpc_bdevs):
         if construct_method == 'construct_nvme_bdev':
             for rpc_bdev in rpc_bdevs:
                 if bdev_name in rpc_bdev['name'] and rpc_bdev['product_name'] == "NVMe disk":
-                    args.client.call('delete_bdev', {'name': "%s" % rpc_bdev['name']})
+                    args.client.call('delete_nvme_controller', {'name': "%s" % rpc_bdev['name'].split('n')[0]})
                     ret_value = True
 
     return ret_value
 
 
 def get_bdev_destroy_method(bdev):
-    destroy_method_map = {'construct_nvme_bdev': "delete_bdev",
+    destroy_method_map = {'construct_nvme_bdev': "delete_nvme_controller",
                           'construct_malloc_bdev': "delete_malloc_bdev",
                           'construct_null_bdev': "delete_null_bdev",
                           'construct_rbd_bdev': "delete_rbd_bdev",

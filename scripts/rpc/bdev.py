@@ -134,6 +134,41 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
     return client.call('construct_nvme_bdev', params)
 
 
+def delete_nvme_controller(client, name=None, trtype=None, traddr=None, adrfam=None, trsvcid=None, subnqn=None):
+    """Remove NVMe controller from the system.
+
+    Args:
+        name: controller name
+        trtype: transport type ("PCIe", "RDMA")
+        traddr: transport address (PCI BDF or IP address)
+        adrfam: address family ("IPv4", "IPv6", "IB", or "FC"; optional for PCIe)
+        trsvcid: transport service ID (port number for IP-based addresses; optional for PCIe)
+        subnqn: subsystem NQN
+    """
+
+    params = {}
+
+    if name:
+        params['name'] = name
+
+    if trtype:
+        params['trtype'] = trtype
+
+    if traddr:
+        params['traddr'] = traddr
+
+    if adrfam:
+        params['adrfam'] = adrfam
+
+    if trsvcid:
+        params['trsvcid'] = trsvcid
+
+    if subnqn:
+        params['subnqn'] = subnqn
+
+    return client.call('delete_nvme_controller', params)
+
+
 def construct_rbd_bdev(client, pool_name, rbd_name, block_size, name=None):
     """Construct a Ceph RBD block device.
 
