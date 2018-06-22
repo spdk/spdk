@@ -500,17 +500,21 @@ def set_bdev_qd_sampling_period(client, name, period):
     return client.call('set_bdev_qd_sampling_period', params)
 
 
-def set_bdev_qos_limit_iops(client, name, ios_per_sec):
-    """Set QoS IOPS limit on a block device.
+def set_bdev_qos_limit(client, name, rw_ios_per_sec=None, rw_mbytes_per_sec=None):
+    """Set QoS rate limit on a block device.
 
     Args:
         name: name of block device
-        ios_per_sec: IOs per second limit (>=10000, example: 20000). 0 means unlimited.
+        rw_ios_per_sec: R/W IOs per second limit (>=10000, example: 20000). 0 means unlimited.
+        rw_mbytes_per_sec: R/W megabytes per second limit (>=10, example: 100). 0 means unlimited.
     """
     params = {}
     params['name'] = name
-    params['ios_per_sec'] = ios_per_sec
-    return client.call('set_bdev_qos_limit_iops', params)
+    if rw_ios_per_sec != None and rw_ios_per_sec >= 0:
+        params['rw_ios_per_sec'] = rw_ios_per_sec
+    if rw_mbytes_per_sec != None and rw_mbytes_per_sec >= 0:
+        params['rw_mbytes_per_sec'] = rw_mbytes_per_sec
+    return client.call('set_bdev_qos_limit', params)
 
 
 def apply_firmware(client, bdev_name, filename):
