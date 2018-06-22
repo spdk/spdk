@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e588f2aa_85704632",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2707,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T17:47:04Z",
+      "side": 1,
+      "message": "This is the check that guarantees that task-\u003escsi.status will be GOOD at the point of the check below...",
+      "revId": "8413fe499d83ace04c61ce910c1b86b940e1b2bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

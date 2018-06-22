@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eea7c6e4_cc1eee0d",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2722,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T17:47:04Z",
+      "side": 0,
+      "message": "... since we always return here if status is not GOOD.",
+      "revId": "635a1aa8a962fea5cec9a400893f46078b50e83d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
