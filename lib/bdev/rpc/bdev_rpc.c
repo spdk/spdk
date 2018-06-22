@@ -560,6 +560,8 @@ struct rpc_set_bdev_qos_limit {
 	char		*r_ios_per_sec;
 	char		*w_ios_per_sec;
 	char		*rw_mbytes_per_sec;
+	char		*r_mbytes_per_sec;
+	char		*w_mbytes_per_sec;
 };
 
 static void
@@ -570,6 +572,8 @@ free_rpc_set_bdev_qos_limit(struct rpc_set_bdev_qos_limit *r)
 	free(r->r_ios_per_sec);
 	free(r->w_ios_per_sec);
 	free(r->rw_mbytes_per_sec);
+	free(r->r_mbytes_per_sec);
+	free(r->w_mbytes_per_sec);
 }
 
 static const struct spdk_json_object_decoder rpc_set_bdev_qos_limit_decoders[] = {
@@ -588,6 +592,14 @@ static const struct spdk_json_object_decoder rpc_set_bdev_qos_limit_decoders[] =
 	},
 	{
 		"rw_mbytes_per_sec", offsetof(struct rpc_set_bdev_qos_limit, rw_mbytes_per_sec),
+		spdk_json_decode_string, true
+	},
+	{
+		"r_mbytes_per_sec", offsetof(struct rpc_set_bdev_qos_limit, r_mbytes_per_sec),
+		spdk_json_decode_string, true
+	},
+	{
+		"w_mbytes_per_sec", offsetof(struct rpc_set_bdev_qos_limit, w_mbytes_per_sec),
 		spdk_json_decode_string, true
 	},
 };
@@ -638,7 +650,7 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 	}
 
 	if (!req.rw_ios_per_sec && !req.r_ios_per_sec && !req.w_ios_per_sec &&
-	    !req.rw_mbytes_per_sec) {
+	    !req.rw_mbytes_per_sec && !req.r_mbytes_per_sec && !req.w_mbytes_per_sec) {
 		SPDK_ERRLOG("invalid rate limits set\n");
 		goto invalid;
 	}
@@ -684,6 +696,26 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 			goto invalid;
 		} else {
 			limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = limit_per_sec * 1024 * 1024;
+		}
+	}
+
+	if (req.r_mbytes_per_sec) {
+		limit_per_sec = atoi(req.r_mbytes_per_sec);
+		if (limit_per_sec < 0) {
+			SPDK_ERRLOG("invalid rate limit %x\n", limit_per_sec);
+			goto invalid;
+		} else {
+			limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT] = limit_per_sec * 1024 * 1024;
+		}
+	}
+
+	if (req.w_mbytes_per_sec) {
+		limit_per_sec = atoi(req.w_mbytes_per_sec);
+		if (limit_per_sec < 0) {
+			SPDK_ERRLOG("invalid rate limit %x\n", limit_per_sec);
+			goto invalid;
+		} else {
+			limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT] = limit_per_sec * 1024 * 1024;
 		}
 	}
 
