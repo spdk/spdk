@@ -22,6 +22,8 @@ if [ -s /etc/redhat-release ]; then
 	yum install -y libpmemblk-devel || true
 	# Additional dependencies for SPDK CLI
 	yum install -y python-configshell
+	yum install -y python3-configshell
+	yum install -y python3-pexpect
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
