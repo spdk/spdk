@@ -70,6 +70,8 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_BYTES_PER_SEC		(10 * 1024 * 1024)
 
 static const char *qos_type_str[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES] = {"Limit_IOPS",
+								       "Limit_Read_IOPS",
+								       "Limit_Write_IOPS",
 								       "Limit_BPS"
 								      };
 
@@ -998,6 +1000,43 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static bool
+_spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
+{
+	assert(limit != SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES);
+
+	switch (limit) {
+	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
+		return true;
+	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+		return false;
+	case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
+	default:
+		return false;
+	}
+}
+
+static bool
+_spdk_bdev_is_read_io(struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		if (bdev_io->u.nvme_passthru.cmd.opc == SPDK_NVME_OPC_READ) {
+			return true;
+		} else {
+			return false;
+		}
+	case SPDK_BDEV_IO_TYPE_READ:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static uint64_t
 _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 {
@@ -1046,6 +1085,11 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 		qos->submitted_this_timeslice[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT]++;
 		qos->submitted_this_timeslice[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] +=
 			_spdk_bdev_get_io_size_in_byte(bdev_io);
+		if (_spdk_bdev_is_read_io(bdev_io) == true) {
+			qos->submitted_this_timeslice[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT]++;
+		} else {
+			qos->submitted_this_timeslice[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT]++;
+		}
 		ch->io_outstanding++;
 		shared_resource->io_outstanding++;
 		bdev->fn_table->submit_request(ch->channel, bdev_io);
@@ -1285,15 +1329,12 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 			TAILQ_INIT(&qos->queued);
 
 			for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-				switch (i) {
-				case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+				if (_spdk_bdev_qos_is_iops_rate_limit(i) == true) {
 					qos->min_limits_per_timeslice[i] =
 						SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE;
-					break;
-				case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+				} else {
 					qos->min_limits_per_timeslice[i] =
 						SPDK_BDEV_QOS_MIN_BYTE_PER_TIMESLICE;
-					break;
 				}
 
 				qos->submitted_this_timeslice[i] = 0;
@@ -1625,13 +1666,10 @@ spdk_bdev_get_qos_rate_limits(struct spdk_bdev *bdev, int64_t *limits)
 	pthread_mutex_lock(&bdev->internal.mutex);
 	if (bdev->internal.qos) {
 		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-			switch (i) {
-			case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+			if (_spdk_bdev_qos_is_iops_rate_limit(i) == true) {
 				limits[i] = bdev->internal.qos->rate_limits[i];
-				break;
-			case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+			} else {
 				limits[i] = bdev->internal.qos->rate_limits[i] / 1024 / 1024;
-				break;
 			}
 		}
 	}
@@ -2747,13 +2785,10 @@ _spdk_bdev_qos_config_limit(struct spdk_bdev *bdev, int64_t *limits)
 			continue;
 		}
 
-		switch (i) {
-		case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+		if (_spdk_bdev_qos_is_iops_rate_limit(i) == true) {
 			min_qos_set = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
-			break;
-		case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+		} else {
 			min_qos_set = SPDK_BDEV_QOS_MIN_BYTES_PER_SEC;
-			break;
 		}
 
 		if (limits[i] % min_qos_set) {
@@ -2816,18 +2851,12 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 
 			val = spdk_conf_section_get_nmval(sp, qos_type_str[j], i, 1);
 			if (val) {
-				switch (j) {
-				case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+				if (_spdk_bdev_qos_is_iops_rate_limit(j) == true) {
 					limits[j] = strtoull(val, NULL, 10);
-					config_qos = true;
-					break;
-				case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+				} else {
 					limits[j] = strtoull(val, NULL, 10) * 1024 * 1024;
-					config_qos = true;
-					break;
-				case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
-					break;
 				}
+				config_qos = true;
 			}
 
 			break;
@@ -3499,13 +3528,10 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, int64_t *limits,
 			disable_rate_limit = false;
 		}
 
-		switch (i) {
-		case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+		if (_spdk_bdev_qos_is_iops_rate_limit(i) == true) {
 			min_limit_per_sec = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
-			break;
-		case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+		} else {
 			min_limit_per_sec = SPDK_BDEV_QOS_MIN_BYTES_PER_SEC;
-			break;
 		}
 
 		limit_set_complement = limits[i] % min_limit_per_sec;
