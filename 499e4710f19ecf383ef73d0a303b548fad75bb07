@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61bdf7fd_0be7088e",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T17:03:03Z",
+      "side": 1,
+      "message": "This will make it impossible to look up the mempool from other processes (without knowing the pid); what is the goal of this change?",
+      "revId": "499e4710f19ecf383ef73d0a303b548fad75bb07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
