@@ -1,0 +1,25 @@
+{
+  "num_blocks": $(N),$(W)
+  "name": "Nvme0n1p0",$(W)
+  "aliases": [],$(W)
+  "qos_ios_per_sec": 0,$(W)
+  "driver_specific": {
+    "split": {
+      "base_bdev": "Nvme0n1",$(W)
+      "offset_blocks": $(N)
+    }
+  },$(W)
+  "claimed": false,$(W)
+  "block_size": $(N),$(W)
+  "product_name": "Split Disk",$(W)
+  "supported_io_types": {
+    "reset": $(S),$(W)
+    "nvme_admin": $(S),$(W)
+    "unmap": $(S),$(W)
+    "read": $(S),$(W)
+    "write_zeroes": $(S),$(W)
+    "write": $(S),$(W)
+    "flush": $(S),$(W)
+    "nvme_io": $(S)
+  }
+}
