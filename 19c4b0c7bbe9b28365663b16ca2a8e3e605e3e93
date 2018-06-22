@@ -142,6 +142,23 @@
     },
     {
       "key": {
+        "uuid": "3c1878d7_8bd97183",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1882,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-06-22T03:26:27Z",
+      "side": 1,
+      "message": "We should be using the bdev_io that was obtained in zcopy_start phase. This is because bdev_io will have the data buffer context necessary to release the allocated buffer.",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c54eef92_e977fb6f",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
