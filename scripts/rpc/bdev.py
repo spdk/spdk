@@ -64,6 +64,16 @@ def construct_null_bdev(client, num_blocks, block_size, name, uuid=None):
     return client.call('construct_null_bdev', params)
 
 
+def delete_null_bdev(client, name):
+    """Remove null bdev from the system.
+
+    Args:
+        name: name of null bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_null_bdev', params)
+
+
 def construct_aio_bdev(client, filename, name, block_size=None):
     """Construct a Linux AIO block device.
 

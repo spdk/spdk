@@ -167,6 +167,15 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_null_bdev)
 
     @call_cmd
+    def delete_null_bdev(args):
+        rpc.bdev.delete_null_bdev(args.client,
+                                  name=args.name)
+
+    p = subparsers.add_parser('delete_null_bdev', help='Delete a null bdev')
+    p.add_argument('name', help='null bdev name')
+    p.set_defaults(func=delete_null_bdev)
+
+    @call_cmd
     def construct_aio_bdev(args):
         print(rpc.bdev.construct_aio_bdev(args.client,
                                           filename=args.filename,
