@@ -53,7 +53,7 @@ DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_virtqueue *vq, uint16_t req_idx, struct vring_desc **desc,
 		struct vring_desc **desc_table, uint32_t *desc_table_size), 0);
 DEFINE_STUB(spdk_vhost_vring_desc_is_wr, bool, (struct vring_desc *cur_desc), false);
-DEFINE_STUB(spdk_vhost_vring_desc_to_iov, int, (struct spdk_vhost_dev *vdev, struct iovec *iov,
+DEFINE_STUB(spdk_vhost_vring_desc_to_iov, int, (struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq, struct iovec *iov,
 		uint16_t *iov_index, const struct vring_desc *desc), 0);
 DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_virtqueue *vq, uint16_t id, uint32_t len));
@@ -80,15 +80,15 @@ DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_tgt *vtgt, spdk_vhost_event_fn cb_fn,
 		void *arg, unsigned timeout_sec, const char *errmsg), 0);
 DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
-DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (void *event_ctx, int response));
+DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (struct spdk_vhost_dev *vdev, int rc));
 DEFINE_STUB_V(spdk_vhost_lock, (void));
 DEFINE_STUB_V(spdk_vhost_unlock, (void));
 DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *vtgt_name, spdk_vhost_event_fn fn,
 		void *arg));
 DEFINE_STUB(spdk_vhost_vring_desc_has_next, bool, (struct vring_desc *cur_desc), false);
-DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len),
-{0});
+DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
+		uint64_t addr, uint64_t len), {0});
 DEFINE_STUB(spdk_scsi_dev_get_id, int, (const struct spdk_scsi_dev *dev), {0});
 
 /* This sets spdk_vhost_dev_unregister to either to fail or success */

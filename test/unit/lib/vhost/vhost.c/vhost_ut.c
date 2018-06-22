@@ -214,7 +214,7 @@ desc_to_iov_test(void)
 	desc.addr = 0x110000;
 	desc.len = 0x1000;
 	iov_index = 0;
-	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
+	rc = spdk_vhost_vring_desc_to_iov(vdev, NULL, iov, &iov_index, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(iov_index == 1);
 	CU_ASSERT(iov[0].iov_base == (void *)0x1110000);

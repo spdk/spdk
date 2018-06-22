@@ -281,7 +281,7 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 
 		/* set the base virtual address */
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x1000000000"));
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x10009fff8000"));
 		if (args == NULL) {
 			return -1;
 		}
