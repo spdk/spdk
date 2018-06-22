@@ -1676,6 +1676,10 @@ test_nvme_ctrlr_test_active_ns(void)
 	}
 }
 
+void
+spdk_init_hooks(struct spdk_nvme_hooks *hooks, struct sockaddr *src_addr)
+{}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;

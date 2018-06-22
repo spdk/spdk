@@ -1039,6 +1039,16 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+struct spdk_nvme_hooks;
+
+/**
+ * Initialize controller's hooks
+ *
+ * \param hooks to be initialized
+ * \param src_addr of the controller
+ */
+void spdk_init_hooks(struct spdk_nvme_hooks *hooks, struct sockaddr *src_addr);
+
 #ifdef __cplusplus
 }
 #endif

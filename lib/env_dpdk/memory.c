@@ -33,6 +33,10 @@
 
 #include "spdk/stdinc.h"
 
+#include <infiniband/verbs.h>
+#include <rdma/rdma_cma.h>
+#include <rdma/rdma_verbs.h>
+
 #include "env_internal.h"
 
 #include <rte_config.h>
@@ -517,6 +521,39 @@ memory_iter_cb(const struct rte_memseg_list *msl,
 	return spdk_mem_register(ms->addr, len);
 }
 #endif
+
+struct spdk_nvme_transport_id;
+
+static
+struct ibv_pd *get_ibv_pd(void *hook_ctx, struct ibv_context *verbs,
+			  const struct spdk_nvme_transport_id *trid)
+{
+	return NULL;
+}
+
+static
+uint64_t get_rkey(void *hook_ctx, void *buf, size_t size)
+{
+	struct ibv_mr *mr;
+	mr = ibv_reg_mr(NULL, buf, size,
+			IBV_ACCESS_LOCAL_WRITE |
+			IBV_ACCESS_REMOTE_READ |
+			IBV_ACCESS_REMOTE_WRITE);
+
+	if (mr == NULL) {
+		return -1;
+	}
+
+	return mr->rkey;
+}
+
+void
+spdk_init_hooks(struct spdk_nvme_hooks *hooks, struct sockaddr *src_addr)
+{
+	hooks->hook_ctx = NULL;
+	hooks->get_ibv_pd = get_ibv_pd;
+	hooks->get_rkey = get_rkey;
+}
 
 int
 spdk_mem_map_init(void)

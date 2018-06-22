@@ -38,7 +38,9 @@
 
 #define spdk_pci_device rte_pci_device
 
-#include "spdk/env.h"
+//#include "spdk/env.h"
+
+#include "spdk/nvme.h"
 
 #include <rte_config.h>
 #include <rte_version.h>
