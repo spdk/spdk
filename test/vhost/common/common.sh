@@ -999,6 +999,7 @@ function run_fio()
 				mkdir -p $out
 				;;
 			--local) run_server_mode=false ;;
+			--json) json="--json" ;;
 		*)
 			error "Invalid argument '$arg'"
 			return 1
@@ -1044,7 +1045,7 @@ function run_fio()
 
 	python $SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
 		$([[ ! -z "$fio_bin" ]] && echo "--fio-bin=$fio_bin") \
-		--out=$out ${fio_disks%,}
+		--out=$out $json ${fio_disks%,}
 }
 
 # Shutdown or kill any running VM and SPDK APP.

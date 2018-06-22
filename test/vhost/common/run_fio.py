@@ -23,6 +23,7 @@ def show_help():
         -f, --fio-bin     Location of FIO binary on local host (Default "fio")
         -o, --out         Directory used to save generated job files and
                           files with test results
+        -J, --json        Use JSON format for output
         -p, --perf-vmex   Enable aggregating statistic for VMEXITS for VMs
     """)
 
@@ -43,12 +44,14 @@ def save_file(path, mode, contents):
     fh.close()
 
 
-def run_fio(vms, fio_cfg_fname, out_path, perf_vmex=False):
+def run_fio(vms, fio_cfg_fname, out_path, perf_vmex=False, json=False):
         global fio_bin
         job_name = os.path.splitext(os.path.basename(fio_cfg_fname))[0]
 
         # Build command for FIO
         fio_cmd = " ".join([fio_bin, "--eta=never"])
+        if json:
+            fio_cmd = " ".join([fio_bin, "--output-format=json"])
         for vm in vms:
             # vm[0] = IP address, vm[1] = Port number
             fio_cmd = " ".join([fio_cmd,
@@ -114,11 +117,12 @@ def main():
     fio_cfg = None
     out_dir = None
     perf_vmex = False
+    json = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hj:f:o:p",
+        opts, args = getopt.getopt(sys.argv[1:], "hJj:f:o:p",
                                    ["help", "job-file=", "fio-bin=",
-                                    "out=", "perf-vmex"])
+                                    "out=", "perf-vmex", "json"])
     except getopt.GetoptError:
         show_help()
         sys.exit(1)
@@ -139,6 +143,8 @@ def main():
             out_dir = a
         elif o in ("-f", "--fio-bin"):
             fio_bin = a
+        elif o in ("-J", "--json"):
+            json = True
 
     if fio_cfg is None:
         print("ERROR! No FIO job provided!")
@@ -155,7 +161,7 @@ def main():
         vms.append((ip, port, filenames))
 
     print("Running job file: {0}".format(fio_cfg))
-    run_fio(vms, fio_cfg, out_dir, perf_vmex)
+    run_fio(vms, fio_cfg, out_dir, perf_vmex, json)
 
 
 if __name__ == "__main__":
