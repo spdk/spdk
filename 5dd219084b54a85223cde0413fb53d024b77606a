@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29844182_4f6154aa",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-22T11:59:55Z",
+      "side": 1,
+      "message": "is this used anywhere? or it\u0027s a typo?",
+      "range": {
+        "startLine": 148,
+        "startChar": 1,
+        "endLine": 148,
+        "endChar": 6
+      },
+      "revId": "5dd219084b54a85223cde0413fb53d024b77606a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
