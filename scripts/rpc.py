@@ -301,6 +301,15 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_pmem_bdev)
 
     @call_cmd
+    def delete_pmem_bdev(args):
+        rpc.bdev.delete_pmem_bdev(args.client,
+                                  name=args.name)
+
+    p = subparsers.add_parser('delete_pmem_bdev', help='Delete a pmem bdev')
+    p.add_argument('name', help='pmem bdev name')
+    p.set_defaults(func=delete_pmem_bdev)
+
+    @call_cmd
     def construct_passthru_bdev(args):
         print(rpc.bdev.construct_passthru_bdev(args.client,
                                                base_bdev_name=args.base_bdev_name,

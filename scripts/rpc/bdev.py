@@ -234,6 +234,16 @@ def construct_pmem_bdev(client, pmem_file, name):
     return client.call('construct_pmem_bdev', params)
 
 
+def delete_pmem_bdev(client, name):
+    """Remove pmem bdev from the system.
+
+    Args:
+        bdev_name: name of pmem bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_pmem_bdev', params)
+
+
 def construct_passthru_bdev(client, base_bdev_name, passthru_bdev_name):
     """Construct a pass-through block device.
 
