@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cd70f8e_f0ee8822",
+        "filename": "lib/nvme/nvme_fabric.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T23:34:46Z",
+      "side": 1,
+      "message": "I know this is a direct copy of the existing code, but why don\u0027t we do the tmp_value thing for get_reg_8?",
+      "revId": "93f9136736352499068a8d25d70478b764af47b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
