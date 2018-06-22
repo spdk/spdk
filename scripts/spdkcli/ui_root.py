@@ -98,7 +98,7 @@ class UIRoot(UINode):
     def create_lvol_store(self, **kwargs):
         response = rpc.lvol.construct_lvol_store(self.client, **kwargs)
         new_lvs = rpc.lvol.get_lvol_stores(self.client,
-                                           self.print_array(response),
+                                           response,
                                            lvs_name=None)
         return new_lvs[0]["name"]
 
