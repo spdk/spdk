@@ -2,6 +2,8 @@
 
 set -ex
 
+rpc_py="python $rootdir/scripts/rpc.py"
+
 run_step() {
 	if [ -z "$1" ]; then
 		echo run_step called with no parameter
@@ -130,6 +132,8 @@ trap - SIGINT SIGTERM EXIT
 
 run_bsdump
 rm -f $ROCKSDB_CONF
+
+$rpc_py delete_nvme_bdev "Nvme0n1"
 
 report_test_completion "blobfs"
 timing_exit rocksdb

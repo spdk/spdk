@@ -156,6 +156,7 @@ if grep -q Nvme0 $testdir/bdev.conf; then
 fi
 
 $rpc_py delete_passthru_bdev TestPT
+$rpc_py delete_nvme_bdev Nvme0n1
 
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
