@@ -159,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "3facbe0e_a9245679",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1882,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T15:58:48Z",
+      "side": 1,
+      "message": "I think Ben was thinking of making some changes to this effect.  Where zcopy_end would take the zcopy_start bdev_io as a parameter.",
+      "parentUuid": "3c1878d7_8bd97183",
+      "revId": "19c4b0c7bbe9b28365663b16ca2a8e3e605e3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c54eef92_e977fb6f",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
