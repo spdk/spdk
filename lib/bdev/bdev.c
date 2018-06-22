@@ -79,10 +79,10 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_LIMIT_NOT_DEFINED		UINT64_MAX
 
 static const char *qos_conf_type[] = {"Limit_IOPS", "Limit_Read_IOPS", "Limit_Write_IOPS",
-				      "Limit_BPS"
+				      "Limit_BPS", "Limit_Read_BPS", "Limit_Write_BPS"
 				     };
 static const char *qos_rpc_type[] = {"rw_ios_per_sec", "r_ios_per_sec", "w_ios_per_sec",
-				     "rw_mbytes_per_sec"
+				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
 				    };
 
 TAILQ_HEAD(spdk_bdev_list, spdk_bdev);
@@ -1071,6 +1071,8 @@ _spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
 	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
 		return true;
 	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_R_BPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_W_BPS_RATE_LIMIT:
 		return false;
 	case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
 	default:
@@ -1162,9 +1164,11 @@ _spdk_bdev_qos_init_ops(struct spdk_bdev_qos *qos)
 			qos->rate_limits[i].count_io = _spdk_bdev_qos_read_write_count_io;
 			break;
 		case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+		case SPDK_BDEV_QOS_R_BPS_RATE_LIMIT:
 			qos->rate_limits[i].count_io = _spdk_bdev_qos_read_count_io;
 			break;
 		case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
+		case SPDK_BDEV_QOS_W_BPS_RATE_LIMIT:
 			qos->rate_limits[i].count_io = _spdk_bdev_qos_write_count_io;
 			break;
 		default:
