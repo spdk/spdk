@@ -72,7 +72,9 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 static const char *qos_type_str[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES] = {"Limit_IOPS",
 								       "Limit_Read_IOPS",
 								       "Limit_Write_IOPS",
-								       "Limit_BPS"
+								       "Limit_BPS",
+								       "Limit_Read_BPS",
+								       "Limit_Write_BPS"
 								      };
 
 struct spdk_bdev_mgr {
@@ -1011,6 +1013,8 @@ _spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
 	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
 		return true;
 	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_R_BPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_W_BPS_RATE_LIMIT:
 		return false;
 	case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
 	default:
@@ -1066,6 +1070,7 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 	int				i = 0;
 	bool				no_more_ios = false;
+	uint64_t			io_size_in_byte = 0;
 
 	while (!TAILQ_EMPTY(&qos->queued)) {
 		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
@@ -1083,12 +1088,17 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 		bdev_io = TAILQ_FIRST(&qos->queued);
 		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
 		qos->submitted_this_timeslice[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT]++;
+		io_size_in_byte = _spdk_bdev_get_io_size_in_byte(bdev_io);
 		qos->submitted_this_timeslice[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] +=
-			_spdk_bdev_get_io_size_in_byte(bdev_io);
+			io_size_in_byte;
 		if (_spdk_bdev_is_read_io(bdev_io) == true) {
 			qos->submitted_this_timeslice[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT]++;
+			qos->submitted_this_timeslice[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT] +=
+				io_size_in_byte;
 		} else {
 			qos->submitted_this_timeslice[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT]++;
+			qos->submitted_this_timeslice[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT] +=
+				io_size_in_byte;
 		}
 		ch->io_outstanding++;
 		shared_resource->io_outstanding++;
