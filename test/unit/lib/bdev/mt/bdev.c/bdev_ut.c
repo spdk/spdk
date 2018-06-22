@@ -535,7 +535,8 @@ basic_qos(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable read/write IOPS, read only IOPS and bandwidth rate limits.
+	 * Enable read/write IOPS, read only IOPS and read/write
+	 * byte per second rate limits.
 	 * In this case, all rate limits will take equal effect.
 	 */
 	/* 2000 read/write I/O per second, or 2 per millisecond */
@@ -647,7 +648,8 @@ io_during_qos_queue(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable read/write IOPS, read only IOPS and bandwidth rate limits.
+	 * Enable read/write IOPS, read only IOPS and read/write
+	 * byte per second rate limits.
 	 * In this case, IOPS rate limit will take effect first.
 	 */
 	/* 2000 read/write I/O per second, or 2 per millisecond */
@@ -739,7 +741,8 @@ io_during_qos_reset(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable read/write IOPS, write only IOPS and bandwidth rate limits.
+	 * Enable read/write IOPS, write only IOPS and read/write
+	 * per second rate limits.
 	 * In this case, bandwidth rate limit will take effect first.
 	 */
 	/* 2000 read/write I/O per second, or 2 per millisecond */
@@ -1103,11 +1106,14 @@ qos_dynamic_enable(void)
 	set_thread(0);
 
 	/*
-	 * Enable QoS: IOPS and byte per second rate limits.
+	 * Enable QoS: Read/Write IOPS, Read only IOPS, Write only
+	 * IOPS and Read/Write byte per second rate limits.
 	 * More than 10 I/Os allowed per timeslice.
 	 */
 	status = -1;
 	limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 10000;
+	limits[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT] = 10000;
+	limits[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT] = 10000;
 	limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = 100 * 1024 * 1024;
 	spdk_bdev_set_qos_rate_limits(bdev, limits, qos_dynamic_enable_done, &status);
 	poll_threads();
@@ -1147,9 +1153,13 @@ qos_dynamic_enable(void)
 	CU_ASSERT(bdev_io_status[1] == SPDK_BDEV_IO_STATUS_PENDING);
 	poll_threads();
 
-	/* Disable QoS: IOPS rate limit */
+	/*
+	 * Disable QoS: Read/Write IOPS, Read Only IOPS and
+	 * Write only IOPS rate limits */
 	status = -1;
 	limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 0;
+	limits[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT] = 0;
+	limits[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT] = 0;
 	spdk_bdev_set_qos_rate_limits(bdev, limits, qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);
