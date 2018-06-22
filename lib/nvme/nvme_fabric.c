@@ -268,3 +268,73 @@ nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 
 	return 0;
 }
+
+int
+nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
+{
+	struct nvme_completion_poll_status status;
+	struct spdk_nvmf_fabric_connect_rsp *rsp;
+	struct spdk_nvmf_fabric_connect_cmd cmd;
+	struct spdk_nvmf_fabric_connect_data *nvmf_data;
+	struct spdk_nvme_ctrlr *ctrlr;
+	int rc;
+
+	if (num_entries == 0 || num_entries > SPDK_NVME_IO_QUEUE_MAX_ENTRIES) {
+		return -EINVAL;
+	}
+
+	ctrlr = qpair->ctrlr;
+	if (!ctrlr) {
+		return -EINVAL;
+	}
+
+	nvmf_data = spdk_dma_zmalloc(sizeof(*nvmf_data), 0, NULL);
+	if (!nvmf_data) {
+		SPDK_ERRLOG("nvmf_data allocation error\n");
+		return -ENOMEM;
+	}
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opcode = SPDK_NVME_OPC_FABRIC;
+	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
+	cmd.qid = qpair->id;
+	cmd.sqsize = num_entries - 1;
+	cmd.kato = ctrlr->opts.keep_alive_timeout_ms;
+
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvmf_data->cntlid = 0xFFFF;
+	} else {
+		nvmf_data->cntlid = ctrlr->cntlid;
+	}
+
+	SPDK_STATIC_ASSERT(sizeof(nvmf_data->hostid) == sizeof(ctrlr->opts.extended_host_id),
+			   "host ID size mismatch");
+	memcpy(nvmf_data->hostid, ctrlr->opts.extended_host_id, sizeof(nvmf_data->hostid));
+	snprintf(nvmf_data->hostnqn, sizeof(nvmf_data->hostnqn), "%s", ctrlr->opts.hostnqn);
+	snprintf(nvmf_data->subnqn, sizeof(nvmf_data->subnqn), "%s", ctrlr->trid.subnqn);
+
+	rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, qpair,
+					(struct spdk_nvme_cmd *)&cmd,
+					nvmf_data, sizeof(*nvmf_data),
+					nvme_completion_poll_cb, &status);
+	if (rc < 0) {
+		SPDK_ERRLOG("Connect command failed\n");
+		spdk_dma_free(nvmf_data);
+		return rc;
+	}
+
+	if (spdk_nvme_wait_for_completion(qpair, &status)) {
+		SPDK_ERRLOG("Connect command failed\n");
+		spdk_dma_free(nvmf_data);
+		return -EIO;
+	}
+
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status.cpl;
+		ctrlr->cntlid = rsp->status_code_specific.success.cntlid;
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cntlid);
+	}
+
+	spdk_dma_free(nvmf_data);
+	return 0;
+}
