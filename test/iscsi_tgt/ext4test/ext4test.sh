@@ -119,6 +119,11 @@ trap - SIGINT SIGTERM EXIT
 
 rm -f $testdir/iscsi.conf
 iscsicleanup
+
+if [ -z "$NO_NVME" ]; then
+$rpc_py delete_nvme_controller -b Nvme0n1
+
+fi
 killprocess $pid
 report_test_completion "nightly_iscsi_ext4test"
 timing_exit ext4test
