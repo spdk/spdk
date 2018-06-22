@@ -38,7 +38,18 @@
 
 #include "spdk/bdev.h"
 
+typedef void (*spdk_delete_rbd_complete)(void *cb_arg, int bdeverrno);
+
 struct spdk_bdev *spdk_bdev_rbd_create(const char *name, const char *pool_name,
 				       const char *rbd_name, uint32_t block_size);
+/**
+ * Delete rbd bdev.
+ *
+ * \param bdev Pointer to rbd bdev.
+ * \param cb_fn Function to call after deletion.
+ * \param cb_arg Argument to pass to cb_fn.
+ */
+void spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn,
+			  void *cb_arg);
 
 #endif // SPDK_BDEV_RBD_H
