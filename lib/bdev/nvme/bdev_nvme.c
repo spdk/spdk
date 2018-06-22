@@ -771,6 +771,21 @@ nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
+static struct nvme_ctrlr *
+nvme_ctrlr_get_by_name(const char *name)
+{
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (strcasecmp(name, nvme_ctrlr->name) == 0) {
+			return nvme_ctrlr;
+		}
+	}
+
+	return NULL;
+}
+
+
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
@@ -1037,6 +1052,36 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 	free(probe_ctx);
 	return 0;
+}
+
+void
+spdk_bdev_nvme_remove_ctrlr(struct spdk_nvme_transport_id *trid,
+			    const char *name,
+			    spdk_delete_nvme_complete cb_fn,
+			    void *cb_arg)
+{
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	if (trid != NULL) {
+		nvme_ctrlr = nvme_ctrlr_get(trid);
+		if (nvme_ctrlr) {
+			remove_cb(NULL, nvme_ctrlr->ctrlr);
+			cb_fn(cb_arg, 0);
+			return;
+		}
+	}
+
+	if (name != NULL) {
+		nvme_ctrlr = nvme_ctrlr_get_by_name(name);
+		if (nvme_ctrlr) {
+			remove_cb(NULL, nvme_ctrlr->ctrlr);
+			cb_fn(cb_arg, 0);
+			return;
+		}
+	}
+
+	SPDK_ERRLOG("Failed to find NVMe controller\n");
+	cb_fn(cb_arg, -ENODEV);
 }
 
 static int
@@ -1605,6 +1650,27 @@ spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
 	}
 
 	return SPDK_CONTAINEROF(bdev, struct nvme_bdev, disk)->nvme_ctrlr->ctrlr;
+}
+
+char *
+spdk_bdev_nvme_get_ctrlr_name(struct spdk_bdev *bdev)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	ctrlr = spdk_bdev_nvme_get_ctrlr(bdev);
+	if (ctrlr) {
+		pthread_mutex_lock(&g_bdev_nvme_mutex);
+		TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+			if (nvme_ctrlr->ctrlr == ctrlr) {
+				pthread_mutex_unlock(&g_bdev_nvme_mutex);
+				return nvme_ctrlr->name;
+			}
+		}
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	}
+
+	return NULL;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_nvme", SPDK_LOG_BDEV_NVME)

@@ -155,6 +155,9 @@ vm_shutdown_all
 timing_exit vm_shutdown_all
 
 rm -f *.state $ROOT_DIR/spdk.tar.gz
+
+$RPC_PY delete_nvme_controller -b Nvme0n1
+
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
 timing_exit spdk_vhost_kill
