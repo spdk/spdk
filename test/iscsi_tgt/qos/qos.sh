@@ -66,6 +66,7 @@ READ_BANDWIDTH_LIMIT=10
 LIMIT_TYPE=IOPS
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
+READ_IOPS_LIMIT=50000
 
 timing_enter start_iscsi_tgt
 
@@ -101,8 +102,9 @@ check_qos_works_well true $IOPS_LIMIT Malloc0
 $rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 0
 check_qos_works_well false $IOPS_LIMIT Malloc0
 
-# Limit the I/O rate again.
+# Limit the I/O rate again together against read only I/O.
 $rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
+$rpc_py set_bdev_qos_limit Malloc0 --r_ios_per_sec $READ_IOPS_LIMIT
 check_qos_works_well true $IOPS_LIMIT Malloc0
 echo "I/O rate limiting tests successful"
 

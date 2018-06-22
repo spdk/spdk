@@ -509,6 +509,16 @@ static const struct spdk_json_object_decoder rpc_set_bdev_qos_limit_decoders[] =
 		spdk_json_decode_uint64, true
 	},
 	{
+		"r_ios_per_sec", offsetof(struct rpc_set_bdev_qos_limit,
+					  limits[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT]),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"w_ios_per_sec", offsetof(struct rpc_set_bdev_qos_limit,
+					  limits[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT]),
+		spdk_json_decode_uint64, true
+	},
+	{
 		"rw_mbytes_per_sec", offsetof(struct rpc_set_bdev_qos_limit,
 					      limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT]),
 		spdk_json_decode_uint64, true
