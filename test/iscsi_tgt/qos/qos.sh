@@ -46,6 +46,7 @@ timing_enter qos
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 IOPS_LIMIT=20000
+READ_IOPS_LIMIT=50000
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
@@ -83,8 +84,9 @@ check_qos_works_well true $IOPS_LIMIT Malloc0
 $rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 0
 check_qos_works_well false $IOPS_LIMIT Malloc0
 
-# Limit the I/O rate again.
+# Limit the I/O rate again together against read only I/O.
 $rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
+$rpc_py set_bdev_qos_limit Malloc0 --r_ios_per_sec $READ_IOPS_LIMIT
 check_qos_works_well true $IOPS_LIMIT Malloc0
 echo "I/O rate limiting tests successful"
 
