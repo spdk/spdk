@@ -22,6 +22,30 @@
       "revId": "eabd9cb9f1f70c410cf9055dddc96affab9a1102",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "100c20dd_31cd63f0",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-22T15:01:35Z",
+      "side": 1,
+      "message": "I thought we were using python 27?   I\u0027d rather not upgrade python in this commit.\n\nI\u0027ll try removing dev/pep8 and test this out.",
+      "parentUuid": "4785e156_4c7ee568",
+      "range": {
+        "startLine": 49,
+        "startChar": 58,
+        "endLine": 49,
+        "endChar": 68
+      },
+      "revId": "eabd9cb9f1f70c410cf9055dddc96affab9a1102",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
