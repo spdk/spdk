@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "93407087_5eabaf4e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2744,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T22:19:28Z",
+      "side": 1,
+      "message": "I think requiring the bdev module to spdk_bdev_module_examine_done() is still good, even though the examine_config callbacks are synchronous.\n\nBut you could help out bdev module writers by saving the original value of module-\u003eaction_in_progress before incrementing it.  Then after module-\u003eexamine_config() is done, check that the action_in_progress \u003d\u003d the original value (meaning the bdev module called spdk_bdev_module_examine_done).  If they didn\u0027t, do an SPDK_ERRLOG since that\u0027s a programming error that we can detect.",
+      "revId": "f23201f97b6749be5ab4fce82a8b2e7e6e97b5c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c3c26ab_1fbf98e6",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
