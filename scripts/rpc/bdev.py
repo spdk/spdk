@@ -522,6 +522,8 @@ def set_bdev_qos_limit(
         client,
         name,
         rw_ios_per_sec=None,
+        r_ios_per_sec=None,
+        w_ios_per_sec=None,
         rw_mbytes_per_sec=None,
         r_mbytes_per_sec=None,
         w_mbytes_per_sec=None):
@@ -530,6 +532,8 @@ def set_bdev_qos_limit(
     Args:
         name: name of block device
         rw_ios_per_sec: R/W IOs per second limit (>=10000, example: 20000). 0 means unlimited.
+        r_ios_per_sec: Read IOs per second limit (>=10000, example: 20000). 0 means unlimited.
+        w_ios_per_sec: Write IOs per second limit (>=10000, example: 20000). 0 means unlimited.
         rw_mbytes_per_sec: R/W megabytes per second limit (>=10, example: 100). 0 means unlimited.
         r_mbytes_per_sec: Read megabytes per second limit (>=10, example: 100). 0 means unlimited.
         w_mbytes_per_sec: Write megabytes per second limit (>=10, example: 100). 0 means unlimited.
@@ -538,6 +542,10 @@ def set_bdev_qos_limit(
     params['name'] = name
     if rw_ios_per_sec is not None:
         params['rw_ios_per_sec'] = rw_ios_per_sec
+    if r_ios_per_sec is not None:
+        params['r_ios_per_sec'] = r_ios_per_sec
+    if w_ios_per_sec is not None:
+        params['w_ios_per_sec'] = w_ios_per_sec
     if rw_mbytes_per_sec is not None:
         params['rw_mbytes_per_sec'] = rw_mbytes_per_sec
     if r_mbytes_per_sec is not None:
