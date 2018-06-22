@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "384854fc_c282d858",
+        "filename": "test/vhost/common/run_fio.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T18:15:41Z",
+      "side": 1,
+      "message": "I think json needs to be initialized here.  Otherwise, we get this error from the use of json below: \"UnboundLocalError: local variable \u0027json\u0027 referenced before assignment\".",
+      "revId": "d0604f223d2be452a82fb318da9c200e41c2d4c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
