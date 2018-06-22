@@ -47,7 +47,7 @@ def delete_subbdevs(args, bdev, rpc_bdevs):
 
 def get_bdev_destroy_method(bdev):
     destroy_method_map = {'construct_nvme_bdev': "delete_bdev",
-                          'construct_pmem_bdev': "delete_bdev",
+                          'construct_pmem_bdev': "delete_pmem_bdev",
                           'construct_rbd_bdev': "delete_bdev",
                           'construct_malloc_bdev': "delete_bdev",
                           'construct_null_bdev': "delete_bdev",
