@@ -36,10 +36,22 @@
 
 #include "spdk/stdinc.h"
 
+typedef void (*spdk_delete_null_complete)(void *cb_arg, int bdeverrno);
+
 struct spdk_bdev;
 struct spdk_uuid;
 
 struct spdk_bdev *create_null_bdev(const char *name, const struct spdk_uuid *uuid,
 				   uint64_t num_blocks, uint32_t block_size);
+
+/**
+ * Delete null bdev.
+ *
+ * \param bdev Pointer to null bdev.
+ * \param cb_fn Function to call after deletion.
+ * \param cb_arg Argument to pass to cb_fn.
+ */
+void delete_null_bdev(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn,
+		      void *cb_arg);
 
 #endif /* SPDK_BDEV_NULL_H */

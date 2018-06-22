@@ -214,6 +214,17 @@ create_null_bdev(const char *name, const struct spdk_uuid *uuid,
 	return &bdev->bdev;
 }
 
+void
+delete_null_bdev(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn, void *cb_arg)
+{
+	if (!bdev || bdev->module != &null_if) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+}
+
 static int
 null_io_poll(void *arg)
 {
