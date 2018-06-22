@@ -5,6 +5,7 @@ set -e
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
+rpc_py="python $rootdir/scripts/rpc.py"
 
 function run_fio()
 {
@@ -153,6 +154,8 @@ fi
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
 fi
+
+$rpc_py delete_passthru_bdev TestPT
 
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
