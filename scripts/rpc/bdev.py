@@ -134,6 +134,16 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
     return client.call('construct_nvme_bdev', params)
 
 
+def delete_nvme_bdev(client, name):
+    """Remove NVMe bdev from the system.
+
+    Args:
+        bdev_name: name of NVMe bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_nvme_bdev', params)
+
+
 def construct_rbd_bdev(client, pool_name, rbd_name, block_size, name=None):
     """Construct a Ceph RBD block device.
 
