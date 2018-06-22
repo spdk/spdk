@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f57022a_f7d599af",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-22T21:08:55Z",
+      "side": 1,
+      "message": "PRC \u003d\u003e RPC",
+      "revId": "5baaebed3aa4769638a0d499f86bdeae966f456a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
