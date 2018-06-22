@@ -251,6 +251,15 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_rbd_bdev)
 
     @call_cmd
+    def delete_rbd_bdev(args):
+        rpc.bdev.delete_rbd_bdev(args.client,
+                                 name=args.name)
+
+    p = subparsers.add_parser('delete_rbd_bdev', help='Delete a rbd bdev')
+    p.add_argument('name', help='rbd bdev name')
+    p.set_defaults(func=delete_rbd_bdev)
+
+    @call_cmd
     def construct_error_bdev(args):
         print(rpc.bdev.construct_error_bdev(args.client,
                                             base_name=args.base_name))

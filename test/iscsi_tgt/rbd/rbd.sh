@@ -34,7 +34,7 @@ timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-$rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+rbd_bdev="$($rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096)"
 $rpc_py get_bdevs
 # "Ceph0:0" ==> use Ceph0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
@@ -57,6 +57,7 @@ rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
+$rpc_py delete_rbd_bdev $rbd_bdev
 killprocess $pid
 rbd_cleanup
 
