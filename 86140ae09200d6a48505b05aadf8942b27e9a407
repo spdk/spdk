@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86a4e751_f33d8379",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2717,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-22T17:49:05Z",
+      "side": 1,
+      "message": "This looks OK, since because of the check above, we know that task \u003d\u003d primary.",
+      "revId": "86140ae09200d6a48505b05aadf8942b27e9a407",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
