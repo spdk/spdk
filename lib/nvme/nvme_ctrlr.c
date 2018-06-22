@@ -38,6 +38,10 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 
+#include <infiniband/verbs.h>
+#include <rdma/rdma_cma.h>
+#include <rdma/rdma_verbs.h>
+
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 
@@ -1276,6 +1280,83 @@ spdk_nvme_ctrlr_get_current_process(struct spdk_nvme_ctrlr *ctrlr)
 	return spdk_nvme_ctrlr_get_process(ctrlr, getpid());
 }
 
+static int
+nvme_ctrlr_parse_addr(struct sockaddr_storage *sa, const char *addr,
+		      const char *service)
+{
+	struct addrinfo *res;
+	struct addrinfo hints;
+	int ret;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = 0;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = 0;
+
+	ret = getaddrinfo(addr, service, &hints, &res);
+	if (ret) {
+		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(ret), ret);
+		return ret;
+	}
+
+	if (res->ai_addrlen > sizeof(*sa)) {
+		SPDK_ERRLOG("getaddrinfo() ai_addrlen %zu too large\n", (size_t)res->ai_addrlen);
+		ret = EINVAL;
+	} else {
+		memcpy(sa, res->ai_addr, res->ai_addrlen);
+	}
+
+	freeaddrinfo(res);
+	return ret;
+}
+
+static
+struct ibv_pd *get_ibv_pd(void *hook_ctx, struct ibv_context *verbs,
+			  const struct spdk_nvme_transport_id *trid)
+{
+	return NULL;
+}
+
+static
+uint64_t get_rkey(void *hook_ctx, void *buf, size_t size)
+{
+	struct ibv_mr *mr;
+
+	mr = ibv_reg_mr(NULL, buf, size,
+			IBV_ACCESS_LOCAL_WRITE |
+			IBV_ACCESS_REMOTE_READ |
+			IBV_ACCESS_REMOTE_WRITE);
+
+	if (mr == NULL) {
+		return -1;
+	}
+
+	return mr->rkey;
+}
+
+void
+spdk_init_hooks(struct spdk_nvme_hooks *hooks, struct sockaddr *src_addr)
+{
+	hooks->hook_ctx = NULL;
+	hooks->get_ibv_pd = get_ibv_pd;
+	hooks->get_rkey = get_rkey;
+}
+
+static void *
+nvme_ctrlr_init_hooks(struct sockaddr *src_addr)
+{
+	struct spdk_nvme_hooks *hooks = malloc(sizeof(struct spdk_nvme_hooks));
+
+	if (!hooks) {
+		SPDK_ERRLOG("hooks is NULL\n");
+		return NULL;
+	}
+
+	spdk_init_hooks(hooks, src_addr);
+
+	return hooks;
+}
+
 /**
  * This function will be called when a process is using the controller.
  *  1. For the primary process, it is called when constructing the controller.
@@ -1286,7 +1367,10 @@ int
 nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
 	struct spdk_nvme_ctrlr_process	*ctrlr_proc;
+	struct sockaddr_storage         src_addr;
 	pid_t				pid = getpid();
+	int                             rc;
+	bool                            src_addr_specified;
 
 	/* Check whether the process is already added or not */
 	if (spdk_nvme_ctrlr_get_process(ctrlr, pid)) {
@@ -1301,11 +1385,27 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 		return -1;
 	}
 
+	if (ctrlr->opts.src_addr[0] || ctrlr->opts.src_svcid[0]) {
+		memset(&src_addr, 0, sizeof(src_addr));
+		rc = nvme_ctrlr_parse_addr(&src_addr, ctrlr->opts.src_addr,
+					   ctrlr->opts.src_svcid);
+		if (rc != 0) {
+			SPDK_ERRLOG("src_addr nvme_ctrlr_parse_addr() failed\n");
+			return -1;
+		}
+		src_addr_specified = true;
+	} else {
+		src_addr_specified = false;
+	}
+
 	ctrlr_proc->is_primary = spdk_process_is_primary();
 	ctrlr_proc->pid = pid;
 	STAILQ_INIT(&ctrlr_proc->active_reqs);
 	ctrlr_proc->devhandle = devhandle;
 	ctrlr_proc->ref = 0;
+	ctrlr_proc->ctrlr_hook = (struct spdk_nvme_hooks *)nvme_ctrlr_init_hooks(
+					 src_addr_specified ? (struct sockaddr *)&src_addr : NULL);
+
 	TAILQ_INIT(&ctrlr_proc->allocated_io_qpairs);
 
 	TAILQ_INSERT_TAIL(&ctrlr->active_procs, ctrlr_proc, tailq);
