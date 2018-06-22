@@ -215,6 +215,8 @@ invalid:
 SPDK_RPC_REGISTER("get_bdevs_iostat", spdk_rpc_get_bdevs_iostat, SPDK_RPC_RUNTIME)
 
 static const char *qos_rate_limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES] = {"rw_ios_per_sec",
+									  "r_ios_per_sec",
+									  "w_ios_per_sec",
 									  "rw_mbytes_per_sec"
 									 };
 
