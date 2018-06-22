@@ -379,17 +379,20 @@ def bdev_inject_error(client, name, io_type, error_type, num=1):
     return client.call('bdev_inject_error', params)
 
 
-def set_bdev_qos_limit_iops(client, name, ios_per_sec):
-    """Set QoS IOPS limit on a block device.
+def set_bdev_qos_limit(client, name, limit_per_sec, limit_type):
+    """Set QoS rate limit on a block device.
 
     Args:
         name: name of block device
-        ios_per_sec: IOs per second limit (>=10000, example: 20000). 0 means unlimited.
+        limit_per_sec: limit per second. 0 means unlimited. For IOPS, >=10000. For BPS, >=10(MB).
+        limit_type: type of rate limit (IOPS, BPS). Default is IOPS.
     """
     params = {}
     params['name'] = name
-    params['ios_per_sec'] = ios_per_sec
-    return client.call('set_bdev_qos_limit_iops', params)
+    params['limit_per_sec'] = limit_per_sec
+    if limit_type:
+        params['limit_type'] = limit_type
+    return client.call('set_bdev_qos_limit', params)
 
 
 def apply_firmware(client, bdev_name, filename):
