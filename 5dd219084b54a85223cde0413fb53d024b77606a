@@ -46,6 +46,30 @@
       "revId": "5dd219084b54a85223cde0413fb53d024b77606a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b9c500f_1abafbbb",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-22T12:49:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "29844182_4f6154aa",
+      "range": {
+        "startLine": 148,
+        "startChar": 1,
+        "endLine": 148,
+        "endChar": 6
+      },
+      "revId": "5dd219084b54a85223cde0413fb53d024b77606a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
