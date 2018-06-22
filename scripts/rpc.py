@@ -322,6 +322,15 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_passthru_bdev)
 
     @call_cmd
+    def delete_passthru_bdev(args):
+        rpc.bdev.delete_passthru_bdev(args.client,
+                                      name=args.name)
+
+    p = subparsers.add_parser('delete_passthru_bdev', help='Delete a passthru bdev')
+    p.add_argument('name', help='passthru bdev name')
+    p.set_defaults(func=delete_passthru_bdev)
+
+    @call_cmd
     def get_bdevs(args):
         print_dict(rpc.bdev.get_bdevs(args.client,
                                       name=args.name))
