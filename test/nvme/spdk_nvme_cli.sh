@@ -6,7 +6,13 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
-spdk_nvme_cli="/home/sys_sgsw/nvme-cli"
+
+if [ -z "${DEPENDENCY_DIR}" ]; then
+        echo DEPENDENCY_DIR not defined!
+        exit 1
+fi
+
+spdk_nvme_cli="${DEPENDENCY_DIR}/nvme-cli"
 
 if [ ! -d $spdk_nvme_cli ]; then
 	echo "nvme-cli repository not found at $spdk_nvme_cli; skipping tests."

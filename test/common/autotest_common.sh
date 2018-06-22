@@ -56,6 +56,16 @@ fi
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 
+if [ -z "$DEPENDENCY_DIR" ]; then
+	export DEPENDENCY_DIR=/home/sys_sgsw
+else
+	export DEPENDENCY_DIR
+fi
+
+if [ ! -z "$HUGEMEM" ]; then
+	export HUGEMEM
+fi
+
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''
@@ -132,8 +142,8 @@ if [ -d /usr/src/fio ]; then
 	config_params+=' --with-fio=/usr/src/fio'
 fi
 
-if [ -d /home/sys_sgsw/vtune_codes ]; then
-	config_params+=' --with-vtune=/home/sys_sgsw/vtune_codes'
+if [ -d ${DEPENDENCY_DIR}/vtune_codes ]; then
+	config_params+=' --with-vtune='${DEPENDENCY_DIR}'/vtune_codes'
 fi
 
 if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ]; then

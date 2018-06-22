@@ -6,6 +6,11 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
+if [ -z "${DEPENDENCY_DIR}" ]; then
+	echo DEPENDENCY_DIR not defined!
+	exit 1
+fi
+
 function ssh_vm() {
 	sshpass -p "$password" ssh -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -p 10022 root@localhost "$@"
 }
@@ -72,9 +77,9 @@ function devices_delete() {
 }
 
 password=$1
-base_img=/home/sys_sgsw/fedora24.img
-test_img=/home/sys_sgsw/fedora24_test.img
-qemu_pidfile=/home/sys_sgsw/qemupid
+base_img=${DEPENDENCY_DIR}/fedora24.img
+test_img=${DEPENDENCY_DIR}/fedora24_test.img
+qemu_pidfile=${DEPENDENCY_DIR}/qemupid
 
 if [ ! -e "$base_img" ]; then
 	echo "Hotplug VM image not found; skipping test"
