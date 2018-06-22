@@ -1,5 +1,15 @@
 # Changelog
 
+## v18.10: (Next Release)
+
+### bdev
+
+Enforcement of bandwidth limits for quality of service (QoS) has been added to the bdev layer.
+See the new [set_bdev_qos_limit](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit)
+documentation for more details. The previous set_bdev_qos_limit_iops RPC method introduced at
+18.04 release has been deprecated. The new set_bdev_qos_limit PRC method can support both
+bandwidth and IOPS limits.
+
 ## v18.07: (Upcoming Release)
 
 ### bdev
