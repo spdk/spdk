@@ -147,6 +147,11 @@ class Commands_Rpc(object):
         output, rc = self.rpc.delete_bdev(base_name)
         return rc
 
+    def delete_nvme_bdev(self, base_name):
+        print("INFO: RPC COMMAND delete_nvme_bdev")
+        output, rc = self.rpc.delete_nvme_bdev(base_name)
+        return rc
+
     def destroy_lvol_bdev(self, bdev_name):
         print("INFO: RPC COMMAND destroy_lvol_bdev")
         output, rc = self.rpc.destroy_lvol_bdev(bdev_name)

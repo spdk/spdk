@@ -205,6 +205,15 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_nvme_bdev)
 
     @call_cmd
+    def delete_nvme_bdev(args):
+        rpc.bdev.delete_nvme_bdev(args.client,
+                                  name=args.name)
+
+    p = subparsers.add_parser('delete_nvme_bdev', help='Delete a NVMe bdev')
+    p.add_argument('name', help='NVMe bdev name')
+    p.set_defaults(func=delete_nvme_bdev)
+
+    @call_cmd
     def construct_rbd_bdev(args):
         print_array(rpc.bdev.construct_rbd_bdev(args.client,
                                                 name=args.name,
