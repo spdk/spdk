@@ -535,11 +535,13 @@ basic_qos(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable both IOPS and bandwidth rate limits.
-	 * In this case, both rate limits will take equal effect.
+	 * Enable read/write IOPS, read only IOPS and bandwidth rate limits.
+	 * In this case, all rate limits will take equal effect.
 	 */
-	/* 2000 I/O per second, or 2 per millisecond */
+	/* 2000 read/write I/O per second, or 2 per millisecond */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 2000;
+	/* 2000 read only I/O per second, or 2 per millisecond */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT] = 2000;
 	/* 8K byte per millisecond with 4K block size */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = 8192000;
 
@@ -645,11 +647,13 @@ io_during_qos_queue(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable both IOPS and bandwidth rate limits.
+	 * Enable read/write IOPS, read only IOPS and bandwidth rate limits.
 	 * In this case, IOPS rate limit will take effect first.
 	 */
-	/* 1000 I/O per second, or 1 per millisecond */
-	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 1000;
+	/* 2000 read/write I/O per second, or 2 per millisecond */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 2000;
+	/* 1000 read only I/O per second, or 1 per millisecond */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT] = 1000;
 	/* 8K byte per millisecond with 4K block size */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = 8192000;
 
@@ -735,11 +739,13 @@ io_during_qos_reset(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable both IOPS and bandwidth rate limits.
+	 * Enable read/write IOPS, write only IOPS and bandwidth rate limits.
 	 * In this case, bandwidth rate limit will take effect first.
 	 */
-	/* 2000 I/O per second, or 2 per millisecond */
+	/* 2000 read/write I/O per second, or 2 per millisecond */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 2000;
+	/* 1000 write only I/O per second, or 1 per millisecond */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT] = 1000;
 	/* 4K byte per millisecond with 4K block size */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT] = 4096000;
 
@@ -758,11 +764,11 @@ io_during_qos_reset(void)
 
 	/* Send two I/O. One of these gets queued by QoS. The other is sitting at the disk. */
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status1);
+	rc = spdk_bdev_write_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status1);
 	CU_ASSERT(rc == 0);
 	set_thread(0);
 	status0 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status0);
+	rc = spdk_bdev_write_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status0);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
