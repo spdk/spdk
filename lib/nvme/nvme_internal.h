@@ -439,6 +439,11 @@ struct spdk_nvme_ctrlr_process {
 	spdk_nvme_timeout_cb		timeout_cb_fn;
 	void				*timeout_cb_arg;
 	uint64_t			timeout_ticks;
+
+	/**
+	* Pre-registered InfiniBand Verbs protection domain and memory region.
+	*/
+	struct spdk_nvme_hooks          *ctrlr_hook;
 };
 
 /*
