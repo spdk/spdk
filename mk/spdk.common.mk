@@ -128,14 +128,6 @@ endif
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)
-# RDMA Userspace Verbs Library
-ifneq ("$(wildcard /usr/lib/libibverbs.*)","")
-LIBS += -libverbs
-endif
-# RDMA Connection Manager Library
-ifneq ("$(wildcard /usr/lib/librdmacm.*)","")
-LIBS += -lrdmacm
-endif
 # Mellanox - MLX4 HBA Userspace Library
 ifneq ("$(wildcard /usr/lib/libmlx4.*)","")
 LIBS += -lmlx4
@@ -150,6 +142,8 @@ LIBS += -lcxgb4
 endif
 endif
 endif
+
+LIBS += -lrdmacm -libverbs
 
 ifeq ($(CONFIG_DEBUG), y)
 COMMON_CFLAGS += -DDEBUG -O0 -fno-omit-frame-pointer
