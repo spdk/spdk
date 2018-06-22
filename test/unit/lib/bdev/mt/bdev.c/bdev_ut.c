@@ -617,16 +617,18 @@ basic_qos(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable read/write IOPS, read only IOPS and read/write
-	 * byte per second rate limits.
+	 * Enable read/write IOPS, read only IOPS, read/write
+	 * byte and read only byte per second rate limits.
 	 * In this case, all rate limits will take equal effect.
 	 */
 	/* 2000 read/write I/O per second, or 2 per millisecond */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT].limit = 2000;
 	/* 2000 read only I/O per second, or 2 per millisecond */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT].limit = 2000;
-	/* 8K byte per millisecond with 4K block size */
+	/* 8K read/write byte per millisecond with 4K block size */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT].limit = 8192000;
+	/* 8K read only byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_R_BPS_RATE_LIMIT].limit = 8192000;
 
 	g_get_io_channel = true;
 
@@ -730,8 +732,8 @@ io_during_qos_queue(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable read/write IOPS, read only IOPS, write only IOPS
-	 * and read/write byte per sec rate limits.
+	 * Enable read/write IOPS, read only IOPS, write only IOPS,
+	 * read/write byte and write only byte per sec rate limits.
 	 * In this case, both read only and write only IOPS rate limit
 	 * will take effect.
 	 */
@@ -741,8 +743,10 @@ io_during_qos_queue(void)
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT].limit = 1000;
 	/* 1000 write only I/O per second, or 1 per millisecond */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT].limit = 1000;
-	/* 8K byte per millisecond with 4K block size */
+	/* 8K byte read/write byte per millisecond with 4K block size */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT].limit = 8192000;
+	/* 8K byte write only byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT].limit = 8192000;
 
 	g_get_io_channel = true;
 
@@ -833,17 +837,19 @@ io_during_qos_reset(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable read/write IOPS, write only IOPS and read/write
-	 * byte per second rate limits.
-	 * In this case, read/write byte per second rate limit will
-	 * take effect first.
+	 * Enable read/write IOPS, write only IOPS, read/write
+	 * byte and write only byte per second rate limits.
+	 * In this case, write only bype per second rate limit
+	 * will take effect first.
 	 */
 	/* 2000 read/write I/O per second, or 2 per millisecond */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT].limit = 2000;
 	/* 1000 write only I/O per second, or 1 per millisecond */
 	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT].limit = 1000;
-	/* 4K byte per millisecond with 4K block size */
-	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT].limit = 4096000;
+	/* 8K read/write byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT].limit = 8192000;
+	/* 4K write only byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT].limit = 4096000;
 
 	g_get_io_channel = true;
 
@@ -1249,8 +1255,9 @@ qos_dynamic_enable(void)
 	poll_threads();
 
 	/*
-	 * Disable QoS: Read/Write IOPS, Read Only IOPS and
-	 * Write only IOPS rate limits */
+	 * Disable QoS: Read/Write IOPS, Read only and Write only
+	 * rate limits
+	 */
 	status = -1;
 	limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = 0;
 	limits[SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT] = 0;
