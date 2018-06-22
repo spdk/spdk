@@ -40,6 +40,10 @@ of new bdev modules. This header includes an interface for the spdk_bdev_part an
 spdk_bdev_part_base objects to enable the creation of multiple virtual bdevs on top of a
 single base bdev.
 
+Enforcement of bandwidth limits for quality of service (QoS) has been added to the bdev layer.
+See the [set_bdev_qos_limit_bps](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit_bps)
+documentation for more details.
+
 ### Env
 
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
