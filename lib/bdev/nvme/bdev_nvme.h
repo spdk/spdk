@@ -42,6 +42,8 @@
 
 #define NVME_MAX_CONTROLLERS 1024
 
+typedef void (*spdk_delete_nvme_complete)(void *cb_arg, int bdeverrno);
+
 struct nvme_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -75,5 +77,20 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  const char **names, size_t *count,
 			  const char *hostnqn);
 struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
+char *spdk_bdev_nvme_get_ctrlr_name(struct spdk_bdev *bdev);
+
+/**
+ * Delete NVMe controller with all bdev on top of it.
+ * Requires to pass transport ID or name of NVMe controller.
+ *
+ * \param trid Pointer to transport ID.
+ * \param name NVMe controller name
+ * \param cb_fn Function to call after deletion.
+ * \param cb_arg Argument to pass to cb_fn.
+ */
+void spdk_bdev_nvme_remove_ctrlr(struct spdk_nvme_transport_id *trid,
+				 const char *name,
+				 spdk_delete_nvme_complete cb_fn,
+				 void *cb_arg);
 
 #endif // SPDK_BDEV_NVME_H
