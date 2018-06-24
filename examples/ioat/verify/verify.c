@@ -138,6 +138,11 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 		len = spdk_max(8, (rand_r(&seed) % SRC_BUFFER_SIZE) & ~0x7);
 		dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
 		ioat_task->fill_pattern = fill_pattern;
+		/* in case the buffer crosses hugepage boundary and must be split,
+		 * we need to ensure 8 bit alignment. We do it unconditionally
+		 * to keep things simple.
+		 */
+		ioat_task->dst = (void *)(((uintptr_t)ioat_task->buffer + dst_offset) & ~0x7);
 	} else {
 		src_offset = rand_r(&seed) % SRC_BUFFER_SIZE;
 		len = rand_r(&seed) % (SRC_BUFFER_SIZE - src_offset);
@@ -145,9 +150,9 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 
 		memset(ioat_task->buffer, 0, SRC_BUFFER_SIZE);
 		ioat_task->src = (void *)((uintptr_t)g_src + src_offset);
+		ioat_task->dst = (void *)((uintptr_t)ioat_task->buffer + dst_offset);
 	}
 	ioat_task->len = len;
-	ioat_task->dst = (void *)((uintptr_t)ioat_task->buffer + dst_offset);
 	ioat_task->thread_entry = thread_entry;
 }
 
