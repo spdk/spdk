@@ -115,9 +115,24 @@ def load_config(client, args):
 
 
 def load_subsystem_config(client, args):
-    config = _json_load(args.filename)
+    subsystem = _json_load(args.filename)
 
-    for elem in config['config']:
-        if not elem or 'method' not in elem:
+    if not subsystem['config']:
+        return
+
+    allowed_methods = client.call('get_rpc_methods')
+    config = subsystem['config']
+    for elem in list(config):
+        if 'method' not in elem or elem['method'] not in allowed_methods:
+            raise rpc_client.JSONRPCException("Unknown method was included in the config file")
+
+    allowed_methods = client.call('get_rpc_methods', {'current': True})
+    for elem in list(config):
+        if 'method' not in elem or elem['method'] not in allowed_methods:
             continue
+
         client.call(elem['method'], elem['params'])
+        config.remove(elem)
+
+    if config:
+        print("Some configs were skipped because they cannot be called in the current RPC state.")
