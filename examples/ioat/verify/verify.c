@@ -125,8 +125,8 @@ ioat_exit(void)
 static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_task *ioat_task)
 {
 	int len;
-	int src_offset;
-	int dst_offset;
+	uintptr_t src_offset;
+	uintptr_t dst_offset;
 	int num_ddwords;
 	uint64_t fill_pattern;
 
@@ -148,10 +148,10 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 		dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
 
 		memset(ioat_task->buffer, 0, SRC_BUFFER_SIZE);
-		ioat_task->src =  g_src + src_offset;
+		ioat_task->src = (void *)((uintptr_t)g_src + src_offset);
 	}
 	ioat_task->len = len;
-	ioat_task->dst = ioat_task->buffer + dst_offset;
+	ioat_task->dst = (void *)((uintptr_t)ioat_task->buffer + dst_offset);
 	ioat_task->thread_entry = thread_entry;
 }
 
