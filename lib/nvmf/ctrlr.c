@@ -1726,3 +1726,14 @@ spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 
 	return 0;
 }
+
+void
+spdk_nvmf_ctrlr_drain_aer_req(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	if (!ctrlr->aer_req) {
+		return;
+	}
+
+	spdk_nvmf_request_complete(ctrlr->aer_req);
+	ctrlr->aer_req = NULL;
+}

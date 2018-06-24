@@ -67,10 +67,11 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Transport request completion error!\n");
 	}
 
-	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
-		assert(qpair->state_cb != NULL);
+	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING ||
+	    qpair->state == SPDK_NVMF_QPAIR_ERROR) {
 
-		if (TAILQ_EMPTY(&qpair->outstanding)) {
+		if (TAILQ_EMPTY(&qpair->outstanding) &&
+		    qpair->state_cb != NULL) {
 			qpair->state_cb(qpair->state_cb_arg, 0);
 		}
 	} else {
@@ -135,6 +136,8 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		/* Place the request on the outstanding list so we can keep track of it */
+		TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 		spdk_nvmf_request_complete(req);
 		return;
 	}
