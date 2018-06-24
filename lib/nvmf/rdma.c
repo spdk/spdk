@@ -124,7 +124,7 @@ enum spdk_nvmf_rdma_request_state {
 #define TRACE_RDMA_REQUEST_STATE_COMPLETING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x9)
 #define TRACE_RDMA_REQUEST_STATE_COMPLETED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xA)
 
-SPDK_TRACE_REGISTER_FN(nvmf_trace)
+SPDK_TRACE_REGISTER_FN(rdma_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
 	spdk_trace_register_description("RDMA_REQ_NEW", "",
@@ -259,6 +259,12 @@ struct spdk_nvmf_rdma_qpair {
 	void					*bufs;
 	struct ibv_mr				*bufs_mr;
 
+	/* IBV queue pair attributes: they are used to manage
+	 * qp state and recover from errors.
+	 */
+	struct ibv_qp_init_attr	ibv_init_attr;
+	struct ibv_qp_attr		ibv_attr;
+
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	pending_link;
 
@@ -330,6 +336,127 @@ struct spdk_nvmf_rdma_mgmt_channel {
 	TAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_data_buf_queue;
 };
 
+/* API to IBV QueuePair */
+static enum ibv_qp_state
+spdk_nvmf_rdma_get_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	return rqpair->ibv_attr.qp_state;
+}
+
+static int attr_mask_rc[] = {
+	[IBV_QPS_RESET] = IBV_QP_STATE,
+	[IBV_QPS_INIT] = (IBV_QP_STATE |
+			  IBV_QP_PKEY_INDEX |
+			  IBV_QP_PORT |
+			  IBV_QP_ACCESS_FLAGS),
+	[IBV_QPS_RTR] = (IBV_QP_STATE |
+			  IBV_QP_AV |
+			  IBV_QP_PATH_MTU |
+			  IBV_QP_DEST_QPN |
+			  IBV_QP_RQ_PSN |
+			  IBV_QP_MAX_DEST_RD_ATOMIC |
+			  IBV_QP_MIN_RNR_TIMER),
+	[IBV_QPS_RTS] = (IBV_QP_STATE |
+			  IBV_QP_SQ_PSN |
+			  IBV_QP_TIMEOUT |
+			  IBV_QP_RETRY_CNT |
+			  IBV_QP_RNR_RETRY |
+			  IBV_QP_MAX_QP_RD_ATOMIC),
+	[IBV_QPS_SQD] = IBV_QP_STATE,
+	[IBV_QPS_SQE] = IBV_QP_STATE,
+	[IBV_QPS_ERR] = IBV_QP_STATE,
+};
+
+/* All the attributes needed for recovery */
+static int spdk_nvmf_ibv_attr_mask =
+	IBV_QP_STATE |
+	IBV_QP_PKEY_INDEX |
+	IBV_QP_PORT |
+	IBV_QP_ACCESS_FLAGS |
+	IBV_QP_AV |
+	IBV_QP_PATH_MTU |
+	IBV_QP_DEST_QPN |
+	IBV_QP_RQ_PSN |
+	IBV_QP_MAX_DEST_RD_ATOMIC |
+	IBV_QP_MIN_RNR_TIMER |
+	IBV_QP_SQ_PSN |
+	IBV_QP_TIMEOUT |
+	IBV_QP_RETRY_CNT |
+	IBV_QP_RNR_RETRY |
+	IBV_QP_MAX_QP_RD_ATOMIC;
+
+static const char *str_ibv_qp_state[] = {
+	"IBV_QPS_RESET",
+	"IBV_QPS_INIT",
+	"IBV_QPS_RTR",
+	"IBV_QPS_RTS",
+	"IBV_QPS_SQD",
+	"IBV_QPS_SQE",
+	"IBV_QPS_ERR"
+};
+
+static int
+spdk_nvmf_rdma_update_ibv_qp(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	int rc;
+	rc = ibv_query_qp(rqpair->cm_id->qp, &rqpair->ibv_attr,
+			  spdk_nvmf_ibv_attr_mask, &rqpair->ibv_init_attr);
+	assert(!rc);
+	return rc;
+}
+
+static int
+spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
+			     enum ibv_qp_state new_state)
+{
+	int rc;
+	enum ibv_qp_state state;
+
+	switch (new_state) {
+	case IBV_QPS_RESET:
+	case IBV_QPS_INIT:
+	case IBV_QPS_RTR:
+	case IBV_QPS_RTS:
+	case IBV_QPS_SQD:
+	case IBV_QPS_SQE:
+	case IBV_QPS_ERR:
+		break;
+	default:
+		SPDK_ERRLOG("QP#%d: bad state requested: %u\n",
+			    rqpair->qpair.qid, new_state);
+		return -1;
+	}
+	rqpair->ibv_attr.cur_qp_state = rqpair->ibv_attr.qp_state;
+	rqpair->ibv_attr.qp_state = new_state;
+	rqpair->ibv_attr.ah_attr.port_num = rqpair->ibv_attr.port_num;
+
+	rc = ibv_modify_qp(rqpair->cm_id->qp, &rqpair->ibv_attr,
+			   attr_mask_rc[new_state]);
+
+	if (rc) {
+		SPDK_ERRLOG("QP#%d: failed to set state to: %s, %d (%s)\n",
+			    rqpair->qpair.qid, str_ibv_qp_state[new_state], errno, strerror(errno));
+		return rc;
+	}
+	rc = spdk_nvmf_rdma_update_ibv_qp(rqpair);
+
+	if (rc) {
+		SPDK_ERRLOG("QP#%d: failed to update attributes\n", rqpair->qpair.qid);
+		return rc;
+	}
+	state = spdk_nvmf_rdma_get_ibv_state(rqpair);
+
+	if (state != new_state) {
+		SPDK_ERRLOG("QP#%d: expected state: %s, actual state: %s\n",
+			    rqpair->qpair.qid, str_ibv_qp_state[new_state],
+			    str_ibv_qp_state[state]);
+		return -1;
+	}
+	SPDK_NOTICELOG("IBV QP#%u changed to: %s\n", rqpair->qpair.qid,
+		       str_ibv_qp_state[state]);
+	return 0;
+}
+
 static int
 spdk_nvmf_rdma_mgmt_channel_create(void *io_device, void *ctx_buf)
 {
@@ -392,23 +519,24 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
 	int				rc, i;
-	struct ibv_qp_init_attr		attr;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
-	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
-	attr.qp_type		= IBV_QPT_RC;
-	attr.send_cq		= rqpair->poller->cq;
-	attr.recv_cq		= rqpair->poller->cq;
-	attr.cap.max_send_wr	= rqpair->max_queue_depth * 2; /* SEND, READ, and WRITE operations */
-	attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
-	attr.cap.max_send_sge	= SPDK_NVMF_MAX_SGL_ENTRIES;
-	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
+	memset(&rqpair->ibv_init_attr, 0, sizeof(struct ibv_qp_init_attr));
+	rqpair->ibv_init_attr.qp_context		= rqpair;
+	rqpair->ibv_init_attr.qp_type		= IBV_QPT_RC;
+	rqpair->ibv_init_attr.send_cq		= rqpair->poller->cq;
+	rqpair->ibv_init_attr.recv_cq		= rqpair->poller->cq;
+	rqpair->ibv_init_attr.cap.max_send_wr	= rqpair->max_queue_depth *
+			2; /* SEND, READ, and WRITE operations */
+	rqpair->ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
+	rqpair->ibv_init_attr.cap.max_send_sge	= SPDK_NVMF_MAX_SGL_ENTRIES;
+	rqpair->ibv_init_attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
-	rc = rdma_create_qp(rqpair->cm_id, NULL, &attr);
+	rc = rdma_create_qp(rqpair->cm_id, NULL, &rqpair->ibv_init_attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
 		rdma_destroy_id(rqpair->cm_id);
@@ -514,6 +642,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 		TAILQ_INSERT_TAIL(&rqpair->free_queue, rdma_req, link);
 	}
+	spdk_nvmf_rdma_update_ibv_qp(rqpair);
 
 	return 0;
 }
