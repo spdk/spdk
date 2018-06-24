@@ -134,10 +134,15 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 		fill_pattern = rand_r(&seed);
 		fill_pattern = fill_pattern << 32 | rand_r(&seed);
 
-		/* ensure that the length of memset block is 8 Bytes aligned */
-		len = 8 + ((rand_r(&seed) % (SRC_BUFFER_SIZE - 8)) & ~0x7);
-		dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
+		/* Ensure that the length of memset block is 8 Bytes aligned.
+		 * In case the buffer crosses hugepage boundary and must be split,
+		 * we also need to ensure 8 byte address alignment. We do it
+		 * unconditionally to keep things simple.
+		 */
+		len = 8 + ((rand_r(&seed) % (SRC_BUFFER_SIZE - 16)) & ~0x7);
+		dst_offset = 8 + rand_r(&seed) % (SRC_BUFFER_SIZE - 8 - len);
 		ioat_task->fill_pattern = fill_pattern;
+		ioat_task->dst = (void *)(((uintptr_t)ioat_task->buffer + dst_offset) & ~0x7);
 	} else {
 		src_offset = rand_r(&seed) % SRC_BUFFER_SIZE;
 		len = rand_r(&seed) % (SRC_BUFFER_SIZE - src_offset);
@@ -145,9 +150,9 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 
 		memset(ioat_task->buffer, 0, SRC_BUFFER_SIZE);
 		ioat_task->src = (void *)((uintptr_t)g_src + src_offset);
+		ioat_task->dst = (void *)((uintptr_t)ioat_task->buffer + dst_offset);
 	}
 	ioat_task->len = len;
-	ioat_task->dst = (void *)((uintptr_t)ioat_task->buffer + dst_offset);
 	ioat_task->thread_entry = thread_entry;
 }
 
