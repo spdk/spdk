@@ -36,6 +36,7 @@
 
 #include "spdk/stdinc.h"
 
+#include <infiniband/verbs.h>
 #include "spdk/likely.h"
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_spec.h"
@@ -174,6 +175,12 @@ struct spdk_nvmf_qpair {
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
 
+	struct {
+		struct ibv_qp			*qp;
+		struct ibv_qp_init_attr	init_attr;
+		struct ibv_qp_attr		attr;
+	} ibv;
+
 	TAILQ_HEAD(, spdk_nvmf_request)		outstanding;
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
 };
@@ -307,5 +314,34 @@ spdk_nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 {
 	return qpair->qid == 0;
 }
+
+/* API to IBV QueuePair */
+static inline enum ibv_qp_state
+spdk_nvmf_get_ibv_state(struct spdk_nvmf_qpair *qpair) {
+	return qpair->ibv.attr.qp_state;
+}
+
+int
+spdk_nvmf_update_ibv_qp(struct spdk_nvmf_qpair *qpair);
+
+int
+spdk_nvmf_set_ibv_state(struct spdk_nvmf_qpair *qpair,
+			enum ibv_qp_state new_state);
+
+int
+spdk_nvmf_recover(struct spdk_nvmf_qpair *qpair);
+
+#define OBJECT_NVMF_IO				0x30
+
+#define TRACE_GROUP_NVMF			0x3
+#define TRACE_NVMF_IO_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0)
+#define TRACE_RDMA_READ_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x1)
+#define TRACE_RDMA_WRITE_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x2)
+#define TRACE_RDMA_READ_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x3)
+#define TRACE_RDMA_WRITE_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x4)
+#define TRACE_NVMF_LIB_READ_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x5)
+#define TRACE_NVMF_LIB_WRITE_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x6)
+#define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
+#define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
 #endif /* __NVMF_INTERNAL_H__ */
