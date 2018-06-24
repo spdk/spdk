@@ -37,6 +37,7 @@
 #include "spdk/env.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 
 #define SRC_BUFFER_SIZE (512*1024)
 
@@ -127,7 +128,6 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 	int len;
 	uintptr_t src_offset;
 	uintptr_t dst_offset;
-	int num_ddwords;
 	uint64_t fill_pattern;
 
 	if (ioat_task->type == IOAT_FILL_TYPE) {
@@ -135,11 +135,7 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 		fill_pattern = fill_pattern << 32 | rand_r(&seed);
 
 		/* ensure that the length of memset block is 8 Bytes aligned */
-		num_ddwords = (rand_r(&seed) % SRC_BUFFER_SIZE) / 8;
-		len = num_ddwords * 8;
-		if (len < 8) {
-			len = 8;
-		}
+		len = 8 + ((rand_r(&seed) % (SRC_BUFFER_SIZE - 8)) & ~0x7);
 		dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
 		ioat_task->fill_pattern = fill_pattern;
 	} else {
