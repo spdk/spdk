@@ -899,3 +899,141 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 
 	return 0;
 }
+
+static int attr_mask_rc[IBV_QPS_UNKNOWN] = {
+	[IBV_QPS_RESET] = IBV_QP_STATE,
+	[IBV_QPS_INIT] = (IBV_QP_STATE |
+			  IBV_QP_PKEY_INDEX |
+			  IBV_QP_PORT |
+			  IBV_QP_ACCESS_FLAGS),
+	[IBV_QPS_RTR] = (IBV_QP_STATE |
+			  IBV_QP_AV |
+			  IBV_QP_PATH_MTU |
+			  IBV_QP_DEST_QPN |
+			  IBV_QP_RQ_PSN |
+			  IBV_QP_MAX_DEST_RD_ATOMIC |
+			  IBV_QP_MIN_RNR_TIMER),
+	[IBV_QPS_RTS] = (IBV_QP_STATE |
+			  IBV_QP_SQ_PSN |
+			  IBV_QP_TIMEOUT |
+			  IBV_QP_RETRY_CNT |
+			  IBV_QP_RNR_RETRY |
+			  IBV_QP_MAX_QP_RD_ATOMIC),
+	[IBV_QPS_SQD] = IBV_QP_STATE,
+	[IBV_QPS_SQE] = IBV_QP_STATE,
+	[IBV_QPS_ERR] = IBV_QP_STATE,
+};
+
+/* All the attributes needed for recovery */
+static int spdk_nvmf_ibv_attr_mask =
+	IBV_QP_STATE |
+	IBV_QP_PKEY_INDEX |
+	IBV_QP_PORT |
+	IBV_QP_ACCESS_FLAGS |
+	IBV_QP_AV |
+	IBV_QP_PATH_MTU |
+	IBV_QP_DEST_QPN |
+	IBV_QP_RQ_PSN |
+	IBV_QP_MAX_DEST_RD_ATOMIC |
+	IBV_QP_MIN_RNR_TIMER |
+	IBV_QP_SQ_PSN |
+	IBV_QP_TIMEOUT |
+	IBV_QP_RETRY_CNT |
+	IBV_QP_RNR_RETRY |
+	IBV_QP_MAX_QP_RD_ATOMIC;
+
+static const char *str_ibv_qp_state[] = {
+	"IBV_QPS_RESET",
+	"IBV_QPS_INIT",
+	"IBV_QPS_RTR",
+	"IBV_QPS_RTS",
+	"IBV_QPS_SQD",
+	"IBV_QPS_SQE",
+	"IBV_QPS_ERR",
+	"IBV_QPS_UNKNOWN"
+};
+
+int
+spdk_nvmf_update_ibv_qp(struct spdk_nvmf_qpair *qpair)
+{
+	int rc;
+	rc = ibv_query_qp(qpair->ibv.qp, &qpair->ibv.attr,
+			  spdk_nvmf_ibv_attr_mask, &qpair->ibv.init_attr);
+	assert(!rc);
+	return rc;
+}
+
+int
+spdk_nvmf_set_ibv_state(struct spdk_nvmf_qpair *qpair,
+			enum ibv_qp_state new_state)
+{
+	int rc;
+	enum ibv_qp_state state;
+
+	switch (new_state) {
+	case IBV_QPS_RESET:
+	case IBV_QPS_INIT:
+	case IBV_QPS_RTR:
+	case IBV_QPS_RTS:
+	case IBV_QPS_SQD:
+	case IBV_QPS_SQE:
+	case IBV_QPS_ERR:
+		break;
+	default:
+		SPDK_ERRLOG("QP#%d: bad state requested: %u\n",
+			    qpair->qid, new_state);
+		return -1;
+	}
+	qpair->ibv.attr.cur_qp_state = qpair->ibv.attr.qp_state;
+	qpair->ibv.attr.qp_state = new_state;
+	qpair->ibv.attr.ah_attr.port_num = qpair->ibv.attr.port_num;
+
+	rc = ibv_modify_qp(qpair->ibv.qp, &qpair->ibv.attr,
+			   attr_mask_rc[new_state]);
+
+	if (rc) {
+		SPDK_ERRLOG("QP#%d: failed to set state to: %s, %d (%s)\n",
+			    qpair->qid, str_ibv_qp_state[new_state], errno, strerror(errno));
+		return rc;
+	}
+	rc = spdk_nvmf_update_ibv_qp(qpair);
+
+	if (rc) {
+		SPDK_ERRLOG("QP#%d: failed to update attributes\n", qpair->qid);
+		return rc;
+	}
+	state = spdk_nvmf_get_ibv_state(qpair);
+
+	if (state != new_state) {
+		SPDK_ERRLOG("QP#%d: expected state: %s, actual state: %s\n",
+			    qpair->qid, str_ibv_qp_state[new_state],
+			    str_ibv_qp_state[state]);
+		return -1;
+	}
+	SPDK_NOTICELOG("IBV QP#%u changed to: %s\n", qpair->qid,
+		       str_ibv_qp_state[state]);
+	return 0;
+}
+
+SPDK_TRACE_REGISTER_FN(nvmf_trace)
+{
+	spdk_trace_register_object(OBJECT_NVMF_IO, 'r');
+	spdk_trace_register_description("NVMF_IO_START", "", TRACE_NVMF_IO_START,
+					OWNER_NONE, OBJECT_NVMF_IO, 1, 0, 0, "");
+	spdk_trace_register_description("NVMF_RDMA_READ_START", "", TRACE_RDMA_READ_START,
+					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
+	spdk_trace_register_description("NVMF_RDMA_WRITE_START", "", TRACE_RDMA_WRITE_START,
+					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
+	spdk_trace_register_description("NVMF_RDMA_READ_COMPLETE", "", TRACE_RDMA_READ_COMPLETE,
+					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
+	spdk_trace_register_description("NVMF_RDMA_WRITE_COMPLETE", "", TRACE_RDMA_WRITE_COMPLETE,
+					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
+	spdk_trace_register_description("NVMF_LIB_READ_START", "", TRACE_NVMF_LIB_READ_START,
+					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
+	spdk_trace_register_description("NVMF_LIB_WRITE_START", "", TRACE_NVMF_LIB_WRITE_START,
+					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
+	spdk_trace_register_description("NVMF_LIB_COMPLETE", "", TRACE_NVMF_LIB_COMPLETE,
+					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
+	spdk_trace_register_description("NVMF_IO_COMPLETION_DONE", "", TRACE_NVMF_IO_COMPLETE,
+					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
+}
