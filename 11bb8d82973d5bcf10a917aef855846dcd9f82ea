@@ -16,6 +16,24 @@
       "revId": "11bb8d82973d5bcf10a917aef855846dcd9f82ea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10980834_338c47e9",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-24T23:02:43Z",
+      "side": 1,
+      "message": "Yes, what I wanted to do was exactly what you says. Thank you for correcting my incomplete knowledge.",
+      "parentUuid": "ea61627d_63652ea5",
+      "revId": "11bb8d82973d5bcf10a917aef855846dcd9f82ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
