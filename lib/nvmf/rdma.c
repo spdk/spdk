@@ -33,7 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <infiniband/verbs.h>
 #include <rdma/rdma_cma.h>
 #include <rdma/rdma_verbs.h>
 
@@ -124,7 +123,7 @@ enum spdk_nvmf_rdma_request_state {
 #define TRACE_RDMA_REQUEST_STATE_COMPLETING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x9)
 #define TRACE_RDMA_REQUEST_STATE_COMPLETED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xA)
 
-SPDK_TRACE_REGISTER_FN(nvmf_trace)
+SPDK_TRACE_REGISTER_FN(rdma_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
 	spdk_trace_register_description("RDMA_REQ_NEW", "",
@@ -392,23 +391,24 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
 	int				rc, i;
-	struct ibv_qp_init_attr		attr;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
-	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
-	attr.qp_type		= IBV_QPT_RC;
-	attr.send_cq		= rqpair->poller->cq;
-	attr.recv_cq		= rqpair->poller->cq;
-	attr.cap.max_send_wr	= rqpair->max_queue_depth * 2; /* SEND, READ, and WRITE operations */
-	attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
-	attr.cap.max_send_sge	= SPDK_NVMF_MAX_SGL_ENTRIES;
-	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
+	memset(&qpair->ibv.init_attr, 0, sizeof(struct ibv_qp_init_attr));
+	qpair->ibv.init_attr.qp_context		= rqpair;
+	qpair->ibv.init_attr.qp_type		= IBV_QPT_RC;
+	qpair->ibv.init_attr.send_cq		= rqpair->poller->cq;
+	qpair->ibv.init_attr.recv_cq		= rqpair->poller->cq;
+	qpair->ibv.init_attr.cap.max_send_wr	= rqpair->max_queue_depth *
+			2; /* SEND, READ, and WRITE operations */
+	qpair->ibv.init_attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
+	qpair->ibv.init_attr.cap.max_send_sge	= SPDK_NVMF_MAX_SGL_ENTRIES;
+	qpair->ibv.init_attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
-	rc = rdma_create_qp(rqpair->cm_id, NULL, &attr);
+	rc = rdma_create_qp(rqpair->cm_id, NULL, &qpair->ibv.init_attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
 		rdma_destroy_id(rqpair->cm_id);
@@ -416,6 +416,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
+	qpair->ibv.qp = rqpair->cm_id->qp;
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "New RDMA Connection: %p\n", qpair);
 
@@ -477,7 +478,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_recv->wr.sg_list = rdma_recv->sgl;
 		rdma_recv->wr.num_sge = SPDK_COUNTOF(rdma_recv->sgl);
 
-		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
+		rc = ibv_post_recv(rqpair->qpair.ibv.qp, &rdma_recv->wr, &bad_wr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
 			spdk_nvmf_rdma_qpair_destroy(rqpair);
@@ -514,6 +515,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 		TAILQ_INSERT_TAIL(&rqpair->free_queue, rdma_req, link);
 	}
+	spdk_nvmf_update_ibv_qp(&rqpair->qpair);
 
 	return 0;
 }
@@ -539,7 +541,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 
 	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
 	rdma_req->data.wr.next = NULL;
-	rc = ibv_post_send(rqpair->cm_id->qp, &rdma_req->data.wr, &bad_wr);
+	rc = ibv_post_send(rqpair->qpair.ibv.qp, &rdma_req->data.wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to transfer data from host to target\n");
 
@@ -581,7 +583,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	assert(rdma_req->recv != NULL);
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
 		      rqpair);
-	rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
+	rc = ibv_post_recv(rqpair->qpair.ibv.qp, &rdma_req->recv->wr, &bad_recv_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return rc;
@@ -608,7 +610,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, qpair);
 
 	/* Send the completion */
-	rc = ibv_post_send(rqpair->cm_id->qp, send_wr, &bad_send_wr);
+	rc = ibv_post_send(rqpair->qpair.ibv.qp, send_wr, &bad_send_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to send response capsule\n");
 
