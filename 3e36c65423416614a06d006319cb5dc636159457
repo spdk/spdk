@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e3af5ee_1b6215b0",
+        "filename": "autotest.sh",
+        "patchSetId": 88
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:45:10Z",
+      "side": 1,
+      "message": "These two changed lines seem unrelated to re-enabling the test.\n\nI don\u0027t think we want to redirect the output here - this will hide the results of the test.  Also, why delete the file and then use append (\u003e\u003e)?",
+      "revId": "3e36c65423416614a06d006319cb5dc636159457",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
