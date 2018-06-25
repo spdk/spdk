@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "333263eb_73a75ee4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T17:04:33Z",
+      "side": 1,
+      "message": "This looks unrelated - maybe it should be split out into a separate commit.",
+      "revId": "58bd90e2c63fd6dac8a203083040c27dd2f51c0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
