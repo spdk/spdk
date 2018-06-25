@@ -180,7 +180,7 @@ class UIBdev(UINode):
 
 class UIMallocBdev(UIBdev):
     def __init__(self, parent):
-        UIBdev.__init__(self, "Malloc", parent)
+        UIBdev.__init__(self, "malloc", parent)
 
     def ui_command_create(self, size, block_size, name=None, uuid=None):
         """
@@ -219,7 +219,7 @@ class UIMallocBdev(UIBdev):
 
 class UIAIOBdev(UIBdev):
     def __init__(self, parent):
-        UIBdev.__init__(self, "AIO", parent)
+        UIBdev.__init__(self, "aio", parent)
 
     def ui_command_create(self, name, filename, block_size):
         """
@@ -245,7 +245,7 @@ class UIAIOBdev(UIBdev):
 
 class UILvolBdev(UIBdev):
     def __init__(self, parent):
-        UIBdev.__init__(self, "Logical_Volume", parent)
+        UIBdev.__init__(self, "logical_volume", parent)
 
     def ui_command_create(self, name, size, lvs, thin_provision=None):
         """
@@ -281,7 +281,7 @@ class UILvolBdev(UIBdev):
 
 class UINvmeBdev(UIBdev):
     def __init__(self, parent):
-        UIBdev.__init__(self, "NVMe", parent)
+        UIBdev.__init__(self, "nvme", parent)
 
     def ui_command_create(self, name, trtype, traddr,
                           adrfam=None, trsvcid=None, subnqn=None):
@@ -300,7 +300,7 @@ class UINvmeBdev(UIBdev):
 
 class UINullBdev(UIBdev):
     def __init__(self, parent):
-        UIBdev.__init__(self, "Null", parent)
+        UIBdev.__init__(self, "null", parent)
 
     def ui_command_create(self, name, size, block_size, uuid=None):
         """
@@ -328,7 +328,7 @@ class UINullBdev(UIBdev):
 
 class UIErrorBdev(UIBdev):
     def __init__(self, parent):
-        UIBdev.__init__(self, "Error", parent)
+        UIBdev.__init__(self, "error", parent)
 
     def ui_command_create(self, base_name):
         """
@@ -345,7 +345,7 @@ class UIErrorBdev(UIBdev):
 
 class UISplitBdev(UIBdev):
     def __init__(self, parent):
-        UIBdev.__init__(self, "Split_Disk", parent)
+        UIBdev.__init__(self, "split_disk", parent)
 
 
 class UIPmemBdev(UIBdev):
@@ -378,7 +378,7 @@ class UIPmemBdev(UIBdev):
 
 class UIRbdBdev(UIBdev):
     def __init__(self, parent):
-        UIBdev.__init__(self, "Rbd", parent)
+        UIBdev.__init__(self, "rbd", parent)
 
     def ui_command_create(self, pool_name, rbd_name, block_size, name=None):
         block_size = self.ui_eval_param(block_size, "number", None)
@@ -394,7 +394,7 @@ class UIRbdBdev(UIBdev):
 
 class UIiSCSIBdev(UIBdev):
     def __init__(self, parent):
-        UIBdev.__init__(self, "iSCSI", parent)
+        UIBdev.__init__(self, "iscsi", parent)
 
     def ui_command_create(self, name, url, initiator_iqn):
         """

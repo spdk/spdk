@@ -31,7 +31,7 @@ class UIRoot(UINode):
         # For example logical volumes: listing in menu is "Logical_Volume"
         # (cannot have space), but the product name in SPDK is "Logical Volume"
         bdev_type = bdev_type.replace("_", " ")
-        for bdev in filter(lambda x: bdev_type in x["product_name"],
+        for bdev in filter(lambda x: bdev_type in x["product_name"].lower(),
                            self.current_bdevs):
             test = Bdev(bdev)
             yield test
