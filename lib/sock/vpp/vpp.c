@@ -1088,7 +1088,7 @@ _spdk_vpp_app_attach(void)
 	bmp->context = ntohl(0xfeedface);
 
 	bmp->options[APP_OPTIONS_FLAGS] = APP_OPTIONS_FLAGS_ADD_SEGMENT;
-	bmp->options[APP_OPTIONS_PREALLOC_FIFO_PAIRS] = 16;
+	bmp->options[APP_OPTIONS_PREALLOC_FIFO_PAIRS] = 32;
 	bmp->options[APP_OPTIONS_RX_FIFO_SIZE] = fifo_size;
 	bmp->options[APP_OPTIONS_TX_FIFO_SIZE] = fifo_size;
 	bmp->options[APP_OPTIONS_ADD_SEGMENT_SIZE] = 128 << 20;
