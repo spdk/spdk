@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "125fc07d_54db2d51",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 85
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T02:06:19Z",
+      "side": 1,
+      "message": "null_json_config may fit well with the intention?",
+      "range": {
+        "startLine": 45,
+        "startChar": 83,
+        "endLine": 45,
+        "endChar": 101
+      },
+      "revId": "7e02e914bc17dc9cc4c79176388d6c447a4f0e24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "195210f5_30798168",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 85
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T02:06:19Z",
+      "side": 1,
+      "message": "this save_config is called after clean_bdev_subsystem_config(). Hence config but params will be NULL.\n\nIs it possible to save_config before clean_bdev_subsystem_config() and then use it in  test_params() as full_config?\n\nThis may make test more effective.",
+      "revId": "7e02e914bc17dc9cc4c79176388d6c447a4f0e24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cce29cc_55209715",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 85
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T02:06:19Z",
+      "side": 1,
+      "message": "This is not used in the run_spdk_tgt function.",
+      "range": {
+        "startLine": 118,
+        "startChar": 14,
+        "endLine": 118,
+        "endChar": 26
+      },
+      "revId": "7e02e914bc17dc9cc4c79176388d6c447a4f0e24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
