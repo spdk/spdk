@@ -46,7 +46,7 @@
 /* _GNU_SOURCE is redefined in the vpp headers with no protection (dlmalloc.h)  */
 #undef _GNU_SOURCE
 
-//#include <svm/svm_fifo_segment.h>
+#include <svm/svm_fifo_segment.h>
 #include <vlibmemory/api.h>
 #include <vpp/api/vpe_msg_enum.h>
 #include <vnet/session/application_interface.h>
