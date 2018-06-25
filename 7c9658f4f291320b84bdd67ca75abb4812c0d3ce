@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb5dd03c_a8e0bb80",
+        "filename": "examples/ioat/verify/verify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T16:45:03Z",
+      "side": 1,
+      "message": "I would call this \"8 byte alignment\" rather than \"8 bit alignment\" (the low 3 bits are set to 0, and the address is aligned to an 8-byte multiple).\n\nAlso, I\u0027m not sure this is safe; the length can just be truncated with \u0026 ~0x7, since that will always stay inside the buffer, but masking the start pointer looks like it could shift the pointer before the beginning of the buffer (unless ioat_task-\u003ebuffer is guaranteed to be at least 8-byte aligned; I\u0027m not sure what alignment spdk_mempool_get() guarantees).",
+      "revId": "7c9658f4f291320b84bdd67ca75abb4812c0d3ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
