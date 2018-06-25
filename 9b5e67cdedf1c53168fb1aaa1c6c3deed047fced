@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac565274_48c5e557",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1043,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-25T11:58:24Z",
+      "side": 1,
+      "message": "Keeping consistency with create function (spdk_bdev_nvme_create), probably \"spdk_bdev_nvme_delete\" would be better.",
+      "range": {
+        "startLine": 1043,
+        "startChar": 0,
+        "endLine": 1043,
+        "endChar": 16
+      },
+      "revId": "9b5e67cdedf1c53168fb1aaa1c6c3deed047fced",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
