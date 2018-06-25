@@ -13,6 +13,9 @@ INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 PORTAL_TAG=1
 ISCSI_APP="$TARGET_NS_CMD ./app/iscsi_tgt/iscsi_tgt"
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	ISCSI_APP+=" -L sock_vpp"
+fi
 ISCSI_TEST_CORE_MASK=0xFF
 
 function create_veth_interfaces() {
@@ -34,17 +37,25 @@ function create_veth_interfaces() {
 	# Accept connections from veth interface
 	iptables -I INPUT 1 -i $INITIATOR_INTERFACE -p tcp --dport $ISCSI_PORT -j ACCEPT
 
-	$TARGET_NS_CMD ip link set lo up
-	$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
 	$TARGET_NS_CMD ip link set $TARGET_INTERFACE up
 
-	# Verify connectivity
-	ping -c 1 $TARGET_IP
-	ip netns exec $TARGET_NAMESPACE ping -c 1 $INITIATOR_IP
+	if [ "$1" == "posix" ]; then
+		$TARGET_NS_CMD ip link set lo up
+		$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
+
+		# Verify connectivity
+		ping -c 1 $TARGET_IP
+		ip netns exec $TARGET_NAMESPACE ping -c 1 $INITIATOR_IP
+	else
+		start_vpp
+	fi
 }
 
 function cleanup_veth_interfaces() {
 	# $1 = test type (posix/vpp)
+	if [ "$1" == "vpp" ]; then
+		kill_vpp
+	fi
 
 	# Cleanup veth interfaces and network namespace
 	# Note: removing one veth, removes the pair
@@ -89,4 +100,73 @@ function iscsitestfini() {
 		fi
 		$rootdir/scripts/setup.sh reset
 	fi
+}
+
+function start_vpp() {
+	# We need to make sure that posix side doesn't send jumbo packets while
+	# for VPP side maximal size of MTU for TCP is 1460 and tests doesn't work
+	# stable with larger packets
+	MTU=1460
+	ip link set dev $INITIATOR_INTERFACE mtu $MTU
+	ethtool -K $INITIATOR_INTERFACE tso off
+	ethtool -k $INITIATOR_INTERFACE
+
+	# Start VPP process in SPDK target network namespace
+	$TARGET_NS_CMD vpp \
+		unix { nodaemon cli-listen /run/vpp/cli.sock } \
+		dpdk { no-pci num-mbufs 128000 } \
+		session { evt_qs_memfd_seg } \
+		socksvr { socket-name /run/vpp-api.sock } \
+		plugins { \
+			plugin default { disable } \
+			plugin dpdk_plugin.so { enable } \
+		} &
+
+	vpp_pid=$!
+	echo "VPP Process pid: $vpp_pid"
+
+	# Wait until VPP starts responding
+	xtrace_disable
+	counter=40
+	while [ $counter -gt 0 ] ; do
+		vppctl show version &> /dev/null && break
+		counter=$(( $counter - 1 ))
+		sleep 0.5
+	done
+	xtrace_restore
+	if [ $counter -eq 0 ] ; then
+		return 1
+	fi
+
+	# Setup host interface
+	vppctl create host-interface name $TARGET_INTERFACE
+	VPP_TGT_INT="host-$TARGET_INTERFACE"
+	vppctl set interface state $VPP_TGT_INT up
+	vppctl set interface ip address $VPP_TGT_INT $TARGET_IP/24
+	vppctl set interface mtu $MTU $VPP_TGT_INT
+
+	vppctl show interface
+
+	# Disable session layer
+	# NOTE: VPP net framework should enable it itself.
+	vppctl session disable
+
+	# Verify connectivity
+	vppctl show int addr
+	ip addr show $INITIATOR_INTERFACE
+	ip netns exec $TARGET_NAMESPACE ip addr show $TARGET_INTERFACE
+	sleep 3
+	ping -c 1 $TARGET_IP -s $(( $MTU - 28 )) -M do
+	vppctl ping $INITIATOR_IP repeat 1 size $(( $MTU - (28 + 8) )) verbose
+}
+
+function kill_vpp() {
+	vppctl delete host-interface name $TARGET_INTERFACE
+
+	# Dump VPP configuration before kill
+	vppctl show api clients
+	vppctl show session
+	vppctl show errors
+
+	killprocess $vpp_pid
 }
