@@ -1014,6 +1014,71 @@ spdk_nvmf_set_ibv_state(struct spdk_nvmf_qpair *qpair,
 	return 0;
 }
 
+int
+spdk_nvmf_recover(struct spdk_nvmf_qpair *qpair)
+{
+	int recovered;
+	enum ibv_qp_state state, next_state;
+
+	state = spdk_nvmf_get_ibv_state(qpair);
+	next_state = state;
+
+	SPDK_NOTICELOG("IBV QP#%u is in state: %s\n",
+		       qpair->qid,
+		       str_ibv_qp_state[state]);
+
+	if (!(state == IBV_QPS_ERR || state == IBV_QPS_RESET)) {
+		SPDK_ERRLOG("Can't recover IBV qp#%u, it's not in IBV_QPS_ERR state!\n",
+			    qpair->qid);
+		return -1;
+	}
+
+	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
+	recovered = 0;
+
+	while (!recovered) {
+		state = spdk_nvmf_get_ibv_state(qpair);
+		switch (state) {
+		case IBV_QPS_ERR:
+			next_state = IBV_QPS_RESET;
+			break;
+		case IBV_QPS_RESET:
+			next_state = IBV_QPS_INIT;
+			break;
+		case IBV_QPS_INIT:
+			next_state = IBV_QPS_RTR;
+			break;
+		case IBV_QPS_RTR:
+			next_state = IBV_QPS_RTS;
+			break;
+		case IBV_QPS_RTS:
+			recovered = 1;
+			break;
+		default:
+			SPDK_ERRLOG("IBV qp#%u unexpected state for recovery: %u\n",
+				    qpair->qid, state);
+			goto error;
+		}
+		/* Do not transition into same state */
+		if (next_state == state) {
+			break;
+		}
+
+		if (spdk_nvmf_set_ibv_state(qpair, next_state)) {
+			goto error;
+		}
+	}
+	qpair->state = SPDK_NVMF_QPAIR_ACTIVE;
+
+	return 0;
+error:
+	SPDK_ERRLOG("IBV qp#%u recovery failed\n", qpair->qid);
+	/* Put NVMf qpair back into error state so recovery
+ 		will trigger disconnect */
+	qpair->state = SPDK_NVMF_QPAIR_ERROR;
+	return -1;
+}
+
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_IO, 'r');
