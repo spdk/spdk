@@ -885,6 +885,10 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		} else if (ns != NULL && sgroup->channels[i] == NULL) {
 			/* A namespace appeared but there is no channel yet */
 			sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
+			if (sgroup->channels[i] == NULL) {
+				SPDK_ERRLOG("Could not allocate I/O channel.\n");
+				return -ENOMEM;
+			}
 		} else {
 			/* A namespace was present before and didn't change. */
 		}
