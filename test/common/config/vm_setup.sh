@@ -205,25 +205,6 @@ function install_qemu()
 function install_vpp()
 {
     if echo $CONF | grep -q vpp; then
-        # Vector packet processing (VPP) is installed for use with iSCSI tests.
-        # At least on fedora 28, the yum setup that vpp uses is deprecated and fails.
-        # The actions taken under the vpp_setup script are necessary to fix this issue.
-        if [ -d vpp_setup ]; then
-            echo "vpp setup already done."
-        else
-            echo "%_topdir  $HOME/vpp_setup/src/rpm" >> ~/.rpmmacros
-            sudo dnf install -y perl-generators
-            mkdir -p ~/vpp_setup/src/rpm
-            mkdir -p vpp_setup/src/rpm/BUILD vpp_setup/src/rpm/RPMS vpp_setup/src/rpm/SOURCES \
-            vpp_setup/src/rpm/SPECS vpp_setup/src/rpm/SRPMS
-            dnf download --downloaddir=./vpp_setup/src/rpm --source redhat-rpm-config
-            rpm -ivh ~/vpp_setup/src/rpm/redhat-rpm-config*
-            sed -i s/"Requires: (annobin if gcc)"//g ~/vpp_setup/src/rpm/SPECS/redhat-rpm-config.spec
-            rpmbuild -ba ~/vpp_setup/src/rpm/SPECS/*.spec
-            sudo dnf remove -y --noautoremove redhat-rpm-config
-            sudo rpm -Uvh ~/vpp_setup/src/rpm/RPMS/noarch/*
-        fi
-
         if [ -d vpp ]; then
             echo "vpp already cloned."
             if [ ! -d vpp/build-root ]; then
@@ -233,26 +214,13 @@ function install_vpp()
             fi
         else
             git clone "${GIT_REPO_VPP}"
-            git -C ./vpp checkout v18.01.1
-            # VPP 18.01.1 does not support OpenSSL 1.1.
-            # For compilation, a compatibility package is used temporarily.
-            sudo dnf install -y --allowerasing compat-openssl10-devel
+            git -C ./vpp checkout v19.01.1
+            git -C ./vpp cherry-pick 97dcf5bd26ca6de580943f5d39681f0144782c3d
+
             # Installing required dependencies for building VPP
             yes | make -C ./vpp install-dep
 
-            make -C ./vpp pkg-rpm -j${jobs}
-            # Reinstall latest OpenSSL devel package.
-            sudo dnf install -y --allowerasing openssl-devel
-            sudo dnf install -y \
-                ./vpp/build_root/vpp-lib-18.01.1-release.x86_64.rpm \
-                ./vpp/build_root/vpp-devel-18.01.1-release.x86_64.rpm \
-                ./vpp/build_root/vpp-18.01.1-release.x86_64.rpm
-            # Since hugepage configuration is done via spdk/scripts/setup.sh,
-            # this default config is not needed.
-            #
-            # NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
-            # very low count and cause issues with hugepage total sizes above 1GB.
-            sudo rm -f /etc/sysctl.d/80-vpp.conf
+            make -C ./vpp build -j${jobs}
         fi
     fi
 }
