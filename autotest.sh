@@ -124,6 +124,7 @@ timing_exit lib
 
 if [ $SPDK_TEST_ISCSI -eq 1 ]; then
 	run_test ./test/iscsi_tgt/iscsi_tgt.sh posix
+	run_test ./test/iscsi_tgt/iscsijson/json_config.sh
 fi
 
 if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
