@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0e01cd8d_95e5a837",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-25T23:01:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "908c1509_39716476",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aaceb510_4a58f1bd",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-21T20:52:38Z",
       "side": 1,
       "message": "Return code can be removed",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0cec014_8cbb62f7",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-25T23:01:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aaceb510_4a58f1bd",
       "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7ccbeefb_6b16ab8b",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-25T23:01:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "90007960_ce5b68ee",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "782982bb_7aaa0bba",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 2
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "3bf8d5fa_621f47e9",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-25T23:01:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "782982bb_7aaa0bba",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4162204_688fac4d",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 2
@@ -81,6 +153,24 @@
       "writtenOn": "2018-06-21T20:52:38Z",
       "side": 1,
       "message": "remove this",
+      "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83bea1ed_9a810f33",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-25T23:01:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4162204_688fac4d",
       "revId": "aba0db9b31664c9a612b53f04d20548c65c218f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

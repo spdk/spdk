@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "027022c1_65c4aaa9",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-25T23:01:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2106d76a_5c3c2c4f",
+      "revId": "a08456218ed630285fe55faa5ece42e759dfdb77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d2b50ea_e36243d3",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 5
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "ed8fb128_e3b14ff0",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-25T23:01:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d2b50ea_e36243d3",
+      "revId": "a08456218ed630285fe55faa5ece42e759dfdb77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "058454c8_dba24cd8",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 5
@@ -47,6 +83,24 @@
       "writtenOn": "2018-06-25T20:11:14Z",
       "side": 1,
       "message": "This should probably also mention that it applies offset_blocks as specified in spdk_bdev_part_construct() when creating this bdev.",
+      "revId": "a08456218ed630285fe55faa5ece42e759dfdb77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a053885_bf6df120",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 771,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-25T23:01:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "058454c8_dba24cd8",
       "revId": "a08456218ed630285fe55faa5ece42e759dfdb77",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
