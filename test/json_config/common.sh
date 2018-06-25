@@ -1,6 +1,7 @@
 JSON_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 SPDK_BUILD_DIR=$JSON_DIR/../../
 . $JSON_DIR/../common/autotest_common.sh
+. $JSON_DIR/../iscsi_tgt/common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
 spdk_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/spdk.sock"
@@ -57,9 +58,9 @@ function test_json_config() {
 }
 
 function clean_after_test_json_config() {
-	rm $last_bdevs $base_bdevs
-	rm $last_json_config $base_json_config
-	rm $tmp_config $full_config $skip_params_config
+	rm -f $last_bdevs $base_bdevs
+	rm -f $last_json_config $base_json_config
+	rm -f $tmp_config $full_config $skip_params_config
 }
 
 function create_bdev_subsystem_config() {
@@ -88,6 +89,19 @@ function create_pmem_bdev_subsytem_config() {
 function create_rbd_bdev_subsystem_config() {
 	rbd_setup 127.0.0.1
 	$rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+}
+
+function create_iscsi_subsystem_config() {
+	TARGET_IP=127.0.0.1
+	$rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
+	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	$rpc_py construct_malloc_bdev 64 4096 --name Malloc0
+	$rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+	$rpc_py add_initiators_to_initiator_group -n "ANY2" -m 192.168.200.100/32 $INITIATOR_TAG
+}
+
+function clean_iscsi_subsystem_config() {
+	echo "nope"
 }
 
 function clean_bdev_subsystem_config() {

@@ -93,8 +93,39 @@ def clear_scsi_subsystem(args, scsi_config):
     pass
 
 
-def clear_iscsi_subsystem(args, iscsi_config):
-    pass
+def get_target_node_name(iscsi):
+    nvmf_name = None
+    if 'name' in iscsi['name']:
+        iscsi_name = iscsi['name']
+
+    return iscsi_name
+
+
+def get_portal_group_tag(iscsi):
+    iscsi_name = None
+    if 'tag' in iscsi['tag']:
+        iscsi_name = iscsi['tag']
+
+    return iscsi_name
+
+
+def clear_iscsi_subsystem(args, iscsi_subsystem):
+    rpc_iscsi = args.client.call("get_target_nodes")
+    for iscsi_config in rpc_iscsi:
+        iscsi_name = get_target_node_name(iscsi_config)
+        destroy_method = 'delete_target_node'
+        args.client.call('delete_target_node', {"target_node_name": iscsi_name})
+
+    rpc_iscsi = args.client.call("get_target_nodes")
+    for iscsi_config in rpc_iscsi:
+        iscsi_name = get_portal_group_tag(iscsi_config)
+        args.client.call('delete_portal_group', {"tag": iscsi_name})
+
+    rpc_iscsi = args.client.call("get_initiator_groups")
+    for iscsi_config in rpc_iscsi:
+        iscsi_name = get_portal_group_tag(iscsi_config)
+        destroy_method = 'delete_initiator_group'
+        args.client.call(destroy_method, {"tag": iscsi_name})
 
 
 def clear_nbd_subsystem(args, scsi_config):
