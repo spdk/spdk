@@ -56,6 +56,13 @@ class UIRoot(UINode):
     def delete_malloc_bdev(self, **kwargs):
         rpc.bdev.delete_malloc_bdev(self.client, **kwargs)
 
+    def create_iscsi_bdev(self, **kwargs):
+        response = rpc.bdev.construct_iscsi_bdev(self.client, **kwargs)
+        return response
+
+    def delete_iscsi_bdev(self, **kwargs):
+        rpc.bdev.delete_iscsi_bdev(self.client, **kwargs)
+
     def create_aio_bdev(self, **kwargs):
         response = rpc.bdev.construct_aio_bdev(self.client, **kwargs)
         return self.print_array(response)

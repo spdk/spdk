@@ -57,6 +57,7 @@ class UIBdevs(UINode):
         UISplitBdev(self)
         UIPmemBdev(self)
         UIRbdBdev(self)
+        UIiSCSIBdev(self)
 
     def ui_command_delete(self, name):
         """
@@ -387,6 +388,40 @@ class UIRbdBdev(UIBdev):
                                                    block_size=block_size,
                                                    name=name)
         self.shell.log.info(ret_name)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UIiSCSIBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "iSCSI", parent)
+
+    def ui_command_create(self, name, url, initiator_iqn):
+        """
+        Create iSCSI bdev in configuration by connecting to remote
+        iSCSI target.
+
+        Arguments:
+        name - name to be used as an ID for created iSCSI bdev.
+        url - iscsi url pointing to LUN on remote iSCSI target.
+              Example: iscsi://127.0.0.1:3260/iqn.2018-06.org.spdk/0.
+        initiator_iqn - IQN to use for initiating connection with the target.
+        """
+        ret_name = self.get_root().create_iscsi_bdev(name=name,
+                                                     url=url,
+                                                     initiator_iqn=initiator_iqn)
+        self.shell.log.info(ret_name)
+        self.get_root().refresh()
+        self.refresh()
+
+    def ui_command_delete(self, name):
+        """
+        Deletes iSCSI bdev from configuration.
+
+        Arguments:
+        name - name of the iscsi bdev to be deleted.
+        """
+        self.get_root().delete_iscsi_bdev(name=name)
         self.get_root().refresh()
         self.refresh()
 
