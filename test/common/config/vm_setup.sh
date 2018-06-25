@@ -233,8 +233,8 @@ function install_vpp()
             fi
         else
             git clone "${GIT_REPO_VPP}"
-            git -C ./vpp checkout v18.01.1
-            # VPP 18.01.1 does not support OpenSSL 1.1.
+            git -C ./vpp checkout v18.07.1
+            # VPP 18.07.1 does not support OpenSSL 1.1.
             # For compilation, a compatibility package is used temporarily.
             sudo dnf install -y --allowerasing compat-openssl10-devel
             # Installing required dependencies for building VPP
@@ -244,9 +244,11 @@ function install_vpp()
             # Reinstall latest OpenSSL devel package.
             sudo dnf install -y --allowerasing openssl-devel
             sudo dnf install -y \
-                ./vpp/build_root/vpp-lib-18.01.1-release.x86_64.rpm \
-                ./vpp/build_root/vpp-devel-18.01.1-release.x86_64.rpm \
-                ./vpp/build_root/vpp-18.01.1-release.x86_64.rpm
+                ./vpp/build-root/vpp-lib-18.07.1-*.x86_64.rpm \
+                ./vpp/build-root/vpp-devel-18.07.1-*.x86_64.rpm \
+                ./vpp/build-root/vpp-18.07.1-*.x86_64.rpm \
+                ./vpp/build-root/vpp-plugins-18.07.1-*.x86_64.rpm \
+                ./vpp/build-root/vpp-selinux-policy-18.07.1-*.x86_64.rpm
             # Since hugepage configuration is done via spdk/scripts/setup.sh,
             # this default config is not needed.
             #
