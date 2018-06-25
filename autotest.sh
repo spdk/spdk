@@ -149,6 +149,9 @@ timing_exit lib
 
 if [ $SPDK_TEST_ISCSI -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
+	if [ $SPDK_TEST_VPP -eq 1 ]; then
+		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh vpp
+	fi
 	run_test suite ./test/iscsi_tgt/iscsijson/json_config.sh
 	run_test suite ./test/spdkcli/iscsi.sh
 fi
