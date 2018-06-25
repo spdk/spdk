@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20c22e79_ab77bde2",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T03:20:06Z",
+      "side": 1,
+      "message": "is this necessary?",
+      "range": {
+        "startLine": 59,
+        "startChar": 1,
+        "endLine": 59,
+        "endChar": 22
+      },
+      "revId": "79f4ee90f3430ab68a224ad1e8fe2d3eeaa3e087",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
