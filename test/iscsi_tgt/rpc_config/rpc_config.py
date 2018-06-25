@@ -94,7 +94,7 @@ def verify_log_flag_rpc_methods(rpc_py, rpc_param):
     print("verify_log_flag_rpc_methods passed")
 
 
-def verify_iscsi_connection_rpc_methods(rpc_py):
+def verify_iscsi_connection_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
     output = rpc.get_iscsi_connections()
     jsonvalue = json.loads(output)
@@ -135,7 +135,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     print("verify_iscsi_connection_rpc_methods passed")
 
 
-def verify_scsi_devices_rpc_methods(rpc_py):
+def verify_scsi_devices_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
     output = rpc.get_scsi_devices()
     jsonvalue = json.loads(output)
@@ -486,13 +486,16 @@ if __name__ == "__main__":
     try:
         verify_log_flag_rpc_methods(rpc_py, rpc_param)
         verify_get_interfaces(rpc_py)
-        verify_add_delete_ip_address(rpc_py)
+        # Add/delete IP will not be supported in VPP.
+        # It has separate vppctl utility for that.
+        if test_type == 'posix':
+            verify_add_delete_ip_address(rpc_py)
         create_malloc_bdevs_rpc_methods(rpc_py, rpc_param)
         verify_portal_groups_rpc_methods(rpc_py, rpc_param)
         verify_initiator_groups_rpc_methods(rpc_py, rpc_param)
         verify_target_nodes_rpc_methods(rpc_py, rpc_param)
-        verify_scsi_devices_rpc_methods(rpc_py)
-        verify_iscsi_connection_rpc_methods(rpc_py)
+        verify_scsi_devices_rpc_methods(rpc_py, rpc_param)
+        verify_iscsi_connection_rpc_methods(rpc_py, rpc_param)
         verify_add_nvme_bdev_rpc_methods(rpc_py)
     except RpcException as e:
         print("{}. Exiting with status {}".format(e.message, e.retval))
