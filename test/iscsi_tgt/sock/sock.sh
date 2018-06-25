@@ -10,6 +10,9 @@ source $rootdir/test/iscsi_tgt/common.sh
 iscsitestinit $1 $2
 
 HELLO_SOCK_APP="$TARGET_NS_CMD $rootdir/examples/sock/hello_world/hello_sock"
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	HELLO_SOCK_APP+=" -L sock_vpp"
+fi
 SOCAT_APP="socat"
 
 # ----------------
@@ -39,29 +42,36 @@ killprocess $server_pid || true
 report_test_completion "sock_client"
 timing_exit sock_client
 
-# ----------------
-# Test server path
-# ----------------
+# Test for server path affects further tests for iSCSI leaving connection from
+# client in TIME_WAIT state even when hello_sock application is closed. It causes
+# that VPP segfaults trying to close it.
+if [ "$1" == "posix" ] ; then
 
-timing_enter sock_server
+	# ----------------
+	# Test server path
+	# ----------------
 
-# start echo server using hello_sock echo server
-$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S & server_pid=$!
-trap "killprocess $server_pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
-waitforlisten $server_pid
+	timing_enter sock_server
 
-# send message to server using socat
-message="**MESSAGE:This is a test message to the server**"
-response=$( echo $message | $SOCAT_APP - tcp:$TARGET_IP:$ISCSI_PORT 2>/dev/null )
+	# start echo server using hello_sock echo server
+	$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S & server_pid=$!
+	trap "killprocess $server_pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+	waitforlisten $server_pid
 
-if [ "$message" != "$response" ]; then
-	exit 1
+	# send message to server using socat
+	message="**MESSAGE:This is a test message to the server**"
+	response=$( echo $message | $SOCAT_APP - tcp:$TARGET_IP:$ISCSI_PORT 2>/dev/null )
+
+	if [ "$message" != "$response" ]; then
+		exit 1
+	fi
+
+	trap - SIGINT SIGTERM EXIT
+
+	killprocess $server_pid
+
+	iscsitestfini $1 $2
+	report_test_completion "sock_server"
+	timing_exit sock_server
+
 fi
-
-trap - SIGINT SIGTERM EXIT
-
-killprocess $server_pid
-
-iscsitestfini $1 $2
-report_test_completion "sock_server"
-timing_exit sock_server
