@@ -491,6 +491,20 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
  */
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
 
+/**
+ * Set the given buffer as the data buffer described by this bdev_io.
+ *
+ * The portion of the buffer used may be adjusted for memory alignement
+ * purposes.
+ *
+ * \param bdev_io I/O to set the buffer on.
+ * \param buf The buffer to set as the active data buffer.
+ * \param len The length of the buffer.
+ *
+ * \return The usable size of the buffer, after adjustments of alignment.
+ */
+size_t spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len);
+
 void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
 
