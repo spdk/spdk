@@ -184,6 +184,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
 		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
+		if [ $SPDK_RUN_VPP -eq 1 ]; then
+			run_test suite ./test/iscsi_tgt/iscsi_tgt.sh vpp
+		fi
 		run_test suite ./test/spdkcli/iscsi.sh
 	fi
 
