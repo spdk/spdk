@@ -93,6 +93,7 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_poll_group *group = ctx_buf;
 	struct spdk_nvmf_transport *transport;
 	uint32_t sid;
+	bool failed = false;
 
 	TAILQ_INIT(&group->tgroups);
 	TAILQ_INIT(&group->qpairs);
@@ -115,13 +116,22 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 			continue;
 		}
 
-		spdk_nvmf_poll_group_add_subsystem(group, subsystem);
+		if (spdk_nvmf_poll_group_add_subsystem(group, subsystem) != 0) {
+			spdk_nvmf_poll_group_remove_subsystem(group, subsystem);
+			if (failed == false) {
+				failed = true;
+			}
+		}
 	}
 
 	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
 	group->thread = spdk_get_thread();
 
-	return 0;
+	if (failed == true) {
+		return -1;
+	} else {
+		return 0;
+	}
 }
 
 static void
@@ -781,6 +791,10 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		} else if (ns != NULL && sgroup->channels[i] == NULL) {
 			/* A namespace appeared but there is no channel yet */
 			sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
+			if (sgroup->channels[i] == NULL) {
+				SPDK_ERRLOG("No I/O channel, may config fewer cores.\n");
+				return -EINVAL;
+			}
 		} else {
 			/* A namespace was present before and didn't change. */
 		}
