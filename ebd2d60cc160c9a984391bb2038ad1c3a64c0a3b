@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aff486ae_12f5e7f4",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-25T11:44:25Z",
+      "side": 1,
+      "message": "Usually we try to be consistent with create function on one for delete, so \"delete_passthru_disk\" (from \"create_passthru_disk\").",
+      "range": {
+        "startLine": 573,
+        "startChar": 0,
+        "endLine": 573,
+        "endChar": 21
+      },
+      "revId": "ebd2d60cc160c9a984391bb2038ad1c3a64c0a3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
