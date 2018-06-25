@@ -23,7 +23,7 @@
 
 [QoS]
   # QoS section defines limitation on performance
-  # metric like IOPS
+  # metric like IOPS, bandwidth
   #
   # Format: Limit_IOPS Bdev_Name IOPS_Limit_Value
   #
@@ -32,3 +32,10 @@
   #
   # Assign 20000 IOPS for the Malloc0 block device
   Limit_IOPS Malloc0 20000
+  Limit_Read_IOPS AIO0 10000
+  #
+  # Bandwidth limit must be 10 (MB) or greater and be
+  # multiple of 10
+  # Assign 100 (MB) bandwidth for the Malloc3 block
+  # device
+  Limit_BWPS Malloc3 100
