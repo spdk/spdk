@@ -34,20 +34,59 @@ function create_veth_interfaces() {
 	# Accept connections from veth interface
 	iptables -I INPUT 1 -i $INITIATOR_INTERFACE -p tcp --dport $ISCSI_PORT -j ACCEPT
 
-	$TARGET_NS_CMD ip link set lo up
-	$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
 	$TARGET_NS_CMD ip link set $TARGET_INTERFACE up
 
-	# Verify connectivity
-	ping -c 1 $TARGET_IP
-	ip netns exec $TARGET_NAMESPACE ping -c 1 $INITIATOR_IP
+	if [ "$1" == "posix" ]; then
+		$TARGET_NS_CMD ip link set lo up
+		$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
+
+		# Verify connectivity
+		ping -c 1 $TARGET_IP
+		ip netns exec $TARGET_NAMESPACE ping -c 1 $INITIATOR_IP
+	else
+		start_vpp
+	fi
 }
 
 function cleanup_veth_interfaces() {
 	# $1 = test type (posix/vpp)
+	if [ "$1" == "vpp" ]; then
+		kill_vpp
+	fi
 
 	# Cleanup veth interfaces and network namespace
 	# Note: removing one veth, removes the pair
 	ip link delete $INITIATOR_INTERFACE
 	ip netns del $TARGET_NAMESPACE
+}
+
+function start_vpp() {
+	# Start VPP process in SPDK target network namespace
+	$TARGET_NS_CMD vpp unix { nodaemon cli-listen /run/vpp/cli.sock } dpdk { no-pci num-mbufs 128000 } session { evt_qs_memfd_seg } socksvr { socket-name /run/vpp-api.sock } &
+	vpp_pid=$!
+	echo "VPP Process pid: $vpp_pid"
+	waitforlisten $vpp_pid /run/vpp/cli.sock
+
+	# Setup host interface
+	vppctl create host-interface name $TARGET_INTERFACE
+	VPP_TGT_INT="host-$TARGET_INTERFACE"
+	vppctl set interface state $VPP_TGT_INT up
+	vppctl set interface ip address $VPP_TGT_INT $TARGET_IP/24
+
+	# Enable session layer
+	vppctl session enable
+
+	# Verify connectivity
+	vppctl show int addr
+	ip addr show $INITIATOR_INTERFACE
+	ip netns exec $TARGET_NAMESPACE ip addr show $TARGET_INTERFACE
+	sleep 3
+	ping -c 1 $TARGET_IP
+	vppctl ping $INITIATOR_IP repeat 1
+}
+
+function kill_vpp() {
+	vppctl delete host-interface name $TARGET_INTERFACE
+	vpp_pid=$(pgrep vpp)
+	killprocess $vpp_pid
 }
