@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eed9fbf7_69ecd567",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T20:02:13Z",
+      "side": 1,
+      "message": "This is just papering over the issue.  We need to check the return value of spdk_get_io_channel() and handle it in poll_group_update_subsystem().  The target should not be allowed to get into a state where a valid NS has a NULL I/O channel on a valid subsystem poll group.",
+      "revId": "a6611f80b7b5ad32f34e1ff2a177dab9e75e2025",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
