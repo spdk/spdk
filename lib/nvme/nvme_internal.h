@@ -765,6 +765,7 @@ nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 
 				cpl = &err_cpl;
 				cmd->err_count--;
+				break;
 			}
 		}
 	}
