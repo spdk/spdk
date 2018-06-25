@@ -1,6 +1,7 @@
 JSON_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 SPDK_BUILD_DIR=$JSON_DIR/../../
 source $JSON_DIR/../common/autotest_common.sh
+source $JSON_DIR/../iscsi_tgt/common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
 spdk_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/spdk.sock"
@@ -11,6 +12,10 @@ last_json_config=$JSON_DIR/last_config.json
 full_config=$JSON_DIR/full_config.json
 base_bdevs=$JSON_DIR/bdevs_base.txt
 last_bdevs=$JSON_DIR/bdevs_last.txt
+base_portal_groups=$JSON_DIR/portal_groups_base.txt
+last_portal_groups=$JSON_DIR/portal_groups_last.txt
+base_target_nodes=$JSON_DIR/target_nodes_base.txt
+last_target_nodes=$JSON_DIR/target_nodes_last.txt
 tmp_config=$JSON_DIR/tmp_config.json
 null_json_config=$JSON_DIR/null_json_config.json
 
@@ -77,6 +82,8 @@ function kill_targets() {
 # 11. Remove all files.
 function test_json_config() {
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $base_bdevs
+	$rpc_py get_portal_groups | jq '.|sort_by(.name)' > $base_portal_groups
+	$rpc_py get_target_nodes | jq '.|sort_by(.name)' > $base_target_nodes
 	$rpc_py save_config -f $full_config
 	$JSON_DIR/config_filter.py -method "delete_global_parameters" -filename $full_config > $base_json_config
 	$clear_config_py clear_config
@@ -88,17 +95,23 @@ function test_json_config() {
 	fi
 	$rpc_py load_config -f $base_json_config
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $last_bdevs
+	$rpc_py get_portal_groups | jq '.|sort_by(.name)' > $last_portal_groups
+	$rpc_py get_target_nodes | jq '.|sort_by(.name)' > $last_target_nodes
 	$rpc_py save_config -f $tmp_config
 	$JSON_DIR/config_filter.py -method "delete_global_parameters" -filename $tmp_config > $last_json_config
 	diff $base_json_config $last_json_config
 	diff $base_bdevs $last_bdevs
+	diff $base_portal_groups $last_portal_groups
+	diff $base_target_nodes $last_target_nodes
 	remove_config_files_after_test_json_config
 }
 
 function remove_config_files_after_test_json_config() {
-	rm $last_bdevs $base_bdevs
-	rm $last_json_config $base_json_config
-	rm $tmp_config $full_config $null_json_config
+	rm -f $last_bdevs $base_bdevs
+	rm -f $last_json_config $base_json_config
+	rm -f $tmp_config $full_config $null_json_config
+	rm -f $base_target_nodes $last_target_nodes
+	rm -f $base_portal_groups $last_portal_groups
 }
 
 function create_pmem_bdev_subsytem_config() {
