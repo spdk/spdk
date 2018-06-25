@@ -1,6 +1,7 @@
 JSON_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 SPDK_BUILD_DIR=$JSON_DIR/../../
 . $JSON_DIR/../common/autotest_common.sh
+. $JSON_DIR/../iscsi_tgt/common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
 spdk_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/spdk.sock"
@@ -57,9 +58,9 @@ function test_json_config() {
 }
 
 function remove_config_files_after_test_json_config() {
-	rm $last_bdevs $base_bdevs
-	rm $last_json_config $base_json_config
-	rm $tmp_config $full_config $null_json_config
+	rm -f $last_bdevs $base_bdevs
+	rm -f $last_json_config $base_json_config
+	rm -f $tmp_config $full_config $null_json_config
 }
 
 function create_bdev_subsystem_config() {
@@ -78,6 +79,29 @@ function create_bdev_subsystem_config() {
 	$rpc_py construct_lvol_bdev -l lvs_test -t lvol1 32
 	$rpc_py snapshot_lvol_bdev lvs_test/lvol0 snapshot0
 	$rpc_py clone_lvol_bdev lvs_test/snapshot0 clone0
+}
+
+function create_pmem_bdev_subsytem_config() {
+	$rpc_py create_pmem_pool /tmp/pool_file1 128 512
+	$rpc_py construct_pmem_bdev -n pmem1 /tmp/pool_file1
+}
+
+function create_rbd_bdev_subsystem_config() {
+	rbd_setup 127.0.0.1
+	$rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+}
+
+function create_iscsi_subsystem_config() {
+	TARGET_IP=127.0.0.1
+	$rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
+	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	$rpc_py construct_malloc_bdev 64 4096 --name Malloc0
+	$rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+	$rpc_py add_initiators_to_initiator_group -n "ANY2" -m 192.168.200.100/32 $INITIATOR_TAG
+}
+
+function clear_iscsi_subsystem_config() {
+	$clear_config_py clear_config
 }
 
 function clear_bdev_subsystem_config() {
