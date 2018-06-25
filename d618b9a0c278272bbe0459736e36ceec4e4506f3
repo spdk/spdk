@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c71a17c3_18ab1677",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 86
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T09:34:35Z",
+      "side": 1,
+      "message": "I\u0027m sorry that adding if to diff was my wrong feedback. This if [] should be removed too?",
+      "revId": "d618b9a0c278272bbe0459736e36ceec4e4506f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
