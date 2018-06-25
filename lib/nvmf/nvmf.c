@@ -93,6 +93,8 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_poll_group *group = ctx_buf;
 	struct spdk_nvmf_transport *transport;
 	uint32_t sid;
+	int rc;
+	bool pg_created = false;
 
 	TAILQ_INIT(&group->tgroups);
 	TAILQ_INIT(&group->qpairs);
@@ -115,7 +117,18 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 			continue;
 		}
 
-		spdk_nvmf_poll_group_add_subsystem(group, subsystem);
+		rc = spdk_nvmf_poll_group_add_subsystem(group, subsystem);
+		if (rc != 0) {
+			spdk_nvmf_poll_group_remove_subsystem(group, subsystem);
+			continue;
+		}
+
+		pg_created = true;
+	}
+
+	/* All poll groups creation failed */
+	if (pg_created == false) {
+		return -1;
 	}
 
 	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
@@ -781,6 +794,10 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		} else if (ns != NULL && sgroup->channels[i] == NULL) {
 			/* A namespace appeared but there is no channel yet */
 			sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
+			if (sgroup->channels[i] == NULL) {
+				SPDK_ERRLOG("Return error without valid I/O channel\n");
+				return -EINVAL;
+			}
 		} else {
 			/* A namespace was present before and didn't change. */
 		}
