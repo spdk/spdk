@@ -49,6 +49,52 @@
     },
     {
       "key": {
+        "uuid": "0e4f919a_8cf43169",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T12:14:32Z",
+      "side": 1,
+      "message": "is it possible to execute delete_nvmf_subsystem by calling clear_config?",
+      "range": {
+        "startLine": 114,
+        "startChar": 9,
+        "endLine": 114,
+        "endChar": 30
+      },
+      "revId": "5429befa3ab832148529c128058dca0d5d3cd817",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b7c205e_01c7d71a",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T12:14:32Z",
+      "side": 1,
+      "message": "is it possible to execute delete_malloc_bdev by calling clear_config? at least delete_malloc_bdev should be used.",
+      "range": {
+        "startLine": 115,
+        "startChar": 1,
+        "endLine": 116,
+        "endChar": 28
+      },
+      "revId": "5429befa3ab832148529c128058dca0d5d3cd817",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4b9cf203_2530653f",
         "filename": "test/nvmf/nvmfjson/json_config.sh",
         "patchSetId": 32
