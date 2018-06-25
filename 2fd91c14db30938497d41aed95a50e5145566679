@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "622dd56c_ae9ba8fa",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-25T18:06:54Z",
+      "side": 1,
+      "message": "Mention some where that the run time is in seconds.",
+      "range": {
+        "startLine": 108,
+        "startChar": 30,
+        "endLine": 108,
+        "endChar": 38
+      },
+      "revId": "2fd91c14db30938497d41aed95a50e5145566679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a889b46_51c69be7",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-25T18:06:54Z",
+      "side": 1,
+      "message": "mention units are seconds",
+      "range": {
+        "startLine": 110,
+        "startChar": 31,
+        "endLine": 110,
+        "endChar": 36
+      },
+      "revId": "2fd91c14db30938497d41aed95a50e5145566679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d821fc88_d7f0e639",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-25T18:06:54Z",
+      "side": 1,
+      "message": "Mention the other types of controllers supported besides spdk_vhost_scsi",
+      "range": {
+        "startLine": 112,
+        "startChar": 26,
+        "endLine": 112,
+        "endChar": 91
+      },
+      "revId": "2fd91c14db30938497d41aed95a50e5145566679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc0f45ec_eee54777",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-25T18:06:54Z",
+      "side": 1,
+      "message": "Some where between -s and -d parameter might be a good place to put the write up you have in your email explaining how these parameters are used to determine how many lvols are curved up.",
+      "range": {
+        "startLine": 116,
+        "startChar": 56,
+        "endLine": 116,
+        "endChar": 57
+      },
+      "revId": "2fd91c14db30938497d41aed95a50e5145566679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
