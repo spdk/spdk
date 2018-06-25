@@ -67,6 +67,9 @@ function waitfortcp() {
 iscsitestinit $1 $2
 
 HELLO_SOCK_APP="$TARGET_NS_CMD $rootdir/examples/sock/hello_world/hello_sock"
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	HELLO_SOCK_APP+=" -L sock_vpp"
+fi
 SOCAT_APP="socat"
 
 # ----------------

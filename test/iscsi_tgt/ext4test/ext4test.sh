@@ -53,6 +53,7 @@ $rpc_py bdev_inject_error EE_Malloc0 'all' 'failure' -n 1000
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 set +e
+waitforfile /dev/$dev
 mkfs.ext4 -F /dev/$dev
 if [ $? -eq 0 ]; then
 	echo "mkfs successful - expected failure"
