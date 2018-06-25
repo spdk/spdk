@@ -1,6 +1,7 @@
 JSON_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 SPDK_BUILD_DIR=$JSON_DIR/../../
 source $JSON_DIR/../common/autotest_common.sh
+source $JSON_DIR/../iscsi_tgt/common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
 spdk_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/spdk.sock"
@@ -96,9 +97,9 @@ function test_json_config() {
 }
 
 function remove_config_files_after_test_json_config() {
-	rm $last_bdevs $base_bdevs
-	rm $last_json_config $base_json_config
-	rm $tmp_config $full_config $null_json_config
+	rm  $last_bdevs $base_bdevs
+	rm  $last_json_config $base_json_config
+	rm  $tmp_config $full_config $null_json_config
 }
 
 function create_pmem_bdev_subsytem_config() {
