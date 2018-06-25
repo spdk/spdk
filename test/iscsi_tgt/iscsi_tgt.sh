@@ -32,9 +32,12 @@ create_veth_interfaces $TEST_TYPE
 start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
 trap "kill_stub; cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
 
+if [ "$TEST_TYPE" == "posix" ]; then
+# TODO: fix tests below to work with VPP
 run_test ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test ./test/iscsi_tgt/reset/reset.sh
+fi
 run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh $TEST_TYPE
 run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test ./test/iscsi_tgt/fio/fio.sh
@@ -49,17 +52,25 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test ./test/iscsi_tgt/digests/digests.sh
 fi
 if [ $SPDK_TEST_RBD -eq 1 ]; then
-	run_test ./test/iscsi_tgt/rbd/rbd.sh
+	# RBD tests do not support network namespaces,
+	# they can only be run on posix sockets.
+	if [ "$TEST_TYPE" == "posix" ]; then
+		run_test ./test/iscsi_tgt/rbd/rbd.sh
+	fi
 fi
 
 trap "cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
 kill_stub
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	# TODO: enable remote NVMe controllers with multi-process so that
-	#  we can use the stub for this test
-	# Test configure remote NVMe device from rpc and conf file
-	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
+	# NVMe-oF tests do not support network namespaces,
+	# they can only be run on posix sockets.
+	if [ "$TEST_TYPE" == "posix" ]; then
+		# TODO: enable remote NVMe controllers with multi-process so that
+		#  we can use the stub for this test
+		# Test configure remote NVMe device from rpc and conf file
+		run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
+	fi
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
