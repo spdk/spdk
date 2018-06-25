@@ -133,6 +133,8 @@ if [ ! -z ${PEP8} ]; then
 		echo " OK"
 	fi
 	rm -f pep8.log
+else
+	echo "You do not have pycodestyle or pep8 installed so your Python style is not being checked!"
 fi
 
 # Check if any of the public interfaces were modified by this patch.
