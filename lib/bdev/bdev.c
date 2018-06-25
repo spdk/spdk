@@ -68,8 +68,11 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_BYTE_PER_TIMESLICE	512
 #define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		10000
 #define SPDK_BDEV_QOS_MIN_BW_IN_MB_PER_SEC	10
+#define SPDK_BDEV_QOS_TYPES			16
 
-static const char *qos_type_str[SPDK_BDEV_QOS_NUM_TYPES] = {"Limit_IOPS", "Limit_BPS"};
+static const char *qos_type_str[SPDK_BDEV_QOS_TYPES] = {"Limit_IOPS", "Limit_BPS",
+							"Limit_Read_IOPS", "Limit_Write_IOPS"
+						       };
 
 struct spdk_bdev_mgr {
 	struct spdk_mempool *bdev_io_pool;
@@ -111,8 +114,14 @@ static void			*g_fini_cb_arg = NULL;
 static struct spdk_thread	*g_fini_thread = NULL;
 
 struct spdk_bdev_qos {
-	/** Rate limit, in I/O per second */
+	/** Rate limit for both read and write, in I/O per second */
 	uint64_t iops_rate_limit;
+
+	/** Rate limit for read only, in I/O per second */
+	uint64_t read_iops_rate_limit;
+
+	/** Rate limit for write only, in I/O per second */
+	uint64_t write_iops_rate_limit;
 
 	/** Rate limit, in byte per second */
 	uint64_t byte_rate_limit;
@@ -130,12 +139,26 @@ struct spdk_bdev_qos {
 	 *  only valid for the master channel which manages the outstanding IOs. */
 	uint32_t max_ios_per_timeslice;
 
+	/** Maximum allowed read IOs to be issued in one timeslice (e.g., 1ms) and
+	 *  only valid for the master channel which manages the outstanding IOs. */
+	uint32_t max_read_ios_per_timeslice;
+
+	/** Maximum allowed write IOs to be issued in one timeslice (e.g., 1ms) and
+	 *  only valid for the master channel which manages the outstanding IOs. */
+	uint32_t max_write_ios_per_timeslice;
+
 	/** Maximum allowed bytes to be issued in one timeslice (e.g., 1ms) and
 	 *  only valid for the master channel which manages the outstanding IOs. */
 	uint32_t max_byte_per_timeslice;
 
 	/** Submitted IO in one timeslice (e.g., 1ms) */
 	uint32_t io_submitted_this_timeslice;
+
+	/** Submitted read IO in one timeslice (e.g., 1ms) */
+	uint32_t read_io_submitted_this_timeslice;
+
+	/** Submitted write IO in one timeslice (e.g., 1ms) */
+	uint32_t write_io_submitted_this_timeslice;
 
 	/** Submitted byte in one timeslice (e.g., 1ms) */
 	uint32_t byte_submitted_this_timeslice;
@@ -1004,6 +1027,25 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static bool
+_spdk_bdev_is_read_io(struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		if (bdev_io->u.nvme_passthru.cmd.opc == SPDK_NVME_OPC_READ) {
+			return true;
+		} else {
+			return false;
+		}
+	case SPDK_BDEV_IO_TYPE_READ:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static uint64_t
 _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 {
@@ -1038,6 +1080,16 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 			break;
 		}
 
+		if (qos->max_read_ios_per_timeslice > 0 &&
+		    qos->read_io_submitted_this_timeslice >= qos->max_read_ios_per_timeslice) {
+			break;
+		}
+
+		if (qos->max_write_ios_per_timeslice > 0 &&
+		    qos->write_io_submitted_this_timeslice >= qos->max_write_ios_per_timeslice) {
+			break;
+		}
+
 		if (qos->max_byte_per_timeslice > 0 &&
 		    qos->byte_submitted_this_timeslice >= qos->max_byte_per_timeslice) {
 			break;
@@ -1046,6 +1098,11 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 		bdev_io = TAILQ_FIRST(&qos->queued);
 		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
 		qos->io_submitted_this_timeslice++;
+		if (_spdk_bdev_is_read_io(bdev_io) == true) {
+			qos->read_io_submitted_this_timeslice++;
+		} else {
+			qos->write_io_submitted_this_timeslice++;
+		}
 		qos->byte_submitted_this_timeslice += _spdk_bdev_get_io_size_in_byte(bdev_io);
 		ch->io_outstanding++;
 		shared_resource->io_outstanding++;
@@ -1203,6 +1260,24 @@ spdk_bdev_qos_update_max_quota_per_timeslice(struct spdk_bdev_qos *qos)
 		qos->max_ios_per_timeslice = 0;
 	}
 
+	if (qos->read_iops_rate_limit > 0) {
+		max_ios_per_timeslice = qos->read_iops_rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
+					SPDK_BDEV_SEC_TO_USEC;
+		qos->max_read_ios_per_timeslice = spdk_max(max_ios_per_timeslice,
+						  SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE);
+	} else {
+		qos->max_read_ios_per_timeslice = 0;
+	}
+
+	if (qos->write_iops_rate_limit > 0) {
+		max_ios_per_timeslice = qos->write_iops_rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
+					SPDK_BDEV_SEC_TO_USEC;
+		qos->max_write_ios_per_timeslice = spdk_max(max_ios_per_timeslice,
+						   SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE);
+	} else {
+		qos->max_write_ios_per_timeslice = 0;
+	}
+
 	if (qos->byte_rate_limit > 0) {
 		max_byte_per_timeslice = qos->byte_rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
 					 SPDK_BDEV_SEC_TO_USEC;
@@ -1220,6 +1295,8 @@ spdk_bdev_channel_poll_qos(void *arg)
 
 	/* Reset for next round of rate limiting */
 	qos->io_submitted_this_timeslice = 0;
+	qos->read_io_submitted_this_timeslice = 0;
+	qos->write_io_submitted_this_timeslice = 0;
 	qos->byte_submitted_this_timeslice = 0;
 
 	_spdk_bdev_qos_io_submit(qos->ch);
@@ -1281,6 +1358,8 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 			TAILQ_INIT(&qos->queued);
 			spdk_bdev_qos_update_max_quota_per_timeslice(qos);
 			qos->io_submitted_this_timeslice = 0;
+			qos->read_io_submitted_this_timeslice = 0;
+			qos->write_io_submitted_this_timeslice = 0;
 			qos->byte_submitted_this_timeslice = 0;
 
 			qos->poller = spdk_poller_register(spdk_bdev_channel_poll_qos,
@@ -1473,6 +1552,8 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 	new_qos->max_ios_per_timeslice = 0;
 	new_qos->max_byte_per_timeslice = 0;
 	new_qos->io_submitted_this_timeslice = 0;
+	new_qos->read_io_submitted_this_timeslice = 0;
+	new_qos->write_io_submitted_this_timeslice = 0;
 	new_qos->byte_submitted_this_timeslice = 0;
 	new_qos->poller = NULL;
 	TAILQ_INIT(&new_qos->queued);
@@ -2704,6 +2785,8 @@ _spdk_bdev_qos_config_type(struct spdk_bdev *bdev, uint64_t qos_set,
 
 	switch (qos_type) {
 	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
 		min_qos_set = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
 		break;
 	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
@@ -2736,6 +2819,12 @@ _spdk_bdev_qos_config_type(struct spdk_bdev *bdev, uint64_t qos_set,
 	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
 		bdev->internal.qos->byte_rate_limit = qos_set * 1024 * 1024;
 		break;
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+		bdev->internal.qos->read_iops_rate_limit = qos_set;
+		break;
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
+		bdev->internal.qos->write_iops_rate_limit = qos_set;
+		break;
 	default:
 		break;
 	}
@@ -2753,13 +2842,14 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 	const char			*val = NULL;
 	uint64_t			qos_set = 0;
 	int				i = 0, j = 0;
+	enum spdk_bdev_qos_type		qos_type = SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT;
 
 	sp = spdk_conf_find_section(NULL, "QoS");
 	if (!sp) {
 		return;
 	}
 
-	while (j < SPDK_BDEV_QOS_NUM_TYPES) {
+	while (j < SPDK_BDEV_QOS_TYPES) {
 		i = 0;
 		while (true) {
 			val = spdk_conf_section_get_nmval(sp, qos_type_str[j], i, 0);
@@ -2775,7 +2865,8 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 			val = spdk_conf_section_get_nmval(sp, qos_type_str[j], i, 1);
 			if (val) {
 				qos_set = strtoull(val, NULL, 10);
-				_spdk_bdev_qos_config_type(bdev, qos_set, j);
+				qos_type = SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT << j;
+				_spdk_bdev_qos_config_type(bdev, qos_set, qos_type);
 			}
 
 			break;
@@ -3430,9 +3521,10 @@ spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, struct spdk_bdev_qos_rate_l
 			     uint32_t types, void (*cb_fn)(void *cb_arg, int status), void *cb_arg)
 {
 	struct set_qos_limit_ctx *ctx;
-	uint32_t limit_set_complement = 0, min_limit_per_sec = 0;
+	uint32_t limit_set_complement = 0;
 	uint64_t limit_per_sec = 0;
 	uint32_t limit_type = SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT;
+	uint32_t min_limit_per_sec = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
 	bool enable_rate_limit = true;
 
 	assert(types != SPDK_BDEV_QOS_INVALID_RATE_LIMIT);
