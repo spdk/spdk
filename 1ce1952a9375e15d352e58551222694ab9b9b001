@@ -1,0 +1,141 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b29b58b_ab611a7d",
+        "filename": "test/bdev/bdevjson/json_config.sh",
+        "patchSetId": 88
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T23:26:12Z",
+      "side": 1,
+      "message": "clear?",
+      "range": {
+        "startLine": 16,
+        "startChar": 1,
+        "endLine": 16,
+        "endChar": 6
+      },
+      "revId": "1ce1952a9375e15d352e58551222694ab9b9b001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7926ed0_9a8e4390",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 88
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T23:26:12Z",
+      "side": 1,
+      "message": "remove_config_files_after_test_json_config or\nremove_files_after_test_json_config may be easy to grasp what is done here.",
+      "range": {
+        "startLine": 59,
+        "startChar": 9,
+        "endLine": 59,
+        "endChar": 14
+      },
+      "revId": "1ce1952a9375e15d352e58551222694ab9b9b001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0842440e_e7cfe482",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 88
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T23:26:12Z",
+      "side": 1,
+      "message": "I know config of pmem and rbd will be tested in subsequent patches. But the title of this patch is renamed to base_bdev and is it possible to add this together with code to run test?",
+      "revId": "1ce1952a9375e15d352e58551222694ab9b9b001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3953009b_8706408e",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 88
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T23:26:12Z",
+      "side": 1,
+      "message": "is it possible to add this later?",
+      "revId": "1ce1952a9375e15d352e58551222694ab9b9b001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7ff91f5_7c6cac4f",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 88
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T23:26:12Z",
+      "side": 1,
+      "message": "you used clear_config first and so clear_bdev_subsystem_config may be better.",
+      "range": {
+        "startLine": 93,
+        "startChar": 9,
+        "endLine": 93,
+        "endChar": 14
+      },
+      "revId": "1ce1952a9375e15d352e58551222694ab9b9b001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6baa8fdb_1079eec6",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 88
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T23:26:12Z",
+      "side": 1,
+      "message": "is it possible to add this later?",
+      "revId": "1ce1952a9375e15d352e58551222694ab9b9b001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1682d0fa_d591145d",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 88
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T23:26:12Z",
+      "side": 1,
+      "message": "is it possible to add this later?",
+      "revId": "1ce1952a9375e15d352e58551222694ab9b9b001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
