@@ -46,6 +46,8 @@ $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S & server_pid=$!
 trap "killprocess $server_pid;exit 1" SIGINT SIGTERM EXIT
 waitforlisten $server_pid
 
+sleep 1
+
 # send message to server using socat
 message="**MESSAGE:This is a test message to the server**"
 response=$( echo $message | $SOCAT_APP - tcp:$TARGET_IP:$ISCSI_PORT 2>/dev/null )
