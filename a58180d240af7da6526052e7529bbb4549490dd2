@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60b5a88a_5bd8710f",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T01:40:35Z",
+      "side": 1,
+      "message": "busy_tsc ? (add underscore)",
+      "range": {
+        "startLine": 182,
+        "startChar": 38,
+        "endLine": 182,
+        "endChar": 39
+      },
+      "revId": "a58180d240af7da6526052e7529bbb4549490dd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92a32fb6_caafd719",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T01:40:35Z",
+      "side": 1,
+      "message": "idle_tsc ?",
+      "range": {
+        "startLine": 183,
+        "startChar": 38,
+        "endLine": 183,
+        "endChar": 39
+      },
+      "revId": "a58180d240af7da6526052e7529bbb4549490dd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb694558_37ed07e0",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T01:40:35Z",
+      "side": 1,
+      "message": "unknown_tsc ?",
+      "range": {
+        "startLine": 184,
+        "startChar": 41,
+        "endLine": 184,
+        "endChar": 42
+      },
+      "revId": "a58180d240af7da6526052e7529bbb4549490dd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4bc0d09_07132ee6",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T01:40:35Z",
+      "side": 1,
+      "message": "I think it may be better if the top level is a JSON object because tsc_hz and stats should not be in the same list.\n\n{\n  \"tsc_hz\": 3000000000,\n  \"stats\": [\n    {\n      \"core_id\", 0,\n      \"busy_tsc\", 0,\n      \"idle_tsc\", 0,\n      \"unknown_tsc\", 0\n    },\n    {\n      \"core_id\", 1,\n      \"busy_tsc\", 0,\n      \"idle_tsc\", 0,\n      \"unknown_tsc\", 0\n    }\n  ]\n}",
+      "revId": "a58180d240af7da6526052e7529bbb4549490dd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
