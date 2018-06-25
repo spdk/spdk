@@ -1,0 +1,13 @@
+diff --git a/src/vnet/tcp/tcp_input.c b/src/vnet/tcp/tcp_input.c
+index 392d694..e7efa77 100644
+--- a/src/vnet/tcp/tcp_input.c
++++ b/src/vnet/tcp/tcp_input.c
+@@ -1644,6 +1644,8 @@ tcp_handle_disconnects (tcp_worker_ctx_t * wrk)
+   for (i = 0; i < vec_len (pending_disconnects); i++)
+     {
+       tc = tcp_connection_get (pending_disconnects[i], thread_index);
++      if (tc == NULL)
++	continue;
+       tcp_disconnect_pending_off (tc);
+       session_transport_closing_notify (&tc->connection);
+     }
