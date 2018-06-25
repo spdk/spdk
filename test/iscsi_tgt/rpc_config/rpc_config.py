@@ -124,9 +124,13 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
 
     check_output('iscsiadm -m node --logout', shell=True)
     check_output('iscsiadm -m node -o delete', shell=True)
+
     rpc.delete_initiator_group(initiator_tag)
     rpc.delete_portal_group(portal_tag)
     rpc.delete_target_node(name)
+
+    time.sleep(1)
+
     output = rpc.get_iscsi_connections()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
@@ -164,9 +168,13 @@ def verify_scsi_devices_rpc_methods(rpc_py):
 
     check_output('iscsiadm -m node --logout', shell=True)
     check_output('iscsiadm -m node -o delete', shell=True)
+
     rpc.delete_initiator_group(initiator_tag)
     rpc.delete_portal_group(portal_tag)
     rpc.delete_target_node(name)
+
+    time.sleep(1)
+
     output = rpc.get_scsi_devices()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
@@ -486,7 +494,10 @@ if __name__ == "__main__":
     try:
         verify_log_flag_rpc_methods(rpc_py, rpc_param)
         verify_get_interfaces(rpc_py)
-        verify_add_delete_ip_address(rpc_py)
+        # Add/delete IP will not be supported in VPP.
+        # It has separate vppctl utility for that.
+        if test_type == 'posix':
+            verify_add_delete_ip_address(rpc_py)
         create_malloc_bdevs_rpc_methods(rpc_py, rpc_param)
         verify_portal_groups_rpc_methods(rpc_py, rpc_param)
         verify_initiator_groups_rpc_methods(rpc_py, rpc_param)
