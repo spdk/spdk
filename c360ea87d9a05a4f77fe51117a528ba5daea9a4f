@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6fcb2b0a_39d0ff48",
+        "filename": "include/spdk_internal/virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-25T09:31:45Z",
+      "side": 1,
+      "message": "Done, I included some more detail.",
+      "parentUuid": "faf7619d_25a951ad",
+      "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18be8bbf_b6f6fefb",
         "filename": "include/spdk_internal/virtio.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-18T22:31:22Z",
       "side": 1,
       "message": "virtqueue_req_flush",
+      "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7395c7d_9326afd0",
+        "filename": "include/spdk_internal/virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-25T09:31:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "18be8bbf_b6f6fefb",
       "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "8d030a99_d660a0b9",
+        "filename": "include/spdk_internal/virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-25T09:31:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a9d424f_1b3c65ff",
+      "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21395a90_149652f3",
         "filename": "lib/virtio/virtio.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-06-18T22:31:22Z",
       "side": 1,
       "message": "Why does the location of this virtio_wmb() change relative to the previous code in virtqueue_req_flush?\n\n(I\u0027m having major deja vu while writing this comment - maybe you answered this question in a different Gerrit review that made similar changes, but I can\u0027t seem to find it.)",
+      "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22da382c_18865f71",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-25T09:31:45Z",
+      "side": 1,
+      "message": "That\u0027s just a minor cleanup. I *did* try to smuggle this once already but removed it soon after, claiming that it\u0027s unimportant. I\u0027ll do the same now :)",
+      "parentUuid": "21395a90_149652f3",
       "revId": "c360ea87d9a05a4f77fe51117a528ba5daea9a4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
