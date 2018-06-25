@@ -579,7 +579,7 @@ bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	uint64_t offset_blocks, num_blocks;
 	uint16_t cmd_len;
 
-	buf = bdev_io->u.bdev.iov.iov_base;
+	buf = bdev_io->u.bdev.iovs[0].iov_base;
 
 	offset_blocks = bdev_io->u.bdev.offset_blocks;
 	num_blocks = bdev_io->u.bdev.num_blocks;
