@@ -877,6 +877,10 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		} else if (ns != NULL && sgroup->channels[i] == NULL) {
 			/* A namespace appeared but there is no channel yet */
 			sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
+			if (sgroup->channels[i] == NULL) {
+				SPDK_ERRLOG("No I/O channel, may config fewer cores.\n");
+				return -EINVAL;
+			}
 		} else {
 			/* A namespace was present before and didn't change. */
 		}
