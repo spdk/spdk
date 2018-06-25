@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f740047e_848044dc",
+        "filename": "examples/ioat/verify/verify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T16:38:10Z",
+      "side": 1,
+      "message": "spdk_max() is implemented as a simple macro:\n\n  #define spdk_max(a,b) (((a)\u003e(b))?(a):(b))\n\nso it evaluates its arguments twice; this means that rand_r() will get executed again and may return an out-of-range value on the second call.\n\nWe could make spdk_max()/spdk_min() only evaluate their arguments once, although this would require the GCC typeof extension (I don\u0027t think there\u0027s any standard way to do this in C99), but in this case, it\u0027s probably simpler to just keep an intermediate variable to hold the rand_r() result and then use spdk_max() on that.",
+      "revId": "bb8f2442a6580840a9ace8369c8e518d834933f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
