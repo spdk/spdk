@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d02c2c3_270ed883",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T04:31:35Z",
+      "side": 1,
+      "message": "I\u0027m not sure if using -f is a good manner in test code (the intention is not to care if files exist or not?)\n\nHow do you think about the following?\n\nfor nvmf\ntest_json_config\nclean_after_test_json_config_nvmf\n\nfor bdev\ntest_json_config\nclean_afer_test_json_config_bdev",
+      "range": {
+        "startLine": 61,
+        "startChar": 4,
+        "endLine": 61,
+        "endChar": 6
+      },
+      "revId": "5429befa3ab832148529c128058dca0d5d3cd817",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b9cf203_2530653f",
+        "filename": "test/nvmf/nvmfjson/json_config.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-25T04:31:35Z",
+      "side": 1,
+      "message": "will you check the result as well as test for bdev json config?",
+      "revId": "5429befa3ab832148529c128058dca0d5d3cd817",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
