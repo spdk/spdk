@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "824b325e_06402fb1",
+        "filename": "dpdk",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:56:48Z",
+      "side": 1,
+      "message": "This submodule change looks unrelated; please run \u0027git submodule update\u0027 on your branch.",
+      "revId": "6b72d8eaa427e8520518be170d7ca81d41bd7581",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8077d526_4115917e",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:56:48Z",
+      "side": 1,
+      "message": "This should be in the NVMe library headers; we can\u0027t use NVMe library types in the env library, since env is generic.",
+      "revId": "6b72d8eaa427e8520518be170d7ca81d41bd7581",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96c198ac_c62eb6ee",
+        "filename": "lib/env_dpdk/env_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:56:48Z",
+      "side": 1,
+      "message": "I don\u0027t think this is meant to be commented out.",
+      "revId": "6b72d8eaa427e8520518be170d7ca81d41bd7581",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d48948e3_9e9da274",
+        "filename": "lib/env_dpdk/env_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:56:48Z",
+      "side": 1,
+      "message": "The env library cannot include the NVMe library headers - env is generic and is layered below the NVMe driver.",
+      "revId": "6b72d8eaa427e8520518be170d7ca81d41bd7581",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c06b740a_f25e2d5e",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:56:48Z",
+      "side": 1,
+      "message": "The env layer should not know anything about the Infiniband verbs API - this is encapsulated in lib/nvme, and env needs to work even when libibverbs is not linked in.",
+      "revId": "6b72d8eaa427e8520518be170d7ca81d41bd7581",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21c3558b_01386e4b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1312,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:56:48Z",
+      "side": 1,
+      "message": "malloc() needs to be checked (it can return NULL on failure); also, the cast is not necessary in C.",
+      "revId": "6b72d8eaa427e8520518be170d7ca81d41bd7581",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49e2996c_8d3436c8",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1354,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:56:48Z",
+      "side": 1,
+      "message": "This should not be required for PCIe (locally-attached) controllers, since they don\u0027t have an ADRFAM.  Only NVMe-oF controllers require ADRFAM.",
+      "revId": "6b72d8eaa427e8520518be170d7ca81d41bd7581",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c8dfab8_b3f500d8",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:56:48Z",
+      "side": 1,
+      "message": "The first parameter to spdk_mem_map_alloc() is the default translation - in other words, the value that is returned from a lookup when no value has been inserted into the map for a given key.  I don\u0027t think returning the value of \u0027hooks\u0027 there makes sense.",
+      "revId": "6b72d8eaa427e8520518be170d7ca81d41bd7581",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1d60f06_21a72471",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-25T19:56:48Z",
+      "side": 1,
+      "message": "This should be moved up next to the other hooks.  Also, please add a newline between the braces.",
+      "revId": "6b72d8eaa427e8520518be170d7ca81d41bd7581",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
