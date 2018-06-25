@@ -61,6 +61,7 @@ enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_ACTIVATING,
 	SPDK_NVMF_QPAIR_ACTIVE,
 	SPDK_NVMF_QPAIR_DEACTIVATING,
+	SPDK_NVMF_QPAIR_ERROR,
 };
 
 typedef void (*spdk_nvmf_state_change_done)(void *cb_arg, int status);
@@ -297,6 +298,8 @@ void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
+
+void spdk_nvmf_ctrlr_drain_reqs(struct spdk_nvmf_ctrlr *ctrlr);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)

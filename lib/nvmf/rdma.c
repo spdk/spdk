@@ -1110,6 +1110,11 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			TAILQ_REMOVE(&rqpair->incoming_queue, rdma_recv, link);
 
+			if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ERROR ||
+			    rqpair->qpair.state == SPDK_NVMF_QPAIR_DEACTIVATING) {
+				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+				break;
+			}
 			/* The next state transition depends on the data transfer needs of this request. */
 			rdma_req->req.xfer = spdk_nvmf_rdma_request_get_xfer(rdma_req);
 
@@ -1713,10 +1718,114 @@ spdk_nvmf_rdma_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
 	return false;
 }
 
+#define spdk_nvmf_rdma_drain_queue(queue, link) { \
+	struct spdk_nvmf_rdma_request *rdma_req, *req_tmp; \
+	struct spdk_nvmf_rdma_transport *rtransport; \
+\
+	TAILQ_FOREACH_SAFE(rdma_req, \
+	&queue, \
+	link, \
+	req_tmp) { \
+		rtransport = SPDK_CONTAINEROF(rdma_req->req.qpair->transport, \
+						struct spdk_nvmf_rdma_transport, transport); \
+		spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED); \
+		spdk_nvmf_rdma_request_process(rtransport, rdma_req); \
+	} \
+}
+
+static void spdk_nvmf_rdma_drain_rw_reqs(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	spdk_nvmf_rdma_drain_queue(
+		rqpair->state_queue[RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER],
+		state_link);
+	spdk_nvmf_rdma_drain_queue(
+		rqpair->state_queue[RDMA_REQUEST_STATE_COMPLETING_CONTROLLER_TO_HOST],
+		state_link);
+	spdk_nvmf_rdma_drain_queue(
+		rqpair->state_queue[RDMA_REQUEST_STATE_COMPLETING_INCAPSULE],
+		state_link);
+}
+
+static void spdk_nvmf_rdma_drain_pending_reqs(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	spdk_nvmf_rdma_drain_queue(rqpair->pending_rdma_rw_queue, link);
+	spdk_nvmf_rdma_drain_queue(rqpair->pending_rdma_rw_queue, link);
+}
+
+static void
+spdk_nvmf_rdma_sq_drained(void *cb_arg, int status)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair = cb_arg;
+
+	SPDK_NOTICELOG("IBV QP#%u drained\n", rqpair->qpair.qid);
+	/* drain might recurse into this func again, null the state cb */
+	rqpair->qpair.state_cb = NULL;
+	rqpair->qpair.state_cb_arg = NULL;
+
+	spdk_nvmf_ctrlr_drain_reqs(rqpair->qpair.ctrlr);
+	spdk_nvmf_rdma_drain_pending_reqs(rqpair);
+	spdk_nvmf_rdma_drain_rw_reqs(rqpair);
+
+	if (!spdk_nvmf_rdma_qpair_is_idle(&rqpair->qpair)) {
+		/* There must be outstanding requests down to media.
+		 * If so, wait till they're complete
+		 */
+		assert(!TAILQ_EMPTY(&rqpair->qpair.outstanding));
+		rqpair->qpair.state_cb = spdk_nvmf_rdma_sq_drained;
+		rqpair->qpair.state_cb_arg = rqpair;
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA,
+			      "QP#%u (%p): wait for outstanding requests...\n",
+			      rqpair->qpair.qid, &rqpair->qpair);
+		return;
+	}
+
+	if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ERROR) {
+		/* Do not start recovery if qp is not in error state.
+		   QP Drained may come a few times along with QP state
+		   transitions. */
+		return;
+	}
+
+	if (spdk_nvmf_recover(&rqpair->qpair) != 0) {
+		SPDK_NOTICELOG("QP#%u (%p): reqovery failed, disconnecting...\n",
+			       rqpair->qpair.qid, &rqpair->qpair);
+		spdk_nvmf_qpair_disconnect(&rqpair->qpair);
+	}
+}
+
+static void
+_spdk_nvmf_rdma_sq_drained(void *cb_arg)
+{
+	spdk_nvmf_rdma_sq_drained(cb_arg, 0);
+}
+
+static void
+_spdk_nvmf_rdma_qp_error(void *arg)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair = arg;
+	/* Set ERROR state cb to receive
+	   request completions from nvmf layer */
+	rqpair->qpair.state_cb = spdk_nvmf_rdma_sq_drained;
+	rqpair->qpair.state_cb_arg = rqpair;
+	rqpair->qpair.state = SPDK_NVMF_QPAIR_ERROR;
+
+	if (spdk_nvmf_rdma_qpair_is_idle(&rqpair->qpair)) {
+		/* There are no outstanding requests */
+		spdk_nvmf_rdma_sq_drained(rqpair, 0);
+	}
+}
+
+static struct spdk_nvmf_rdma_qpair *
+spdk_nvmf_rqpair_from_qp(struct ibv_qp *qp)
+{
+	return qp->qp_context;
+}
+
 static void
 spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 {
 	int rc;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct ibv_async_event event;
 
 	rc = ibv_get_async_event(device->context, &event);
@@ -1729,6 +1838,38 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 
 	SPDK_NOTICELOG("Async event: %s\n",
 		       ibv_event_type_str(event.event_type));
+
+	switch (event.event_type) {
+	case IBV_EVENT_QP_FATAL:
+		rqpair = spdk_nvmf_rqpair_from_qp(event.element.qp);
+		spdk_nvmf_update_ibv_qp(&rqpair->qpair);
+		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
+		break;
+	case IBV_EVENT_SQ_DRAINED:
+		rqpair = spdk_nvmf_rqpair_from_qp(event.element.qp);
+		spdk_nvmf_update_ibv_qp(&rqpair->qpair);
+		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_sq_drained, rqpair);
+		break;
+	case IBV_EVENT_CQ_ERR:
+	case IBV_EVENT_QP_LAST_WQE_REACHED:
+	case IBV_EVENT_QP_REQ_ERR:
+	case IBV_EVENT_QP_ACCESS_ERR:
+	case IBV_EVENT_COMM_EST:
+	case IBV_EVENT_PATH_MIG:
+	case IBV_EVENT_PATH_MIG_ERR:
+	case IBV_EVENT_DEVICE_FATAL:
+	case IBV_EVENT_PORT_ACTIVE:
+	case IBV_EVENT_PORT_ERR:
+	case IBV_EVENT_LID_CHANGE:
+	case IBV_EVENT_PKEY_CHANGE:
+	case IBV_EVENT_SM_CHANGE:
+	case IBV_EVENT_SRQ_ERR:
+	case IBV_EVENT_SRQ_LIMIT_REACHED:
+	case IBV_EVENT_CLIENT_REREGISTER:
+	case IBV_EVENT_GID_CHANGE:
+	default:
+		break;
+	}
 	ibv_ack_async_event(&event);
 }
 
@@ -1978,8 +2119,14 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_transport	*rtransport = SPDK_CONTAINEROF(req->qpair->transport,
 			struct spdk_nvmf_rdma_transport, transport);
 	struct spdk_nvmf_rdma_request	*rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair,
+					      struct spdk_nvmf_rdma_qpair, qpair);
 
-	spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_EXECUTED);
+	/* Mark request as COMPLETED for ERROR state so RDMA transfer is not kicked off */
+	spdk_nvmf_rdma_request_set_state(rdma_req,
+					 (rqpair->qpair.state == SPDK_NVMF_QPAIR_ERROR) ?
+					 RDMA_REQUEST_STATE_COMPLETED :
+					 RDMA_REQUEST_STATE_EXECUTED);
 	spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 
 	return 0;
@@ -2108,8 +2255,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 	for (i = 0; i < reaped; i++) {
 		if (wc[i].status) {
-			SPDK_ERRLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				    rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on CQ %p, Request 0x%lu (%d): %s\n",
+				      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
 			continue;
 		}
@@ -2153,10 +2300,13 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_recv = get_rdma_recv_from_wc(&wc[i]);
 			rqpair = rdma_recv->qpair;
 
-			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
-
-			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
+			if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ERROR) {
+				/* Ignore it */
+			} else {
+				TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
+				/* Try to process other queued requests */
+				spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
+			}
 			break;
 
 		default:
