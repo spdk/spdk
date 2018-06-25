@@ -51,7 +51,7 @@ class UIRoot(UINode):
 
     def create_malloc_bdev(self, **kwargs):
         response = rpc.bdev.construct_malloc_bdev(self.client, **kwargs)
-        return self.print_array(response)
+        return response
 
     def delete_malloc_bdev(self, **kwargs):
         rpc.bdev.delete_malloc_bdev(self.client, **kwargs)
@@ -65,22 +65,22 @@ class UIRoot(UINode):
 
     def create_aio_bdev(self, **kwargs):
         response = rpc.bdev.construct_aio_bdev(self.client, **kwargs)
-        return self.print_array(response)
+        return response
 
     def delete_aio_bdev(self, **kwargs):
         rpc.bdev.delete_aio_bdev(self.client, **kwargs)
 
     def create_lvol_bdev(self, **kwargs):
         response = rpc.lvol.construct_lvol_bdev(self.client, **kwargs)
-        return self.print_array(response)
+        return response
 
     def create_nvme_bdev(self, **kwargs):
         response = rpc.bdev.construct_nvme_bdev(self.client, **kwargs)
-        return self.print_array(response)
+        return response
 
     def create_null_bdev(self, **kwargs):
         response = rpc.bdev.construct_null_bdev(self.client, **kwargs)
-        return self.print_array(response)
+        return response
 
     def create_error_bdev(self, **kwargs):
         response = rpc.bdev.construct_error_bdev(self.client, **kwargs)
