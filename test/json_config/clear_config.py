@@ -100,12 +100,34 @@ def clear_nvmf_subsystem(args, nvmf_config):
             args.client.call(destroy_method, {'nqn': nvmf['params']['nqn']})
 
 
-def clear_scsi_subsystem(args, scsi_config):
-    pass
+def get_iscsi_destroy_method(iscsi):
+    destroy_method_map = {'add_portal_group': "delete_portal_group",
+                          'add_initiator_group': "delete_initiator_group",
+                          'construct_target_node': "delete_target_node",
+                          'set_iscsi_options': None
+                          }
+    return destroy_method_map[iscsi['method']]
+
+
+def get_iscsi_name(iscsi):
+    if 'name' in iscsi['params']:
+        return iscsi['params']['name']
+    else:
+        return iscsi['params']['tag']
+
+
+def get_iscsi_name_key(iscsi):
+    if iscsi['method'] == 'construct_target_node':
+        return "name"
+    else:
+        return 'tag'
 
 
 def clear_iscsi_subsystem(args, iscsi_config):
-    pass
+    for iscsi in iscsi_config:
+        destroy_method = get_iscsi_destroy_method(iscsi)
+        if destroy_method:
+            args.client.call(destroy_method, {get_iscsi_name_key(iscsi): get_iscsi_name(iscsi)})
 
 
 def clear_nbd_subsystem(args, scsi_config):
