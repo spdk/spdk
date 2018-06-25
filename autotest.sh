@@ -201,6 +201,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test suite test/spdkcli/raid.sh
 	fi
 
+	if [ $SPDK_TEST_VPP -eq 1 ]; then
+		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh vpp
+	fi
+
 	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 		run_test suite ./test/blobfs/rocksdb/rocksdb.sh
 		run_test suite ./test/blobstore/blobstore.sh
