@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09a34e77_4e0dd765",
+        "filename": "lib/bdev/passthru/vbdev_passthru.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-25T14:28:09Z",
+      "side": 1,
+      "message": "Please fix, see check_format.sh",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 6
+      },
+      "revId": "e64adcce3dd268ed652141fade17411bfdd00640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
