@@ -53,6 +53,7 @@ fi
 : ${SPDK_TEST_VHOST_INIT=1}; export SPDK_TEST_VHOST_INIT
 : ${SPDK_TEST_PMDK=1}; export SPDK_TEST_PMDK
 : ${SPDK_TEST_LVOL=1}; export SPDK_TEST_LVOL
+: ${SPDK_TEST_VPP=1}; export SPDK_TEST_VPP
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 
@@ -101,6 +102,13 @@ case `uname` in
 				config_params+=' --enable-asan'
 			else
 				SPDK_RUN_ASAN=0
+			fi
+		fi
+		if [ $SPDK_TEST_VPP -eq 1 ]; then
+			if ldconfig -p | grep -q libvppcom; then
+				config_params+=' --with-vpp'
+			else
+				SPDK_TEST_VPP=0
 			fi
 		fi
 		;;
