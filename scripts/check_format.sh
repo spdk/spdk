@@ -110,12 +110,10 @@ else
 fi
 rm -f scripts/posix.log
 
-if hash pep8 2>/dev/null; then
-	PEP8=pep8
-fi
-
 if hash pycodestyle 2>/dev/null; then
 	PEP8=pycodestyle
+elif hash pep8 2>/dev/null; then
+	PEP8=pep8
 fi
 
 if [ ! -z ${PEP8} ]; then
