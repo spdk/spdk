@@ -380,9 +380,22 @@ spdk_bdev_get_by_name(const char *bdev_name)
 static void
 spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf)
 {
+	struct iovec **iovs;
+	int *iovcnt;
+
 	assert(bdev_io->internal.get_buf_cb != NULL);
 	assert(buf != NULL);
-	assert(bdev_io->u.bdev.iovs != NULL);
+
+	iovs = &bdev_io->u.bdev.iovs;
+	iovcnt = &bdev_io->u.bdev.iovcnt;
+
+	if (*iovs == NULL || *iovcnt == 0) {
+		*iovs = &bdev_io->iov;
+		*iovcnt = 1;
+	}
+
+	(*iovs)[0].iov_base = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
+	(*iovs)[0].iov_len = bdev_io->internal.buf_len;
 
 	bdev_io->internal.buf = buf;
 	bdev_io->u.bdev.iovs[0].iov_base = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
@@ -1689,9 +1702,9 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->internal.ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
-	bdev_io->u.bdev.iov.iov_base = buf;
-	bdev_io->u.bdev.iov.iov_len = num_blocks * bdev->blocklen;
-	bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
+	bdev_io->u.bdev.iovs = &bdev_io->iov;
+	bdev_io->u.bdev.iovs[0].iov_base = buf;
+	bdev_io->u.bdev.iovs[0].iov_len = num_blocks * bdev->blocklen;
 	bdev_io->u.bdev.iovcnt = 1;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
@@ -1784,9 +1797,9 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->internal.ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
-	bdev_io->u.bdev.iov.iov_base = buf;
-	bdev_io->u.bdev.iov.iov_len = num_blocks * bdev->blocklen;
-	bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
+	bdev_io->u.bdev.iovs = &bdev_io->iov;
+	bdev_io->u.bdev.iovs[0].iov_base = buf;
+	bdev_io->u.bdev.iovs[0].iov_len = num_blocks * bdev->blocklen;
 	bdev_io->u.bdev.iovcnt = 1;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
@@ -1905,9 +1918,9 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		}
 
 		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
-		bdev_io->u.bdev.iov.iov_base = g_bdev_mgr.zero_buffer;
-		bdev_io->u.bdev.iov.iov_len = len;
-		bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
+		bdev_io->u.bdev.iovs = &bdev_io->iov;
+		bdev_io->u.bdev.iovs[0].iov_base = g_bdev_mgr.zero_buffer;
+		bdev_io->u.bdev.iovs[0].iov_len = len;
 		bdev_io->u.bdev.iovcnt = 1;
 		bdev_io->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev);
 		bdev_io->u.bdev.split_remaining_num_blocks = num_blocks - bdev_io->u.bdev.num_blocks;
@@ -1970,10 +1983,12 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->internal.ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
-	bdev_io->u.bdev.iov.iov_base = NULL;
-	bdev_io->u.bdev.iov.iov_len = 0;
-	bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
+
+	bdev_io->u.bdev.iovs = &bdev_io->iov;
+	bdev_io->u.bdev.iovs[0].iov_base = NULL;
+	bdev_io->u.bdev.iovs[0].iov_len = 0;
 	bdev_io->u.bdev.iovcnt = 1;
+
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
@@ -3156,7 +3171,7 @@ spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *c
 		       ZERO_BUFFER_SIZE);
 
 	bdev_io->u.bdev.offset_blocks = bdev_io->u.bdev.split_current_offset_blocks;
-	bdev_io->u.bdev.iov.iov_len = len;
+	bdev_io->u.bdev.iovs[0].iov_len = len;
 	bdev_io->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev_io->bdev);
 	bdev_io->u.bdev.split_remaining_num_blocks -= bdev_io->u.bdev.num_blocks;
 	bdev_io->u.bdev.split_current_offset_blocks += bdev_io->u.bdev.num_blocks;

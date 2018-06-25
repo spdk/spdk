@@ -324,11 +324,11 @@ struct spdk_bdev_io {
 	/** Enumerated value representing the I/O type. */
 	uint8_t type;
 
+	/** A single iovec element for use by this bdev_io. */
+	struct iovec iov;
+
 	union {
 		struct {
-			/** For basic IO case, use our own iovec element. */
-			struct iovec iov;
-
 			/** For SG buffer cases, array of iovecs to transfer. */
 			struct iovec *iovs;
 
