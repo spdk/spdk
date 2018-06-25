@@ -67,6 +67,8 @@ sleep 1
 timing_enter discovery
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+# TODO check with iscsiadm -m sessions that initiator actually connected
+sleep 3
 timing_exit discovery
 
 timing_enter fio
