@@ -430,6 +430,13 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	bdev = ns->bdev;
 	desc = ns->desc;
 	ch = group->sgroups[ctrlr->subsys->id].channels[nsid - 1];
+	if (spdk_unlikely(ch == NULL)) {
+		SPDK_ERRLOG("I/O command sent to NULL I/O channel\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 		return nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
