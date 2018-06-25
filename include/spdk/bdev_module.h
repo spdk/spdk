@@ -674,14 +674,49 @@ spdk_bdev_io_from_ctx(void *ctx)
 
 struct spdk_bdev_part_base;
 
+/**
+ * Returns a pointer to the spdk_bdev associated with an spdk_bdev_part_base
+ *
+ * \param part_base A pointer to an spdk_bdev_part_base object.
+ *
+ * \return A pointer to the base's spdk_bdev struct.
+ */
 struct spdk_bdev *spdk_bdev_part_base_get_bdev(struct spdk_bdev_part_base *part_base);
 
+/**
+ * Returns a pointer to the spdk_bdev_descriptor associated with an spdk_bdev_part_base
+ *
+ * \param part_base A pointer to an spdk_bdev_part_base object.
+ *
+ * \return A pointer to the base's spdk_bdev_desc struct.
+ */
 struct spdk_bdev_desc *spdk_bdev_part_base_get_desc(struct spdk_bdev_part_base *part_base);
 
+/**
+ * Returns a pointer to the tailq associated with an spdk_bdev_part_base
+ *
+ * \param part_base A pointer to an spdk_bdev_part_base object.
+ *
+ * \return The head of a tailq of spdk_bdev_part structs registered to the base's module.
+ */
 struct bdev_part_tailq *spdk_bdev_part_base_get_tailq(struct spdk_bdev_part_base *part_base);
 
+/**
+ * Returns a pointer to the module level context associated with an spdk_bdev_part_base
+ *
+ * \param part_base A pointer to an spdk_bdev_part_base object.
+ *
+ * \return A pointer to the module level context registered with the base in spdk_bdev_part_base_construct.
+ */
 void *spdk_bdev_part_base_get_ctx(struct spdk_bdev_part_base *part_base);
 
+/**
+ * Returns a pointer to the reference number associated with an spdk_bdev_part_base
+ *
+ * \param part_base A pointer to an spdk_bdev_part_base object.
+ *
+ * \return The base's reference number.
+ */
 uint32_t spdk_bdev_part_base_get_ref(struct spdk_bdev_part_base *part_base);
 
 typedef void (*spdk_bdev_part_base_free_fn)(void *ctx);
