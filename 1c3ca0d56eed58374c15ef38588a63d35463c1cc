@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "379cf7ab_ec948eb5",
+        "filename": "lib/bdev/null/bdev_null.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-26T05:01:07Z",
+      "side": 1,
+      "message": "Argument?",
+      "range": {
+        "startLine": 52,
+        "startChar": 17,
+        "endLine": 52,
+        "endChar": 26
+      },
+      "revId": "1c3ca0d56eed58374c15ef38588a63d35463c1cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
