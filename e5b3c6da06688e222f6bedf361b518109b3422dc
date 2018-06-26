@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50437f30_a1df1064",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 3097,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T13:32:02Z",
+      "side": 1,
+      "message": "I would agree with comments in previous patch sets.\n\nChanging it, so that no data is written to blobstore when doing load is valid one. Thus it would be best suited to separate patch. Would it be possible to create another patch with this change ?\n\nDoes this change here affect this patch at all ?",
+      "range": {
+        "startLine": 3097,
+        "startChar": 31,
+        "endLine": 3097,
+        "endChar": 68
+      },
+      "revId": "e5b3c6da06688e222f6bedf361b518109b3422dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
