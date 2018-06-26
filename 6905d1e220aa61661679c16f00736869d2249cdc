@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f11b2561_56984e9d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-26T00:41:21Z",
+      "side": 1,
+      "message": "This looks that x is attached to the end of hex value like 1111x. This should be \"0x%04\" PRIx16 ?",
+      "range": {
+        "startLine": 799,
+        "startChar": 61,
+        "endLine": 799,
+        "endChar": 72
+      },
+      "revId": "6905d1e220aa61661679c16f00736869d2249cdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
