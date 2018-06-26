@@ -21,10 +21,50 @@
 
 set -e
 
+UPGRADE=false;
+INSTALL=false;
+
+function usage()
+{
+    echo "This script is intended to automate the environment setup for a fedora linux virtual machine."
+    echo "Please run this script as your regular user. The script will make calls to sudo as needed."
+    echo ""
+    echo "./vm_setup.sh"
+    echo "\t-h --help"
+    echo "\t-u --upgrade Run dnf upgrade"
+    echo "\t-i --install-deps Install dnf based dependencies"
+
+    exit 0
+}
+
+while getopts 'iuh-:' optchar; do
+    case "$optchar" in
+        -)
+        case "$OPTARG" in
+            help) usage;;
+            upgrade) UPGRADE=true;;
+            install-deps) INSTALL=true;;
+            *) echo "Invalid argument '$OPTARG'"
+            usage;;
+        esac
+        ;;
+    h) usage;;
+    u) UPGRADE=true;;
+    i) INSTALL=true;;
+    *) echo "Invalid argument '$OPTARG'"
+    usage;;
+    esac
+done
+
 jobs=$(($(nproc)*2))
 
-sudo dnf upgrade -y
-sudo dnf install -y git
+if $UPGRADE; then
+    sudo dnf upgrade -y
+fi
+
+if $INSTALL; then
+    sudo dnf install -y git
+fi
 
 cd ~
 mkdir -p spdk_repo
@@ -38,36 +78,40 @@ else
 fi
 cd spdk
 git submodule update --init --recursive
-sudo ./scripts/pkgdep.sh
 cd ~
 
 
-sudo dnf install -y jq
-sudo dnf install -y tsocks
-sudo dnf install -y valgrind
-sudo dnf install -y nvme-cli
-sudo dnf install -y ceph
-sudo dnf install -y gdb
-sudo dnf install -y fio
-sudo dnf install -y librbd-devel
-sudo dnf install -y kernel-devel
-sudo dnf install -y gflags-devel
-sudo dnf install -y libasan
-sudo dnf install -y libubsan
-sudo dnf install -y autoconf
-sudo dnf install -y automake
-sudo dnf install -y libtool
-sudo dnf install -y libmount-devel
-sudo dnf install -y isns-utils-devel
-sudo dnf install -y pmempool
-sudo dnf install -y perl-open
-sudo dnf install -y glib2-devel
-sudo dnf install -y pixman-devel
-sudo dnf install -y astyle-devel
-sudo dnf install -y elfutils-libelf-devel
-sudo dnf install -y flex
-sudo dnf install -y bison
-sudo dnf install -y targetcli
+if $INSTALL; then
+    sudo ./scripts/pkgdep.sh
+
+    sudo dnf install -y jq
+    sudo dnf install -y tsocks
+    sudo dnf install -y valgrind
+    sudo dnf install -y nvme-cli
+    sudo dnf install -y ceph
+    sudo dnf install -y gdb
+    sudo dnf install -y fio
+    sudo dnf install -y librbd-devel
+    sudo dnf install -y kernel-devel
+    sudo dnf install -y gflags-devel
+    sudo dnf install -y libasan
+    sudo dnf install -y libubsan
+    sudo dnf install -y autoconf
+    sudo dnf install -y automake
+    sudo dnf install -y libtool
+    sudo dnf install -y libmount-devel
+    sudo dnf install -y isns-utils-devel
+    sudo dnf install -y pmempool
+    sudo dnf install -y perl-open
+    sudo dnf install -y glib2-devel
+    sudo dnf install -y pixman-devel
+    sudo dnf install -y astyle-devel
+    sudo dnf install -y elfutils-libelf-devel
+    sudo dnf install -y flex
+    sudo dnf install -y bison
+    sudo dnf install -y targetcli
+    sudo dnf install -y perl-Switch librdmacm-utils libibverbs-utils
+fi
 
 # The librxe-dev repository provides a command line tool called rxe_cfg which makes it
 # very easy to use Soft-RoCE. The build pool utilizes this command line tool in the absence
@@ -84,7 +128,6 @@ else
     sudo make install
     cd ~
 fi
-sudo dnf install -y perl-Switch librdmacm-utils libibverbs-utils
 
 # The version of iscsiadm that ships with fedora 26 was broken as of November 3 2017.
 # There is already a bug report out about it, and hopefully it is fixed soon, but in the event that
