@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c44695e_2b73f56a",
+        "filename": "test/nvmf/discovery/discovery.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-26T19:40:45Z",
+      "side": 1,
+      "message": "It probably makes more sense to write:\n\nfor null_bdev in $null_bdevs; do\n    $rpc_py delete_null_bdev $null_bdev\ndone",
+      "revId": "336ab5d98ec3f72dd4e26f6ce9032a8adbd70aaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
