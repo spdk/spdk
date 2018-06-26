@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e5b7adb_e46e2ce7",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-26T01:29:59Z",
+      "side": 1,
+      "message": "will you also add doc here if you add doc to delete function?",
+      "revId": "9381fedb18573d3f0473ac753c34e3e3c45e14b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4f253bb_0142cecc",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-26T01:29:59Z",
+      "side": 1,
+      "message": "spdk_delete_pmem_disk may be more consistent? (e.g. malloc uses the term disk.)\n\nCurrent name is of course fine but I think symmetric name is desirable.",
+      "range": {
+        "startLine": 50,
+        "startChar": 22,
+        "endLine": 50,
+        "endChar": 26
+      },
+      "revId": "9381fedb18573d3f0473ac753c34e3e3c45e14b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
