@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "5459ce25_573747f0",
+        "filename": "test/bdev/bdevjson/json_config.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-26T13:40:27Z",
+      "side": 1,
+      "message": "Please add timing section and report_test_completion.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 15
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2b83f6e_2337764f",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 89
