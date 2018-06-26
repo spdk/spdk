@@ -43,6 +43,7 @@ cd ~
 
 
 sudo dnf install -y jq
+sudo dnf install -y tsocks
 sudo dnf install -y valgrind
 sudo dnf install -y nvme-cli
 sudo dnf install -y ceph
@@ -95,7 +96,7 @@ if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
         mkdir -p open-iscsi-install
         cd open-iscsi-install
         sudo dnf download --source iscsi-initiator-utils
-        rpm2cpio iscsi-initiator-utils-6.2.0.874-3.git86e8892.fc26.src.rpm | cpio -idmv
+        rpm2cpio $(ls) | cpio -idmv
         mkdir -p patches
         mv 00* patches/
         git clone https://github.com/open-iscsi/open-iscsi
@@ -167,7 +168,7 @@ else
     echo "qemu already checked out. Skipping"
 fi
 cd "$SPDK_QEMU_BRANCH"
-if hash tsocks &> /dev/null; then
+if hash tsocks 2> /dev/null; then
     git_param="--with-git='tsocks git'"
 fi
 ./configure "$git_param" --prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa
