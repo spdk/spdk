@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5bc17299_9236de45",
+        "filename": "lib/bdev/rbd/bdev_rbd.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-26T05:00:46Z",
+      "side": 1,
+      "message": "Argument?",
+      "range": {
+        "startLine": 50,
+        "startChar": 17,
+        "endLine": 50,
+        "endChar": 26
+      },
+      "revId": "2e3ff04479ec333d313fb70defac366a15c57933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
