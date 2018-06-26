@@ -2,6 +2,12 @@
 
 ## v18.07: (Upcoming Release)
 
+### Log
+
+The debug log component flag has been renamed from `-t` to `-L` to prevent confusion
+with tracepoints and to allow the option to be added to tools that already use `-t`
+to mean something else.
+
 ### NVMe Driver
 
 New API function spdk_nvme_qpair_add_cmd_error_injection() and
