@@ -16,6 +16,24 @@
       "revId": "58bd90e2c63fd6dac8a203083040c27dd2f51c0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43d4bc6d_0e54f3a0",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-26T08:54:47Z",
+      "side": 1,
+      "message": "Yup, this change was on purpose, but unrelated. Should be gone after rebase now that Tomek\u0027s patches (which also change this line) are merged.",
+      "parentUuid": "333263eb_73a75ee4",
+      "revId": "58bd90e2c63fd6dac8a203083040c27dd2f51c0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
