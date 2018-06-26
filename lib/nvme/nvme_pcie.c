@@ -1028,7 +1028,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	 *   This ensures the PRP list embedded in the nvme_tracker object will not span a
 	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
 	 */
-	pqpair->tr = spdk_dma_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
+	pqpair->tr = spdk_dma_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), NULL);
 	if (pqpair->tr == NULL) {
 		SPDK_ERRLOG("nvme_tr failed\n");
 		return -ENOMEM;
@@ -1039,9 +1039,9 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 
 	for (i = 0; i < num_trackers; i++) {
 		tr = &pqpair->tr[i];
+		phys_addr = spdk_vtophys(pqpair->tr + i);
 		nvme_qpair_construct_tracker(tr, i, phys_addr);
 		TAILQ_INSERT_HEAD(&pqpair->free_tr, tr, tq_list);
-		phys_addr += sizeof(struct nvme_tracker);
 	}
 
 	nvme_pcie_qpair_reset(qpair);
