@@ -62,7 +62,7 @@ static struct spdk_bdev_module passthru_if = {
 	.module_init = vbdev_passthru_init,
 	.config_text = vbdev_passthru_get_spdk_running_config,
 	.get_ctx_size = vbdev_passthru_get_ctx_size,
-	.examine = vbdev_passthru_examine,
+	.examine_config = vbdev_passthru_examine,
 	.module_fini = vbdev_passthru_finish
 };
 

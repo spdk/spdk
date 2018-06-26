@@ -68,7 +68,7 @@ static void vbdev_ut_examine(struct spdk_bdev *bdev);
 
 struct spdk_bdev_module vbdev_ut_if = {
 	.name = "vbdev_ut",
-	.examine = vbdev_ut_examine,
+	.examine_config = vbdev_ut_examine,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)

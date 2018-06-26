@@ -2757,14 +2757,31 @@ static void
 spdk_bdev_start(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_module *module;
+	uint32_t action;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
 
+	/* Examine configuration before initializing I/O */
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (module->examine) {
+		if (module->examine_config) {
+			action = module->internal.action_in_progress;
 			module->internal.action_in_progress++;
-			module->examine(bdev);
+			module->examine_config(bdev);
+			if (action != module->internal.action_in_progress) {
+				SPDK_ERRLOG("Module %s examine_config did not exit properly", module->name);
+			}
+		}
+	}
+
+	if (bdev->internal.claim_module) {
+		return;
+	}
+
+	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
+		if (module->examine_disk) {
+			module->internal.action_in_progress++;
+			module->examine_disk(bdev);
 		}
 	}
 }
@@ -3121,7 +3138,7 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 	 *  ready to handle examine callbacks from later modules that will
 	 *  register physical bdevs.
 	 */
-	if (bdev_module->examine != NULL) {
+	if (bdev_module->examine_config != NULL || bdev_module->examine_disk != NULL) {
 		TAILQ_INSERT_HEAD(&g_bdev_mgr.bdev_modules, bdev_module, internal.tailq);
 	} else {
 		TAILQ_INSERT_TAIL(&g_bdev_mgr.bdev_modules, bdev_module, internal.tailq);
