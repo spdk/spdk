@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a14361d_85e06cbb",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-26T20:16:24Z",
+      "side": 1,
+      "message": "How can this happen? It looks like lun-\u003econtext is always set in create_iscsi_lun() before we start the poller.",
+      "revId": "eaee46986f0fa617d366e3e5c88ac072d2d10409",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
