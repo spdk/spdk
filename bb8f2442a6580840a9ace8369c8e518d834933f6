@@ -16,6 +16,24 @@
       "revId": "bb8f2442a6580840a9ace8369c8e518d834933f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2eacb7f0_c8080ea2",
+        "filename": "examples/ioat/verify/verify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-26T05:30:57Z",
+      "side": 1,
+      "message": "True, thanks.\nhttps://review.gerrithub.io/c/spdk/spdk/+/369102",
+      "parentUuid": "f740047e_848044dc",
+      "revId": "bb8f2442a6580840a9ace8369c8e518d834933f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
