@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9538247_54a2446f",
+        "filename": "test/spdkcli/spdkcli.test.match",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-26T12:35:19Z",
+      "side": 1,
+      "message": "if possible - I\u0027d suggest ignoring these list empty circles and full lines of dots and just concentrate on keywords like \"vhost\", \"malloc\", \"Nvmen1p0\", etc.\nFocus on that later.",
+      "range": {
+        "startLine": 2,
+        "startChar": 2,
+        "endLine": 2,
+        "endChar": 5
+      },
+      "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c8a3969_9002bb4e",
+        "filename": "test/spdkcli/spdkcli.test.match",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-26T12:35:19Z",
+      "side": 1,
+      "message": "Pretty sure you will need to update this file to ignore some of the variable output places, like NVMe or Split size, as this can vary between servers.",
+      "range": {
+        "startLine": 10,
+        "startChar": 116,
+        "endLine": 10,
+        "endChar": 122
+      },
+      "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8774484c_09f278cc",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-26T12:35:19Z",
+      "side": 1,
+      "message": "If it\u0027s global, then why not spawn it just once in main?",
+      "range": {
+        "startLine": 29,
+        "startChar": 4,
+        "endLine": 29,
+        "endChar": 60
+      },
+      "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0720c1b0_d953e08a",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-26T12:35:19Z",
+      "side": 1,
+      "message": "You found a bug that after creating target/lun and calling \"ls\" the tree is not refreshed. I think you should have this case here.",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 65
+      },
+      "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff954eae_b6655501",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-26T12:35:19Z",
+      "side": 1,
+      "message": "Do you plan on adding more arguments? Because I think argparse just for 2 is an overkill",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 24
+      },
+      "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
