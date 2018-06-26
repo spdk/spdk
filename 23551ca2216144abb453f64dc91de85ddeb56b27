@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4ec4ad8_5828d565",
+        "filename": "test/bdev/bdevjson/json_config.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T11:23:40Z",
+      "side": 1,
+      "message": "Is this required ? Why not just use only \"rpc_py\" and \"clear_config_py\" ?",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 40
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2b83f6e_2337764f",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T11:23:40Z",
+      "side": 1,
+      "message": "It might have been separate patch, but I\u0027m fine to have it here.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 46
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1d0a8db_b54d83fa",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T11:23:40Z",
+      "side": 1,
+      "message": "Since json test are incorporated into usual tests for all bdev types, this flag looks unused. Can it be removed ?",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 44
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fb93eef_32072406",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T11:23:40Z",
+      "side": 1,
+      "message": "Is there a reason not to use \"rpc_py\" and \"clear_config_py\" throughout ?",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 70
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "038bf906_1573394c",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T11:23:40Z",
+      "side": 1,
+      "message": "Since this is the main part of the whole test, please add brief description of what is happening here. Otherwise the intention might be not immediately known.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 29
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8655e011_d14717f7",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T11:23:40Z",
+      "side": 1,
+      "message": "Why not use match utility ? Instead of saving the config, stripping it of arbitrary \"delete_startup_rpcs\" and going through actual json. I mean, configuration is known beforehand and both \"startup_rpcs\" and \"runtime_rpcs\" can be tested at the same time.",
+      "range": {
+        "startLine": 42,
+        "startChar": 1,
+        "endLine": 42,
+        "endChar": 100
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ebbd4cb_5f195c57",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T11:23:40Z",
+      "side": 1,
+      "message": "Is this assuming there are two NVMe devices (physical or emulated when in VM) ?\nIt might be fine to assume one. Two unless specific test requires it, might be too many.",
+      "range": {
+        "startLine": 66,
+        "startChar": 31,
+        "endLine": 66,
+        "endChar": 38
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8be32f94_6858e036",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T11:23:40Z",
+      "side": 1,
+      "message": "Since the sample_aio file is removed only when on Linux, please only create it when on Linux system. Move this line one below.",
+      "range": {
+        "startLine": 72,
+        "startChar": 1,
+        "endLine": 72,
+        "endChar": 54
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e7c10e7_72b096ba",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-26T11:23:40Z",
+      "side": 1,
+      "message": "Shouldn\u0027t destroying lvol store be enough, as in no need to delete each lvol separately ?",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 39
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
