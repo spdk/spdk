@@ -16,6 +16,24 @@
       "revId": "7c9658f4f291320b84bdd67ca75abb4812c0d3ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebb5064f_4115043f",
+        "filename": "examples/ioat/verify/verify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-26T05:47:37Z",
+      "side": 1,
+      "message": "It is somewhat safe since rte_mempool buffers in SPDK are always cache aligned. This isn\u0027t really documented in SPDK though and may not work for other env implementations. Ack, I\u0027ll manually ensure everything\u0027s safe at least to increase the code readability.",
+      "parentUuid": "fb5dd03c_a8e0bb80",
+      "revId": "7c9658f4f291320b84bdd67ca75abb4812c0d3ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
