@@ -16,6 +16,24 @@
       "revId": "3e36c65423416614a06d006319cb5dc636159457",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23a7e9df_3f52ee84",
+        "filename": "autotest.sh",
+        "patchSetId": 88
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-26T07:33:45Z",
+      "side": 1,
+      "message": "Sorry, I added these logs to help me investigate the issue with virtio initiator, I missed that.",
+      "parentUuid": "6e3af5ee_1b6215b0",
+      "revId": "3e36c65423416614a06d006319cb5dc636159457",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
