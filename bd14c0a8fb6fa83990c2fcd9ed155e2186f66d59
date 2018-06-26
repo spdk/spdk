@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fa592e9c_b0e99cc2",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-26T17:12:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6c348c38_14e30796",
+      "revId": "bd14c0a8fb6fa83990c2fcd9ed155e2186f66d59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ddeb5cd1_c1416c47",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-21T20:49:22Z",
       "side": 1,
       "message": "This should also talk about how it relates to the value (1 or 0) returned from the spdk_bdev_fn_table\u0027s destruct function.  I\u0027ll let you dig into it further.  :)",
+      "revId": "bd14c0a8fb6fa83990c2fcd9ed155e2186f66d59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b941ce9_fb34357f",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-26T17:12:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ddeb5cd1_c1416c47",
       "revId": "bd14c0a8fb6fa83990c2fcd9ed155e2186f66d59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
