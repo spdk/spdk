@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9dc2d170_8ca85995",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-26T20:12:39Z",
+      "side": 1,
+      "message": "Is this intended to be just ls? I don\u0027t see the $ls variable being set anywhere.",
+      "range": {
+        "startLine": 99,
+        "startChar": 17,
+        "endLine": 99,
+        "endChar": 20
+      },
+      "revId": "535b09479d3e8e6608eb9932f6d149e8ce992810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
