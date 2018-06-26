@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f5770f3_2d00a1e3",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-26T20:58:17Z",
+      "side": 1,
+      "message": "These semicolons should not be needed.",
+      "revId": "beb59ea313dc59998570a277335e16bc63eec8bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
