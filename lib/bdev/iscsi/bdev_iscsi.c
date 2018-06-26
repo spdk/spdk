@@ -329,6 +329,10 @@ bdev_iscsi_poll_lun(struct bdev_iscsi_lun *lun)
 {
 	struct pollfd pfd = {};
 
+	if (!lun->context) {
+		return -1;
+	}
+
 	pfd.fd = iscsi_get_fd(lun->context);
 	pfd.events = iscsi_which_events(lun->context);
 
