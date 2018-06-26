@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "190aad22_e72f6a3c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-26T13:30:25Z",
+      "side": 1,
+      "message": "This is to handle the case where the I/O channel is NULL and error popped up.",
+      "range": {
+        "startLine": 120,
+        "startChar": 2,
+        "endLine": 120,
+        "endChar": 7
+      },
+      "revId": "a81905d5a635cfbec3db4b009fdcfc90dcbe8bf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
