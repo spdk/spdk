@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "7d0cbf82_163a20b9",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-26T13:57:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8774484c_09f278cc",
+      "range": {
+        "startLine": 29,
+        "startChar": 4,
+        "endLine": 29,
+        "endChar": 60
+      },
+      "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0720c1b0_d953e08a",
         "filename": "test/spdkcli/spdkcli_job.py",
         "patchSetId": 2
@@ -94,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "7e5c0351_50c22b3f",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-26T13:57:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0720c1b0_d953e08a",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 65
+      },
+      "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff954eae_b6655501",
         "filename": "test/spdkcli/spdkcli_job.py",
         "patchSetId": 2
@@ -105,6 +153,30 @@
       "writtenOn": "2018-06-26T12:35:19Z",
       "side": 1,
       "message": "Do you plan on adding more arguments? Because I think argparse just for 2 is an overkill",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 24
+      },
+      "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b116fa0_c91578db",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-26T13:57:39Z",
+      "side": 1,
+      "message": "I plan to add argument for filename that will be used for match application.",
+      "parentUuid": "ff954eae_b6655501",
       "range": {
         "startLine": 86,
         "startChar": 0,
