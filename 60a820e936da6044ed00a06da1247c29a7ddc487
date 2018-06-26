@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70b4d860_d078f58c",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-26T22:30:02Z",
+      "side": 1,
+      "message": "This header file should not need any references to spdk_thread",
+      "revId": "60a820e936da6044ed00a06da1247c29a7ddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afaeafb6_813e7b13",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-26T22:30:02Z",
+      "side": 1,
+      "message": "The function below, without the outer while loop, belongs in lib/thread.",
+      "revId": "60a820e936da6044ed00a06da1247c29a7ddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
