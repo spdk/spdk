@@ -89,7 +89,7 @@ static struct spdk_bdev_module error_if = {
 	.name = "error",
 	.module_init = vbdev_error_init,
 	.module_fini = vbdev_error_fini,
-	.examine = vbdev_error_examine,
+	.examine_config = vbdev_error_examine,
 	.config_json = vbdev_error_config_json,
 
 };

@@ -181,9 +181,9 @@ vbdev_ut_module_fini(void)
 
 struct spdk_bdev_module vbdev_ut_if = {
 	.name = "vbdev_ut",
-	.examine = vbdev_ut_examine,
 	.module_init = vbdev_ut_module_init,
 	.module_fini = vbdev_ut_module_fini,
+	.examine_config = vbdev_ut_examine,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)

@@ -65,7 +65,6 @@ static struct spdk_bdev_module aio_if = {
 	.module_fini	= NULL,
 	.config_text	= bdev_aio_get_spdk_running_config,
 	.get_ctx_size	= bdev_aio_get_ctx_size,
-	.examine	= NULL,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&aio_if)

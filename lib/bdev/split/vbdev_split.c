@@ -78,7 +78,7 @@ static struct spdk_bdev_module split_if = {
 	.name = "split",
 	.module_init = vbdev_split_init,
 	.module_fini = vbdev_split_fini,
-	.examine = vbdev_split_examine,
+	.examine_config = vbdev_split_examine,
 	.config_json = vbdev_split_config_json,
 };
 
@@ -426,7 +426,6 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 			SPDK_ERRLOG("could not split bdev %s\n", bdev->name);
 		}
 	}
-
 	spdk_bdev_module_examine_done(&split_if);
 }
 
