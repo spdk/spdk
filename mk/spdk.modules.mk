@@ -74,8 +74,8 @@ SOCK_MODULES_LIST += sock_posix
 
 ifeq ($(CONFIG_VPP),y)
 ifneq ($(CONFIG_VPP_DIR),)
-SOCK_MODULES_DEPS = -l:libvppinfra.a -l:libsvm.a -l:libvapiclient.a
-SOCK_MODULES_DEPS += -l:libvppcom.a -l:libvlibmemoryclient.a
+SOCK_MODULES_DEPS = -l:libvppinfra.a -l:libsvm.a
+SOCK_MODULES_DEPS += -l:libvlibmemoryclient.a
 else
 SOCK_MODULES_DEPS = -lvppcom
 endif
