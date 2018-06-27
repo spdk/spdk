@@ -239,6 +239,25 @@ bdev_virtio_disk_destruct(void *ctx)
 	return 0;
 }
 
+int
+bdev_virtio_blk_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(name);
+	if (bdev == NULL) {
+		return -ENODEV;
+	}
+
+	if (bdev->module != &virtio_blk_if) {
+		return -EINVAL;
+	}
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+
+	return 0;
+}
+
 static int
 bdev_virtio_dump_json_config(void *ctx, struct spdk_json_write_ctx *w)
 {
