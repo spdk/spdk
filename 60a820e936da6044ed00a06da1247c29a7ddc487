@@ -69,6 +69,24 @@
       "revId": "60a820e936da6044ed00a06da1247c29a7ddc487",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c56de8f1_f159d546",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-27T04:08:12Z",
+      "side": 1,
+      "message": "Went back and looked some more. I\u0027m not exactly sure on what you have in mind in terms of the function breakup. \nHow about this comment gets addressed in the next patch in this series?\nI can submit this and you can add a subsequent patch to break this function up in between the thread and the reactor file?\nAfter that, I can start working on the next set of iterations here (i.e. the TLS part)",
+      "parentUuid": "612cafed_b7144d99",
+      "revId": "60a820e936da6044ed00a06da1247c29a7ddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
