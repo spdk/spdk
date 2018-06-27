@@ -256,6 +256,22 @@ void spdk_dma_free(void *buf);
 void *spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags);
 
 /**
+ * Reserve a named, process shared memory zone with the given size, socket_id,
+ * flags and alignment.
+ *
+ * \param name Name to set for this memory zone.
+ * \param len Length in bytes.
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
+ * for any socket.
+ * \param flags Flags to set for this memory zone.
+ * \param align Alignment for resulting memzone. Must be a power of 2.
+ *
+ * \return a pointer to the allocated memory address on success, or NULL on failure.
+ */
+void *spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
+				   unsigned flags, unsigned align);
+
+/**
  * Lookup the memory zone identified by the given name.
  *
  * \param name Name of the memory zone.

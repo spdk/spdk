@@ -133,7 +133,8 @@ spdk_dma_free(void *buf)
 }
 
 void *
-spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
+spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
+			     unsigned flags, unsigned align)
 {
 	const struct rte_memzone *mz;
 	unsigned dpdk_flags = 0;
@@ -151,7 +152,7 @@ spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags
 		socket_id = SOCKET_ID_ANY;
 	}
 
-	mz = rte_memzone_reserve(name, len, socket_id, dpdk_flags);
+	mz = rte_memzone_reserve_aligned(name, len, socket_id, dpdk_flags, align);
 
 	if (mz != NULL) {
 		memset(mz->addr, 0, len);
@@ -159,6 +160,13 @@ spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags
 	} else {
 		return NULL;
 	}
+}
+
+void *
+spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
+{
+	return spdk_memzone_reserve_aligned(name, len, socket_id, flags,
+					    RTE_CACHE_LINE_SIZE);
 }
 
 void *

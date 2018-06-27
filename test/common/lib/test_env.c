@@ -75,6 +75,20 @@ spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags
 	}
 }
 
+/* setup the mock control to pass thru by default */
+void *ut_p_spdk_memzone_reserve_aligned = MOCK_PASS_THRU_P;
+void *
+spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
+			     unsigned flags, unsigned align)
+{
+	if (ut_p_spdk_memzone_reserve_aligned &&
+	    ut_p_spdk_memzone_reserve_aligned == MOCK_PASS_THRU_P) {
+		return malloc(len);
+	} else {
+		return ut_p_spdk_memzone_reserve_aligned;
+	}
+}
+
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
