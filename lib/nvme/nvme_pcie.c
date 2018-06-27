@@ -960,6 +960,22 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
+static void
+nvme_pcie_qpair_get_mz_names(struct spdk_nvme_qpair *qpair,
+			     char *sq_buf, size_t sq_len,
+			     char *cq_buf, size_t cq_len)
+{
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+
+	assert(sq_len >= SPDK_MAX_MEMZONE_NAME_LEN);
+	assert(cq_len >= SPDK_MAX_MEMZONE_NAME_LEN);
+
+	snprintf(sq_buf, sq_len,
+		 "nvme_%.14s_sq_%"PRIu16, ctrlr->trid.traddr, qpair->id);
+	snprintf(cq_buf, cq_len,
+		 "nvme_%.14s_cq_%"PRIu16, ctrlr->trid.traddr, qpair->id);
+}
+
 static int
 nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 {
@@ -973,6 +989,8 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	uint64_t		offset;
 	uint16_t		num_trackers;
 	size_t			page_size = sysconf(_SC_PAGESIZE);
+	char			sq_mz_name[SPDK_MAX_MEMZONE_NAME_LEN];
+	char			cq_mz_name[SPDK_MAX_MEMZONE_NAME_LEN];
 
 	/*
 	 * Limit the maximum number of completions to return per call to prevent wraparound,
@@ -991,6 +1009,9 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 
 	pqpair->sq_in_cmb = false;
 
+	nvme_pcie_qpair_get_mz_names(qpair, sq_mz_name, sizeof(sq_mz_name),
+				     cq_mz_name, sizeof(sq_mz_name));
+
 	/* cmd and cpl rings must be aligned on page size boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {
 		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
@@ -1001,23 +1022,26 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		}
 	}
 	if (pqpair->sq_in_cmb == false) {
-		pqpair->cmd = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					       page_size,
-					       &pqpair->cmd_bus_addr);
+		pqpair->cmd = spdk_memzone_reserve_aligned(sq_mz_name,
+				pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
+				SPDK_ENV_SOCKET_ID_ANY, 0, page_size);
 		if (pqpair->cmd == NULL) {
 			SPDK_ERRLOG("alloc qpair_cmd failed\n");
 			return -ENOMEM;
 		}
+
+		pqpair->cmd_bus_addr = spdk_vtophys(pqpair->cmd);
 	}
 
-	pqpair->cpl = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
-				       page_size,
-				       &pqpair->cpl_bus_addr);
+	pqpair->cpl = spdk_memzone_reserve_aligned(cq_mz_name,
+			pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
+			SPDK_ENV_SOCKET_ID_ANY, 0, page_size);
 	if (pqpair->cpl == NULL) {
 		SPDK_ERRLOG("alloc qpair_cpl failed\n");
 		return -ENOMEM;
 	}
 
+	pqpair->cpl_bus_addr = spdk_vtophys(pqpair->cpl);
 	doorbell_base = &pctrlr->regs->doorbell[0].sq_tdbl;
 	pqpair->sq_tdbl = doorbell_base + (2 * qpair->id + 0) * pctrlr->doorbell_stride_u32;
 	pqpair->cq_hdbl = doorbell_base + (2 * qpair->id + 1) * pctrlr->doorbell_stride_u32;
@@ -1327,15 +1351,20 @@ static int
 nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	char			sq_mz_name[SPDK_MAX_MEMZONE_NAME_LEN];
+	char			cq_mz_name[SPDK_MAX_MEMZONE_NAME_LEN];
+
+	nvme_pcie_qpair_get_mz_names(qpair, sq_mz_name, sizeof(sq_mz_name),
+				     cq_mz_name, sizeof(sq_mz_name));
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_pcie_admin_qpair_destroy(qpair);
 	}
 	if (pqpair->cmd && !pqpair->sq_in_cmb) {
-		spdk_dma_free(pqpair->cmd);
+		spdk_memzone_free(sq_mz_name);
 	}
 	if (pqpair->cpl) {
-		spdk_dma_free(pqpair->cpl);
+		spdk_memzone_free(cq_mz_name);
 	}
 	if (pqpair->tr) {
 		spdk_dma_free(pqpair->tr);
