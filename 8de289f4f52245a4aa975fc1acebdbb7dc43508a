@@ -22,6 +22,23 @@
       "revId": "8de289f4f52245a4aa975fc1acebdbb7dc43508a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3b72743_465f2218",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1825,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-27T19:46:05Z",
+      "side": 1,
+      "message": "I think this check should go at the top of the loop like it was before (nseg \u003d\u003d NVME_MAX_SGL_DESCRIPTORS is fine as long as we are at the end of the request).",
+      "revId": "8de289f4f52245a4aa975fc1acebdbb7dc43508a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
