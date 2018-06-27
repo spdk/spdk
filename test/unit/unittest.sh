@@ -111,6 +111,7 @@ $valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/porta
 
 $valgrind $testdir/lib/thread/thread.c/thread_ut
 
+$valgrind $testdir/lib/util/base64.c/base64_ut
 $valgrind $testdir/lib/util/bit_array.c/bit_array_ut
 $valgrind $testdir/lib/util/crc16.c/crc16_ut
 $valgrind $testdir/lib/util/crc32_ieee.c/crc32_ieee_ut
