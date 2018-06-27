@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd0f7bbe_ce22d0d0",
+        "filename": "test/iscsi_tgt/iscsijson/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T08:35:16Z",
+      "side": 1,
+      "message": "Is killing and restarting necessary? It adds time to execution",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 13
+      },
+      "revId": "49559230c610a57ffe80bfa26b42f27ffbefea43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecb6c7b1_ec326de8",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T08:35:16Z",
+      "side": 1,
+      "message": "if \u0027name\u0027 in iscsi:\n    return iscsi[\u0027name\u0027]\nreturn None",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 21
+      },
+      "revId": "49559230c610a57ffe80bfa26b42f27ffbefea43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c505b113_397b2e8e",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T08:35:16Z",
+      "side": 1,
+      "message": "similar as previous comment",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 21
+      },
+      "revId": "49559230c610a57ffe80bfa26b42f27ffbefea43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
