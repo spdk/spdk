@@ -58,6 +58,11 @@ extern "C" {
  */
 #define SPDK_MALLOC_SHARE  0x02
 
+/**
+ * Memzone flags
+ */
+#define SPDK_MEMZONE_IOVA_CONTIG 0x00100000
+
 struct spdk_pci_device;
 
 /**

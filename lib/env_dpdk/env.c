@@ -138,6 +138,15 @@ spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags
 	const struct rte_memzone *mz;
 	unsigned dpdk_flags = 0;
 
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
+	/* Older DPDKs do not offer such flag since their
+	 * memzones are physically contiguous by default.
+	 */
+	if (flags & SPDK_MEMZONE_IOVA_CONTIG) {
+		dpdk_flags |= RTE_MEMZONE_IOVA_CONTIG;
+	}
+#endif
+
 	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
 		socket_id = SOCKET_ID_ANY;
 	}
