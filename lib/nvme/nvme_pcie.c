@@ -195,6 +195,8 @@ struct nvme_pcie_qpair {
 
 	uint64_t cmd_bus_addr;
 	uint64_t cpl_bus_addr;
+	char sq_mz_name[SPDK_MAX_MEMZONE_NAME_LEN];
+	char cq_mz_name[SPDK_MAX_MEMZONE_NAME_LEN];
 };
 
 static int nvme_pcie_ctrlr_attach(spdk_nvme_probe_cb probe_cb, void *cb_ctx,
@@ -991,6 +993,11 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 
 	pqpair->sq_in_cmb = false;
 
+	snprintf(pqpair->sq_mz_name, SPDK_MAX_MEMZONE_NAME_LEN,
+		 "nvme_%.14s_sq_%"PRIu16, ctrlr->trid.traddr, qpair->id);
+	snprintf(pqpair->cq_mz_name, SPDK_MAX_MEMZONE_NAME_LEN,
+		 "nvme_%.14s_cq_%"PRIu16, ctrlr->trid.traddr, qpair->id);
+
 	/* cmd and cpl rings must be aligned on page size boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {
 		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
@@ -1001,23 +1008,30 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		}
 	}
 	if (pqpair->sq_in_cmb == false) {
-		pqpair->cmd = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					       page_size,
-					       &pqpair->cmd_bus_addr);
+		pqpair->cmd = spdk_memzone_reserve_aligned(pqpair->sq_mz_name,
+				pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
+				SPDK_ENV_SOCKET_ID_ANY,
+				SPDK_MEMZONE_IOVA_CONTIG,
+				page_size);
 		if (pqpair->cmd == NULL) {
 			SPDK_ERRLOG("alloc qpair_cmd failed\n");
 			return -ENOMEM;
 		}
+
+		pqpair->cmd_bus_addr = spdk_vtophys(pqpair->cmd);
 	}
 
-	pqpair->cpl = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
-				       page_size,
-				       &pqpair->cpl_bus_addr);
+	pqpair->cpl = spdk_memzone_reserve_aligned(pqpair->cq_mz_name,
+			pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
+			SPDK_ENV_SOCKET_ID_ANY,
+			SPDK_MEMZONE_IOVA_CONTIG,
+			page_size);
 	if (pqpair->cpl == NULL) {
 		SPDK_ERRLOG("alloc qpair_cpl failed\n");
 		return -ENOMEM;
 	}
 
+	pqpair->cpl_bus_addr = spdk_vtophys(pqpair->cpl);
 	doorbell_base = &pctrlr->regs->doorbell[0].sq_tdbl;
 	pqpair->sq_tdbl = doorbell_base + (2 * qpair->id + 0) * pctrlr->doorbell_stride_u32;
 	pqpair->cq_hdbl = doorbell_base + (2 * qpair->id + 1) * pctrlr->doorbell_stride_u32;
@@ -1332,10 +1346,10 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 		nvme_pcie_admin_qpair_destroy(qpair);
 	}
 	if (pqpair->cmd && !pqpair->sq_in_cmb) {
-		spdk_dma_free(pqpair->cmd);
+		spdk_memzone_free(pqpair->sq_mz_name);
 	}
 	if (pqpair->cpl) {
-		spdk_dma_free(pqpair->cpl);
+		spdk_memzone_free(pqpair->cq_mz_name);
 	}
 	if (pqpair->tr) {
 		spdk_dma_free(pqpair->tr);
