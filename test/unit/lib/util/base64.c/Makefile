@@ -31,10 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-C_SRCS = bit_array.c cpuset.c crc16.c crc32.c crc32c.c crc32_ieee.c fd.c strerror_tls.c string.c uuid.c base64.c
-LIBNAME = util
+TEST_FILE = base64_ut.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
