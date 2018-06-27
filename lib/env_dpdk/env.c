@@ -136,12 +136,13 @@ void *
 spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
 {
 	const struct rte_memzone *mz;
+	unsigned dpdk_flags = 0;
 
 	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
 		socket_id = SOCKET_ID_ANY;
 	}
 
-	mz = rte_memzone_reserve(name, len, socket_id, flags);
+	mz = rte_memzone_reserve(name, len, socket_id, dpdk_flags);
 
 	if (mz != NULL) {
 		memset(mz->addr, 0, len);
