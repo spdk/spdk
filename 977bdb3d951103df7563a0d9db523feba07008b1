@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a50bf9e8_33edda45",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 91
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T12:54:50Z",
+      "side": 1,
+      "message": "Get",
+      "range": {
+        "startLine": 40,
+        "startChar": 5,
+        "endLine": 40,
+        "endChar": 9
+      },
+      "revId": "977bdb3d951103df7563a0d9db523feba07008b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79de24d0_97b77d34",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 91
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T12:54:50Z",
+      "side": 1,
+      "message": "Sorry, this should be \nLoad global parameters and configuration to the spdktgt from the file full_config",
+      "revId": "977bdb3d951103df7563a0d9db523feba07008b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1885ae1_9681c7a5",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 91
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T12:54:50Z",
+      "side": 1,
+      "message": "is_startup_rpc may be better",
+      "range": {
+        "startLine": 22,
+        "startChar": 16,
+        "endLine": 22,
+        "endChar": 27
+      },
+      "revId": "977bdb3d951103df7563a0d9db523feba07008b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
