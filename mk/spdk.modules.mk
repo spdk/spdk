@@ -67,8 +67,10 @@ NET_MODULES_LIST += net_posix
 
 ifeq ($(CONFIG_VPP),y)
 ifneq ($(CONFIG_VPP_DIR),)
-NET_MODULES_DEPS = -l:libvppinfra.a -l:libsvm.a -l:libvapiclient.a
-NET_MODULES_DEPS += -l:libvppcom.a -l:libvlibmemoryclient.a
+NET_MODULES_DEPS = -l:libvppinfra.a -l:libsvm.a
+#-l:libvapiclient.a
+# NET_MODULES_DEPS += -l:libvppcom.a 
+NET_MODULES_DEPS += -l:libvlibmemoryclient.a
 else
 NET_MODULES_DEPS = -lvppcom
 endif
