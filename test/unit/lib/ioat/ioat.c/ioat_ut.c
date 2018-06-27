@@ -39,6 +39,9 @@
 
 #include "common/lib/test_env.c"
 
+DEFINE_STUB(spdk_pci_device_get_addr, struct spdk_pci_addr,
+	    (struct spdk_pci_device *pci_dev), {0})
+
 int
 spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {

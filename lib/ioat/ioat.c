@@ -372,6 +372,8 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	uint64_t status;
 	int i, num_descriptors;
 	uint64_t comp_update_bus_addr = 0;
+	struct spdk_pci_addr pci_addr;
+	char bdf[16];
 
 	if (ioat_map_pci_bar(ioat) != 0) {
 		SPDK_ERRLOG("ioat_map_pci_bar() failed\n");
@@ -411,7 +413,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 		return -1;
 	}
 
-	comp_update_bus_addr = spdk_vtophys(ioat->comp_update);
+	comp_update_bus_addr = spdk_vtophys((void *)ioat->comp_update);
 	ioat->ring_size_order = IOAT_DEFAULT_ORDER;
 
 	num_descriptors = 1 << ioat->ring_size_order;
@@ -421,8 +423,13 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 		return -1;
 	}
 
-	ioat->hw_ring = spdk_dma_zmalloc(num_descriptors * sizeof(union spdk_ioat_hw_desc), 64,
-					 &ioat->hw_ring_phys_addr);
+	pci_addr = spdk_pci_device_get_addr(ioat->device);
+	spdk_pci_addr_fmt(bdf, sizeof(bdf), &pci_addr);
+	snprintf(ioat->hw_ring_mz_name, sizeof(ioat->hw_ring_mz_name),
+		 "ioat_%s", bdf);
+	ioat->hw_ring = spdk_memzone_reserve_aligned(ioat->hw_ring_mz_name,
+			num_descriptors * sizeof(union spdk_ioat_hw_desc),
+			SPDK_ENV_SOCKET_ID_ANY, SPDK_MEMZONE_IOVA_CONTIG, 64);
 	if (!ioat->hw_ring) {
 		return -1;
 	}
