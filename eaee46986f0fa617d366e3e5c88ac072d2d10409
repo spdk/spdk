@@ -16,6 +16,23 @@
       "revId": "eaee46986f0fa617d366e3e5c88ac072d2d10409",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a84b1345_7bba8420",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-06-27T03:18:59Z",
+      "side": 1,
+      "message": "I think when there is seg fault, the lun-\u003econtext is just illegal to visit. \nSometimes it also happens to iscsi_scsi_response_cb function in iscsi-command.c where scsi_cbdata-\u003etask is just illegal to visit as gdb gives \"can\u0027t access memory at 0x...\".",
+      "revId": "eaee46986f0fa617d366e3e5c88ac072d2d10409",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
