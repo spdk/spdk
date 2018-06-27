@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "695ecd0c_c5ca4fb7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-06-27T13:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a6439b8_7a37020a",
+      "revId": "70e7e6771ae393368e00b486f2ff880e69f084e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1dac6e53_5b346d35",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "c9325ecf_462fe74c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-06-27T13:58:09Z",
+      "side": 1,
+      "message": "done, thanks",
+      "parentUuid": "1dac6e53_5b346d35",
+      "revId": "70e7e6771ae393368e00b486f2ff880e69f084e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20e8f0fa_918324c2",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2018-06-26T23:55:52Z",
       "side": 1,
       "message": "\\n",
+      "revId": "70e7e6771ae393368e00b486f2ff880e69f084e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98efbb02_db9162d2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-06-27T13:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "20e8f0fa_918324c2",
       "revId": "70e7e6771ae393368e00b486f2ff880e69f084e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -76,6 +130,30 @@
     },
     {
       "key": {
+        "uuid": "9bbf4c1b_80dc8f4f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-06-27T13:58:09Z",
+      "side": 1,
+      "message": "I\u0027m scared a bit to dereference a ptr to bool, had a job interview failed because of this once.\nwould uint8_t go?",
+      "parentUuid": "532d75a3_f78452e8",
+      "range": {
+        "startLine": 588,
+        "startChar": 52,
+        "endLine": 588,
+        "endChar": 68
+      },
+      "revId": "70e7e6771ae393368e00b486f2ff880e69f084e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "886b5500_9b048fd3",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -87,6 +165,24 @@
       "writtenOn": "2018-06-26T21:06:30Z",
       "side": 1,
       "message": "This looks redundant with the data_posted assignment in the caller; either move this one up (so it is before all return paths) and drop the one in the caller, or drop this one and require the caller to clear it beforehand.",
+      "revId": "70e7e6771ae393368e00b486f2ff880e69f084e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53555657_3e467ed4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-06-27T13:58:09Z",
+      "side": 1,
+      "message": "Done, thanks",
+      "parentUuid": "886b5500_9b048fd3",
       "revId": "70e7e6771ae393368e00b486f2ff880e69f084e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
