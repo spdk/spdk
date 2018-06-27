@@ -260,6 +260,24 @@
     },
     {
       "key": {
+        "uuid": "8d9e0a7c_973d3873",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-27T15:43:45Z",
+      "side": 1,
+      "message": "bdev-\u003edestruct() is called on hot-remove, in case of lvol it means whole lvol store is removed. For shutdown this is the same. I can\u0027t come up with a case where only single lvol is hot-removed.\nException being delete_bdev(). Since that is intended as debug only, so I don\u0027t think it applies here.\n\nI don\u0027t think there is need to expose (either as C API or RPC) lvol loading/unloading separate from whole lvol store.",
+      "parentUuid": "3b9c1a2d_63036965",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5322414f_c65dff6a",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 31
