@@ -103,6 +103,24 @@
       "revId": "a58180d240af7da6526052e7529bbb4549490dd2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bdc3c91_ddc8f386",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:28:39Z",
+      "side": 1,
+      "message": "spdk_json_write_object_begin(w);\n\nspdk_json_write_named_uint64(w, \"tsc_hz\", spdk_get_ticks_hz());\n\nspdk_json_write_named_array_begin(w, \"stats\");\n\nif (req.core_id !\u003d UINT32_MAX) {\n  spdk_rpc_dump_reactor_tsc_stats_info(w, req.core_id);\n} else {\n  SPDK_ENV_FOREACH_CORE(i) {\n    spdk_rpc_dump_reactor_tsc_stats_info(w, i);\n  }\n}\n\nspdk_json_write_array_end(w);\n\nspdk_json_write_object_end(w);",
+      "parentUuid": "b08640f0_18dbb870",
+      "revId": "a58180d240af7da6526052e7529bbb4549490dd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
