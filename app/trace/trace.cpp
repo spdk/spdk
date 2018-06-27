@@ -310,7 +310,7 @@ int main(int argc, char **argv)
 	int			fd, i;
 	int			lcore = SPDK_TRACE_MAX_LCORE;
 	uint64_t		tsc_offset;
-	const char		*app_name = "ids";
+	const char		*app_name = "spdk";
 	int			op;
 	char			shm_name[64];
 	int			shm_id = -1, shm_pid = -1;
