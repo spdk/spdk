@@ -102,8 +102,7 @@ int bdev_virtio_pci_scsi_dev_create(const char *name, struct spdk_pci_addr *pci_
 				    bdev_virtio_create_cb cb_fn, void *cb_arg);
 
 /**
- * Remove a Virtio device with given name. This will destroy all bdevs exposed
- * by this device.
+ * Remove a Virtio device with given name.
  *
  * \param name virtio device name
  * \param cb_fn function to be called after scanning all targets on the virtio
@@ -115,6 +114,17 @@ int bdev_virtio_pci_scsi_dev_create(const char *name, struct spdk_pci_addr *pci_
  */
 void bdev_virtio_scsi_dev_remove(const char *name,
 				 bdev_virtio_remove_cb cb_fn, void *cb_arg);
+
+/**
+ * Remove a Virtio device with given name. This will destroy all bdevs exposed
+ * by this device.
+ *
+ * \param bdev virtio blk device bdev
+ * \param cb_fn function to be called after removing bdev
+ * \param cb_arg argument for the `cb_fn`
+ */
+void bdev_virtio_blk_dev_remove(struct spdk_bdev *bdev,
+				bdev_virtio_remove_cb cb_fn, void *cb_arg);
 
 /**
  * List all created Virtio-SCSI devices.

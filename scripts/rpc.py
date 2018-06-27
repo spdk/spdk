@@ -1356,6 +1356,16 @@ if __name__ == "__main__":
     p.set_defaults(func=remove_virtio_scsi_bdev)
 
     @call_cmd
+    def remove_virtio_blk_bdev(args):
+        rpc.vhost.remove_virtio_blk_bdev(args.client,
+                                         name=args.name)
+
+    p = subparsers.add_parser('remove_virtio_blk_bdev', help="""Remove a Virtio-BLK device
+    This will delete all bdevs exposed by this device""")
+    p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
+    p.set_defaults(func=remove_virtio_blk_bdev)
+
+    @call_cmd
     def construct_virtio_user_blk_bdev(args):
         print(rpc.vhost.construct_virtio_user_blk_bdev(args.client,
                                                        path=args.path,
