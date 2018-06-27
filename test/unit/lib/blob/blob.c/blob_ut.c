@@ -3133,7 +3133,7 @@ bs_version(void)
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
-	CU_ASSERT(super->clean == 0);
+	CU_ASSERT(super->clean == 1);
 
 	/*
 	 * Create a blob - just to make sure that when we unload it
