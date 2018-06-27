@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "20a4a3b0_3231ebec",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2744,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-27T08:22:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "93407087_5eabaf4e",
+      "revId": "f23201f97b6749be5ab4fce82a8b2e7e6e97b5c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c3c26ab_1fbf98e6",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-22T22:12:04Z",
       "side": 1,
       "message": "if (bdev-\u003eclaim_module) {\n  return;\n}\n\nThen you don\u0027t have to indent the examine_disk loop.",
+      "revId": "f23201f97b6749be5ab4fce82a8b2e7e6e97b5c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "280c7e25_099a7e95",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2748,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-27T08:22:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2c3c26ab_1fbf98e6",
       "revId": "f23201f97b6749be5ab4fce82a8b2e7e6e97b5c1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
