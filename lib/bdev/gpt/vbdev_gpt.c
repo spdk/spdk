@@ -133,7 +133,7 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 
 	gpt = &gpt_base->gpt;
 	gpt->buf_size = spdk_max(SPDK_GPT_BUFFER_SIZE, bdev->blocklen);
-	gpt->buf = spdk_dma_zmalloc(gpt->buf_size, spdk_bdev_get_buf_align(bdev), NULL);
+	gpt->buf = spdk_dma_zmalloc(gpt->buf_size, spdk_bdev_get_buf_align(bdev));
 	if (!gpt->buf) {
 		SPDK_ERRLOG("Cannot alloc buf\n");
 		spdk_bdev_part_base_free(&gpt_base->part_base);

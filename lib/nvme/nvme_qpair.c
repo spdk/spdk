@@ -435,7 +435,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	req_size_padded = (sizeof(struct nvme_request) + 63) & ~(size_t)63;
 
-	qpair->req_buf = spdk_dma_zmalloc(req_size_padded * num_requests, 64, NULL);
+	qpair->req_buf = spdk_dma_zmalloc(req_size_padded * num_requests, 64);
 	if (qpair->req_buf == NULL) {
 		return -ENOMEM;
 	}
@@ -607,7 +607,7 @@ spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	if (cmd == NULL) {
-		cmd = spdk_dma_zmalloc(sizeof(*cmd), 64, NULL);
+		cmd = spdk_dma_zmalloc(sizeof(*cmd), 64);
 		if (!cmd) {
 			return -ENOMEM;
 		}

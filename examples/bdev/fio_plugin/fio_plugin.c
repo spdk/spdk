@@ -475,7 +475,7 @@ spdk_fio_close(struct thread_data *td, struct fio_file *f)
 static int
 spdk_fio_iomem_alloc(struct thread_data *td, size_t total_mem)
 {
-	td->orig_buffer = spdk_dma_zmalloc(total_mem, 0x1000, NULL);
+	td->orig_buffer = spdk_dma_zmalloc(total_mem, 0x1000);
 	return td->orig_buffer == NULL;
 }
 

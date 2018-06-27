@@ -422,11 +422,11 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair->reqs = calloc(rqpair->max_queue_depth, sizeof(*rqpair->reqs));
 	rqpair->recvs = calloc(rqpair->max_queue_depth, sizeof(*rqpair->recvs));
 	rqpair->cmds = spdk_dma_zmalloc(rqpair->max_queue_depth * sizeof(*rqpair->cmds),
-					0x1000, NULL);
+					0x1000);
 	rqpair->cpls = spdk_dma_zmalloc(rqpair->max_queue_depth * sizeof(*rqpair->cpls),
-					0x1000, NULL);
+					0x1000);
 	rqpair->bufs = spdk_dma_zmalloc(rqpair->max_queue_depth * rtransport->in_capsule_data_size,
-					0x1000, NULL);
+					0x1000);
 	if (!rqpair->reqs || !rqpair->recvs || !rqpair->cmds ||
 	    !rqpair->cpls || !rqpair->bufs) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");

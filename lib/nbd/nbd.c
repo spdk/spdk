@@ -571,7 +571,7 @@ spdk_nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 
 			/* io payload allocate */
 			if (io->payload_size) {
-				io->payload = spdk_dma_malloc(io->payload_size, nbd->buf_align, NULL);
+				io->payload = spdk_dma_malloc(io->payload_size, nbd->buf_align);
 				if (io->payload == NULL) {
 					SPDK_ERRLOG("could not allocate io->payload of size %d\n", io->payload_size);
 					spdk_put_nbd_io(nbd, io);

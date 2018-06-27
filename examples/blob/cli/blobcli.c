@@ -684,7 +684,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 * small. This could be bigger of course.
 	 */
 	cli_context->buff = spdk_dma_malloc(cli_context->page_size,
-					    ALIGN_4K, NULL);
+					    ALIGN_4K);
 	if (cli_context->buff == NULL) {
 		printf("Error in allocating memory\n");
 		spdk_blob_close(cli_context->blob, close_cb, cli_context);
@@ -779,7 +779,7 @@ fill_blob_cb(void *arg1, struct spdk_blob *blob, int bserrno)
 	cli_context->page_count = 0;
 	cli_context->blob_pages = spdk_blob_get_num_pages(cli_context->blob);
 	cli_context->buff = spdk_dma_malloc(cli_context->page_size,
-					    ALIGN_4K, NULL);
+					    ALIGN_4K);
 	if (cli_context->buff == NULL) {
 		unload_bs(cli_context, "Error in allocating memory",
 			  -ENOMEM);

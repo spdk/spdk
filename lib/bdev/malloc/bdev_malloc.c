@@ -392,7 +392,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 		return NULL;
 	}
 
-	mdisk = spdk_dma_zmalloc(sizeof(*mdisk), 0, NULL);
+	mdisk = spdk_dma_zmalloc(sizeof(*mdisk), 0);
 	if (!mdisk) {
 		SPDK_ERRLOG("mdisk spdk_dma_zmalloc() failed\n");
 		return NULL;
@@ -404,7 +404,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	 * TODO: need to pass a hint so we know which socket to allocate
 	 *  from on multi-socket systems.
 	 */
-	mdisk->malloc_buf = spdk_dma_zmalloc(num_blocks * block_size, 2 * 1024 * 1024, NULL);
+	mdisk->malloc_buf = spdk_dma_zmalloc(num_blocks * block_size, 2 * 1024 * 1024);
 	if (!mdisk->malloc_buf) {
 		SPDK_ERRLOG("malloc_buf spdk_dma_zmalloc() failed\n");
 		malloc_disk_free(mdisk);

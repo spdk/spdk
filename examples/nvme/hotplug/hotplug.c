@@ -149,7 +149,7 @@ alloc_task(struct dev_ctx *dev)
 		return NULL;
 	}
 
-	task->buf = spdk_dma_zmalloc(g_io_size_bytes, 0x200, NULL);
+	task->buf = spdk_dma_zmalloc(g_io_size_bytes, 0x200);
 	if (task->buf == NULL) {
 		free(task);
 		return NULL;

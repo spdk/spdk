@@ -98,23 +98,15 @@ ut_init_task(struct spdk_scsi_task *task)
 }
 
 void *
-spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_malloc(size_t size, size_t align)
 {
-	void *buf = malloc(size);
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
-	}
-	return buf;
+	return malloc(size);
 }
 
 void *
-spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_zmalloc(size_t size, size_t align)
 {
-	void *buf = calloc(size, 1);
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
-	}
-	return buf;
+	return calloc(size, 1);
 }
 
 void

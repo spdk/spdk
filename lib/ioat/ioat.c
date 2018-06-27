@@ -407,8 +407,8 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 		ioat->max_xfer_size = 1U << xfercap;
 	}
 
-	ioat->comp_update = spdk_dma_zmalloc(sizeof(*ioat->comp_update), SPDK_IOAT_CHANCMP_ALIGN,
-					     NULL);
+	ioat->comp_update = spdk_dma_zmalloc(sizeof(*ioat->comp_update),
+		SPDK_IOAT_CHANCMP_ALIGN);
 	if (ioat->comp_update == NULL) {
 		return -1;
 	}

@@ -242,7 +242,7 @@ deallocate_test(void)
 	memset(context.FFh_buf, 0xFF, max_block_size);
 
 	for (i = 0; i < NUM_BLOCKS; i++) {
-		context.write_buf[i] = spdk_dma_zmalloc(0x1000, max_block_size, NULL);
+		context.write_buf[i] = spdk_dma_zmalloc(0x1000, max_block_size);
 		if (context.write_buf[i] == NULL) {
 			printf("could not allocate buffer for test.\n");
 			cleanup(&context);
@@ -250,7 +250,7 @@ deallocate_test(void)
 		}
 
 		fill_random(context.write_buf[i], 0x1000);
-		context.read_buf[i] = spdk_dma_zmalloc(0x1000, max_block_size, NULL);
+		context.read_buf[i] = spdk_dma_zmalloc(0x1000, max_block_size);
 		if (context.read_buf[i] == NULL) {
 			printf("could not allocate buffer for test.\n");
 			cleanup(&context);

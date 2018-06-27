@@ -956,7 +956,7 @@ alloc_task_pool(struct spdk_vhost_nvme_dev *nvme)
 
 	for (i = 0; i < entries; i++) {
 		task = spdk_dma_zmalloc(sizeof(struct spdk_vhost_nvme_task),
-					SPDK_CACHE_LINE_SIZE, NULL);
+					SPDK_CACHE_LINE_SIZE);
 		if (task == NULL) {
 			SPDK_ERRLOG("Controller %s alloc task pool failed\n",
 				    nvme->vdev.name);
@@ -1259,7 +1259,7 @@ int
 spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t num_io_queues)
 {
 	struct spdk_vhost_nvme_dev *dev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_nvme_dev),
-					  SPDK_CACHE_LINE_SIZE, NULL);
+					  SPDK_CACHE_LINE_SIZE);
 	int rc;
 
 	if (dev == NULL) {

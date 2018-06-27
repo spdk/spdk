@@ -593,15 +593,13 @@ _spdk_blob_serialize_add_page(const struct spdk_blob *blob,
 		assert(*pages == NULL);
 		*page_count = 1;
 		*pages = spdk_dma_malloc(SPDK_BS_PAGE_SIZE,
-					 SPDK_BS_PAGE_SIZE,
-					 NULL);
+					 SPDK_BS_PAGE_SIZE);
 	} else {
 		assert(*pages != NULL);
 		(*page_count)++;
 		*pages = spdk_dma_realloc(*pages,
 					  SPDK_BS_PAGE_SIZE * (*page_count),
-					  SPDK_BS_PAGE_SIZE,
-					  NULL);
+					  SPDK_BS_PAGE_SIZE);
 	}
 
 	if (*pages == NULL) {
@@ -955,7 +953,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		/* Read the next page */
 		ctx->num_pages++;
 		ctx->pages = spdk_dma_realloc(ctx->pages, (sizeof(*page) * ctx->num_pages),
-					      sizeof(*page), NULL);
+					      sizeof(*page));
 		if (ctx->pages == NULL) {
 			ctx->cb_fn(seq, ctx->cb_arg, -ENOMEM);
 			free(ctx);
@@ -1029,7 +1027,7 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 
 	ctx->blob = blob;
 	ctx->pages = spdk_dma_realloc(ctx->pages, SPDK_BS_PAGE_SIZE,
-				      SPDK_BS_PAGE_SIZE, NULL);
+				      SPDK_BS_PAGE_SIZE);
 	if (!ctx->pages) {
 		free(ctx);
 		cb_fn(seq, cb_arg, -ENOMEM);
@@ -1495,7 +1493,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->cb_arg = cb_arg;
 
 	if (blob->bs->clean) {
-		ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+		ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000);
 		if (!ctx->super) {
 			cb_fn(seq, cb_arg, -ENOMEM);
 			free(ctx);
@@ -1641,7 +1639,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	ctx->blob = blob;
 	ctx->page = cluster_start_page;
 
-	ctx->buf = spdk_dma_malloc(blob->bs->cluster_sz, blob->back_bs_dev->blocklen, NULL);
+	ctx->buf = spdk_dma_malloc(blob->bs->cluster_sz, blob->back_bs_dev->blocklen);
 	if (!ctx->buf) {
 		SPDK_ERRLOG("DMA allocation for cluster of size = %" PRIu32 " failed.\n",
 			    blob->bs->cluster_sz);
@@ -2569,7 +2567,7 @@ _spdk_bs_write_used_clusters(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequenc
 
 	/* Write out the used clusters mask */
 	mask_size = ctx->super->used_cluster_mask_len * SPDK_BS_PAGE_SIZE;
-	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
+	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000);
 	if (!ctx->mask) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
 		return;
@@ -2592,7 +2590,7 @@ _spdk_bs_write_used_md(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl 
 	uint64_t	mask_size, lba, lba_count;
 
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
-	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
+	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000);
 	if (!ctx->mask) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
 		return;
@@ -2624,7 +2622,7 @@ _spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence
 	}
 
 	mask_size = ctx->super->used_blobid_mask_len * SPDK_BS_PAGE_SIZE;
-	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
+	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000);
 	if (!ctx->mask) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
 		return;
@@ -2737,7 +2735,7 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 
 	/* Read the used blobids mask */
 	mask_size = ctx->super->used_blobid_mask_len * SPDK_BS_PAGE_SIZE;
-	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
+	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000);
 	if (!ctx->mask) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
 		return;
@@ -2774,7 +2772,7 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	/* Read the used clusters mask */
 	mask_size = ctx->super->used_cluster_mask_len * SPDK_BS_PAGE_SIZE;
-	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
+	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000);
 	if (!ctx->mask) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
 		return;
@@ -2793,7 +2791,7 @@ _spdk_bs_load_read_used_pages(spdk_bs_sequence_t *seq, void *cb_arg)
 
 	/* Read the used pages mask */
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
-	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
+	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000);
 	if (!ctx->mask) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
 		return;
@@ -2994,8 +2992,7 @@ _spdk_bs_load_replay_md(spdk_bs_sequence_t *seq, void *cb_arg)
 	ctx->page_index = 0;
 	ctx->cur_page = 0;
 	ctx->page = spdk_dma_zmalloc(SPDK_BS_PAGE_SIZE,
-				     SPDK_BS_PAGE_SIZE,
-				     NULL);
+				     SPDK_BS_PAGE_SIZE);
 	if (!ctx->page) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
 		return;
@@ -3152,7 +3149,7 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->iter_cb_arg = opts.iter_cb_arg;
 
 	/* Allocate memory for the super block */
-	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000);
 	if (!ctx->super) {
 		free(ctx);
 		_spdk_bs_free(bs);
@@ -3375,8 +3372,7 @@ _spdk_bs_dump_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	ctx->cur_page = 0;
 	ctx->page = spdk_dma_zmalloc(SPDK_BS_PAGE_SIZE,
-				     SPDK_BS_PAGE_SIZE,
-				     NULL);
+				     SPDK_BS_PAGE_SIZE);
 	if (!ctx->page) {
 		_spdk_bs_dump_finish(seq, ctx, -ENOMEM);
 		return;
@@ -3417,7 +3413,7 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 	ctx->print_xattr_fn = print_xattr_fn;
 
 	/* Allocate memory for the super block */
-	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000);
 	if (!ctx->super) {
 		free(ctx);
 		_spdk_bs_free(bs);
@@ -3556,7 +3552,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->bs = bs;
 
 	/* Allocate memory for the super block */
-	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000);
 	if (!ctx->super) {
 		free(ctx);
 		_spdk_bs_free(bs);
@@ -3811,7 +3807,7 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 	ctx->bs = bs;
 	ctx->is_load = false;
 
-	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000);
 	if (!ctx->super) {
 		free(ctx);
 		cb_fn(cb_arg, -ENOMEM);
@@ -3895,7 +3891,7 @@ spdk_bs_set_super(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	ctx->bs = bs;
 
-	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000);
 	if (!ctx->super) {
 		free(ctx);
 		cb_fn(cb_arg, -ENOMEM);

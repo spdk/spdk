@@ -103,7 +103,7 @@ static struct spdk_vhost_scsi_dev *
 alloc_svdev(void)
 {
 	struct spdk_vhost_scsi_dev *svdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_dev),
-					    SPDK_CACHE_LINE_SIZE, NULL);
+					    SPDK_CACHE_LINE_SIZE);
 
 	SPDK_CU_ASSERT_FATAL(svdev != NULL);
 	svdev->vdev.registered = true;

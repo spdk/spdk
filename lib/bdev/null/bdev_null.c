@@ -176,7 +176,7 @@ create_null_bdev(const char *name, const struct spdk_uuid *uuid,
 		return NULL;
 	}
 
-	bdev = spdk_dma_zmalloc(sizeof(*bdev), 0, NULL);
+	bdev = spdk_dma_zmalloc(sizeof(*bdev), 0);
 	if (!bdev) {
 		SPDK_ERRLOG("could not allocate null_bdev\n");
 		return NULL;
@@ -272,7 +272,7 @@ bdev_null_initialize(void)
 	 *  Instead of using a real rbuf from the bdev pool, just always point to
 	 *  this same zeroed buffer.
 	 */
-	g_null_read_buf = spdk_dma_zmalloc(SPDK_BDEV_LARGE_BUF_MAX_SIZE, 0, NULL);
+	g_null_read_buf = spdk_dma_zmalloc(SPDK_BDEV_LARGE_BUF_MAX_SIZE, 0);
 
 	/*
 	 * We need to pick some unique address as our "io device" - so just use the

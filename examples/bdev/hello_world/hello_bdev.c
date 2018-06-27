@@ -190,7 +190,7 @@ hello_start(void *arg1, void *arg2)
 	 */
 	blk_size = spdk_bdev_get_block_size(hello_context->bdev);
 	buf_align = spdk_bdev_get_buf_align(hello_context->bdev);
-	hello_context->buff = spdk_dma_zmalloc(blk_size, buf_align, NULL);
+	hello_context->buff = spdk_dma_zmalloc(blk_size, buf_align);
 	if (!hello_context->buff) {
 		SPDK_ERRLOG("Failed to allocate buffer\n");
 		spdk_put_io_channel(hello_context->bdev_io_channel);

@@ -447,7 +447,7 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	firm_ctx->fw_image = spdk_dma_zmalloc(firm_ctx->size, 4096, NULL);
+	firm_ctx->fw_image = spdk_dma_zmalloc(firm_ctx->size, 4096);
 	if (!firm_ctx->fw_image) {
 		close(fd);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

@@ -97,8 +97,6 @@ struct spdk_env_opts {
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
- * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
  * \param flags Combination of SPDK_MALLOC flags (\ref SPDK_MALLOC_DMA, \ref SPDK_MALLOC_SHARE).
@@ -106,7 +104,7 @@ struct spdk_env_opts {
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags);
+void *spdk_malloc(size_t size, size_t align, int socket_id, uint32_t flags);
 
 /**
  * Allocate dma/sharable memory based on a given dma_flg. It is a physically
@@ -118,15 +116,13 @@ void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id,
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
- * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
  * \param flags Combination of SPDK_MALLOC flags (\ref SPDK_MALLOC_DMA, \ref SPDK_MALLOC_SHARE).
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags);
+void *spdk_zmalloc(size_t size, size_t align, int socket_id, uint32_t flags);
 
 /**
  * Free buffer memory that was previously allocated with spdk_malloc() or spdk_zmalloc().
@@ -160,12 +156,10 @@ int spdk_env_init(const struct spdk_env_opts *opts);
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
- * the allocated buffer is passed. If NULL, the physical address is not returned.
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_dma_malloc(size_t size, size_t align);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the given size,
@@ -176,14 +170,12 @@ void *spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr);
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
- * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
+void *spdk_dma_malloc_socket(size_t size, size_t align, int socket_id);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the given size
@@ -194,12 +186,10 @@ void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
- * the allocated buffer is passed. If NULL, the physical address is not returned.
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_dma_zmalloc(size_t size, size_t align);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the given size,
@@ -210,14 +200,12 @@ void *spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
- * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
  *
  * \return a pointer to the allocated memory buffer.
  */
-void *spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
+void *spdk_dma_zmalloc_socket(size_t size, size_t align, int socket_id);
 
 /**
  * Resize the allocated and pinned memory buffer with the given new size and
@@ -229,12 +217,10 @@ void *spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, in
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
- * the allocated buffer is passed. If NULL, the physical address is not returned.
  *
  * \return a pointer to the resized memory buffer.
  */
-void *spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_dma_realloc(void *buf, size_t size, size_t align);
 
 /**
  * Free a memory buffer previously allocated, for example from spdk_dma_zmalloc().

@@ -468,7 +468,7 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
 			return -1;
 		}
 		vq->tasks = spdk_dma_zmalloc(sizeof(struct spdk_vhost_blk_task) * task_cnt,
-					     SPDK_CACHE_LINE_SIZE, NULL);
+					     SPDK_CACHE_LINE_SIZE);
 		if (vq->tasks == NULL) {
 			SPDK_ERRLOG("Controller %s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
 				    bvdev->vdev.name, task_cnt, i);
@@ -588,7 +588,7 @@ spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 		goto err;
 	}
 
-	destroy_ctx = spdk_dma_zmalloc(sizeof(*destroy_ctx), SPDK_CACHE_LINE_SIZE, NULL);
+	destroy_ctx = spdk_dma_zmalloc(sizeof(*destroy_ctx), SPDK_CACHE_LINE_SIZE);
 	if (destroy_ctx == NULL) {
 		SPDK_ERRLOG("Failed to alloc memory for destroying device.\n");
 		goto err;
@@ -781,7 +781,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
-	bvdev = spdk_dma_zmalloc(sizeof(*bvdev), SPDK_CACHE_LINE_SIZE, NULL);
+	bvdev = spdk_dma_zmalloc(sizeof(*bvdev), SPDK_CACHE_LINE_SIZE);
 	if (bvdev == NULL) {
 		ret = -1;
 		goto out;

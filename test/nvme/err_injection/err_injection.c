@@ -184,7 +184,7 @@ read_test(bool error_expected)
 
 	foreach_dev(dev) {
 		dev->error_expected = error_expected;
-		dev->data = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+		dev->data = spdk_dma_zmalloc(0x1000, 0x1000);
 		if (!dev->data) {
 			failed = 1;
 			goto cleanup;

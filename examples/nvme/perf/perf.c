@@ -333,7 +333,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	entry->latency_page = spdk_dma_zmalloc(sizeof(struct spdk_nvme_intel_rw_latency_page),
-					       4096, NULL);
+					       4096);
 	if (entry->latency_page == NULL) {
 		printf("Allocation error (latency page)\n");
 		exit(1);
@@ -763,7 +763,7 @@ submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
 		 * namespace without metadata
 		 */
 		max_io_size_bytes = g_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
-		task->buf = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
+		task->buf = spdk_dma_zmalloc(max_io_size_bytes, g_io_align);
 		if (task->buf == NULL) {
 			fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 			exit(1);

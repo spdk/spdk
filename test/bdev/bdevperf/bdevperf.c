@@ -703,7 +703,7 @@ bdevperf_construct_targets_tasks(void)
 					goto ret;
 				}
 
-				task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
+				task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment);
 				if (!task->buf) {
 					fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
 					free(task);

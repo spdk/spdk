@@ -101,7 +101,7 @@ spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
 {
 	assert(task->alloc_len == 0);
 
-	task->iov.iov_base = spdk_dma_zmalloc(alloc_len, 0, NULL);
+	task->iov.iov_base = spdk_dma_zmalloc(alloc_len, 0);
 	task->iov.iov_len = alloc_len;
 	task->alloc_len = alloc_len;
 
@@ -169,7 +169,7 @@ spdk_scsi_task_gather_data(struct spdk_scsi_task *task, int *len)
 		return NULL;
 	}
 
-	buf = spdk_dma_malloc(buf_len, 0, NULL);
+	buf = spdk_dma_malloc(buf_len, 0);
 	if (buf == NULL) {
 		*len = -1;
 		return NULL;

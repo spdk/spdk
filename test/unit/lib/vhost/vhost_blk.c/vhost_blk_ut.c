@@ -90,7 +90,7 @@ static struct spdk_vhost_blk_dev *
 alloc_bvdev(void)
 {
 	struct spdk_vhost_blk_dev *bvdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_blk_dev),
-					   SPDK_CACHE_LINE_SIZE, NULL);
+					   SPDK_CACHE_LINE_SIZE);
 
 	SPDK_CU_ASSERT_FATAL(bvdev != NULL);
 	bvdev->vdev.backend = &vhost_blk_device_backend;

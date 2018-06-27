@@ -306,7 +306,7 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 		exit(1);
 	}
 
-	task->buf = spdk_dma_zmalloc(g_arbitration.io_size_bytes, 0x200, NULL);
+	task->buf = spdk_dma_zmalloc(g_arbitration.io_size_bytes, 0x200);
 	if (!task->buf) {
 		spdk_mempool_put(task_pool, task);
 		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");

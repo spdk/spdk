@@ -175,7 +175,7 @@ static bool g_completion_success;
 static void
 initialize_buffer(char **buf, int pattern, int size)
 {
-	*buf = spdk_dma_zmalloc(size, 0x1000, NULL);
+	*buf = spdk_dma_zmalloc(size, 0x1000);
 	memset(*buf, pattern, size);
 }
 

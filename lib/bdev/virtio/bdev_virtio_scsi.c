@@ -263,7 +263,7 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 	eventq = vdev->vqs[VIRTIO_SCSI_EVENTQ];
 	num_events = spdk_min(eventq->vq_nentries, VIRTIO_SCSI_EVENTQ_BUFFER_COUNT);
 	svdev->eventq_ios = spdk_dma_zmalloc(sizeof(*svdev->eventq_ios) * num_events,
-					     0, NULL);
+					     0);
 	if (svdev->eventq_ios == NULL) {
 		SPDK_ERRLOG("cannot allocate memory for %"PRIu16" eventq buffers\n",
 			    num_events);
@@ -1622,7 +1622,7 @@ _virtio_scsi_dev_scan_init(struct virtio_scsi_dev *svdev)
 		return -EBUSY;
 	}
 
-	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
+	base = spdk_dma_zmalloc(sizeof(*base), 64);
 	if (base == NULL) {
 		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
 		return -ENOMEM;

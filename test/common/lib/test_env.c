@@ -89,14 +89,11 @@ spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
 }
 
 void *
-spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_malloc(size_t size, size_t align)
 {
 	void *buf = NULL;
 	if (posix_memalign(&buf, align, size)) {
 		return NULL;
-	}
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
 	}
 	return buf;
 }
@@ -104,11 +101,11 @@ spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 int ut_spdk_dma_zmalloc = (int)MOCK_PASS_THRU;
 void *ut_p_spdk_dma_zmalloc = &ut_spdk_dma_zmalloc;
 void *
-spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_zmalloc(size_t size, size_t align)
 {
 	if (ut_p_spdk_dma_zmalloc &&
 	    ut_spdk_dma_zmalloc == (int)MOCK_PASS_THRU) {
-		void *buf = spdk_dma_malloc(size, align, phys_addr);
+		void *buf = spdk_dma_malloc(size, align);
 
 		if (buf != NULL) {
 			memset(buf, 0, size);
@@ -120,19 +117,19 @@ spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 }
 
 void *
-spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_dma_malloc_socket(size_t size, size_t align, int socket_id)
 {
-	return spdk_dma_malloc(size, align, phys_addr);
+	return spdk_dma_malloc(size, align);
 }
 
 void *
-spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_dma_zmalloc_socket(size_t size, size_t align, int socket_id)
 {
-	return spdk_dma_zmalloc(size, align, phys_addr);
+	return spdk_dma_zmalloc(size, align);
 }
 
 void *
-spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_realloc(void *buf, size_t size, size_t align)
 {
 	return realloc(buf, size);
 }

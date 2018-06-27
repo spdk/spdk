@@ -668,7 +668,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_pcie_qpair *pqpair;
 	int rc;
 
-	pqpair = spdk_dma_zmalloc(sizeof(*pqpair), 64, NULL);
+	pqpair = spdk_dma_zmalloc(sizeof(*pqpair), 64);
 	if (pqpair == NULL) {
 		return -ENOMEM;
 	}
@@ -794,7 +794,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
-	pctrlr = spdk_dma_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL);
+	pctrlr = spdk_dma_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64);
 	if (pctrlr == NULL) {
 		close(claim_fd);
 		SPDK_ERRLOG("could not allocate ctrlr\n");
@@ -1056,7 +1056,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	 *   This ensures the PRP list embedded in the nvme_tracker object will not span a
 	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
 	 */
-	pqpair->tr = spdk_dma_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), NULL);
+	pqpair->tr = spdk_dma_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr));
 	if (pqpair->tr == NULL) {
 		SPDK_ERRLOG("nvme_tr failed\n");
 		return -ENOMEM;
@@ -1604,7 +1604,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	assert(ctrlr != NULL);
 
-	pqpair = spdk_dma_zmalloc(sizeof(*pqpair), 64, NULL);
+	pqpair = spdk_dma_zmalloc(sizeof(*pqpair), 64);
 	if (pqpair == NULL) {
 		return NULL;
 	}

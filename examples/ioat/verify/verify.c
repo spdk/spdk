@@ -364,7 +364,7 @@ init_src_buffer(void)
 {
 	int i;
 
-	g_src = spdk_dma_zmalloc(SRC_BUFFER_SIZE, 512, NULL);
+	g_src = spdk_dma_zmalloc(SRC_BUFFER_SIZE, 512);
 	if (g_src == NULL) {
 		fprintf(stderr, "Allocate src buffer failed\n");
 		return -1;

@@ -133,7 +133,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 			      vq_size * sizeof(struct vq_desc_extra),
 			      RTE_CACHE_LINE_SIZE);
 
-	vq = spdk_dma_zmalloc(size, RTE_CACHE_LINE_SIZE, NULL);
+	vq = spdk_dma_zmalloc(size, RTE_CACHE_LINE_SIZE);
 	if (vq == NULL) {
 		SPDK_ERRLOG("can not allocate vq\n");
 		return -ENOMEM;

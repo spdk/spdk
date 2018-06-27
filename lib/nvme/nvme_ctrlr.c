@@ -366,12 +366,11 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 
 static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
-	uint64_t phys_addr = 0;
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_intel_log_page_directory *log_page_directory;
 
 	log_page_directory = spdk_dma_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
-					      64, &phys_addr);
+					      64);
 	if (log_page_directory == NULL) {
 		SPDK_ERRLOG("could not allocate log_page_directory\n");
 		return -ENXIO;
@@ -655,12 +654,12 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* only 1 page size for doorbell buffer */
-	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, NULL);
+	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size);
 	if (ctrlr->shadow_doorbell == NULL) {
 		return -1;
 	}
 
-	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, NULL);
+	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size);
 	if (ctrlr->eventidx == NULL) {
 		goto error;
 	}
@@ -804,8 +803,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	 * The allocated size must be a multiple of sizeof(struct spdk_nvme_ns_list)
 	 */
 	num_pages = (ctrlr->num_ns * sizeof(new_ns_list[0]) - 1) / sizeof(struct spdk_nvme_ns_list) + 1;
-	new_ns_list = spdk_dma_zmalloc(num_pages * sizeof(struct spdk_nvme_ns_list), ctrlr->page_size,
-				       NULL);
+	new_ns_list = spdk_dma_zmalloc(num_pages * sizeof(struct spdk_nvme_ns_list), ctrlr->page_size);
 	if (!new_ns_list) {
 		SPDK_ERRLOG("Failed to allocate active_ns_list!\n");
 		return -ENOMEM;
@@ -1095,7 +1093,6 @@ static int
 nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t nn = ctrlr->cdata.nn;
-	uint64_t phys_addr = 0;
 
 	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
 	 * so check if we need to reallocate.
@@ -1108,14 +1105,12 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			return 0;
 		}
 
-		ctrlr->ns = spdk_dma_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
-					     &phys_addr);
+		ctrlr->ns = spdk_dma_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64);
 		if (ctrlr->ns == NULL) {
 			goto fail;
 		}
 
-		ctrlr->nsdata = spdk_dma_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
-						 &phys_addr);
+		ctrlr->nsdata = spdk_dma_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64);
 		if (ctrlr->nsdata == NULL) {
 			goto fail;
 		}
@@ -1295,7 +1290,7 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	}
 
 	/* Initialize the per process properties for this ctrlr */
-	ctrlr_proc = spdk_dma_zmalloc(sizeof(struct spdk_nvme_ctrlr_process), 64, NULL);
+	ctrlr_proc = spdk_dma_zmalloc(sizeof(struct spdk_nvme_ctrlr_process), 64);
 	if (ctrlr_proc == NULL) {
 		SPDK_ERRLOG("failed to allocate memory to track the process props\n");
 

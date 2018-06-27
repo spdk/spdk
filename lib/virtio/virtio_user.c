@@ -323,7 +323,7 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 		return -1;
 	}
 
-	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VIRTIO_PCI_VRING_ALIGN, NULL);
+	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VIRTIO_PCI_VRING_ALIGN);
 	if (queue_mem == NULL) {
 		return -ENOMEM;
 	}

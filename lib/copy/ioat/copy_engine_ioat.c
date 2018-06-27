@@ -268,7 +268,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 {
 	struct ioat_device *dev;
 
-	dev = spdk_dma_zmalloc(sizeof(*dev), 0, NULL);
+	dev = spdk_dma_zmalloc(sizeof(*dev), 0);
 	if (dev == NULL) {
 		SPDK_ERRLOG("Failed to allocate device struct\n");
 		return;

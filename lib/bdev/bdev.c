@@ -750,8 +750,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 		return;
 	}
 
-	g_bdev_mgr.zero_buffer = spdk_dma_zmalloc(ZERO_BUFFER_SIZE, ZERO_BUFFER_SIZE,
-				 NULL);
+	g_bdev_mgr.zero_buffer = spdk_dma_zmalloc(ZERO_BUFFER_SIZE, ZERO_BUFFER_SIZE);
 	if (!g_bdev_mgr.zero_buffer) {
 		SPDK_ERRLOG("create bdev zero buffer failed\n");
 		spdk_bdev_init_complete(-1);

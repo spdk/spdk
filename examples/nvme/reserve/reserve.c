@@ -178,7 +178,7 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
-	payload = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	payload = spdk_dma_zmalloc(0x1000, 0x1000);
 	if (!payload) {
 		fprintf(stderr, "DMA Buffer Allocation Failed\n");
 		return -1;

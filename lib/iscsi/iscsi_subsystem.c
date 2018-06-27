@@ -915,7 +915,7 @@ spdk_iscsi_parse_globals(void)
 		return rc;
 	}
 
-	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
+	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0);
 	if (!g_spdk_iscsi.session) {
 		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array\n");
 		return -1;

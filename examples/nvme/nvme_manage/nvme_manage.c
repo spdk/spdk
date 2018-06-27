@@ -103,7 +103,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	/* Retrieve controller data */
 	dev->cdata = spdk_nvme_ctrlr_get_data(dev->ctrlr);
 
-	dev->common_ns_data = spdk_dma_zmalloc(sizeof(struct spdk_nvme_ns_data), 4096, NULL);
+	dev->common_ns_data = spdk_dma_zmalloc(sizeof(struct spdk_nvme_ns_data), 4096);
 	if (dev->common_ns_data == NULL) {
 		fprintf(stderr, "common_ns_data allocation failure\n");
 		return;
@@ -377,7 +377,7 @@ get_allocated_nsid(struct dev *dev)
 	struct spdk_nvme_ns_list *ns_list;
 	struct spdk_nvme_cmd cmd = {0};
 
-	ns_list = spdk_dma_zmalloc(sizeof(*ns_list), 4096, NULL);
+	ns_list = spdk_dma_zmalloc(sizeof(*ns_list), 4096);
 	if (ns_list == NULL) {
 		printf("Allocation error\n");
 		return 0;
@@ -425,7 +425,7 @@ ns_attach(struct dev *device, int attachment_op, int ctrlr_id, int ns_id)
 	struct spdk_nvme_ctrlr_list *ctrlr_list;
 
 	ctrlr_list = spdk_dma_zmalloc(sizeof(struct spdk_nvme_ctrlr_list),
-				      4096, NULL);
+				      4096);
 	if (ctrlr_list == NULL) {
 		printf("Allocation error (controller list)\n");
 		exit(1);
@@ -454,7 +454,7 @@ ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns
 	uint32_t nsid;
 	struct spdk_nvme_ns_data *ndata;
 
-	ndata = spdk_dma_zmalloc(sizeof(struct spdk_nvme_ns_data), 4096, NULL);
+	ndata = spdk_dma_zmalloc(sizeof(struct spdk_nvme_ns_data), 4096);
 	if (ndata == NULL) {
 		printf("Allocation error (namespace data)\n");
 		exit(1);
@@ -817,7 +817,7 @@ update_firmware_image(void)
 
 	size = fw_stat.st_size;
 
-	fw_image = spdk_dma_zmalloc(size, 4096, NULL);
+	fw_image = spdk_dma_zmalloc(size, 4096);
 	if (fw_image == NULL) {
 		printf("Allocation error\n");
 		close(fd);

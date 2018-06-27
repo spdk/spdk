@@ -110,7 +110,7 @@ spdk_bit_array_resize(struct spdk_bit_array **bap, uint32_t num_bits)
 	 */
 	new_size += SPDK_BIT_ARRAY_WORD_BYTES;
 
-	new_ba = (struct spdk_bit_array *)spdk_dma_realloc(*bap, new_size, 64, NULL);
+	new_ba = (struct spdk_bit_array *)spdk_dma_realloc(*bap, new_size, 64);
 	if (!new_ba) {
 		return -ENOMEM;
 	}

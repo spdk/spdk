@@ -180,7 +180,7 @@ read_blob(struct hello_context_t *hello_context)
 	SPDK_NOTICELOG("entry\n");
 
 	hello_context->read_buff = spdk_dma_malloc(hello_context->page_size,
-				   0x1000, NULL);
+				   0x1000);
 	if (hello_context->read_buff == NULL) {
 		unload_bs(hello_context, "Error in memory allocation",
 			  -ENOMEM);
@@ -225,7 +225,7 @@ blob_write(struct hello_context_t *hello_context)
 	 * tranfer 1 page of 4K aligned data at offset 0 in the blob.
 	 */
 	hello_context->write_buff = spdk_dma_malloc(hello_context->page_size,
-				    0x1000, NULL);
+				    0x1000);
 	if (hello_context->write_buff == NULL) {
 		unload_bs(hello_context, "Error in allocating memory",
 			  -ENOMEM);

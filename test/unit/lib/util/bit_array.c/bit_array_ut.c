@@ -38,7 +38,7 @@
 #include "util/bit_array.c"
 
 void *
-spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_realloc(void *buf, size_t size, size_t align)
 {
 	return realloc(buf, size);
 }
