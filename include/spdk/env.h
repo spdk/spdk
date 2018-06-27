@@ -58,6 +58,9 @@ extern "C" {
  */
 #define SPDK_MALLOC_SHARE  0x02
 
+#define SPDK_MAX_MEMZONE_NAME_LEN 32
+#define SPDK_MAX_MEMPOOL_NAME_LEN 29
+
 /**
  * Memzone flags
  */
