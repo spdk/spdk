@@ -319,6 +319,42 @@ test_get_status_string(void)
 }
 #endif
 
+static void
+test_nvme_qpair_add_cmd_error_injection(void)
+{
+	struct spdk_nvme_qpair          qpair = {};
+	struct spdk_nvme_ctrlr          ctrlr = {};
+	int    rc;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+	ctrlr.adminq = &qpair;
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, NULL,
+			SPDK_NVME_OPC_GET_FEATURES, true, 5000, 1,
+			SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_INVALID_FIELD);
+
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, NULL,
+			SPDK_NVME_OPC_GET_FEATURES);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair,
+			SPDK_NVME_OPC_READ, false, 0, 1,
+			SPDK_NVME_SCT_MEDIA_ERROR, SPDK_NVME_SC_UNRECOVERED_READ_ERROR);
+
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair,
+			SPDK_NVME_OPC_READ);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair,
+			SPDK_NVME_OPC_COMPARE, true, 0, 5,
+			SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_COMPARE_FAILURE);
+
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair,
+			SPDK_NVME_OPC_COMPARE);
+	CU_ASSERT(rc == 0);
+
+	cleanup_submit_request_test(&qpair);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -343,6 +379,8 @@ int main(int argc, char **argv)
 #ifdef DEBUG
 	    || CU_add_test(suite, "get_status_string", test_get_status_string) == NULL
 #endif
+	    || CU_add_test(suite, "spdk_nvme_qpair_add_cmd_error_injection",
+			   test_nvme_qpair_add_cmd_error_injection) == NULL
 	   ) {
 		CU_cleanup_registry();
 		return CU_get_error();
