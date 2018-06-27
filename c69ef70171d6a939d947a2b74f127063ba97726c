@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "3d4ab3d8_6102ae74",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-27T10:18:58Z",
+      "side": 1,
+      "message": "Please remove also /tmp/sample_aio file",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 15
+      },
+      "revId": "c69ef70171d6a939d947a2b74f127063ba97726c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1842694_0eedba76",
         "filename": "test/spdkcli/spdkcli_job.py",
         "patchSetId": 4
@@ -59,6 +82,30 @@
       "writtenOn": "2018-06-27T07:08:44Z",
       "side": 1,
       "message": "Still think this is redundant;)",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 24
+      },
+      "revId": "c69ef70171d6a939d947a2b74f127063ba97726c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "456d8051_eae9e4a1",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-27T10:18:58Z",
+      "side": 1,
+      "message": "I think this is only solution if we want to do different think in the same file. Other solution is to check sys.argv[1] list (It will consume less code, but I think that filename parameter will be needed to save ls output for match application)",
+      "parentUuid": "ad5f729c_4c42593c",
       "range": {
         "startLine": 99,
         "startChar": 0,
