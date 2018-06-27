@@ -38,169 +38,162 @@
 #include "spdk/net.h"
 #include "spdk/string.h"
 #include "spdk_internal/sock.h"
-#include <vcl/vppcom.h>
+#include "spdk/queue.h"
+
+#include <svm/svm_fifo_segment.h>
+#include <vlibmemory/api.h>
+#include <vpp/api/vpe_msg_enum.h>
+#include <vnet/session/application_interface.h>
+
+#define vl_typedefs		/* define message structures */
+#include <vpp/api/vpe_all_api_h.h>
+#undef vl_typedefs
+
+/* declare message handlers for each api */
+
+#define vl_endianfun		/* define message structures */
+#include <vpp/api/vpe_all_api_h.h>
+#undef vl_endianfun
+
+/* instantiate all the print functions we know about */
+#define vl_print(handle, ...)
+#define vl_printfun
+#include <vpp/api/vpe_all_api_h.h>
+#undef vl_printfun
+
+
+/* VPP connection state */
+enum spdk_vpp_state {
+	VPP_STATE_START,
+	VPP_STATE_ATTACHED,
+	VPP_STATE_READY,
+	VPP_STATE_DISCONNECTING,
+	VPP_STATE_FAILED
+};
+static enum spdk_vpp_state g_vpp_state;
+static bool g_vpp_initialized = false;
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 
-static bool g_vpp_initialized = false;
 
-struct spdk_vpp_sock {
-	struct spdk_sock	base;
-	int			fd;
+static unix_shared_memory_queue_t *g_vl_input_queue;
+static unix_shared_memory_queue_t *g_app_event_queue;
+
+static int g_my_client_index;
+
+/* VPP session state */
+enum spdk_vpp_session_state {
+	STATE_START,
+
+	STATE_READY,
+	STATE_LISTEN,
+	STATE_ACCEPT,
+	STATE_CONNECT,
+
+	STATE_FAILED
 };
+
+struct spdk_vpp_session {
+	struct spdk_sock base;
+
+	int id;
+	enum spdk_vpp_session_state state;
+
+	bool is_server;
+	bool is_listen;
+
+	svm_fifo_t *rx_fifo;
+	svm_fifo_t *tx_fifo;
+
+	bool lcl_addr_family;
+	ip46_address_t lcl_addr;
+	uint16_t lcl_port;
+
+	bool peer_addr_family;
+	ip46_address_t peer_addr;
+	uint16_t peer_port;
+
+	uint64_t handle;
+	uint32_t context;
+	unix_shared_memory_queue_t *vpp_event_queue;
+
+	/* Listener fields */
+	uint32_t *accept_session_index_fifo;
+};
+
+static struct spdk_vpp_session *g_sessions;
+static uword *g_session_index_by_vpp_handles;
+#define VPP_LISTENER_HANDLE(listener_handle) (listener_handle |= 1ULL << 63)
 
 struct spdk_vpp_sock_group_impl {
-	struct spdk_sock_group_impl	base;
-	int				fd;
+	struct spdk_sock_group_impl base;
 };
 
-static int
-get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
-{
-	const char *result = NULL;
-
-	if (sa == NULL || host == NULL) {
-		return -1;
-	}
-
-	if (sa->sa_family == AF_INET) {
-		result = inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
-				   host, hlen);
-	} else {
-		result = inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
-				   host, hlen);
-	}
-
-	if (result == NULL) {
-		return -1;
-	}
-
-	return 0;
-}
-
-#define __vpp_sock(sock) (struct spdk_vpp_sock *)sock
+#define __vpp_session(sock) (struct spdk_vpp_session *)sock
 #define __vpp_group_impl(group) (struct spdk_vpp_sock_group_impl *)group
 
-static inline void
-vcom_socket_copy_ep_to_sockaddr(struct sockaddr *addr, socklen_t *len, vppcom_endpt_t *ep)
-{
-	int sa_len, copy_len;
 
-	assert(ep->vrf == VPPCOM_VRF_DEFAULT);
+/******************************************************************************
+ * Session management
+ */
 
-	if (ep->is_ip4 == VPPCOM_IS_IP4) {
-		addr->sa_family = AF_INET;
-		((struct sockaddr_in *) addr)->sin_port = ep->port;
-		if (*len > sizeof(struct sockaddr_in)) {
-			*len = sizeof(struct sockaddr_in);
-		}
-		sa_len = sizeof(struct sockaddr_in) - sizeof(struct in_addr);
-		copy_len = *len - sa_len;
-		if (copy_len > 0) {
-			memcpy(&((struct sockaddr_in *) addr)->sin_addr, ep->ip, copy_len);
-		}
-	} else {
-		addr->sa_family = AF_INET6;
-		((struct sockaddr_in6 *) addr)->sin6_port = ep->port;
-		if (*len > sizeof(struct sockaddr_in6)) {
-			*len = sizeof(struct sockaddr_in6);
-		}
-		sa_len = sizeof(struct sockaddr_in6) - sizeof(struct in6_addr);
-		copy_len = *len - sa_len;
-		if (copy_len > 0) {
-			memcpy(&((struct sockaddr_in6 *) addr)->sin6_addr, ep->ip, copy_len);
-		}
+static struct spdk_vpp_session *
+_spdk_vpp_session_create(void) {
+	struct spdk_vpp_session *session;
+
+	pool_get(g_sessions, session);
+	memset (session, 0, sizeof (*session));
+	session->id = session - g_sessions;
+
+	return session;
+}
+
+static struct spdk_vpp_session *
+_spdk_vpp_session_get(int id) {
+	struct spdk_vpp_session *session;
+
+	if (pool_is_free_index(g_sessions, id)) {
+		return NULL;
 	}
+	session = pool_elt_at_index(g_sessions, id);
+
+	return session;
+}
+
+static struct spdk_vpp_session *
+_spdk_vpp_session_get_by_handle(int handle) {
+	struct spdk_vpp_session *session;
+	uword *id;
+
+	id = hash_get(g_session_index_by_vpp_handles, handle);
+	if (!id) {
+		/* Could not find session by handle */
+		return NULL;
+	}
+
+	session = _spdk_vpp_session_get(*id);
+
+	return session;
 }
 
 static int
-getsockname_vpp(int fd, struct sockaddr *addr, socklen_t *len)
-{
-	vppcom_endpt_t ep;
-	uint32_t size = sizeof(ep);
-	uint8_t addr_buf[sizeof(struct in6_addr)];
-	int rc;
-
-	if (!addr || !len) {
-		return -EFAULT;
-	}
-
-	ep.ip = addr_buf;
-
-	rc = vppcom_session_attr(fd, VPPCOM_ATTR_GET_LCL_ADDR, &ep, &size);
-	if (rc == VPPCOM_OK) {
-		vcom_socket_copy_ep_to_sockaddr(addr, len, &ep);
-	}
-
-	return rc;
-}
-
-
-static int
-getpeername_vpp(int sock, struct sockaddr *addr, socklen_t *len)
-{
-	vppcom_endpt_t ep;
-	uint32_t size = sizeof(ep);
-	uint8_t addr_buf[sizeof(struct in6_addr)];
-	int rc;
-
-	if (!addr || !len) {
-		return -EFAULT;
-	}
-
-	ep.ip = addr_buf;
-
-	rc = vppcom_session_attr(sock, VPPCOM_ATTR_GET_PEER_ADDR, &ep, &size);
-	if (rc == VPPCOM_OK) {
-		vcom_socket_copy_ep_to_sockaddr(addr, len, &ep);
-	}
-
-	return rc;
+_spdk_vpp_session_close(struct spdk_vpp_session *session) {
+	return 0;
 }
 
 static int
 spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *caddr, int clen)
 {
-	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
+	struct spdk_vpp_session *session = __vpp_session(_sock);
 	struct sockaddr sa;
 	socklen_t salen;
-	int rc;
 
-	assert(sock != NULL);
+	assert(session != NULL);
 	assert(g_vpp_initialized);
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
-	rc = getsockname_vpp(sock->fd, &sa, &salen);
-	if (rc != 0) {
-		errno = -rc;
-		SPDK_ERRLOG("getsockname_vpp() failed (errno=%d)\n", errno);
-		return -1;
-	}
-
-	rc = get_addr_str(&sa, saddr, slen);
-	if (rc != 0) {
-		/* Errno already set by get_addr_str() */
-		SPDK_ERRLOG("get_addr_str() failed (errno=%d)\n", errno);
-		return -1;
-	}
-
-	memset(&sa, 0, sizeof(sa));
-	salen = sizeof(sa);
-	rc = getpeername_vpp(sock->fd, &sa, &salen);
-	if (rc != 0) {
-		errno = -rc;
-		SPDK_ERRLOG("getpeername_vpp() failed (errno=%d)\n", errno);
-		return -1;
-	}
-
-	rc = get_addr_str(&sa, caddr, clen);
-	if (rc != 0) {
-		/* Errno already set by get_addr_str() */
-		SPDK_ERRLOG("get_addr_str() failed (errno=%d)\n", errno);
-		return -1;
-	}
 
 	return 0;
 }
@@ -210,74 +203,434 @@ enum spdk_vpp_create_type {
 	SPDK_SOCK_CREATE_CONNECT,
 };
 
+
+/******************************************************************************
+ * Application attach/detach
+ */
+
+static void
+vl_api_application_attach_reply_t_handler (vl_api_application_attach_reply_t *mp)
+{
+	svm_fifo_segment_create_args_t _a, *a = &_a;
+	int rv;
+
+	if (mp->retval) {
+		SPDK_ERRLOG("attach failed with error %d\n", mp->retval);
+		g_vpp_state = VPP_STATE_FAILED;
+		return;
+	}
+
+	if (mp->segment_name_length == 0) {
+		SPDK_ERRLOG("segment_name_length zero\n");
+		return;
+	}
+
+	memset(a, 0, sizeof(*a));
+	a->segment_name = (char *)mp->segment_name;
+	a->segment_size = mp->segment_size;
+
+	assert(mp->app_event_queue_address);
+
+	/* Attach to the segment vpp created */
+	rv = svm_fifo_segment_attach(a);
+	if (rv) {
+		SPDK_ERRLOG("svm_fifo_segment_attach ('%s') failed\n", mp->segment_name);
+		return;
+	}
+
+	g_app_event_queue = uword_to_pointer(mp->app_event_queue_address, unix_shared_memory_queue_t *);
+	g_vpp_state = VPP_STATE_ATTACHED;
+}
+
+int
+application_attach ()
+{
+	vl_api_application_attach_t *bmp;
+	u32 fifo_size = 4 << 20;
+	bmp = vl_msg_api_alloc(sizeof (*bmp));
+	memset(bmp, 0, sizeof (*bmp));
+
+	bmp->_vl_msg_id = ntohs (VL_API_APPLICATION_ATTACH);
+	bmp->client_index = g_my_client_index;
+	bmp->context = ntohl(0xfeedface);
+	bmp->options[APP_OPTIONS_FLAGS] =
+			APP_OPTIONS_FLAGS_ACCEPT_REDIRECT | APP_OPTIONS_FLAGS_ADD_SEGMENT;
+	bmp->options[APP_OPTIONS_PREALLOC_FIFO_PAIRS] = 16;
+	bmp->options[APP_OPTIONS_RX_FIFO_SIZE] = fifo_size;
+	bmp->options[APP_OPTIONS_TX_FIFO_SIZE] = fifo_size;
+	bmp->options[APP_OPTIONS_ADD_SEGMENT_SIZE] = 128 << 20;
+	bmp->options[APP_OPTIONS_SEGMENT_SIZE] = 256 << 20;
+	vl_msg_api_send_shmem (g_vl_input_queue, (u8 *)&bmp);
+
+	/* TODO: Here we should to wait until attached or timeouted */
+
+	return 0;
+}
+
+/* Detach */
+static void
+vl_api_application_detach_reply_t_handler(vl_api_application_detach_reply_t *mp)
+{
+	if (mp->retval) {
+		SPDK_ERRLOG("detach failed with error %d\n", mp->retval);
+	}
+}
+
+void
+application_detach()
+{
+	vl_api_application_detach_t *bmp;
+	bmp = vl_msg_api_alloc(sizeof (*bmp));
+	memset (bmp, 0, sizeof(*bmp));
+
+	bmp->_vl_msg_id = ntohs(VL_API_APPLICATION_DETACH);
+	bmp->client_index = g_my_client_index;
+	bmp->context = ntohl(0xfeedface);
+	vl_msg_api_send_shmem(g_vl_input_queue, (u8 *)&bmp);
+}
+
+static void
+vl_api_map_another_segment_t_handler (vl_api_map_another_segment_t * mp)
+{
+	svm_fifo_segment_create_args_t _a, *a = &_a;
+	int rv;
+
+	memset (a, 0, sizeof (*a));
+	a->segment_name = (char *) mp->segment_name;
+	a->segment_size = mp->segment_size;
+	/* Attach to the segment vpp created */
+	rv = svm_fifo_segment_attach (a);
+	if (rv) {
+		SPDK_ERRLOG("svm_fifo_segment_attach ('%s') failed\n", mp->segment_name);
+		return;
+	}
+}
+
+/******************************************************************************
+ * Connect
+ */
+
+static void
+vl_api_connect_session_reply_t_handler(vl_api_connect_session_reply_t *mp)
+{
+	struct spdk_vpp_session *session;
+	svm_fifo_t *rx_fifo, *tx_fifo;
+	int rv;
+
+	if (mp->retval) {
+		SPDK_ERRLOG("connection failed with code: %d\n", mp->retval);
+		g_vpp_state = VPP_STATE_FAILED;
+		return;
+	}
+
+	session = _spdk_vpp_session_get(mp->context);
+	if (session == NULL) {
+		/**/
+		return;
+	}
+
+	session->vpp_event_queue = uword_to_pointer(mp->vpp_event_queue_address,
+		      unix_shared_memory_queue_t *);
+
+	rx_fifo = uword_to_pointer (mp->server_rx_fifo, svm_fifo_t *);
+	rx_fifo->client_session_index = session->id;
+	tx_fifo = uword_to_pointer (mp->server_tx_fifo, svm_fifo_t *);
+	tx_fifo->client_session_index = session->id;
+
+	session->rx_fifo = rx_fifo;
+	session->tx_fifo = tx_fifo;
+
+	/* Add handle to the lookup table */
+	session->handle = mp->handle;
+	hash_set(g_session_index_by_vpp_handles, mp->handle, session->id);
+
+	/* Set lcl addr */
+	session->lcl_addr_family = mp->is_ip4 ? AF_INET : AF_INET6;
+	memcpy(&session->lcl_addr, mp->lcl_ip, sizeof(session->lcl_addr));
+	session->lcl_port = mp->lcl_port;
+
+	session->state = STATE_CONNECT;
+}
+
+static int
+_spdk_vpp_session_connect(struct spdk_vpp_session *session)
+{
+	vl_api_connect_sock_t *cmp;
+	cmp = vl_msg_api_alloc (sizeof(*cmp));
+	memset (cmp, 0, sizeof (*cmp));
+
+	cmp->_vl_msg_id = ntohs (VL_API_CONNECT_SOCK);
+	cmp->client_index = g_my_client_index;
+	cmp->context = session->id;
+
+	cmp->vrf = 0 /* VPPCOM_VRF_DEFAULT */;
+	cmp->is_ip4 = (session->peer_addr_family == AF_INET);
+	memcpy (cmp->ip, &session->peer_addr, sizeof(cmp->ip));
+	cmp->port = session->peer_port;
+	cmp->proto = 0 /* VPPCOM_PROTO_TCP */;
+	//clib_memcpy (cmp->options, session->options, sizeof (cmp->options));
+	vl_msg_api_send_shmem (g_vl_input_queue, (u8 *)&cmp);
+
+	return 0;
+}
+
+static void
+vl_api_disconnect_session_reply_t_handler(vl_api_disconnect_session_reply_t *mp)
+{
+	if (mp->retval) {
+		/* VPP session disconnection error */
+	}
+}
+
+static void
+vl_api_disconnect_session_t_handler (vl_api_disconnect_session_t *mp)
+{
+	struct spdk_vpp_session *session = 0;
+	vl_api_disconnect_session_reply_t *rmp;
+	uword *id;
+	int rv = 0;
+
+	session = _spdk_vpp_session_get_by_handle(mp->handle);
+	if (session != NULL) {
+		hash_unset(g_session_index_by_vpp_handles, mp->handle);
+		pool_put(g_sessions, session);
+	} else {
+		SPDK_ERRLOG("couldn't find session key %llx", mp->handle);
+		rv = -11;
+	}
+
+	rmp = vl_msg_api_alloc (sizeof (*rmp));
+	memset (rmp, 0, sizeof (*rmp));
+
+	rmp->_vl_msg_id = ntohs(VL_API_DISCONNECT_SESSION_REPLY);
+	rmp->retval = rv;
+	rmp->handle = mp->handle;
+	vl_msg_api_send_shmem(g_vl_input_queue, (u8 *)&rmp);
+}
+
+static int
+_spdk_vpp_session_disconnect (struct spdk_vpp_session *session)
+{
+	vl_api_disconnect_session_t *dmp;
+
+	dmp = vl_msg_api_alloc (sizeof (*dmp));
+	memset (dmp, 0, sizeof (*dmp));
+	dmp->_vl_msg_id = ntohs (VL_API_DISCONNECT_SESSION);
+	dmp->client_index = g_my_client_index;
+	dmp->handle = session->handle;
+	vl_msg_api_send_shmem (g_vl_input_queue, (u8 *)&dmp);
+
+	return 0;
+}
+
+
+
+
+static void
+vl_api_reset_session_t_handler (vl_api_reset_session_t *mp)
+{
+	vl_api_reset_session_reply_t *rmp;
+	uword *p;
+	int rv = 0;
+
+	/* TODO: reset session here by mp->handle and set rv if fail */
+
+	rmp = vl_msg_api_alloc(sizeof (*rmp));
+	memset(rmp, 0, sizeof(*rmp));
+	rmp->_vl_msg_id = ntohs(VL_API_RESET_SESSION_REPLY);
+	rmp->retval = rv;
+	rmp->handle = mp->handle;
+	vl_msg_api_send_shmem(g_vl_input_queue, (u8 *)&rmp);
+}
+
+
+/******************************************************************************
+ * Bind
+ */
+
+static void
+vl_api_bind_sock_reply_t_handler(vl_api_bind_sock_reply_t *mp)
+{
+	struct spdk_vpp_session *session;
+
+	/* Context should be set to the session index */
+	session = _spdk_vpp_session_get(mp->context);
+
+	if (mp->retval) {
+		session->state = STATE_FAILED;
+		return;
+	}
+
+	session->handle = mp->handle;
+
+	/* Set local address */
+	session->lcl_addr_family = mp->lcl_is_ip4 ? AF_INET : AF_INET6;
+	memcpy (&session->lcl_addr, mp->lcl_ip, sizeof (session->lcl_addr));
+	session->lcl_port = mp->lcl_port;
+
+	/* Register listener */
+	hash_set(g_session_index_by_vpp_handles, VPP_LISTENER_HANDLE(mp->handle),
+			session->id);
+
+	/* Session binded, set listen state */
+	session->is_listen = true;
+	session->state = STATE_LISTEN;
+}
+
+static void
+vl_api_unbind_sock_reply_t_handler(vl_api_unbind_sock_reply_t * mp)
+{
+	struct spdk_vpp_session *session;
+
+	session = _spdk_vpp_session_get(mp->context);
+
+	if (mp->retval != 0) {
+	}
+}
+
+
+/******************************************************************************
+ * Accept session
+ */
+
+static inline void
+_spdk_send_accept_session_reply (u64 handle, u32 context, int retval)
+{
+	vl_api_accept_session_reply_t *rmp;
+
+	rmp = vl_msg_api_alloc(sizeof (*rmp));
+	memset (rmp, 0, sizeof(*rmp));
+	rmp->_vl_msg_id = ntohs(VL_API_ACCEPT_SESSION_REPLY);
+	rmp->retval = htonl (retval);
+	rmp->context = context;
+	rmp->handle = handle;
+	vl_msg_api_send_shmem(g_vl_input_queue, (u8 *) & rmp);
+}
+
+static void
+vl_api_accept_session_t_handler(vl_api_accept_session_t *mp)
+{
+	svm_fifo_t *rx_fifo, *tx_fifo;
+	struct spdk_vpp_session *client_session, *listen_session;
+	u32 session_index;
+
+	listen_session = _spdk_vpp_session_get_by_handle(
+			VPP_LISTENER_HANDLE(mp->listener_handle));
+	if (!listen_session) {
+		return;
+	}
+
+	/* Allocate local session for a client and set it up */
+	client_session = _spdk_vpp_session_create();
+
+	rx_fifo = uword_to_pointer (mp->server_rx_fifo, svm_fifo_t *);
+	rx_fifo->client_session_index = client_session->id;
+	tx_fifo = uword_to_pointer (mp->server_tx_fifo, svm_fifo_t *);
+	tx_fifo->client_session_index = client_session->id;
+
+	client_session->handle = mp->handle;
+	client_session->context = mp->context;
+	client_session->rx_fifo = rx_fifo;
+	client_session->tx_fifo = tx_fifo;
+	client_session->vpp_event_queue = uword_to_pointer(mp->vpp_event_queue_address,
+			unix_shared_memory_queue_t *);
+
+	client_session->is_server = true;
+	client_session->peer_port = mp->port;
+	client_session->peer_addr_family = mp->is_ip4 ? AF_INET : AF_INET6;
+	memcpy(&client_session->peer_addr, mp->ip, sizeof(client_session->peer_addr));
+
+	/* Add it to lookup table */
+	hash_set(g_session_index_by_vpp_handles, mp->handle, session_index);
+	client_session->lcl_port = listen_session->lcl_port;
+	memcpy(&client_session->lcl_addr, &listen_session->lcl_addr, sizeof(client_session->lcl_addr));
+	client_session->lcl_addr_family = listen_session->lcl_addr_family;
+
+	clib_fifo_add1(listen_session->accept_session_index_fifo, session_index);
+	client_session->state = STATE_ACCEPT;
+}
+
+
+static int
+_spdk_vpp_session_listen(struct spdk_vpp_session *session)
+{
+	vl_api_bind_sock_t *bmp;
+
+	if (session->is_listen) {
+		/* Already in the listen state */
+		return 0;
+	}
+
+	session->is_server = 1;
+	bmp = vl_msg_api_alloc (sizeof (*bmp));
+	memset (bmp, 0, sizeof (*bmp));
+
+	bmp->_vl_msg_id = ntohs (VL_API_BIND_SOCK);
+	bmp->client_index = g_my_client_index;
+	bmp->context = session->id;
+	bmp->vrf = 0;
+	bmp->is_ip4 = (session->lcl_addr_family == AF_INET);
+	memcpy(bmp->ip, &session->lcl_addr, sizeof (bmp->ip));
+	bmp->port = session->lcl_port;
+	bmp->proto = 0; // TCP
+	//memcpy (bmp->options, session->options, sizeof (bmp->options));
+	vl_msg_api_send_shmem (g_vl_input_queue, (u8 *)& bmp);
+
+	/* Wait for session state change to LISTEN */
+
+	return 0;
+}
+
 static struct spdk_sock *
 spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type)
 {
-	struct spdk_vpp_sock *sock;
-	int fd, rc;
-	vppcom_endpt_t endpt;
-	uint8_t addr_buf[sizeof(struct in6_addr)];
+	struct spdk_vpp_session *session;
+	int rc;
+	uint16_t addr_family = AF_INET;	/* Fixit! */
+	ip46_address_t addr_buf;
 
 	if (ip == NULL) {
 		return NULL;
 	}
 
+	session = _spdk_vpp_session_create();
+	if (session == NULL) {
+		errno = -session->id;
+		SPDK_ERRLOG("_spdk_vpp_session_create() failed, errno = %d\n", errno);
+		return NULL;
+	}
+
 	/* Check address family */
 	if (inet_pton(AF_INET, ip, &addr_buf)) {
-		endpt.is_ip4 = VPPCOM_IS_IP4;
+		addr_family = AF_INET;
 	} else if (inet_pton(AF_INET6, ip, &addr_buf)) {
-		endpt.is_ip4 = VPPCOM_IS_IP6;
+		addr_family = AF_INET6;
 	} else {
 		SPDK_ERRLOG("IP address with invalid format\n");
 		return NULL;
 	}
-	endpt.vrf = VPPCOM_VRF_DEFAULT;
-	endpt.ip = (uint8_t *)&addr_buf;
-	endpt.port = htons(port);
-
-	fd = vppcom_session_create(VPPCOM_VRF_DEFAULT, VPPCOM_PROTO_TCP, 1 /* is_nonblocking */);
-	if (fd < 0) {
-		errno = -fd;
-		SPDK_ERRLOG("vppcom_session_create() failed, errno = %d\n", errno);
-		return NULL;
-	}
 
 	if (type == SPDK_SOCK_CREATE_LISTEN) {
-		rc = vppcom_session_bind(fd, &endpt);
-		if (rc != VPPCOM_OK) {
-			errno = -rc;
-			SPDK_ERRLOG("vppcom_session_bind() failed, errno = %d\n", errno);
-			vppcom_session_close(fd);
-			return NULL;
-		}
+		session->lcl_addr_family = addr_family;
+		session->lcl_addr = addr_buf;
+		session->lcl_port = port;	/* Check endianess */
 
-		rc = vppcom_session_listen(fd, 512);
-		if (rc != VPPCOM_OK) {
+		rc = _spdk_vpp_session_listen(session);
+		if (rc != 0) {
 			errno = -rc;
-			SPDK_ERRLOG("vppcom_session_listen() failed, errno = %d\n", errno);
-			vppcom_session_close(fd);
+			SPDK_ERRLOG("vppcom_session_listen() failed\n");
+			_spdk_vpp_session_close(session);
 			return NULL;
 		}
 	} else if (type == SPDK_SOCK_CREATE_CONNECT) {
-		rc = vppcom_session_connect(fd, &endpt);
-		if (rc != VPPCOM_OK) {
-			errno = -rc;
-			SPDK_ERRLOG("vppcom_session_connect() failed, errno = %d\n", errno);
-			vppcom_session_close(fd);
+		rc = _spdk_vpp_session_connect(session);
+		if (rc != 0) {
+			_spdk_vpp_session_close(session);
 			return NULL;
 		}
 	}
 
-	sock = calloc(1, sizeof(*sock));
-	if (sock == NULL) {
-		errno = -ENOMEM;
-		SPDK_ERRLOG("sock allocation failed\n");
-		vppcom_session_close(fd);
-		return NULL;
-	}
-
-	sock->fd = fd;
-	return &sock->base;
+	return &session->base;
 }
 
 static struct spdk_sock *
@@ -303,46 +656,55 @@ spdk_vpp_sock_connect(const char *ip, int port)
 static struct spdk_sock *
 spdk_vpp_sock_accept(struct spdk_sock *_sock)
 {
-	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
-	vppcom_endpt_t		endpt;
+	struct spdk_vpp_session *listen_session = __vpp_session(_sock);
+	struct spdk_vpp_session *client_session = NULL;
+	u32 client_session_index = ~0;
+
 	uint8_t			ip[16];
 	int			rc;
-	struct spdk_vpp_sock	*new_sock;
 	double			wait_time = -1.0;
 
-	endpt.ip = ip;
-
-	assert(sock != NULL);
+	assert(listen_session != NULL);
 	assert(g_vpp_initialized);
 
-	rc = vppcom_session_accept(sock->fd, &endpt, O_NONBLOCK, wait_time);
-	if (rc < 0) {
-		errno = -rc;
+	if (listen_session->state != STATE_LISTEN) {
+		/* Listen session should be in the listen state */
 		return NULL;
 	}
 
-	new_sock = calloc(1, sizeof(*sock));
-	if (new_sock == NULL) {
+	/* TODO: Wait for client session to accept (add timeout) */
+	do {
+		if (clib_fifo_elts(listen_session->accept_session_index_fifo))
+			break;
+	} while(1);
+
+	clib_fifo_sub1(listen_session->accept_session_index_fifo,
+			client_session_index);
+	client_session = _spdk_vpp_session_get(client_session_index);
+	if (client_session == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
-		vppcom_session_close(rc);
+		_spdk_vpp_session_close(client_session);
 		return NULL;
 	}
 
-	new_sock->fd = rc;
-	return &new_sock->base;
+
+	_spdk_send_accept_session_reply (client_session->handle,
+			client_session->context, 0);
+
+	return &client_session->base;
 }
 
 static int
 spdk_vpp_sock_close(struct spdk_sock *_sock)
 {
-	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
+	struct spdk_vpp_session *session = __vpp_session(_sock);
 	int rc;
 
-	assert(sock != NULL);
+	assert(session != NULL);
 	assert(g_vpp_initialized);
 
-	rc = vppcom_session_close(sock->fd);
-	if (rc != VPPCOM_OK) {
+	rc = _spdk_vpp_session_close(session);
+	if (rc != 0) {
 		errno = -rc;
 		return -1;
 	}
@@ -353,32 +715,39 @@ spdk_vpp_sock_close(struct spdk_sock *_sock)
 static ssize_t
 spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 {
-	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
+	struct spdk_vpp_session *session = __vpp_session(_sock);
 	int rc;
 
-	assert(sock != NULL);
+	assert(session != NULL);
 	assert(g_vpp_initialized);
 
-	rc = vppcom_session_read(sock->fd, buf, len);
+	//bytes = svm_fifo_max_dequeue(session->rx_fifo);
+
+	/* Allow enqueuing of new event */
+	//svm_fifo_unset_event(session->rx_fifo);
+
+	rc = svm_fifo_dequeue_nowait(session->rx_fifo, len, buf);
 	if (rc < 0) {
 		errno = -rc;
 		return -1;
 	}
+
 	return rc;
 }
 
 static ssize_t
 spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
-	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
+	struct spdk_vpp_session *session = __vpp_session(_sock);
 	ssize_t total = 0;
 	int i, rc;
 
-	assert(sock != NULL);
+	assert(session != NULL);
 	assert(g_vpp_initialized);
 
 	for (i = 0; i < iovcnt; ++i) {
-		rc = vppcom_session_write(sock->fd, iov[i].iov_base, iov[i].iov_len);
+		rc = svm_fifo_enqueue_nowait(session->tx_fifo, iov[i].iov_len,
+				iov[i].iov_base);
 		if (rc < 0) {
 			if (total > 0) {
 				break;
@@ -425,54 +794,21 @@ spdk_vpp_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 static bool
 spdk_vpp_sock_is_ipv6(struct spdk_sock *_sock)
 {
-	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
-	vppcom_endpt_t ep;
-	uint32_t size = sizeof(ep);
-	uint8_t addr_buf[sizeof(struct in6_addr)];
-	int rc;
-
-	assert(sock != NULL);
-	assert(g_vpp_initialized);
-
-	ep.ip = addr_buf;
-
-	rc = vppcom_session_attr(sock->fd, VPPCOM_ATTR_GET_LCL_ADDR, &ep, &size);
-	if (rc != VPPCOM_OK) {
-		errno = -rc;
-		return false;
-	}
-
-	return (ep.is_ip4 == VPPCOM_IS_IP6);
+	struct spdk_vpp_session *session = __vpp_session(_sock);
+	return session->peer_addr_family == AF_INET6;
 }
 
 static bool
 spdk_vpp_sock_is_ipv4(struct spdk_sock *_sock)
 {
-	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
-	vppcom_endpt_t ep;
-	uint32_t size = sizeof(ep);
-	uint8_t addr_buf[sizeof(struct in6_addr)];
-	int rc;
-
-	assert(sock != NULL);
-	assert(g_vpp_initialized);
-
-	ep.ip = addr_buf;
-
-	rc = vppcom_session_attr(sock->fd, VPPCOM_ATTR_GET_LCL_ADDR, &ep, &size);
-	if (rc != VPPCOM_OK) {
-		errno = -rc;
-		return false;
-	}
-
-	return (ep.is_ip4 == VPPCOM_IS_IP4);
+	struct spdk_vpp_session *session = __vpp_session(_sock);
+	return session->peer_addr_family == AF_INET;
 }
 
 static struct spdk_sock_group_impl *
 spdk_vpp_sock_group_impl_create(void)
 {
 	struct spdk_vpp_sock_group_impl *group_impl;
-	int fd;
 
 	if (!g_vpp_initialized) {
 		return NULL;
@@ -484,60 +820,34 @@ spdk_vpp_sock_group_impl_create(void)
 		return NULL;
 	}
 
-	fd = vppcom_epoll_create();
-	if (fd < 0) {
-		free(group_impl);
-		return NULL;
-	}
-
-	group_impl->fd = fd;
-
 	return &group_impl->base;
 }
 
 static int
-spdk_vpp_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_sock *_sock)
+spdk_vpp_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
+		struct spdk_sock *_sock)
 {
-	struct spdk_vpp_sock_group_impl *group = __vpp_group_impl(_group);
-	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
-	int rc;
-	struct epoll_event event;
-
-	assert(sock != NULL);
-	assert(group != NULL);
-	assert(g_vpp_initialized);
-
-	event.events = EPOLLIN;
-	event.data.ptr = sock;
-
-	rc = vppcom_epoll_ctl(group->fd, EPOLL_CTL_ADD, sock->fd, &event);
-	if (rc != VPPCOM_OK) {
-		errno = -rc;
-		return -1;
-	}
-
+	/* We expect that higher level do it for us */
 	return 0;
 }
 
 static int
-spdk_vpp_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct spdk_sock *_sock)
+spdk_vpp_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
+		struct spdk_sock *_sock)
 {
-	struct spdk_vpp_sock_group_impl *group = __vpp_group_impl(_group);
-	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
-	int rc;
-	struct epoll_event event;
-
-	assert(sock != NULL);
-	assert(group != NULL);
-	assert(g_vpp_initialized);
-
-	rc = vppcom_epoll_ctl(group->fd, EPOLL_CTL_DEL, sock->fd, &event);
-	if (rc != VPPCOM_OK) {
-		errno = -rc;
-		return -1;
-	}
-
+	/* We expect that higher level do it for us */
 	return 0;
+}
+
+static bool
+_spdk_vpp_session_read_ready(struct spdk_vpp_session *session) {
+	svm_fifo_t *rx_fifo = NULL;
+	uint32_t ready;
+
+	rx_fifo = session->rx_fifo;
+	ready = svm_fifo_max_dequeue (rx_fifo);
+
+	return ready;
 }
 
 static int
@@ -546,20 +856,22 @@ spdk_vpp_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_event
 {
 	struct spdk_vpp_sock_group_impl *group = __vpp_group_impl(_group);
 	int num_events, i;
-	struct epoll_event events[MAX_EVENTS_PER_POLL];
+	struct spdk_sock *sock;
+	struct spdk_vpp_session *session;
 
 	assert(group != NULL);
 	assert(socks != NULL);
 	assert(g_vpp_initialized);
 
-	num_events = vppcom_epoll_wait(group->fd, events, max_events, 0);
-	if (num_events < 0) {
-		errno = -num_events;
-		return -1;
-	}
-
-	for (i = 0; i < num_events; i++) {
-		socks[i] = events[i].data.ptr;
+	num_events = 0;
+	TAILQ_FOREACH(sock, &_group->socks, link) {
+		session = __vpp_session(sock);
+		if (_spdk_vpp_session_read_ready(session) > 0) {
+			if (num_events < max_events) {
+				socks[num_events] = sock;
+			}
+			num_events++;
+		}
 	}
 
 	return num_events;
@@ -568,18 +880,6 @@ spdk_vpp_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_event
 static int
 spdk_vpp_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
-	struct spdk_vpp_sock_group_impl *group = __vpp_group_impl(_group);
-	int rc;
-
-	assert(group != NULL);
-	assert(g_vpp_initialized);
-
-	rc = vppcom_session_close(group->fd);
-	if (rc != VPPCOM_OK) {
-		errno = -rc;
-		return -1;
-	}
-
 	return 0;
 }
 
@@ -606,6 +906,18 @@ static struct spdk_net_impl g_vpp_net_impl = {
 
 SPDK_NET_IMPL_REGISTER(vpp, &g_vpp_net_impl);
 
+#define foreach_uri_msg                                 \
+_(BIND_SOCK_REPLY, bind_sock_reply)                     \
+_(UNBIND_SOCK_REPLY, unbind_sock_reply)                 \
+_(ACCEPT_SESSION, accept_session)                       \
+_(CONNECT_SESSION_REPLY, connect_session_reply)         \
+_(DISCONNECT_SESSION, disconnect_session)               \
+_(DISCONNECT_SESSION_REPLY, disconnect_session_reply)   \
+_(RESET_SESSION, reset_session)                         \
+_(APPLICATION_ATTACH_REPLY, application_attach_reply)   \
+_(APPLICATION_DETACH_REPLY, application_detach_reply)	\
+_(MAP_ANOTHER_SEGMENT, map_another_segment)		\
+
 static int
 spdk_vpp_net_framework_init(void)
 {
@@ -618,10 +930,24 @@ spdk_vpp_net_framework_init(void)
 		return -ENOMEM;
 	}
 
-	rc = vppcom_app_create(app_name);
-	if (rc == 0) {
-		g_vpp_initialized = true;
-	}
+	api_main_t *am = &api_main;
+
+#define _(N,n)						\
+	vl_msg_api_set_handlers(VL_API_##N, #n,		\
+			vl_api_##n##_t_handler,		\
+			vl_noop_handler,		\
+			vl_api_##n##_t_endian,		\
+			vl_api_##n##_t_print,		\
+			sizeof(vl_api_##n##_t), 1);
+	foreach_uri_msg;
+#undef _
+
+	if (vl_client_connect_to_vlib ("/vpe-api", app_name, 32 /* API_RX_Q_SIZE */) < 0)
+		  return -1;
+
+	g_vl_input_queue = am->shmem_hdr->vl_input_queue;
+	g_my_client_index = am->my_client_index;
+	g_vpp_initialized = true;
 
 	free(app_name);
 
