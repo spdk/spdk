@@ -16,6 +16,24 @@
       "revId": "336ab5d98ec3f72dd4e26f6ce9032a8adbd70aaf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "935e2dab_aa858d40",
+        "filename": "test/nvmf/discovery/discovery.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-27T10:37:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0c44695e_2b73f56a",
+      "revId": "336ab5d98ec3f72dd4e26f6ce9032a8adbd70aaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
