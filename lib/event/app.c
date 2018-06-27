@@ -484,6 +484,11 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		return 1;
 	}
 
+	if (!start_fn) {
+		SPDK_ERRLOG("start_fn should not be NULL\n");
+		return 1;
+	}
+
 	if (opts->print_level > SPDK_LOG_WARN &&
 	    isatty(STDERR_FILENO) &&
 	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
