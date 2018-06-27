@@ -2899,7 +2899,9 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	thread = spdk_get_thread();
 	if (!thread) {
 		/* The user called this from a non-SPDK thread. */
-		cb_fn(cb_arg, -ENOTSUP);
+		if (cb_fn != NULL) {
+			cb_fn(cb_arg, -ENOTSUP);
+		}
 		return;
 	}
 
