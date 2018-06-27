@@ -1966,7 +1966,7 @@ bdev_virtio_pci_scsi_dev_create(const char *name, struct spdk_pci_addr *pci_addr
 				     PCI_DEVICE_ID_VIRTIO_SCSI_MODERN, pci_addr);
 }
 
-void
+int
 bdev_virtio_scsi_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void *cb_arg)
 {
 	struct virtio_scsi_dev *svdev;
@@ -1981,12 +1981,13 @@ bdev_virtio_scsi_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void 
 	if (svdev == NULL) {
 		pthread_mutex_unlock(&g_virtio_scsi_mutex);
 		SPDK_ERRLOG("Cannot find Virtio-SCSI device named '%s'\n", name);
-		cb_fn(cb_arg, -ENODEV);
-		return;
+		return -ENODEV;
 	}
 
 	virtio_scsi_dev_remove(svdev, cb_fn, cb_arg);
 	pthread_mutex_unlock(&g_virtio_scsi_mutex);
+
+	return 0;
 }
 
 void
