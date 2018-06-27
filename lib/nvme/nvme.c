@@ -166,7 +166,7 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 /**
- * Allocate a request as well as a physically contiguous buffer to copy to/from the user's buffer.
+ * Allocate a request as well as a DMA-capable buffer to copy to/from the user's buffer.
  *
  * This is intended for use in non-fast-path functions (admin commands, reservations, etc.)
  * where the overhead of a copy is not a problem.
