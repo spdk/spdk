@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fc34385_185cfdae",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-27T23:27:47Z",
+      "side": 1,
+      "message": "We should probably convert this 512 (alignment amount) into a #define or something, but that can be in another commit.\n\n(It should also probably be at least 4096 to allow for the common case of 4K alignment required for libaio with 4K blocks.)",
+      "range": {
+        "startLine": 427,
+        "startChar": 39,
+        "endLine": 427,
+        "endChar": 42
+      },
+      "revId": "11c324fddda1f87f851686ec21c250ac9f71e966",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
