@@ -82,6 +82,7 @@ int spdk_nvme_ocssd_ctrlr_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t n
  * LBAs must correspond to the start of chunks to reset.
  * Must be allocated through spdk_dma_malloc() or its variants
  * \param num_lbas number of LBAs stored in lba_list
+ * \param chunk_info an array of chunk info on DMA-able memory
  * \param cb_fn callback function to invoke when the I/O is completed
  * \param cb_arg argument to pass to the callback function
  *
@@ -91,6 +92,7 @@ int spdk_nvme_ocssd_ctrlr_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t n
 int spdk_nvme_ocssd_ns_cmd_vector_reset(struct spdk_nvme_ns *ns,
 					struct spdk_nvme_qpair *qpair,
 					uint64_t *lba_list, uint32_t num_lbas,
+					struct spdk_ocssd_chunk_information *chunk_info,
 					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
