@@ -257,16 +257,22 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	struct virtio_hw *hw = dev->ctx;
 	uint64_t desc_addr, avail_addr, used_addr;
 	uint16_t notify_off;
-	void *queue_mem;
-	uint64_t queue_mem_phys_addr;
+	struct spdk_pci_addr pci_addr;
+	char addr[16];
+	char vring_mz_name[SPDK_MAX_MEMZONE_NAME_LEN];
 
-	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VIRTIO_PCI_VRING_ALIGN, &queue_mem_phys_addr);
-	if (queue_mem == NULL) {
+	pci_addr = spdk_pci_device_get_addr(hw->pci_dev);
+	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
+	snprintf(vring_mz_name, sizeof(vring_mz_name),
+		 "virtio_%s_vq_%"PRIu16, addr, vq->vq_queue_index);
+	vq->vq_ring_virt_mem = spdk_memzone_reserve_aligned(vring_mz_name,
+			       vq->vq_ring_size, SPDK_ENV_SOCKET_ID_ANY,
+			       0, VIRTIO_PCI_VRING_ALIGN);
+	if (vq->vq_ring_virt_mem == NULL) {
 		return -ENOMEM;
 	}
 
-	vq->vq_ring_mem = queue_mem_phys_addr;
-	vq->vq_ring_virt_mem = queue_mem;
+	vq->vq_ring_mem = spdk_vtophys(vq->vq_ring_virt_mem);
 
 	if (!check_vq_phys_addr_ok(vq)) {
 		return -1;
@@ -306,6 +312,14 @@ static void
 modern_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
 	struct virtio_hw *hw = dev->ctx;
+	struct spdk_pci_addr pci_addr;
+	char addr[16];
+	char vring_mz_name[SPDK_MAX_MEMZONE_NAME_LEN];
+
+	pci_addr = spdk_pci_device_get_addr(hw->pci_dev);
+	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
+	snprintf(vring_mz_name, sizeof(vring_mz_name),
+		 "virtio_%s_vq_%"PRIu16, addr, vq->vq_queue_index);
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_select, vq->vq_queue_index);
 
@@ -318,7 +332,7 @@ modern_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_enable, 0);
 
-	spdk_dma_free(vq->vq_ring_virt_mem);
+	spdk_memzone_free(vring_mz_name);
 }
 
 static void
