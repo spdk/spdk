@@ -112,9 +112,22 @@ int bdev_virtio_pci_scsi_dev_create(const char *name, struct spdk_pci_addr *pci_
  *  * ENODEV - couldn't find device with given name
  *  * EBUSY - device is already being removed
  * \param cb_arg argument for the `cb_fn`
+ * \return zero on success or -ENODEV if scsi dev does not exist
  */
-void bdev_virtio_scsi_dev_remove(const char *name,
-				 bdev_virtio_remove_cb cb_fn, void *cb_arg);
+int bdev_virtio_scsi_dev_remove(const char *name,
+				bdev_virtio_remove_cb cb_fn, void *cb_arg);
+
+/**
+ * Remove a Virtio device with given name.
+ *
+ * \param bdev virtio blk device bdev
+ * \param cb_fn function to be called after removing bdev
+ * \param cb_arg argument for the `cb_fn`
+ * \return zero on success, -ENODEV if bdev with 'name' does not exist or
+ * -EINVAL if bdev with 'name' is not a virtio blk device.
+ */
+int bdev_virtio_blk_dev_remove(const char *name,
+			       bdev_virtio_remove_cb cb_fn, void *cb_arg);
 
 /**
  * List all created Virtio-SCSI devices.
