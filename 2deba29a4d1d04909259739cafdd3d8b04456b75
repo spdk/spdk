@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1221345_91ee812f",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-27T23:04:34Z",
+      "side": 1,
+      "message": "This doesn\u0027t match the parameter name (bdev_name vs name).",
+      "range": {
+        "startLine": 71,
+        "startChar": 8,
+        "endLine": 71,
+        "endChar": 17
+      },
+      "revId": "2deba29a4d1d04909259739cafdd3d8b04456b75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
