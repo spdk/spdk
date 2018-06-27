@@ -1814,6 +1814,12 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			remaining_transfer_len -= length;
 			virt_addr += length;
 
+			if (nseg > 0 && phys_addr == sgl->address + sgl->unkeyed.length) {
+				/* extend previous entry */
+				sgl->unkeyed.length += length;
+				continue;
+			}
+
 			sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 			sgl->unkeyed.length = length;
 			sgl->address = phys_addr;
