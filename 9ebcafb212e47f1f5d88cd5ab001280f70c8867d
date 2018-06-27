@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a873cce_2d28feed",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 92
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T13:26:53Z",
+      "side": 1,
+      "message": "Nitpicking here, but commit of this size could really use some better commit message than just title.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 45
+      },
+      "revId": "9ebcafb212e47f1f5d88cd5ab001280f70c8867d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed78ef1a_df7a7c9d",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 92
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T13:26:53Z",
+      "side": 1,
+      "message": "In my opinion it\u0027d be better to have these comments inline, but this is still ok.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 23
+      },
+      "revId": "9ebcafb212e47f1f5d88cd5ab001280f70c8867d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
