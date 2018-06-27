@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "840ecbfc_fe31ded6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T00:22:42Z",
+      "side": 1,
+      "message": "these are duplicated with the line 397,398?",
+      "range": {
+        "startLine": 401,
+        "startChar": 0,
+        "endLine": 402,
+        "endChar": 61
+      },
+      "revId": "65ffb807e5969b85157b63a36b1904ac88679486",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
