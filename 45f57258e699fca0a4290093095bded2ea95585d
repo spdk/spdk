@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f5a66f2_9babf146",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-27T13:55:55Z",
+      "side": 1,
+      "message": "There\u0027s only one bdev per Virtio Block device. bdev_virtio_*_blk_dev_create functions are documented to return a \"virtio-blk bdev\".",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e84fcbe_459cb39e",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-27T13:55:55Z",
+      "side": 1,
+      "message": "I don\u0027t think it works. req is usually on the stack, so you\u0027ll segfault here.\nDid you mean free(req-\u003ename)?",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2c62436_a677eb8b",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-27T13:55:55Z",
+      "side": 1,
+      "message": "ctx is a spdk_jsonrpc_request. You passed it in line #470 and freed the rpc_remove_virtio_blk_dev afterwards.",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de94ffd2_f7eb90e4",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-27T13:55:55Z",
+      "side": 1,
+      "message": "I think you should fail the request with spdk_jsonrpc_send_error_response and at least return the errno back to the user. I know errnos aren\u0027t very helpful either, but still they\u0027re more helpful than success/fail messages.",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79e21790_3526caa3",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-27T13:55:55Z",
+      "side": 1,
+      "message": "There\u0027s just one bdev per Virtio Block device.",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2ca468f_ef213f5c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-27T13:55:55Z",
+      "side": 1,
+      "message": "please mention it\u0027s Virtio Block bdev name",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0708e52c_8a2a9a86",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-27T13:55:55Z",
+      "side": 1,
+      "message": "There\u0027s just one.",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfd22afc_fddacaf0",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-27T13:55:55Z",
+      "side": 1,
+      "message": "virtio block bdev name",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
