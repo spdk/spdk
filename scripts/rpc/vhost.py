@@ -193,6 +193,16 @@ def remove_virtio_scsi_bdev(client, name):
     return client.call('remove_virtio_scsi_bdev', params)
 
 
+def remove_virtio_bdev(client, name):
+    """Remove a Virtio device
+    This will delete all bdevs exposed by this device.
+    Args:
+        name: virtio device name
+    """
+    params = {'name': name}
+    return client.call('remove_virtio_bdev', params)
+
+
 def get_virtio_scsi_devs(client):
     """Get list of virtio scsi devices."""
     return client.call('get_virtio_scsi_devs')
