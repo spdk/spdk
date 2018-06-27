@@ -194,17 +194,17 @@ invalid:
 SPDK_RPC_REGISTER("construct_virtio_pci_scsi_bdev", spdk_rpc_construct_virtio_pci_scsi_dev,
 		  SPDK_RPC_RUNTIME);
 
-struct rpc_remove_virtio_scsi_dev {
+struct rpc_remove_virtio_dev {
 	char *name;
 	struct spdk_jsonrpc_request *request;
 };
 
-static const struct spdk_json_object_decoder rpc_remove_virtio_scsi_dev[] = {
-	{"name", offsetof(struct rpc_remove_virtio_scsi_dev, name), spdk_json_decode_string },
+static const struct spdk_json_object_decoder rpc_remove_virtio_dev[] = {
+	{"name", offsetof(struct rpc_remove_virtio_dev, name), spdk_json_decode_string },
 };
 
 static void
-free_rpc_remove_virtio_scsi_dev(struct rpc_remove_virtio_scsi_dev *req)
+free_rpc_remove_virtio_dev(struct rpc_remove_virtio_dev *req)
 {
 	if (!req) {
 		return;
@@ -215,13 +215,13 @@ free_rpc_remove_virtio_scsi_dev(struct rpc_remove_virtio_scsi_dev *req)
 }
 
 static void
-spdk_rpc_remove_virtio_scsi_bdev_cb(void *ctx, int errnum)
+spdk_rpc_remove_virtio_bdev_cb(void *ctx, int errnum)
 {
-	struct rpc_remove_virtio_scsi_dev *req = ctx;
+	struct rpc_remove_virtio_dev *req = ctx;
 	struct spdk_jsonrpc_request *request = req->request;
 	struct spdk_json_write_ctx *w;
 
-	free_rpc_remove_virtio_scsi_dev(req);
+	free_rpc_remove_virtio_dev(req);
 
 	if (errnum != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -239,10 +239,10 @@ spdk_rpc_remove_virtio_scsi_bdev_cb(void *ctx, int errnum)
 }
 
 static void
-spdk_rpc_remove_virtio_scsi_bdev(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
+spdk_rpc_remove_virtio_bdev(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
 {
-	struct rpc_remove_virtio_scsi_dev *req;
+	struct rpc_remove_virtio_dev *req;
 	int rc;
 
 	req = calloc(1, sizeof(*req));
@@ -251,24 +251,32 @@ spdk_rpc_remove_virtio_scsi_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (spdk_json_decode_object(params, rpc_remove_virtio_scsi_dev,
-				    SPDK_COUNTOF(rpc_remove_virtio_scsi_dev),
+	if (spdk_json_decode_object(params, rpc_remove_virtio_dev,
+				    SPDK_COUNTOF(rpc_remove_virtio_dev),
 				    req)) {
 		rc = -EINVAL;
 		goto invalid;
 	}
 
 	req->request = request;
-	bdev_virtio_scsi_dev_remove(req->name, spdk_rpc_remove_virtio_scsi_bdev_cb, req);
+
+	rc = bdev_virtio_blk_dev_remove(req->name, spdk_rpc_remove_virtio_bdev_cb, req);
+	if (rc != 0) {
+		rc = bdev_virtio_scsi_dev_remove(req->name, spdk_rpc_remove_virtio_bdev_cb, req);
+	}
+
+	if (rc != 0) {
+		spdk_rpc_remove_virtio_bdev_cb(req, rc);
+	}
 
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
-	free_rpc_remove_virtio_scsi_dev(req);
+	free_rpc_remove_virtio_dev(req);
 }
-SPDK_RPC_REGISTER("remove_virtio_scsi_bdev", spdk_rpc_remove_virtio_scsi_bdev, SPDK_RPC_RUNTIME);
+SPDK_RPC_REGISTER("remove_virtio_bdev", spdk_rpc_remove_virtio_bdev, SPDK_RPC_RUNTIME);
 
 static void
 spdk_rpc_get_virtio_scsi_devs(struct spdk_jsonrpc_request *request,
