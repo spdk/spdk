@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd7aee9d_de515145",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-27T19:48:01Z",
+      "side": 1,
+      "message": "Isn\u0027t sgl pointing at the currently-uninitialized next entry of the list here? (We advanced it in the previous iteration with sgl++ below.)",
+      "revId": "054c902f37dbdec6ba76d29e4b6fde0c42d608a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
