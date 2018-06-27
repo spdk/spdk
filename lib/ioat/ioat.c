@@ -406,11 +406,12 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	}
 
 	ioat->comp_update = spdk_dma_zmalloc(sizeof(*ioat->comp_update), SPDK_IOAT_CHANCMP_ALIGN,
-					     &comp_update_bus_addr);
+					     NULL);
 	if (ioat->comp_update == NULL) {
 		return -1;
 	}
 
+	comp_update_bus_addr = spdk_vtophys(ioat->comp_update);
 	ioat->ring_size_order = IOAT_DEFAULT_ORDER;
 
 	num_descriptors = 1 << ioat->ring_size_order;
