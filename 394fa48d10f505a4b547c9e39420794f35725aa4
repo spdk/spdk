@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5dfa2c1e_7ff886d4",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-27T15:35:18Z",
+      "side": 1,
+      "message": "I don\u0027t think COMMON_DIR will be set, especially if invoked from the python script as you show it in the next patch.",
+      "revId": "394fa48d10f505a4b547c9e39420794f35725aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
