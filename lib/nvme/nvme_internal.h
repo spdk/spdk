@@ -155,14 +155,14 @@ struct nvme_payload {
 
 	/**
 	 * If reset_sgl_fn == NULL, this is a contig payload, and contig_or_cb_arg contains the
-	 * virtual memory address of a single physically contiguous buffer.
+	 * virtual memory address of a single virtually contiguous buffer.
 	 *
 	 * If reset_sgl_fn != NULL, this is a SGL payload, and contig_or_cb_arg contains the
 	 * cb_arg that will be passed to the SGL callback functions.
 	 */
 	void *contig_or_cb_arg;
 
-	/** Virtual memory address of a single physically contiguous metadata buffer */
+	/** Virtual memory address of a single virtually contiguous metadata buffer */
 	void *md;
 };
 

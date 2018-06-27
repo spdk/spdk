@@ -166,7 +166,7 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 /**
- * Allocate a request as well as a physically contiguous buffer to copy to/from the user's buffer.
+ * Allocate a request as well as a DMA-capable buffer to copy to/from the user's buffer.
  *
  * This is intended for use in non-fast-path functions (admin commands, reservations, etc.)
  * where the overhead of a copy is not a problem.
@@ -177,24 +177,24 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 				void *cb_arg, bool host_to_controller)
 {
 	struct nvme_request *req;
-	void *contig_buffer = NULL;
+	void *dma_buffer = NULL;
 	uint64_t phys_addr;
 
 	if (buffer && payload_size) {
-		contig_buffer = spdk_dma_zmalloc(payload_size, 4096, &phys_addr);
-		if (!contig_buffer) {
+		dma_buffer = spdk_dma_zmalloc(payload_size, 4096, &phys_addr);
+		if (!dma_buffer) {
 			return NULL;
 		}
 
 		if (host_to_controller) {
-			memcpy(contig_buffer, buffer, payload_size);
+			memcpy(dma_buffer, buffer, payload_size);
 		}
 	}
 
-	req = nvme_allocate_request_contig(qpair, contig_buffer, payload_size, nvme_user_copy_cmd_complete,
+	req = nvme_allocate_request_contig(qpair, dma_buffer, payload_size, nvme_user_copy_cmd_complete,
 					   NULL);
 	if (!req) {
-		spdk_dma_free(contig_buffer);
+		spdk_dma_free(dma_buffer);
 		return NULL;
 	}
 
