@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f63c42e_31ef759f",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 37
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T10:30:30Z",
+      "side": 1,
+      "message": "if \u0027nqn\u0027 in nvmf[nqn]:\n    return nvmf[nqn]\nreturn None",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 20
+      },
+      "revId": "781c4359f9b25fc9be1e739cf0eda550af8042db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "497ee7c2_4b92d20d",
+        "filename": "test/nvmf/nvmfjson/json_config.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T10:30:30Z",
+      "side": 1,
+      "message": "As in iscsi commit - do we need to kill and restart?",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 13
+      },
+      "revId": "781c4359f9b25fc9be1e739cf0eda550af8042db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
