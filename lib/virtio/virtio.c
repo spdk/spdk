@@ -202,6 +202,7 @@ virtio_free_queues(struct virtio_dev *dev)
 			continue;
 		}
 
+		virtio_dev_backend_ops(dev)->del_queue(dev, vq);
 		spdk_dma_free(vq->vq_ring_virt_mem);
 
 		rte_free(vq);
