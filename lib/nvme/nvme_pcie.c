@@ -1761,6 +1761,8 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	return 0;
 }
 
+#define _2MB_OFFSET(ptr)	(((uintptr_t)ptr) &  (0x200000 - 1))
+
 /**
  * Build SGL list describing scattered payload buffer.
  */
@@ -1771,7 +1773,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	int rc;
 	void *virt_addr;
 	uint64_t phys_addr;
-	uint32_t remaining_transfer_len, length;
+	uint32_t remaining_transfer_len, remaining_user_sge_len, length;
 	struct spdk_nvme_sgl_descriptor *sgl;
 	uint32_t nseg = 0;
 
@@ -1791,33 +1793,40 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	remaining_transfer_len = req->payload_size;
 
 	while (remaining_transfer_len > 0) {
-		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
-			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-			return -1;
-		}
-
-		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
+		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg,
+					      &virt_addr, &remaining_user_sge_len);
 		if (rc) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return -1;
 		}
 
-		phys_addr = spdk_vtophys(virt_addr);
-		if (phys_addr == SPDK_VTOPHYS_ERROR) {
-			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-			return -1;
+		remaining_user_sge_len = spdk_min(remaining_user_sge_len, remaining_transfer_len);
+		while (remaining_user_sge_len > 0) {
+			phys_addr = spdk_vtophys(virt_addr);
+			if (phys_addr == SPDK_VTOPHYS_ERROR) {
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return -1;
+			}
+
+			length = spdk_min(remaining_transfer_len, remaining_user_sge_len);
+			length = spdk_min(length, 0x200000 - _2MB_OFFSET(virt_addr));
+			remaining_user_sge_len -= length;
+			remaining_transfer_len -= length;
+			virt_addr += length;
+
+			sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+			sgl->unkeyed.length = length;
+			sgl->address = phys_addr;
+			sgl->unkeyed.subtype = 0;
+
+			sgl++;
+			nseg++;
+
+			if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return -1;
+			}
 		}
-
-		length = spdk_min(remaining_transfer_len, length);
-		remaining_transfer_len -= length;
-
-		sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
-		sgl->unkeyed.length = length;
-		sgl->address = phys_addr;
-		sgl->unkeyed.subtype = 0;
-
-		sgl++;
-		nseg++;
 	}
 
 	if (nseg == 1) {
