@@ -2,6 +2,121 @@
   "comments": [
     {
       "key": {
+        "uuid": "ee96e980_226b0dba",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 41
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T06:52:32Z",
+      "side": 1,
+      "message": "You fill the body of this function but \"clear_vhost_subsystem\" is never used anywhere, or at least I don\u0027t see it (",
+      "range": {
+        "startLine": 116,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 46
+      },
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7ca15c3_908188dd",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 41
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T06:52:32Z",
+      "side": 1,
+      "message": "Is vhost_config a list or a dict?",
+      "range": {
+        "startLine": 117,
+        "startChar": 26,
+        "endLine": 117,
+        "endChar": 38
+      },
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a416be98_eb2db149",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 41
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T06:52:32Z",
+      "side": 1,
+      "message": "I\u0027ve seen this multiple times in various places and even asked before but I don\u0027t recall getting an answer. Could you explain why do we use \"reversed\" so much?",
+      "range": {
+        "startLine": 117,
+        "startChar": 17,
+        "endLine": 117,
+        "endChar": 25
+      },
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1f5da8b_5be0cf9e",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 41
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T06:52:32Z",
+      "side": 1,
+      "message": "\"for vhost\" implies that you do some actions \"for each vhost in list\". I assume \"vhost_config\" is not a list of configs for multiple vhosts, so I\u0027d suggest changing this variable name.",
+      "range": {
+        "startLine": 117,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 13
+      },
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18235228_24424122",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 41
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T06:52:32Z",
+      "side": 1,
+      "message": "Again - why do we reverse?",
+      "range": {
+        "startLine": 149,
+        "startChar": 30,
+        "endLine": 149,
+        "endChar": 38
+      },
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f6aaad9_93a2448d",
         "filename": "test/json_config/common.sh",
         "patchSetId": 41
@@ -42,6 +157,23 @@
         "endLine": 155,
         "endChar": 3
       },
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75ad055a_722454d0",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T06:52:32Z",
+      "side": 1,
+      "message": "Most of the functions in this script could use some kind of at least short comment describing what we\u0027re doing and why.",
       "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
