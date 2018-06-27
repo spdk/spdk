@@ -22,6 +22,30 @@
       "revId": "cae6c6cce760c1a6ae7157f2661188c897b224fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a91b598e_8460e22f",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-27T07:21:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6410590c_c6a3ce5f",
+      "range": {
+        "startLine": 939,
+        "startChar": 1,
+        "endLine": 939,
+        "endChar": 37
+      },
+      "revId": "cae6c6cce760c1a6ae7157f2661188c897b224fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

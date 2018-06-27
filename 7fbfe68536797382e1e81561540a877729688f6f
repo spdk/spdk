@@ -83,6 +83,30 @@
     },
     {
       "key": {
+        "uuid": "e192f093_167c75bf",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-27T07:21:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "02eea800_70fdd049",
+      "range": {
+        "startLine": 1107,
+        "startChar": 1,
+        "endLine": 1107,
+        "endChar": 45
+      },
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38240096_7e4b25f0",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 31
@@ -212,6 +236,24 @@
       "side": 1,
       "message": "\u003e Don\u0027t think so. Aren\u0027t there is still hot-remove and shutdown\n \u003e cases, which do no delete the lvol on disk but just clean up\n \u003e structures.\n\nReading my own comment again, it might have been worder better.\n\nI think the bdev-\u003edestruct() path will not be deprecated, since it is used in hot-remove and shutdown (app or just unloading lvs).\nAm I missing something in this assumption ?",
       "parentUuid": "91f923fd_5147a589",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b9c1a2d_63036965",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-27T07:21:03Z",
+      "side": 1,
+      "message": "I agree, I enabled one unit test, but this path of code is something that we might want to change.\nWhen we call bdev-\u003edestruct() we remove the bdev and we are left with unusable lvol. Maybe we should consider adding public calls to lvol layer to at least load it again or free it. I think this should be included in separate patch.",
+      "parentUuid": "55776e86_589330cb",
       "revId": "7fbfe68536797382e1e81561540a877729688f6f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
