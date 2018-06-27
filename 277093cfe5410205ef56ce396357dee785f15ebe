@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bad566a9_bcc4b875",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-27T05:46:02Z",
+      "side": 1,
+      "message": "Is this the path in the VM? Or the Host?",
+      "range": {
+        "startLine": 24,
+        "startChar": 35,
+        "endLine": 24,
+        "endChar": 54
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efe70564_026978aa",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-27T05:46:02Z",
+      "side": 1,
+      "message": "How about changing this to the \"Total number of virtual machines to launch in this test\".",
+      "range": {
+        "startLine": 26,
+        "startChar": 35,
+        "endLine": 26,
+        "endChar": 66
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b6af346_373b8a45",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-27T05:46:02Z",
+      "side": 1,
+      "message": "If we have say 2 NVMe devices and I want to use 1 device, how do you pick which one to use? Can we do a whitelist of the NVMe devices we want to use instead of the count?",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 74
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be181c82_4de8e43e",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-27T05:46:02Z",
+      "side": 1,
+      "message": "I think you mean \"The I/Os throttle rate in IOPS for each device on the VMs\"",
+      "range": {
+        "startLine": 38,
+        "startChar": 35,
+        "endLine": 38,
+        "endChar": 78
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fd7bb84_849c58c4",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-27T05:46:02Z",
+      "side": 1,
+      "message": "In the help function, you mentioned each VM will get 1 lvol on each NVMe under the vm-count option. However, if I understand these section correctly each VM will get 1 lvol total. Right?",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 48
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbca9d48_3c4bba26",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-27T05:46:02Z",
+      "side": 1,
+      "message": "Isn\u0027t 4 MiB the default cluster size? Do we need to specify a value here if we are using the default?",
+      "range": {
+        "startLine": 157,
+        "startChar": 62,
+        "endLine": 157,
+        "endChar": 69
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c831c764_82d17586",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-27T05:46:02Z",
+      "side": 1,
+      "message": "We don\u0027t have /home/sys_sgsw directory in our perf test systems. So this should probably be an input. Is this image on a share some where?",
+      "range": {
+        "startLine": 174,
+        "startChar": 19,
+        "endLine": 174,
+        "endChar": 54
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
