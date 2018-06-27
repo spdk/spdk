@@ -31,32 +31,13 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
-
-#include "CUnit/Basic.h"
+#include "spdk_cunit.h"
 
 #include "ioat/ioat.c"
 
-void *
-spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
-{
-	return calloc(1, size);
-}
+#include "spdk_internal/mock.h"
 
-void spdk_dma_free(void *buf)
-{
-	free(buf);
-}
-
-uint64_t spdk_vtophys(void *buf)
-{
-	return (uint64_t)buf;
-}
-
-void spdk_delay_us(unsigned int us)
-{
-
-}
+#include "common/lib/test_env.c"
 
 int
 spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
