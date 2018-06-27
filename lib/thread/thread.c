@@ -647,9 +647,7 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	cpl(i, 0);
-
-	free(i);
+	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
 
 void
