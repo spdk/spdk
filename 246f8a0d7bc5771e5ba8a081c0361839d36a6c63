@@ -186,6 +186,30 @@
       "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36653a60_c8921e1c",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T07:08:44Z",
+      "side": 1,
+      "message": "You mean filename for output file, or match file with results to compare?\nI think this is not needed here in python script - you do the \"match\" in .sh script anyway, so why add it here?",
+      "parentUuid": "7b116fa0_c91578db",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 24
+      },
+      "revId": "246f8a0d7bc5771e5ba8a081c0361839d36a6c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

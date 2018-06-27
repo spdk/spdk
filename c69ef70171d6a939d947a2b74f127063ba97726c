@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1842694_0eedba76",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T07:08:44Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be in \"main\" after line 99?\nSince we use \"if __name__ \u003d \"main\" then let\u0027s stick to it.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 12
+      },
+      "revId": "c69ef70171d6a939d947a2b74f127063ba97726c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7a30075_bb043912",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T07:08:44Z",
+      "side": 1,
+      "message": "I think this use of path join is wrong.\nEither use os.path.join(testdir, \"../../scripts/spdkcli.py\")\nor don\u0027t use os.path.join at all and manually concatenate.",
+      "range": {
+        "startLine": 18,
+        "startChar": 35,
+        "endLine": 18,
+        "endChar": 47
+      },
+      "revId": "c69ef70171d6a939d947a2b74f127063ba97726c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad5f729c_4c42593c",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T07:08:44Z",
+      "side": 1,
+      "message": "Still think this is redundant;)",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 24
+      },
+      "revId": "c69ef70171d6a939d947a2b74f127063ba97726c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
