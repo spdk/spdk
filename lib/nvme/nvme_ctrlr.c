@@ -655,17 +655,18 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* only 1 page size for doorbell buffer */
-	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size,
-				 &prp1);
+	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, NULL);
 	if (ctrlr->shadow_doorbell == NULL) {
 		return -1;
 	}
 
-	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, &prp2);
+	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, NULL);
 	if (ctrlr->eventidx == NULL) {
 		goto error;
 	}
 
+	prp1 = spdk_vtophys(ctrlr->shadow_doorbell);
+	prp2 = spdk_vtophys(ctrlr->eventidx);
 	rc = nvme_ctrlr_cmd_doorbell_buffer_config(ctrlr, prp1, prp2,
 			nvme_completion_poll_cb, &status);
 	if (rc != 0) {
