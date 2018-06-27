@@ -36,7 +36,7 @@ S :=
 SPDK_ROOT_DIR := $(CURDIR)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += lib shared_lib examples app include
+DIRS-y += lib examples app include
 DIRS-$(CONFIG_TESTS) += test
 
 .PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk cc_version cxx_version
