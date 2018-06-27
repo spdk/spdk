@@ -313,6 +313,8 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 	uint16_t queue_idx = vq->vq_queue_index;
+	void *queue_mem;
+	uint64_t queue_mem_phys_addr;
 	uint64_t desc_addr, avail_addr, used_addr;
 	int callfd;
 	int kickfd;
@@ -321,6 +323,14 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 		SPDK_ERRLOG("queue %"PRIu16" already exists\n", queue_idx);
 		return -1;
 	}
+
+	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VIRTIO_PCI_VRING_ALIGN, &queue_mem_phys_addr);
+	if (queue_mem == NULL) {
+		return -ENOMEM;
+	}
+
+	vq->vq_ring_mem = queue_mem_phys_addr;
+	vq->vq_ring_virt_mem = queue_mem;
 
 	/* May use invalid flag, but some backend uses kickfd and
 	 * callfd as criteria to judge if dev is alive. so finally we
@@ -374,6 +384,8 @@ virtio_user_del_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	close(dev->kickfds[vq->vq_queue_index]);
 	dev->callfds[vq->vq_queue_index] = -1;
 	dev->kickfds[vq->vq_queue_index] = -1;
+
+	spdk_dma_free(vq->vq_ring_virt_mem);
 }
 
 static void

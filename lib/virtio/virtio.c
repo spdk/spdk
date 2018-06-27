@@ -107,11 +107,8 @@ virtio_init_vring(struct virtqueue *vq)
 static int
 virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 {
-	void *queue_mem;
 	unsigned int vq_size, size;
-	uint64_t queue_mem_phys_addr;
 	struct virtqueue *vq;
-	int ret;
 
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "setting up queue: %"PRIu16"\n", vtpci_queue_idx);
 
@@ -155,21 +152,6 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vring_size: %u, rounded_vring_size: %u\n",
 		      size, vq->vq_ring_size);
 
-	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VIRTIO_PCI_VRING_ALIGN, &queue_mem_phys_addr);
-	if (queue_mem == NULL) {
-		ret = -ENOMEM;
-		goto fail_q_alloc;
-	}
-
-	vq->vq_ring_mem = queue_mem_phys_addr;
-	vq->vq_ring_virt_mem = queue_mem;
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vq->vq_ring_mem:      0x%" PRIx64 "\n",
-		      vq->vq_ring_mem);
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vq->vq_ring_virt_mem: 0x%" PRIx64 "\n",
-		      (uint64_t)(uintptr_t)vq->vq_ring_virt_mem);
-
-	virtio_init_vring(vq);
-
 	vq->owner_thread = NULL;
 
 	if (virtio_dev_backend_ops(dev)->setup_queue(dev, vq) < 0) {
@@ -177,12 +159,13 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		return -EINVAL;
 	}
 
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vq->vq_ring_mem:      0x%" PRIx64 "\n",
+		      vq->vq_ring_mem);
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vq->vq_ring_virt_mem: 0x%" PRIx64 "\n",
+		      (uint64_t)(uintptr_t)vq->vq_ring_virt_mem);
+
+	virtio_init_vring(vq);
 	return 0;
-
-fail_q_alloc:
-	rte_free(vq);
-
-	return ret;
 }
 
 static void
@@ -203,7 +186,6 @@ virtio_free_queues(struct virtio_dev *dev)
 		}
 
 		virtio_dev_backend_ops(dev)->del_queue(dev, vq);
-		spdk_dma_free(vq->vq_ring_virt_mem);
 
 		rte_free(vq);
 		dev->vqs[i] = NULL;
