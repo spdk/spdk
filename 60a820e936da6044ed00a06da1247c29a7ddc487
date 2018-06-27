@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "43647c0c_dade53d2",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-27T01:27:45Z",
+      "side": 1,
+      "message": "Yes correct. This was not needed. Will update.",
+      "parentUuid": "70b4d860_d078f58c",
+      "revId": "60a820e936da6044ed00a06da1247c29a7ddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "afaeafb6_813e7b13",
         "filename": "lib/event/reactor.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-26T22:30:02Z",
       "side": 1,
       "message": "The function below, without the outer while loop, belongs in lib/thread.",
+      "revId": "60a820e936da6044ed00a06da1247c29a7ddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "612cafed_b7144d99",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-27T01:27:45Z",
+      "side": 1,
+      "message": "Ideally, this should be in the application and should reside here. All applications may not use the same types of \"preempts\" i.e. spin/sleep cycles while polling a thread. Keeping it here gives us that flexibility.\n\nHaving said that, I can move it to the threads function, because, I can decide to NOT use the function provided in the threads library and spin my own in the app. As long as the accessor functions defined for the thread structure are available, an app can \"override\" the function.\n\nI will go ahead and update this as well. But, if you agree with the comments above, I can rollback the movement and keep this function as is here.",
+      "parentUuid": "afaeafb6_813e7b13",
       "revId": "60a820e936da6044ed00a06da1247c29a7ddc487",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
