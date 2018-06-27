@@ -112,6 +112,26 @@ cleanup_submit_request_test(struct spdk_nvme_qpair *qpair)
 }
 
 static void
+cleanup_error_cmd(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint8_t opc)
+{
+	struct nvme_error_cmd *cmd, *entry;
+
+	if (qpair == NULL) {
+		qpair = ctrlr->adminq;
+	}
+
+	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
+		if (cmd->opc == opc) {
+			TAILQ_REMOVE(&qpair->err_cmd_head, cmd, link);
+			spdk_dma_free(cmd);
+			return;
+		}
+	}
+
+	return;
+}
+
+static void
 expected_success_callback(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	CU_ASSERT(!spdk_nvme_cpl_is_error(cpl));
@@ -319,6 +339,51 @@ test_get_status_string(void)
 }
 #endif
 
+static void
+test_nvme_qpair_add_cmd_error_injection(void)
+{
+	struct spdk_nvme_qpair          qpair = {};
+	struct spdk_nvme_ctrlr          ctrlr = {};
+	int    rc;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair,
+			SPDK_NVME_OPC_GET_FEATURES, true, 5000, 1,
+			SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_INVALID_FIELD);
+
+	cleanup_error_cmd(&ctrlr, &qpair, SPDK_NVME_OPC_GET_FEATURES);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair,
+			SPDK_NVME_OPC_READ, false, 0, 1,
+			SPDK_NVME_SCT_MEDIA_ERROR, SPDK_NVME_SC_UNRECOVERED_READ_ERROR);
+
+	cleanup_error_cmd(&ctrlr, &qpair, SPDK_NVME_OPC_READ);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair,
+			SPDK_NVME_OPC_COMPARE, true, 0, 5,
+			SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_COMPARE_FAILURE);
+
+	cleanup_error_cmd(&ctrlr, &qpair, SPDK_NVME_OPC_COMPARE);
+	CU_ASSERT(rc == 0);
+
+	cleanup_submit_request_test(&qpair);
+}
+
+static void
+test_nvme_qpair_remove_cmd_error_injection(void)
+{
+	struct spdk_nvme_qpair          qpair = {};
+	struct spdk_nvme_ctrlr          ctrlr = {};
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair,
+			SPDK_NVME_OPC_GET_FEATURES);
+
+	cleanup_submit_request_test(&qpair);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -343,6 +408,10 @@ int main(int argc, char **argv)
 #ifdef DEBUG
 	    || CU_add_test(suite, "get_status_string", test_get_status_string) == NULL
 #endif
+	    || CU_add_test(suite, "spdk_nvme_qpair_add_cmd_error_injection",
+			   test_nvme_qpair_add_cmd_error_injection) == NULL
+	    || CU_add_test(suite, "spdk_nvme_qpair_remove_cmd_error_injection",
+			   test_nvme_qpair_remove_cmd_error_injection) == NULL
 	   ) {
 		CU_cleanup_registry();
 		return CU_get_error();
