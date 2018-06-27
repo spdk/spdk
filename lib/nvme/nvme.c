@@ -305,7 +305,8 @@ nvme_driver_init(void)
 			return 0;
 		} else {
 			g_spdk_nvme_driver = spdk_memzone_reserve(SPDK_NVME_DRIVER_NAME,
-					     sizeof(struct nvme_driver), socket_id, 0);
+					     sizeof(struct nvme_driver), socket_id,
+					     SPDK_MEMZONE_NO_IOVA_CONTIG);
 		}
 
 		if (g_spdk_nvme_driver == NULL) {
