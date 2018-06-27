@@ -68,6 +68,7 @@ struct spdk_ioat_chan {
 	union spdk_ioat_hw_desc		*hw_ring;
 	uint64_t			hw_ring_phys_addr;
 	uint32_t			dma_capabilities;
+	char				hw_ring_mz_name[SPDK_MAX_MEMZONE_NAME_LEN];
 
 	/* tailq entry for attached_chans */
 	TAILQ_ENTRY(spdk_ioat_chan)	tailq;
