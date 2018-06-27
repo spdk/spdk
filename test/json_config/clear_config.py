@@ -54,21 +54,13 @@ def get_bdev_destroy_method(bdev):
                           'construct_aio_bdev': "delete_aio_bdev",
                           'construct_error_bdev': "delete_error_bdev",
                           'construct_split_vbdev': "destruct_split_vbdev",
-                          'construct_virtio_dev': {
-                              'blk': "delete_bdev",
-                              'scsi': "remove_virtio_scsi_bdev"
-                              }
+                          'construct_virtio_dev': "remove_virtio_bdev"
                           }
     destroy_method = None
     if 'method' in bdev:
         construct_method = bdev['method']
         if construct_method in destroy_method_map.keys():
             destroy_method = destroy_method_map[construct_method]
-            if construct_method == 'construct_virtio_dev':
-                if bdev['params']['dev_type'] == 'blk':
-                    destroy_method = destroy_method['blk']
-                else:
-                    destroy_method = destroy_method['scsi']
 
     return destroy_method
 
