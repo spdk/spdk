@@ -187,7 +187,7 @@ test_nvme_ocssd_ns_cmd_vector_reset_single_entry(void)
 	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, max_xfer_size, 0, false);
 	uint64_t lba_list = 0x12345678;
 	spdk_nvme_ocssd_ns_cmd_vector_reset(&ns, &qpair, &lba_list, 1,
-					    NULL, NULL);
+					    NULL, NULL, NULL);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -218,7 +218,7 @@ test_nvme_ocssd_ns_cmd_vector_reset(void)
 	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, max_xfer_size, 0, false);
 	uint64_t lba_list[vector_size];
 	spdk_nvme_ocssd_ns_cmd_vector_reset(&ns, &qpair, lba_list, vector_size,
-					    NULL, NULL);
+					    NULL, NULL, NULL);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
