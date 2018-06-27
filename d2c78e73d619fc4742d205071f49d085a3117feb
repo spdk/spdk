@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0e0444f_fcf7e155",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-27T11:34:05Z",
+      "side": 1,
+      "message": "Please add also checking rpc get_iscsi_connections and  get_scsi_devices. This should be similar to get_bdevs rpc checking.",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 56
+      },
+      "revId": "d2c78e73d619fc4742d205071f49d085a3117feb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
