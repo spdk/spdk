@@ -1,0 +1,314 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffce7db7_327da795",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "source command may be used in other places to execute autotest_common.sh.",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 1
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d0bf043_1bc6a183",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "is this default? you can omit this?",
+      "range": {
+        "startLine": 5,
+        "startChar": 51,
+        "endLine": 5,
+        "endChar": 72
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc6bbe30_3c8ae246",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "is this default? you can omit this?",
+      "range": {
+        "startLine": 6,
+        "startChar": 48,
+        "endLine": 6,
+        "endChar": 69
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e38ed2d_d8374773",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "this is default and you can omit this?",
+      "range": {
+        "startLine": 17,
+        "startChar": 59,
+        "endLine": 17,
+        "endChar": 80
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "652c8a2c_ff74b3fb",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "Startup parameters cannot be cleared. Clear spdk_tgt config is enough.\n\nAnd it looks that \"checking if cleared\" is missing.",
+      "range": {
+        "startLine": 42,
+        "startChar": 27,
+        "endLine": 42,
+        "endChar": 54
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a53eec1_e9d32c8c",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "Save",
+      "range": {
+        "startLine": 44,
+        "startChar": 5,
+        "endLine": 44,
+        "endChar": 10
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93124880_e85f4ab0",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "are",
+      "range": {
+        "startLine": 45,
+        "startChar": 50,
+        "endLine": 45,
+        "endChar": 52
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d69a31d8_5b5faace",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "match?",
+      "range": {
+        "startLine": 46,
+        "startChar": 39,
+        "endLine": 46,
+        "endChar": 56
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12c368a4_8a40ff71",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "term configuration (\u003ddelete_startup_rpcs) and global parameters (\u003ddelete_runtime_rpcs) may be easier to understand.\n\nI think inlining explanation into the code may be helpful for viewers.\n\n\nI\u0027m not confident that the following is better and please use the following as reference info.\n\n#1 save a list of bdevs.\n#2 save only configuration of the running spdk_tgt. (global parameters are not saved.)\n#3 clear configuration of the running spdk_tgt.\n#4 save only configuration of the running spdk_tgt.\n#5 check if configuration is cleared by the file saved at #4.\n#6 load the file saved at #2 to the running spdk_tgt.\n#7 save a list of bdevs.\n#8 save only configuration of the running spdk_tgt.\n#9 check if the file saved at #2 matches the file saved at #8.\n#10 check if the file saved at #1 matches the file saved at #7.\n#11 remove all files.\n\nor \n\n#1 save a list of bdevs and save it to the file \"base_bdevs\".\n\n#2 save only configuration of the running spdk_tgt to the file \"base_json_config\". (global parameters are not saved.)\n\n#3 clear configuration of the running spdk_tgt.\n\n#4 save only configuration of the running spdk_tgt to the file \"null_json_config\". (global parameters are not saved.)\n\n#5 check if configuration of the running spdk_tgt is cleared by checking if the file \"null_json_config\" doesn\u0027t have any configuration.\n\n#6 load the file \"base_json_config\" to the running spdk_tgt.\n\n#7 get a list of bdevs and save it to the file \"last_bdevs\".\n\n#8 save only configuration of the running spdk_tgt to the file \"last_json_config\".\n\n#9 check if the file \"base_json_config\" matches the file \"last_json_config\".\n\n#10 check if the file \"base_bdevs\" matches the file \"last_bdevs\".\n\n#11 remove all files.",
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4282aa40_41d2cd54",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "delete_global_parameters and delete_configs may be appropriate. \n\nWe know that SPDK\u0027s JSON config file is list of RPCs but we cannot imagine easily config from RPC.\n\nSorry for being late for my reply.",
+      "range": {
+        "startLine": 50,
+        "startChar": 37,
+        "endLine": 50,
+        "endChar": 56
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da9c4028_4da01021",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "Some description should be added here too. Inlining into the code may be helpful.\n\n#1 save only global parameters to the file \"base_json_config\".\n#2 exit the running spdk_tgt.\n#3 start the spdk_tgt and it waits for loading global parameters.\n#4 load the file \"base_json_config\".\n#5 save only global parameters to the file \"last_json_config\".\n#6 check if the file \"base_json_config\" matches the file \"last_json_config\".\n#7 delete all files.",
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ad26878_518eb66a",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 90
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "test_global_params or test_global_parameters may be better.",
+      "range": {
+        "startLine": 102,
+        "startChar": 14,
+        "endLine": 102,
+        "endChar": 20
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5e2c0dd_124e2708",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 90
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "maybe do_remove or do_remove_startup_rpcs ?",
+      "range": {
+        "startLine": 6,
+        "startChar": 29,
+        "endLine": 6,
+        "endChar": 44
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cecbf75_0ea65f77",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 90
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-27T06:20:36Z",
+      "side": 1,
+      "message": "startup_methods or startup_rpcs?",
+      "range": {
+        "startLine": 7,
+        "startChar": 4,
+        "endLine": 7,
+        "endChar": 20
+      },
+      "revId": "7e4b52d7c0da067f25a831172defbf22366bf099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
