@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5ba5aa72_3bee0704",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T11:52:32Z",
+      "side": 1,
+      "message": "On host. Binary will get copied to the VM, so it is important that VM uses the same OS as host or binary should be statically compiled.",
+      "parentUuid": "bad566a9_bcc4b875",
+      "range": {
+        "startLine": 24,
+        "startChar": 35,
+        "endLine": 24,
+        "endChar": 54
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efe70564_026978aa",
         "filename": "test/vhost/perf_bench/vhost_perf.sh",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-27T05:46:02Z",
       "side": 1,
       "message": "How about changing this to the \"Total number of virtual machines to launch in this test\".",
+      "range": {
+        "startLine": 26,
+        "startChar": 35,
+        "endLine": 26,
+        "endChar": 66
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f7a530a_11730151",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T11:52:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "efe70564_026978aa",
       "range": {
         "startLine": 26,
         "startChar": 35,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "8d8d07c8_7de4a5fd",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T11:52:32Z",
+      "side": 1,
+      "message": "I think this can and should be achieved using scripts/setup.sh with WHITELIST option.",
+      "parentUuid": "3b6af346_373b8a45",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 74
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be181c82_4de8e43e",
         "filename": "test/vhost/perf_bench/vhost_perf.sh",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2018-06-27T05:46:02Z",
       "side": 1,
       "message": "I think you mean \"The I/Os throttle rate in IOPS for each device on the VMs\"",
+      "range": {
+        "startLine": 38,
+        "startChar": 35,
+        "endLine": 38,
+        "endChar": 78
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5d31dde_726d824a",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T11:52:32Z",
+      "side": 1,
+      "message": "Fixed.\nCopy-pasted your comment if you dont mind.",
+      "parentUuid": "be181c82_4de8e43e",
       "range": {
         "startLine": 38,
         "startChar": 35,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "68d9e540_8ab1cd99",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T11:52:32Z",
+      "side": 1,
+      "message": "Help message was wrong, fixed it.",
+      "parentUuid": "7fd7bb84_849c58c4",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 48
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dbca9d48_3c4bba26",
         "filename": "test/vhost/perf_bench/vhost_perf.sh",
         "patchSetId": 3
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "d6ac2567_9b29e1cb",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T11:52:32Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "dbca9d48_3c4bba26",
+      "range": {
+        "startLine": 157,
+        "startChar": 62,
+        "endLine": 157,
+        "endChar": 69
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c831c764_82d17586",
         "filename": "test/vhost/perf_bench/vhost_perf.sh",
         "patchSetId": 3
@@ -151,6 +295,30 @@
       "writtenOn": "2018-06-27T05:46:02Z",
       "side": 1,
       "message": "We don\u0027t have /home/sys_sgsw directory in our perf test systems. So this should probably be an input. Is this image on a share some where?",
+      "range": {
+        "startLine": 174,
+        "startChar": 19,
+        "endLine": 174,
+        "endChar": 54
+      },
+      "revId": "277093cfe5410205ef56ce396357dee785f15ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "596d53bc_98cf1853",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-27T11:52:32Z",
+      "side": 1,
+      "message": "Changed to parameter.\nI\u0027ll send you an e-mail on where to get the image file;)",
+      "parentUuid": "c831c764_82d17586",
       "range": {
         "startLine": 174,
         "startChar": 19,
