@@ -38,6 +38,7 @@ int
 spdk_nvme_ocssd_ns_cmd_vector_reset(struct spdk_nvme_ns *ns,
 				    struct spdk_nvme_qpair *qpair,
 				    uint64_t *lba_list, uint32_t num_lbas,
+				    struct spdk_ocssd_chunk_information *chunk_info,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request	*req;
@@ -56,6 +57,10 @@ spdk_nvme_ocssd_ns_cmd_vector_reset(struct spdk_nvme_ns *ns,
 	cmd = &req->cmd;
 	cmd->opc = SPDK_OCSSD_OPC_VECTOR_RESET;
 	cmd->nsid = ns->id;
+
+	if (chunk_info != NULL) {
+		cmd->mptr = spdk_vtophys(chunk_info);
+	}
 
 	/*
 	 * Dword 10 and 11 store a pointer to the list of logical block addresses.
