@@ -227,6 +227,13 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return 0;
 }
 
+int
+spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			struct spdk_bdev_io_wait_entry *entry)
+{
+	return 0;
+}
+
 /*
  * This test specifically tests a mode select 6 command from the
  *  Windows SCSI compliance test that caused SPDK to crash.
