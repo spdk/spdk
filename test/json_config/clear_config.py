@@ -55,7 +55,7 @@ def get_bdev_destroy_method(bdev):
                           'construct_error_bdev': "delete_error_bdev",
                           'construct_split_vbdev': "destruct_split_vbdev",
                           'construct_virtio_dev': {
-                              'blk': "delete_bdev",
+                              'blk': "remove_virtio_blk_bdev",
                               'scsi': "remove_virtio_scsi_bdev"
                               }
                           }
