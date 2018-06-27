@@ -465,7 +465,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 
 /* Caller must hold g_ioat_driver.lock */
 static struct spdk_ioat_chan *
-ioat_attach(void *device)
+ioat_attach(struct spdk_pci_device *device)
 {
 	struct spdk_ioat_chan *ioat;
 	uint32_t cmd_reg;

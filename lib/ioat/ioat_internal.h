@@ -52,7 +52,7 @@ struct ioat_descriptor {
 /* One of these per allocated PCI device. */
 struct spdk_ioat_chan {
 	/* Opaque handle to upper layer */
-	void                *device;
+	struct spdk_pci_device		*device;
 	uint64_t            max_xfer_size;
 	volatile struct spdk_ioat_registers *regs;
 
