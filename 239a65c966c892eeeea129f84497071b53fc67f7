@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "811cf724_1b3ffb6f",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T18:02:57Z",
+      "side": 1,
+      "message": "extra space after (void *).\n\nThe formatting is also weird - maybe indent the arguments at least one tab from the function call start.",
+      "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d28b7da_c66416bb",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T18:02:57Z",
+      "side": 1,
+      "message": "The indentation looks messed up here too",
+      "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca1e536b_421cb9de",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T18:02:57Z",
+      "side": 1,
+      "message": "Indentation",
+      "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
