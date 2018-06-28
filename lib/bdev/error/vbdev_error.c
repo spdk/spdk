@@ -113,7 +113,7 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint3
 	}
 
 	TAILQ_FOREACH(part, &g_error_disks, tailq) {
-		if (bdev == &part->bdev) {
+		if (bdev == spdk_bdev_part_get_bdev(part)) {
 			error_disk = (struct error_disk *)part;
 			break;
 		}
@@ -206,7 +206,7 @@ static int
 vbdev_error_destruct(void *ctx)
 {
 	struct error_disk *error_disk = ctx;
-	struct spdk_bdev *base_bdev = spdk_bdev_part_base_get_bdev(error_disk->part.base);
+	struct spdk_bdev *base_bdev = spdk_bdev_part_get_base_bdev(&error_disk->part);
 	int rc;
 
 	rc = vbdev_error_config_remove(base_bdev->name);
@@ -221,7 +221,7 @@ static int
 vbdev_error_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct error_disk *error_disk = ctx;
-	struct spdk_bdev *base_bdev = spdk_bdev_part_base_get_bdev(error_disk->part.base);
+	struct spdk_bdev *base_bdev = spdk_bdev_part_get_base_bdev(&error_disk->part);
 
 	spdk_json_write_name(w, "error_disk");
 	spdk_json_write_object_begin(w);

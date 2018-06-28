@@ -107,9 +107,9 @@ spdk_bdev_part_free_cb(void *io_device)
 	struct spdk_bdev_part_base *base;
 
 	assert(part);
-	assert(part->base);
+	assert(part->internal.base);
 
-	base = part->base;
+	base = part->internal.base;
 
 	TAILQ_REMOVE(base->tailq, part, tailq);
 
@@ -118,8 +118,8 @@ spdk_bdev_part_free_cb(void *io_device)
 		spdk_bdev_part_base_free(base);
 	}
 
-	spdk_bdev_destruct_done(&part->bdev, 0);
-	free(part->bdev.name);
+	spdk_bdev_destruct_done(&part->internal.bdev, 0);
+	free(part->internal.bdev.name);
 	free(part);
 }
 
@@ -139,8 +139,8 @@ spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tail
 	struct spdk_bdev_part *part, *tmp;
 
 	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
-		if (part->base->bdev == base_bdev) {
-			spdk_bdev_unregister(&part->bdev, NULL, NULL);
+		if (part->internal.base->bdev == base_bdev) {
+			spdk_bdev_unregister(&part->internal.bdev, NULL, NULL);
 		}
 	}
 }
@@ -150,7 +150,7 @@ spdk_bdev_part_io_type_supported(void *_part, enum spdk_bdev_io_type io_type)
 {
 	struct spdk_bdev_part *part = _part;
 
-	return part->base->bdev->fn_table->io_type_supported(part->base->bdev, io_type);
+	return part->internal.base->bdev->fn_table->io_type_supported(part->internal.base->bdev, io_type);
 }
 
 static struct spdk_io_channel *
@@ -159,6 +159,30 @@ spdk_bdev_part_get_io_channel(void *_part)
 	struct spdk_bdev_part *part = _part;
 
 	return spdk_get_io_channel(part);
+}
+
+struct spdk_bdev *
+spdk_bdev_part_get_bdev(struct spdk_bdev_part *part)
+{
+	return &part->internal.bdev;
+}
+
+struct spdk_bdev_part_base *
+spdk_bdev_part_get_base(struct spdk_bdev_part *part)
+{
+	return part->internal.base;
+}
+
+struct spdk_bdev *
+spdk_bdev_part_get_base_bdev(struct spdk_bdev_part *part)
+{
+	return part->internal.base->bdev;
+}
+
+uint64_t
+spdk_bdev_part_get_offset_blocks(struct spdk_bdev_part *part)
+{
+	return part->internal.offset_blocks;
 }
 
 static void
@@ -176,38 +200,38 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 {
 	struct spdk_bdev_part *part = ch->part;
 	struct spdk_io_channel *base_ch = ch->base_ch;
-	struct spdk_bdev_desc *base_desc = part->base->desc;
+	struct spdk_bdev_desc *base_desc = part->internal.base->desc;
 	uint64_t offset;
 	int rc = 0;
 
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		offset = bdev_io->u.bdev.offset_blocks + part->offset_blocks;
+		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		rc = spdk_bdev_readv_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
 					    bdev_io->u.bdev.iovcnt, offset,
 					    bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
 					    bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		offset = bdev_io->u.bdev.offset_blocks + part->offset_blocks;
+		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		rc = spdk_bdev_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
 					     bdev_io->u.bdev.iovcnt, offset,
 					     bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
 					     bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		offset = bdev_io->u.bdev.offset_blocks + part->offset_blocks;
+		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		rc = spdk_bdev_write_zeroes_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
 						   spdk_bdev_part_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		offset = bdev_io->u.bdev.offset_blocks + part->offset_blocks;
+		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		rc = spdk_bdev_unmap_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
 					    spdk_bdev_part_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		offset = bdev_io->u.bdev.offset_blocks + part->offset_blocks;
+		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		rc = spdk_bdev_flush_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
 					    spdk_bdev_part_complete_io, bdev_io);
 		break;
@@ -232,13 +256,13 @@ spdk_bdev_part_channel_create_cb(void *io_device, void *ctx_buf)
 	struct spdk_bdev_part_channel *ch = ctx_buf;
 
 	ch->part = part;
-	ch->base_ch = spdk_bdev_get_io_channel(part->base->desc);
+	ch->base_ch = spdk_bdev_get_io_channel(part->internal.base->desc);
 	if (ch->base_ch == NULL) {
 		return -1;
 	}
 
-	if (part->base->ch_create_cb) {
-		return part->base->ch_create_cb(io_device, ctx_buf);
+	if (part->internal.base->ch_create_cb) {
+		return part->internal.base->ch_create_cb(io_device, ctx_buf);
 	} else {
 		return 0;
 	}
@@ -250,8 +274,8 @@ spdk_bdev_part_channel_destroy_cb(void *io_device, void *ctx_buf)
 	struct spdk_bdev_part *part = (struct spdk_bdev_part *)io_device;
 	struct spdk_bdev_part_channel *ch = ctx_buf;
 
-	if (part->base->ch_destroy_cb) {
-		part->base->ch_destroy_cb(io_device, ctx_buf);
+	if (part->internal.base->ch_destroy_cb) {
+		part->internal.base->ch_destroy_cb(io_device, ctx_buf);
 	}
 	spdk_put_io_channel(ch->base_ch);
 }
@@ -303,20 +327,20 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 			 char *name, uint64_t offset_blocks, uint64_t num_blocks,
 			 char *product_name)
 {
-	part->bdev.name = name;
-	part->bdev.blocklen = base->bdev->blocklen;
-	part->bdev.blockcnt = num_blocks;
-	part->offset_blocks = offset_blocks;
+	part->internal.bdev.name = name;
+	part->internal.bdev.blocklen = base->bdev->blocklen;
+	part->internal.bdev.blockcnt = num_blocks;
+	part->internal.offset_blocks = offset_blocks;
 
-	part->bdev.write_cache = base->bdev->write_cache;
-	part->bdev.need_aligned_buffer = base->bdev->need_aligned_buffer;
-	part->bdev.product_name = product_name;
-	part->bdev.ctxt = part;
-	part->bdev.module = base->module;
-	part->bdev.fn_table = base->fn_table;
+	part->internal.bdev.write_cache = base->bdev->write_cache;
+	part->internal.bdev.need_aligned_buffer = base->bdev->need_aligned_buffer;
+	part->internal.bdev.product_name = product_name;
+	part->internal.bdev.ctxt = part;
+	part->internal.bdev.module = base->module;
+	part->internal.bdev.fn_table = base->fn_table;
 
 	__sync_fetch_and_add(&base->ref, 1);
-	part->base = base;
+	part->internal.base = base;
 
 	if (!base->claimed) {
 		int rc;
@@ -324,7 +348,7 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 		rc = spdk_bdev_module_claim_bdev(base->bdev, base->desc, base->module);
 		if (rc) {
 			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base->bdev));
-			free(part->bdev.name);
+			free(part->internal.bdev.name);
 			return -1;
 		}
 		base->claimed = true;
@@ -333,7 +357,7 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 	spdk_io_device_register(part, spdk_bdev_part_channel_create_cb,
 				spdk_bdev_part_channel_destroy_cb,
 				base->channel_size);
-	spdk_vbdev_register(&part->bdev, &base->bdev, 1);
+	spdk_vbdev_register(&part->internal.bdev, &base->bdev, 1);
 	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
 
 	return 0;
