@@ -579,7 +579,7 @@ Name                    | Optional | Type        | Description
 name                    | Required | string      | Block device name
 limit_per_sec           | Required | number      | Rate limit per second to allow. 0 means unlimited. For IOPS, >=10000. For BPS, >=10(MB).
 limit_type              | Optional | string      | Type of rate limit (IOPS, BPS). Default is IOPS.
-
+io_type                 | Optional | string      | Type of I/O operations (RW, R, W). Default is RW.
 
 ### Example
 
@@ -593,6 +593,7 @@ Example request:
     "name": "Malloc0"
     "limit_per_sec": 20000
     "limit_type": "IOPS"
+    "io_type": "RW"
   }
 }
 ~~~
