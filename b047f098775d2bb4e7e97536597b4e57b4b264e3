@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8f78680_702294ee",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:16:09Z",
+      "side": 1,
+      "message": "I don\u0027t see why additional states were needed - the two states appear to do the same thing.\n\nAs a starting point, can we separate the part of the patch that adds these two new states from the part of the patch that adds the state machine tracking in lists? I don\u0027t think they need to be grouped into the same patch.",
+      "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93fa3bb4_b634b21d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:16:09Z",
+      "side": 1,
+      "message": "You could eliminate this queue if you can collapse the TRANSFER_PENDING_* states into one. Maybe within the state it looks at the transfer direction and then sets the next state accordingly.",
+      "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71e4045a_aaf5506a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:16:09Z",
+      "side": 1,
+      "message": "I think the code would be clearer if instead of these functions, you took their contents and put them in the places they are called from. They\u0027re each only called from one spot and most of the function is getting to particular data members that the calling location already has access to.",
+      "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f355061_9e887da6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1993,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:16:09Z",
+      "side": 1,
+      "message": "Did this function actually need to move?",
+      "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
