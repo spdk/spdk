@@ -3511,6 +3511,14 @@ _spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, uint32_t types,
 		bdev->internal.qos->iops_rate_limit = limits->rw_ios_per_sec;
 	}
 
+	if (types & SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT) {
+		bdev->internal.qos->read_iops_rate_limit = limits->r_ios_per_sec;
+	}
+
+	if (types & SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT) {
+		bdev->internal.qos->write_iops_rate_limit = limits->w_ios_per_sec;
+	}
+
 	if (types & SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT) {
 		bdev->internal.qos->byte_rate_limit = limits->rw_mbytes_per_sec * 1024 * 1024;
 	}
@@ -3535,6 +3543,14 @@ spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, struct spdk_bdev_qos_rate_l
 				min_limit_per_sec = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
 				limit_per_sec = limits->rw_ios_per_sec;
 			}
+			if (limit_type == SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT) {
+				min_limit_per_sec = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
+				limit_per_sec = limits->r_ios_per_sec;
+			}
+			if (limit_type == SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT) {
+				min_limit_per_sec = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
+				limit_per_sec = limits->w_ios_per_sec;
+			}
 			if (limit_type == SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT) {
 				min_limit_per_sec = SPDK_BDEV_QOS_MIN_BW_IN_MB_PER_SEC;
 				limit_per_sec = limits->rw_mbytes_per_sec;
@@ -3555,6 +3571,12 @@ spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, struct spdk_bdev_qos_rate_l
 		if (limit_type == SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT) {
 			limits->rw_ios_per_sec = limit_per_sec;
 		}
+		if (limit_type == SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT) {
+			limits->r_ios_per_sec = limit_per_sec;
+		}
+		if (limit_type == SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT) {
+			limits->w_ios_per_sec = limit_per_sec;
+		}
 		if (limit_type == SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT) {
 			limits->rw_mbytes_per_sec = limit_per_sec;
 		}
@@ -3562,7 +3584,8 @@ spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, struct spdk_bdev_qos_rate_l
 		limit_type <<= 1;
 	}
 
-	if (limits->rw_ios_per_sec == 0 && limits->rw_mbytes_per_sec == 0) {
+	if (limits->rw_ios_per_sec == 0 && limits->r_ios_per_sec == 0 &&
+	    limits->w_ios_per_sec == 0 && limits->rw_mbytes_per_sec == 0) {
 		enable_rate_limit = false;
 	}
 
