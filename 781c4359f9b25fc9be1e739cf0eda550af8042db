@@ -45,6 +45,30 @@
       "revId": "781c4359f9b25fc9be1e739cf0eda550af8042db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17d9e32e_e845fde0",
+        "filename": "test/nvmf/nvmfjson/json_config.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-28T10:20:56Z",
+      "side": 1,
+      "message": "Want to test loading full config while app is waiting for subsystem initialization (the \"-w\" parameter). We can remove test_params which also restart app but it\u0027s used in bdev tests.",
+      "parentUuid": "497ee7c2_4b92d20d",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 13
+      },
+      "revId": "781c4359f9b25fc9be1e739cf0eda550af8042db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
