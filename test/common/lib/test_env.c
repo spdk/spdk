@@ -213,6 +213,14 @@ spdk_mempool_put(struct spdk_mempool *_mp, void *ele)
 	free(ele);
 }
 
+void
+spdk_mempool_put_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count)
+{
+	for (size_t i = 0; i < count; i++) {
+		spdk_mempool_put(mp, ele_arr[i]);
+	}
+}
+
 size_t
 spdk_mempool_count(const struct spdk_mempool *_mp)
 {
