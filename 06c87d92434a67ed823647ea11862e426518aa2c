@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ec50613_d28f4c5b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:46:36Z",
+      "side": 1,
+      "message": "align the data members",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f18e4f53_d5ccc561",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:46:36Z",
+      "side": 1,
+      "message": "alignment",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1ad70ea_f4a91c29",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1739,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:46:36Z",
+      "side": 1,
+      "message": "It would probably be clearer to write this as a function that took an rqpair and the state enum as arguments.\n\nThis is a little bit tricky because it only actually works for certain states - i.e. ones where the request is only in the state list and not also another.",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ade80c9c_aac73adf",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1783,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:46:36Z",
+      "side": 1,
+      "message": "This aborts the AER requests, but you\u0027d only want to do that if the admin queue is being recovered.",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1204087f_b5272474",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1792,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:46:36Z",
+      "side": 1,
+      "message": "This never sets the qpair state, and if the qpair state isn\u0027t DEACTIVATING or ERROR this callback will never get called. It looks to me like this can happen on some paths.\n\nI also think that manipulating qpair.state_cb and such is probably crossing boundary lines between the transport and the generic code. Maybe a utility function in the generic code called spdk_nvmf_qpair_quiesce that takes a callback function could be added, and then this just calls that?",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7aa2c3e_095c15bc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1867,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T20:46:36Z",
+      "side": 1,
+      "message": "This path doesn\u0027t appear to do much. It doesn\u0027t set the qpair state, so I/O won\u0027t quiesce. It also won\u0027t trigger error recovery. It appears that it does abort all I/O currently sitting in one of the RDMA state queues. Can that actually happen when we hit this state? Is that all this path really should do?",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
