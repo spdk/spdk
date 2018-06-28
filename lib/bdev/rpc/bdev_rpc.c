@@ -457,6 +457,7 @@ struct rpc_set_bdev_qos_limit {
 	char		*name;
 	uint64_t	limit_per_sec;
 	char		*limit_type;
+	char		*io_type;
 };
 
 static void
@@ -464,12 +465,14 @@ free_rpc_set_bdev_qos_limit(struct rpc_set_bdev_qos_limit *r)
 {
 	free(r->name);
 	free(r->limit_type);
+	free(r->io_type);
 }
 
 static const struct spdk_json_object_decoder rpc_set_bdev_qos_limit_decoders[] = {
 	{"name", offsetof(struct rpc_set_bdev_qos_limit, name), spdk_json_decode_string},
 	{"limit_per_sec", offsetof(struct rpc_set_bdev_qos_limit, limit_per_sec), spdk_json_decode_uint64},
 	{"limit_type", offsetof(struct rpc_set_bdev_qos_limit, limit_type), spdk_json_decode_string, true},
+	{"io_type", offsetof(struct rpc_set_bdev_qos_limit, io_type), spdk_json_decode_string, true},
 };
 
 static void
@@ -501,7 +504,8 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 	struct rpc_set_bdev_qos_limit req = {};
 	struct spdk_bdev *bdev;
 	/* Default is read/write IOPS rate limit */
-	enum spdk_bdev_qos_type io_type = SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT;
+	enum spdk_bdev_qos_type limit_type = SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT;
+	bool is_iops_rate_limit = true;
 
 	if (spdk_json_decode_object(params, rpc_set_bdev_qos_limit_decoders,
 				    SPDK_COUNTOF(rpc_set_bdev_qos_limit_decoders),
@@ -517,18 +521,33 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.limit_type) {
-		if (strcmp(req.limit_type, "IOPS") == 0) {
-			io_type = SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT;
-		} else if (strcmp(req.limit_type, "BPS") == 0) {
-			io_type = SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT;
-		} else {
+		if (strcmp(req.limit_type, "BPS") == 0) {
+			is_iops_rate_limit = false;
+		} else if (strcmp(req.limit_type, "IOPS") != 0) {
 			SPDK_ERRLOG("limit type '%s' is not one of 'IOPS, BPS'\n", req.limit_type);
 			goto invalid;
 		}
 	}
 
+	if (req.io_type) {
+		if (strcmp(req.io_type, "RW") == 0) {
+			if (is_iops_rate_limit == true) {
+				limit_type = SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT;
+			} else {
+				limit_type = SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT;
+			}
+		} else if (strcmp(req.io_type, "R") == 0) {
+			limit_type = SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT;
+		} else if (strcmp(req.io_type, "W") == 0) {
+			limit_type = SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT;
+		} else {
+			SPDK_ERRLOG("I/O type '%s' is not one of 'RW, R, W'\n", req.io_type);
+			goto invalid;
+		}
+	}
+
 	free_rpc_set_bdev_qos_limit(&req);
-	spdk_bdev_set_qos_rate_limit(bdev, req.limit_per_sec, io_type,
+	spdk_bdev_set_qos_rate_limit(bdev, req.limit_per_sec, limit_type,
 				     spdk_rpc_set_bdev_qos_limit_complete, request);
 	return;
 

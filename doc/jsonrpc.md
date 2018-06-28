@@ -579,7 +579,7 @@ Name                    | Optional | Type        | Description
 name                    | Required | string      | Block device name
 ios_per_sec             | Required | number      | Number of I/Os per second to allow. 0 means unlimited.
 limit_type              | Optional | string      | Type of rate limit (IOPS, BPS). Default is IOPS.
-
+io_type                 | Optional | string      | Type of I/O operations (RW, R, W). Default is RW.
 
 ### Example
 
@@ -591,8 +591,9 @@ Example request:
   "method": "set_bdev_qos_limit_iops",
   "params": {
     "name": "Malloc0"
-    "ios_per_sec": 20000
+    "limit_per_sec": 20000
     "limit_type": "IOPS"
+    "io_type": "RW"
   }
 }
 ~~~
