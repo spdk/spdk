@@ -370,7 +370,7 @@ void spdk_mempool_put(struct spdk_mempool *mp, void *ele);
  * \param ele_arr Array of the elements to put.
  * \param count Count of elements to put.
  */
-void spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count);
+void spdk_mempool_put_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count);
 
 /**
  * Get the number of entries in the memory pool.

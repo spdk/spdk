@@ -260,7 +260,7 @@ spdk_mempool_put(struct spdk_mempool *mp, void *ele)
 }
 
 void
-spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count)
+spdk_mempool_put_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count)
 {
 	rte_mempool_put_bulk((struct rte_mempool *)mp, ele_arr, count);
 }
