@@ -457,6 +457,22 @@ void spdk_scsi_task_copy_status(struct spdk_scsi_task *dst, struct spdk_scsi_tas
  */
 void spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task);
 
+/**
+ * Allocate I/O channel for the LUN
+ *
+ * \param lun Logical unit.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun);
+
+/**
+ * Free I/O channel from the logical unit
+ *
+ * \param lun Logical unit.
+ */
+void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);
+
 #ifdef __cplusplus
 }
 #endif
