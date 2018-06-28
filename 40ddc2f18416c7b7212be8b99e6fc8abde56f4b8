@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73ad6d65_2c2d9154",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3254,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T17:53:14Z",
+      "side": 1,
+      "message": "In a separate patch can you change the behavior to simply round the user\u0027s request to the nearest valid value?",
+      "revId": "40ddc2f18416c7b7212be8b99e6fc8abde56f4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3c78125_0d5957a7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3313,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T17:53:14Z",
+      "side": 1,
+      "message": "Remove the default label from these switch statements. It should fail to compile if we add a new enum value.",
+      "revId": "40ddc2f18416c7b7212be8b99e6fc8abde56f4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "778245b0_bc485079",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T17:53:14Z",
+      "side": 1,
+      "message": "In some parts of the code you\u0027re using \"bwps\" - bandwidth per second. In other parts you\u0027re using \"byteps\" - bytes per second. Let\u0027s pick a consistent name throughout. Maybe just \"bps\" for bytes per second.",
+      "revId": "40ddc2f18416c7b7212be8b99e6fc8abde56f4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

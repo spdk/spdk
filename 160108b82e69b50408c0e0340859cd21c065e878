@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2ca127f_c1f484d3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T17:53:14Z",
+      "side": 1,
+      "message": "You can\u0027t alter the changelog for a release that has already gone out. Add a new section to the 18.07 portion of the changelog at the top instead.",
+      "revId": "160108b82e69b50408c0e0340859cd21c065e878",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
