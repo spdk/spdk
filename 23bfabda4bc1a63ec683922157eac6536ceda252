@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ef35ae0_006eb51e",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-28T11:07:57Z",
+      "side": 1,
+      "message": "could you rename this as well?",
+      "range": {
+        "startLine": 180,
+        "startChar": 7,
+        "endLine": 180,
+        "endChar": 21
+      },
+      "revId": "23bfabda4bc1a63ec683922157eac6536ceda252",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
