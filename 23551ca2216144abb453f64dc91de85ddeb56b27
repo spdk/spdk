@@ -397,6 +397,30 @@
       "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "170cccbe_69f716bf",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-28T10:45:18Z",
+      "side": 1,
+      "message": "This looks not addressed yet",
+      "parentUuid": "4e7c10e7_72b096ba",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 39
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
