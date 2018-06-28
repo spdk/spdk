@@ -445,6 +445,30 @@
       "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81a0146e_9ab54bdf",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-28T12:09:59Z",
+      "side": 1,
+      "message": "So far I cannot only destroy lvol store as bug exists and it is reported in github issue 345.",
+      "parentUuid": "4e7c10e7_72b096ba",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 39
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
