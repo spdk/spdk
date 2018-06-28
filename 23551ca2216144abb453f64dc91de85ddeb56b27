@@ -421,6 +421,30 @@
       "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d955747_4a094410",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 89
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-28T12:00:28Z",
+      "side": 1,
+      "message": "I removed deleting lvs_test/lvol1. Other lvol bdevs must be deleted because of dependencies.",
+      "parentUuid": "170cccbe_69f716bf",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 39
+      },
+      "revId": "23551ca2216144abb453f64dc91de85ddeb56b27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
