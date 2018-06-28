@@ -46,6 +46,7 @@ extern "C" {
 #endif
 
 #include "spdk/assert.h"
+#include "spdk/nvme_spec.h"
 
 /** A maximum number of LBAs that can be issued by vector I/O commands */
 #define SPDK_NVME_OCSSD_MAX_LBAL_ENTRIES	64
@@ -208,6 +209,23 @@ struct spdk_ocssd_chunk_information {
 	uint64_t wp;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_ocssd_chunk_information) == 32, "Incorrect size");
+
+/**
+ * Vector completion queue entry
+ */
+struct spdk_ocssd_vector_cpl {
+	/* dword 0,1 */
+	uint64_t		lba_status;	/* completion status bit array */
+
+	/* dword 2 */
+	uint16_t		sqhd;	/* submission queue head pointer */
+	uint16_t		sqid;	/* submission queue identifier */
+
+	/* dword 3 */
+	uint16_t		cid;	/* command identifier */
+	struct spdk_nvme_status	status;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_ocssd_vector_cpl) == 16, "Incorrect size");
 
 /**
  * OCSSD admin command set opcodes
