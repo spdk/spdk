@@ -339,16 +339,19 @@ def bdev_inject_error(client, name, io_type, error_type, num=1):
     return client.call('bdev_inject_error', params)
 
 
-def set_bdev_qos_limit_iops(client, name, ios_per_sec):
+def set_bdev_qos_limit_iops(client, name, ios_per_sec, io_type):
     """Set QoS IOPS limit on a block device.
 
     Args:
         name: name of block device
         ios_per_sec: IOs per second limit (>=10000, example: 20000). 0 means unlimited.
+        io_type: type of I/O operations (RW, R, W). Default is RW.
     """
     params = {}
     params['name'] = name
     params['ios_per_sec'] = ios_per_sec
+    if io_type:
+        params['io_type'] = io_type
     return client.call('set_bdev_qos_limit_iops', params)
 
 
