@@ -387,7 +387,8 @@ if __name__ == "__main__":
         rpc.bdev.set_bdev_qos_limit(args.client,
                                     name=args.name,
                                     limit_per_sec=args.limit_per_sec,
-                                    limit_type=args.limit_type)
+                                    limit_type=args.limit_type,
+                                    io_type=args.io_type)
 
     p = subparsers.add_parser('set_bdev_qos_limit', help='Set QoS rate limit on a blockdev')
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
@@ -395,6 +396,7 @@ if __name__ == "__main__":
                    help='Limit per second. 0 means unlimited. For IOPS, >=10000. For BPS, >=10(MB)',
                    type=int)
     p.add_argument('-l', '--limit_type', help="Type of rate limit (IOPS, BPS). Default is IOPS.", required=False)
+    p.add_argument('-t', '--io_type', help="Type of I/O operations (RW, R, W). Default is RW.", required=False)
     p.set_defaults(func=set_bdev_qos_limit)
 
     @call_cmd
