@@ -69,6 +69,30 @@
       "revId": "781c4359f9b25fc9be1e739cf0eda550af8042db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96977d76_c4e78b11",
+        "filename": "test/nvmf/nvmfjson/json_config.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-28T15:36:59Z",
+      "side": 1,
+      "message": "I think we can have this kill/run but at the end we could merge all targets (iscsi, nvmf, vhost) tests into one test run so only one kill/run will be executed.",
+      "parentUuid": "17d9e32e_e845fde0",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 13
+      },
+      "revId": "781c4359f9b25fc9be1e739cf0eda550af8042db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
