@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfc50ae7_ec63575e",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 39
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-28T15:55:49Z",
+      "side": 1,
+      "message": "Are those parameters optional? If not use them directly.",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 15
+      },
+      "revId": "aea1fc3507435d663c3ea8b1aad4eccd027a04ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38079b82_96a03e0f",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 39
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-28T15:55:49Z",
+      "side": 1,
+      "message": "I know this how this script file is written but don\u0027t think it is ok to ignore non existing mapings (this should be fixed in separate patch). If there is no contruct -\u003e destruct method maping this should die badly by throwing excetion. If there is construct but delibertly no destruct method this should be maped to \u0027None\u0027 explicitly.\n\nSomething like:\n\ndef clear_nvmf_subsystem(args, nvmf_config):\n    destroy_method_map \u003d {\n        \u0027construct_nvmf_subsystem\u0027: \u0027delete_nvmf_subsystem\u0027,\n        \u0027construct_nvmf_subsystem_without_delete\u0027: None\n    }\n\n    for nvmf in nvmf_config:\n        destroy_method \u003d destroy_method_map[\u0027method\u0027]\n        if destroy_method:\n            args.client.call(destroy_method, {get_nvmf_name_key(nvmf): get_nvmf_name(nvmf)})",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 92
+      },
+      "revId": "aea1fc3507435d663c3ea8b1aad4eccd027a04ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
