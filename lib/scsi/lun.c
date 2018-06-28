@@ -191,36 +191,59 @@ spdk_scsi_lun_remove(struct spdk_scsi_lun *lun)
 }
 
 static int
-spdk_scsi_lun_hot_remove_poll(void *arg)
+spdk_scsi_lun_check_io_channel_poll(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
-	if (spdk_scsi_lun_has_pending_tasks(lun) ||
-	    lun->io_channel != NULL) {
+	if (lun->io_channel) {
 		return -1;
 	}
-
 	spdk_poller_unregister(&lun->hotremove_poller);
-	spdk_scsi_lun_remove(lun);
 
+	spdk_scsi_lun_remove(lun);
 	return -1;
 }
 
 static void
-_spdk_scsi_lun_hot_remove(void *arg1)
+spdk_scsi_lun_check_io_channel(struct spdk_scsi_lun *lun)
 {
-	struct spdk_scsi_lun *lun = arg1;
-
+	/* Expect IO channel is freed in the following callback operation */
 	if (lun->hotremove_cb) {
 		lun->hotremove_cb(lun, lun->hotremove_ctx);
 	}
 
-	if (spdk_scsi_lun_has_pending_tasks(lun) ||
-	    lun->io_channel != NULL) {
-		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_hot_remove_poll,
+	if (lun->io_channel) {
+		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_check_io_channel_poll,
 					lun, 10);
 	} else {
 		spdk_scsi_lun_remove(lun);
+	}
+}
+
+static int
+spdk_scsi_lun_check_pending_tasks_poll(void *arg)
+{
+	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
+
+	if (spdk_scsi_lun_has_pending_tasks(lun)) {
+		return -1;
+	}
+	spdk_poller_unregister(&lun->hotremove_poller);
+
+	spdk_scsi_lun_check_io_channel(lun);
+	return -1;
+}
+
+static void
+spdk_scsi_lun_check_pending_tasks(void *arg1)
+{
+	struct spdk_scsi_lun *lun = arg1;
+
+	if (spdk_scsi_lun_has_pending_tasks(lun)) {
+		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_check_pending_tasks_poll,
+					lun, 10);
+	} else {
+		spdk_scsi_lun_check_io_channel(lun);
 	}
 }
 
@@ -242,9 +265,9 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
 
 	thread = spdk_io_channel_get_thread(lun->io_channel);
 	if (thread != spdk_get_thread()) {
-		spdk_thread_send_msg(thread, _spdk_scsi_lun_hot_remove, lun);
+		spdk_thread_send_msg(thread, spdk_scsi_lun_check_pending_tasks, lun);
 	} else {
-		_spdk_scsi_lun_hot_remove(lun);
+		spdk_scsi_lun_check_pending_tasks(lun);
 	}
 }
 
