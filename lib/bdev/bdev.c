@@ -3310,6 +3310,30 @@ _spdk_bdev_enable_qos_done(struct spdk_io_channel_iter *i, int status)
 	_spdk_bdev_set_qos_limit_done(ctx, status);
 }
 
+static void
+_spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, enum spdk_bdev_qos_type type,
+			      uint64_t limit_per_sec)
+{
+	assert(bdev->internal.qos != NULL);
+
+	switch (type) {
+	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+		bdev->internal.qos->iops_rate_limit = limit_per_sec;
+		break;
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+		bdev->internal.qos->read_iops_rate_limit = limit_per_sec;
+		break;
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
+		bdev->internal.qos->write_iops_rate_limit = limit_per_sec;
+		break;
+	case SPDK_BDEV_QOS_RW_BYTEPS_RATE_LIMIT:
+		bdev->internal.qos->byte_rate_limit = limit_per_sec * 1024 * 1024;
+		break;
+	default:
+		break;
+	}
+}
+
 void
 spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, uint64_t limit_per_sec,
 			     enum spdk_bdev_qos_type type,
@@ -3319,6 +3343,8 @@ spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, uint64_t limit_per_sec,
 
 	switch (type) {
 	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
 		if (limit_per_sec > 0 && limit_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
 			SPDK_ERRLOG("Requested rate limit %" PRIu64 " is not a multiple of %u\n",
 				    limit_per_sec, SPDK_BDEV_QOS_MIN_IOS_PER_SEC);
@@ -3370,50 +3396,25 @@ spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, uint64_t limit_per_sec,
 				return;
 			}
 
-			switch (type) {
-			case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
-				bdev->internal.qos->iops_rate_limit = limit_per_sec;
-				break;
-			case SPDK_BDEV_QOS_RW_BYTEPS_RATE_LIMIT:
-				bdev->internal.qos->byte_rate_limit = limit_per_sec * 1024 * 1024;
-				break;
-			default:
-				break;
-			}
+			_spdk_bdev_set_qos_rate_limit(bdev, type, limit_per_sec);
 
 			spdk_for_each_channel(__bdev_to_io_dev(bdev),
 					      _spdk_bdev_enable_qos_msg, ctx,
 					      _spdk_bdev_enable_qos_done);
 		} else {
 			/* Updating */
-			switch (type) {
-			case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
-				bdev->internal.qos->iops_rate_limit = limit_per_sec;
-				break;
-			case SPDK_BDEV_QOS_RW_BYTEPS_RATE_LIMIT:
-				bdev->internal.qos->byte_rate_limit = limit_per_sec * 1024 * 1024;
-				break;
-			default:
-				break;
-			}
+			_spdk_bdev_set_qos_rate_limit(bdev, type, limit_per_sec);
 
 			spdk_thread_send_msg(bdev->internal.qos->thread,
 					     _spdk_bdev_update_qos_rate_limit_msg, ctx);
 		}
 	} else {
 		if (bdev->internal.qos != NULL) {
-			switch (type) {
-			case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
-				bdev->internal.qos->iops_rate_limit = 0;
-				break;
-			case SPDK_BDEV_QOS_RW_BYTEPS_RATE_LIMIT:
-				bdev->internal.qos->byte_rate_limit = 0;
-				break;
-			default:
-				break;
-			}
+			_spdk_bdev_set_qos_rate_limit(bdev, type, 0);
 
 			if (bdev->internal.qos->iops_rate_limit == 0 &&
+			    bdev->internal.qos->read_iops_rate_limit == 0 &&
+			    bdev->internal.qos->write_iops_rate_limit == 0 &&
 			    bdev->internal.qos->byte_rate_limit == 0) {
 				/* Disabling */
 				spdk_for_each_channel(__bdev_to_io_dev(bdev),

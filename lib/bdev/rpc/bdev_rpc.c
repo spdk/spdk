@@ -456,17 +456,20 @@ SPDK_RPC_REGISTER("delete_bdev", spdk_rpc_delete_bdev, SPDK_RPC_RUNTIME)
 struct rpc_set_bdev_qos_limit_iops {
 	char		*name;
 	uint64_t	ios_per_sec;
+	char		*io_type;
 };
 
 static void
 free_rpc_set_bdev_qos_limit_iops(struct rpc_set_bdev_qos_limit_iops *r)
 {
 	free(r->name);
+	free(r->io_type);
 }
 
 static const struct spdk_json_object_decoder rpc_set_bdev_qos_limit_iops_decoders[] = {
 	{"name", offsetof(struct rpc_set_bdev_qos_limit_iops, name), spdk_json_decode_string},
 	{"ios_per_sec", offsetof(struct rpc_set_bdev_qos_limit_iops, ios_per_sec), spdk_json_decode_uint64},
+	{"io_type", offsetof(struct rpc_set_bdev_qos_limit_iops, io_type), spdk_json_decode_string, true},
 };
 
 static void
@@ -497,6 +500,7 @@ spdk_rpc_set_bdev_qos_limit_iops(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_set_bdev_qos_limit_iops req = {};
 	struct spdk_bdev *bdev;
+	enum spdk_bdev_qos_type io_type = SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT;
 
 	if (spdk_json_decode_object(params, rpc_set_bdev_qos_limit_iops_decoders,
 				    SPDK_COUNTOF(rpc_set_bdev_qos_limit_iops_decoders),
@@ -511,8 +515,21 @@ spdk_rpc_set_bdev_qos_limit_iops(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	if (req.io_type) {
+		if (strcmp(req.io_type, "RW") == 0) {
+			io_type = SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT;
+		} else if (strcmp(req.io_type, "R") == 0) {
+			io_type = SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT;
+		} else if (strcmp(req.io_type, "W") == 0) {
+			io_type = SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT;
+		} else {
+			SPDK_ERRLOG("I/O type '%s' is not one of 'RW, R, W'\n", req.io_type);
+			goto invalid;
+		}
+	}
+
 	free_rpc_set_bdev_qos_limit_iops(&req);
-	spdk_bdev_set_qos_rate_limit(bdev, req.ios_per_sec, SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT,
+	spdk_bdev_set_qos_rate_limit(bdev, req.ios_per_sec, io_type,
 				     spdk_rpc_set_bdev_qos_limit_iops_complete, request);
 	return;
 
