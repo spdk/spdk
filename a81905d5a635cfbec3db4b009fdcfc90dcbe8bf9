@@ -22,6 +22,23 @@
       "revId": "a81905d5a635cfbec3db4b009fdcfc90dcbe8bf9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71aaeaa1_1067ccc3",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T17:57:33Z",
+      "side": 1,
+      "message": "I think in the case of one subsystem failing, this function needs to return an error code indicating that not all subsystems are able to use this poll group. It\u0027s probably the correct behavior to go ahead and create the poll group anyway like you\u0027re doing, we just need to inform the user that not all of them worked via some return code.",
+      "revId": "a81905d5a635cfbec3db4b009fdcfc90dcbe8bf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
