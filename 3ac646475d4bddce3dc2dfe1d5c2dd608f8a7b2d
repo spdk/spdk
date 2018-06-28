@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "dbc9446e_76d50c18",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T17:38:34Z",
+      "side": 1,
+      "message": "These shouldn\u0027t have trailing semicolons.",
+      "revId": "3ac646475d4bddce3dc2dfe1d5c2dd608f8a7b2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dcb8c6ee_5bb180e5",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 2
