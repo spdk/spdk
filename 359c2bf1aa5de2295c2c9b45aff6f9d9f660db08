@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f3c5e04d_ac6464f7",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-28T12:59:02Z",
+      "side": 1,
+      "message": "There is some performance improvement, this was hinted in doc/iscsi.md bu it can be removed if You want.",
+      "parentUuid": "5c5f973e_50e11784",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 55
+      },
+      "revId": "359c2bf1aa5de2295c2c9b45aff6f9d9f660db08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0464e5c0_f1ab5d53",
         "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
         "patchSetId": 26
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-18T13:08:06Z",
       "side": 1,
       "message": "We could eliminate all fio argument processing from this script and relegate this as input for the script. This removes the burden of parsing all of this here. Only argument that has to be changed during run time is \"filename\u003d/dev/sdX\" according to what is available on the initiator side (as is already done).",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 67
+      },
+      "revId": "359c2bf1aa5de2295c2c9b45aff6f9d9f660db08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76594ba0_1cd48c90",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-28T12:59:02Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "0464e5c0_f1ab5d53",
       "range": {
         "startLine": 123,
         "startChar": 0,
