@@ -36,6 +36,7 @@
 #include "spdk_internal/mock.h"
 
 #include "spdk/env.h"
+#include "spdk/queue.h"
 
 /*
  * NOTE:
@@ -222,6 +223,78 @@ spdk_mempool_count(const struct spdk_mempool *_mp)
 	} else {
 		return 1024;
 	}
+}
+
+struct spdk_ring_ele {
+	void *ele;
+	TAILQ_ENTRY(spdk_ring_ele) link;
+};
+
+struct spdk_ring {
+	TAILQ_HEAD(, spdk_ring_ele) elements;
+};
+
+struct spdk_ring *
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
+{
+	struct spdk_ring *ring;
+
+	ring = calloc(1, sizeof(*ring));
+	if (ring) {
+		TAILQ_INIT(&ring->elements);
+	}
+
+	return ring;
+}
+
+
+void
+spdk_ring_free(struct spdk_ring *ring)
+{
+	free(ring);
+}
+
+size_t
+spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
+{
+	struct spdk_ring_ele *ele;
+	size_t i;
+
+	for (i = 0; i < count; i++) {
+		ele = calloc(1, sizeof(*ele));
+		if (!ele) {
+			break;
+		}
+
+		ele->ele = objs[i];
+		TAILQ_INSERT_TAIL(&ring->elements, ele, link);
+	}
+
+	return i;
+}
+
+size_t
+spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
+{
+	struct spdk_ring_ele *ele, *tmp;
+	size_t i = 0;
+
+	if (count == 0) {
+		return 0;
+	}
+
+	TAILQ_FOREACH_SAFE(ele, &ring->elements, link, tmp) {
+		TAILQ_REMOVE(&ring->elements, ele, link);
+		objs[i] = ele->ele;
+		free(ele);
+		i++;
+		if (i >= count) {
+			break;
+		}
+	}
+
+	return i;
+
 }
 
 uint64_t ut_tsc = 0;
