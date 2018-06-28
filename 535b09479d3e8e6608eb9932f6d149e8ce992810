@@ -22,6 +22,30 @@
       "revId": "535b09479d3e8e6608eb9932f6d149e8ce992810",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "156cdd98_f090d16f",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-28T16:34:06Z",
+      "side": 1,
+      "message": "Yes, thank you.",
+      "parentUuid": "9dc2d170_8ca85995",
+      "range": {
+        "startLine": 99,
+        "startChar": 17,
+        "endLine": 99,
+        "endChar": 20
+      },
+      "revId": "535b09479d3e8e6608eb9932f6d149e8ce992810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
