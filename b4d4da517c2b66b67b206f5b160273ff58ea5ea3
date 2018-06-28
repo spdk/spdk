@@ -50,6 +50,24 @@
       "revId": "b4d4da517c2b66b67b206f5b160273ff58ea5ea3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5b7db5d_8c71c645",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-28T11:55:15Z",
+      "side": 1,
+      "message": "True.",
+      "parentUuid": "e5a02558_4b7d8702",
+      "revId": "b4d4da517c2b66b67b206f5b160273ff58ea5ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
