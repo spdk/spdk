@@ -722,10 +722,24 @@ uint32_t spdk_bdev_part_base_get_ref(struct spdk_bdev_part_base *part_base);
 typedef void (*spdk_bdev_part_base_free_fn)(void *ctx);
 
 struct spdk_bdev_part {
-	struct spdk_bdev		bdev;
-	struct spdk_bdev_part_base	*base;
-	uint64_t			offset_blocks;
+	/* Entry into the module's global list of bdev parts */
 	TAILQ_ENTRY(spdk_bdev_part)	tailq;
+
+	/**
+	 * Fields that are used internally by part.c These fields should only
+	 * be accessed from a module using any pertinent get and set methods.
+	 */
+	struct bdev_part_internal_fields {
+
+		/* This part's corresponding bdev object. Not to be confused with the base bdev */
+		struct spdk_bdev		bdev;
+
+		/* The base to which this part belongs */
+		struct spdk_bdev_part_base	*base;
+
+		/* number of blocks from the start of the base bdev to the start of this part */
+		uint64_t			offset_blocks;
+	} internal;
 };
 
 struct spdk_bdev_part_channel {
@@ -816,6 +830,47 @@ int spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_
  */
 void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io);
 
+/**
+ * Return a pointer to this part's spdk_bdev.
+ *
+ * \param part An spdk_bdev_part object.
+ *
+ * \return A pointer to this part's spdk_bdev object.
+ */
+struct spdk_bdev *spdk_bdev_part_get_bdev(struct spdk_bdev_part *part);
+
+/**
+ * Return a pointer to this part's base.
+ *
+ * \param part An spdk_bdev_part object.
+ *
+ * \return A pointer to this part's spdk_bdev_part_base object.
+ */
+struct spdk_bdev_part_base *spdk_bdev_part_get_base(struct spdk_bdev_part *part);
+
+/**
+ * Return a pointer to this part's base bdev.
+ *
+ * The return value of this function is equivalent to calling
+ * spdk_bdev_part_base_get_bdev on this part's base.
+ *
+ * \param part An spdk_bdev_part object.
+ *
+ * \return A pointer to the bdev belonging to this part's base.
+ */
+struct spdk_bdev *spdk_bdev_part_get_base_bdev(struct spdk_bdev_part *part);
+
+/**
+ * Return this part's offset from the beginning of the base bdev.
+ *
+ * This function should not be called in the I/O path. Any block
+ * translations to I/O will be handled in spdk_bdev_part_submit_request.
+ *
+ * \param part An spdk_bdev_part object.
+ *
+ * \return the block offset of this part from it's underlying bdev.
+ */
+uint64_t spdk_bdev_part_get_offset_blocks(struct spdk_bdev_part *part);
 
 /*
  * Macro used to register module for later initialization.

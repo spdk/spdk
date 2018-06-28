@@ -35,6 +35,11 @@ on each call. This allows multiple callers to query I/O statistics without confl
 with each other. Existing users will need to adjust their code to record the previous
 I/O statistics to calculate the delta between calls.
 
+A new public header file bdev_module.h has been introduced to facilitate the development
+of new bdev modules. This header includes an interface for the spdk_bdev_part and
+spdk_bdev_part_base objects to enable the creation of multiple virtual bdevs on top of a
+single base bdev.
+
 ### Env
 
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
