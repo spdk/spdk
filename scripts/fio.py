@@ -16,7 +16,7 @@ ioengine=libaio
 direct=1
 bs=%(blocksize)d
 iodepth=%(iodepth)d
-norandommap=1
+norandommap=%(norandommap)d
 %(verify)s
 verify_dump=1
 
@@ -86,12 +86,15 @@ def get_target_devices():
 
 
 def create_fio_config(size, q_depth, devices, test, run_time, verify):
+    norandommap = 0
     if not verify:
         verifyfio = ""
+        norandommap = 1
     else:
         verifyfio = verify_template
     fiofile = fio_template % {"blocksize": size, "iodepth": q_depth,
-                              "testtype": test, "runtime": run_time, "verify": verifyfio}
+                              "testtype": test, "runtime": run_time,
+                              "norandommap": norandommap, "verify": verifyfio}
     for (i, dev) in enumerate(devices):
         fiofile += fio_job_template % {"jobnumber": i, "device": dev}
     return fiofile
