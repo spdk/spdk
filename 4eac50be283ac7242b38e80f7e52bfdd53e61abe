@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc539d4a_785946f3",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T17:43:25Z",
+      "side": 1,
+      "message": "This doesn\u0027t seem right to me, since now the \"no_master_ch\" poller will be running when there is a master_ch, but I don\u0027t totally understand what the no_master_ch_poller is for and how it is synchronized with the other pollers.  I\u0027d like Pawel\u0027s input, since he introduced this poller.",
+      "revId": "4eac50be283ac7242b38e80f7e52bfdd53e61abe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
