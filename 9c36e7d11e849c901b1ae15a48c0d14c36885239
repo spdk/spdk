@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6cb521b1_d67a951b",
+        "filename": "lib/nvmf/fc_nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T18:04:17Z",
+      "side": 1,
+      "message": "We have files named like \u0027nvme_spec.h\u0027, \u0027nvme_ocssd_spec.h\u0027, and \u0027nvmf_spec.h\u0027 already. I think this one should be named \u0027nvmf_fc_spec.h\u0027 to fit into that pattern.",
+      "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "777893fb_bdac3154",
+        "filename": "lib/nvmf/fc_nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T18:04:17Z",
+      "side": 1,
+      "message": "For structure definitions that come from a specification, we always use an SPDK_STATIC_ASSERT to confirm that the size of the structure that the compiler generates matches the expected size in the specification.",
+      "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "581bfd45_211a1ff4",
+        "filename": "lib/nvmf/nvmf_fc_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T18:04:17Z",
+      "side": 1,
+      "message": "* I think you could probably submit the nvmf specification header as a separate patch from this one. \n\n* This file can probably just be named \u0027nvmf_fc.h\u0027 - it\u0027s internal just due to where the file is in the directory structure. The only reason we have \u0027nvmf_internal.h\u0027 is because there is a public header already named \u0027nvmf.h\u0027 that conflicts in #include statements.\n\n* It\u0027s hard to do a meaningful review the code in this file because it contains no associated definitions.",
+      "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52c5c15c_dc335b74",
+        "filename": "lib/nvmf/nvmf_fc_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T18:04:17Z",
+      "side": 1,
+      "message": "Throughout SPDK, we don\u0027t typedef our enums and structs.",
+      "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
