@@ -236,7 +236,7 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
 
 	lun->removed = true;
 	if (lun->io_channel == NULL) {
-		_spdk_scsi_lun_hot_remove(lun);
+		spdk_scsi_lun_remove(lun);
 		return;
 	}
 
