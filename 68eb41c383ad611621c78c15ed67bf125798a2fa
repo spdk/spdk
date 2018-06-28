@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41757494_bebbb723",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-28T05:16:26Z",
+      "side": 1,
+      "message": "we can remove the extra newline",
+      "revId": "68eb41c383ad611621c78c15ed67bf125798a2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
