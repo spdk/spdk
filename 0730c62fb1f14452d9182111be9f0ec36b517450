@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f70a994_36717646",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-28T09:52:44Z",
+      "side": 1,
+      "message": "\"one LUN (ID 0)\" or something might be slightly more clear... I think.",
+      "range": {
+        "startLine": 608,
+        "startChar": 23,
+        "endLine": 608,
+        "endChar": 28
+      },
+      "revId": "0730c62fb1f14452d9182111be9f0ec36b517450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25a4bf86_9338f3b5",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-28T09:52:44Z",
+      "side": 1,
+      "message": "get_lvol_stores",
+      "range": {
+        "startLine": 171,
+        "startChar": 13,
+        "endLine": 171,
+        "endChar": 22
+      },
+      "revId": "0730c62fb1f14452d9182111be9f0ec36b517450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "391c7186_d6bd6556",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-28T09:52:44Z",
+      "side": 1,
+      "message": "get_vhost_controllers",
+      "range": {
+        "startLine": 183,
+        "startChar": 13,
+        "endLine": 183,
+        "endChar": 22
+      },
+      "revId": "0730c62fb1f14452d9182111be9f0ec36b517450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
