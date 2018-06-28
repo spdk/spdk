@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ebc79c34_9333ac3c",
+        "filename": "lib/nvmf/fc_nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-06-28T18:27:42Z",
+      "side": 1,
+      "message": "I can change the name.  That\u0027s no problem",
+      "parentUuid": "6cb521b1_d67a951b",
+      "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "777893fb_bdac3154",
         "filename": "lib/nvmf/fc_nvme_spec.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-28T18:04:17Z",
       "side": 1,
       "message": "For structure definitions that come from a specification, we always use an SPDK_STATIC_ASSERT to confirm that the size of the structure that the compiler generates matches the expected size in the specification.",
+      "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11496be7_74a26fd1",
+        "filename": "lib/nvmf/fc_nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-06-28T18:27:42Z",
+      "side": 1,
+      "message": "I can add those.",
+      "parentUuid": "777893fb_bdac3154",
       "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "6d37019b_7dc7d61d",
+        "filename": "lib/nvmf/nvmf_fc_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-06-28T18:27:42Z",
+      "side": 1,
+      "message": "I will submit the spec. header as a separate patch.\nI will change the name of this file.\nYes, it\u0027s difficult to understand all of these definitions without the code behind it. You should at least look at the \"struct spdk_nvmf_fc_ll_drvr_ops\" definition. That\u0027s the basic FC low level driver abstraction (since there is no common FC interface like RDMA).",
+      "parentUuid": "581bfd45_211a1ff4",
+      "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52c5c15c_dc335b74",
         "filename": "lib/nvmf/nvmf_fc_internal.h",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2018-06-28T18:04:17Z",
       "side": 1,
       "message": "Throughout SPDK, we don\u0027t typedef our enums and structs.",
+      "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec59bf7b_aca362fc",
+        "filename": "lib/nvmf/nvmf_fc_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-06-28T18:27:42Z",
+      "side": 1,
+      "message": "That\u0027s not true. There is a typedef enum in nvmf_internal.h and a handful of other .h files in SPDK.",
+      "parentUuid": "52c5c15c_dc335b74",
       "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
