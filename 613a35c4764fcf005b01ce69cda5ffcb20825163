@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ebd3764e_e0ea9203",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-06-28T23:42:37Z",
+      "side": 1,
+      "message": "This function does act on the transport.  The tgt argument is used to find the transport for the trid-\u003etrtype.\n\nThe operation of adding the transports to the channels was asynchrounous. That\u0027s no longer done in this function anymore.  This function simply calls the transport\u0027s  listen function to add the listener.  That was always done directly, not asynchronously.",
+      "parentUuid": "0d76bf44_732a3496",
+      "revId": "613a35c4764fcf005b01ce69cda5ffcb20825163",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c6c26dd6_5bfec4fb",
         "filename": "include/spdk/nvmf.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-28T19:56:00Z",
       "side": 1,
       "message": "When the transport was created, the target was already assigned. I think either spdk_nvmf_tgt_transport_create should be asynchronous and automatically add the transport to the target, or spdk_nvmf_tgt_transport_create shouldn\u0027t take the target as a parameter and let it later get associated via this function.",
+      "revId": "613a35c4764fcf005b01ce69cda5ffcb20825163",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "195abb08_ebe8f187",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-06-28T23:42:37Z",
+      "side": 1,
+      "message": "You originally asked me to break the transport creation and target assignment up into 2 functions, but if you want the transport create to assign it to the target I can merge the 2 functions.  The only reason the tgt gets passed to the create transport function is that it gets passed all the way down the the create function in the transport table.  I can look into if that\u0027s really necessary anymore. Let me know.",
+      "parentUuid": "c6c26dd6_5bfec4fb",
       "revId": "613a35c4764fcf005b01ce69cda5ffcb20825163",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
