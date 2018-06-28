@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06eaee70_35b576fb",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1329,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-28T07:48:01Z",
+      "side": 1,
+      "message": "We should probably exit from this function on spdk_bdev_queue_io_wait success w/o calling lines 1339 and 1340. They will be called on successful retry which I\u0027m finding more accurate.",
+      "revId": "03e3b0bdbd8fc0d47f020051b5fb81934ebeb6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7a773f0_75672a66",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1329,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-28T07:48:01Z",
+      "side": 1,
+      "message": "This function may return error status. In such case callback will never be called and we will have memory leak on bdev_io_wait allocation. We should check the return status and in case of failure we should continue with code in \u0027else if\u0027 block.",
+      "range": {
+        "startLine": 1329,
+        "startChar": 2,
+        "endLine": 1329,
+        "endChar": 25
+      },
+      "revId": "03e3b0bdbd8fc0d47f020051b5fb81934ebeb6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92b709b2_c88b8bd9",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2115,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-28T07:48:01Z",
+      "side": 1,
+      "message": "In case of rc \u003d\u003d -ENOMEM we should return 0 as we are going to retry operation. If we return -ENOMEM and retry successfully use may think it will never be executed and he/she will try to run it again.\nIt would be nice to do all the operations that may retry as an asynchronous functions, so that we would return correct status after retrying. I\u0027m not sure if it\u0027s doable from scsi point of view though. But this is a topic for a separate patch.",
+      "range": {
+        "startLine": 2115,
+        "startChar": 8,
+        "endLine": 2115,
+        "endChar": 10
+      },
+      "revId": "03e3b0bdbd8fc0d47f020051b5fb81934ebeb6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
