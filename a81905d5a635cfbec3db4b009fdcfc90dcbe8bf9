@@ -39,6 +39,23 @@
       "revId": "a81905d5a635cfbec3db4b009fdcfc90dcbe8bf9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "575f5977_70b07ec6",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T18:22:40Z",
+      "side": 1,
+      "message": "This error message seems confusing; I\u0027m not sure the end user will know what to do with this information.\n\nIf it\u0027s something the user can fix, it should include actionable information; otherwise, we can probably reduce the log level (maybe to DEBUG) to avoid confusion.",
+      "revId": "a81905d5a635cfbec3db4b009fdcfc90dcbe8bf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
