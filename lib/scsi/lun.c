@@ -191,18 +191,45 @@ spdk_scsi_lun_remove(struct spdk_scsi_lun *lun)
 }
 
 static int
-spdk_scsi_lun_hot_remove_poll(void *arg)
+spdk_scsi_lun_check_io_channel(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
-	if (spdk_scsi_lun_has_pending_tasks(lun) ||
-	    lun->io_channel != NULL) {
+	if (lun->io_channel) {
 		return -1;
 	}
-
 	spdk_poller_unregister(&lun->hotremove_poller);
-	spdk_scsi_lun_remove(lun);
 
+	spdk_scsi_lun_remove(lun);
+	return -1;
+}
+
+static void
+spdk_scsi_lun_notify_hot_remove(struct spdk_scsi_lun *lun)
+{
+	if (lun->hotremove_cb) {
+		lun->hotremove_cb(lun, lun->hotremove_ctx);
+	}
+
+	if (lun->io_channel) {
+		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_check_io_channel,
+					lun, 10);
+	} else {
+		spdk_scsi_lun_remove(lun);
+	}
+}
+
+static int
+spdk_scsi_lun_check_pending_tasks(void *arg)
+{
+	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
+
+	if (spdk_scsi_lun_has_pending_tasks(lun)) {
+		return -1;
+	}
+	spdk_poller_unregister(&lun->hotremove_poller);
+
+	spdk_scsi_lun_notify_hot_remove(lun);
 	return -1;
 }
 
@@ -211,16 +238,11 @@ _spdk_scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
 
-	if (lun->hotremove_cb) {
-		lun->hotremove_cb(lun, lun->hotremove_ctx);
-	}
-
-	if (spdk_scsi_lun_has_pending_tasks(lun) ||
-	    lun->io_channel != NULL) {
-		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_hot_remove_poll,
+	if (spdk_scsi_lun_has_pending_tasks(lun)) {
+		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_check_pending_tasks,
 					lun, 10);
 	} else {
-		spdk_scsi_lun_remove(lun);
+		spdk_scsi_lun_notify_hot_remove(lun);
 	}
 }
 
