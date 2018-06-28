@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d75536cc_aa9a0b49",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 93
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-28T10:16:16Z",
+      "side": 1,
+      "message": "This goes unused, can you please remove it ?",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 44
+      },
+      "revId": "bfa78e1410e999c0752b0b52b390ef30146565fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
