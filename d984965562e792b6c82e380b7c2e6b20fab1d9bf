@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36600c79_aaa61cfd",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-28T01:14:03Z",
+      "side": 1,
+      "message": "TSC stats of reactors?\n\nYou should use upper case for TSC.",
+      "range": {
+        "startLine": 129,
+        "startChar": 65,
+        "endLine": 129,
+        "endChar": 82
+      },
+      "revId": "d984965562e792b6c82e380b7c2e6b20fab1d9bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "868d4be1_6a581751",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-28T01:14:03Z",
+      "side": 1,
+      "message": "Core ID for a reactor. If ommitted, get TSC stats of all reactors?",
+      "range": {
+        "startLine": 130,
+        "startChar": 44,
+        "endLine": 130,
+        "endChar": 104
+      },
+      "revId": "d984965562e792b6c82e380b7c2e6b20fab1d9bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5950c7d_0bd76495",
+        "filename": "scripts/rpc/app.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-28T01:14:03Z",
+      "side": 1,
+      "message": "\"Get TSC stats of reactors\" may look appropriate?",
+      "range": {
+        "startLine": 27,
+        "startChar": 7,
+        "endLine": 27,
+        "endChar": 28
+      },
+      "revId": "d984965562e792b6c82e380b7c2e6b20fab1d9bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03cf1d7b_09902ad2",
+        "filename": "scripts/rpc/app.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-28T01:14:03Z",
+      "side": 1,
+      "message": "all reactors?",
+      "range": {
+        "startLine": 30,
+        "startChar": 68,
+        "endLine": 30,
+        "endChar": 78
+      },
+      "revId": "d984965562e792b6c82e380b7c2e6b20fab1d9bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abe056fb_11af9c0a",
+        "filename": "scripts/rpc/app.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-28T01:14:03Z",
+      "side": 1,
+      "message": "a reactor for it?",
+      "range": {
+        "startLine": 30,
+        "startChar": 39,
+        "endLine": 30,
+        "endChar": 40
+      },
+      "revId": "d984965562e792b6c82e380b7c2e6b20fab1d9bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfd97f2c_71ebbee0",
+        "filename": "scripts/rpc/app.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-28T01:14:03Z",
+      "side": 1,
+      "message": "\"of reactors\"?\n\nwe can specify a core or all cores",
+      "range": {
+        "startLine": 33,
+        "startChar": 39,
+        "endLine": 33,
+        "endChar": 55
+      },
+      "revId": "d984965562e792b6c82e380b7c2e6b20fab1d9bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
