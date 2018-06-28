@@ -266,6 +266,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 ios_per_sec             | Required | number      | Number of I/Os per second to allow. 0 means unlimited.
+io_type                 | Optional | string      | Type of I/O operations (RW, R, W). Default is RW.
 
 ### Example
 
@@ -278,6 +279,7 @@ Example request:
   "params": {
     "name": "Malloc0"
     "ios_per_sec": 20000
+    "io_type": "RW"
   }
 }
 ~~~
