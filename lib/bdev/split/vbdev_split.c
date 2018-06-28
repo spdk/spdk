@@ -121,7 +121,8 @@ static int
 vbdev_split_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev_part *part = ctx;
-	struct spdk_bdev *split_base_bdev = spdk_bdev_part_base_get_bdev(part->base);
+	struct spdk_bdev *split_base_bdev = spdk_bdev_part_get_base_bdev(part);
+	uint64_t offset_blocks = spdk_bdev_part_get_offset_blocks(part);
 
 	spdk_json_write_name(w, "split");
 	spdk_json_write_object_begin(w);
@@ -129,7 +130,7 @@ vbdev_split_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "base_bdev");
 	spdk_json_write_string(w, spdk_bdev_get_name(split_base_bdev));
 	spdk_json_write_name(w, "offset_blocks");
-	spdk_json_write_uint64(w, part->offset_blocks);
+	spdk_json_write_uint64(w, offset_blocks);
 
 	spdk_json_write_object_end(w);
 
