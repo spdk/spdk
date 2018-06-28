@@ -140,6 +140,30 @@
     },
     {
       "key": {
+        "uuid": "4387ac79_00643ebf",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-28T12:42:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f6aaad9_93a2448d",
+      "range": {
+        "startLine": 154,
+        "startChar": 2,
+        "endLine": 154,
+        "endChar": 27
+      },
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2673c1bb_c8d9298f",
         "filename": "test/json_config/common.sh",
         "patchSetId": 41
@@ -151,6 +175,30 @@
       "writtenOn": "2018-06-26T12:04:37Z",
       "side": 1,
       "message": "Since this patch expands kill_targets(), why not just use that ?",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 155,
+        "endChar": 3
+      },
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16fc1097_18e63172",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-28T12:42:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2673c1bb_c8d9298f",
       "range": {
         "startLine": 148,
         "startChar": 0,
@@ -180,6 +228,24 @@
     },
     {
       "key": {
+        "uuid": "edfb6203_81968d52",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-28T12:42:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75ad055a_722454d0",
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a004cf8_73b2af10",
         "filename": "test/vhost/initiator/json_config.sh",
         "patchSetId": 41
@@ -191,6 +257,30 @@
       "writtenOn": "2018-06-26T12:04:37Z",
       "side": 1,
       "message": "I believe this has been moved to common file in patch previous to this, making it no longer needed here.",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 47
+      },
+      "revId": "c3f13196e3ad282577a5e2506b1fd588d6157b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f18a7e95_d11f4118",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-28T12:42:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a004cf8_73b2af10",
       "range": {
         "startLine": 38,
         "startChar": 0,
