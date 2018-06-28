@@ -86,12 +86,7 @@
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
 	(1ULL << VIRTIO_F_VERSION_1) | \
-	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) | \
-	(1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_RING_F_INDIRECT_DESC))
-
-#define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
-	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
 
 struct spdk_vhost_dev;
 
@@ -129,7 +124,6 @@ struct spdk_vhost_virtqueue {
 
 struct spdk_vhost_tgt_backend {
 	uint64_t virtio_features;
-	uint64_t disabled_features;
 
 	size_t dev_ctx_size;
 

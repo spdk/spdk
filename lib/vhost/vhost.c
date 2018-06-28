@@ -747,8 +747,7 @@ spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name,
 		rc = -EIO;
 		goto out;
 	}
-	if (rte_vhost_driver_set_features(path, backend->virtio_features) ||
-	    rte_vhost_driver_disable_features(path, backend->disabled_features)) {
+	if (rte_vhost_driver_set_features(path, backend->virtio_features)) {
 		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", name);
 
 		rte_vhost_driver_unregister(path);
