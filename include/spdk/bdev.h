@@ -126,6 +126,10 @@ enum spdk_bdev_qos_type {
 struct spdk_bdev_qos_rate_limits {
 	/** Read/Write I/Os per second */
 	int32_t rw_ios_per_sec;
+	/** Read only I/Os per second */
+	int32_t r_ios_per_sec;
+	/** Write only I/Os per second */
+	int32_t w_ios_per_sec;
 	/** Read/Write megabytes per second */
 	int32_t rw_mbytes_per_sec;
 };
