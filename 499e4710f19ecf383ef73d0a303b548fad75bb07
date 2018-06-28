@@ -16,6 +16,24 @@
       "revId": "499e4710f19ecf383ef73d0a303b548fad75bb07",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "110ed434_6c19466a",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-28T04:31:32Z",
+      "side": 1,
+      "message": "As we currently use the mempool which is mostly with the creation operation, so that instead of \"lookup\" the existing mempool here. I select to create a unique mempool for this process. So that the release could be no difference with a single process condition or multiple processes condition.\n\nThe other purpose is to make the mempool management easy. I actually worked on to add a reference count for the allocated mempool and also increased when we looked it up. As we just cast it to spdk mempool so that this change is not that straightforward. And this refcount could also be complicated when one process died and the refcount is not dropped.\n\nIf \"lookup\" is better here, I will further work on that.",
+      "parentUuid": "61bdf7fd_0be7088e",
+      "revId": "499e4710f19ecf383ef73d0a303b548fad75bb07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
