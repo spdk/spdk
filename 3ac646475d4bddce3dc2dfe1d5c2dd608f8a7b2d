@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dcb8c6ee_5bb180e5",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-28T17:34:22Z",
+      "side": 1,
+      "message": "We were previously putting this one per line",
+      "revId": "3ac646475d4bddce3dc2dfe1d5c2dd608f8a7b2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
