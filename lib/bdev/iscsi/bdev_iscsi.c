@@ -324,6 +324,25 @@ bdev_iscsi_flush(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io, uin
 	}
 }
 
+static void
+bdev_iscsi_unmap(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
+		 uint64_t lba, uint64_t num_blocks)
+{
+	struct scsi_task *task;
+	struct unmap_list list[1];
+
+	list[0].lba = lba;
+	list[0].num = num_blocks;
+	task = iscsi_unmap_task(lun->context, 0, 0, 0, list, 1,
+				bdev_iscsi_command_cb, iscsi_io);
+	if (task == NULL) {
+		SPDK_ERRLOG("failed to get unmap_task\n");
+		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+}
+
+
 static int
 bdev_iscsi_poll_lun(struct bdev_iscsi_lun *lun)
 {
@@ -408,6 +427,11 @@ static void _bdev_iscsi_submit_request(void *_bdev_io)
 				 ISCSI_IMMEDIATE_DATA_NO,
 				 bdev_io->u.bdev.offset_blocks);
 		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		bdev_iscsi_unmap(lun, iscsi_io,
+				 bdev_io->u.bdev.offset_blocks,
+				 bdev_io->u.bdev.num_blocks);
+		break;
 	default:
 		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
 		break;
@@ -436,6 +460,7 @@ bdev_iscsi_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return true;
 
 	default:
