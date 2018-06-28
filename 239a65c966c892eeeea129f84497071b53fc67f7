@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "359e27be_fa24cb14",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-28T19:45:58Z",
+      "side": 1,
+      "message": "I removed the cast to void (See Daniel\u0027s comment) and the indentation is unavoidable. check_format auto-corrects to this.",
+      "parentUuid": "811cf724_1b3ffb6f",
+      "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d28b7da_c66416bb",
         "filename": "lib/bdev/part.c",
         "patchSetId": 19
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-28T18:02:57Z",
       "side": 1,
       "message": "The indentation looks messed up here too",
+      "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b26a23ff_16b0943c",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-28T19:45:58Z",
+      "side": 1,
+      "message": "check_format auto-corrects this if I try to change the indenting.",
+      "parentUuid": "1d28b7da_c66416bb",
       "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -82,6 +118,30 @@
       "writtenOn": "2018-06-28T18:24:33Z",
       "side": 1,
       "message": "I don\u0027t think the (void *) cast should be necessary - unless you\u0027re casting away \u0027const\u0027, all pointer types should automatically convert when passed to a void * parameter.",
+      "range": {
+        "startLine": 202,
+        "startChar": 44,
+        "endLine": 202,
+        "endChar": 57
+      },
+      "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a7cf95d_e1bb1784",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-28T19:45:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f8c8fec_4e32f5d4",
       "range": {
         "startLine": 202,
         "startChar": 44,
