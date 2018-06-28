@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f1bddba0_f3700852",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-28T00:59:15Z",
+      "side": 1,
+      "message": "If 512, buf is always padded even if buf is already 512 aligned.\n\nThis is safe because extra 512 is added when the buffer is created.\n\nIf no special reason, this probably should be 511?",
+      "range": {
+        "startLine": 396,
+        "startChar": 43,
+        "endLine": 396,
+        "endChar": 46
+      },
+      "revId": "11c324fddda1f87f851686ec21c250ac9f71e966",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fc34385_185cfdae",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
