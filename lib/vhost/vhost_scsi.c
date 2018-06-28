@@ -110,7 +110,6 @@ static void spdk_vhost_scsi_write_config_json(struct spdk_vhost_tgt *vtgt,
 static int spdk_vhost_scsi_tgt_remove(struct spdk_vhost_tgt *);
 
 static const struct spdk_vhost_tgt_backend g_vhost_scsi_tgt_backend = {
-	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
 	.dev_ctx_size = sizeof(struct spdk_vhost_scsi_dev) - sizeof(struct spdk_vhost_dev),
 	.start_device =  spdk_vhost_scsi_start,
 	.stop_device = spdk_vhost_scsi_stop,
@@ -710,7 +709,8 @@ spdk_vhost_scsi_tgt_construct(const char *name, const char *cpumask)
 
 	spdk_vhost_lock();
 	rc = spdk_vhost_tgt_register(&svtgt->vtgt, name, cpumask,
-				     &g_vhost_scsi_tgt_backend);
+				     &g_vhost_scsi_tgt_backend,
+				     SPDK_VHOST_SCSI_FEATURES);
 
 	if (rc) {
 		spdk_dma_free(svtgt);

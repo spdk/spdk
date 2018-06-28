@@ -133,7 +133,7 @@ alloc_vtgt(struct spdk_vhost_tgt **vtgt_p, const char *name, const char *cpumask
 
 	vtgt = calloc(1, sizeof(*vtgt));
 	SPDK_CU_ASSERT_FATAL(vtgt != NULL);
-	rc = spdk_vhost_tgt_register(vtgt, name, cpumask, &g_vtgt_backend);
+	rc = spdk_vhost_tgt_register(vtgt, name, cpumask, &g_vtgt_backend, 0);
 	if (rc == 0) {
 		*vtgt_p = vtgt;
 	} else {

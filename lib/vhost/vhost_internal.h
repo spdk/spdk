@@ -123,8 +123,6 @@ struct spdk_vhost_virtqueue {
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_tgt_backend {
-	uint64_t virtio_features;
-
 	size_t dev_ctx_size;
 
 	/**
@@ -287,7 +285,7 @@ spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 }
 
 int spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name, const char *mask_str,
-			    const struct spdk_vhost_tgt_backend *backend);
+			    const struct spdk_vhost_tgt_backend *backend, uint64_t features);
 int spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt);
 
 int spdk_vhost_scsi_controller_construct(void);

@@ -673,7 +673,8 @@ _start_rte_driver(void *arg)
 int
 spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name,
 			const char *mask_str,
-			const struct spdk_vhost_tgt_backend *backend)
+			const struct spdk_vhost_tgt_backend *backend,
+			uint64_t features)
 {
 	static unsigned ctrlr_num;
 	char path[PATH_MAX];
@@ -747,7 +748,7 @@ spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name,
 		rc = -EIO;
 		goto out;
 	}
-	if (rte_vhost_driver_set_features(path, backend->virtio_features)) {
+	if (rte_vhost_driver_set_features(path, features)) {
 		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", name);
 
 		rte_vhost_driver_unregister(path);

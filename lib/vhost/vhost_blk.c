@@ -726,11 +726,13 @@ spdk_vhost_blk_get_config(struct spdk_vhost_tgt *vtgt, uint8_t *config,
 	return 0;
 }
 
+#define SPDK_VHOST_BLK_FEATURES \
+	(SPDK_VHOST_FEATURES | \
+	(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) | \
+	(1ULL << VIRTIO_BLK_F_BLK_SIZE) | (1ULL << VIRTIO_BLK_F_TOPOLOGY) | \
+	(1ULL << VIRTIO_BLK_F_MQ))
+
 static const struct spdk_vhost_tgt_backend g_vhost_blk_tgt_backend = {
-	.virtio_features = SPDK_VHOST_FEATURES |
-	(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) |
-	(1ULL << VIRTIO_BLK_F_BLK_SIZE) | (1ULL << VIRTIO_BLK_F_TOPOLOGY) |
-	(1ULL << VIRTIO_BLK_F_MQ),
 	.dev_ctx_size = sizeof(struct spdk_vhost_blk_dev) - sizeof(struct spdk_vhost_dev),
 	.start_device =  spdk_vhost_blk_start,
 	.stop_device = spdk_vhost_blk_stop,
@@ -788,6 +790,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 {
 	struct spdk_vhost_blk_tgt *bvtgt = NULL;
 	struct spdk_bdev *bdev;
+	uint64_t features;
 	int ret = 0;
 
 	spdk_vhost_lock();
@@ -815,22 +818,16 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	bvtgt->bdev = bdev;
 	bvtgt->readonly = readonly;
-	ret = spdk_vhost_tgt_register(&bvtgt->vtgt, name, cpumask, &g_vhost_blk_tgt_backend);
-	if (ret != 0) {
-		spdk_bdev_close(bvtgt->bdev_desc);
-		ret = -1;
-		goto out;
+
+	features = SPDK_VHOST_BLK_FEATURES;
+	if (readonly) {
+		features |= (1ULL << VIRTIO_BLK_F_RO);
 	}
 
-	if (readonly && rte_vhost_driver_set_features(bvtgt->vtgt.path,
-			g_vhost_blk_tgt_backend.virtio_features | (1ULL << VIRTIO_BLK_F_RO))) {
-		SPDK_ERRLOG("Controller %s: failed to set as a readonly\n", name);
+	ret = spdk_vhost_tgt_register(&bvtgt->vtgt, name, cpumask,
+				      &g_vhost_blk_tgt_backend, features);
+	if (ret != 0) {
 		spdk_bdev_close(bvtgt->bdev_desc);
-
-		if (spdk_vhost_tgt_unregister(&bvtgt->vtgt) != 0) {
-			SPDK_ERRLOG("Controller %s: failed to remove controller\n", name);
-		}
-
 		ret = -1;
 		goto out;
 	}
