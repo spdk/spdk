@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1aa892e_a18eae8b",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T20:05:10Z",
+      "side": 1,
+      "message": "This is now running after \u0027cd ~\u0027, so I think it will be in the wrong working directory.",
+      "revId": "69ebcd04677bc6af54ffdd5e52e1bac35dad2971",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
