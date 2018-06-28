@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2213602e_b9b2d628",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T18:24:33Z",
+      "side": 1,
+      "message": "Minor nitpick: the (void *) cast should not be needed here.",
+      "range": {
+        "startLine": 126,
+        "startChar": 43,
+        "endLine": 126,
+        "endChar": 51
+      },
+      "revId": "6953206d47b111dd19933d6001e5ae53e5856171",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -50,6 +50,47 @@
       "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22b6e8ed_d135b4dd",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T18:24:33Z",
+      "side": 1,
+      "message": "I think this is unavoidable - the longer variable name pushes the function call so far right that astyle decides to wrap the lines differently.",
+      "parentUuid": "ca1e536b_421cb9de",
+      "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f8c8fec_4e32f5d4",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T18:24:33Z",
+      "side": 1,
+      "message": "I don\u0027t think the (void *) cast should be necessary - unless you\u0027re casting away \u0027const\u0027, all pointer types should automatically convert when passed to a void * parameter.",
+      "range": {
+        "startLine": 202,
+        "startChar": 44,
+        "endLine": 202,
+        "endChar": 57
+      },
+      "revId": "239a65c966c892eeeea129f84497071b53fc67f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
