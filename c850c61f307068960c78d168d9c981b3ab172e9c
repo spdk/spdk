@@ -1,0 +1,186 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f20f568c_1de6b4d7",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "The channel is allocated with calloc() immediately before this callback is called from spdk_get_io_channel(), so it should not be necessary to zero it out again.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "901893bb_8373bb4c",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "Rather than dynamically allocating the waitq_entry, would it make sense to just include one directly in pvol_bdev_io? The entry is not very large, so it should be fine.  Removing the allocation would also avoid the need for handling the possibility of allocation failure.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bcfcc0b_e4c7a7ee",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "It looks like the flush implementation above doesn\u0027t actually do anything; it would be better to report flush as unsupported in this case.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "120ae533_0145fcf1",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "These calls can be simplified using the _fmt variant of the function, spdk_json_write_named_string_fmt().  Then you won\u0027t need the fixed-size buffer.",
+      "range": {
+        "startLine": 841,
+        "startChar": 3,
+        "endLine": 841,
+        "endChar": 31
+      },
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78c98aab_b2915652",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 977,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "strdup() needs a check for allocation failure.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e95ccd7e_f8bc876c",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "If this is always meant to be last, you can remove the trailing comma.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52322600_48614fe3",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "rail -\u003e RAID?",
+      "range": {
+        "startLine": 252,
+        "startChar": 9,
+        "endLine": 252,
+        "endChar": 13
+      },
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbf5a9bc_1b738261",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "We have been doing some cleanup/refactoring recently on rpc.py, so this probably changed since you originally wrote the patch.  The scripts/rpc.py script should be responsible for converting the \u0027args\u0027 object from argparse into individual Python method arguments (see the other bdev @call_cmd methods for examples).  This should hopefully just be a matter of moving the parsing code from scripts/rpc/bdev.py into scripts/rpc.py and adding named parameters to each method.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9ef5c1a_3c1e8901",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "I guess this is in bytes, but it should probably be documented.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9740d11b_d4306ff1",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-28T23:11:09Z",
+      "side": 1,
+      "message": "Please add named arguments here in place of args (see comments on scripts/rpc.py) and add a doc string like the other methods in this file.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
