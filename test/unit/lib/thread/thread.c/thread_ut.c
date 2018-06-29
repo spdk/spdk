@@ -97,6 +97,63 @@ thread_send_msg(void)
 	free_threads();
 }
 
+static int
+poller_run_done(void *ctx)
+{
+	bool	*poller_run = ctx;
+
+	*poller_run = true;
+
+	return -1;
+}
+
+static void
+thread_poller(void)
+{
+	struct spdk_poller	*poller = NULL;
+	bool			poller_run = false;
+
+	allocate_threads(1);
+
+	set_thread(0);
+	reset_time();
+	/* Register a poller with no-wait time and test execution */
+	poller = spdk_poller_register(poller_run_done, &poller_run, 0);
+	CU_ASSERT(poller != NULL);
+
+	poll_threads();
+	CU_ASSERT(poller_run == true);
+
+	spdk_poller_unregister(&poller);
+	CU_ASSERT(poller == NULL);
+
+	/* Register a poller with 1000us wait time and test single execution */
+	poller_run = false;
+	poller = spdk_poller_register(poller_run_done, &poller_run, 1000);
+	CU_ASSERT(poller != NULL);
+
+	poll_threads();
+	CU_ASSERT(poller_run == false);
+
+	increment_time(1000);
+	poll_threads();
+	CU_ASSERT(poller_run == true);
+
+	reset_time();
+	poller_run = false;
+	poll_threads();
+	CU_ASSERT(poller_run == false);
+
+	increment_time(1000);
+	poll_threads();
+	CU_ASSERT(poller_run == true);
+
+	spdk_poller_unregister(&poller);
+	CU_ASSERT(poller == NULL);
+
+	free_threads();
+}
+
 static void
 for_each_cb(void *ctx)
 {
@@ -424,6 +481,7 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "thread_alloc", thread_alloc) == NULL ||
 		CU_add_test(suite, "thread_send_msg", thread_send_msg) == NULL ||
+		CU_add_test(suite, "thread_poller", thread_poller) == NULL ||
 		CU_add_test(suite, "thread_for_each", thread_for_each) == NULL ||
 		CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove) == NULL ||
 		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
