@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ba13b3b_a2942a33",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2136,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T09:09:10Z",
+      "side": 1,
+      "message": "Can we switch logic to: if bdev_io_wait \u003d\u003d NULL; return -ENOMEM; This way indentations will look better.",
+      "range": {
+        "startLine": 2136,
+        "startChar": 2,
+        "endLine": 2136,
+        "endChar": 28
+      },
+      "revId": "011ca2130f65882295d45c929c3aab6f9572d511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5b7ca35_93f1d83e",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2142,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T09:09:10Z",
+      "side": 1,
+      "message": "Can we also switch logic here:\nif rc! \u003d 0; free(bdev_io_wait);",
+      "range": {
+        "startLine": 2142,
+        "startChar": 7,
+        "endLine": 2142,
+        "endChar": 14
+      },
+      "revId": "011ca2130f65882295d45c929c3aab6f9572d511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
