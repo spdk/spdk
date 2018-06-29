@@ -202,9 +202,9 @@ int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
  * LUN0 associated with given SPDK bdev. Currently only one LUN per
  * device is supported.
  *
- * If vhost SCSI device has an active socket connection, it is
- * required that it has negotiated \c VIRTIO_SCSI_F_HOTPLUG feature
- * flag. Otherwise an -ENOTSUP error code is returned.
+ * If the vhost SCSI device has an active connection and has negotiated
+ * \c VIRTIO_SCSI_F_HOTPLUG feature,  the new SCSI target should be
+ * automatically detected by the other side.
  *
  * \param vdev vhost SCSI device.
  * \param scsi_tgt_num slot to attach to.
