@@ -207,9 +207,20 @@ spdk_scsi_lun_check_removable_poll(void *arg)
 static void
 spdk_scsi_lun_check_removable(struct spdk_scsi_lun *lun)
 {
+	struct spdk_scsi_desc *desc, *tmp;
+
 	/* Expect IO channel is freed in the following callback operation */
 	if (lun->hotremove_cb) {
 		lun->hotremove_cb(lun, lun->hotremove_ctx);
+	}
+
+	TAILQ_FOREACH_SAFE(desc, &lun->open_descs, link, tmp) {
+		if (desc->hotremove_cb) {
+			desc->hotremove_cb(lun, desc->hotremove_ctx);
+		} else {
+			TAILQ_REMOVE(&lun->open_descs, desc, link);
+			free(desc);
+		}
 	}
 
 	if (lun->io_channel) {
@@ -312,6 +323,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 	lun->io_channel = NULL;
 	lun->hotremove_cb = hotremove_cb;
 	lun->hotremove_ctx = hotremove_ctx;
+	TAILQ_INIT(&lun->open_descs);
 
 	return lun;
 }
@@ -320,6 +332,41 @@ void
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	spdk_scsi_lun_hot_remove(lun);
+}
+
+int
+spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb,
+		   void *hotremove_ctx, struct spdk_scsi_desc **_desc)
+{
+	struct spdk_scsi_desc *desc;
+
+	if (lun->hotremove_cb) {
+		return -EBUSY;
+	}
+
+	desc = calloc(1, sizeof(*desc));
+	if (desc == NULL) {
+		SPDK_ERRLOG("calloc() failed for LUN descriptor.\n");
+		return -ENOMEM;
+	}
+
+	TAILQ_INSERT_TAIL(&lun->open_descs, desc, link);
+
+	desc->lun = lun;
+	desc->hotremove_cb = hotremove_cb;
+	desc->hotremove_ctx = hotremove_ctx;
+	*_desc = desc;
+
+	return 0;
+}
+
+void
+spdk_scsi_lun_close(struct spdk_scsi_desc *desc)
+{
+	struct spdk_scsi_lun *lun = desc->lun;
+
+	TAILQ_REMOVE(&lun->open_descs, desc, link);
+	free(desc);
 }
 
 int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)

@@ -72,6 +72,13 @@ struct spdk_scsi_dev {
 	uint8_t			protocol_id;
 };
 
+struct spdk_scsi_desc {
+	struct spdk_scsi_lun		*lun;
+	spdk_scsi_remove_cb_t		hotremove_cb;
+	void				*hotremove_ctx;
+	TAILQ_ENTRY(spdk_scsi_desc)	link;
+};
+
 struct spdk_scsi_lun {
 	/** LUN id for this logical unit. */
 	int id;
@@ -102,6 +109,9 @@ struct spdk_scsi_lun {
 
 	/** Argument for hotremove_cb */
 	void *hotremove_ctx;
+
+	/** List of open descriptors for this LUN. */
+	TAILQ_HEAD(, spdk_scsi_desc) open_descs;
 
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* pending tasks */
 };
