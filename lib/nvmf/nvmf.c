@@ -56,6 +56,16 @@ SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 #define SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS 1024
 #define SPDK_NVMF_DEFAULT_IO_UNIT_SIZE 131072
 
+struct nvmf_qpair_disconnect_ctx {
+	union Payload {
+		struct spdk_nvmf_qpair *qpair;
+		struct spdk_nvmf_ctrlr *ctrlr;
+	} payload;
+
+	nvmf_qpair_disconnect_cb cb_fn;
+	void *ctx;
+};
+
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 {
@@ -136,7 +146,7 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	spdk_poller_unregister(&group->poller);
 
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qptmp) {
-		spdk_nvmf_qpair_disconnect(qpair);
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 	}
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
@@ -601,17 +611,24 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 }
 
 static void
-_spdk_nvmf_ctrlr_free(void *ctx)
+_spdk_nvmf_ctrlr_free_from_qpair(void *ctx)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair_ctx->payload.ctrlr;
 
 	spdk_nvmf_ctrlr_destruct(ctrlr);
+
+	if (qpair_ctx->cb_fn) {
+		qpair_ctx->cb_fn(qpair_ctx->ctx);
+	}
+	free(qpair_ctx);
 }
 
 static void
 _spdk_nvmf_qpair_destroy(void *ctx, int status)
 {
-	struct spdk_nvmf_qpair *qpair = ctx;
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_qpair *qpair = qpair_ctx->payload.qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	uint16_t qid = qpair->qid;
 	uint32_t count;
@@ -624,6 +641,10 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	spdk_nvmf_transport_qpair_fini(qpair);
 
 	if (!ctrlr) {
+		if (qpair_ctx->cb_fn) {
+			qpair_ctx->cb_fn(qpair_ctx->ctx);
+		}
+		free(qpair_ctx);
 		return;
 	}
 
@@ -635,20 +656,31 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	if (count == 0) {
 		/* If this was the last queue pair on the controller, also send a message
 		 * to the subsystem to remove the controller. */
-		spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free, ctrlr);
+		qpair_ctx->payload.ctrlr = ctrlr;
+		spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx);
+	} else {
+		if (qpair_ctx->cb_fn) {
+			qpair_ctx->cb_fn(qpair_ctx->ctx);
+		}
+		free(qpair_ctx);
 	}
 }
 
 static void
 _spdk_nvmf_qpair_deactivate(void *ctx)
 {
-	struct spdk_nvmf_qpair *qpair = ctx;
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_qpair *qpair = qpair_ctx->payload.qpair;
 
 	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING ||
 	    qpair->state == SPDK_NVMF_QPAIR_INACTIVE) {
 		/* This can occur if the connection is killed by the target,
 		 * which results in a notification that the connection
 		 * died. */
+		if (qpair_ctx->cb_fn) {
+			qpair_ctx->cb_fn(qpair_ctx->ctx);
+		}
+		free(qpair_ctx);
 		return;
 	}
 
@@ -658,21 +690,27 @@ _spdk_nvmf_qpair_deactivate(void *ctx)
 	/* Check for outstanding I/O */
 	if (!TAILQ_EMPTY(&qpair->outstanding)) {
 		qpair->state_cb = _spdk_nvmf_qpair_destroy;
-		qpair->state_cb_arg = qpair;
+		qpair->state_cb_arg = qpair_ctx;
 		return;
 	}
 
-	_spdk_nvmf_qpair_destroy(qpair, 0);
+	_spdk_nvmf_qpair_destroy(qpair_ctx, 0);
 }
 
 void
-spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_ctx));
+
+	qpair_ctx->payload.qpair = qpair;
+	qpair_ctx->cb_fn = cb_fn;
+	qpair_ctx->ctx = ctx;
+
 	if (qpair->group->thread == spdk_get_thread()) {
-		_spdk_nvmf_qpair_deactivate(qpair);
+		_spdk_nvmf_qpair_deactivate(qpair_ctx);
 	} else {
 		/* Send a message to the thread that owns this qpair */
-		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_deactivate, qpair);
+		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_deactivate, qpair_ctx);
 	}
 }
 
@@ -825,7 +863,7 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, tmp) {
 		if (qpair->ctrlr->subsys == subsystem) {
-			spdk_nvmf_qpair_disconnect(qpair);
+			spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 		}
 	}
 
