@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f24cfeaa_8bd4d232",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-29T16:27:42Z",
+      "side": 1,
+      "message": "It might be helpful to provide a list of the valid SPDK Subsystem. Looks like bdev is one of the valid subsystems. What are the others? Or is there a way to get them via rpc?",
+      "range": {
+        "startLine": 303,
+        "startChar": 51,
+        "endLine": 303,
+        "endChar": 70
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73825af9_1849c3d4",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-06-29T16:27:42Z",
+      "side": 1,
+      "message": "Does the output differ by bdev type? Or is it the same for Malloc and NVMe bdev? Having at least 1 NVMe example would help.",
+      "range": {
+        "startLine": 355,
+        "startChar": 6,
+        "endLine": 359,
+        "endChar": 54
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
