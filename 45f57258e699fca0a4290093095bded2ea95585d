@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f59cd343_8152fed7",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-29T12:12:02Z",
+      "side": 1,
+      "message": "For SCSI this sentence was fine :)\nI think you meant to delete it from line #120.",
+      "range": {
+        "startLine": 105,
+        "startChar": 43,
+        "endLine": 106,
+        "endChar": 18
+      },
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9f5a66f2_9babf146",
         "filename": "lib/bdev/virtio/bdev_virtio.h",
         "patchSetId": 1
