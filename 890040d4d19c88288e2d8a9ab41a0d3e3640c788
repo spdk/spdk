@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfaa7a57_a5072031",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-29T15:54:29Z",
+      "side": 1,
+      "message": "debug-\u003edebugging\nI might say something like:\nTo remove a particular bdev please use the delete command specific to its bdev module (or class or type). I think that makes the meaning more clear.",
+      "revId": "890040d4d19c88288e2d8a9ab41a0d3e3640c788",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9aaaee0b_f42bff1d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-29T15:54:29Z",
+      "side": 1,
+      "message": "To remove block -\u003e To remove a block\nuse delete_nvme_bdev comand -\u003e\neither:\nuse the delete_nvme_bdev command.\nuse delete_nvme_bdev.\n\nThe same idea can be applied to the next four additions.",
+      "revId": "890040d4d19c88288e2d8a9ab41a0d3e3640c788",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
