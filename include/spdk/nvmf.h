@@ -191,12 +191,20 @@ int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_qpair *qpair);
 
+typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
+
 /**
  * Disconnect an NVMe-oF qpair
  *
  * \param qpair The NVMe-oF qpair to disconnect.
+ * \param cb_fn The function to call upon completion of the disconnect.
+ * \param ctx The context to pass to the callback function.
+ *
+ * \return 0 upon success.
+ * \return -ENOMEM if the function specific context could not be allocated.
  */
-void spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair);
+int spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn,
+			       void *ctx);
 
 /**
  * Create an NVMe-oF subsystem.
