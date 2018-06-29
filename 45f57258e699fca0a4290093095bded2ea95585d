@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0ae93056_c2a79d14",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T07:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f5a66f2_9babf146",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e84fcbe_459cb39e",
         "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "45f57258e699fca0a4290093095bded2ea95585d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4291177f_c2d66477",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T07:53:22Z",
+      "side": 1,
+      "message": "Yes, I did mean req-\u003ename. Thanks!",
+      "parentUuid": "7e84fcbe_459cb39e",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "cac71ec7_10eb5936",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T07:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f2c62436_a677eb8b",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de94ffd2_f7eb90e4",
         "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
         "patchSetId": 1
@@ -67,6 +121,24 @@
       "revId": "45f57258e699fca0a4290093095bded2ea95585d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61c5700a_9891be5f",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T07:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de94ffd2_f7eb90e4",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "751983c0_8f736ca1",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T07:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79e21790_3526caa3",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f2ca468f_ef213f5c",
         "filename": "scripts/rpc.py",
         "patchSetId": 1
@@ -101,6 +191,24 @@
       "revId": "45f57258e699fca0a4290093095bded2ea95585d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c81c199e_6ecf58a3",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T07:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f2ca468f_ef213f5c",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "9ed44223_7468728c",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T07:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0708e52c_8a2a9a86",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bfd22afc_fddacaf0",
         "filename": "scripts/rpc/vhost.py",
         "patchSetId": 1
@@ -135,6 +261,24 @@
       "revId": "45f57258e699fca0a4290093095bded2ea95585d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25605433_1cb1c2e2",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-29T07:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bfd22afc_fddacaf0",
+      "revId": "45f57258e699fca0a4290093095bded2ea95585d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
