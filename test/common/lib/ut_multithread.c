@@ -226,7 +226,7 @@ poll_thread(uintptr_t thread_id)
 		poller = TAILQ_FIRST(&thread->pollers);
 		TAILQ_REMOVE(&thread->pollers, poller, tailq);
 
-		while (g_current_time_in_us >= poller->next_expiration_in_us) {
+		if (g_current_time_in_us >= poller->next_expiration_in_us) {
 			if (poller->fn) {
 				poller->fn(poller->arg);
 			}
