@@ -85,7 +85,7 @@ This RPC can be called only once.
 
 ### Parameters
 
-None
+This method has no parameters.
 
 ### Response
 
@@ -218,6 +218,148 @@ Example response:
     "destroy_lvol_store",
     "rename_lvol_store",
     "construct_lvol_store"
+  ]
+}
+~~~
+
+## get_subsystems {#rpc_get_subsystems}
+
+Get an array of name and dependency relationship of SPDK subsystems in initialization order.
+
+### Parameters
+
+None
+
+### Response
+
+The response is an array of name and dependency relationship of SPDK subsystems in initialization order.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_subsystems"
+}
+~~~
+
+Example response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "subsystem": "copy",
+      "depends_on": []
+    },
+    {
+      "subsystem": "interface",
+      "depends_on": []
+    },
+    {
+      "subsystem": "net_framework",
+      "depends_on": [
+        "interface"
+      ]
+    },
+    {
+      "subsystem": "bdev",
+      "depends_on": [
+        "copy"
+      ]
+    },
+    {
+      "subsystem": "nbd",
+      "depends_on": [
+        "bdev"
+      ]
+    },
+    {
+      "subsystem": "scsi",
+      "depends_on": [
+        "bdev"
+      ]
+    },
+    {
+      "subsystem": "iscsi",
+      "depends_on": [
+        "scsi"
+      ]
+    }
+  ]
+}
+~~~
+
+## get_subsystem_config {#rpc_get_subsystem_config}
+
+Get current configuration of the specified SPDK subsystem
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | SPDK Subsystem name
+
+### Response
+
+The response is current configuration of the specfied SPDK subsystem.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_subsystem_config",
+  "params": {
+    "name": "bdev"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "params": {
+        "bdev_io_pool_size": 65536,
+        "bdev_io_cache_size": 256
+      },
+      "method": "set_bdev_options"
+    },
+    {
+      "params": {
+        "block_size": 4096,
+        "num_blocks": 32768,
+        "name": "Malloc0",
+        "uuid": "9732ae0a-8aac-4d0f-865d-3737659167c3"
+      },
+      "method": "construct_malloc_bdev"
+    },
+    {
+      "params": {
+        "block_size": 4096,
+        "num_blocks": 32768,
+        "name": "Malloc1",
+        "uuid": "f5be655d-3e0c-4895-b8f8-be5b666e3a02"
+      },
+      "method": "construct_malloc_bdev"
+    },
+    {
+      "params": {
+        "block_size": 4096,
+        "num_blocks": 32768,
+        "name": "Malloc2",
+        "uuid": "3f36c87c-243b-4e27-b8b1-bd4bdb7525e3"
+      },
+      "method": "construct_malloc_bdev"
+    }
   ]
 }
 ~~~
