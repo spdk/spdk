@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11678cb9_5e7a454f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T15:38:41Z",
+      "side": 1,
+      "message": "This RPC return genereted lvol UUID witch became a name of lvol bdev\n\nBTW this look odd to create bdev using UUID instead of provided name.",
+      "range": {
+        "startLine": 1237,
+        "startChar": 0,
+        "endLine": 1237,
+        "endChar": 60
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b6aae3c_2d64c630",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1273,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T15:38:41Z",
+      "side": 1,
+      "message": "It would be good to mention in the beggining of \"# Logical Volume\" chapter that name might be UUID or alias (\"lvol_store_name/lvol_name\")",
+      "range": {
+        "startLine": 1273,
+        "startChar": 51,
+        "endLine": 1273,
+        "endChar": 91
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebc17d4b_9ad11346",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1278,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T15:38:41Z",
+      "side": 1,
+      "message": "generated UUID",
+      "range": {
+        "startLine": 1278,
+        "startChar": 0,
+        "endLine": 1278,
+        "endChar": 4
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e60cfd7_58b31c50",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1317,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T15:38:41Z",
+      "side": 1,
+      "message": "Generated UUID",
+      "range": {
+        "startLine": 1317,
+        "startChar": 0,
+        "endLine": 1317,
+        "endChar": 4
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbd67ff1_878447a0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1345,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T15:38:41Z",
+      "side": 1,
+      "message": "It would be good to metion that this renames only the alias not the bdev not lvol UUID itself.\n\nBTW I think this RPC call should be called \"rename_lvol\"",
+      "range": {
+        "startLine": 1345,
+        "startChar": 0,
+        "endLine": 1345,
+        "endChar": 24
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9900e516_1d7bde55",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1415,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T15:38:41Z",
+      "side": 1,
+      "message": "\"... by wiping all data.\" ?",
+      "range": {
+        "startLine": 1415,
+        "startChar": 24,
+        "endLine": 1415,
+        "endChar": 25
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
