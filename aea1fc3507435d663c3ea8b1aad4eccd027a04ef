@@ -45,6 +45,75 @@
       "revId": "aea1fc3507435d663c3ea8b1aad4eccd027a04ef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "608d3a36_4b80ae05",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-29T05:46:19Z",
+      "side": 1,
+      "message": "this is necessary to call here?",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 17
+      },
+      "revId": "aea1fc3507435d663c3ea8b1aad4eccd027a04ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1033ffa9_bafeb5fc",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-29T05:46:19Z",
+      "side": 1,
+      "message": "Is this error? should be 0?",
+      "range": {
+        "startLine": 105,
+        "startChar": 9,
+        "endLine": 105,
+        "endChar": 10
+      },
+      "revId": "aea1fc3507435d663c3ea8b1aad4eccd027a04ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4b7b2d6_64e96b6e",
+        "filename": "test/nvmf/nvmfjson/json_config.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-29T05:46:19Z",
+      "side": 1,
+      "message": "this is already called in the end of test_json_config",
+      "range": {
+        "startLine": 31,
+        "startChar": 1,
+        "endLine": 31,
+        "endChar": 43
+      },
+      "revId": "aea1fc3507435d663c3ea8b1aad4eccd027a04ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
