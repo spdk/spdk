@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d353c996_98ba7cec",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-06-29T15:55:10Z",
+      "side": 1,
+      "message": "This state, RDMA_REQUEST_STATE_COMPLETING_CONTROLLER_TO_HOST, is now used to calculate \"cur_rw_depth\" and thus limiting the number of outstanding data transfers. Please see \n1059 static int\n1060 spdk_nvmf_rdma_cur_rw_depth(struct spdk_nvmf_rdma_qpair *rqpair)\n\n\nPlease also see the next patch, https://review.gerrithub.io/#/c/spdk/spdk/+/416879/. The request queue of this state is being dumped after \"SQ drained\" async event is received from the IBV qp.",
+      "parentUuid": "f8f78680_702294ee",
+      "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93fa3bb4_b634b21d",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-28T20:16:09Z",
       "side": 1,
       "message": "You could eliminate this queue if you can collapse the TRANSFER_PENDING_* states into one. Maybe within the state it looks at the transfer direction and then sets the next state accordingly.",
+      "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bba3574_d4806896",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-06-29T15:55:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "93fa3bb4_b634b21d",
       "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "a032e340_d925e476",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-06-29T15:55:10Z",
+      "side": 1,
+      "message": "I presume this is about _init_ functions. Put their code into the calling function, left _set_state_ intact.",
+      "parentUuid": "71e4045a_aaf5506a",
+      "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f355061_9e887da6",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2018-06-28T20:16:09Z",
       "side": 1,
       "message": "Did this function actually need to move?",
+      "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d162e31_504253e9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1993,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-06-29T15:55:10Z",
+      "side": 1,
+      "message": "removed the function, put the code into the calling function. Hope I got you right.",
+      "parentUuid": "9f355061_9e887da6",
       "revId": "b047f098775d2bb4e7e97536597b4e57b4b264e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
