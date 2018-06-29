@@ -118,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "59ed141d_58ccecbb",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T11:34:50Z",
+      "side": 1,
+      "message": "I need to think more about this but don\u0027t think you have a right here.",
+      "parentUuid": "65214ed7_fcf3d0cc",
+      "range": {
+        "startLine": 314,
+        "startChar": 5,
+        "endLine": 314,
+        "endChar": 33
+      },
+      "revId": "577064c166bd0ca6d83e47f2d99513248b53cc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "602f7dfe_0fc6bf5b",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 18
