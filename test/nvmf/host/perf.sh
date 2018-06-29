@@ -27,7 +27,7 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/nvmf.conf
 
 local_nvme_trid=$(grep TransportID $testdir/nvmf.conf | head -n1 | awk -F"\"" '{print $2}')
 
-$NVMF_APP -c $testdir/nvmf.conf -i 0 &
+$NVMF_APP -c $testdir/nvmf.conf -i 0 -s 2048
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
