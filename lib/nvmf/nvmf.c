@@ -63,6 +63,12 @@ struct nvmf_qpair_disconnect_ctx {
 	void *ctx;
 };
 
+struct nvmf_qpair_disconnect_many_ctx {
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_poll_group *group;
+	nvmf_qpair_disconnect_cpl cb_fn;
+};
+
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 {
@@ -860,26 +866,17 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
-int
-spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem)
+static void
+_nvmf_poll_group_remove_subsystem_cb(void *ctx, int status)
 {
-	struct spdk_nvmf_qpair *qpair, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	int rc = 0;
 	uint32_t nsid;
 
-	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, tmp) {
-		if (qpair->ctrlr->subsys == subsystem) {
-			rc += spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-		}
+	if (status) {
+		return;
 	}
 
-	if (rc != 0) {
-		return -1;
-	}
-
-	sgroup = &group->sgroups[subsystem->id];
+	sgroup = ctx;
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 
 	for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
@@ -892,6 +889,81 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	sgroup->num_channels = 0;
 	free(sgroup->channels);
 	sgroup->channels = NULL;
+}
+
+static void
+_nvmf_subsystem_disconnect_next_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair;
+	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	int rc = 0;
+	bool match_found = false;
+
+	group = qpair_ctx->group;
+	subsystem = qpair_ctx->subsystem;
+
+	TAILQ_FOREACH(qpair, &group->qpairs, link) {
+		if (qpair->ctrlr->subsys == subsystem) {
+			match_found = true;
+			break;
+		}
+	}
+
+	if (match_found) {
+		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_subsystem_disconnect_next_qpair, qpair_ctx);
+	}
+
+	if (!match_found || rc != 0) {
+		if (qpair_ctx->cb_fn) {
+			sgroup = &group->sgroups[subsystem->id];
+			qpair_ctx->cb_fn(sgroup, rc);
+		}
+		free(qpair_ctx);
+		return;
+	}
+	return;
+}
+
+int
+spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
+				      struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct nvmf_qpair_disconnect_many_ctx *ctx;
+	int rc = 0;
+
+	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
+
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
+	ctx->cb_fn = _nvmf_poll_group_remove_subsystem_cb;
+	ctx->group = group;
+	ctx->subsystem = subsystem;
+
+	TAILQ_FOREACH(qpair, &group->qpairs, link) {
+		if (qpair->ctrlr->subsys == subsystem) {
+			break;
+		}
+	}
+
+	if (qpair) {
+		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_subsystem_disconnect_next_qpair, ctx);
+	} else {
+		free(ctx);
+		sgroup = &group->sgroups[subsystem->id];
+		_nvmf_poll_group_remove_subsystem_cb(sgroup, 0);
+	}
+
+	if (rc != 0) {
+		free(ctx);
+		return rc;
+	}
 
 	return 0;
 }
