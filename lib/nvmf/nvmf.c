@@ -148,18 +148,15 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 }
 
 static void
-spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+_spdk_nvmf_tgt_destroy_poll_group_cb(void *ctx, int status)
 {
-	struct spdk_nvmf_poll_group *group = ctx_buf;
-	struct spdk_nvmf_qpair *qpair, *qptmp;
+	struct spdk_nvmf_poll_group *group = ctx;
 	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	uint32_t sid, nsid;
 
-	spdk_poller_unregister(&group->poller);
-
-	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qptmp) {
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+	if (status != 0) {
+		return;
 	}
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
@@ -181,6 +178,58 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	}
 
 	free(group->sgroups);
+}
+
+static void
+_nvmf_tgt_disconnect_next_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair;
+	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_poll_group *group = qpair_ctx->group;
+	int rc = 0;
+
+	qpair = TAILQ_FIRST(&group->qpairs);
+
+	if (qpair) {
+		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_tgt_disconnect_next_qpair, ctx);
+	}
+
+	if (!qpair || rc != 0) {
+		_spdk_nvmf_tgt_destroy_poll_group_cb(qpair_ctx->group, rc);
+		free(qpair_ctx);
+		return;
+	}
+}
+
+static void
+spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_poll_group *group = ctx_buf;
+	struct spdk_nvmf_qpair *qpair;
+	struct nvmf_qpair_disconnect_many_ctx *ctx;
+	int rc = 0;
+
+	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
+
+	if (!ctx) {
+		SPDK_ERRLOG("Failed to allocate memory for destroy poll group ctx\n");
+		return;
+	}
+
+	spdk_poller_unregister(&group->poller);
+
+	ctx->group = group;
+
+	qpair = TAILQ_FIRST(&group->qpairs);
+
+	if (qpair) {
+		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_tgt_disconnect_next_qpair, ctx);
+	}
+
+	if (!qpair || rc != 0) {
+		_spdk_nvmf_tgt_destroy_poll_group_cb(group, rc);
+		free(ctx);
+	}
 }
 
 struct spdk_nvmf_tgt *
