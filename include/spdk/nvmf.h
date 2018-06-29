@@ -192,6 +192,7 @@ int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_qpair *qpair);
 
 typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
+typedef void (*nvmf_qpair_disconnect_cpl)(void *ctx, int status);
 
 /**
  * Disconnect an NVMe-oF qpair
