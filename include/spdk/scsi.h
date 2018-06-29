@@ -145,6 +145,9 @@ struct spdk_scsi_task {
 struct spdk_scsi_port;
 struct spdk_scsi_dev;
 struct spdk_scsi_lun;
+struct spdk_scsi_desc;
+
+typedef void (*spdk_scsi_remove_cb_t)(struct spdk_scsi_lun *, void *);
 
 /**
  * Initialize SCSI layer.
@@ -456,6 +459,25 @@ void spdk_scsi_task_copy_status(struct spdk_scsi_task *dst, struct spdk_scsi_tas
  * \param task SCSI task.
  */
 void spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task);
+
+/**
+ * Open a logical unit for I/O operations.
+ *
+ * \param lun Logical unit to open.
+ * \param hotremove_cb Callback function ofr hot removal of the logical unit.
+ * \param hotremove_ctx Param for hot removal callback function.
+ * \param desc Output parameter for the descriptor when operation is successful.
+ * \return 0 if operation is successful, suitable errno value otherwise
+ */
+int spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb,
+		       void *hotremove_ctx, struct spdk_scsi_desc **desc);
+
+/**
+ * Close an opened logical unit.
+ *
+ * \param desc Desciptor of the logical unit.
+ */
+void spdk_scsi_lun_close(struct spdk_scsi_desc *desc);
 
 /**
  * Allocate I/O channel for the LUN
