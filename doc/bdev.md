@@ -70,7 +70,9 @@ Example response
 
 To remove previously created bdev user can use `delete_bdev` RPC command.
 Bdev can be deleted at any time and this will be fully handled by any upper
-layers. As an argument user should provide bdev name.
+layers. As an argument user should provide bdev name. This RPC command
+should be used only for debugging purpose. To remove a particular bdev please
+use the delete command specific to its bdev module.
 
 # NVMe bdev {#bdev_config_nvme}
 
@@ -88,6 +90,10 @@ This command will create NVMe bdev of physical device in the system.
 
 This command will create NVMe bdev of NVMe-oF resource.
 
+To remove a block device representation of NVMe device use the delete_nvme_bdev command.
+
+`rpc.py delete_nvme_bdev Nvme0`
+
 # Null {#bdev_config_null}
 
 The SPDK null bdev driver is a dummy block I/O target that discards all writes and returns undefined
@@ -100,6 +106,10 @@ Example command
 `rpc.py construct_null_bdev Null0 8589934592 4096`
 
 This command will create an 8 petabyte `Null0` device with block size 4096.
+
+To delete a null bdev use the delete_null_bdev command.
+
+`rpc.py delete_null_bdev Null0`
 
 # Linux AIO bdev {#bdev_config_aio}
 
@@ -120,6 +130,10 @@ This command will create `aio0` device from /dev/sda.
 
 This command will create `file` device with block size 8192 from /tmp/file.
 
+To delete an aio bdev use the delete_aio_bdev command.
+
+`rpc.py delete_aio_bdev aio0`
+
 # Ceph RBD {#bdev_config_rbd}
 
 The SPDK RBD bdev driver provides SPDK block layer access to Ceph RADOS block
@@ -132,6 +146,10 @@ Example command
 `rpc.py construct_rbd_bdev rbd foo 512`
 
 This command will create a bdev that represents the 'foo' image from a pool called 'rbd'.
+
+To remove a block device representation use the delete_rbd_bdev command.
+
+`rpc.py delete_rbd_bdev Rbd0`
 
 # GPT (GUID Partition Table) {#bdev_config_gpt}
 
@@ -279,6 +297,10 @@ Example command
 
 `rpc.py construct_pmem_bdev /path/to/pmem_pool -n pmem`
 
+To remove a block device representation use the delete_pmem_bdev command.
+
+`rpc.py delete_pmem_bdev pmem`
+
 # Virtio SCSI {#bdev_config_virtio_scsi}
 
 The Virtio-SCSI driver allows creating SPDK block devices from Virtio-SCSI LUNs.
@@ -315,5 +337,6 @@ Virtio-Block bdevs are constructed the same way as Virtio-SCSI ones.
 
 `rpc.py construct_virtio_pci_blk_bdev 0000:01:00.0 VirtioBlk1`
 
-Since they export only a single bdev, the Virtio-Block driver doesn't offer additional
-remove/destruct RPC calls. @ref bdev_ug_delete_bdev should be used instead.
+Virtio-BLK devices can be removed with the following command
+
+`rpc.py remove_virtio_blk_bdev VirtioBlk0`
