@@ -138,18 +138,15 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 }
 
 static void
-spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+_spdk_nvmf_tgt_destroy_poll_group_cb(void *ctx, int status)
 {
-	struct spdk_nvmf_poll_group *group = ctx_buf;
-	struct spdk_nvmf_qpair *qpair, *qptmp;
+	struct spdk_nvmf_poll_group *group = ctx;
 	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	uint32_t sid, nsid;
 
-	spdk_poller_unregister(&group->poller);
-
-	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qptmp) {
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+	if (status != 0) {
+		return;
 	}
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
@@ -171,6 +168,66 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	}
 
 	free(group->sgroups);
+}
+
+static void
+_nvmf_tgt_disconnect_next_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *current_qpair;
+	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
+	int rc;
+
+	if (qpair_ctx->next == NULL) {
+		if (qpair_ctx->cb_fn) {
+			qpair_ctx->cb_fn(qpair_ctx->cb_arg, 0);
+		}
+		free(qpair_ctx);
+		return;
+	}
+
+	current_qpair = qpair_ctx->next;
+	qpair_ctx->next = TAILQ_NEXT(current_qpair, link);
+
+	rc = spdk_nvmf_qpair_disconnect(current_qpair, _nvmf_tgt_disconnect_next_qpair, ctx);
+
+	if (rc != 0) {
+		if (qpair_ctx->cb_fn) {
+			qpair_ctx->cb_fn(qpair_ctx->cb_arg, rc);
+		}
+		free(qpair_ctx);
+		return;
+	}
+}
+
+static void
+spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_poll_group *group = ctx_buf;
+	struct spdk_nvmf_qpair *qpair;
+	struct nvmf_qpair_disconnect_many_ctx *ctx;
+	int rc = 0;
+
+	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
+
+	spdk_poller_unregister(&group->poller);
+
+	ctx->cb_fn = _spdk_nvmf_tgt_destroy_poll_group_cb;
+	ctx->cb_arg = group;
+
+	qpair = TAILQ_FIRST(&group->qpairs);
+
+	if (qpair) {
+		ctx->next = TAILQ_NEXT(qpair, link);
+		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_tgt_disconnect_next_qpair, ctx);
+	} else {
+		_spdk_nvmf_tgt_destroy_poll_group_cb(group, 0);
+		free(ctx);
+	}
+
+	if (rc != 0) {
+		_spdk_nvmf_tgt_destroy_poll_group_cb(group, rc);
+		free(ctx);
+	}
 }
 
 struct spdk_nvmf_tgt *
