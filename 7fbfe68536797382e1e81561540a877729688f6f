@@ -278,6 +278,24 @@
     },
     {
       "key": {
+        "uuid": "b317fade_25a2b2ba",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-29T06:41:17Z",
+      "side": 1,
+      "message": "Generally I agree, but details are important:\n\nOn lvol layer we assume that lvolstore has information about lvols.\nIn current design we are freeing lvol from memory only when we are deleting it or unloading whole lvolstore.\nspdk_bdev_unregister() called from RPC frees bdev, but leaves lvol in memory until we unload whole lvolstore.\nI think this solutions gives us better flexibility and separates on-disk logic from in-memory logic.\n\nAlternative solution:\nspdk_bdev_unregister() frees lvol, we need to update list of lvols, there is possibility for lvol duplication etc. \nWe need to use separate call for closing bdev in delete_lvol path, because we need a handle to lvol after freeing associated bdev.\n\nWhat do you think?",
+      "parentUuid": "8d9e0a7c_973d3873",
+      "revId": "7fbfe68536797382e1e81561540a877729688f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5322414f_c65dff6a",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 31
