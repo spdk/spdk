@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9839f5a_14b76c74",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-29T08:41:16Z",
+      "side": 1,
+      "message": "This should be (1ULL \u003c\u003c VIRTIO_RING_F_EVENT_IDX)",
+      "range": {
+        "startLine": 400,
+        "startChar": 32,
+        "endLine": 400,
+        "endChar": 55
+      },
+      "revId": "577064c166bd0ca6d83e47f2d99513248b53cc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae8833fa_042a2ce6",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-29T08:41:16Z",
+      "side": 1,
+      "message": "virtio spec says its a 16-bit variable, no need to use __virtio16 specifically",
+      "range": {
+        "startLine": 401,
+        "startChar": 0,
+        "endLine": 401,
+        "endChar": 80
+      },
+      "revId": "577064c166bd0ca6d83e47f2d99513248b53cc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5702238b_64db05b0",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-29T08:41:16Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 417,
+        "startChar": 32,
+        "endLine": 417,
+        "endChar": 55
+      },
+      "revId": "577064c166bd0ca6d83e47f2d99513248b53cc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65214ed7_fcf3d0cc",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-29T08:41:16Z",
+      "side": 1,
+      "message": "this should be the last checked used_idx, not last signaled used_idx.\nThis will currently send an interrupt once in a while regardless of what used_event is - we don\u0027t want that when using e.g. SPDK Virtio driver.\nYou might set signaled_used_idx to vring.last_used_idx here, but I believe this variable is used for something else and all this should be solved in a different way - you get the idea.",
+      "range": {
+        "startLine": 314,
+        "startChar": 5,
+        "endLine": 314,
+        "endChar": 33
+      },
+      "revId": "577064c166bd0ca6d83e47f2d99513248b53cc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "602f7dfe_0fc6bf5b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1089,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-29T08:41:16Z",
+      "side": 1,
+      "message": "This is checking the features before they\u0027re retrieved from rte_vhost (line #1118).\nUsually this works just because the device is restarted multiple times during initialization.",
+      "range": {
+        "startLine": 1089,
+        "startChar": 6,
+        "endLine": 1089,
+        "endChar": 32
+      },
+      "revId": "577064c166bd0ca6d83e47f2d99513248b53cc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
