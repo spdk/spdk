@@ -119,5 +119,7 @@ main(int argc, char **argv)
 	}
 
 	rc = spdk_app_start(&opts, spdk_tgt_started, NULL, NULL);
+	spdk_app_fini();
+
 	return rc;
 }
