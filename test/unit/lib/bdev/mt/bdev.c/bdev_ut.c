@@ -315,22 +315,11 @@ poller_run_done(void *ctx)
 	return -1;
 }
 
-static int
-poller_run_times_done(void *ctx)
-{
-	int	*poller_run_times = ctx;
-
-	(*poller_run_times)++;
-
-	return -1;
-}
-
 static void
 basic_poller(void)
 {
 	struct spdk_poller	*poller = NULL;
 	bool			poller_run = false;
-	int			poller_run_times = 0;
 
 	setup_test();
 
@@ -366,26 +355,6 @@ basic_poller(void)
 	increment_time(1000);
 	poll_threads();
 	CU_ASSERT(poller_run == true);
-
-	spdk_poller_unregister(&poller);
-	CU_ASSERT(poller == NULL);
-
-	reset_time();
-	/* Register a poller with 1000us wait time and test multiple execution */
-	poller = spdk_poller_register(poller_run_times_done, &poller_run_times, 1000);
-	CU_ASSERT(poller != NULL);
-
-	poll_threads();
-	CU_ASSERT(poller_run_times == 0);
-
-	increment_time(1000);
-	poll_threads();
-	CU_ASSERT(poller_run_times == 1);
-
-	poller_run_times = 0;
-	increment_time(2000);
-	poll_threads();
-	CU_ASSERT(poller_run_times == 2);
 
 	spdk_poller_unregister(&poller);
 	CU_ASSERT(poller == NULL);
