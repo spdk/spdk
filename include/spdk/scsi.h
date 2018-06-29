@@ -140,6 +140,7 @@ struct spdk_scsi_task {
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
 
 	uint32_t abort_id;
+	void *bdev_io_wait;
 };
 
 struct spdk_scsi_port;

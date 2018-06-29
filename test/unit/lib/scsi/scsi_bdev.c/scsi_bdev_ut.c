@@ -44,6 +44,10 @@ struct spdk_scsi_globals g_spdk_scsi;
 
 static uint64_t g_test_bdev_num_blocks;
 
+TAILQ_HEAD(, spdk_bdev_io_wait_entry) g_io_wait_queue;
+
+bool g_bdev_io_pool_full = false;
+
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
@@ -135,6 +139,13 @@ spdk_put_task(struct spdk_scsi_task *task)
 	task->iov.iov_base = NULL;
 	task->iov.iov_len = 0;
 	task->alloc_len = 0;
+	while (!TAILQ_EMPTY(&g_io_wait_queue)) {
+		struct spdk_bdev_io_wait_entry *entry;
+
+		entry = TAILQ_FIRST(&g_io_wait_queue);
+		TAILQ_REMOVE(&g_io_wait_queue, entry, link);
+		entry->cb_fn(entry->cb_arg);
+	}
 }
 
 
@@ -184,6 +195,9 @@ spdk_bdev_read(struct spdk_bdev_desc *bdev_desc, struct spdk_io_channel *ch,
 	       void *buf, uint64_t offset, uint64_t nbytes,
 	       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	if (g_bdev_io_pool_full) {
+		return -ENOMEM;
+	}
 	return 0;
 }
 
@@ -192,6 +206,9 @@ spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	if (g_bdev_io_pool_full) {
+		return -ENOMEM;
+	}
 	return 0;
 }
 
@@ -201,6 +218,9 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		 uint64_t offset, uint64_t len,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	if (g_bdev_io_pool_full) {
+		return -ENOMEM;
+	}
 	return 0;
 }
 
@@ -209,6 +229,9 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	if (g_bdev_io_pool_full) {
+		return -ENOMEM;
+	}
 	return 0;
 }
 
@@ -216,6 +239,9 @@ int
 spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	if (g_bdev_io_pool_full) {
+		return -ENOMEM;
+	}
 	return 0;
 }
 
@@ -224,6 +250,17 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	if (g_bdev_io_pool_full) {
+		return -ENOMEM;
+	}
+	return 0;
+}
+
+int
+spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			struct spdk_bdev_io_wait_entry *entry)
+{
+	TAILQ_INSERT_TAIL(&g_io_wait_queue, entry, link);
 	return 0;
 }
 
@@ -747,6 +784,8 @@ main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
+
+	TAILQ_INIT(&g_io_wait_queue);
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();

@@ -60,6 +60,8 @@
 #define INQUIRY_OFFSET(field)		offsetof(struct spdk_scsi_cdb_inquiry_data, field) + \
 					sizeof(((struct spdk_scsi_cdb_inquiry_data *)0x0)->field)
 
+static void spdk_bdev_scsi_process_block_resubmit(void *arg);
+
 static int
 spdk_hex2bin(char ch)
 {
@@ -1299,6 +1301,7 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		    struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task,
 		    uint64_t lba, uint32_t len)
 {
+	struct spdk_bdev_io_wait_entry *bdev_io_wait;
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
@@ -1317,7 +1320,22 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 	rc = spdk_bdev_readv(bdev_desc, bdev_ch, task->iovs,
 			     task->iovcnt, offset, nbytes,
 			     spdk_bdev_scsi_task_complete_cmd, task);
+
 	if (rc) {
+		if (rc == -ENOMEM) {
+			bdev_io_wait = calloc(1, sizeof(*bdev_io_wait));
+			if (bdev_io_wait != NULL) {
+				bdev_io_wait->bdev = bdev;
+				bdev_io_wait->cb_fn = spdk_bdev_scsi_process_block_resubmit;
+				bdev_io_wait->cb_arg = task;
+				task->bdev_io_wait = bdev_io_wait;
+				rc = spdk_bdev_queue_io_wait(bdev, bdev_ch, bdev_io_wait);
+				if (rc == 0) {
+					return SPDK_SCSI_TASK_PENDING;
+				}
+				free(bdev_io_wait);
+			}
+		}
 		SPDK_ERRLOG("spdk_bdev_readv() failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
@@ -1337,6 +1355,7 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		     struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task,
 		     uint64_t lba, uint32_t len)
 {
+	struct spdk_bdev_io_wait_entry *bdev_io_wait;
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
@@ -1367,6 +1386,20 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 			      task);
 
 	if (rc) {
+		if (rc == -ENOMEM) {
+			bdev_io_wait = calloc(1, sizeof(*bdev_io_wait));
+			if (bdev_io_wait != NULL) {
+				bdev_io_wait->bdev = bdev;
+				bdev_io_wait->cb_fn = spdk_bdev_scsi_process_block_resubmit;
+				bdev_io_wait->cb_arg = task;
+				task->bdev_io_wait = bdev_io_wait;
+				rc = spdk_bdev_queue_io_wait(bdev, bdev_ch, bdev_io_wait);
+				if (rc == 0) {
+					return SPDK_SCSI_TASK_PENDING;
+				}
+				free(bdev_io_wait);
+			}
+		}
 		SPDK_ERRLOG("spdk_bdev_writev failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
@@ -1388,6 +1421,7 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		    struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task,
 		    uint64_t lba, uint32_t num_blocks)
 {
+	struct spdk_bdev_io_wait_entry *bdev_io_wait;
 	uint64_t bdev_num_blocks;
 	int rc;
 
@@ -1411,6 +1445,20 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 				    spdk_bdev_scsi_task_complete_cmd, task);
 
 	if (rc) {
+		if (rc == -ENOMEM) {
+			bdev_io_wait = calloc(1, sizeof(*bdev_io_wait));
+			if (bdev_io_wait != NULL) {
+				bdev_io_wait->bdev = bdev;
+				bdev_io_wait->cb_fn = spdk_bdev_scsi_process_block_resubmit;
+				bdev_io_wait->cb_arg = task;
+				task->bdev_io_wait = bdev_io_wait;
+				rc = spdk_bdev_queue_io_wait(bdev, bdev_ch, bdev_io_wait);
+				if (rc == 0) {
+					return SPDK_SCSI_TASK_PENDING;
+				}
+				free(bdev_io_wait);
+			}
+		}
 		SPDK_ERRLOG("spdk_bdev_flush_blocks() failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
@@ -1593,6 +1641,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 
 	for (i = 0; i < desc_count; i++) {
+		struct spdk_bdev_io_wait_entry  *bdev_io_wait;
 		struct spdk_scsi_unmap_bdesc	*desc;
 		uint64_t offset_blocks;
 		uint64_t num_blocks;
@@ -1611,6 +1660,21 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 					    spdk_bdev_scsi_task_complete_unmap_cmd, ctx);
 
 		if (rc) {
+			if (rc == -ENOMEM) {
+				bdev_io_wait = calloc(1, sizeof(*bdev_io_wait));
+				if (bdev_io_wait != NULL) {
+					bdev_io_wait->bdev = bdev;
+					bdev_io_wait->cb_fn = spdk_bdev_scsi_process_block_resubmit;
+					bdev_io_wait->cb_arg = task;
+					task->bdev_io_wait = bdev_io_wait;
+					rc = spdk_bdev_queue_io_wait(bdev, bdev_ch, bdev_io_wait);
+					if (rc == 0) {
+						/* TODO: At this time it will unmap blocks multiple times */
+						return SPDK_SCSI_TASK_PENDING;
+					}
+					free(bdev_io_wait);
+				}
+			}
 			SPDK_ERRLOG("SCSI Unmapping failed\n");
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 						  SPDK_SCSI_SENSE_NO_SENSE,
@@ -1752,6 +1816,15 @@ spdk_bdev_scsi_process_block(struct spdk_scsi_task *task)
 	}
 
 	return SPDK_SCSI_TASK_COMPLETE;
+}
+
+static void
+spdk_bdev_scsi_process_block_resubmit(void *arg)
+{
+	struct spdk_scsi_task *task = arg;
+
+	free(task->bdev_io_wait);
+	spdk_bdev_scsi_process_block(task);
 }
 
 static int
@@ -2041,11 +2114,37 @@ spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
 	return rc;
 }
 
+static void
+spdk_bdev_scsi_attempt_reset(void *arg)
+{
+	struct spdk_scsi_task *task = arg;
+
+	free(task->bdev_io_wait);
+	spdk_bdev_scsi_reset(task);
+}
+
 int
 spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 {
 	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_bdev_io_wait_entry *bdev_io_wait;
+	int rc;
 
-	return spdk_bdev_reset(lun->bdev_desc, lun->io_channel,
-			       spdk_bdev_scsi_task_complete_mgmt, task);
+	rc = spdk_bdev_reset(lun->bdev_desc, lun->io_channel, spdk_bdev_scsi_task_complete_mgmt, task);
+	if (rc == -ENOMEM) {
+		bdev_io_wait = calloc(1, sizeof(*bdev_io_wait));
+		if (bdev_io_wait != NULL) {
+			bdev_io_wait->bdev = lun->bdev;
+			bdev_io_wait->cb_fn = spdk_bdev_scsi_attempt_reset;
+			bdev_io_wait->cb_arg = task;
+			task->bdev_io_wait = bdev_io_wait;
+			rc = spdk_bdev_queue_io_wait(lun->bdev, lun->io_channel, bdev_io_wait);
+			if (rc == 0) {
+				return rc;
+			}
+			free(bdev_io_wait);
+		}
+	}
+
+	return rc;
 }
