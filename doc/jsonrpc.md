@@ -1054,3 +1054,163 @@ Example response:
   "result": true
 }
 ~~~
+
+# Logical Volume {#jsonrpc_components_lvol}
+
+## construct_lvol_store {#rpc_construct_lvoL_store}
+
+Construct a logical volume store.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | Bdev on which to construct logical volume store
+lvs_name                | Required | string      | Name of the logical volume store to create
+cluster_sz              | Optional | number      | Cluster size of the logical volume store in bytes
+
+### Reponse
+
+UUID of the created logical volume store is returned.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "construct_lvol_store",
+  "params": {
+    "lvs_name": "LVS0",
+    "bdev_name": "Malloc0"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "a9959197-b5e2-4f2d-8095-251ffb6985a5"
+}
+~~~
+
+## destroy_lvol_store {#rpc_destroy_lvol_store}
+
+Destroy an logical volume store.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+uuid                    | Optional | string      | UUID of the logical volume store to destroy
+lvs_name                | Optional | string      | Name of the logical volume store to destroy
+
+Either uuid or lvs_name must be specified, but not both.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "destroy_lvol_store",
+  "id": 1
+  "params": {
+    "uuid": "a9959197-b5e2-4f2d-8095-251ffb6985a5"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## get_lvol_stores {#rpc_get_lvol_stores}
+
+Get a list of logical volume stores.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+uuid                    | Optional | string      | UUID of the logical volume store to retrieve information about
+lvs_name                | Optional | string      | Name of the logical volume store to retrieve information about
+
+Either uuid or lvs_name may be specified, but not both.
+If both uuid and lvs_name are omitted, information about all logical volume stores is returned.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_lvol_stores",
+  "id": 1,
+  "params": {
+    "lvs_name": "LVS0"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "uuid": "a9959197-b5e2-4f2d-8095-251ffb6985a5",
+      "base_bdev": "Malloc0",
+      "free_clusters": 31,
+      "cluster_size": 4194304,
+      "total_data_clusters": 31,
+      "block_size": 4096,
+      "name": "LVS0"
+    }
+  ]
+}
+~~~
+
+## rename_lvol_store {#rpc_rename_lvol_store}
+
+Rename a logical volume store.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+old_name                | Required | string      | Existing logical volume store name
+new_name                | Required | string      | New logical volume store name
+
+### Example 
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "rename_lvol_store",
+  "id": 1,
+  "params": {
+    "old_name": "LVS0",
+    "new_name": "LVS2"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
