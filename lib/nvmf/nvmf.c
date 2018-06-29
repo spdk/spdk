@@ -141,19 +141,12 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 }
 
 static void
-spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+_spdk_nvmf_tgt_destroy_poll_group_cb(void *ctx)
 {
-	struct spdk_nvmf_poll_group *group = ctx_buf;
-	struct spdk_nvmf_qpair *qpair, *qptmp;
+	struct spdk_nvmf_poll_group *group = ctx;
 	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	uint32_t sid, nsid;
-
-	spdk_poller_unregister(&group->poller);
-
-	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qptmp) {
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-	}
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
 		TAILQ_REMOVE(&group->tgroups, tgroup, link);
@@ -174,6 +167,51 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	}
 
 	free(group->sgroups);
+}
+
+static void
+_nvmf_tgt_disconnect_next_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *current_qpair;
+	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
+
+	if (qpair_ctx->next == NULL) {
+		if (qpair_ctx->cb_fn) {
+			qpair_ctx->cb_fn(qpair_ctx->cb_arg);
+		}
+		free(qpair_ctx);
+		return;
+	}
+
+	current_qpair = qpair_ctx->next;
+	qpair_ctx->next = TAILQ_NEXT(current_qpair, link);
+
+	spdk_nvmf_qpair_disconnect(current_qpair, _nvmf_tgt_disconnect_next_qpair, ctx);
+}
+
+static void
+spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_poll_group *group = ctx_buf;
+	struct spdk_nvmf_qpair *qpair;
+	struct nvmf_qpair_disconnect_many_ctx *ctx;
+
+	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
+
+	spdk_poller_unregister(&group->poller);
+
+	ctx->cb_fn = _spdk_nvmf_tgt_destroy_poll_group_cb;
+	ctx->cb_arg = group;
+
+	qpair = TAILQ_FIRST(&group->qpairs);
+
+	if (qpair) {
+		ctx->next = TAILQ_NEXT(qpair, link);
+		spdk_nvmf_qpair_disconnect(qpair, _nvmf_tgt_disconnect_next_qpair, ctx);
+	} else {
+		_spdk_nvmf_tgt_destroy_poll_group_cb(group);
+		free(ctx);
+	}
 }
 
 struct spdk_nvmf_tgt *
