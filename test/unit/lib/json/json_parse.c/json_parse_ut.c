@@ -170,6 +170,10 @@ test_parse_literal(void)
 	PARSE_FAIL("fals", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("n", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("nul", SPDK_JSON_PARSE_INCOMPLETE);
+
+	PARSE_FAIL("taaaaa", SPDK_JSON_PARSE_INVALID);
+	PARSE_FAIL("faaaaa", SPDK_JSON_PARSE_INVALID);
+	PARSE_FAIL("naaaaa", SPDK_JSON_PARSE_INVALID);
 }
 
 static void
@@ -402,6 +406,9 @@ test_parse_string_escapes_unicode(void)
 	/* High surrogate without low */
 	STR_FAIL("\\uD800", SPDK_JSON_PARSE_INVALID);
 	STR_FAIL("\\uD800abcdef", SPDK_JSON_PARSE_INVALID);
+
+	/* High surrogate followed by high surrogate */
+	STR_FAIL("\\uD800\\uD800", SPDK_JSON_PARSE_INVALID);
 }
 
 static void
@@ -473,6 +480,7 @@ test_parse_number(void)
 	NUM_FAIL("3e+", SPDK_JSON_PARSE_INCOMPLETE);
 	NUM_FAIL("3e-", SPDK_JSON_PARSE_INCOMPLETE);
 	NUM_FAIL("3.e4", SPDK_JSON_PARSE_INVALID);
+	NUM_FAIL("3.2eX", SPDK_JSON_PARSE_INVALID);
 	NUM_FAIL("-", SPDK_JSON_PARSE_INCOMPLETE);
 	NUM_FAIL("NaN", SPDK_JSON_PARSE_INVALID);
 	NUM_FAIL(".123", SPDK_JSON_PARSE_INVALID);
@@ -481,6 +489,8 @@ test_parse_number(void)
 static void
 test_parse_array(void)
 {
+	char buffer[SPDK_JSON_MAX_NESTING_DEPTH + 2] = {0};
+
 	PARSE_PASS("[]", 2, "");
 	VAL_ARRAY_BEGIN(0);
 	VAL_ARRAY_END();
@@ -527,6 +537,15 @@ test_parse_array(void)
 	PARSE_FAIL("[,true]", SPDK_JSON_PARSE_INVALID);
 	PARSE_FAIL("[true}", SPDK_JSON_PARSE_INVALID);
 	PARSE_FAIL("[true,,true]", SPDK_JSON_PARSE_INVALID);
+
+	/* Nested arrays exactly up to the allowed nesting depth */
+	memset(buffer, '[', SPDK_JSON_MAX_NESTING_DEPTH);
+	buffer[SPDK_JSON_MAX_NESTING_DEPTH] = ' ';
+	PARSE_FAIL(buffer, SPDK_JSON_PARSE_INCOMPLETE);
+
+	/* Nested arrays exceeding the maximum allowed nesting depth for this implementation */
+	buffer[SPDK_JSON_MAX_NESTING_DEPTH] = '[';
+	PARSE_FAIL(buffer, SPDK_JSON_PARSE_MAX_DEPTH_EXCEEDED);
 }
 
 static void
@@ -606,6 +625,7 @@ test_parse_object(void)
 	PARSE_FAIL("{\"a\":", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("{\"a\":true", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("{\"a\":true,", SPDK_JSON_PARSE_INCOMPLETE);
+	PARSE_FAIL("{\"a\":true]", SPDK_JSON_PARSE_INVALID);
 	PARSE_FAIL("{\"a\":true,}", SPDK_JSON_PARSE_INVALID);
 	PARSE_FAIL("{\"a\":true,\"}", SPDK_JSON_PARSE_INCOMPLETE);
 	PARSE_FAIL("{\"a\":true,\"b}", SPDK_JSON_PARSE_INCOMPLETE);
@@ -870,6 +890,12 @@ test_parse_comment(void)
 	PARSE_FAIL_FLAGS("//", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 	PARSE_FAIL_FLAGS("// test", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 	PARSE_FAIL_FLAGS("//\n", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+
+	/* Invalid character following slash */
+	PARSE_FAIL_FLAGS("[0/x", SPDK_JSON_PARSE_INVALID, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+
+	/* Single slash at end of buffer */
+	PARSE_FAIL_FLAGS("[0/", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 }
 
 int main(int argc, char **argv)
