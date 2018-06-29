@@ -3109,8 +3109,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	uint32_t transfer_len;
 	size_t residual_len;
 	size_t data_len;
-	int o_bit, u_bit, O_bit, U_bit;
-	int bidi_residual_len;
+	int O_bit, U_bit;
 	int rc;
 	struct spdk_iscsi_task *primary;
 
@@ -3133,8 +3132,8 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	o_bit = u_bit = O_bit = U_bit = 0;
-	bidi_residual_len = residual_len = 0;
+	O_bit = U_bit = 0;
+	residual_len = 0;
 	data_len = primary->scsi.data_transferred;
 
 	if ((transfer_len != 0) &&
@@ -3173,14 +3172,6 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	rsph->opcode = ISCSI_OP_SCSI_RSP;
 	rsph->flags |= 0x80; /* bit 0 is default to 1 */
 
-	if (o_bit) {
-		rsph->flags |= ISCSI_SCSI_BIDI_OVERFLOW;
-	}
-
-	if (u_bit) {
-		rsph->flags |= ISCSI_SCSI_BIDI_UNDERFLOW;
-	}
-
 	if (O_bit) {
 		rsph->flags |= ISCSI_SCSI_OVERFLOW;
 	}
@@ -3206,7 +3197,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
 	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
 
-	to_be32(&rsph->bi_read_res_cnt, bidi_residual_len);
+	to_be32(&rsph->bi_read_res_cnt, 0);
 	to_be32(&rsph->res_cnt, residual_len);
 
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
