@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9893497d_b28611d9",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-06-29T15:40:36Z",
+      "side": 1,
+      "message": "Possibly:\nStatus of completion -\u003e Completion status",
+      "revId": "5049cd425e27271cd72ac2c40f92085cb83f7855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
