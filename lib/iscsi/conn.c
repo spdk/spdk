@@ -50,7 +50,6 @@
 #include "iscsi/conn.h"
 #include "iscsi/tgt_node.h"
 #include "iscsi/portal_grp.h"
-#include "spdk/scsi.h"
 
 #define SPDK_ISCSI_CONNECTION_MEMSET(conn)		\
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
@@ -591,6 +590,124 @@ spdk_iscsi_conn_check_shutdown(void *arg)
 	return -1;
 }
 
+static bool
+spdk_iscsi_conn_check_lun_removable(struct spdk_iscsi_conn *conn, int lun_id)
+{
+	struct spdk_iscsi_task *task;
+
+	TAILQ_FOREACH(task, &conn->active_r2t_tasks, link) {
+		if (task->lun_id == lun_id) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static void
+spdk_iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
+{
+	struct spdk_scsi_desc *desc;
+	struct spdk_scsi_lun *lun;
+
+	if (lun_id < 0 || lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
+		return;
+	}
+
+	desc = conn->open_lun_descs[lun_id];
+	if (desc == NULL) {
+		return;
+	}
+
+	lun = spdk_scsi_dev_get_lun(conn->dev, lun_id);
+	spdk_scsi_lun_free_io_channel(lun);
+
+	spdk_scsi_lun_close(desc);
+
+	conn->open_lun_descs[lun_id] = NULL;
+}
+
+static void
+spdk_iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
+{
+	int i;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		spdk_iscsi_conn_close_lun(conn, i);
+	}
+}
+
+struct spdk_iscsi_hotremove_ctx {
+	struct spdk_scsi_lun	*lun;
+	struct spdk_iscsi_conn	*conn;
+	struct spdk_poller	*poller;
+};
+
+static int
+spdk_iscsi_conn_remove_lun_poll(void *ctx)
+{
+	struct spdk_iscsi_hotremove_ctx *remove_ctx = ctx;
+	struct spdk_iscsi_conn *conn;
+	struct spdk_scsi_lun *lun;
+	int lun_id;
+
+	conn = remove_ctx->conn;
+	lun = remove_ctx->lun;
+	lun_id = spdk_scsi_lun_get_id(lun);
+
+	if (spdk_iscsi_conn_check_lun_removable(conn, lun_id)) {
+		return -1;
+	}
+	spdk_poller_unregister(&remove_ctx->poller);
+
+	spdk_iscsi_conn_close_lun(conn, lun_id);
+
+	free(remove_ctx);
+	return -1;
+}
+
+static void
+spdk_iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *_remove_ctx)
+{
+	struct spdk_iscsi_conn *conn = _remove_ctx;
+	struct spdk_iscsi_hotremove_ctx *remove_ctx;
+
+	remove_ctx = malloc(sizeof(*remove_ctx));
+	if (remove_ctx == NULL) {
+		SPDK_ERRLOG("malloc() failed for hot removal of LUN\n");
+
+		spdk_iscsi_conn_close_lun(conn, spdk_scsi_lun_get_id(lun));
+		return;
+	}
+
+	remove_ctx->lun = lun;
+	remove_ctx->conn = conn;
+
+	remove_ctx->poller = spdk_poller_register(spdk_iscsi_conn_remove_lun_poll,
+			     remove_ctx, 10);
+}
+
+static void
+spdk_iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
+{
+	int i, rc;
+	struct spdk_scsi_lun *lun;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		lun = spdk_scsi_dev_get_lun(conn->dev, i);
+		if (lun == NULL) {
+			continue;
+		}
+
+		rc = spdk_scsi_lun_open(lun, spdk_iscsi_conn_remove_lun, conn,
+					&conn->open_lun_descs[i]);
+		if (rc != 0) {
+			spdk_iscsi_conn_close_luns(conn);
+			return;
+		}
+		spdk_scsi_lun_allocate_io_channel(lun);
+	}
+}
+
 /**
  *  This function will stop executing the specified connection.
  */
@@ -608,7 +725,7 @@ spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 		pthread_mutex_unlock(&target->mutex);
 
 		assert(conn->dev != NULL);
-		spdk_scsi_dev_free_io_channels(conn->dev);
+		spdk_iscsi_conn_close_luns(conn);
 	}
 
 	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
@@ -1172,7 +1289,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		assert(conn->dev != NULL);
-		spdk_scsi_dev_allocate_io_channels(conn->dev);
+		spdk_iscsi_conn_open_luns(conn);
 	}
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
