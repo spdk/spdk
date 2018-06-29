@@ -305,63 +305,6 @@ basic(void)
 	teardown_test();
 }
 
-static int
-poller_run_done(void *ctx)
-{
-	bool	*poller_run = ctx;
-
-	*poller_run = true;
-
-	return -1;
-}
-
-static void
-basic_poller(void)
-{
-	struct spdk_poller	*poller = NULL;
-	bool			poller_run = false;
-
-	setup_test();
-
-	set_thread(0);
-	reset_time();
-	/* Register a poller with no-wait time and test execution */
-	poller = spdk_poller_register(poller_run_done, &poller_run, 0);
-	CU_ASSERT(poller != NULL);
-
-	poll_threads();
-	CU_ASSERT(poller_run == true);
-
-	spdk_poller_unregister(&poller);
-	CU_ASSERT(poller == NULL);
-
-	/* Register a poller with 1000us wait time and test single execution */
-	poller_run = false;
-	poller = spdk_poller_register(poller_run_done, &poller_run, 1000);
-	CU_ASSERT(poller != NULL);
-
-	poll_threads();
-	CU_ASSERT(poller_run == false);
-
-	increment_time(1000);
-	poll_threads();
-	CU_ASSERT(poller_run == true);
-
-	reset_time();
-	poller_run = false;
-	poll_threads();
-	CU_ASSERT(poller_run == false);
-
-	increment_time(1000);
-	poll_threads();
-	CU_ASSERT(poller_run == true);
-
-	spdk_poller_unregister(&poller);
-	CU_ASSERT(poller == NULL);
-
-	teardown_test();
-}
-
 static void
 reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
@@ -1227,7 +1170,6 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "basic", basic) == NULL ||
-		CU_add_test(suite, "basic_poller", basic_poller) == NULL ||
 		CU_add_test(suite, "basic_qos", basic_qos) == NULL ||
 		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
 		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
