@@ -780,7 +780,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	/* ack the disconnect event before rdma_destroy_id */
 	rdma_ack_cm_event(evt);
 
-	spdk_nvmf_qpair_disconnect(qpair);
+	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 
 	return 0;
 }
