@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "5a3d264e_c1db8231",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T09:28:48Z",
+      "side": 1,
+      "message": "I like standard includes and they say:\n\n  /*\n   * __virtio{16,32,64} have the following meaning:\n   * - __u{16,32,64} for virtio devices in legacy mode, accessed in native endian\n   * - __le{16,32,64} for standard-compliant virtio devices\n   */\n\n  typedef __u16 __bitwise__ __virtio16;\n  typedef __u32 __bitwise__ __virtio32;\n  typedef __u64 __bitwise__ __virtio64;\n\nSo when Ubuntu 14.04 will be EoL we can change this. Also __virtioXX have additional __bitwise__ attribute that can be used with code analizers.",
+      "parentUuid": "ae8833fa_042a2ce6",
+      "range": {
+        "startLine": 401,
+        "startChar": 0,
+        "endLine": 401,
+        "endChar": 80
+      },
+      "revId": "577064c166bd0ca6d83e47f2d99513248b53cc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5702238b_64db05b0",
         "filename": "lib/vhost/rte_vhost/vhost_user.c",
         "patchSetId": 18
