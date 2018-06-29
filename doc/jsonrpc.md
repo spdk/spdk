@@ -1085,12 +1085,18 @@ Example response:
 
 # Logical Volume {#jsonrpc_components_lvol}
 
-Identification of logical volume store is explained first.
+Identification of logical volume store and logical volume is explained first.
 
 A logical volume store has a UUID and a name for its identification.
 The UUID is generated on creation and it can be used as a unique identifier.
 The name is specified on creation and can be renamed.
 Either UUID or name is used to access logical volume store in RPCs.
+
+A logical volume has a UUID and a name for its identification.
+The UUID of the logical volume is generated on creation and it can be unique identifier.
+The alias of the logical volume takes the format _lvs_name/lvol_name_ where:
+* _lvs_name_ is the name of the logical volume store. _lvs_name_ may be renamed.
+* _lvol_name_ is specified on creation and can be renamed.
 
 ## construct_lvol_store {#rpc_construct_lvoL_store}
 
@@ -1237,6 +1243,300 @@ Example request:
   "params": {
     "old_name": "LVS0",
     "new_name": "LVS2"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_lvoL_bdev {#rpc_construct_lvol_bdev}
+
+Create a logical volume on a logical volume store.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+lvol_name               | Required | string      | Name of logical volume to create
+size                    | Required | number      | Desired size of logical volume in bytes
+thin_provision          | Optional | boolean     | True to enable thin provisioning
+uuid                    | Optional | String      | UUID of logical volume store to create logical volume on
+lvs_name                | Optional | String      | Name of logical volume store to create logical volume on
+
+Size will be rounded up to a multiple of cluster size. Either uuid or lvs_name must be specified, but not both.
+lvol_name will be used in the alias of the created logical volume.
+
+### Response
+
+UUID of the created logical volume is returned.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "construct_lvol_bdev",
+  "id": 1,
+  "params": {
+    "lvol_name": "LVOL0",
+    "size": 1048576,
+    "lvs_name": "LVS0",
+    "thin_provision": true
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "1b38702c-7f0c-411e-a962-92c6a5a8a602"
+}
+~~~
+
+## snapshot_lvol_bdev {#rpc_snapshot_lvol_bdev}
+
+Capture a snapshot of the current state of a logical volume.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+lvol_name               | Required | string      | UUID of the logical volume to create a snapshot from
+snapshot_name           | Required | string      | Name for the newly created snapshot
+
+### Response
+
+UUID of the created logical volume snapshot is returned.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "snapshot_lvol_bdev",
+  "id": 1,
+  "params": {
+    "lvol_name": "1b38702c-7f0c-411e-a962-92c6a5a8a602",
+    "snapshot_name": "SNAP1"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "cc8d7fdf-7865-4d1f-9fc6-35da8e368670"
+}
+~~~
+
+## clone_lvol_bdev {#rpc_clone_lvol_bdev}
+
+Create a logical volume based on a snapshot.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+snapshot_name           | Required | string      | UUID of the snapshot to clone
+clone_name              | Required | string      | UUID of the logical volume to create
+
+### Response
+
+UUID of the created logical volume clone is returned.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0"
+  "method": "clone_lvol_bdev",
+  "id": 1,
+  "params": {
+    "snapshot_name": "cc8d7fdf-7865-4d1f-9fc6-35da8e368670",
+    "clone_name": "CLONE1"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "8d87fccc-c278-49f0-9d4c-6237951aca09"
+}
+~~~
+
+## rename_lvol_bdev {#rpc_rename_lvol_bdev}
+
+Rename a logical volume. New name will rename only the alias of the logical volume.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+old_name                | Required | string      | Existing logical volume UUID
+new_name                | Required | string      | New logical volume name
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "rename_lvol_bdev",
+  "id": 1,
+  "params": {
+    "old_name": "067df606-6dbc-4143-a499-0d05855cb3b8",
+    "new_name": "LVOL2"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## resize_lvol_bdev {#rpc_resize_lvol_bdev}
+
+Resize a logical volume.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | UUID of the logical volume to resize
+size                    | Required | number      | Desired size of logical volume in bytes
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "resize_lvol_bdev",
+  "id": 1,
+  "params": {
+    "name": "51638754-ca16-43a7-9f8f-294a0805ab0a",
+    "size": 2097152
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## destroy_lvol_bdev {#rpc_destroy_lvol_bdev}
+
+Destroy a logical volume.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | UUID of the logical volume to destroy
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "destroy_lvol_bdev",
+  "id": 1,
+  "params": {
+    "name": "51638754-ca16-43a7-9f8f-294a0805ab0a"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## inflate_lvol_bdev {#rpc_inflate_lvol_bdev}
+
+Inflate a logical volume.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | UUID of the logical volume to inflate
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "inflate_lvol_bdev",
+  "id": 1,
+  "params": {
+    "name": "8d87fccc-c278-49f0-9d4c-6237951aca09"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## decouple_parent_lvol_bdev {#rpc_decouple_parent_lvol_bdev}
+
+Decouple the parent of a logical volume.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | UUID of the logical volume to decouple the parent of it
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "inflate_lvol_bdev",
+  "id": 1.
+  "params": {
+    "name": "8d87fccc-c278-49f0-9d4c-6237951aca09"
   }
 }
 ~~~
