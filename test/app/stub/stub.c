@@ -141,6 +141,7 @@ main(int argc, char **argv)
 	opts.max_delay_us = 1000 * 1000;
 
 	ch = spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id, NULL);
+	spdk_app_fini();
 
 	return ch;
 }
