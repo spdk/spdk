@@ -174,6 +174,12 @@ configuring 8192MB memory.
 sudo HUGEMEM=8192 scripts/setup.sh
 ~~~
 
+SPDK application can be started with specified amount of hugepage memory.
+Generally speaking, the more devices attached and more targets exposed, the more
+hugepage memory is required. Starting with DPDK 18.05, however, the hugepages
+can be reserved and freed dynamically, meaning that SPDK applications can be
+started even with zero hugepage memory specified.
+
 <a id="examples"></a>
 ## Example Code
 

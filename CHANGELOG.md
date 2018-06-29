@@ -2,6 +2,12 @@
 
 ## v18.07: (Upcoming Release)
 
+### Memory
+
+Added support for DPDK 18.05 dynamic memory allocation. SPDK apps can now be
+started with very little or even zero hugepage memory as required hugepages
+will be allocated and freed at runtime.
+
 ### Log
 
 The debug log component flag has been renamed from `-t` to `-L` to prevent confusion
