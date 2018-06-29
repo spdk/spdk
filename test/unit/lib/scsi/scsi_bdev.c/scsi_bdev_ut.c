@@ -44,6 +44,10 @@ struct spdk_scsi_globals g_spdk_scsi;
 
 static uint64_t g_test_bdev_num_blocks;
 
+TAILQ_HEAD(, spdk_bdev_io_wait_entry) g_io_wait_queue;
+
+bool g_bdev_io_pool_full = false;
+
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
@@ -135,6 +139,13 @@ spdk_put_task(struct spdk_scsi_task *task)
 	task->iov.iov_base = NULL;
 	task->iov.iov_len = 0;
 	task->alloc_len = 0;
+	while (!TAILQ_EMPTY(&g_io_wait_queue)) {
+		struct spdk_bdev_io_wait_entry *entry;
+
+		entry = TAILQ_FIRST(&g_io_wait_queue);
+		TAILQ_REMOVE(&g_io_wait_queue, entry, link);
+		entry->cb_fn(entry->cb_arg);
+	}
 }
 
 
@@ -182,6 +193,10 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 static int
 _spdk_bdev_io_op(spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	if (g_bdev_io_pool_full) {
+		g_bdev_io_pool_full = false;
+		return -ENOMEM;
+	}
 	return 0;
 }
 
@@ -223,6 +238,14 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return _spdk_bdev_io_op(cb, cb_arg);
+}
+
+int
+spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			struct spdk_bdev_io_wait_entry *entry)
+{
+	TAILQ_INSERT_TAIL(&g_io_wait_queue, entry, link);
+	return 0;
 }
 
 /*
@@ -741,7 +764,7 @@ xfer_len_test(void)
 }
 
 static void
-xfer_test(void)
+_xfer_test(bool bdev_io_pool_full)
 {
 	struct spdk_bdev bdev;
 	struct spdk_scsi_lun lun;
@@ -764,6 +787,7 @@ xfer_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 1); /* transfer length */
 	task.transfer_len = 1 * 512;
+	g_bdev_io_pool_full = bdev_io_pool_full;
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -779,6 +803,7 @@ xfer_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 1); /* transfer length */
 	task.transfer_len = 1 * 512;
+	g_bdev_io_pool_full = bdev_io_pool_full;
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -798,6 +823,7 @@ xfer_test(void)
 	to_be64(&data[24], 10); /* LBA 10 */
 	to_be32(&data[32], 3); /* 3 blocks */
 	spdk_scsi_task_set_data(&task, data, sizeof(data));
+	g_bdev_io_pool_full = bdev_io_pool_full;
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -813,6 +839,7 @@ xfer_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 1); /* transfer length */
 	task.transfer_len = 1 * 512;
+	g_bdev_io_pool_full = bdev_io_pool_full;
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -820,11 +847,20 @@ xfer_test(void)
 	spdk_put_task(&task);
 }
 
+static void
+xfer_test(void)
+{
+	_xfer_test(false);
+	_xfer_test(true);
+}
+
 int
 main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
+
+	TAILQ_INIT(&g_io_wait_queue);
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
