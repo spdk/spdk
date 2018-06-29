@@ -222,6 +222,176 @@ Example response:
 }
 ~~~
 
+## get_subsystems {#rpc_get_subsystems}
+
+Get an array of name and dependency relationship of SPDK subsystems in initialization order.
+
+### Parameters
+
+None
+
+### Response
+
+The response is an array of name and dependency relationship of SPDK subsystems in initialization order.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_subsystems"
+}
+~~~
+
+Example response:
+response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "subsystem": "copy",
+      "depends_on": []
+    },
+    {
+      "subsystem": "interface",
+      "depends_on": []
+    },
+    {
+      "subsystem": "net_framework",
+      "depends_on": [
+        "interface"
+      ]
+    },
+    {
+      "subsystem": "bdev",
+      "depends_on": [
+        "copy"
+      ]
+    },
+    {
+      "subsystem": "nbd",
+      "depends_on": [
+        "bdev"
+      ]
+    },
+    {
+      "subsystem": "nvmf",
+      "depends_on": [
+        "bdev"
+      ]
+    },
+    {
+      "subsystem": "scsi",
+      "depends_on": [
+        "bdev"
+      ]
+    },
+    {
+      "subsystem": "vhost",
+      "depends_on": [
+        "scsi"
+      ]
+    },
+    {
+      "subsystem": "iscsi",
+      "depends_on": [
+        "scsi"
+      ]
+    }
+  ]
+}
+~~~
+
+## get_subsystem_config {#rpc_get_subsystem_config}
+
+Get current configuration of the specified SPDK subsystem
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | SPDK subsystem name
+
+SPDK subsystems whose current configuration can be retrieved by get_subsystem_config are the following:
+* bdev
+* iscsi
+* nbd
+* nvmf
+* vhost
+
+### Response
+
+The response is current configuration of the specfied SPDK subsystem.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_subsystem_config",
+  "params": {
+    "name": "bdev"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "params": {
+        "base_bdev": "Malloc2",
+        "split_size_mb": 0,
+        "split_count": 2
+      },
+      "method": "construct_split_vbdev"
+    },
+    {
+      "params": {
+        "trtype": "PCIe",
+        "name": "Nvme1",
+        "traddr": "0000:01:00.0"
+      },
+      "method": "construct_nvme_bdev"
+    },
+    {
+      "params": {
+        "trtype": "PCIe",
+        "name": "Nvme2",
+        "traddr": "0000:03:00.0"
+      },
+      "method": "construct_nvme_bdev"
+    },
+    {
+      "params": {
+        "block_size": 512,
+        "num_blocks": 131072,
+        "name": "Malloc0",
+        "uuid": "913fc008-79a7-447f-b2c4-c73543638c31"
+      },
+      "method": "construct_malloc_bdev"
+    },
+    {
+      "params": {
+        "block_size": 512,
+        "num_blocks": 131072,
+        "name": "Malloc1",
+        "uuid": "dd5b8f6e-b67a-4506-b606-7fff5a859920"
+      },
+      "method": "construct_malloc_bdev"
+    }
+  ]
+}
+~~~
+
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## set_bdev_options {#rpc_set_bdev_options}
