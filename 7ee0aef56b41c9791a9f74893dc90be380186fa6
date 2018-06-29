@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf7c1725_5625fef3",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T16:11:06Z",
+      "side": 1,
+      "message": "I changed this to hotremove to fix nasty bug here https://review.gerrithub.io/393674\n\nI\u0027m afraid this will revive this bug.",
+      "range": {
+        "startLine": 239,
+        "startChar": 2,
+        "endLine": 239,
+        "endChar": 28
+      },
+      "revId": "7ee0aef56b41c9791a9f74893dc90be380186fa6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
