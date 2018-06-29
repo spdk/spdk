@@ -111,6 +111,117 @@ Example response:
 }
 ~~~
 
+## get_rpc_methods {#rpc_get_rpc_methods}
+
+Get an array of supported RPC methods.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+current                 | Optional | boolean     | Get an array of RPC methods only callable in the current state.
+
+### Response
+
+The response is an array of supported RPC methods.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_rpc_methods"
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    "start_subsystem_init",
+    "get_rpc_methods",
+    "get_scsi_devices",
+    "get_interfaces",
+    "delete_ip_address",
+    "add_ip_address",
+    "get_nbd_disks",
+    "stop_nbd_disk",
+    "start_nbd_disk",
+    "get_trace_flags",
+    "clear_trace_flag",
+    "set_trace_flag",
+    "get_log_level",
+    "set_log_level",
+    "get_log_print_level",
+    "set_log_print_level",
+    "get_iscsi_global_params",
+    "target_node_add_lun",
+    "get_iscsi_connections",
+    "delete_portal_group",
+    "add_portal_group",
+    "get_portal_groups",
+    "delete_target_node",
+    "delete_pg_ig_maps",
+    "add_pg_ig_maps",
+    "construct_target_node",
+    "get_target_nodes",
+    "delete_initiator_group",
+    "delete_initiators_from_initiator_group",
+    "add_initiators_to_initiator_group",
+    "add_initiator_group",
+    "get_initiator_groups",
+    "set_iscsi_options",
+    "set_bdev_options",
+    "set_bdev_qos_limit_iops",
+    "delete_bdev",
+    "get_bdevs_config",
+    "get_bdevs",
+    "get_bdevs_iostat",
+    "get_subsystem_config",
+    "get_subsystems",
+    "context_switch_monitor",
+    "kill_instance",
+    "scan_ioat_copy_engine",
+    "construct_virtio_dev",
+    "construct_virtio_pci_blk_bdev",
+    "construct_virtio_user_blk_bdev",
+    "get_virtio_scsi_devs",
+    "remove_virtio_scsi_bdev",
+    "construct_virtio_pci_scsi_bdev",
+    "construct_virtio_user_scsi_bdev",
+    "delete_aio_bdev",
+    "construct_aio_bdev",
+    "destruct_split_vbdev",
+    "construct_split_vbdev",
+    "bdev_inject_error",
+    "delete_error_bdev",
+    "construct_error_bdev",
+    "construct_passthru_bdev",
+    "apply_nvme_firmware",
+    "construct_nvme_bdev",
+    "construct_null_bdev",
+    "delete_malloc_bdev",
+    "construct_malloc_bdev",
+    "get_lvol_stores",
+    "destroy_lvol_bdev",
+    "resize_lvol_bdev",
+    "decouple_parent_lvol_bdev",
+    "inflate_lvol_bdev",
+    "rename_lvol_bdev",
+    "clone_lvol_bdev",
+    "snapshot_lvol_bdev",
+    "construct_lvol_bdev",
+    "destroy_lvol_store",
+    "rename_lvol_store",
+    "construct_lvol_store"
+  ]
+}
+~~~
+
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## set_bdev_options {#rpc_set_bdev_options}
