@@ -16,6 +16,24 @@
       "revId": "4eac50be283ac7242b38e80f7e52bfdd53e61abe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4dde5a9b_47686ef9",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-29T14:29:27Z",
+      "side": 1,
+      "message": "If there is no master channel there is no polling of iSCSI context so if target send eg NOP-out we can\u0027t response to it and connection might timed out and terminated - like I observed during long debug session :)\n\nbdev_iscsi_no_master_ch_poll is synchronized using mutex and ch_count - see bdev_iscsi_no_master_ch_poll function.\n\nAs you already observed this is pointless to move this code here as we already have a master channel and efectivly makes whole bdev_iscsi_no_master_ch_poll() dead code.\n\nOnly way to sefault here is that bdev_iscsi_destruct_cb() is called from different core than create_iscsi_lun(). Ziye can you check it by putting proper assert in bdev_iscsi_destruct_cb()?",
+      "parentUuid": "fc539d4a_785946f3",
+      "revId": "4eac50be283ac7242b38e80f7e52bfdd53e61abe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
