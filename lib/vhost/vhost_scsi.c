@@ -823,11 +823,6 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 		return -EINVAL;
 	}
 
-	if (vdev->lcore != -1 && !spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vdev->name);
-		return -ENOTSUP;
-	}
-
 	if (svdev->scsi_dev[scsi_tgt_num] != NULL) {
 		SPDK_ERRLOG("Controller %s target %u already occupied\n", vdev->name, scsi_tgt_num);
 		return -EEXIST;
@@ -852,13 +847,25 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 	}
 	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_tgt_num], 0, "vhost");
 
-	if (vdev->lcore != -1) {
-		spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[scsi_tgt_num]);
-		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_RESCAN);
-	}
-
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: defined target '%s' using bdev '%s'\n",
 		     vdev->name, target_name, bdev_name);
+
+	if (vdev->lcore == -1) {
+		/* All done. */
+		return 0;
+	}
+
+	spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[scsi_tgt_num]);
+
+	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET,
+			       VIRTIO_SCSI_EVT_RESET_RESCAN);
+	} else {
+		SPDK_NOTICELOG("Device %s does not support hotplug. "
+			       "Please restart the driver or perform a rescan.\n",
+			       vdev->name);
+	}
+
 	return 0;
 }
 
