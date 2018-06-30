@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "81f2d640_fec7fa16",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-30T14:52:53Z",
+      "side": 1,
+      "message": "This is needed to support the smaller memory configurations in the vagrant platforms. I\u0027ve changed this from NRHUGE to HUGEMEM.",
+      "parentUuid": "517f3ae6_6bdf1f6d",
+      "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a908498_fafede45",
         "filename": "test/nvme/hotplug.sh",
         "patchSetId": 5
