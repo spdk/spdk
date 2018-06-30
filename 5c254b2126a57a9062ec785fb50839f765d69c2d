@@ -16,6 +16,24 @@
       "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6603588_673bab3e",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-30T14:49:04Z",
+      "side": 0,
+      "message": "I\u0027ve fixed this with my last patch",
+      "parentUuid": "fb4d19bc_20a5587d",
+      "revId": "5c254b2126a57a9062ec785fb50839f765d69c2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

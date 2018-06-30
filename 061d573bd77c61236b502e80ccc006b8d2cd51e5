@@ -34,6 +34,24 @@
       "revId": "061d573bd77c61236b502e80ccc006b8d2cd51e5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9017a3b6_10874767",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-30T14:49:04Z",
+      "side": 1,
+      "message": "Note that I had to add --allowerasing to the openssl-devel in pkgdep.sh.  I\u0027m leaving this here because it doesn\u0027t hurt to run this twice.  My goal with these changes it to make calling vm_setup.sh idempotent.",
+      "parentUuid": "a0ce5642_83787969",
+      "revId": "061d573bd77c61236b502e80ccc006b8d2cd51e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
