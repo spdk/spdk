@@ -16,6 +16,24 @@
       "revId": "1cff8f922e284ff31dbe706a893cb7f6d265f07e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b03d0cb_25914edb",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-06-30T15:13:43Z",
+      "side": 1,
+      "message": "I\u0027d like these scripts to be as generic as possible so I\u0027ve removed the dependency on getopt.  create_vbox.sh now uses getopts and I\u0027ve tested it with both OS X 10.11 and OS X 10.12.\n\nSo, hopefully you can deinstall gnu-getopt and see that this works now.",
+      "parentUuid": "3b083a23_0f478459",
+      "revId": "1cff8f922e284ff31dbe706a893cb7f6d265f07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
