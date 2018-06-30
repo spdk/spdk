@@ -113,12 +113,11 @@ for dev in $devs; do
 	echo ""
 done
 
-$rpc_py delete_error_bdev EE_Malloc0
-
 trap - SIGINT SIGTERM EXIT
 
 rm -f $testdir/iscsi.conf
 iscsicleanup
+$rpc_py delete_error_bdev EE_Malloc0
 killprocess $pid
 report_test_completion "nightly_iscsi_ext4test"
 timing_exit ext4test
