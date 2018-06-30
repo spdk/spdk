@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75b443c3_fa336a08",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-30T06:10:08Z",
+      "side": 1,
+      "message": "I will move this to the place after iscsicleanup. So after that please add delete_nvmebdev just below that.",
+      "revId": "0f8feb75858939feb38b46a85f3be09e6f6622c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
