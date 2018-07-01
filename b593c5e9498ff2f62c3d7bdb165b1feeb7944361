@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a630c593_baffc349",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-01T21:09:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52a07040_4810cb34",
+      "range": {
+        "startLine": 8,
+        "startChar": 9,
+        "endLine": 8,
+        "endChar": 29
+      },
+      "revId": "b593c5e9498ff2f62c3d7bdb165b1feeb7944361",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a98a7653_d2f01d16",
         "filename": "test/vhost/initiator/json_config.sh",
         "patchSetId": 45
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-29T06:17:04Z",
       "side": 1,
       "message": "connect_to_vhost_devices_from_initiator or connect_to_vhost_devices?",
+      "range": {
+        "startLine": 27,
+        "startChar": 9,
+        "endLine": 27,
+        "endChar": 25
+      },
+      "revId": "b593c5e9498ff2f62c3d7bdb165b1feeb7944361",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e19c09f_071bab47",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-01T21:09:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a98a7653_d2f01d16",
       "range": {
         "startLine": 27,
         "startChar": 9,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "42f52b6b_c8c92ec3",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-01T21:09:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ab47f22f_054b6101",
+      "range": {
+        "startLine": 32,
+        "startChar": 15,
+        "endLine": 32,
+        "endChar": 21
+      },
+      "revId": "b593c5e9498ff2f62c3d7bdb165b1feeb7944361",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18b4d7b7_553917c2",
         "filename": "test/vhost/initiator/json_config.sh",
         "patchSetId": 45
@@ -82,6 +154,24 @@
       "writtenOn": "2018-06-29T06:17:04Z",
       "side": 1,
       "message": "is this duplicated with the line 48? Or clear_config is called above the line 48?",
+      "revId": "b593c5e9498ff2f62c3d7bdb165b1feeb7944361",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "caee0f55_d67390ef",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-01T21:09:24Z",
+      "side": 1,
+      "message": "Test_json_config method is designed for spdk_tgt and virtio initiator so it is needed to redefine clear_config_py (spdk target socket).",
+      "parentUuid": "18b4d7b7_553917c2",
       "revId": "b593c5e9498ff2f62c3d7bdb165b1feeb7944361",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "798108b3_60809586",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-01T21:09:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4e888016_12af5239",
+      "range": {
+        "startLine": 58,
+        "startChar": 1,
+        "endLine": 58,
+        "endChar": 22
+      },
+      "revId": "b593c5e9498ff2f62c3d7bdb165b1feeb7944361",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b180eb1_def36e37",
         "filename": "test/vhost/initiator/json_config.sh",
         "patchSetId": 45
@@ -122,6 +236,30 @@
       "writtenOn": "2018-06-29T06:17:04Z",
       "side": 1,
       "message": "add timing enter and exit?",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 15
+      },
+      "revId": "b593c5e9498ff2f62c3d7bdb165b1feeb7944361",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c32616d5_3164e5c4",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-01T21:09:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b180eb1_def36e37",
       "range": {
         "startLine": 63,
         "startChar": 0,
