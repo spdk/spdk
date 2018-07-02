@@ -47,7 +47,8 @@
 #include "spdk_internal/virtio.h"
 
 #define VIRTIO_USER_SUPPORTED_PROTOCOL_FEATURES \
-	((1ULL << VHOST_USER_PROTOCOL_F_MQ))
+	((1ULL << VHOST_USER_PROTOCOL_F_MQ) | \
+	(1ULL << VHOST_USER_PROTOCOL_F_CONFIG))
 
 static int
 virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
