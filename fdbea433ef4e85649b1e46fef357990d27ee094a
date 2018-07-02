@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "39a100b5_c6ac2690",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T02:14:20Z",
+      "side": 1,
+      "message": "Thank you for very nice proposal.\n\nI will add list of SPDK subsystems supported by get_subsystem_config. get_subsystems provides list of SPDK subsystems but user cannot know if each is supported or not by get_subsystem_config.",
+      "parentUuid": "f24cfeaa_8bd4d232",
+      "range": {
+        "startLine": 303,
+        "startChar": 51,
+        "endLine": 303,
+        "endChar": 70
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73825af9_1849c3d4",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-29T16:27:42Z",
       "side": 1,
       "message": "Does the output differ by bdev type? Or is it the same for Malloc and NVMe bdev? Having at least 1 NVMe example would help.",
+      "range": {
+        "startLine": 355,
+        "startChar": 6,
+        "endLine": 359,
+        "endChar": 54
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6729db7b_71115c40",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T02:14:20Z",
+      "side": 1,
+      "message": "Yes, some variety is desirable and I\u0027ll add nvme and split bdevs. Thank you.",
+      "parentUuid": "73825af9_1849c3d4",
       "range": {
         "startLine": 355,
         "startChar": 6,
