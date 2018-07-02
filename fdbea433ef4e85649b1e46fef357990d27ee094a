@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "6bdca243_f86fbb4f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-02T08:09:15Z",
+      "side": 1,
+      "message": "I think that get_subsystems should be sufficient for getting list of subsystem. If subsystem don\u0027t support configuration it will produce empty configuration - this note can be added here. But documentation of specific subsystem should contain all doc about it\u0027s configuration.",
+      "parentUuid": "39a100b5_c6ac2690",
+      "range": {
+        "startLine": 303,
+        "startChar": 51,
+        "endLine": 303,
+        "endChar": 70
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73825af9_1849c3d4",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "Yes, some variety is desirable and I\u0027ll add nvme and split bdevs. Thank you.",
       "parentUuid": "73825af9_1849c3d4",
+      "range": {
+        "startLine": 355,
+        "startChar": 6,
+        "endLine": 359,
+        "endChar": 54
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7699acc7_39c7fb1a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-02T08:09:15Z",
+      "side": 1,
+      "message": "This is only an example. I think it is fine as is. Only some note can be made in description of rpc_get_subsystem_config that format depend from subsystem we are querying an use need to check the format in that subsystem doc.",
+      "parentUuid": "6729db7b_71115c40",
       "range": {
         "startLine": 355,
         "startChar": 6,
