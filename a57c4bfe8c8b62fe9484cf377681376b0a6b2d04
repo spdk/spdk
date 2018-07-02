@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84d47edc_e15de52d",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-02T18:28:12Z",
+      "side": 1,
+      "message": "The commit message says what is changed, but it does not explain why.\n\nWhat is this fixing?  What is the reason for the change?\n\nIs there some documentation from Ceph/librbd that specifies what flags need to be specified when creating the eventfd for rbd_set_image_notification()? The example code from Ceph does not specify EFD_SEMAPHORE: https://github.com/ceph/ceph/blob/master/src/test/librbd/test_librbd.cc",
+      "revId": "a57c4bfe8c8b62fe9484cf377681376b0a6b2d04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
