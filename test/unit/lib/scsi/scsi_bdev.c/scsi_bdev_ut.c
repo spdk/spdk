@@ -46,6 +46,9 @@ static uint64_t g_test_bdev_num_blocks;
 
 TAILQ_HEAD(, spdk_bdev_io) g_bdev_io_queue;
 
+TAILQ_HEAD(, spdk_bdev_io_wait_entry) g_io_wait_queue;
+bool g_bdev_io_pool_full = false;
+
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
@@ -189,12 +192,21 @@ static void
 ut_bdev_io_flush(void)
 {
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_io_wait_entry *entry;
 
-	while (!TAILQ_EMPTY(&g_bdev_io_queue)) {
-		bdev_io = TAILQ_FIRST(&g_bdev_io_queue);
-		TAILQ_REMOVE(&g_bdev_io_queue, bdev_io, internal.link);
-		bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
-		free(bdev_io);
+	while (!TAILQ_EMPTY(&g_bdev_io_queue) || !TAILQ_EMPTY(&g_io_wait_queue)) {
+		while (!TAILQ_EMPTY(&g_bdev_io_queue)) {
+			bdev_io = TAILQ_FIRST(&g_bdev_io_queue);
+			TAILQ_REMOVE(&g_bdev_io_queue, bdev_io, internal.link);
+			bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
+			free(bdev_io);
+		}
+
+		while (!TAILQ_EMPTY(&g_io_wait_queue)) {
+			entry = TAILQ_FIRST(&g_io_wait_queue);
+			TAILQ_REMOVE(&g_io_wait_queue, entry, link);
+			entry->cb_fn(entry->cb_arg);
+		}
 	}
 }
 
@@ -202,6 +214,11 @@ static int
 _spdk_bdev_io_op(spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
+
+	if (g_bdev_io_pool_full) {
+		g_bdev_io_pool_full = false;
+		return -ENOMEM;
+	}
 
 	bdev_io = calloc(1, sizeof(*bdev_io));
 	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
@@ -252,6 +269,14 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return _spdk_bdev_io_op(cb, cb_arg);
+}
+
+int
+spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			struct spdk_bdev_io_wait_entry *entry)
+{
+	TAILQ_INSERT_TAIL(&g_io_wait_queue, entry, link);
+	return 0;
 }
 
 /*
@@ -787,7 +812,7 @@ xfer_len_test(void)
 }
 
 static void
-xfer_test(void)
+_xfer_test(bool bdev_io_pool_full)
 {
 	struct spdk_bdev bdev;
 	struct spdk_scsi_lun lun;
@@ -810,9 +835,12 @@ xfer_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 1); /* transfer length */
 	task.transfer_len = 1 * 512;
+	g_bdev_io_pool_full = bdev_io_pool_full;
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
-	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	if (bdev_io_pool_full == false) {
+		CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	}
 
 	ut_bdev_io_flush();
 	CU_ASSERT(task.status == SPDK_SCSI_TASK_COMPLETE);
@@ -827,9 +855,12 @@ xfer_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 1); /* transfer length */
 	task.transfer_len = 1 * 512;
+	g_bdev_io_pool_full = bdev_io_pool_full;
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
-	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	if (bdev_io_pool_full == false) {
+		CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	}
 
 	ut_bdev_io_flush();
 	CU_ASSERT(task.status == SPDK_SCSI_TASK_COMPLETE);
@@ -848,6 +879,7 @@ xfer_test(void)
 	to_be64(&data[24], 10); /* LBA 10 */
 	to_be32(&data[32], 3); /* 3 blocks */
 	spdk_scsi_task_set_data(&task, data, sizeof(data));
+	g_bdev_io_pool_full = bdev_io_pool_full;
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -865,13 +897,23 @@ xfer_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 1); /* transfer length */
 	task.transfer_len = 1 * 512;
+	g_bdev_io_pool_full = bdev_io_pool_full;
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
-	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	if (bdev_io_pool_full == false) {
+		CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	}
 
 	ut_bdev_io_flush();
 	CU_ASSERT(task.status == SPDK_SCSI_TASK_COMPLETE);
 	ut_put_task(&task);
+}
+
+static void
+xfer_test(void)
+{
+	_xfer_test(false);
+	_xfer_test(true);
 }
 
 int
@@ -881,6 +923,7 @@ main(int argc, char **argv)
 	unsigned int	num_failures;
 
 	TAILQ_INIT(&g_bdev_io_queue);
+	TAILQ_INIT(&g_io_wait_queue);
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
