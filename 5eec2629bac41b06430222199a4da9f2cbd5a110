@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "b0ba5a8c_7a35d885",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 1091,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-02T19:40:54Z",
+      "side": 1,
+      "message": "This capitalized L in lvoL looks accidental.",
+      "range": {
+        "startLine": 1091,
+        "startChar": 43,
+        "endLine": 1091,
+        "endChar": 44
+      },
+      "revId": "5eec2629bac41b06430222199a4da9f2cbd5a110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "490b4833_c2faa47b",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 4
