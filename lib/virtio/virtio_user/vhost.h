@@ -47,6 +47,10 @@
 #define VHOST_USER_PROTOCOL_F_MQ	0
 #endif
 
+#ifndef VHOST_USER_PROTOCOL_F_CONFIG
+#define VHOST_USER_PROTOCOL_F_CONFIG	9
+#endif
+
 enum vhost_user_request {
 	VHOST_USER_NONE = 0,
 	VHOST_USER_GET_FEATURES = 1,
