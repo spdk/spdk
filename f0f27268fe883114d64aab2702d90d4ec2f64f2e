@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d6ae49c_ea73d4fc",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-02T04:55:54Z",
+      "side": 1,
+      "message": "I don\u0027t think you should add the check here, after LUN is constructed, users may set LUN\u0027s hotremove_cb.",
+      "revId": "f0f27268fe883114d64aab2702d90d4ec2f64f2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
