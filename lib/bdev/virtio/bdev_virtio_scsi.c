@@ -337,8 +337,14 @@ virtio_pci_scsi_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 		return NULL;
 	}
 
-	virtio_dev_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
-				   &num_queues, sizeof(num_queues));
+	rc = virtio_dev_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
+					&num_queues, sizeof(num_queues));
+	if (rc) {
+		SPDK_ERRLOG("%s: config read failed: %s\n", vdev->name, spdk_strerror(-rc));
+		virtio_dev_destruct(vdev);
+		free(svdev);
+		return NULL;
+	}
 
 	rc = virtio_scsi_dev_init(svdev, num_queues);
 	if (rc != 0) {
