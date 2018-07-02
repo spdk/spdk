@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5a473226_ec455945",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T02:13:39Z",
+      "side": 1,
+      "message": "Thank you for correcting me and I agree with you it will be helpful if we can use lvol_name in RPCs.",
+      "parentUuid": "11678cb9_5e7a454f",
+      "range": {
+        "startLine": 1237,
+        "startChar": 0,
+        "endLine": 1237,
+        "endChar": 60
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b6aae3c_2d64c630",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-29T15:38:41Z",
       "side": 1,
       "message": "It would be good to mention in the beggining of \"# Logical Volume\" chapter that name might be UUID or alias (\"lvol_store_name/lvol_name\")",
+      "range": {
+        "startLine": 1273,
+        "startChar": 51,
+        "endLine": 1273,
+        "endChar": 91
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cfb7dfc_b7857599",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1273,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T02:13:39Z",
+      "side": 1,
+      "message": "Thank you for nice suggestion. I\u0027ll add explanation in the beginning of the chapter of Logical Volume.",
+      "parentUuid": "5b6aae3c_2d64c630",
       "range": {
         "startLine": 1273,
         "startChar": 51,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "0c0d02c9_425a2b6f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1278,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T02:13:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ebc17d4b_9ad11346",
+      "range": {
+        "startLine": 1278,
+        "startChar": 0,
+        "endLine": 1278,
+        "endChar": 4
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e60cfd7_58b31c50",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 2
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "4fff1059_9bff0325",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1317,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T02:13:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e60cfd7_58b31c50",
+      "range": {
+        "startLine": 1317,
+        "startChar": 0,
+        "endLine": 1317,
+        "endChar": 4
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bbd67ff1_878447a0",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 2
@@ -105,6 +201,30 @@
       "writtenOn": "2018-06-29T15:38:41Z",
       "side": 1,
       "message": "It would be good to metion that this renames only the alias not the bdev not lvol UUID itself.\n\nBTW I think this RPC call should be called \"rename_lvol\"",
+      "range": {
+        "startLine": 1345,
+        "startChar": 0,
+        "endLine": 1345,
+        "endChar": 24
+      },
+      "revId": "63f8b1c3412f33401589a5acd733dd8a235f0186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05feb0ae_dbe23b2e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1345,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T02:13:39Z",
+      "side": 1,
+      "message": "Thank you, I\u0027ll explain that.\n\nAs you say, the relationship of the alias and UUID is not be clear, and the name of RPCs and their parameters should be reconsidered.\n\nI\u0027ll do in separate patches.",
+      "parentUuid": "bbd67ff1_878447a0",
       "range": {
         "startLine": 1345,
         "startChar": 0,
