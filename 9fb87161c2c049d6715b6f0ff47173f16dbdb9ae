@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c5fa560_cfc7a3e0",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T21:48:43Z",
+      "side": 1,
+      "message": "Using the ref here originally was a bad idea.  We should keep track of how many partitions were created in the gpt_base structure itself.  Then check that value here.  Then we can remove the spdk_bdev_part_base_get_ref() call from the public API.",
+      "revId": "9fb87161c2c049d6715b6f0ff47173f16dbdb9ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "093702fd_781896e3",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T21:48:43Z",
+      "side": 1,
+      "message": "I think here you can just assert that cfg-\u003esplit_base \u003d\u003d NULL.",
+      "revId": "9fb87161c2c049d6715b6f0ff47173f16dbdb9ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
