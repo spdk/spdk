@@ -46,6 +46,9 @@
 
 #include "spdk_internal/virtio.h"
 
+#define VIRTIO_USER_SUPPORTED_PROTOCOL_FEATURES \
+	(0)
+
 static int
 virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 {
@@ -286,6 +289,7 @@ static int
 virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
+	uint64_t protocol_features;
 	int ret;
 
 	ret = dev->ops->send_request(dev, VHOST_USER_SET_FEATURES, &features);
@@ -295,6 +299,22 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 
 	vdev->negotiated_features = features;
 	vdev->modern = virtio_dev_has_feature(vdev, VIRTIO_F_VERSION_1);
+
+	if (virtio_dev_has_feature(vdev, VHOST_USER_F_PROTOCOL_FEATURES)) {
+		/* nothing else to do */
+		return 0;
+	}
+
+	ret = dev->ops->send_request(dev, VHOST_USER_GET_PROTOCOL_FEATURES, &protocol_features);
+	if (ret < 0) {
+		return -1;
+	}
+
+	protocol_features &= VIRTIO_USER_SUPPORTED_PROTOCOL_FEATURES;
+	ret = dev->ops->send_request(dev, VHOST_USER_SET_PROTOCOL_FEATURES, &protocol_features);
+	if (ret < 0) {
+		return -1;
+	}
 
 	return 0;
 }
@@ -312,6 +332,7 @@ static int
 virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
+	struct vhost_vring_state state;
 	uint16_t queue_idx = vq->vq_queue_index;
 	uint64_t desc_addr, avail_addr, used_addr;
 	int callfd;
@@ -336,6 +357,16 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	if (kickfd < 0) {
 		SPDK_ERRLOG("kickfd error, %s\n", spdk_strerror(errno));
 		close(callfd);
+		return -1;
+	}
+
+	state.index = vq->vq_queue_index;
+	state.num = 0;
+
+	if (virtio_dev_has_feature(vdev, VHOST_USER_F_PROTOCOL_FEATURES) &&
+	    dev->ops->send_request(dev, VHOST_USER_SET_VRING_ENABLE, &state) < 0) {
+		SPDK_ERRLOG("failed to send VHOST_USER_SET_VRING_ENABLE: %s\n",
+				spdk_strerror(errno));
 		return -1;
 	}
 

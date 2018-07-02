@@ -314,12 +314,14 @@ vhost_user_sock(struct virtio_user_dev *dev,
 
 	switch (req) {
 	case VHOST_USER_GET_FEATURES:
+	case VHOST_USER_GET_PROTOCOL_FEATURES:
 	case VHOST_USER_GET_QUEUE_NUM:
 		need_reply = 1;
 		break;
 
 	case VHOST_USER_SET_FEATURES:
 	case VHOST_USER_SET_LOG_BASE:
+	case VHOST_USER_SET_PROTOCOL_FEATURES:
 		msg.payload.u64 = *((__u64 *)arg);
 		msg.size = sizeof(msg.payload.u64);
 		break;
