@@ -214,7 +214,7 @@ virtio_user_dev_setup(struct virtio_dev *vdev)
 	return 0;
 }
 
-static void
+static int
 virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 			    void *dst, int length)
 {
@@ -226,13 +226,14 @@ virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 
 	if (dev->ops->send_request(dev, VHOST_USER_GET_CONFIG, &cfg) < 0) {
 		SPDK_ERRLOG("get_config failed: %s\n", spdk_strerror(errno));
-		return;
+		return -errno;
 	}
 
 	memcpy(dst, cfg.region + offset, length);
+	return 0;
 }
 
-static void
+static int
 virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 			     const void *src, int length)
 {
@@ -245,8 +246,10 @@ virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_CONFIG, &cfg) < 0) {
 		SPDK_ERRLOG("set_config failed: %s\n", spdk_strerror(errno));
-		return;
+		return -errno;
 	}
+
+	return 0;
 }
 
 static void

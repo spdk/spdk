@@ -98,9 +98,9 @@ struct virtio_dev {
 };
 
 struct virtio_dev_ops {
-	void (*read_dev_cfg)(struct virtio_dev *hw, size_t offset,
+	int (*read_dev_cfg)(struct virtio_dev *hw, size_t offset,
 			     void *dst, int len);
-	void (*write_dev_cfg)(struct virtio_dev *hw, size_t offset,
+	int (*write_dev_cfg)(struct virtio_dev *hw, size_t offset,
 			      const void *src, int len);
 	uint8_t (*get_status)(struct virtio_dev *hw);
 	void (*set_status)(struct virtio_dev *hw, uint8_t status);
@@ -390,8 +390,9 @@ void virtio_dev_set_status(struct virtio_dev *vdev, uint8_t flag);
  * \param offset offset in bytes
  * \param src pointer to data to copy from
  * \param len length of data to copy in bytes
+ * \return 0 on success, negative errno otherwise
  */
-void virtio_dev_write_dev_config(struct virtio_dev *vdev, size_t offset, const void *src, int len);
+int virtio_dev_write_dev_config(struct virtio_dev *vdev, size_t offset, const void *src, int len);
 
 /**
  * Read raw data from the device config at given offset.  This call does not
@@ -401,8 +402,9 @@ void virtio_dev_write_dev_config(struct virtio_dev *vdev, size_t offset, const v
  * \param offset offset in bytes
  * \param dst pointer to buffer to copy data into
  * \param len length of data to copy in bytes
+ * \return 0 on success, negative errno otherwise
  */
-void virtio_dev_read_dev_config(struct virtio_dev *vdev, size_t offset, void *dst, int len);
+int virtio_dev_read_dev_config(struct virtio_dev *vdev, size_t offset, void *dst, int len);
 
 /**
  * Get backend-specific ops for given device.
