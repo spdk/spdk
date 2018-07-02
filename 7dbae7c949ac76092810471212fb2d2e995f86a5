@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac14d9dd_4566ac2d",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-02T09:41:04Z",
+      "side": 1,
+      "message": "I would like to deprecate all \"construct_virtio_*\" RPC calls except \"construct_virtio_dev\" so introducing those will make us one step backward here. Can you invent generic \"remove_virtio_dev\" that will remove any Virtio device (blk, scsi, nvme etc) using the base name only?",
+      "range": {
+        "startLine": 488,
+        "startChar": 19,
+        "endLine": 488,
+        "endChar": 41
+      },
+      "revId": "7dbae7c949ac76092810471212fb2d2e995f86a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
