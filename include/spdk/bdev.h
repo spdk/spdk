@@ -112,14 +112,18 @@ enum spdk_bdev_qos_type {
 	SPDK_BDEV_QOS_INVALID_RATE_LIMIT = 0,
 	/** IOPS rate limit for both read and write */
 	SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT = 1 << 0,
-	/** Byte per second rate limit for both read and write */
-	SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT = 1 << 1,
 	/** IOPS rate limit for read only */
-	SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT = 1 << 2,
+	SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT = 1 << 1,
 	/** IOPS rate limit for write only */
-	SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT = 1 << 3,
+	SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT = 1 << 2,
+	/** Byte per second rate limit for both read and write */
+	SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT = 1 << 3,
+	/** Byte per second rate limit for read only */
+	SPDK_BDEV_QOS_R_BPS_RATE_LIMIT = 1 << 4,
+	/** Byte per second rate limit for write only */
+	SPDK_BDEV_QOS_W_BPS_RATE_LIMIT = 1 << 5,
 	/** Keep last */
-	SPDK_BDEV_QOS_NUM_TYPES = 1 << 4
+	SPDK_BDEV_QOS_NUM_TYPES = 1 << 6
 };
 
 /** bdev QoS rate limit value */
@@ -132,6 +136,10 @@ struct spdk_bdev_qos_rate_limits {
 	int32_t w_ios_per_sec;
 	/** Read/Write megabytes per second */
 	int32_t rw_mbytes_per_sec;
+	/** Read only megabytes per second */
+	int32_t r_mbytes_per_sec;
+	/** Write only megabytes per second */
+	int32_t w_mbytes_per_sec;
 };
 
 /**
