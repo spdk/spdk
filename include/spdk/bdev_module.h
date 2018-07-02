@@ -219,14 +219,14 @@ struct spdk_bdev {
 	/** Unique product name for this kind of block device. */
 	char *product_name;
 
+	/** write cache enabled, not used at the moment */
+	int write_cache;
+
 	/** Size in bytes of a logical block for the backend */
 	uint32_t blocklen;
 
 	/** Number of blocks */
 	uint64_t blockcnt;
-
-	/** write cache enabled, not used at the moment */
-	int write_cache;
 
 	/**
 	 * This is used to make sure buffers are sector aligned.
