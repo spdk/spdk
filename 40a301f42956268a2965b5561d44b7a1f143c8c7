@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9468e29_8e0cd9cc",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T04:12:05Z",
+      "side": 1,
+      "message": "it looks fine but hwloc tool may be better to be utilized in the end.",
+      "revId": "40a301f42956268a2965b5561d44b7a1f143c8c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a14554da_b6966451",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T04:12:05Z",
+      "side": 1,
+      "message": "Would you add any comment about the allocation policy, i.e., all vm_cpus must be in the same numa node?",
+      "revId": "40a301f42956268a2965b5561d44b7a1f143c8c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de9348e6_19df0f03",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T04:12:05Z",
+      "side": 1,
+      "message": "Will you add help doc for spdk_cpu_list?",
+      "revId": "40a301f42956268a2965b5561d44b7a1f143c8c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac428e03_f1d0f0bd",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T04:12:05Z",
+      "side": 1,
+      "message": "Will you add any help doc? \n\nI don\u0027t think this is good but for example \n\"Specify custom values for vhost\u0027s reactor mask and master core, and each VM\u0027s qemu mask and qemu numa node\".",
+      "revId": "40a301f42956268a2965b5561d44b7a1f143c8c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be144923_aedaf507",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T04:12:05Z",
+      "side": 1,
+      "message": "I cannot find from where cpu_cfg_arg is referenced.",
+      "range": {
+        "startLine": 154,
+        "startChar": 4,
+        "endLine": 154,
+        "endChar": 15
+      },
+      "revId": "40a301f42956268a2965b5561d44b7a1f143c8c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
