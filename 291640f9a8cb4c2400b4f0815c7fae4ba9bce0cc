@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b953f70_b2e756a3",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T04:36:16Z",
+      "side": 1,
+      "message": "this space should be removed?",
+      "range": {
+        "startLine": 50,
+        "startChar": 1,
+        "endLine": 50,
+        "endChar": 2
+      },
+      "revId": "291640f9a8cb4c2400b4f0815c7fae4ba9bce0cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

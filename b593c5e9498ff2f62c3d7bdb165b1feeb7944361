@@ -178,6 +178,24 @@
     },
     {
       "key": {
+        "uuid": "311602e6_1e6d938e",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T04:36:16Z",
+      "side": 1,
+      "message": "Thank you, I understood.",
+      "parentUuid": "caee0f55_d67390ef",
+      "revId": "b593c5e9498ff2f62c3d7bdb165b1feeb7944361",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e888016_12af5239",
         "filename": "test/vhost/initiator/json_config.sh",
         "patchSetId": 45
