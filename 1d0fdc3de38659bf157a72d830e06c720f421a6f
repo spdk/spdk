@@ -16,6 +16,24 @@
       "revId": "1d0fdc3de38659bf157a72d830e06c720f421a6f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "784a70b5_194cae33",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T21:29:44Z",
+      "side": 1,
+      "message": "Previous patches should ensure that all pending tasks sent to backend block driver have already been completed.\n\nBut I think instead of polling for all of these to be completed here, can we instead actively abort them from the remove_lun callback?  Something like the existing spdk_clear_all_transfer_task.",
+      "parentUuid": "16328354_ded62731",
+      "revId": "1d0fdc3de38659bf157a72d830e06c720f421a6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
