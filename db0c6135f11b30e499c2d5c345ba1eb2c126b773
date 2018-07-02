@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef2eb219_0f5963e6",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T19:11:59Z",
+      "side": 1,
+      "message": "I don\u0027t think we should assert SCSI_STATUS_GOOD here.  At this point, the IO isn\u0027t actually completed yet.  SCSI_STATUS_GOOD \u003d\u003d 0x00, and we memset the task to 0\u0027s which is why this assert passes.\n\nIt would probably be better to initialize status to something invalid (0xFF?) and assert here that it is still invalid - meaning the SCSI layer didn\u0027t set it yet.  Then assert that status \u003d\u003d SCSI_STATUS_GOOD after you flush the IO.\n\nOther tests in this file already do this check, so this is just another case of that.  But now that you have the flush functionality in place, it would be better to fix these asserts I think.  Maybe as part of a separate patch before this one - that fixes the existing STATUS_GOOD asserts when the IO is pending?",
+      "revId": "db0c6135f11b30e499c2d5c345ba1eb2c126b773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d88666a_2184fe84",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 845,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T19:11:59Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "db0c6135f11b30e499c2d5c345ba1eb2c126b773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02bbc00b_18b6a9a9",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T19:11:59Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "db0c6135f11b30e499c2d5c345ba1eb2c126b773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
