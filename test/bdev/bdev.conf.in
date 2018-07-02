@@ -38,4 +38,5 @@
   # multiple of 10
   # Assign 100 (MB) bandwidth for the Malloc3 block
   # device
-  Limit_BWPS Malloc3 100
+  Limit_BPS Malloc3 100
+  Limit_Write_BPS AIO1 40

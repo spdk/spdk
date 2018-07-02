@@ -622,12 +622,18 @@ basic_qos(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable read/write IOPS, read only IOPS and bandwidth rate limits.
-	 * In this case, both rate limits will take equal effect.
+	 * Enable read/write IOPS, read only IOPS, read/write bandwidth
+	 * and read only bandwidth rate limits.
+	 * In this case, all rate limits will take equal effect.
 	 */
-	bdev->internal.qos->iops_rate_limit = 2000; /* 2 read/write I/O per millisecond */
-	bdev->internal.qos->read_iops_rate_limit = 2000; /* 2 read only I/O per millisecond */
-	bdev->internal.qos->byte_rate_limit = 8192000; /* 8K byte per millisecond with 4K block size */
+	/* 2 read/write I/O per millisecond */
+	bdev->internal.qos->iops_rate_limit = 2000;
+	/* 2 read only I/O per millisecond */
+	bdev->internal.qos->read_iops_rate_limit = 2000;
+	/* 8K byte per millisecond with 4K block size */
+	bdev->internal.qos->byte_rate_limit = 8192000;
+	/* 8K read byte per millisecond with 4K block size */
+	bdev->internal.qos->read_byte_rate_limit = 8192000;
 
 	g_get_io_channel = true;
 
@@ -731,8 +737,9 @@ io_during_qos_queue(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable read/write IOPS, read only IOPS and bandwidth rate limits.
-	 * In this case, IOPS rate limit will take effect first.
+	 * Enable read/write IOPS, read only IOPS, read/write bandwidth
+	 * and write only bandwidth rate limits.
+	 * In this case, read only IOPS rate limit will take effect first.
 	 */
 	/* 2000 read/write I/O per second, or 2 per millisecond */
 	bdev->internal.qos->iops_rate_limit = 2000;
@@ -740,6 +747,8 @@ io_during_qos_queue(void)
 	bdev->internal.qos->read_iops_rate_limit = 1000;
 	/* 8K byte per millisecond with 4K block size */
 	bdev->internal.qos->byte_rate_limit = 8192000;
+	/* 8K write byte per millisecond with 4K block size */
+	bdev->internal.qos->write_byte_rate_limit = 8192000;
 
 	g_get_io_channel = true;
 
@@ -823,15 +832,19 @@ io_during_qos_reset(void)
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
 	/*
-	 * Enable read/write IOPS, write only IOPS and bandwidth rate limits.
-	 * In this case, bandwidth rate limit will take effect first.
+	 * Enable read/write IOPS, write only IOPS, read/write bandwidth
+	 * and write only bandwidth rate limits.
+	 * In this case, write only bandwidth rate limit will take effect
+	 * first.
 	 */
 	/* 2000 read/write I/O per second, or 2 per millisecond */
 	bdev->internal.qos->iops_rate_limit = 2000;
 	/* 1000 write only I/O per second, or 1 per millisecond */
 	bdev->internal.qos->write_iops_rate_limit = 1000;
-	/* 4K byte per millisecond with 4K block size */
-	bdev->internal.qos->byte_rate_limit = 4096000;
+	/* 8K byte per millisecond with 4K block size */
+	bdev->internal.qos->byte_rate_limit = 8192000;
+	/* 4K write byte per millisecond with 4K block size */
+	bdev->internal.qos->write_byte_rate_limit = 4096000;
 
 	g_get_io_channel = true;
 
