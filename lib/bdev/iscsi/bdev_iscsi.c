@@ -139,7 +139,10 @@ static void
 bdev_iscsi_lun_cleanup(struct bdev_iscsi_lun *lun)
 {
 	TAILQ_REMOVE(&g_iscsi_lun_head, lun, link);
-	iscsi_destroy_context(lun->context);
+
+	/* Comment out this line since there is defect in some versions in libscsi */
+	//iscsi_destroy_context(lun->context);
+
 	iscsi_free_lun(lun);
 	if (TAILQ_EMPTY(&g_iscsi_lun_head) && g_finish_in_process) {
 		bdev_iscsi_finish_done();
