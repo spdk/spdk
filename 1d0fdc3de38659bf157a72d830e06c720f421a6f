@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16328354_ded62731",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-02T09:39:06Z",
+      "side": 1,
+      "message": "I think here we should also check other pending tasks which already sent to the backend block driver.",
+      "revId": "1d0fdc3de38659bf157a72d830e06c720f421a6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
