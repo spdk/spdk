@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5129947_8bca02e4",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-02T21:13:39Z",
+      "side": 1,
+      "message": "Extra space inserted before pmempool?",
+      "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7eb43f89_4bf4a97d",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-02T21:13:39Z",
+      "side": 1,
+      "message": "Installing openssl-devel again shouldn\u0027t be needed - it\u0027s installed by pkgdep.sh now.",
+      "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66e8f593_3f1abc43",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-02T21:13:39Z",
+      "side": 1,
+      "message": "libiscsi-devel is also installed in pkgdep.sh.",
+      "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b85e16f_4e89291c",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-02T21:13:39Z",
+      "side": 1,
+      "message": "This shouldn\u0027t hurt, but I\u0027m not sure why it\u0027s needed - $git_param will expand to the empty string if it isn\u0027t set.",
+      "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b6a343c_e14489ed",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-02T21:13:39Z",
+      "side": 1,
+      "message": "Mixed tabs/spaces.",
+      "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
