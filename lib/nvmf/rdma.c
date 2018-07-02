@@ -301,6 +301,7 @@ struct spdk_nvmf_rdma_port {
 	struct spdk_nvmf_rdma_device		*device;
 	uint32_t				ref;
 	TAILQ_ENTRY(spdk_nvmf_rdma_port)	link;
+	struct spdk_nvme_hooks                 *hooks;
 };
 
 struct spdk_nvmf_rdma_transport {
@@ -395,9 +396,18 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	struct ibv_qp_init_attr		attr;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	struct spdk_nvmf_rdma_request	*rdma_req;
+	struct spdk_nvmf_rdma_port	*port;
+	struct spdk_nvme_hooks          *hooks;
+	struct ibv_pd                   *pd = NULL;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
+	port = rqpair->port;
+	hooks = port->hooks;
+
+	if (hooks) {
+		pd = hooks->get_ibv_pd(hooks->hook_ctx, rqpair->cm_id->verbs, &port->trid);
+	}
 
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
 	attr.qp_type		= IBV_QPT_RC;
@@ -408,7 +418,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	attr.cap.max_send_sge	= SPDK_NVMF_MAX_SGL_ENTRIES;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
-	rc = rdma_create_qp(rqpair->cm_id, NULL, &attr);
+	rc = rdma_create_qp(rqpair->cm_id, pd, &attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
 		rdma_destroy_id(rqpair->cm_id);
@@ -661,6 +671,53 @@ spdk_nvmf_rdma_event_reject(struct rdma_cm_id *id, enum spdk_nvmf_rdma_transport
 	rdma_reject(id, &rej_data, sizeof(rej_data));
 }
 
+static
+uint64_t get_rkey(void *hook_ctx, void *buf, size_t size)
+{
+	struct ibv_mr *mr;
+
+	mr = ibv_reg_mr(NULL, buf, size,
+			IBV_ACCESS_LOCAL_WRITE |
+			IBV_ACCESS_REMOTE_READ |
+			IBV_ACCESS_REMOTE_WRITE);
+
+	if (mr == NULL) {
+		return -1;
+	}
+
+	return mr->rkey;
+}
+
+static
+struct ibv_pd *get_ibv_pd(void *hook_ctx, struct ibv_context *verbs,
+			  const struct spdk_nvme_transport_id *trid)
+{
+	return NULL;
+}
+
+void
+spdk_init_hooks(struct spdk_nvme_hooks *hooks, struct sockaddr *src_addr)
+{
+	hooks->hook_ctx = NULL;
+	hooks->get_ibv_pd = get_ibv_pd;
+	hooks->get_rkey = get_rkey;
+}
+
+static void *
+nvmf_rdma_init_hooks(struct sockaddr *src_addr)
+{
+	struct spdk_nvme_hooks *hooks = malloc(sizeof(struct spdk_nvme_hooks));
+
+	if (!hooks) {
+		SPDK_ERRLOG("hooks is NULL\n");
+		return NULL;
+	}
+
+	spdk_init_hooks(hooks, src_addr);
+
+	return hooks;
+}
+
 static int
 nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event,
 		  new_qpair_fn cb_fn)
@@ -699,6 +756,11 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	port = event->listen_id->context;
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Listen Id was %p with verbs %p. ListenAddr: %p\n",
 		      event->listen_id, event->listen_id->verbs, port);
+
+	/*
+	* Initializing hooks
+	*/
+	nvmf_rdma_init_hooks(NULL);
 
 	/* Figure out the supported queue depth. This is a multi-step process
 	 * that takes into account hardware maximums, host provided values,
@@ -902,9 +964,13 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
 				 struct spdk_nvmf_rdma_request *rdma_req)
 {
-	void		*buf = NULL;
-	uint32_t	length = rdma_req->req.length;
-	uint32_t	i = 0;
+	void		            *buf = NULL;
+	uint32_t	             length = rdma_req->req.length;
+	uint32_t	             i = 0;
+	struct spdk_nvmf_rdma_recv  *recv = rdma_req->recv;
+	struct spdk_nvmf_rdma_qpair *qpair = recv->qpair;
+	struct spdk_nvmf_rdma_port  *port = qpair->port;
+	struct spdk_nvme_hooks      *hooks = port->hooks;
 
 	rdma_req->req.iovcnt = 0;
 	while (length) {
@@ -920,8 +986,14 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 		rdma_req->data.buffers[i] = buf;
 		rdma_req->data.wr.sg_list[i].addr = (uintptr_t)(rdma_req->req.iov[i].iov_base);
 		rdma_req->data.wr.sg_list[i].length = rdma_req->req.iov[i].iov_len;
-		rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-						     (uint64_t)buf, rdma_req->req.iov[i].iov_len))->lkey;
+
+		if (hooks) {
+			rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+							     (uint64_t)buf, rdma_req->req.iov[i].iov_len));
+		} else {
+			rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+							     (uint64_t)buf, rdma_req->req.iov[i].iov_len))->lkey;
+		}
 
 		length -= rdma_req->req.iov[i].iov_len;
 		i++;
