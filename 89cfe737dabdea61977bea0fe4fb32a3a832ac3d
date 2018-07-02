@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c341ec7_8e3782d9",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-07-02T16:56:53Z",
+      "side": 1,
+      "message": "I think your missing \"~~~\" here.\nThis is causing the rest of the sections not to render correctly.",
+      "range": {
+        "startLine": 250,
+        "startChar": 0,
+        "endLine": 250,
+        "endChar": 1
+      },
+      "revId": "89cfe737dabdea61977bea0fe4fb32a3a832ac3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
