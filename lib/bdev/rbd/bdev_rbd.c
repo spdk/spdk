@@ -499,7 +499,7 @@ bdev_rbd_create_cb(void *io_device, void *ctx_buf)
 		goto err;
 	}
 
-	ch->pfd.fd = eventfd(0, EFD_NONBLOCK);
+	ch->pfd.fd = eventfd(0, EFD_NONBLOCK | EFD_SEMAPHORE);
 	if (ch->pfd.fd < 0) {
 		SPDK_ERRLOG("Failed to get eventfd\n");
 		goto err;
