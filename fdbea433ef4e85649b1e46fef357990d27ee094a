@@ -121,6 +121,30 @@
     },
     {
       "key": {
+        "uuid": "580ebfae_540c3f80",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-02T16:19:51Z",
+      "side": 1,
+      "message": "Don\u0027t get my wrong but I\u0027m not a fan of additional code just to aid those who don\u0027t want to read documentation.\n\nIf subsystem does\u0027t implement write_json_config the get_subsystem config method will give you None as config. If subsystem produce empty array you know that it\u0027s cofiguration is empty (eg no vhost controllers to dump). This logic we can document.",
+      "parentUuid": "6b92a6d0_affbe0ab",
+      "range": {
+        "startLine": 303,
+        "startChar": 51,
+        "endLine": 303,
+        "endChar": 70
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73825af9_1849c3d4",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3
