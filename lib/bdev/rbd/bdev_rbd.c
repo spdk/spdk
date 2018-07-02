@@ -54,6 +54,8 @@
 
 static int bdev_rbd_count = 0;
 
+#define BDEV_RBD_POLL_US 50
+
 struct bdev_rbd {
 	struct spdk_bdev disk;
 	char *rbd_name;
@@ -512,7 +514,7 @@ bdev_rbd_create_cb(void *io_device, void *ctx_buf)
 		goto err;
 	}
 
-	ch->poller = spdk_poller_register(bdev_rbd_io_poll, ch, 0);
+	ch->poller = spdk_poller_register(bdev_rbd_io_poll, ch, BDEV_RBD_POLL_US);
 
 	return 0;
 
