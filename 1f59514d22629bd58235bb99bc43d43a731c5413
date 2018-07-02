@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da8d0e1a_2b4ae30e",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-02T07:45:19Z",
+      "side": 1,
+      "message": "I\u0027m not buying it. What bug, where it was reported? In which libiscsi version this bug is present and in which it is fixed? Stack trace from #340 indicate that we are polling the context so we think it is valid which I\u0027m almost sure it isn\u0027t.\nI suggested to trace cleanup path to see if this context (and whole lun/bdev) isn\u0027t destroyd from different thread that it should be.",
+      "range": {
+        "startLine": 143,
+        "startChar": 0,
+        "endLine": 144,
+        "endChar": 39
+      },
+      "revId": "1f59514d22629bd58235bb99bc43d43a731c5413",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
