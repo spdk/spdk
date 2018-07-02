@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe134e69_8ebabfeb",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-02T21:52:10Z",
+      "side": 1,
+      "message": "We don\u0027t normally give a name to nested unions like this, but if it does need a name (e.g. if we declare unions of this type elsewhere), it would be better to move the definition to the top level outside this struct and give it a nvmf_*-style name.\n\nIn this case, a union is probably not really worth the trouble; it saves a few bytes of memory at the cost of more complex/harder to understand code.  I would probably just move qpair and ctrlr to the outer struct and remove the union.",
+      "range": {
+        "startLine": 60,
+        "startChar": 7,
+        "endLine": 60,
+        "endChar": 14
+      },
+      "revId": "eba027d610bf2940349fb628acb22a6bb16fc851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2db8a142_6500c7ba",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-02T21:52:10Z",
+      "side": 1,
+      "message": "calloc() can fail, so this needs to check for qpair_ctx \u003d\u003d NULL and handle it somehow.",
+      "revId": "eba027d610bf2940349fb628acb22a6bb16fc851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
