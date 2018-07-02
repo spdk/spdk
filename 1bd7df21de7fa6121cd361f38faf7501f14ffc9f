@@ -22,6 +22,30 @@
       "revId": "1bd7df21de7fa6121cd361f38faf7501f14ffc9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abf92a99_b7ae03fe",
+        "filename": "test/vhost/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-02T15:15:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d59508b2_733d440b",
+      "range": {
+        "startLine": 7,
+        "startChar": 1,
+        "endLine": 7,
+        "endChar": 60
+      },
+      "revId": "1bd7df21de7fa6121cd361f38faf7501f14ffc9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
