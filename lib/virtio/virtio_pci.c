@@ -146,7 +146,7 @@ io_write64_twopart(uint64_t val, uint32_t *lo, uint32_t *hi)
 	spdk_mmio_write_4(hi, val >> 32);
 }
 
-static void
+static int
 modern_read_dev_config(struct virtio_dev *dev, size_t offset,
 		       void *dst, int length)
 {
@@ -165,9 +165,11 @@ modern_read_dev_config(struct virtio_dev *dev, size_t offset,
 
 		new_gen = spdk_mmio_read_1(&hw->common_cfg->config_generation);
 	} while (old_gen != new_gen);
+
+	return 0;
 }
 
-static void
+static int
 modern_write_dev_config(struct virtio_dev *dev, size_t offset,
 			const void *src, int length)
 {
@@ -178,6 +180,8 @@ modern_write_dev_config(struct virtio_dev *dev, size_t offset,
 	for (i = 0;  i < length; i++) {
 		spdk_mmio_write_1(((uint8_t *)hw->dev_cfg) + offset + i, *p++);
 	}
+
+	return 0;
 }
 
 static uint64_t

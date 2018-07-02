@@ -683,18 +683,18 @@ virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index)
 	pthread_mutex_unlock(&vdev->mutex);
 }
 
-void
+int
 virtio_dev_read_dev_config(struct virtio_dev *dev, size_t offset,
 			   void *dst, int length)
 {
-	virtio_dev_backend_ops(dev)->read_dev_cfg(dev, offset, dst, length);
+	return virtio_dev_backend_ops(dev)->read_dev_cfg(dev, offset, dst, length);
 }
 
-void
+int
 virtio_dev_write_dev_config(struct virtio_dev *dev, size_t offset,
 			    const void *src, int length)
 {
-	virtio_dev_backend_ops(dev)->write_dev_cfg(dev, offset, src, length);
+	return virtio_dev_backend_ops(dev)->write_dev_cfg(dev, offset, src, length);
 }
 
 void
