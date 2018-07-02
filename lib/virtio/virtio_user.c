@@ -47,7 +47,7 @@
 #include "spdk_internal/virtio.h"
 
 #define VIRTIO_USER_SUPPORTED_PROTOCOL_FEATURES \
-	(0)
+	((1ULL << VHOST_USER_PROTOCOL_F_MQ))
 
 static int
 virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
@@ -144,6 +144,15 @@ virtio_user_start_device(struct virtio_dev *vdev)
 	struct virtio_user_dev *dev = vdev->ctx;
 	uint64_t host_max_queues;
 	int ret;
+
+	if ((dev->protocol_features & (1ULL << VHOST_USER_PROTOCOL_F_MQ)) == 0 &&
+	    vdev->max_queues > 1 + vdev->fixed_queues_num) {
+		SPDK_WARNLOG("%s: requested %"PRIu16" request queues, but the "
+			     "host doesn't support VHOST_USER_PROTOCOL_F_MQ. "
+			     "Only one request queue will be used.\n",
+			     vdev->name, vdev->max_queues - vdev->fixed_queues_num);
+		vdev->max_queues = 1 + vdev->fixed_queues_num;
+	}
 
 	/* negotiate the number of I/O queues. */
 	ret = dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &host_max_queues);
