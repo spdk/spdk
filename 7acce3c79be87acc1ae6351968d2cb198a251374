@@ -16,6 +16,24 @@
       "revId": "7acce3c79be87acc1ae6351968d2cb198a251374",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8dfa3156_4f304989",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 1194,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-02T13:43:44Z",
+      "side": 1,
+      "message": "did it in examine real quick and it caused another minor issue so if nobody has any problems with using this callback I\u0027d prefer to keep it",
+      "parentUuid": "613ee376_4be9e3b7",
+      "revId": "7acce3c79be87acc1ae6351968d2cb198a251374",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
