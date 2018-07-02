@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3d5e31d_0b77ce26",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T06:44:04Z",
+      "side": 1,
+      "message": "assert(cfg-\u003esplit_base \u003d\u003d NULL || spdk_bdev_part_base_get_ref(cfg-\u003esplit_base) \u003d\u003d 0); ?",
+      "revId": "ed138f4b7c1a352c5fe1ea7395701d2f11cfb78f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
