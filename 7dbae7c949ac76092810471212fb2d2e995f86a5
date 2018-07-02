@@ -46,6 +46,30 @@
       "revId": "7dbae7c949ac76092810471212fb2d2e995f86a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70ad891c_56c74204",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-02T16:03:18Z",
+      "side": 1,
+      "message": "Deprecate by end of this release and remove in next. I checked that the amount of work won\u0027t be so big. For now you can try to delete blk controller, if this fail becouse of ENODEV try deleting SCSI dev. Ofcource this will require to assert that base controllers names are unique but this is not so hard to do. Or you can invent API to search a controller.",
+      "parentUuid": "9e174f53_5f6464a4",
+      "range": {
+        "startLine": 488,
+        "startChar": 19,
+        "endLine": 488,
+        "endChar": 41
+      },
+      "revId": "7dbae7c949ac76092810471212fb2d2e995f86a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
