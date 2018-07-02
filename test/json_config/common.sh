@@ -90,6 +90,17 @@ function remove_config_files_after_test_json_config() {
 	rm $tmp_config $full_config $null_json_config
 }
 
+function create_pmem_bdev_subsytem_config() {
+        $rpc_py create_pmem_pool /tmp/pool_file1 128 512
+        $rpc_py construct_pmem_bdev -n pmem1 /tmp/pool_file1
+}
+
+function clear_pmem_bdev_subsystem_config() {
+        if [ -f /tmp/pool_file1 ]; then
+                rm /tmp/pool_file1
+        fi
+}
+
 function create_bdev_subsystem_config() {
 	$rpc_py construct_split_vbdev Nvme0n1 2
 	$rpc_py construct_null_bdev Null0 32 512
