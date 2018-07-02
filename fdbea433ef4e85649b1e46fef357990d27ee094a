@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "6b92a6d0_affbe0ab",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T08:54:17Z",
+      "side": 1,
+      "message": "Uhm, we can\u0027t know if config is empty or not by spdk_subsystems. I\u0027ll update get_subsystems to inform if each subsystem provides or not configuration by get_subsystem_config.",
+      "parentUuid": "0f0dd772_7eb9b0a0",
+      "range": {
+        "startLine": 303,
+        "startChar": 51,
+        "endLine": 303,
+        "endChar": 70
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73825af9_1849c3d4",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3
