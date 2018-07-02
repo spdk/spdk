@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c0c6abd_df9b659b",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T05:50:26Z",
+      "side": 1,
+      "message": "disks",
+      "range": {
+        "startLine": 25,
+        "startChar": 92,
+        "endLine": 25,
+        "endChar": 96
+      },
+      "revId": "e6d6d162834221339e9ad2f32370671184d31c65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5acdc3e7_c66cb784",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T05:50:26Z",
+      "side": 1,
+      "message": "address. you will find in below too.",
+      "range": {
+        "startLine": 26,
+        "startChar": 40,
+        "endLine": 26,
+        "endChar": 46
+      },
+      "revId": "e6d6d162834221339e9ad2f32370671184d31c65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46c319de_f965dfee",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T05:50:26Z",
+      "side": 1,
+      "message": "you can refer this in common.sh as well.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 7
+      },
+      "revId": "e6d6d162834221339e9ad2f32370671184d31c65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c186aec8_afbfe0db",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T05:50:26Z",
+      "side": 1,
+      "message": "probably device number",
+      "range": {
+        "startLine": 95,
+        "startChar": 17,
+        "endLine": 95,
+        "endChar": 24
+      },
+      "revId": "e6d6d162834221339e9ad2f32370671184d31c65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
