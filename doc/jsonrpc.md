@@ -233,6 +233,7 @@ None
 ### Response
 
 The response is an array of name and dependency relationship of SPDK subsystems in initialization order.
+The response also includes status if configuration is retrievable for each SPDK subsystem.
 
 ### Example
 
@@ -246,60 +247,68 @@ Example request:
 ~~~
 
 Example response:
-response:
 {
   "jsonrpc": "2.0",
   "id": 1,
   "result": [
     {
       "subsystem": "copy",
-      "depends_on": []
+      "depends_on": [],
+      "config_retrievable": false
     },
     {
       "subsystem": "interface",
-      "depends_on": []
+      "depends_on": [],
+      "config_retrievable": false
     },
     {
       "subsystem": "net_framework",
       "depends_on": [
         "interface"
-      ]
+      ],
+      "config_retrievable": false
     },
     {
       "subsystem": "bdev",
       "depends_on": [
         "copy"
-      ]
+      ],
+      "config_retrievable": true
     },
     {
       "subsystem": "nbd",
       "depends_on": [
         "bdev"
-      ]
+      ],
+      "config_retrievable": true
     },
     {
       "subsystem": "nvmf",
       "depends_on": [
         "bdev"
-      ]
+      ],
+      "config_retrievable": true
     },
     {
       "subsystem": "scsi",
       "depends_on": [
         "bdev"
-      ]
+      ],
+      "config_retrievable": false
     },
     {
       "subsystem": "vhost",
       "depends_on": [
         "scsi"
-      ]
+      ],
+      "config_retrievable": true
     },
     {
       "subsystem": "iscsi",
       "depends_on": [
         "scsi"
-      ]
+      ],
+      "config_retrievable": true
     }
   ]
 }
@@ -315,12 +324,8 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | SPDK subsystem name
 
-SPDK subsystems whose current configuration can be retrieved by get_subsystem_config are the following:
-* bdev
-* iscsi
-* nbd
-* nvmf
-* vhost
+SPDK subsystems whose current configuration is retrievable by the get_subsystem_config method
+return the config_retrievable key by true in the get_subsystems method.
 
 ### Response
 
@@ -348,27 +353,10 @@ Example response:
   "result": [
     {
       "params": {
-        "base_bdev": "Malloc2",
-        "split_size_mb": 0,
-        "split_count": 2
+        "bdev_io_pool_size": 65536,
+        "bdev_io_cache_size": 256
       },
-      "method": "construct_split_vbdev"
-    },
-    {
-      "params": {
-        "trtype": "PCIe",
-        "name": "Nvme1",
-        "traddr": "0000:01:00.0"
-      },
-      "method": "construct_nvme_bdev"
-    },
-    {
-      "params": {
-        "trtype": "PCIe",
-        "name": "Nvme2",
-        "traddr": "0000:03:00.0"
-      },
-      "method": "construct_nvme_bdev"
+      "method": "set_bdev_options"
     },
     {
       "params": {
@@ -387,6 +375,14 @@ Example response:
         "uuid": "dd5b8f6e-b67a-4506-b606-7fff5a859920"
       },
       "method": "construct_malloc_bdev"
+    },
+    {
+      "params": {
+        "trtype": "PCIe",
+        "name": "Nvme1",
+        "traddr": "0000:01:00.0"
+      },
+      "method": "construct_nvme_bdev"
     }
   ]
 }
