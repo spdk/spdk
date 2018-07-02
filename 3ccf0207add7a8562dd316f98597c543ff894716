@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fefade9f_168adc12",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T19:00:43Z",
+      "side": 1,
+      "message": "could we just use the fields within spdk_bdev_io (cb, caller_ctx, link) instead of adding this new structure?\n\nthen g_bdev_io_queue can just be a TAILQ of spdk_bdev_io",
+      "revId": "3ccf0207add7a8562dd316f98597c543ff894716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "902818eb_1698a4c1",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T19:00:43Z",
+      "side": 1,
+      "message": "Let\u0027s pick a different name for this function.  Using spdk_ as a prefix makes it seem like this is part of the public SPDK bdev API, and that this is a stub for it.  For example, it is confusingly similar to spdk_bdev_flush_blocks().\n\nMaybe ut_bdev_io_flush?",
+      "revId": "3ccf0207add7a8562dd316f98597c543ff894716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
