@@ -44,6 +44,15 @@ struct spdk_scsi_globals g_spdk_scsi;
 
 static uint64_t g_test_bdev_num_blocks;
 
+struct bdev_io_queue {
+	struct spdk_bdev_io *bdev_io;
+	spdk_bdev_io_completion_cb cb;
+	void *cb_arg;
+	TAILQ_ENTRY(bdev_io_queue) link;
+};
+
+TAILQ_HEAD(, bdev_io_queue) g_bdev_io_queue;
+
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
@@ -126,6 +135,20 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 }
 
 static void
+spdk_bdev_io_flush(void)
+{
+	struct bdev_io_queue *queue_entry;
+
+	while (!TAILQ_EMPTY(&g_bdev_io_queue)) {
+		queue_entry = TAILQ_FIRST(&g_bdev_io_queue);
+		TAILQ_REMOVE(&g_bdev_io_queue, queue_entry, link);
+		queue_entry->cb(queue_entry->bdev_io, true, queue_entry->cb_arg);
+		free(queue_entry->bdev_io);
+		free(queue_entry);
+	}
+}
+
+static void
 spdk_put_task(struct spdk_scsi_task *task)
 {
 	if (task->alloc_len) {
@@ -179,12 +202,33 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 	*iovcntp = 0;
 }
 
+static int
+_spdk_bdev_io_op(spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct bdev_io_queue *queue_entry;
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = calloc(1, sizeof(*bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	queue_entry = calloc(1, sizeof(*queue_entry));
+	SPDK_CU_ASSERT_FATAL(queue_entry != NULL);
+	queue_entry->cb = cb;
+	queue_entry->cb_arg = cb_arg;
+	queue_entry->bdev_io = bdev_io;
+
+	TAILQ_INSERT_TAIL(&g_bdev_io_queue, queue_entry, link);
+
+	return 0;
+}
+
 int
 spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 int
@@ -193,7 +237,7 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		 uint64_t offset, uint64_t len,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 int
@@ -201,14 +245,14 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 int
 spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 int
@@ -216,7 +260,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 /*
@@ -663,6 +707,7 @@ lba_range_test(void)
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
 
+	spdk_bdev_io_flush();
 	spdk_put_task(&task);
 }
 
@@ -731,6 +776,7 @@ xfer_len_test(void)
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
 
+	spdk_bdev_io_flush();
 	spdk_put_task(&task);
 }
 
@@ -739,6 +785,8 @@ main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
+
+	TAILQ_INIT(&g_bdev_io_queue);
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
