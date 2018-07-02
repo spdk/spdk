@@ -68,6 +68,8 @@ spdk_rpc_get_subsystems(struct spdk_jsonrpc_request *request,
 			}
 		}
 		spdk_json_write_array_end(w);
+		spdk_json_write_named_bool(w, "config_retrievable",
+					   subsystem->write_config_json != NULL);
 
 		spdk_json_write_object_end(w);
 	}
