@@ -16,6 +16,24 @@
       "revId": "0f8feb75858939feb38b46a85f3be09e6f6622c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "377ea7bd_45ad879f",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-02T10:14:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75b443c3_fa336a08",
+      "revId": "0f8feb75858939feb38b46a85f3be09e6f6622c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
