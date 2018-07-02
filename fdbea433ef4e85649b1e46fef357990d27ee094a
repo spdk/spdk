@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "0f0dd772_7eb9b0a0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T08:49:03Z",
+      "side": 1,
+      "message": "Current get_subsystems don\u0027t provide any information if each subsystem produces configuration.\nWe can know if each subsystem produces configuration by calling get_subsystem_config with the name of it.\n\nOK, I\u0027ll add not about that instead of the list of current  subsystems which produces configuration.",
+      "parentUuid": "6bdca243_f86fbb4f",
+      "range": {
+        "startLine": 303,
+        "startChar": 51,
+        "endLine": 303,
+        "endChar": 70
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73825af9_1849c3d4",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3
@@ -132,6 +156,30 @@
       "side": 1,
       "message": "This is only an example. I think it is fine as is. Only some note can be made in description of rpc_get_subsystem_config that format depend from subsystem we are querying an use need to check the format in that subsystem doc.",
       "parentUuid": "6729db7b_71115c40",
+      "range": {
+        "startLine": 355,
+        "startChar": 6,
+        "endLine": 359,
+        "endChar": 54
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45dae3e6_e02f90f3",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T08:49:03Z",
+      "side": 1,
+      "message": "I can accept that my example is not realistic, and so changed the example.\n\nI will change the example to malloc_bdev x 2 + nvme_bdev x 1 (compromising between simple and realistic.)\n\nI agree that format of each subsystem configuration should be described in doc. This is the first step and I want to defer those tasks in later patches.\n\nAnyway thanks for nice feedback.",
+      "parentUuid": "7699acc7_39c7fb1a",
       "range": {
         "startLine": 355,
         "startChar": 6,
