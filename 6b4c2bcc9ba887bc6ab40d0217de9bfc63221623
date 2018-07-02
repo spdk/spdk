@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "81ff1b6b_f1726e79",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1102,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T02:13:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e21307a0_1ffdf94f",
+      "range": {
+        "startLine": 1102,
+        "startChar": 8,
+        "endLine": 1102,
+        "endChar": 10
+      },
+      "revId": "6b4c2bcc9ba887bc6ab40d0217de9bfc63221623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a407765_df5c4540",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-29T16:45:53Z",
       "side": 1,
       "message": "Looks like you have a trailing white space here.",
+      "range": {
+        "startLine": 1194,
+        "startChar": 11,
+        "endLine": 1194,
+        "endChar": 12
+      },
+      "revId": "6b4c2bcc9ba887bc6ab40d0217de9bfc63221623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59872714_05f5cd3c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1194,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T02:13:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a407765_df5c4540",
       "range": {
         "startLine": 1194,
         "startChar": 11,
