@@ -71,10 +71,8 @@ enum vhost_user_request {
 struct virtio_user_backend_ops;
 
 struct virtio_user_dev {
-	/* for vhost_user backend */
 	int		vhostfd;
 
-	/* for both vhost_user and vhost_kernel */
 	int		callfds[SPDK_VIRTIO_MAX_VIRTQUEUES];
 	int		kickfds[SPDK_VIRTIO_MAX_VIRTQUEUES];
 	uint32_t	queue_size;
@@ -101,6 +99,5 @@ struct vhost_user_config {
 };
 
 extern struct virtio_user_backend_ops ops_user;
-extern struct virtio_user_backend_ops ops_kernel;
 
 #endif

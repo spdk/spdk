@@ -365,8 +365,8 @@ virtio_user_del_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	 * For modern devices, set queue desc, avail, used in PCI bar to 0,
 	 * not see any more behavior in QEMU.
 	 *
-	 * Here we just care about what information to deliver to vhost-user
-	 * or vhost-kernel. So we just close ioeventfd for now.
+	 * Here we just care about what information to deliver to vhost-user.
+	 * So we just close ioeventfd for now.
 	 */
 	struct virtio_user_dev *dev = vdev->ctx;
 
