@@ -79,6 +79,7 @@ struct virtio_user_dev {
 
 	uint8_t		status;
 	char		path[PATH_MAX];
+	uint64_t	protocol_features;
 	struct vring	vrings[SPDK_VIRTIO_MAX_VIRTQUEUES];
 	struct virtio_user_backend_ops *ops;
 };
