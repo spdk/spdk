@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d30b052_0cf3de03",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T21:21:18Z",
+      "side": 1,
+      "message": "ofr \u003d\u003e for",
+      "revId": "21ce4d8e441dda26041aa87624c83e9ff0bc7a16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74542a05_fc33ebc9",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T21:21:18Z",
+      "side": 1,
+      "message": "Desciptor \u003d\u003e Descriptor",
+      "revId": "21ce4d8e441dda26041aa87624c83e9ff0bc7a16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9722210f_cdbf432d",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-02T21:21:18Z",
+      "side": 1,
+      "message": "Should we have some rules on when lun_open/close can be called in relation to allocate/free_io_channels?\n\nFor example, should io_channels be allocated after the lun is opened?  And then freed before the lun is closed?  This would be similar to how bdev works (first get the descriptor, then get an IO channel).\n\nWe could maybe add some asserts to help enforce these rules.  For example, if last descriptor is closed but the io_channel is still allocated, we should assert.",
+      "revId": "21ce4d8e441dda26041aa87624c83e9ff0bc7a16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
