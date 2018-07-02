@@ -16,6 +16,24 @@
       "revId": "f0f27268fe883114d64aab2702d90d4ec2f64f2e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f766677_6c10499d",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-02T05:08:40Z",
+      "side": 1,
+      "message": "lun-\u003ehotremove_cb is for vhost scsi and each desc-\u003ehotremove_cb is for iSCSI multiple connections.\n\nThis check is to clarify this intention but as you say we should not prohibit to use both.\n\nI remove this check.",
+      "parentUuid": "0d6ae49c_ea73d4fc",
+      "revId": "f0f27268fe883114d64aab2702d90d4ec2f64f2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
