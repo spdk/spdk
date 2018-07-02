@@ -16,6 +16,24 @@
       "revId": "ed138f4b7c1a352c5fe1ea7395701d2f11cfb78f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3dc2ad84_797483d9",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-02T15:30:38Z",
+      "side": 1,
+      "message": "You are right. Thank you!",
+      "parentUuid": "c3d5e31d_0b77ce26",
+      "revId": "ed138f4b7c1a352c5fe1ea7395701d2f11cfb78f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
