@@ -54,6 +54,41 @@
     },
     {
       "key": {
+        "uuid": "4aa42428_bf42865f",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T18:32:46Z",
+      "side": 1,
+      "message": "I vote that we don\u0027t make this configurable at all and always use the backing block device\u0027s sector size. The user can query the size using the new function you\u0027re adding below.\n\nYou\u0027ll still need to store the io_unit size in the blobstore metadata. On start up, if the io_unit size is 0, default it to 4k to remain backward compatible with existing blobstores. On new blobstores, set it to the backing block device\u0027s sector size.",
+      "parentUuid": "31ca9fe4_1eacac7d",
+      "revId": "1594bd4015405fe2ba7b8a67f49954bd7db3f5cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6259db30_ae5df7a7",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T18:32:46Z",
+      "side": 1,
+      "message": "I think we should call this the \"io_unit\" size",
+      "revId": "1594bd4015405fe2ba7b8a67f49954bd7db3f5cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9902e106_cba966ea",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 5
