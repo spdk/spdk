@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "194f8076_c31b187f",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T08:00:13Z",
+      "side": 1,
+      "message": "can you use clear_config here too? If no, please ignore.",
+      "revId": "4965790a76ea32e79108e427914360afd7660d82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bdc54fd_8675004d",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T08:00:13Z",
+      "side": 1,
+      "message": "necessary to test vhost?\n\nEven if this is not necessary to test vhost, why this run_initiator() reads config file but run_initiator() in virtio initiator test doesn\u0027t read config file?",
+      "revId": "4965790a76ea32e79108e427914360afd7660d82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79dfe9cd_8b0c0bce",
+        "filename": "test/vhost/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T08:00:13Z",
+      "side": 1,
+      "message": "Please add timing enter and exit",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 15
+      },
+      "revId": "4965790a76ea32e79108e427914360afd7660d82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
