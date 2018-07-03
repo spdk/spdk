@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53ed4d88_607c736b",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-03T18:08:49Z",
+      "side": 1,
+      "message": "Is just a multiple OK?  Meaning will sector size 1536 work?  I think it needs to be power of 2 multiple of the backing device sector size.\n\nI\u0027m wondering if there\u0027s a better name than \"sector\" to use here.  This is really a virtual sector size - i.e. the size of a blob\u0027s I/O unit.  Maybe io_unit_size would be better?\n\nOtherwise I think it will be confusing when blobstore sector size does not equal the backing device\u0027s sector size.",
+      "revId": "1594bd4015405fe2ba7b8a67f49954bd7db3f5cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03e8731a_619d7489",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-03T18:08:49Z",
+      "side": 1,
+      "message": "I\u0027m wondering if the default should be the backing device\u0027s sector size.  That way logical volume stores will \"just work\" with QEMU as a boot device.  But then the default can\u0027t be set the same way.\n\nWhat if we just restricted this to *either* page size or the backing store size?  Then this variable can just be a boolean.  So by default we just use the backing store size.",
+      "revId": "1594bd4015405fe2ba7b8a67f49954bd7db3f5cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9902e106_cba966ea",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3559,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-03T18:08:49Z",
+      "side": 1,
+      "message": "I think specifying sector_sz \u003d\u003d 0 should be an error.  Make the user specify a correct value.",
+      "revId": "1594bd4015405fe2ba7b8a67f49954bd7db3f5cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
