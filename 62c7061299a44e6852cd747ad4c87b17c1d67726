@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3778106c_81d0b5c0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T23:23:43Z",
+      "side": 1,
+      "message": "This just asserts that the requested len is smaller than the large buffer size, so we need to guarantee this is true before calling spdk_bdev_io_get_buf(), or make this into a check that can fail at runtime.",
+      "revId": "62c7061299a44e6852cd747ad4c87b17c1d67726",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
