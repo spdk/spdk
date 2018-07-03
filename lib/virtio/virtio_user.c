@@ -222,6 +222,10 @@ virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 	struct virtio_user_dev *dev = vdev->ctx;
 	struct vhost_user_config cfg = {0};
 
+	if ((dev->protocol_features & (1ULL << VHOST_USER_PROTOCOL_F_CONFIG)) == 0) {
+		return -ENOTSUP;
+	}
+
 	cfg.offset = 0;
 	cfg.size = VHOST_USER_MAX_CONFIG_SIZE;
 
@@ -240,6 +244,10 @@ virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 	struct vhost_user_config cfg = {0};
+
+	if ((dev->protocol_features & (1ULL << VHOST_USER_PROTOCOL_F_CONFIG)) == 0) {
+		return -ENOTSUP;
+	}
 
 	cfg.offset = offset;
 	cfg.size = length;
