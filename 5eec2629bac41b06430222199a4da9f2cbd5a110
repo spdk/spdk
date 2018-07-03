@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "31a65eed_73ab1aa0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 1091,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T00:47:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b0ba5a8c_7a35d885",
+      "range": {
+        "startLine": 1091,
+        "startChar": 43,
+        "endLine": 1091,
+        "endChar": 44
+      },
+      "revId": "5eec2629bac41b06430222199a4da9f2cbd5a110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "490b4833_c2faa47b",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-02T16:52:37Z",
       "side": 1,
       "message": "This whole section and a few sections above it don\u0027t seem to render correctly on the Chrome browser on my laptop. I will send you a screen shot of what I am seeing via email. I think there is an open/close tag missing some where?",
+      "range": {
+        "startLine": 1082,
+        "startChar": 0,
+        "endLine": 1095,
+        "endChar": 14
+      },
+      "revId": "5eec2629bac41b06430222199a4da9f2cbd5a110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c38877b_b1fb796a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T00:47:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "490b4833_c2faa47b",
       "range": {
         "startLine": 1082,
         "startChar": 0,
