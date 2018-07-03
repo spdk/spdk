@@ -16,6 +16,24 @@
       "revId": "b5786c2fd24c8d1e3dd1bdfbb7bee8207c3e4b61",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "010dc20e_200bc27a",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-03T22:32:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e544e84_4ec5c077",
+      "revId": "b5786c2fd24c8d1e3dd1bdfbb7bee8207c3e4b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
