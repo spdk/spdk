@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "542331fa_b7e2615b",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-03T09:54:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "194f8076_c31b187f",
+      "revId": "4965790a76ea32e79108e427914360afd7660d82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0bdc54fd_8675004d",
         "filename": "test/json_config/common.sh",
         "patchSetId": 12
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "2e0bcb89_c19b2e1b",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-03T09:54:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0bdc54fd_8675004d",
+      "revId": "4965790a76ea32e79108e427914360afd7660d82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79dfe9cd_8b0c0bce",
         "filename": "test/vhost/json_config/json_config.sh",
         "patchSetId": 12
@@ -47,6 +83,30 @@
       "writtenOn": "2018-07-03T08:00:13Z",
       "side": 1,
       "message": "Please add timing enter and exit",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 15
+      },
+      "revId": "4965790a76ea32e79108e427914360afd7660d82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aae5a29b_451f79d8",
+        "filename": "test/vhost/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-03T09:54:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79dfe9cd_8b0c0bce",
       "range": {
         "startLine": 24,
         "startChar": 0,
