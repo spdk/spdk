@@ -144,9 +144,12 @@ ut_put_task(struct spdk_scsi_task *task)
 static void
 ut_init_task(struct spdk_scsi_task *task)
 {
-	memset(task, 0, sizeof(*task));
+	memset(task, -1, sizeof(*task));
+	task->iov.iov_base = NULL;
 	task->iovs = &task->iov;
 	task->iovcnt = 1;
+	task->alloc_len = 0;
+	task->dxfer_dir = SPDK_SCSI_DIR_NONE;
 }
 
 void
