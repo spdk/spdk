@@ -34,6 +34,42 @@
       "revId": "7ee8e3e19c4b952203bef40a31ab2a2ac1fb5da2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a9e0bcf_71e27a12",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-03T19:14:13Z",
+      "side": 1,
+      "message": "Sure! I forgot to write to you guys on IRC to say that I have a proposal for cleanup:) This was only a PoC.\n\nDownside is that __get_params() function should be copy-pasted to every function. Looking for a good way to import it to every scripts/rpc submodule and still keep them independent, so that this change doesn\u0027t break spdkcli.",
+      "parentUuid": "78ce04ee_04e97e32",
+      "revId": "7ee8e3e19c4b952203bef40a31ab2a2ac1fb5da2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7256d2d_aaca22b3",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-03T19:14:13Z",
+      "side": 1,
+      "message": "Yup, like above  -forgot to notify you about this proposal.",
+      "parentUuid": "9317114c_006091e9",
+      "revId": "7ee8e3e19c4b952203bef40a31ab2a2ac1fb5da2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
