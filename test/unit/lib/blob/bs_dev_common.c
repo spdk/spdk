@@ -82,8 +82,8 @@ dev_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload
 {
 	uint64_t offset, length;
 
-	offset = lba * DEV_BUFFER_BLOCKLEN;
-	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	offset = lba * dev->blocklen;
+	length = lba_count * dev->blocklen;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	memcpy(payload, &g_dev_buffer[offset], length);
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
@@ -96,8 +96,8 @@ dev_write(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payloa
 {
 	uint64_t offset, length;
 
-	offset = lba * DEV_BUFFER_BLOCKLEN;
-	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	offset = lba * dev->blocklen;
+	length = lba_count * dev->blocklen;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	memcpy(&g_dev_buffer[offset], payload, length);
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
@@ -124,8 +124,8 @@ dev_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	uint64_t offset, length;
 	int i;
 
-	offset = lba * DEV_BUFFER_BLOCKLEN;
-	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	offset = lba * dev->blocklen;
+	length = lba_count * dev->blocklen;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	__check_iov(iov, iovcnt, length);
 
@@ -146,8 +146,8 @@ dev_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	uint64_t offset, length;
 	int i;
 
-	offset = lba * DEV_BUFFER_BLOCKLEN;
-	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	offset = lba * dev->blocklen;
+	length = lba_count * dev->blocklen;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	__check_iov(iov, iovcnt, length);
 
@@ -173,8 +173,8 @@ dev_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 {
 	uint64_t offset, length;
 
-	offset = lba * DEV_BUFFER_BLOCKLEN;
-	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	offset = lba * dev->blocklen;
+	length = lba_count * dev->blocklen;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	memset(&g_dev_buffer[offset], 0, length);
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
@@ -187,8 +187,8 @@ dev_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 {
 	uint64_t offset, length;
 
-	offset = lba * DEV_BUFFER_BLOCKLEN;
-	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	offset = lba * dev->blocklen;
+	length = lba_count * dev->blocklen;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	memset(&g_dev_buffer[offset], 0, length);
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
