@@ -98,12 +98,6 @@ static struct spdk_bdev *g_bdev;
 static const char *g_check_version_msg;
 static bool g_pmemblk_open_allow_open = true;
 
-static void
-_pmem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	fn(ctx);
-}
-
 static PMEMblkpool *
 find_pmemblk_pool(const char *path)
 {
@@ -379,7 +373,7 @@ ut_pmem_blk_init(void)
 {
 	errno = 0;
 
-	spdk_allocate_thread(_pmem_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL);
 
 	g_pool_ok.buffer = calloc(g_pool_ok.nblock, g_pool_ok.bsize);
 	if (g_pool_ok.buffer == NULL) {

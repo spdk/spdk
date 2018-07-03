@@ -33,7 +33,6 @@
 
 #include "spdk_cunit.h"
 
-#include "common/lib/test_env.c"
 #include "common/lib/ut_multithread.c"
 #include "unit/lib/json_mock.c"
 
@@ -229,6 +228,7 @@ unregister_bdev(struct ut_bdev *ut_bdev)
 	/* Handle any deferred messages. */
 	poll_threads();
 	spdk_bdev_unregister(&ut_bdev->bdev, NULL, NULL);
+	poll_threads();
 }
 
 static void
@@ -265,6 +265,7 @@ teardown_test(void)
 	g_desc = NULL;
 	unregister_bdev(&g_bdev);
 	spdk_io_device_unregister(&g_io_device, NULL);
+	poll_threads();
 	spdk_bdev_finish(finish_cb, NULL);
 	poll_threads();
 	memset(&g_bdev, 0, sizeof(g_bdev));
@@ -645,7 +646,6 @@ io_during_qos_queue(void)
 	int rc;
 
 	setup_test();
-	reset_time();
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
@@ -699,7 +699,7 @@ io_during_qos_queue(void)
 	}
 
 	/* Advance in time by a millisecond */
-	increment_time(1000);
+	spdk_delay_us(1000);
 
 	/* Complete more I/O */
 	poll_threads();
@@ -733,7 +733,6 @@ io_during_qos_reset(void)
 	int rc;
 
 	setup_test();
-	reset_time();
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
@@ -1076,7 +1075,7 @@ qos_dynamic_enable(void)
 	int status, second_status, rc, i;
 
 	setup_test();
-	reset_time();
+	MOCK_SET(spdk_get_ticks, 0);
 
 	bdev = &g_bdev.bdev;
 

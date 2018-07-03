@@ -150,7 +150,7 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	g_thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
+	g_thread = spdk_allocate_thread("thread0");
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();

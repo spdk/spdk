@@ -259,7 +259,7 @@ test_connect(void)
 	const char hostnqn[] = "nqn.2016-06.io.spdk:host1";
 	int rc;
 
-	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "ctrlr_ut");
+	thread = spdk_allocate_thread("ctrlr_ut");
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 
 	memset(&group, 0, sizeof(group));

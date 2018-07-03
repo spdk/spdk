@@ -47,12 +47,6 @@ DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
 DEFINE_STUB(spdk_conf_section_get_intval, int, (struct spdk_conf_section *sp, const char *key), -1);
 
-static void
-_bdev_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	fn(ctx);
-}
-
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			 int *sc, int *sk, int *asc, int *ascq)
@@ -84,6 +78,7 @@ struct bdev_ut_channel {
 
 static uint32_t g_bdev_ut_io_device;
 static struct bdev_ut_channel *g_bdev_ut_channel;
+static struct spdk_thread *g_thread;
 
 static void
 stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
@@ -291,20 +286,30 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 }
 
 static void
+bdev_unregister_cb(void *cb_arg, int rc)
+{
+	free(cb_arg);
+}
+
+static void
 free_bdev(struct spdk_bdev *bdev)
 {
-	spdk_bdev_unregister(bdev, NULL, NULL);
-	memset(bdev, 0xFF, sizeof(*bdev));
-	free(bdev);
+	while (spdk_thread_poll(g_thread, 0)) {}
+
+	spdk_bdev_unregister(bdev, bdev_unregister_cb, bdev);
+
+	while (spdk_thread_poll(g_thread, 0)) {}
 }
 
 static void
 free_vbdev(struct spdk_bdev *bdev)
 {
+	while (spdk_thread_poll(g_thread, 0)) {}
+
 	CU_ASSERT(bdev->internal.base_bdevs_cnt != 0);
-	spdk_bdev_unregister(bdev, NULL, NULL);
-	memset(bdev, 0xFF, sizeof(*bdev));
-	free(bdev);
+	spdk_bdev_unregister(bdev, bdev_unregister_cb, bdev);
+
+	while (spdk_thread_poll(g_thread, 0)) {}
 }
 
 static void
@@ -546,6 +551,8 @@ num_blocks_test(void)
 
 	spdk_bdev_close(desc);
 	spdk_bdev_unregister(&bdev, NULL, NULL);
+
+	while (spdk_thread_poll(g_thread, 0)) {}
 }
 
 static void
@@ -634,11 +641,8 @@ alias_add_del_test(void)
 	CU_ASSERT(rc != 0);
 
 	/* Unregister and free bdevs */
-	spdk_bdev_unregister(bdev[0], NULL, NULL);
-	spdk_bdev_unregister(bdev[1], NULL, NULL);
-
-	free(bdev[0]);
-	free(bdev[1]);
+	free_bdev(bdev[0]);
+	free_bdev(bdev[1]);
 }
 
 static void
@@ -688,26 +692,33 @@ bdev_io_wait_test(void)
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
+	while (spdk_thread_poll(g_thread, 0)) {}
 
 	bdev = allocate_bdev("bdev0");
 
 	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc != NULL);
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 
 	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	CU_ASSERT(rc == 0);
 	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	CU_ASSERT(rc == 0);
 	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	CU_ASSERT(rc == 0);
 	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
 
 	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	CU_ASSERT(rc == -ENOMEM);
 
 	io_wait_entry.entry.bdev = bdev;
@@ -729,15 +740,18 @@ bdev_io_wait_test(void)
 	CU_ASSERT(io_wait_entry2.submitted == false);
 
 	stub_complete_io(1);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
 	CU_ASSERT(io_wait_entry.submitted == true);
 	CU_ASSERT(io_wait_entry2.submitted == false);
 
 	stub_complete_io(1);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
 	CU_ASSERT(io_wait_entry2.submitted == true);
 
 	stub_complete_io(4);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
 
 	spdk_put_io_channel(io_ch);
@@ -748,8 +762,8 @@ bdev_io_wait_test(void)
 int
 main(int argc, char **argv)
 {
-	CU_pSuite	suite = NULL;
-	unsigned int	num_failures;
+	CU_pSuite		suite = NULL;
+	unsigned int		num_failures;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
@@ -774,11 +788,14 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	spdk_allocate_thread(_bdev_send_msg, NULL, NULL, NULL, "thread0");
+	g_thread = spdk_allocate_thread("thread0");
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+
+	while (spdk_thread_poll(g_thread, 0)) {}
 	spdk_free_thread();
+
 	return num_failures;
 }

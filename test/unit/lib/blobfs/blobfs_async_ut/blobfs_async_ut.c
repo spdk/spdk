@@ -82,7 +82,7 @@ fs_init(void)
 	struct spdk_thread *thread;
 
 	dev = init_dev();
-	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread("thread0");
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
@@ -132,7 +132,7 @@ fs_open(void)
 
 	dev = init_dev();
 	memset(name, 'a', sizeof(name) - 1);
-	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread("thread0");
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
@@ -200,7 +200,7 @@ fs_create(void)
 
 	dev = init_dev();
 	memset(name, 'a', sizeof(name) - 1);
-	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread("thread0");
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
@@ -247,7 +247,7 @@ fs_truncate(void)
 	struct spdk_bs_dev *dev;
 
 	dev = init_dev();
-	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread("thread0");
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
@@ -310,7 +310,7 @@ fs_rename(void)
 	struct spdk_bs_dev *dev;
 
 	dev = init_dev();
-	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread("thread0");
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
@@ -475,7 +475,7 @@ channel_ops(void)
 	struct spdk_io_channel *channel;
 
 	dev = init_dev();
-	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread("thread0");
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
@@ -507,7 +507,7 @@ channel_ops_sync(void)
 	struct spdk_io_channel *channel;
 
 	dev = init_dev();
-	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread("thread0");
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
