@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abc048ea_5bdeab3f",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T19:01:56Z",
+      "side": 1,
+      "message": "The poller state and the actual poller declaration don\u0027t need to be public.",
+      "revId": "f0e7fc5d122ba0d33e2c884914035c0b712e9452",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6257986c_0fe1c95b",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T19:01:56Z",
+      "side": 1,
+      "message": "I don\u0027t think most of these functions need to exist. The thread internally contains the ring of messages and and the lists of pollers. All a user needs to do is have a function to tell the thread to execute one \"round\" of them.",
+      "revId": "f0e7fc5d122ba0d33e2c884914035c0b712e9452",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf6c665d_6b53bbb2",
+        "filename": "lib/event/app.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T19:01:56Z",
+      "side": 1,
+      "message": "I understand the chicken and egg problem, but I don\u0027t think we\u0027re thinking about it in the right way. I think there really are events that are intended to be sent to a particular core - not to a logical thread. These initialization events fall into that category, as do the shutdown events. Therefore, I think we should keep the event ring and event pool in the reactor library and use that only for these special types of events. Ultimately, these events can be used to pass the threads themselves around too.",
+      "revId": "f0e7fc5d122ba0d33e2c884914035c0b712e9452",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56d5da5e_6fd98b27",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T19:01:56Z",
+      "side": 1,
+      "message": "The user is going to call functions like spdk_thread_send_msg to send a message. That\u0027s going to call into the thread library, which then calls this function pointer (_spdk_reactor_send_msg) which then just immediately turns around and calls functions to queue the message on a ring that was internal to the thread object in the first place. We need to strip out all of that complication and make spdk_thread_send_msg just queue the message on its internal ring object directly, without any other callbacks.",
+      "revId": "f0e7fc5d122ba0d33e2c884914035c0b712e9452",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dde42a9b_1ac0287f",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T19:01:56Z",
+      "side": 1,
+      "message": "Threads can move around, so they can\u0027t be associated with a particular socket id. This makes it impossible to do pooling of messages per-socket like we did previously. That\u0027s fine for now though - let\u0027s just make a big global pool and use it. We can iterate on it later to improve performance, maybe by adding per-thread caches of message objects.",
+      "revId": "f0e7fc5d122ba0d33e2c884914035c0b712e9452",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
