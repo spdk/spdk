@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "635b04fb_9612839e",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-03T15:59:30Z",
+      "side": 1,
+      "message": "This is already called in autotest.sh, so we could remove it.",
+      "parentUuid": "608d3a36_4b80ae05",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 17
+      },
+      "revId": "aea1fc3507435d663c3ea8b1aad4eccd027a04ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1033ffa9_bafeb5fc",
         "filename": "test/json_config/common.sh",
         "patchSetId": 39
@@ -82,6 +106,30 @@
       "writtenOn": "2018-06-29T05:46:19Z",
       "side": 1,
       "message": "Is this error? should be 0?",
+      "range": {
+        "startLine": 105,
+        "startChar": 9,
+        "endLine": 105,
+        "endChar": 10
+      },
+      "revId": "aea1fc3507435d663c3ea8b1aad4eccd027a04ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb8b764d_7703e5f7",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-03T15:59:30Z",
+      "side": 1,
+      "message": "This should be error because we won\u0027t be able to make rpc call below.",
+      "parentUuid": "1033ffa9_bafeb5fc",
       "range": {
         "startLine": 105,
         "startChar": 9,
