@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bae48edd_2a8e44ae",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1399,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-03T11:31:33Z",
+      "side": 1,
+      "message": "Changes in this file are on purpose and done only so that spdkcli works correctly.\nThese changes are originally part of commits: 417661 and 417662.\nI expect these commits to be merged first, so later rebase should automatically remove changes in this file.",
+      "revId": "6f53f74000cc2719b08c98a54ea2c1ea27868188",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
