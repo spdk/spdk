@@ -62,7 +62,6 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define NOMEM_THRESHOLD_COUNT			8
 #define ZERO_BUFFER_SIZE			0x100000
 #define SPDK_BDEV_QOS_TIMESLICE_IN_USEC		1000
-#define SPDK_BDEV_SEC_TO_USEC			1000000ULL
 #define SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE	1
 #define SPDK_BDEV_QOS_MIN_BYTE_PER_TIMESLICE	512
 #define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		10000
@@ -1187,14 +1186,14 @@ spdk_bdev_qos_update_max_quota_per_timeslice(struct spdk_bdev_qos *qos)
 
 	if (qos->iops_rate_limit > 0) {
 		max_ios_per_timeslice = qos->iops_rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
-					SPDK_BDEV_SEC_TO_USEC;
+					SPDK_SEC_TO_USEC;
 		qos->max_ios_per_timeslice = spdk_max(max_ios_per_timeslice,
 						      SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE);
 	}
 
 	if (qos->byte_rate_limit > 0) {
 		max_byte_per_timeslice = qos->byte_rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
-					 SPDK_BDEV_SEC_TO_USEC;
+					 SPDK_SEC_TO_USEC;
 		qos->max_byte_per_timeslice = spdk_max(max_byte_per_timeslice,
 						       SPDK_BDEV_QOS_MIN_BYTE_PER_TIMESLICE);
 	}

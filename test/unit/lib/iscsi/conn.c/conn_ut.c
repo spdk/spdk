@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "common/lib/test_env.c"
 #include "spdk_cunit.h"
 #include "CUnit/Basic.h"
 
@@ -71,16 +72,6 @@ spdk_env_get_last_core(void)
 
 uint32_t
 spdk_env_get_next_core(uint32_t prev_core)
-{
-	return 0;
-}
-
-uint64_t spdk_get_ticks(void)
-{
-	return 0;
-}
-
-uint64_t spdk_get_ticks_hz(void)
 {
 	return 0;
 }
