@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "7eb6275a_96639ec4",
+        "filename": "test/iscsi_tgt/iscsijson/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-03T12:09:09Z",
+      "side": 1,
+      "message": "Unneeded? It is called in test_json_config function.",
+      "range": {
+        "startLine": 31,
+        "startChar": 1,
+        "endLine": 31,
+        "endChar": 43
+      },
+      "revId": "4c1fbb1120cee78042557af03b8b3d14021e9303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bfd6380d_05047707",
         "filename": "test/json_config/clear_config.py",
         "patchSetId": 7
