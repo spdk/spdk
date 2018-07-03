@@ -537,9 +537,17 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 				limit_type = SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT;
 			}
 		} else if (strcmp(req.io_type, "R") == 0) {
-			limit_type = SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT;
+			if (is_iops_rate_limit == true) {
+				limit_type = SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT;
+			} else {
+				limit_type = SPDK_BDEV_QOS_R_BPS_RATE_LIMIT;
+			}
 		} else if (strcmp(req.io_type, "W") == 0) {
-			limit_type = SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT;
+			if (is_iops_rate_limit == true) {
+				limit_type = SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT;
+			} else {
+				limit_type = SPDK_BDEV_QOS_W_BPS_RATE_LIMIT;
+			}
 		} else {
 			SPDK_ERRLOG("I/O type '%s' is not one of 'RW, R, W'\n", req.io_type);
 			goto invalid;
