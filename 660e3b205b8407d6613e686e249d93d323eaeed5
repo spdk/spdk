@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c15aef5_310d0c9a",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T23:21:02Z",
+      "side": 1,
+      "message": "It might be good to emphasize that the data may actually get written back even if commit \u003d\u003d false (such as in the malloc bdev case, where the buffer is directly pointing at the  storage).",
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
