@@ -58,6 +58,8 @@ class UIBdevs(UINode):
         UIPmemBdev(self)
         UIRbdBdev(self)
         UIiSCSIBdev(self)
+        UIVirtioBlkBdev(self)
+        UIVirtioScsiBdev(self)
 
     def ui_command_delete(self, name):
         """
@@ -426,6 +428,60 @@ class UIiSCSIBdev(UIBdev):
         self.refresh()
 
 
+class UIVirtioBlkBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "virtioblk_disk", parent)
+
+    def ui_command_create(self, name, trtype, traddr,
+                          vq_count=None, vq_size=None):
+
+        vq_count = self.ui_eval_param(vq_count, "number", None)
+        vq_size = self.ui_eval_param(vq_size, "number", None)
+
+        ret = self.get_root().create_virtio_dev(name=name,
+                                                trtype=trtype,
+                                                traddr=traddr,
+                                                dev_type="blk",
+                                                vq_count=vq_count,
+                                                vq_size=vq_size)
+
+        self.shell.log.info(ret)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UIVirtioScsiBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "virtioscsi_disk", parent)
+
+    def refresh(self):
+        self._children = set([])
+        for bdev in self.get_root().get_virtio_scsi_devs():
+            UIScsiBdevObj(bdev, self)
+
+    def ui_command_create(self, name, trtype, traddr,
+                          vq_count=None, vq_size=None):
+
+        vq_count = self.ui_eval_param(vq_count, "number", None)
+        vq_size = self.ui_eval_param(vq_size, "number", None)
+
+        ret = self.get_root().create_virtio_dev(name=name,
+                                                trtype=trtype,
+                                                traddr=traddr,
+                                                dev_type="scsi",
+                                                vq_count=vq_count,
+                                                vq_size=vq_size)
+
+        self.shell.log.info(ret)
+        self.get_root().refresh()
+        self.refresh()
+
+    def ui_command_delete(self, name):
+        self.get_root().remove_virtio_scsi_bdev(name=name)
+        self.get_root().refresh()
+        self.refresh()
+
+
 class UIBdevObj(UINode):
     def __init__(self, bdev, parent):
         self.bdev = bdev
@@ -457,6 +513,25 @@ class UIBdevObj(UINode):
             alias = self.bdev.aliases[0]
 
         info = ", ".join(filter(None, [alias, size, in_use]))
+        return info, True
+
+
+class UIScsiBdevObj(UIBdevObj):
+    def __init__(self, bdev, parent):
+        UIBdevObj.__init__(self, bdev, parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        for bdev in self.get_root().get_bdevs("virtio_scsi_disk"):
+            if self.bdev.name in bdev.name:
+                UIBdevObj(bdev, self)
+
+    def summary(self):
+        if "socket" in self.bdev.virtio.keys():
+            info = self.bdev.virtio["socket"]
+        if "pci_address" in self.bdev.virtio.keys():
+            info = self.bdev.virtio["pci_address"]
         return info, True
 
 
