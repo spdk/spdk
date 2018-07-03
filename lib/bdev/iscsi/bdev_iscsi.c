@@ -295,8 +295,8 @@ bdev_iscsi_destruct_cb(void *ctx)
 	struct bdev_iscsi_lun *lun = ctx;
 
 	spdk_poller_unregister(&lun->no_master_ch_poller);
-	bdev_iscsi_lun_cleanup(lun);
 	spdk_bdev_destruct_done(&lun->bdev, 0);
+	bdev_iscsi_lun_cleanup(lun);
 }
 
 static int
