@@ -1396,13 +1396,13 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_dev(args):
-        print_dict(rpc.vhost.construct_virtio_dev(args.client,
-                                                  name=args.name,
-                                                  trtype=args.trtype,
-                                                  traddr=args.traddr,
-                                                  dev_type=args.dev_type,
-                                                  vq_count=args.vq_count,
-                                                  vq_size=args.vq_size))
+        print_array(rpc.vhost.construct_virtio_dev(args.client,
+                                                   name=args.name,
+                                                   trtype=args.trtype,
+                                                   traddr=args.traddr,
+                                                   dev_type=args.dev_type,
+                                                   vq_count=args.vq_count,
+                                                   vq_size=args.vq_size))
 
     p = subparsers.add_parser('construct_virtio_dev', help="""Construct new virtio device using provided
     transport type and device type. In case of SCSI device type this implies scan and add bdevs offered by
@@ -1420,11 +1420,11 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_user_scsi_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_user_scsi_bdev(args.client,
-                                                             path=args.path,
-                                                             name=args.name,
-                                                             vq_count=args.vq_count,
-                                                             vq_size=args.vq_size))
+        print_array(rpc.vhost.construct_virtio_user_scsi_bdev(args.client,
+                                                              path=args.path,
+                                                              name=args.name,
+                                                              vq_count=args.vq_count,
+                                                              vq_size=args.vq_size))
 
     p = subparsers.add_parser('construct_virtio_user_scsi_bdev', help="""Connect to virtio user scsi device.
     This imply scan and add bdevs offered by remote side.
@@ -1438,9 +1438,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_virtio_pci_scsi_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_pci_scsi_bdev(args.client,
-                                                            pci_address=args.pci_address,
-                                                            name=args.name))
+        print_array(rpc.vhost.construct_virtio_pci_scsi_bdev(args.client,
+                                                             pci_address=args.pci_address,
+                                                             name=args.name))
 
     p = subparsers.add_parser('construct_virtio_pci_scsi_bdev', help="""Create a Virtio
     SCSI device from a virtio-pci device.""")
