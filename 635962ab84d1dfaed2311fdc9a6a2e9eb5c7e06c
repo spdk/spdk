@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfb35b77_f4b0025b",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T07:43:31Z",
+      "side": 1,
+      "message": "this looks already merged by https://review.gerrithub.io/#/c/spdk/spdk/+/417526/. Please rebase.",
+      "revId": "635962ab84d1dfaed2311fdc9a6a2e9eb5c7e06c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68ce3938_c7885b38",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 48
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T07:43:31Z",
+      "side": 1,
+      "message": "Add \"In this test, target is spdk_tgt or virtio_initiator.\"",
+      "revId": "635962ab84d1dfaed2311fdc9a6a2e9eb5c7e06c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "082f6a46_36286b81",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 48
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T07:43:31Z",
+      "side": 1,
+      "message": "target (please see the above comment)",
+      "range": {
+        "startLine": 124,
+        "startChar": 22,
+        "endLine": 124,
+        "endChar": 30
+      },
+      "revId": "635962ab84d1dfaed2311fdc9a6a2e9eb5c7e06c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7374fe00_ba48633f",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 48
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T07:43:31Z",
+      "side": 1,
+      "message": "target",
+      "range": {
+        "startLine": 125,
+        "startChar": 15,
+        "endLine": 125,
+        "endChar": 23
+      },
+      "revId": "635962ab84d1dfaed2311fdc9a6a2e9eb5c7e06c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b68f922_4b03d4da",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 48
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T07:43:31Z",
+      "side": 1,
+      "message": "target",
+      "range": {
+        "startLine": 126,
+        "startChar": 53,
+        "endLine": 126,
+        "endChar": 60
+      },
+      "revId": "635962ab84d1dfaed2311fdc9a6a2e9eb5c7e06c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "367a231c_4ee911c8",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 48
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T07:43:31Z",
+      "side": 1,
+      "message": "The following may be better?\n\nelif [ $target \u003d\u003d \"virtio_initiator\" ]; then\n    (snip)\nelse\n    echo \"Target is not specified for test_global_params\"\n    return 1",
+      "range": {
+        "startLine": 138,
+        "startChar": 1,
+        "endLine": 138,
+        "endChar": 5
+      },
+      "revId": "635962ab84d1dfaed2311fdc9a6a2e9eb5c7e06c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
