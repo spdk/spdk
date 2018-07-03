@@ -163,14 +163,29 @@ struct spdk_io_channel {
 };
 
 /**
+ * Initialize the threading library. Must be called once prior to allocating any threads.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_thread_lib_init(void);
+
+/**
+ * Release all resources associated with this library.
+ */
+void spdk_thread_lib_fini(void);
+
+/**
  * Initializes the calling thread for I/O channel allocation.
  *
  * \param msg_fn A function that may be called from any thread and is passed a function
  * pointer (spdk_thread_fn) that must be called on the same thread that spdk_allocate_thread
- * was called from.
+ * was called from. DEPRECATED. Only used in tests. Pass NULL for this parameter.
  * \param start_poller_fn Function to be called to start a poller for the thread.
+ * DEPRECATED. Only used in tests. Pass NULL for this parameter.
  * \param stop_poller_fn Function to be called to stop a poller for the thread.
- * \param thread_ctx Context that will be passed to fn, start_poller_fn and spdk_stop_poller.
+ * DEPRECATED. Only used in tests. Pass NULL for this parameter.
+ * \param thread_ctx Context that will be passed to msg_fn, start_poller_fn, and stop_poller_fn.
+ * DEPRECATED. Only used in tests. Pass NULL for this parameter.
  * \param name Human-readable name for the thread; can be retrieved with spdk_thread_get_name().
  * The string is copied, so the pointed-to data only needs to be valid during the
  * spdk_allocate_thread() call. May be NULL to specify no name.
@@ -190,6 +205,30 @@ struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
  * spdk_put_io_channel() prior to calling this function.
  */
 void spdk_free_thread(void);
+
+/**
+ * Perform one iteration worth of processing on the thread. This includes executing
+ * any pending messages as well as pollers.
+ *
+ * \param thread The thread to process
+ * \param max_msgs The maximum number of messages that will be processed.
+ *                   Use 0 to process all pending messages.
+ *
+ * \return 1 if work was done. 0 if no work was done. -1 if unknown.
+ */
+int spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs);
+
+/**
+ * Return the number of ticks until the next timed poller
+ * would expire. Timed pollers are pollers for which
+ * period_microseconds is greater than 0.
+ *
+ * \param thread The thread to check poller expiration times on
+ * \param now The current time, in ticks.
+ *
+ * \return Number of ticks. If no timed pollers, return 0.
+ */
+uint64_t spdk_thread_next_poller_expiration(struct spdk_thread *thread, uint64_t now);
 
 /**
  * Get count of allocated threads.
