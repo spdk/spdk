@@ -1397,6 +1397,7 @@ if __name__ == "__main__":
     @call_cmd
     def construct_virtio_dev(args):
         print_dict(rpc.vhost.construct_virtio_dev(args.client,
+                                                  name=args.name,
                                                   trtype=args.trtype,
                                                   traddr=args.traddr,
                                                   dev_type=args.dev_type,
