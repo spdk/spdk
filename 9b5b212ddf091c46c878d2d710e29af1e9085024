@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20c9f52c_ca8ce2a2",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-03T17:29:01Z",
+      "side": 1,
+      "message": "I would add something about how spdk_bdev_part is for multiple virtual bdevs with fixed offsets (including when that offset is 0 - i.e. error or passthru).  If cannot be used for more complicated virtual bdev use cases like lvol.",
+      "revId": "9b5b212ddf091c46c878d2d710e29af1e9085024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
