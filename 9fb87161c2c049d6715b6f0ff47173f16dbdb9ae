@@ -19,6 +19,41 @@
     },
     {
       "key": {
+        "uuid": "3e7584eb_9c534a7d",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-03T17:02:44Z",
+      "side": 1,
+      "message": "That\u0027s a good point. Since we only ever use this right here, I think we can actually just return the number from create_bdevs and we don\u0027t need to store it.",
+      "parentUuid": "6c5fa560_cfc7a3e0",
+      "revId": "9fb87161c2c049d6715b6f0ff47173f16dbdb9ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48578850_061c6c75",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-03T17:02:44Z",
+      "side": 1,
+      "message": "Also, I think that I can take this get_ref call out.We should still be able to hot remove the base even if there are no references associated with it.",
+      "revId": "9fb87161c2c049d6715b6f0ff47173f16dbdb9ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "093702fd_781896e3",
         "filename": "lib/bdev/split/vbdev_split.c",
         "patchSetId": 21
@@ -30,6 +65,24 @@
       "writtenOn": "2018-07-02T21:48:43Z",
       "side": 1,
       "message": "I think here you can just assert that cfg-\u003esplit_base \u003d\u003d NULL.",
+      "revId": "9fb87161c2c049d6715b6f0ff47173f16dbdb9ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "199731c1_6ddd47de",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-03T17:02:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "093702fd_781896e3",
       "revId": "9fb87161c2c049d6715b6f0ff47173f16dbdb9ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
