@@ -1,3 +1,7 @@
+def __get_params(params):
+    return {k: v for k, v in params.items() if v is not None and k not in "client"}
+
+
 def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
     """Set parameters for the bdev subsystem.
 
@@ -27,11 +31,12 @@ def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
     Returns:
         Name of created block device.
     """
-    params = {'num_blocks': num_blocks, 'block_size': block_size}
-    if name:
-        params['name'] = name
-    if uuid:
-        params['uuid'] = uuid
+    params = {k: v for k, v in locals().items() if v is not None and k not in "client"}
+#     params = {'num_blocks': num_blocks, 'block_size': block_size}
+#     if name:
+#         params['name'] = name
+#     if uuid:
+#         params['uuid'] = uuid
     return client.call('construct_malloc_bdev', params)
 
 
@@ -314,9 +319,10 @@ def get_bdevs(client, name=None):
     Returns:
         List of bdev information objects.
     """
-    params = {}
-    if name:
-        params['name'] = name
+    params = __get_params(locals())
+#     params = {}
+#     if name:
+#         params['name'] = name
     return client.call('get_bdevs', params)
 
 
