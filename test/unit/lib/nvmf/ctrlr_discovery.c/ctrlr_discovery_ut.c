@@ -36,6 +36,7 @@
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
 
+#include "common/lib/test_env.c"
 #include "nvmf/ctrlr_discovery.c"
 #include "nvmf/subsystem.c"
 
