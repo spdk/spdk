@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03677bd5_fcae81b0",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1066,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:49:57Z",
+      "side": 1,
+      "message": "It might be clearer to write this as:\n\n  phys_addr \u003d spdk_vtophys(tr);\n\nBut this is fine too.",
+      "revId": "8c354bf6b5f292c74f9862c73c4bdcd544af061b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
