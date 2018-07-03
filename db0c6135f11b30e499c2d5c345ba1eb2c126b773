@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f2ecac0e_41ebf55d",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-03T13:37:36Z",
+      "side": 1,
+      "message": "Did you mean to change the behavior of SCSI layer or just UT ? Because this task status is actually set by SCSI layer.\n\nCurrently on each IO that is submitted to bdev layer (no completion yet), return code is SPDK_SCSI_TASK_PENDING with status set to SPDK_SCSI_STATUS_GOOD. \n\n\nI went ahead and changed this behavior, so that SPDK_SCSI_STATUS_GOOD is set only on callback from bdev.\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/417708/\n\nI\u0027ve added patch to initialize task with fields set to 0xFF to verify this and other variables actually changing. https://review.gerrithub.io/#/c/spdk/spdk/+/417686/",
+      "parentUuid": "ef2eb219_0f5963e6",
+      "revId": "db0c6135f11b30e499c2d5c345ba1eb2c126b773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7d88666a_2184fe84",
         "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
         "patchSetId": 2
