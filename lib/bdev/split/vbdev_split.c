@@ -263,7 +263,7 @@ vbdev_split_destruct_config(struct spdk_vbdev_split_config *cfg)
 	struct bdev_part_tailq *split_base_tailq;
 
 	cfg->removed = true;
-	if (cfg->split_base != NULL && spdk_bdev_part_base_get_ref(cfg->split_base)) {
+	if (cfg->split_base != NULL) {
 		split_base_bdev = spdk_bdev_part_base_get_bdev(cfg->split_base);
 		split_base_tailq = spdk_bdev_part_base_get_tailq(cfg->split_base);
 		spdk_bdev_part_base_hotremove(split_base_bdev, split_base_tailq);
@@ -420,7 +420,7 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 	struct spdk_vbdev_split_config *cfg = vbdev_split_config_find_by_base_name(bdev->name);
 
 	if (cfg != NULL && cfg->removed == false) {
-		assert(cfg->split_base == NULL || spdk_bdev_part_base_get_ref(cfg->split_base) == 0);
+		assert(cfg->split_base == NULL);
 
 		if (vbdev_split_create(cfg)) {
 			SPDK_ERRLOG("could not split bdev %s\n", bdev->name);

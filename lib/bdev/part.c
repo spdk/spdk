@@ -79,12 +79,6 @@ spdk_bdev_part_base_get_ctx(struct spdk_bdev_part_base *part_base)
 	return part_base->ctx;
 }
 
-uint32_t
-spdk_bdev_part_base_get_ref(struct spdk_bdev_part_base *part_base)
-{
-	return part_base->ref;
-}
-
 void
 spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)
 {
