@@ -46,30 +46,6 @@
 
 #define SPDK_EVENT_BATCH_SIZE		8
 
-enum spdk_poller_state {
-	/* The poller is registered with a reactor but not currently executing its fn. */
-	SPDK_POLLER_STATE_WAITING,
-
-	/* The poller is currently running its fn. */
-	SPDK_POLLER_STATE_RUNNING,
-
-	/* The poller was unregistered during the execution of its fn. */
-	SPDK_POLLER_STATE_UNREGISTERED,
-};
-
-struct spdk_poller {
-	TAILQ_ENTRY(spdk_poller)	tailq;
-	uint32_t			lcore;
-
-	/* Current state of the poller; should only be accessed from the poller's thread. */
-	enum spdk_poller_state		state;
-
-	uint64_t			period_ticks;
-	uint64_t			next_run_tick;
-	spdk_poller_fn			fn;
-	void				*arg;
-};
-
 enum spdk_reactor_state {
 	SPDK_REACTOR_STATE_INVALID = 0,
 	SPDK_REACTOR_STATE_INITIALIZED = 1,
@@ -95,19 +71,6 @@ struct spdk_reactor {
 
 	/* The last known rusage values */
 	struct rusage					rusage;
-
-	/*
-	 * Contains pollers actively running on this reactor.  Pollers
-	 *  are run round-robin. The reactor takes one poller from the head
-	 *  of the ring, executes it, then puts it back at the tail of
-	 *  the ring.
-	 */
-	TAILQ_HEAD(, spdk_poller)			active_pollers;
-
-	/**
-	 * Contains pollers running on this reactor with a periodic timer.
-	 */
-	TAILQ_HEAD(timer_pollers_head, spdk_poller)	timer_pollers;
 
 	struct spdk_ring				*events;
 
@@ -229,99 +192,6 @@ _spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	event = spdk_event_allocate(reactor->lcore, _spdk_reactor_msg_passed, fn, ctx);
 
 	spdk_event_call(event);
-}
-
-static void
-_spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poller, uint64_t now)
-{
-	struct spdk_poller *iter;
-	uint64_t next_run_tick;
-
-	next_run_tick = now + poller->period_ticks;
-	poller->next_run_tick = next_run_tick;
-
-	/*
-	 * Insert poller in the reactor's timer_pollers list in sorted order by next scheduled
-	 * run time.
-	 */
-	TAILQ_FOREACH_REVERSE(iter, &reactor->timer_pollers, timer_pollers_head, tailq) {
-		if (iter->next_run_tick <= next_run_tick) {
-			TAILQ_INSERT_AFTER(&reactor->timer_pollers, iter, poller, tailq);
-			return;
-		}
-	}
-
-	/* No earlier pollers were found, so this poller must be the new head */
-	TAILQ_INSERT_HEAD(&reactor->timer_pollers, poller, tailq);
-}
-
-static struct spdk_poller *
-_spdk_reactor_start_poller(void *thread_ctx,
-			   spdk_poller_fn fn,
-			   void *arg,
-			   uint64_t period_microseconds)
-{
-	struct spdk_poller *poller;
-	struct spdk_reactor *reactor;
-	uint64_t quotient, remainder, ticks;
-
-	reactor = thread_ctx;
-
-	poller = calloc(1, sizeof(*poller));
-	if (poller == NULL) {
-		SPDK_ERRLOG("Poller memory allocation failed\n");
-		return NULL;
-	}
-
-	poller->lcore = reactor->lcore;
-	poller->state = SPDK_POLLER_STATE_WAITING;
-	poller->fn = fn;
-	poller->arg = arg;
-
-	if (period_microseconds) {
-		quotient = period_microseconds / SPDK_SEC_TO_USEC;
-		remainder = period_microseconds % SPDK_SEC_TO_USEC;
-		ticks = spdk_get_ticks_hz();
-
-		poller->period_ticks = ticks * quotient + (ticks * remainder) / SPDK_SEC_TO_USEC;
-	} else {
-		poller->period_ticks = 0;
-	}
-
-	if (poller->period_ticks) {
-		_spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
-	} else {
-		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
-	}
-
-	return poller;
-}
-
-static void
-_spdk_reactor_stop_poller(struct spdk_poller *poller, void *thread_ctx)
-{
-	struct spdk_reactor *reactor;
-
-	reactor = thread_ctx;
-
-	assert(poller->lcore == spdk_env_get_current_core());
-
-	if (poller->state == SPDK_POLLER_STATE_RUNNING) {
-		/*
-		 * We are being called from the poller_fn, so set the state to unregistered
-		 * and let the reactor loop free the poller.
-		 */
-		poller->state = SPDK_POLLER_STATE_UNREGISTERED;
-	} else {
-		/* Poller is not running currently, so just free it. */
-		if (poller->period_ticks) {
-			TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
-		} else {
-			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
-		}
-
-		free(poller);
-	}
 }
 
 static int
@@ -446,32 +316,11 @@ spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t co
 	return 0;
 }
 
-/**
- *
- * \brief This is the main function of the reactor thread.
- *
- * \code
- *
- * while (1)
- *	if (events to run)
- *		dequeue and run a batch of events
- *
- *	if (active pollers)
- *		run the first poller in the list and move it to the back
- *
- *	if (first timer poller has expired)
- *		run the first timer poller and reinsert it in the timer list
- *
- *	if (no action taken and sleep enabled)
- *		sleep until next timer poller is scheduled to expire
- * \endcode
- *
- */
 static int
 _spdk_reactor_run(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
-	struct spdk_poller	*poller;
+	struct spdk_thread	*thread;
 	uint32_t		event_count;
 	uint64_t		now;
 	uint64_t		sleep_cycles;
@@ -480,10 +329,8 @@ _spdk_reactor_run(void *arg)
 	char			thread_name[32];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-	if (spdk_allocate_thread(_spdk_reactor_send_msg,
-				 _spdk_reactor_start_poller,
-				 _spdk_reactor_stop_poller,
-				 reactor, thread_name) == NULL) {
+	thread = spdk_allocate_thread(_spdk_reactor_send_msg, NULL, NULL, reactor, thread_name);
+	if (!thread) {
 		return -1;
 	}
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
@@ -507,66 +354,29 @@ _spdk_reactor_run(void *arg)
 			took_action = true;
 		}
 
-		poller = TAILQ_FIRST(&reactor->active_pollers);
-		if (poller) {
-			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
-			poller->state = SPDK_POLLER_STATE_RUNNING;
-			rc = poller->fn(poller->arg);
+		rc = spdk_thread_poll(thread);
+		if (rc != 0) {
 			now = spdk_get_ticks();
 			spdk_reactor_add_tsc_stats(reactor, rc, now);
-			if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-				free(poller);
-			} else {
-				poller->state = SPDK_POLLER_STATE_WAITING;
-				TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
-			}
 			took_action = true;
-		}
-
-		poller = TAILQ_FIRST(&reactor->timer_pollers);
-		if (poller) {
-			if (took_action == false) {
-				now = spdk_get_ticks();
-			}
-
-			if (now >= poller->next_run_tick) {
-				uint64_t tmp_timer_tsc;
-
-				TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
-				poller->state = SPDK_POLLER_STATE_RUNNING;
-				rc = poller->fn(poller->arg);
-				/* Save the tsc value from before poller->fn was executed. We want to
-				 * use the current time for idle/busy tsc value accounting, but want to
-				 * use the older time to reinsert to the timer poller below. */
-				tmp_timer_tsc = now;
-				now = spdk_get_ticks();
-				spdk_reactor_add_tsc_stats(reactor, rc, now);
-				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-					free(poller);
-				} else {
-					poller->state = SPDK_POLLER_STATE_WAITING;
-					_spdk_poller_insert_timer(reactor, poller, tmp_timer_tsc);
-				}
-				took_action = true;
-			}
 		}
 
 		/* Determine if the thread can sleep */
 		if (sleep_cycles && !took_action) {
+			uint64_t next_run_tick;
+
 			now = spdk_get_ticks();
 			sleep_us = reactor->max_delay_us;
+			next_run_tick = spdk_thread_next_poller_expiration(thread, now);
 
-			poller = TAILQ_FIRST(&reactor->timer_pollers);
-			if (poller) {
-				/* There are timers registered, so don't sleep beyond
-				 * when the next timer should fire */
-				if (poller->next_run_tick < (now + sleep_cycles)) {
-					if (poller->next_run_tick <= now) {
-						sleep_us = 0;
-					} else {
-						sleep_us = ((poller->next_run_tick - now) *
-							    SPDK_SEC_TO_USEC) / spdk_get_ticks_hz();
-					}
+			/* There are timers registered, so don't sleep beyond
+			 * when the next timer should fire */
+			if (next_run_tick > 0 && next_run_tick < (now + sleep_cycles)) {
+				if (next_run_tick <= now) {
+					sleep_us = 0;
+				} else {
+					sleep_us = ((next_run_tick - now) *
+						    SPDK_SEC_TO_USEC) / spdk_get_ticks_hz();
 				}
 			}
 
@@ -592,9 +402,6 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	reactor->socket_id = spdk_env_get_socket_id(lcore);
 	assert(reactor->socket_id < SPDK_MAX_SOCKET);
 	reactor->max_delay_us = max_delay_us;
-
-	TAILQ_INIT(&reactor->active_pollers);
-	TAILQ_INIT(&reactor->timer_pollers);
 
 	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, reactor->socket_id);
 	if (!reactor->events) {
