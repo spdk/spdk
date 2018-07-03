@@ -13,6 +13,7 @@ from . import nvmf
 from . import pmem
 from . import subsystem
 from . import vhost
+from . import nvme
 from . import client as rpc_client
 
 
