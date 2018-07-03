@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "31ca9fe4_1eacac7d",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-03T18:12:17Z",
+      "side": 1,
+      "message": "Thinking about this more - maybe defaulting to page_size is OK for this patch.  Next/future patch with lvol support could change the default.",
+      "parentUuid": "03e8731a_619d7489",
+      "revId": "1594bd4015405fe2ba7b8a67f49954bd7db3f5cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9902e106_cba966ea",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 5
