@@ -66,7 +66,6 @@ struct spdk_ioat_chan {
 
 	struct ioat_descriptor		*ring;
 	union spdk_ioat_hw_desc		*hw_ring;
-	uint64_t			hw_ring_phys_addr;
 	uint32_t			dma_capabilities;
 
 	/* tailq entry for attached_chans */

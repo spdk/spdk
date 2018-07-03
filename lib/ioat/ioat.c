@@ -154,8 +154,7 @@ ioat_get_ring_entry(struct spdk_ioat_chan *ioat, uint32_t index,
 static uint64_t
 ioat_get_desc_phys_addr(struct spdk_ioat_chan *ioat, uint32_t index)
 {
-	return ioat->hw_ring_phys_addr +
-	       ioat_get_ring_index(ioat, index) * sizeof(union spdk_ioat_hw_desc);
+	return spdk_vtophys(&ioat->hw_ring[ioat_get_ring_index(ioat, index)]);
 }
 
 static void
@@ -421,7 +420,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	}
 
 	ioat->hw_ring = spdk_dma_zmalloc(num_descriptors * sizeof(union spdk_ioat_hw_desc), 64,
-					 &ioat->hw_ring_phys_addr);
+					 NULL);
 	if (!ioat->hw_ring) {
 		return -1;
 	}
@@ -438,7 +437,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 
 	ioat->regs->chanctrl = SPDK_IOAT_CHANCTRL_ANY_ERR_ABORT_EN;
 	ioat_write_chancmp(ioat, comp_update_bus_addr);
-	ioat_write_chainaddr(ioat, ioat->hw_ring_phys_addr);
+	ioat_write_chainaddr(ioat, ioat_get_desc_phys_addr(ioat, 0));
 
 	ioat_prep_null(ioat);
 	ioat_flush(ioat);
