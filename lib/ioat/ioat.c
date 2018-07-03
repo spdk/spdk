@@ -398,7 +398,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 		/* 0 means 4 GB max transfer size. */
 		ioat->max_xfer_size = 1ULL << 32;
 	} else if (xfercap < 12) {
-		/* XFCERCAP must be at least 12 (4 KB) according to the spec. */
+		/* XFERCAP must be at least 12 (4 KB) according to the spec. */
 		SPDK_ERRLOG("invalid XFERCAP value %u\n", xfercap);
 		return -1;
 	} else {
