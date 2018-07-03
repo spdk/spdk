@@ -710,15 +710,6 @@ struct bdev_part_tailq *spdk_bdev_part_base_get_tailq(struct spdk_bdev_part_base
  */
 void *spdk_bdev_part_base_get_ctx(struct spdk_bdev_part_base *part_base);
 
-/**
- * Returns the reference number associated with an spdk_bdev_part_base
- *
- * \param part_base A pointer to an spdk_bdev_part_base object.
- *
- * \return The base's reference number.
- */
-uint32_t spdk_bdev_part_base_get_ref(struct spdk_bdev_part_base *part_base);
-
 typedef void (*spdk_bdev_part_base_free_fn)(void *ctx);
 
 struct spdk_bdev_part {
