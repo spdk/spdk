@@ -1077,6 +1077,388 @@ Example response:
 }
 ~~~
 
+# Vhost Target {#jsonrpc_components_vhost_tgt}
+
+Following common preeconditions need to be met in all target types.
+
+When using vhost user protocol as a transport (which is the only case for now) controller name will be used to create
+UNIX domain socket. This imply that those names concatenated with vhost socket directory path need to be valid UNIX
+socket name.
+
+All @ref cpu_mask parameter are used to choose CPU on which pollers will be launched when new initiator is connecting.
+It must be a subset of application CPU mask.
+
+## set_vhost_controller_coalescing {#rpc_set_vhost_controller_coalescing}
+
+Controls interrupt coalescing for specific target. Because `delay_base_us` is used to calculate delay in CPU ticks
+there is no hardcoded limit for this parameter. Only limitation is that final delay in CPU ticks might not overflow
+32 bit unsigned integer (which is more than 1s @ 4GHz CPU). In real scenarios `delay_base_us` should be much lower
+than 150us.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr                   | Required | string      | Controller name
+delay_base_us           | Required | integer     | Base (minimum) coalescing time.
+iops_threshold          | Required | integer     | Coalescing activation level greater than 0 in IO per second.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "iops_threshold": 100000,
+    "ctrlr": "VhostScsi0",
+    "delay_base_us": 80
+  },
+  "jsonrpc": "2.0",
+  "method": "set_vhost_controller_coalescing",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_vhost_scsi_controller {#rpc_construct_vhost_scsi_controller}
+
+Construct vhost SCSI target.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr                   | Required | string      | Controller name
+cpumask                 | Optional | string      | @ref cpu_mask for this controller.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "cpumask": "0x2",
+    "ctrlr": "VhostScsi0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_vhost_scsi_controller",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## add_vhost_scsi_lun {#rpc_add_vhost_scsi_lun}
+
+In vhost target `ctrlr` create SCSI target with ID `scsi_target_num` and add `bdev_name` as LUN 0.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr                   | Required | string      | Controller name
+scsi_target_num         | Required | string      | SCSI target ID between 0 and 7
+bdev_name               | Required | string      | Name of bdev to expose as a LUN 0.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "scsi_target_num": 1,
+    "bdev_name": "Malloc0",
+    "ctrlr": "VhostScsi0"
+  },
+  "jsonrpc": "2.0",
+  "method": "add_vhost_scsi_lun",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## remove_vhost_scsi_target {#rpc_remove_vhost_scsi_target}
+
+Remove SCSI target ID `scsi_target_num` from vhost target `scsi_target_num`.
+
+ This method will fail if initiator is connected but don't support hut-remove (the `VIRTIO_SCSI_F_HOTPLUG` is not negotiated).
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr                   | Required | string      | Controller name
+scsi_target_num         | Required | string      | SCSI target ID between 0 and 7
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "params": {
+    "scsi_target_num": 1,
+    "ctrlr": "VhostScsi0"
+  },
+  "jsonrpc": "2.0",
+  "method": "remove_vhost_scsi_target",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_vhost_nvme_controller {#rpc_construct_vhost_nvme_controller}
+
+Construct empty vhost NVMe target.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr                   | Required | string      | Controller name
+io_queues               | Required | integer     | Number between 1 and 31 of IO queues for the controller
+cpumask                 | Optional | string      | @ref cpu_mask for this controller.
+
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "cpumask": "0x2",
+    "io_queues": 4,
+    "ctrlr": "VhostNvme0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_vhost_nvme_controller",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## add_vhost_nvme_ns {#rpc_add_vhost_nvme_ns}
+
+Add namespace backed by `bdev_name`
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr                   | Required | string      | Controller name
+bdev_name               | Required | string      | Name of bdev to expose as a namespace.
+cpumask                 | Optional | string      | @ref cpu_mask for this controller.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "bdev_name": "Malloc0",
+    "ctrlr": "VhostNvme0"
+  },
+  "jsonrpc": "2.0",
+  "method": "add_vhost_nvme_ns",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_vhost_blk_controller {#rpc_construct_vhost_blk_controller}
+
+Construct vhost block controller
+
+If `readonly` is `true` then vhost block target will be created as read only and fail any write requests.
+The `VIRTIO_BLK_F_RO` feature flag will be offered to the initiator.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr                   | Required | string      | Controller name
+bdev_name               | Required | string      | Name of bdev to expose block device.
+readonly                | Optional | boolean     | If true, this target will be read only.
+cpumask                 | Optional | string      | @ref cpu_mask for this controller.
+
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "dev_name": "Malloc0",
+    "ctrlr": "VhostBlk0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_vhost_blk_controller",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## get_vhost_controllers {#rpc_get_vhost_controllers}
+
+Display information about all vhost controllers.
+
+### Parameters
+
+This method has no parameters.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_vhost_controllers",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "cpumask": "0x2",
+      "backend_specific": {
+        "scsi": [
+          {
+            "target_name": "Target 2",
+            "luns": [
+              {
+                "id": 0,
+                "bdev_name": "Malloc0"
+              }
+            ],
+            "id": 0,
+            "scsi_dev_num": 2
+          }
+        ]
+      },
+      "iops_threshold": 60000,
+      "ctrlr": "VhostScsi0",
+      "delay_base_us": 0
+    }
+  ]
+}
+
+~~~
+
+## remove_vhost_controller {#rpc_remove_vhost_controller}
+
+Remove vhost target.
+
+This call might fail if there is an initiator connected or there is at leaset one SCSI target configured in case of
+vhost SCSI target. In later case please remove all SCSI targets first using @ref rpc_remove_vhost_scsi_target.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr                   | Required | string      | Controller name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "ctrlr": "VhostNvme0"
+  },
+  "jsonrpc": "2.0",
+  "method": "remove_vhost_controller",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # Logical Volume {#jsonrpc_components_lvol}
 
 Identification of logical volume store and logical volume is explained first.
