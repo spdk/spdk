@@ -126,7 +126,7 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 }
 
 static void
-spdk_put_task(struct spdk_scsi_task *task)
+ut_put_task(struct spdk_scsi_task *task)
 {
 	if (task->alloc_len) {
 		free(task->iov.iov_base);
@@ -139,7 +139,7 @@ spdk_put_task(struct spdk_scsi_task *task)
 
 
 static void
-spdk_init_task(struct spdk_scsi_task *task)
+ut_init_task(struct spdk_scsi_task *task)
 {
 	memset(task, 0, sizeof(*task));
 	task->iovs = &task->iov;
@@ -234,7 +234,7 @@ mode_select_6_test(void)
 	char data[24];
 	int rc;
 
-	spdk_init_task(&task);
+	ut_init_task(&task);
 
 	cdb[0] = 0x15;
 	cdb[1] = 0x11;
@@ -258,7 +258,7 @@ mode_select_6_test(void)
 
 	CU_ASSERT_EQUAL(rc, 0);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 /*
@@ -275,7 +275,7 @@ mode_select_6_test2(void)
 	char cdb[16];
 	int rc;
 
-	spdk_init_task(&task);
+	ut_init_task(&task);
 
 	cdb[0] = 0x15;
 	cdb[1] = 0x00;
@@ -294,7 +294,7 @@ mode_select_6_test2(void)
 
 	CU_ASSERT_EQUAL(rc, 0);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 /*
@@ -317,7 +317,7 @@ mode_sense_6_test(void)
 	unsigned char blk_descriptor_len = 0;
 
 	memset(&bdev, 0, sizeof(struct spdk_bdev));
-	spdk_init_task(&task);
+	ut_init_task(&task);
 	memset(cdb, 0, sizeof(cdb));
 
 	cdb[0] = 0x1A;
@@ -344,7 +344,7 @@ mode_sense_6_test(void)
 	CU_ASSERT_EQUAL(dev_specific_param, 0);
 	CU_ASSERT_EQUAL(blk_descriptor_len, 8);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 /*
@@ -367,7 +367,7 @@ mode_sense_10_test(void)
 	unsigned short blk_descriptor_len = 0;
 
 	memset(&bdev, 0, sizeof(struct spdk_bdev));
-	spdk_init_task(&task);
+	ut_init_task(&task);
 	memset(cdb, 0, sizeof(cdb));
 	cdb[0] = 0x5A;
 	cdb[2] = 0x3F;
@@ -393,7 +393,7 @@ mode_sense_10_test(void)
 	CU_ASSERT_EQUAL(dev_specific_param, 0);
 	CU_ASSERT_EQUAL(blk_descriptor_len, 8);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 /*
@@ -411,7 +411,7 @@ inquiry_evpd_test(void)
 	char cdb[6];
 	int rc;
 
-	spdk_init_task(&task);
+	ut_init_task(&task);
 
 	cdb[0] = 0x12;
 	cdb[1] = 0x00; // EVPD = 0
@@ -434,7 +434,7 @@ inquiry_evpd_test(void)
 	CU_ASSERT_EQUAL(task.sense_data[12], 0x24);
 	CU_ASSERT_EQUAL(task.sense_data[13], 0x0);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 /*
@@ -453,7 +453,7 @@ inquiry_standard_test(void)
 	struct spdk_scsi_cdb_inquiry_data *inq_data;
 	int rc;
 
-	spdk_init_task(&task);
+	ut_init_task(&task);
 
 	cdb[0] = 0x12;
 	cdb[1] = 0x00; // EVPD = 0
@@ -476,7 +476,7 @@ inquiry_standard_test(void)
 	CU_ASSERT_EQUAL(inq_data->version, SPDK_SPC_VERSION_SPC3);
 	CU_ASSERT_EQUAL(rc, 0);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 static void
@@ -491,7 +491,7 @@ _inquiry_overflow_test(uint8_t alloc_len)
 	/* expects a 4K internal data buffer */
 	char data[4096], data_compare[4096];
 
-	spdk_init_task(&task);
+	ut_init_task(&task);
 
 	cdb[0] = 0x12;
 	cdb[1] = 0x00; // EVPD = 0
@@ -517,7 +517,7 @@ _inquiry_overflow_test(uint8_t alloc_len)
 	CU_ASSERT_EQUAL(memcmp(data + alloc_len, data_compare + alloc_len, sizeof(data) - alloc_len), 0);
 	CU_ASSERT(task.data_transferred <= alloc_len);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 static void
@@ -577,7 +577,7 @@ task_complete_test(void)
 	struct spdk_bdev_io bdev_io = {};
 	struct spdk_scsi_lun lun;
 
-	spdk_init_task(&task);
+	ut_init_task(&task);
 
 	TAILQ_INIT(&lun.tasks);
 	TAILQ_INSERT_TAIL(&lun.tasks, &task, scsi_link);
@@ -605,7 +605,7 @@ task_complete_test(void)
 	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
 	CU_ASSERT_EQUAL(task.sense_data[13], SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 static void
@@ -619,7 +619,7 @@ lba_range_test(void)
 
 	lun.bdev = &bdev;
 
-	spdk_init_task(&task);
+	ut_init_task(&task);
 	task.lun = &lun;
 	task.cdb = cdb;
 
@@ -663,7 +663,7 @@ lba_range_test(void)
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 static void
@@ -677,7 +677,7 @@ xfer_len_test(void)
 
 	lun.bdev = &bdev;
 
-	spdk_init_task(&task);
+	ut_init_task(&task);
 	task.lun = &lun;
 	task.cdb = cdb;
 
@@ -731,7 +731,7 @@ xfer_len_test(void)
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
 
-	spdk_put_task(&task);
+	ut_put_task(&task);
 }
 
 int
