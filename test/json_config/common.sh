@@ -111,6 +111,16 @@ function clear_pmem_bdev_subsystem_config() {
 	$rpc_py  delete_pmem_pool /tmp/pool_file1
 }
 
+function create_rbd_bdev_subsystem_config() {
+	rbd_setup 127.0.0.1
+	$rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+}
+
+function clear_rbd_bdev_subsystem_config() {
+	$clear_config_py clear_config
+	rbd_cleanup
+}
+
 function create_bdev_subsystem_config() {
 	$rpc_py construct_split_vbdev Nvme0n1 2
 	$rpc_py construct_null_bdev Null0 32 512
