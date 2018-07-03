@@ -226,6 +226,7 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 {
 	struct spdk_nvme_qpair *qpair = req->qpair;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+	union spdk_nvme_csts_register csts;
 
 	assert(active_proc->timeout_cb_fn != NULL);
 
@@ -246,6 +247,14 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 		return 1;
 	}
 
+	/* A controller level reset is required to recover
+	 * from Controller Fatal Status.
+	 */
+	csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
+	if (csts.bits.cfs) {
+		SPDK_ERRLOG("Controller Fatal Status, reset required\n");
+	}
+
 	req->timed_out = true;
 
 	/*
@@ -255,7 +264,7 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 	 */
 	active_proc->timeout_cb_fn(active_proc->timeout_cb_arg, ctrlr,
 				   nvme_qpair_is_admin_queue(qpair) ? NULL : qpair,
-				   cid);
+				   cid, csts.bits.cfs ? true : false);
 	return 0;
 }
 
