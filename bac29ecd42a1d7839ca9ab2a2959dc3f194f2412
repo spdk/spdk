@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0bf9317e_79a2e600",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2772,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-03T15:32:25Z",
+      "side": 1,
+      "message": "I think this error message can be improved - to make it very obvious to the observer what was done wrong.\n\nFor example \"did not exit properly\" is too vague.  This could say exactly that \"examine_config function for module (module-\u003ename) did not call spdk_bdev_module_examine_done()\".",
+      "revId": "bac29ecd42a1d7839ca9ab2a2959dc3f194f2412",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
