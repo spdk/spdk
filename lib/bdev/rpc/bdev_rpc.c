@@ -544,6 +544,8 @@ struct rpc_set_bdev_qos_limit {
 	int32_t		r_ios_per_sec;
 	int32_t		w_ios_per_sec;
 	int32_t		rw_mbytes_per_sec;
+	int32_t		r_mbytes_per_sec;
+	int32_t		w_mbytes_per_sec;
 };
 
 static void
@@ -568,6 +570,14 @@ static const struct spdk_json_object_decoder rpc_set_bdev_qos_limit_decoders[] =
 	},
 	{
 		"rw_mbytes_per_sec", offsetof(struct rpc_set_bdev_qos_limit, rw_mbytes_per_sec),
+		spdk_json_decode_int32, true
+	},
+	{
+		"r_mbytes_per_sec", offsetof(struct rpc_set_bdev_qos_limit, r_mbytes_per_sec),
+		spdk_json_decode_int32, true
+	},
+	{
+		"w_mbytes_per_sec", offsetof(struct rpc_set_bdev_qos_limit, w_mbytes_per_sec),
 		spdk_json_decode_int32, true
 	},
 };
@@ -617,7 +627,7 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.rw_ios_per_sec == 0 && req.r_ios_per_sec == 0 && req.w_ios_per_sec == 0 &&
-	    req.rw_mbytes_per_sec == 0) {
+	    req.rw_mbytes_per_sec == 0 && req.r_mbytes_per_sec == 0 && req.w_mbytes_per_sec == 0) {
 		SPDK_ERRLOG("no valid rate limits set\n");
 		goto invalid;
 	}
@@ -656,6 +666,24 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 			limits.rw_mbytes_per_sec = req.rw_mbytes_per_sec;
 		}
 		types |= SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT;
+	}
+
+	if (req.r_mbytes_per_sec > 0 || req.r_mbytes_per_sec == -1) {
+		if (req.r_mbytes_per_sec == -1) {
+			limits.r_mbytes_per_sec = 0;
+		} else {
+			limits.r_mbytes_per_sec = req.r_mbytes_per_sec;
+		}
+		types |= SPDK_BDEV_QOS_R_BPS_RATE_LIMIT;
+	}
+
+	if (req.w_mbytes_per_sec > 0 || req.w_mbytes_per_sec == -1) {
+		if (req.w_mbytes_per_sec == -1) {
+			limits.w_mbytes_per_sec = 0;
+		} else {
+			limits.w_mbytes_per_sec = req.w_mbytes_per_sec;
+		}
+		types |= SPDK_BDEV_QOS_W_BPS_RATE_LIMIT;
 	}
 
 	free_rpc_set_bdev_qos_limit(&req);
