@@ -228,6 +228,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 {
 	uint32_t num_partition_entries;
 	uint64_t i, head_lba_start, head_lba_end;
+	uint32_t num_partitions;
 	struct spdk_gpt_partition_entry *p;
 	struct gpt_disk *d;
 	struct spdk_gpt *gpt;
@@ -239,6 +240,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 	num_partition_entries = from_le32(&gpt->header->num_partition_entries);
 	head_lba_start = from_le64(&gpt->header->first_usable_lba);
 	head_lba_end = from_le64(&gpt->header->last_usable_lba);
+	num_partitions = 0;
 
 	for (i = 0; i < num_partition_entries; i++) {
 		p = &gpt->partitions[i];
@@ -277,11 +279,11 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 			free(d);
 			return -1;
 		}
-
+		num_partitions++;
 		d->partition_index = i;
 	}
 
-	return 0;
+	return num_partitions;
 }
 
 static void
@@ -289,7 +291,6 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 {
 	struct gpt_base *gpt_base = (struct gpt_base *)arg;
 	struct spdk_bdev *bdev = spdk_bdev_part_base_get_bdev(gpt_base->part_base);
-	uint32_t part_base_ref;
 	int rc;
 
 	spdk_bdev_free_io(bdev_io);
@@ -320,9 +321,12 @@ end:
 	 *  callback are now completed.
 	 */
 	spdk_bdev_module_examine_done(&gpt_if);
-	part_base_ref = spdk_bdev_part_base_get_ref(gpt_base->part_base);
 
-	if (part_base_ref == 0) {
+	/*
+	 * vbdev_gpt_create_bdevs returns the number of bdevs created upon success.
+	 * We can branch on this value.
+	 */
+	if (rc == 0) {
 		/* If no gpt_disk instances were created, free the base context */
 		spdk_bdev_part_base_free(gpt_base->part_base);
 	}
