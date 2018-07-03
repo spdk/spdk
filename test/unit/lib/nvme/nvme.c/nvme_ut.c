@@ -87,6 +87,16 @@ DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
 	    (struct spdk_nvme_qpair *qpair,
 	     uint32_t max_completions), 0);
 
+DEFINE_STUB(spdk_nvme_ctrlr_reset, int,
+	    (struct spdk_nvme_ctrlr *ctrlr), 0);
+
+union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_csts_register csts = {0};
+
+	return csts;
+}
+
 static bool ut_destruct_called = false;
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)

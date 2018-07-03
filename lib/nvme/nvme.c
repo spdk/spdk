@@ -226,6 +226,7 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 {
 	struct spdk_nvme_qpair *qpair = req->qpair;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+	union spdk_nvme_csts_register csts;
 
 	assert(active_proc->timeout_cb_fn != NULL);
 
@@ -243,6 +244,15 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 	}
 
 	if (req->submit_tick + active_proc->timeout_ticks > now_tick) {
+		return 1;
+	}
+
+	/* Check controller fatal status when detected timeout */
+	csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
+	if (csts.bits.cfs) {
+		SPDK_ERRLOG("Controller fatal error detected, "
+			    "reset and re-initialize the controller\n");
+		spdk_nvme_ctrlr_reset(ctrlr);
 		return 1;
 	}
 
