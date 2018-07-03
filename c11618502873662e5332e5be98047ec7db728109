@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f1f2b27_fb29e524",
+        "filename": "test/vhost/json_config/json_config.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-03T22:58:19Z",
+      "side": 1,
+      "message": "Is this variable needed here?",
+      "revId": "c11618502873662e5332e5be98047ec7db728109",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
