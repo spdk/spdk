@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61531839_e661c6c0",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T17:05:10Z",
+      "side": 1,
+      "message": "Table of contents?",
+      "revId": "9e1593f2d554b57292762d7575ef8662549590c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8da5f636_249f88c0",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T17:05:10Z",
+      "side": 1,
+      "message": "I\u0027d describe tracepoints as a \"high performance tracing mechanism accessible at run-time\" - it is implemented as a circular buffer in shared memory accessible from other processes.",
+      "revId": "9e1593f2d554b57292762d7575ef8662549590c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "054d5f2c_c90143f5",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T17:05:10Z",
+      "side": 1,
+      "message": "I\u0027d put this section at the end - describe how to use the existing ones first.",
+      "revId": "9e1593f2d554b57292762d7575ef8662549590c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "243c3316_16b79822",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-03T17:05:10Z",
+      "side": 1,
+      "message": "You haven\u0027t described what a \"tracepoint group\" is yet - you need to say that tracepoints are placed in groups either in this section or in the introduction. They\u0027re enabled or disabled as a group.",
+      "revId": "9e1593f2d554b57292762d7575ef8662549590c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
