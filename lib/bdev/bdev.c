@@ -1355,19 +1355,22 @@ spdk_bdev_channel_poll_qos(void *arg)
 	qos->write_io_submitted_this_timeslice = 0;
 
 	/* More read/write bytes sent in the last timeslice, allow less in this timeslice */
-	if (qos->byte_submitted_this_timeslice > qos->max_byte_per_timeslice) {
+	if (qos->max_byte_per_timeslice > 0 &&
+	    qos->byte_submitted_this_timeslice > qos->max_byte_per_timeslice) {
 		qos->byte_submitted_this_timeslice -= qos->max_byte_per_timeslice;
 	} else {
 		qos->byte_submitted_this_timeslice = 0;
 	}
 	/* More read bytes sent in the last timeslice, allow less in this timeslice */
-	if (qos->read_byte_submitted_this_timeslice > qos->max_read_byte_per_timeslice) {
+	if (qos->max_read_byte_per_timeslice > 0 &&
+	    qos->read_byte_submitted_this_timeslice > qos->max_read_byte_per_timeslice) {
 		qos->read_byte_submitted_this_timeslice -= qos->max_read_byte_per_timeslice;
 	} else {
 		qos->read_byte_submitted_this_timeslice = 0;
 	}
 	/* More write bytes sent in the last timeslice, allow less in this timeslice */
-	if (qos->write_byte_submitted_this_timeslice > qos->max_write_byte_per_timeslice) {
+	if (qos->max_write_byte_per_timeslice > 0 &&
+	    qos->write_byte_submitted_this_timeslice > qos->max_write_byte_per_timeslice) {
 		qos->write_byte_submitted_this_timeslice -= qos->max_write_byte_per_timeslice;
 	} else {
 		qos->write_byte_submitted_this_timeslice = 0;
@@ -3693,7 +3696,8 @@ spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, struct spdk_bdev_qos_rate_l
 	}
 
 	if (limits->rw_ios_per_sec == 0 && limits->r_ios_per_sec == 0 &&
-	    limits->w_ios_per_sec == 0 && limits->rw_mbytes_per_sec == 0) {
+	    limits->w_ios_per_sec == 0 && limits->rw_mbytes_per_sec == 0 &&
+	    limits->r_mbytes_per_sec == 0 && limits->w_mbytes_per_sec == 0) {
 		enable_rate_limit = false;
 	}
 
