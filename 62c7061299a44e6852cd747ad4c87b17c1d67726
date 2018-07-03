@@ -16,6 +16,24 @@
       "revId": "62c7061299a44e6852cd747ad4c87b17c1d67726",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53719c87_d43b04f1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T23:25:23Z",
+      "side": 1,
+      "message": "We could consider allocating multiple buffers per I/O (similar to the io_unit_size code that has been added to the NVMe-oF target) so that we could support arbitrarily large zero-copy I/Os.",
+      "parentUuid": "3778106c_81d0b5c0",
+      "revId": "62c7061299a44e6852cd747ad4c87b17c1d67726",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
