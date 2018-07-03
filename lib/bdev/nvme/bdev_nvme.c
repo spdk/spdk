@@ -845,14 +845,23 @@ spdk_nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 static void
 timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
-	   struct spdk_nvme_qpair *qpair, uint16_t cid)
+	   struct spdk_nvme_qpair *qpair, uint16_t cid, bool reset)
 {
 	int rc;
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
 
-	switch (g_opts.action_on_timeout) {
-	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
+	/* FALLTHROUGH */
+	if (reset || g_opts.action_on_timeout == SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET) {
+		SPDK_WARNLOG("Warning: Resetting controller\n");
+		rc = spdk_nvme_ctrlr_reset(ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("Resetting controller failed.\n");
+		}
+		return;
+	}
+
+	if (g_opts.action_on_timeout == SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT) {
 		if (qpair) {
 			rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid,
 						       spdk_nvme_abort_cpl, ctrlr);
@@ -862,16 +871,6 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 			SPDK_ERRLOG("Unable to send abort. Resetting.\n");
 		}
-
-	/* FALLTHROUGH */
-	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
-		rc = spdk_nvme_ctrlr_reset(ctrlr);
-		if (rc) {
-			SPDK_ERRLOG("Resetting controller failed.\n");
-		}
-		break;
-	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
-		break;
 	}
 }
 

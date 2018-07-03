@@ -675,11 +675,13 @@ struct spdk_nvme_qpair;
  * \param ctrlr Opaque handle to NVMe controller.
  * \param qpair Opaque handle to a queue pair.
  * \param cid Command ID.
+ * \param reset Controller reset is required.
  */
 typedef void (*spdk_nvme_timeout_cb)(void *cb_arg,
 				     struct spdk_nvme_ctrlr *ctrlr,
 				     struct spdk_nvme_qpair *qpair,
-				     uint16_t cid);
+				     uint16_t cid,
+				     bool reset);
 
 /**
  * Register for timeout callback on a controller.
