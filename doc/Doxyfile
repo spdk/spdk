@@ -786,6 +786,7 @@ INPUT                  = ../include/spdk \
                          intro.md \
                          concepts.md \
                          user_guides.md \
+                         user_guides_common.md \
                          prog_guides.md \
                          general.md \
                          misc.md \
