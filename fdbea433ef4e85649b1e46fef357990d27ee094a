@@ -145,6 +145,30 @@
     },
     {
       "key": {
+        "uuid": "bea8bd8b_ee381950",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T00:49:17Z",
+      "side": 1,
+      "message": "As I replied in the abandoned patch, you are correct and I was wrong. Thank you so much and please review again.",
+      "parentUuid": "580ebfae_540c3f80",
+      "range": {
+        "startLine": 303,
+        "startChar": 51,
+        "endLine": 303,
+        "endChar": 70
+      },
+      "revId": "fdbea433ef4e85649b1e46fef357990d27ee094a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73825af9_1849c3d4",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3

@@ -16,6 +16,24 @@
       "revId": "435894f7227d1d1e563a04de87e6f4f8d6b92376",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0486b827_2e0f02ba",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-03T00:49:17Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6971a49f_f8d21533",
+      "revId": "435894f7227d1d1e563a04de87e6f4f8d6b92376",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
