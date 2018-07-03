@@ -77,6 +77,15 @@ function remove_config_files_after_test_json_config() {
 	rm $tmp_config $full_config $null_json_config
 }
 
+function create_rbd_bdev_subsystem_config() {
+        rbd_setup 127.0.0.1
+        $rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+}
+
+function clear_rbd_bdev_subsystem_config() {
+        rbd_cleanup
+}
+
 function create_bdev_subsystem_config() {
 	$rpc_py construct_split_vbdev Nvme0n1 2
 	$rpc_py construct_null_bdev Null0 32 512
