@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b31d706_afcac555",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-03T06:38:19Z",
+      "side": 1,
+      "message": "ctrlr.adminq \u003d \u0026qpair; no need for this line, otherwise looks good to me.",
+      "revId": "b1d8931aa78cc640c5688f730ae4e7cd5371ac2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
