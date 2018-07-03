@@ -44,6 +44,8 @@ struct spdk_scsi_globals g_spdk_scsi;
 
 static uint64_t g_test_bdev_num_blocks;
 
+TAILQ_HEAD(, spdk_bdev_io) g_bdev_io_queue;
+
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
@@ -135,6 +137,7 @@ ut_put_task(struct spdk_scsi_task *task)
 	task->iov.iov_base = NULL;
 	task->iov.iov_len = 0;
 	task->alloc_len = 0;
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_io_queue));
 }
 
 
@@ -179,12 +182,41 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 	*iovcntp = 0;
 }
 
+static void
+ut_bdev_io_flush(void)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	while (!TAILQ_EMPTY(&g_bdev_io_queue)) {
+		bdev_io = TAILQ_FIRST(&g_bdev_io_queue);
+		TAILQ_REMOVE(&g_bdev_io_queue, bdev_io, internal.link);
+		bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
+		free(bdev_io);
+	}
+}
+
+static int
+_spdk_bdev_io_op(spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = calloc(1, sizeof(*bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	bdev_io->internal.cb = cb;
+	bdev_io->internal.caller_ctx = cb_arg;
+
+	TAILQ_INSERT_TAIL(&g_bdev_io_queue, bdev_io, internal.link);
+
+	return 0;
+}
+
 int
 spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 int
@@ -193,7 +225,7 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		 uint64_t offset, uint64_t len,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 int
@@ -201,14 +233,14 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 int
 spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 int
@@ -216,7 +248,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return _spdk_bdev_io_op(cb, cb_arg);
 }
 
 /*
@@ -636,6 +668,9 @@ lba_range_test(void)
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_bdev_io_queue));
+	ut_bdev_io_flush();
+	CU_ASSERT(task.status == SPDK_SCSI_TASK_COMPLETE);
 
 	/* LBA = 4, length = 1 (LBA out of range) */
 	to_be64(&cdb[2], 4); /* LBA */
@@ -645,6 +680,7 @@ lba_range_test(void)
 	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_io_queue));
 
 	/* LBA = 0, length = 4 (in range, max valid size) */
 	to_be64(&cdb[2], 0); /* LBA */
@@ -653,6 +689,9 @@ lba_range_test(void)
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_bdev_io_queue));
+	ut_bdev_io_flush();
+	CU_ASSERT(task.status == SPDK_SCSI_TASK_COMPLETE);
 
 	/* LBA = 0, length = 5 (LBA in range, length beyond end of bdev) */
 	to_be64(&cdb[2], 0); /* LBA */
@@ -662,6 +701,7 @@ lba_range_test(void)
 	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_io_queue));
 
 	ut_put_task(&task);
 }
@@ -694,6 +734,9 @@ xfer_len_test(void)
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_bdev_io_queue));
+	ut_bdev_io_flush();
+	CU_ASSERT(task.status == SPDK_SCSI_TASK_COMPLETE);
 
 	/* max transfer length (as reported in block limits VPD page) */
 	to_be64(&cdb[2], 0); /* LBA */
@@ -702,6 +745,9 @@ xfer_len_test(void)
 	rc = spdk_bdev_scsi_execute(&task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_bdev_io_queue));
+	ut_bdev_io_flush();
+	CU_ASSERT(task.status == SPDK_SCSI_TASK_COMPLETE);
 
 	/* max transfer length plus one block (invalid) */
 	to_be64(&cdb[2], 0); /* LBA */
@@ -712,6 +758,7 @@ xfer_len_test(void)
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT((task.sense_data[2] & 0xf) == SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
 	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_io_queue));
 
 	/* zero transfer length (valid) */
 	to_be64(&cdb[2], 0); /* LBA */
@@ -721,6 +768,7 @@ xfer_len_test(void)
 	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
 	CU_ASSERT(task.data_transferred == 0);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_io_queue));
 
 	/* zero transfer length past end of disk (invalid) */
 	to_be64(&cdb[2], g_test_bdev_num_blocks); /* LBA */
@@ -730,6 +778,7 @@ xfer_len_test(void)
 	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_io_queue));
 
 	ut_put_task(&task);
 }
@@ -739,6 +788,8 @@ main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
+
+	TAILQ_INIT(&g_bdev_io_queue);
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
