@@ -33,6 +33,14 @@ submission and can significantly reduce CPU usage in the VM on heavy I/O workloa
 This guide assumes the SPDK has been built according to the instructions in @ref
 getting_started.  The SPDK vhost target is built with the default configure options.
 
+## Vhost Command Line Parameters {#vhost_cmd_line_args}
+
+Additional command line flags are available for Vhost target.
+
+Param    | Type     | Default                | Description
+-------- | -------- | ---------------------- | -----------
+-S       | string   | $PWD                   | directory where UNIX domain sockets will be created
+
 ## Supported Guest Operating Systems
 
 The guest OS must contain virtio-scsi or virtio-blk drivers.  Most Linux and FreeBSD
