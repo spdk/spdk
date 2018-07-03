@@ -33,8 +33,11 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/env.h"
+#include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -66,6 +69,29 @@ struct io_device {
 
 static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
 
+enum spdk_poller_state {
+	/* The poller is registered with a thread but not currently executing its fn. */
+	SPDK_POLLER_STATE_WAITING,
+
+	/* The poller is currently running its fn. */
+	SPDK_POLLER_STATE_RUNNING,
+
+	/* The poller was unregistered during the execution of its fn. */
+	SPDK_POLLER_STATE_UNREGISTERED,
+};
+
+struct spdk_poller {
+	TAILQ_ENTRY(spdk_poller)	tailq;
+
+	/* Current state of the poller; should only be accessed from the poller's thread. */
+	enum spdk_poller_state		state;
+
+	uint64_t			period_ticks;
+	uint64_t			next_run_tick;
+	spdk_poller_fn			fn;
+	void				*arg;
+};
+
 struct spdk_thread {
 	pthread_t			thread_id;
 	spdk_thread_pass_msg		msg_fn;
@@ -75,6 +101,19 @@ struct spdk_thread {
 	TAILQ_HEAD(, spdk_io_channel)	io_channels;
 	TAILQ_ENTRY(spdk_thread)	tailq;
 	char				*name;
+
+	/*
+	 * Contains pollers actively running on this thread.  Pollers
+	 *  are run round-robin. The thread takes one poller from the head
+	 *  of the ring, executes it, then puts it back at the tail of
+	 *  the ring.
+	 */
+	TAILQ_HEAD(, spdk_poller)	active_pollers;
+
+	/**
+	 * Contains pollers running on this thread with a periodic timer.
+	 */
+	TAILQ_HEAD(timer_pollers_head, spdk_poller) timer_pollers;
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
@@ -138,6 +177,12 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		return NULL;
 	}
 
+	if ((start_poller_fn != NULL && stop_poller_fn == NULL) ||
+	    (start_poller_fn == NULL && stop_poller_fn != NULL)) {
+		SPDK_ERRLOG("start_poller_fn and stop_poller_fn must either both be NULL or both be non-NULL\n");
+		return NULL;
+	}
+
 	thread = calloc(1, sizeof(*thread));
 	if (!thread) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
@@ -152,6 +197,10 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	thread->thread_ctx = thread_ctx;
 	TAILQ_INIT(&thread->io_channels);
 	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
+
+	TAILQ_INIT(&thread->active_pollers);
+	TAILQ_INIT(&thread->timer_pollers);
+
 	g_thread_count++;
 	if (name) {
 		_set_thread_name(name);
@@ -190,6 +239,89 @@ spdk_free_thread(void)
 	free(thread);
 
 	pthread_mutex_unlock(&g_devlist_mutex);
+}
+
+static void
+_spdk_poller_insert_timer(struct spdk_thread *thread, struct spdk_poller *poller, uint64_t now)
+{
+	struct spdk_poller *iter;
+
+	poller->next_run_tick = now + poller->period_ticks;
+
+	/*
+	 * Insert poller in the thread's timer_pollers list in sorted order by next scheduled
+	 * run time.
+	 */
+	TAILQ_FOREACH_REVERSE(iter, &thread->timer_pollers, timer_pollers_head, tailq) {
+		if (iter->next_run_tick <= poller->next_run_tick) {
+			TAILQ_INSERT_AFTER(&thread->timer_pollers, iter, poller, tailq);
+			return;
+		}
+	}
+
+	/* No earlier pollers were found, so this poller must be the new head */
+	TAILQ_INSERT_HEAD(&thread->timer_pollers, poller, tailq);
+}
+
+int
+spdk_thread_poll(struct spdk_thread *thread)
+{
+	struct spdk_poller *poller;
+	int rc;
+	int aggregate_rc = 0;
+
+	poller = TAILQ_FIRST(&thread->active_pollers);
+	if (poller) {
+		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+		poller->state = SPDK_POLLER_STATE_RUNNING;
+		rc = poller->fn(poller->arg);
+		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			free(poller);
+		} else {
+			poller->state = SPDK_POLLER_STATE_WAITING;
+			TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
+		}
+
+		if (aggregate_rc <= 0) {
+			aggregate_rc = rc;
+		}
+	}
+
+	poller = TAILQ_FIRST(&thread->timer_pollers);
+	if (poller) {
+		uint64_t now = spdk_get_ticks();
+
+		if (now >= poller->next_run_tick) {
+			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+			poller->state = SPDK_POLLER_STATE_RUNNING;
+			rc = poller->fn(poller->arg);
+			if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+				free(poller);
+			} else {
+				poller->state = SPDK_POLLER_STATE_WAITING;
+				_spdk_poller_insert_timer(thread, poller, now);
+			}
+
+			if (rc == 1 || aggregate_rc == -1) {
+				aggregate_rc = rc;
+			}
+		}
+	}
+
+	return aggregate_rc;
+}
+
+uint64_t
+spdk_thread_next_poller_expiration(struct spdk_thread *thread, uint64_t now)
+{
+	struct spdk_poller *poller;
+
+	poller = TAILQ_FIRST(&thread->timer_pollers);
+	if (poller) {
+		return poller->next_run_tick;
+	}
+
+	return 0;
 }
 
 uint32_t
@@ -240,6 +372,7 @@ spdk_poller_register(spdk_poller_fn fn,
 {
 	struct spdk_thread *thread;
 	struct spdk_poller *poller;
+	uint64_t quotient, remainder, ticks;
 
 	thread = spdk_get_thread();
 	if (!thread) {
@@ -247,17 +380,34 @@ spdk_poller_register(spdk_poller_fn fn,
 		return NULL;
 	}
 
-	if (!thread->start_poller_fn || !thread->stop_poller_fn) {
-		SPDK_ERRLOG("No related functions to start requested poller\n");
-		assert(false);
+	if (thread->start_poller_fn) {
+		return thread->start_poller_fn(thread->thread_ctx, fn, arg, period_microseconds);
+	}
+
+	poller = calloc(1, sizeof(*poller));
+	if (poller == NULL) {
+		SPDK_ERRLOG("Poller memory allocation failed\n");
 		return NULL;
 	}
 
-	poller = thread->start_poller_fn(thread->thread_ctx, fn, arg, period_microseconds);
-	if (!poller) {
-		SPDK_ERRLOG("Unable to start requested poller\n");
-		assert(false);
-		return NULL;
+	poller->state = SPDK_POLLER_STATE_WAITING;
+	poller->fn = fn;
+	poller->arg = arg;
+
+	if (period_microseconds) {
+		quotient = period_microseconds / SPDK_SEC_TO_USEC;
+		remainder = period_microseconds % SPDK_SEC_TO_USEC;
+		ticks = spdk_get_ticks_hz();
+
+		poller->period_ticks = ticks * quotient + (ticks * remainder) / SPDK_SEC_TO_USEC;
+	} else {
+		poller->period_ticks = 0;
+	}
+
+	if (poller->period_ticks) {
+		_spdk_poller_insert_timer(thread, poller, spdk_get_ticks());
+	} else {
+		TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
 	}
 
 	return poller;
@@ -277,9 +427,31 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 	*ppoller = NULL;
 
 	thread = spdk_get_thread();
+	if (!thread) {
+		assert(false);
+		return;
+	}
 
-	if (thread) {
+	if (thread->stop_poller_fn) {
 		thread->stop_poller_fn(poller, thread->thread_ctx);
+		return;
+	}
+
+	if (poller->state == SPDK_POLLER_STATE_RUNNING) {
+		/*
+		 * We are being called from the poller_fn, so set the state to unregistered
+		 * and let the thread poll loop free the poller.
+		 */
+		poller->state = SPDK_POLLER_STATE_UNREGISTERED;
+	} else {
+		/* Poller is not running currently, so just free it. */
+		if (poller->period_ticks) {
+			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+		} else {
+			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+		}
+
+		free(poller);
 	}
 }
 
