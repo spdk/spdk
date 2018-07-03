@@ -151,13 +151,6 @@ ioat_get_ring_entry(struct spdk_ioat_chan *ioat, uint32_t index,
 	*hw_desc = &ioat->hw_ring[i];
 }
 
-static uint64_t
-ioat_get_desc_phys_addr(struct spdk_ioat_chan *ioat, uint32_t index)
-{
-	return ioat->hw_ring_phys_addr +
-	       ioat_get_ring_index(ioat, index) * sizeof(union spdk_ioat_hw_desc);
-}
-
 static void
 ioat_submit_single(struct spdk_ioat_chan *ioat)
 {
@@ -336,7 +329,7 @@ ioat_process_channel_events(struct spdk_ioat_chan *ioat)
 			desc->callback_fn(desc->callback_arg);
 		}
 
-		hw_desc_phys_addr = ioat_get_desc_phys_addr(ioat, ioat->tail);
+		hw_desc_phys_addr = desc->phys_addr;
 		ioat->tail++;
 	} while (hw_desc_phys_addr != completed_descriptor);
 
@@ -372,6 +365,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	uint64_t status;
 	int i, num_descriptors;
 	uint64_t comp_update_bus_addr = 0;
+	uint64_t phys_addr;
 
 	if (ioat_map_pci_bar(ioat) != 0) {
 		SPDK_ERRLOG("ioat_map_pci_bar() failed\n");
@@ -421,13 +415,20 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	}
 
 	ioat->hw_ring = spdk_dma_zmalloc(num_descriptors * sizeof(union spdk_ioat_hw_desc), 64,
-					 &ioat->hw_ring_phys_addr);
+					 NULL);
 	if (!ioat->hw_ring) {
 		return -1;
 	}
 
 	for (i = 0; i < num_descriptors; i++) {
-		ioat->hw_ring[i].generic.next = ioat_get_desc_phys_addr(ioat, i + 1);
+		phys_addr = spdk_vtophys(&ioat->hw_ring[i]);
+		if (phys_addr == SPDK_VTOPHYS_ERROR) {
+			SPDK_ERRLOG("Failed to translate descriptor %u to physical address\n", i);
+			return -1;
+		}
+
+		ioat->ring[i].phys_addr = phys_addr;
+		ioat->hw_ring[ioat_get_ring_index(ioat, i - 1)].generic.next = phys_addr;
 	}
 
 	ioat->head = 0;
@@ -438,7 +439,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 
 	ioat->regs->chanctrl = SPDK_IOAT_CHANCTRL_ANY_ERR_ABORT_EN;
 	ioat_write_chancmp(ioat, comp_update_bus_addr);
-	ioat_write_chainaddr(ioat, ioat->hw_ring_phys_addr);
+	ioat_write_chainaddr(ioat, ioat->ring[0].phys_addr);
 
 	ioat_prep_null(ioat);
 	ioat_flush(ioat);
