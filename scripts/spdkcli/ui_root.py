@@ -123,6 +123,19 @@ class UIRoot(UINode):
         response = rpc.bdev.construct_rbd_bdev(self.client, **kwargs)
         return response
 
+    def create_virtio_dev(self, **kwargs):
+        response = rpc.vhost.construct_virtio_dev(self.client, **kwargs)
+        return self.print_array(response)
+
+    def remove_virtio_scsi_bdev(self, **kwargs):
+        response = rpc.vhost.remove_virtio_scsi_bdev(self.client, **kwargs)
+        return response
+
+    def get_virtio_scsi_devs(self):
+        for bdev in rpc.vhost.get_virtio_scsi_devs(self.client):
+            test = Bdev(bdev)
+            yield test
+
     def list_vhost_ctrls(self):
         self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
 
