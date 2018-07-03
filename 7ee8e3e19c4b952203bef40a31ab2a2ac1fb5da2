@@ -16,6 +16,24 @@
       "revId": "7ee8e3e19c4b952203bef40a31ab2a2ac1fb5da2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9317114c_006091e9",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-03T17:51:46Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this also be:\n\nparams \u003d __get_params(locals())\n\nlike was done for get_bdevs below?",
+      "parentUuid": "78ce04ee_04e97e32",
+      "revId": "7ee8e3e19c4b952203bef40a31ab2a2ac1fb5da2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
