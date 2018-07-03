@@ -45,6 +45,7 @@
 #define IOAT_DEFAULT_ORDER			15
 
 struct ioat_descriptor {
+	uint64_t		phys_addr;
 	spdk_ioat_req_cb	callback_fn;
 	void			*callback_arg;
 };
@@ -66,7 +67,6 @@ struct spdk_ioat_chan {
 
 	struct ioat_descriptor		*ring;
 	union spdk_ioat_hw_desc		*hw_ring;
-	uint64_t			hw_ring_phys_addr;
 	uint32_t			dma_capabilities;
 
 	/* tailq entry for attached_chans */
