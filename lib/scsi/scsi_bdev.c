@@ -1327,8 +1327,6 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 	}
 
 	task->data_transferred = nbytes;
-	task->status = SPDK_SCSI_STATUS_GOOD;
-
 	return SPDK_SCSI_TASK_PENDING;
 }
 
@@ -1379,7 +1377,6 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		      (uint64_t)task->length, nbytes);
 
 	task->data_transferred = task->length;
-	task->status = SPDK_SCSI_STATUS_GOOD;
 	return SPDK_SCSI_TASK_PENDING;
 }
 
@@ -1419,7 +1416,6 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 	task->data_transferred = 0;
-	task->status = SPDK_SCSI_STATUS_GOOD;
 	return SPDK_SCSI_TASK_PENDING;
 }
 
@@ -1496,14 +1492,10 @@ spdk_bdev_scsi_task_complete_unmap_cmd(struct spdk_bdev_io *bdev_io, bool succes
 
 	ctx->count--;
 
-	task->bdev_io = bdev_io;
-
-	if (task->status == SPDK_SCSI_STATUS_GOOD) {
+	if (ctx->count == 0) {
+		task->bdev_io = bdev_io;
 		spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
 		spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
-	}
-
-	if (ctx->count == 0) {
 		spdk_scsi_lun_complete_task(task->lun, task);
 		free(ctx);
 	}
@@ -1585,12 +1577,6 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		free(ctx);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
-
-	/* Before we submit commands, set the status to success */
-	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_GOOD,
-				  SPDK_SCSI_SENSE_NO_SENSE,
-				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 
 	for (i = 0; i < desc_count; i++) {
 		struct spdk_scsi_unmap_bdesc	*desc;
