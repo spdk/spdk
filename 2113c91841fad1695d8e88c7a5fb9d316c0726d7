@@ -1,0 +1,274 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bcb412c_2c1adf24",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "parameter -\u003e parameters",
+      "range": {
+        "startLine": 9,
+        "startChar": 24,
+        "endLine": 9,
+        "endChar": 33
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bccc2875_f257df45",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "refere -\u003e refer",
+      "range": {
+        "startLine": 10,
+        "startChar": 30,
+        "endLine": 10,
+        "endChar": 36
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a417e5c3_584465e4",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "cofnig -\u003e config",
+      "range": {
+        "startLine": 33,
+        "startChar": 33,
+        "endLine": 33,
+        "endChar": 39
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "992931d0_f1b75201",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "instead -\u003e instead of",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 7
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24267d4e_1cf1a7e1",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "cofnig -\u003e config",
+      "range": {
+        "startLine": 37,
+        "startChar": 8,
+        "endLine": 37,
+        "endChar": 14
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebf5902f_805591b7",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "usefull -\u003e useful",
+      "range": {
+        "startLine": 42,
+        "startChar": 63,
+        "endLine": 42,
+        "endChar": 70
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75dde025_ac22a512",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "Deffered -\u003e Deferred (also in the anchor name)",
+      "range": {
+        "startLine": 45,
+        "startChar": 4,
+        "endLine": 45,
+        "endChar": 12
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e30582e_fc3b48c2",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "need -\u003e needs",
+      "range": {
+        "startLine": 49,
+        "startChar": 50,
+        "endLine": 49,
+        "endChar": 54
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d868e420_2e388424",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "followng -\u003e following",
+      "range": {
+        "startLine": 66,
+        "startChar": 81,
+        "endLine": 66,
+        "endChar": 89
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f9fc983_174150e4",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "coma -\u003e comma",
+      "range": {
+        "startLine": 66,
+        "startChar": 47,
+        "endLine": 66,
+        "endChar": 51
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbb791c8_a1e7e5f5",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "Maybe explicitly mention `-L all` rather than just `all`.",
+      "range": {
+        "startLine": 66,
+        "startChar": 30,
+        "endLine": 66,
+        "endChar": 35
+      },
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cf5b369_becfb3eb",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-03T17:19:27Z",
+      "side": 1,
+      "message": "This list will probably get outdated, so it might be better to just tell the user to run the application with -h to get the list.",
+      "revId": "2113c91841fad1695d8e88c7a5fb9d316c0726d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
