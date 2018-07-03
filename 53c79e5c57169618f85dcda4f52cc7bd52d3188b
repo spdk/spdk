@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1311e997_6c4bdd30",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-03T17:03:01Z",
+      "side": 1,
+      "message": "struct spdk_bdev_io_wait_entry should be embedded directly in this structure (instead of allocating it).  Then we can ensure that bdev_io can eventually be submitted and avoid case where both bdev_io function returned ENOMEM and we cannot allocate the spdk_bdev_io_wait_entry structure.",
+      "revId": "53c79e5c57169618f85dcda4f52cc7bd52d3188b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
