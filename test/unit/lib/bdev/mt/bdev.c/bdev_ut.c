@@ -1220,9 +1220,27 @@ qos_dynamic_enable(void)
 	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
 	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
 
-	/* Enable QoS: Byte per second rate limit */
+	/* Enable QoS: Read/Write Byte per second rate limit */
 	status = -1;
 	spdk_bdev_set_qos_rate_limit(bdev, 10, SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Enable QoS: Read only Byte per second rate limit */
+	status = -1;
+	spdk_bdev_set_qos_rate_limit(bdev, 10, SPDK_BDEV_QOS_R_BPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Enable QoS: Write only Byte per second rate limit */
+	status = -1;
+	spdk_bdev_set_qos_rate_limit(bdev, 10, SPDK_BDEV_QOS_W_BPS_RATE_LIMIT,
 				     qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);
@@ -1256,9 +1274,27 @@ qos_dynamic_enable(void)
 	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
 	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
 
-	/* Disable QoS: Byte per second rate limit */
+	/* Disable QoS: Read/Write Byte per second rate limit */
 	status = -1;
 	spdk_bdev_set_qos_rate_limit(bdev, 0, SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Disable QoS: Read only Byte per second rate limit */
+	status = -1;
+	spdk_bdev_set_qos_rate_limit(bdev, 0, SPDK_BDEV_QOS_R_BPS_RATE_LIMIT,
+				     qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Disable QoS: Write only Byte per second rate limit */
+	status = -1;
+	spdk_bdev_set_qos_rate_limit(bdev, 0, SPDK_BDEV_QOS_W_BPS_RATE_LIMIT,
 				     qos_dynamic_enable_done, &status);
 	poll_threads();
 	CU_ASSERT(status == 0);

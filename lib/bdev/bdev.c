@@ -3495,7 +3495,9 @@ spdk_bdev_set_qos_rate_limit(struct spdk_bdev *bdev, uint64_t limit_per_sec,
 			if (bdev->internal.qos->iops_rate_limit == 0 &&
 			    bdev->internal.qos->read_iops_rate_limit == 0 &&
 			    bdev->internal.qos->write_iops_rate_limit == 0 &&
-			    bdev->internal.qos->byte_rate_limit == 0) {
+			    bdev->internal.qos->byte_rate_limit == 0 &&
+			    bdev->internal.qos->read_byte_rate_limit == 0 &&
+			    bdev->internal.qos->write_byte_rate_limit == 0) {
 				/* Disabling */
 				spdk_for_each_channel(__bdev_to_io_dev(bdev),
 						      _spdk_bdev_disable_qos_msg, ctx,

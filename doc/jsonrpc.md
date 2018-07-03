@@ -303,6 +303,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 mbytes_per_sec          | Required | number      | Number of megabytes per second to allow. 0 means unlimited.
+io_type                 | Optional | string      | Type of I/O operations (RW, R, W). Default is RW.
 
 ### Example
 
@@ -315,6 +316,7 @@ Example request:
   "params": {
     "name": "Malloc0"
     "mbytes_per_sec": 100
+    "io_type": "RW"
   }
 }
 ~~~

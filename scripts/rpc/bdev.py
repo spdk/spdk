@@ -355,16 +355,19 @@ def set_bdev_qos_limit_iops(client, name, ios_per_sec, io_type):
     return client.call('set_bdev_qos_limit_iops', params)
 
 
-def set_bdev_qos_limit_bps(client, name, mbytes_per_sec):
+def set_bdev_qos_limit_bps(client, name, mbytes_per_sec, io_type):
     """Set QoS megabytes per second limit on a block device.
 
     Args:
         name: name of block device
         mbytes_per_sec: megabytes per second limit (>=10, example: 100). 0 means unlimited.
+        io_type: type of I/O operations (RW, R, W). Default is RW.
     """
     params = {}
     params['name'] = name
     params['mbytes_per_sec'] = mbytes_per_sec
+    if io_type:
+        params['io_type'] = io_type
     return client.call('set_bdev_qos_limit_bps', params)
 
 
