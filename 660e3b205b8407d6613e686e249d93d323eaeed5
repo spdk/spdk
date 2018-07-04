@@ -16,6 +16,24 @@
       "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8cfa91e1_ba9111b2",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-04T00:06:27Z",
+      "side": 1,
+      "message": "I agree.  I\u0027m afraid this might make it sound like if you set commit\u003dfalse that whatever data you wrote to the buffer will get thrown away.\n\nI think the populate parameter is named correctly, but maybe \u0027commit\u0027 should be something else?  What about \u0027modified\u0027?  Then the caller basically indicates whether they modified the data or not - and the bdev module can decide what it has to do if it was modified (which for malloc is a nop).",
+      "parentUuid": "4c15aef5_310d0c9a",
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
