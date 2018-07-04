@@ -50,7 +50,6 @@
 #include "iscsi/conn.h"
 #include "iscsi/tgt_node.h"
 #include "iscsi/portal_grp.h"
-#include "spdk/scsi.h"
 
 #define SPDK_ISCSI_CONNECTION_MEMSET(conn)		\
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
@@ -280,6 +279,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	TAILQ_INIT(&conn->queued_r2t_tasks);
 	TAILQ_INIT(&conn->active_r2t_tasks);
 	TAILQ_INIT(&conn->queued_datain_tasks);
+	memset(&conn->open_lun_descs, 0, sizeof(conn->open_lun_descs));
 
 	rc = spdk_sock_getaddr(sock, conn->target_addr,
 			       sizeof conn->target_addr,
@@ -583,12 +583,79 @@ spdk_iscsi_conn_check_shutdown(void *arg)
 
 	if (spdk_iscsi_get_active_conns() == 0) {
 		spdk_poller_unregister(&g_shutdown_timer);
-		event = spdk_event_allocate(spdk_env_get_current_core(), spdk_iscsi_conn_check_shutdown_cb, NULL,
-					    NULL);
+		event = spdk_event_allocate(spdk_env_get_current_core(),
+					    spdk_iscsi_conn_check_shutdown_cb, NULL, NULL);
 		spdk_event_call(event);
 	}
 
 	return -1;
+}
+
+static void
+spdk_iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
+{
+	struct spdk_scsi_desc *desc;
+
+	desc = conn->open_lun_descs[lun_id];
+	if (desc != NULL) {
+		spdk_scsi_lun_free_io_channel(desc);
+		spdk_scsi_lun_close(desc);
+		conn->open_lun_descs[lun_id] = NULL;
+	}
+}
+
+static void
+spdk_iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
+{
+	int i;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		spdk_iscsi_conn_close_lun(conn, i);
+	}
+}
+
+static void
+spdk_iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
+{
+	struct spdk_iscsi_conn *conn = remove_ctx;
+	int lun_id = spdk_scsi_lun_get_id(lun);
+
+	spdk_clear_all_transfer_task(conn, lun);
+
+	spdk_iscsi_conn_close_lun(conn, lun_id);
+}
+
+static void
+spdk_iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
+{
+	int i, rc;
+	struct spdk_scsi_lun *lun;
+	struct spdk_scsi_desc *desc;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		lun = spdk_scsi_dev_get_lun(conn->dev, i);
+		if (lun == NULL) {
+			continue;
+		}
+
+		rc = spdk_scsi_lun_open(lun, spdk_iscsi_conn_remove_lun, conn, &desc);
+		if (rc != 0) {
+			goto error;
+		}
+
+		rc = spdk_scsi_lun_allocate_io_channel(desc);
+		if (rc != 0) {
+			spdk_scsi_lun_close(desc);
+			goto error;
+		}
+
+		conn->open_lun_descs[i] = desc;
+	}
+
+	return;
+
+error:
+	spdk_iscsi_conn_close_luns(conn);
 }
 
 /**
@@ -607,8 +674,7 @@ spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 		target->num_active_conns--;
 		pthread_mutex_unlock(&target->mutex);
 
-		assert(conn->dev != NULL);
-		spdk_scsi_dev_free_io_channels(conn->dev);
+		spdk_iscsi_conn_close_luns(conn);
 	}
 
 	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
@@ -1171,8 +1237,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 	struct spdk_iscsi_conn *conn = arg1;
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
-		assert(conn->dev != NULL);
-		spdk_scsi_dev_allocate_io_channels(conn->dev);
+		spdk_iscsi_conn_open_luns(conn);
 	}
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */

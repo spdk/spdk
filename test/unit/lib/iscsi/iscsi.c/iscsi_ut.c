@@ -102,6 +102,12 @@ spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
 	return lun->id;
 }
 
+bool
+spdk_scsi_lun_is_removing(const struct spdk_scsi_lun *lun)
+{
+	return true;
+}
+
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {
