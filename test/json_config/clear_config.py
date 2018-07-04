@@ -97,8 +97,17 @@ def clear_iscsi_subsystem(args, iscsi_config):
     pass
 
 
-def clear_nbd_subsystem(args, scsi_config):
-    pass
+def get_nbd_destroy_method(nbd):
+    destroy_method_map = {'start_nbd_disk': "stop_nbd_disk"
+                          }
+    return destroy_method_map[nbd['method']]
+
+
+def clear_nbd_subsystem(args, nbd_config):
+    for nbd in nbd_config:
+        destroy_method = get_nbd_destroy_method(nbd)
+        if destroy_method:
+            args.client.call(destroy_method, {'nbd_device': nbd['params']['nbd_device']})
 
 
 def clear_net_framework_subsystem(args, net_framework_config):
