@@ -42,6 +42,7 @@
 #include "spdk/util.h"
 #include "spdk/rpc.h"
 #include "spdk/string.h"
+#include "spdk/iscsi_spec.h"
 
 #include "spdk_internal/log.h"
 #include "spdk/bdev_module.h"
@@ -342,6 +343,46 @@ bdev_iscsi_unmap(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 	}
 }
 
+static void
+bdev_iscsi_reset_cb(struct iscsi_context *context __attribute__((unused)), int status,
+		    void *command_data, void *private_data)
+{
+	uint32_t tmf_response;
+	struct bdev_iscsi_io *iscsi_io = private_data;
+
+	tmf_response = *(uint32_t *)command_data;
+	if (tmf_response == ISCSI_TASK_FUNC_RESP_COMPLETE) {
+		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static void
+_bdev_iscsi_reset(void *_bdev_io)
+{
+	int rc;
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	struct bdev_iscsi_lun *lun = (struct bdev_iscsi_lun *)bdev_io->bdev->ctxt;
+	struct bdev_iscsi_io *iscsi_io = (struct bdev_iscsi_io *)bdev_io->driver_ctx;
+	struct iscsi_context *context = lun->context;
+
+	rc = iscsi_task_mgmt_lun_reset_async(context, 0,
+					     bdev_iscsi_reset_cb, iscsi_io);
+	if (rc != 0) {
+		SPDK_ERRLOG("failed to do iscsi reset\n");
+		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+}
+
+static void
+bdev_iscsi_reset(struct spdk_bdev_io *bdev_io)
+{
+	struct bdev_iscsi_lun *lun = (struct bdev_iscsi_lun *)bdev_io->bdev->ctxt;
+	spdk_thread_send_msg(lun->master_td, _bdev_iscsi_reset, bdev_io);
+}
+
 static int
 bdev_iscsi_poll_lun(struct bdev_iscsi_lun *lun)
 {
@@ -426,6 +467,9 @@ static void _bdev_iscsi_submit_request(void *_bdev_io)
 				 ISCSI_IMMEDIATE_DATA_NO,
 				 bdev_io->u.bdev.offset_blocks);
 		break;
+	case SPDK_BDEV_IO_TYPE_RESET:
+		bdev_iscsi_reset(bdev_io);
+		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		bdev_iscsi_unmap(lun, iscsi_io,
 				 bdev_io->u.bdev.offset_blocks,
@@ -460,6 +504,7 @@ bdev_iscsi_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
 
 	default:
