@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "26d5423c_f5379942",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f20f568c_1de6b4d7",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "901893bb_8373bb4c",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 22
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "569fde47_d33123c1",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "I thought of the same earlier, but 32Bytes of waitq entry was looking a lot for each bdev_io. Also, the waitq logic in main IO path should not get exercised as we should have enough bdev_io free so putting 32Bytes per bdev_io is getting wasted and under-utilized. Tomorrow if waitq_entry gets additional elements, it would further increase the size and mostly this would not be used as our main IO path is not expected to enter waitq logic more often. Please let me know if you think otherwise.",
+      "parentUuid": "901893bb_8373bb4c",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bcfcc0b_e4c7a7ee",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 22
@@ -47,6 +83,24 @@
       "writtenOn": "2018-06-28T23:11:09Z",
       "side": 1,
       "message": "It looks like the flush implementation above doesn\u0027t actually do anything; it would be better to report flush as unsupported in this case.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6f2f427_c8427977",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "By not returning success for flush, filesystem workload does not work good. Like if we create and mount XFS it does not work as it might be sending flushes. I got this from bdev_nvme module where it was done same way.",
+      "parentUuid": "9bcfcc0b_e4c7a7ee",
       "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -76,6 +130,30 @@
     },
     {
       "key": {
+        "uuid": "77f4355e_1116247c",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "I am using formatting for 2nd argument, I think you meant for 3rd argument. I think for 2nd argument _fmt() function is not required.",
+      "parentUuid": "120ae533_0145fcf1",
+      "range": {
+        "startLine": 841,
+        "startChar": 3,
+        "endLine": 841,
+        "endChar": 31
+      },
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "78c98aab_b2915652",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 22
@@ -87,6 +165,24 @@
       "writtenOn": "2018-06-28T23:11:09Z",
       "side": 1,
       "message": "strdup() needs a check for allocation failure.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4c579ee_7fa2512f",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 977,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "78c98aab_b2915652",
       "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -110,6 +206,24 @@
     },
     {
       "key": {
+        "uuid": "f6aecc55_10caff1b",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "This is purely for developer\u0027s debug purpose (I had written this for initial debugging and did not want to loose this code so put under compilation flag and made it disabled) and adding log level was putting some checks in main IO path code increasing latency, so put it under compile flag.",
+      "parentUuid": "04f6acd1_5f1d09e2",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e95ccd7e_f8bc876c",
         "filename": "lib/bdev/pvol/bdev_pvol.h",
         "patchSetId": 22
@@ -121,6 +235,24 @@
       "writtenOn": "2018-06-28T23:11:09Z",
       "side": 1,
       "message": "If this is always meant to be last, you can remove the trailing comma.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d9e0202_6be86367",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e95ccd7e_f8bc876c",
       "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -150,6 +282,30 @@
     },
     {
       "key": {
+        "uuid": "104c45e2_22d76c96",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52322600_48614fe3",
+      "range": {
+        "startLine": 252,
+        "startChar": 9,
+        "endLine": 252,
+        "endChar": 13
+      },
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dbf5a9bc_1b738261",
         "filename": "scripts/rpc.py",
         "patchSetId": 22
@@ -161,6 +317,24 @@
       "writtenOn": "2018-06-28T23:11:09Z",
       "side": 1,
       "message": "We have been doing some cleanup/refactoring recently on rpc.py, so this probably changed since you originally wrote the patch.  The scripts/rpc.py script should be responsible for converting the \u0027args\u0027 object from argparse into individual Python method arguments (see the other bdev @call_cmd methods for examples).  This should hopefully just be a matter of moving the parsing code from scripts/rpc/bdev.py into scripts/rpc.py and adding named parameters to each method.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49593ef0_929a885b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dbf5a9bc_1b738261",
       "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -184,6 +358,24 @@
     },
     {
       "key": {
+        "uuid": "66d4c27c_ddd56edf",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c9ef5c1a_3c1e8901",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9740d11b_d4306ff1",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 22
@@ -195,6 +387,24 @@
       "writtenOn": "2018-06-28T23:11:09Z",
       "side": 1,
       "message": "Please add named arguments here in place of args (see comments on scripts/rpc.py) and add a doc string like the other methods in this file.",
+      "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8ee0ff2_02f3d316",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-04T10:41:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9740d11b_d4306ff1",
       "revId": "c850c61f307068960c78d168d9c981b3ab172e9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
