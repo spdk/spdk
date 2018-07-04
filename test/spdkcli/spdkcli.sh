@@ -7,13 +7,22 @@ SPDKCLI_BUILD_DIR=$(readlink -f $testdir/../..)
 spdkcli_job="python3 $SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job.py"
 . $SPDKCLI_BUILD_DIR/test/common/autotest_common.sh
 
-timing_enter spdk_cli
 function on_error_exit() {
 	set +e
 	killprocess $spdk_tgt_pid
 	rm -f $testdir/spdkcli.test $testdir/spdkcli_details.test /tmp/sample_aio
+	rm -f $testdir/spdkcli.test_pmem /tmp/sample_pmem
 	print_backtrace
 	exit 1
+}
+
+function run_spdk_tgt() {
+	timing_enter run_spdk_tgt
+        $SPDKCLI_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 1024 &
+        spdk_tgt_pid=$!
+
+        waitforlisten $spdk_tgt_pid
+	timing_exit run_spdk_tgt
 }
 
 function create_bdevs() {
@@ -68,38 +77,72 @@ function clear_config() {
 	$spdkcli_job "/bdevs/malloc delete Malloc3" "Malloc3"
 }
 
-timing_enter run_spdk_tgt
+function run_vhost_test() {
+	dd if=/dev/zero of=/tmp/sample_aio bs=2048 count=5000
+	timing_enter spdkcli_create_bdevs_config
+	create_bdevs
+	timing_exit spdkcli_create_bdevs_config
+
+	timing_enter spdkcli_create_lvols_config
+	create_lvols
+	timing_exit spdkcli_create_lvols_config
+
+	timing_enter spdkcli_create_vhosts_config
+	create_vhosts
+	timing_exit spdkcli_create_vhosts_config
+
+	#check match
+        timing_enter spdkcli_check_match
+        python3 $SPDKCLI_BUILD_DIR/scripts/spdkcli.py ll > $testdir/spdkcli.test
+        python3 $SPDKCLI_BUILD_DIR/scripts/spdkcli.py bdevs/split_disk/Nvme0n1p0 show_details | jq -r -S '.' > $testdir/spdkcli_details.test
+        $SPDKCLI_BUILD_DIR/test/app/match/match -v $testdir/spdkcli.test.match
+        $SPDKCLI_BUILD_DIR/test/app/match/match -v $testdir/spdkcli_details.test.match
+        timing_exit spdkcli_check_match
+
+	timing_enter spdkcli_clear_config
+	clear_config
+	timing_exit spdkcli_clear_config
+}
+
+function run_pmem_test() {
+	timing_enter spdkcli_pmem
+	$spdkcli_job "/bdevs/pmemblk create_pmem_pool /tmp/sample_pmem 32 512" "" True
+	$spdkcli_job "/bdevs/pmemblk create/tmp/sample_pmem pmem_bdev" "pmem_bdev" True
+
+	$SPDKCLI_BUILD_DIR/scripts/spdkcli.py ll > $testdir/spdkcli.test_pmem
+	$SPDKCLI_BUILD_DIR/test/app/match/match -v $testdir/spdkcli.test_pmem".match"
+
+	$spdkcli_job "/bdevs/pmemblk delete pmem_bdev" "pmem_bdev"
+	$spdkcli_job "/bdevs/pmemblk delete_pmem_pool /tmp/sample_pmem" ""
+	timing_exit spdkcli_pmem
+}
+
+timing_enter spdk_cli
 trap 'on_error_exit' ERR
-$SPDKCLI_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 1024 &
-spdk_tgt_pid=$!
-waitforlisten $spdk_tgt_pid
-timing_exit run_spdk_tgt
 
-timing_enter spdkcli_create_bdevs_config
-create_bdevs
-timing_exit spdkcli_create_bdevs_config
+run_spdk_tgt
 
-timing_enter spdkcli_create_lvols_config
-create_lvols
-timing_exit spdkcli_create_lvols_config
+case $1 in
+	-h|--help)
+		echo "usage: $(basename $0) TEST_TYPE"
+		echo "Test type can be:"
+		echo "	--vhost"
+		echo "	--pmem"
+	;;
+	-v|--vhost)
+		run_vhost_test
+		;;
+	-p|--pmem)
+		run_pmem_test
+		;;
+	*)
+		echo "unknown test type: $1"
+		exit 1
+	;;
+esac
 
-timing_enter spdkcli_create_vhosts_config
-create_vhosts
-timing_exit spdkcli_create_vhosts_config
-
-timing_enter spdkcli_check_match
-python3 $SPDKCLI_BUILD_DIR/scripts/spdkcli.py ll > $testdir/spdkcli.test
-python3 $SPDKCLI_BUILD_DIR/scripts/spdkcli.py bdevs/split_disk/Nvme0n1p0 show_details | jq -r -S '.' > $testdir/spdkcli_details.test
-$SPDKCLI_BUILD_DIR/test/app/match/match -v $testdir/spdkcli.test.match
-$SPDKCLI_BUILD_DIR/test/app/match/match -v $testdir/spdkcli_details.test.match
-timing_exit spdkcli_check_match
-
-timing_enter spdkcli_clear_config
-clear_config
-timing_exit spdkcli_clear_config
-
-rm -f $testdir/spdkcli.test $testdir/spdkcli_details.test /tmp/sample_aio
 killprocess $spdk_tgt_pid
-
+rm -f $testdir/spdkcli.test $testdir/spdkcli_details.test /tmp/sample_aio
+rm -f $testdir/spdkcli.test_pmem /tmp/sample_pmem
 timing_exit spdk_cli
 report_test_completion spdk_cli
