@@ -218,6 +218,7 @@ fi
 if [ $SPDK_TEST_PMDK -eq 1 ]; then
 	run_test ./test/pmem/pmem.sh -x
 	run_test ./test/pmem/json_config/json_config.sh
+	run_test ./test/spdkcli/pmem.sh
 fi
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
