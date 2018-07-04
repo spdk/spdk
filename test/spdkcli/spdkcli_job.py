@@ -100,6 +100,17 @@ def clear_spdk_tgt_pmem():
     execute_command("/bdevs/pmemblk delete pmem_bdev","pmem_bdev")
     execute_command("/bdevs/pmemblk delete_pmem_pool /tmp/sample_pmem")
 
+
+def load_spdk_tgt_rbd():
+    execute_command("/bdevs/rbd create rbd foo 512", "Ceph0")
+
+
+def clear_spdk_tgt_rbd():
+    global in_ls
+    in_ls = False
+    execute_command("/bdevs/rbd delete Ceph0","Ceph0")
+
+
 if __name__ == "__main__":
     testdir = os.path.dirname(os.path.realpath(sys.argv[0]))
     child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py"))
@@ -121,3 +132,7 @@ if __name__ == "__main__":
         load_spdk_tgt_pmem()
     if args.job == "clear_spdk_tgt_pmem":
         clear_spdk_tgt_pmem()
+    if args.job == "load_spdk_tgt_rbd":
+        load_spdk_tgt_rbd()
+    if args.job == "clear_spdk_tgt_rbd":
+        clear_spdk_tgt_rbd()

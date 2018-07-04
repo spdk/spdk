@@ -51,6 +51,17 @@ function run_pmem_test() {
 	python3.5 $SPDK_BUILD_DIR/test/spdkcli/spdkcli_job.py -job clear_spdk_tgt_pmem
 }
 
+function run_rbd_test() {
+	trap 'rbd_cleanup; on_error_exit' ERR
+	run_spdk_tgt
+	rootdir=$(readlink -f $SPDK_BUILD_DIR)
+	rbd_setup 127.0.0.1
+
+	python3.5 $SPDK_BUILD_DIR/test/spdkcli/spdkcli_job.py -job load_spdk_tgt_rbd
+        python3.5 $SPDK_BUILD_DIR/test/spdkcli/spdkcli_job.py -job clear_spdk_tgt_rbd
+	rbd_cleanup
+}
+
 case $1 in
         -h|--help)
                 echo "usage: $(basename $0) TEST_TYPE"
@@ -66,7 +77,10 @@ case $1 in
         -p|--pmem)
 		run_pmem_test
                 ;;
-        *)
+	-r|--rbd)
+		run_rbd_test
+		;;
+	*)
                 echo "unknown test type: $1"
                 exit 1
         ;;
