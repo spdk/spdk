@@ -222,6 +222,7 @@ fi
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
 	run_test ./test/bdev/bdevjson/rbd_json_config.sh
+	run_test ./test/spdkcli/spdkcli.sh --rbd
 fi
 
 timing_enter cleanup
