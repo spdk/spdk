@@ -25,6 +25,7 @@ def execute_command(cmd, element=None, element_exists=False):
                 print("Element %s is in list" % element)
                 exit(1)
 
+
 if __name__ == "__main__":
     testdir = os.path.dirname(os.path.realpath(sys.argv[0]))
     child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py"))
