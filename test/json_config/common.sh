@@ -13,6 +13,8 @@ base_bdevs=$JSON_DIR/bdevs_base.txt
 last_bdevs=$JSON_DIR/bdevs_last.txt
 tmp_config=$JSON_DIR/tmp_config.json
 null_json_config=$JSON_DIR/null_json_config.json
+base_nbd_disks=$JSON_DIR/nbd_disks_base.txt
+last_nbd_disks=$JSON_DIR/nbd_disks_last.txt
 
 function run_spdk_tgt() {
 	echo "Running spdk target"
@@ -77,6 +79,7 @@ function kill_targets() {
 # 11. Remove all files.
 function test_json_config() {
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $base_bdevs
+	$rpc_py get_nbd_disks | jq '.|sort_by(.bdev_name)' > $base_nbd_disks
 	$rpc_py save_config -f $full_config
 	$JSON_DIR/config_filter.py -method "delete_global_parameters" -filename $full_config > $base_json_config
 	$clear_config_py clear_config
@@ -86,8 +89,10 @@ function test_json_config() {
 		echo "Config has not been cleared"
 		return 1
 	fi
+
 	$rpc_py load_config -f $base_json_config
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $last_bdevs
+	$rpc_py get_nbd_disks | jq '.|sort_by(.bdev_name)' > $last_nbd_disks
 	$rpc_py save_config -f $tmp_config
 	$JSON_DIR/config_filter.py -method "delete_global_parameters" -filename $tmp_config > $last_json_config
 	diff $base_json_config $last_json_config
@@ -96,9 +101,9 @@ function test_json_config() {
 }
 
 function remove_config_files_after_test_json_config() {
-	rm $last_bdevs $base_bdevs
-	rm $last_json_config $base_json_config
-	rm $tmp_config $full_config $null_json_config
+	rm -f $last_bdevs $base_bdevs
+	rm -f $last_json_config $base_json_config
+	rm -f $tmp_config $full_config $null_json_config
 }
 
 function create_pmem_bdev_subsytem_config() {
@@ -148,6 +153,16 @@ function clear_bdev_subsystem_config() {
 	if [ $(uname -s) = Linux ]; then
 		rm -f /tmp/sample_aio
 	fi
+}
+
+function create_nbd_subsystem_config() {
+	$rpc_py construct_malloc_bdev 128 512 --name Malloc0
+	$rpc_py start_nbd_disk Malloc0 /dev/nbd0
+	$rpc_py start_nbd_disk Nvme0n1 /dev/nbd1
+}
+
+function clear_nbd_subsystem_config() {
+	$clear_config_py clear_config
 }
 
 # In this test, target is spdk_tgt or virtio_initiator.
