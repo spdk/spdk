@@ -55,6 +55,7 @@ struct bdev_iscsi_lun;
 
 #define BDEV_ISCSI_CONNECTION_POLL_US 500 /* 0.5 ms */
 #define BDEV_ISCSI_NO_MASTER_CH_POLL_US 10000 /* 10ms */
+#define SPDK_ISCSI_TMR_FUNC_COMPLETE 0x0
 
 #define DEFAULT_INITIATOR_NAME "iqn.2016-06.io.spdk:init"
 
@@ -342,6 +343,44 @@ bdev_iscsi_unmap(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 	}
 }
 
+static void
+bdev_iscsi_reset_cb(struct iscsi_context *context __attribute__((unused)), int status,
+		    void *command_data, void *private_data)
+{
+	struct bdev_iscsi_io *iscsi_io = private_data;
+	uint32_t tmf_response;
+
+	tmf_response = *(uint32_t *)command_data;
+	if (tmf_response == SPDK_ISCSI_TMR_FUNC_COMPLETE) {
+		iscsi_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	} else {
+		iscsi_io->status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	bdev_iscsi_io_complete(iscsi_io, iscsi_io->status);
+}
+
+static void
+bdev_iscsi_reset(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io)
+{
+
+	struct iscsi_context *context = lun->context;
+	int rc;
+	struct spdk_thread *current_thread = spdk_get_thread();
+
+	if (current_thread != lun->master_td) {
+		return;
+	}
+
+	rc = iscsi_task_mgmt_lun_reset_async(context, 0,
+					     bdev_iscsi_reset_cb, iscsi_io);
+	if (rc != 0) {
+		SPDK_ERRLOG("failed to do iscsi reset\n");
+		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+}
+
 static int
 bdev_iscsi_poll_lun(struct bdev_iscsi_lun *lun)
 {
@@ -426,6 +465,9 @@ static void _bdev_iscsi_submit_request(void *_bdev_io)
 				 ISCSI_IMMEDIATE_DATA_NO,
 				 bdev_io->u.bdev.offset_blocks);
 		break;
+	case SPDK_BDEV_IO_TYPE_RESET:
+		bdev_iscsi_reset(lun, iscsi_io);
+		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		bdev_iscsi_unmap(lun, iscsi_io,
 				 bdev_io->u.bdev.offset_blocks,
@@ -460,6 +502,7 @@ bdev_iscsi_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
 
 	default:
