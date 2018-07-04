@@ -1542,7 +1542,7 @@ _spdk_blob_allocate_and_copy_cluster_cpl(void *cb_arg, int bserrno)
 		}
 	}
 
-	spdk_dma_free(ctx->buf);
+	//spdk_dma_free(ctx->buf);
 	free(ctx);
 }
 
@@ -1568,6 +1568,7 @@ _spdk_blob_insert_cluster_cpl(void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(ctx->seq, bserrno);
 }
 
+#if 0
 static void
 _spdk_blob_write_copy_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
@@ -1603,6 +1604,7 @@ _spdk_blob_write_copy(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 				   _spdk_bs_cluster_to_lba(ctx->blob->bs, 1),
 				   _spdk_blob_write_copy_cpl, ctx);
 }
+#endif /* 0 */
 
 static void
 _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
@@ -1643,7 +1645,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 	ctx->blob = blob;
 	ctx->page = cluster_start_page;
-
+#if 0
 	ctx->buf = spdk_dma_malloc(blob->bs->cluster_sz, blob->back_bs_dev->blocklen, NULL);
 	if (!ctx->buf) {
 		SPDK_ERRLOG("DMA allocation for cluster of size = %" PRIu32 " failed.\n",
@@ -1652,7 +1654,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		spdk_bs_user_op_abort(op);
 		return;
 	}
-
+#endif
 	rc = _spdk_bs_allocate_cluster(blob, cluster_number, &ctx->new_cluster, false);
 	if (rc != 0) {
 		spdk_dma_free(ctx->buf);
@@ -1668,7 +1670,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	ctx->seq = spdk_bs_sequence_start(_ch, &cpl);
 	if (!ctx->seq) {
 		_spdk_bs_release_cluster(blob->bs, ctx->new_cluster);
-		spdk_dma_free(ctx->buf);
+		//spdk_dma_free(ctx->buf);
 		free(ctx);
 		spdk_bs_user_op_abort(op);
 		return;
@@ -1677,11 +1679,17 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	/* Queue the user op to block other incoming operations */
 	TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
 
+#if 0
 	/* Read cluster from backing device */
 	spdk_bs_sequence_read_bs_dev(ctx->seq, blob->back_bs_dev, ctx->buf,
 				     _spdk_bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
 				     _spdk_bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz),
 				     _spdk_blob_write_copy, ctx);
+#else
+	_spdk_blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
+					       _spdk_blob_insert_cluster_cpl, ctx);
+
+#endif
 }
 
 static void
