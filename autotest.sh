@@ -96,6 +96,7 @@ if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 	run_test test/bdev/blockdev.sh
 	if [ $(uname -s) = Linux ]; then
 		run_test test/bdev/bdevjson/json_config.sh
+                run_test test/bdev/nbdjson/json_config.sh
 	fi
 fi
 
