@@ -16,6 +16,24 @@
       "revId": "53c79e5c57169618f85dcda4f52cc7bd52d3188b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f828a5e3_6a51f52b",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-04T13:44:32Z",
+      "side": 1,
+      "message": "Sure, the only issue I saw when tackling this was adding bdev.h as include in here. If that is fine, it simplifies the scsi_bdev.c.\nThanks",
+      "parentUuid": "1311e997_6c4bdd30",
+      "revId": "53c79e5c57169618f85dcda4f52cc7bd52d3188b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
