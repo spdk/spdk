@@ -192,7 +192,7 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_exit integrity_lvol_blk
 
 	timing_enter spdk_cli
-	run_test ./test/spdkcli/spdkcli.sh
+	run_test ./test/spdkcli/spdkcli.sh --vhost
 	timing_exit spdk_cli
 
 	timing_exit vhost
@@ -218,6 +218,7 @@ fi
 if [ $SPDK_TEST_PMDK -eq 1 ]; then
 	run_test ./test/pmem/pmem.sh -x
 	run_test ./test/pmem/json_config/json_config.sh
+	run_test ./test/spdkcli/spdkcli.sh --pmem
 fi
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
