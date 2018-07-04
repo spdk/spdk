@@ -92,6 +92,17 @@ def clear_spdk_tgt():
     execute_command("/bdevs/malloc delete Malloc3", "Malloc3")
 
 
+def load_spdk_tgt_pmem():
+    execute_command("/bdevs/pmemblk create_pmem_pool /tmp/sample_pmem 32 512", "", True)
+    execute_command("/bdevs/pmemblk create/tmp/sample_pmem pmem_bdev", "pmem_bdev", True)
+
+
+def clear_spdk_tgt_pmem():
+    global in_ls
+    in_ls = False
+    execute_command("/bdevs/pmemblk delete pmem_bdev", "pmem_bdev")
+    execute_command("/bdevs/pmemblk delete_pmem_pool /tmp/sample_pmem")
+
 if __name__ == "__main__":
     testdir = os.path.dirname(os.path.realpath(sys.argv[0]))
     child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py"))
@@ -110,3 +121,7 @@ if __name__ == "__main__":
         load_vhost()
     if args.job == "clear_spdk_tgt":
         clear_spdk_tgt()
+    if args.job == "load_spdk_tgt_pmem":
+        load_spdk_tgt_pmem()
+    if args.job == "clear_spdk_tgt_pmem":
+        clear_spdk_tgt_pmem()
