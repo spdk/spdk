@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a194a2b_1834c40d",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-04T08:17:10Z",
+      "side": 1,
+      "message": "Please fix all \"adress\" \u003e \"address\"",
+      "range": {
+        "startLine": 56,
+        "startChar": 14,
+        "endLine": 56,
+        "endChar": 20
+      },
+      "revId": "afd22d7d75da7b1ebee702f23c341c139fce2d36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
