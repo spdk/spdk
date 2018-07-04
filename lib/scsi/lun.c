@@ -444,3 +444,9 @@ spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
 {
 	return !TAILQ_EMPTY(&lun->tasks);
 }
+
+bool
+spdk_scsi_lun_is_removing(const struct spdk_scsi_lun *lun)
+{
+	return lun->removed;
+}
