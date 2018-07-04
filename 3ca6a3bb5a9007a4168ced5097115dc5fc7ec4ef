@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db15d0aa_03971cc3",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-04T13:26:45Z",
+      "side": 1,
+      "message": "Now construct_malloc_bdev returns the created bdev.\nhttps://review.gerrithub.io/c/spdk/spdk/+/416081\n\nProbably we should do as same as test/nvmf/fio/fio.sh",
+      "revId": "3ca6a3bb5a9007a4168ced5097115dc5fc7ec4ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b01d76d_55983736",
+        "filename": "test/nvmf/nvmfjson/json_config.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-04T13:26:45Z",
+      "side": 1,
+      "message": "As Seth commented in https://review.gerrithub.io/c/spdk/spdk/+/410789/14/test/vhost/json_config/json_config.sh#8, \nis this necessary here?",
+      "revId": "3ca6a3bb5a9007a4168ced5097115dc5fc7ec4ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
