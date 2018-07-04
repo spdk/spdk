@@ -5,6 +5,12 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
+iscsi_fio_cleanup() {
+	iscsicleanup
+	rm -f ./local-job0-0-verify.state
+	rm -f $testdir/iscsi.conf
+}
+
 function running_config() {
 	# generate a config file from the running iscsi_tgt
 	#  running_config.sh will leave the file at /tmp/iscsi.conf
@@ -15,14 +21,14 @@ function running_config() {
 	# keep the same iscsiadm configuration to confirm that the
 	#  config file matched the running configuration
 	killprocess $pid
-	trap "iscsicleanup; exit 1" SIGINT SIGTERM EXIT
+	trap "iscsi_fio_cleanup; exit 1" SIGINT SIGTERM EXIT
 
 	timing_enter start_iscsi_tgt2
 
 	$ISCSI_APP -c /tmp/iscsi.conf &
 	pid=$!
 	echo "Process pid: $pid"
-	trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+	trap "iscsi_fio_cleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 	waitforlisten $pid
 	echo "iscsi_tgt is listening. Running tests..."
 
@@ -58,7 +64,7 @@ $ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "iscsi_fio_cleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 echo "iscsi_tgt is listening. Running tests..."
@@ -78,7 +84,7 @@ sleep 1
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
-trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "iscsi_fio_cleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 sleep 1
 $fio_py 4096 1 randrw 1 verify
@@ -94,13 +100,31 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	running_config
 fi
 
-iscsicleanup
-$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
+# Start hotplug test case.
+$fio_py 1048576 128 rw 10 &
+fio_pid=$!
 
-rm -f ./local-job0-0-verify.state
+sleep 3
+set +e
+$rpc_py delete_malloc_bdev 'Malloc0'
+
+wait $fio_pid
+fio_status=$?
+
+if [ $fio_status -eq 0 ]; then
+	echo "iscsi hotplug test: fio successful - expected failure"
+	set -e
+	exit 1
+else
+	echo "iscsi hotplug test: fio failed as expected"
+fi
+
+set -e
+
+iscsi_fio_cleanup
+$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target1'
+
 trap - SIGINT SIGTERM EXIT
-iscsicleanup
-rm -f $testdir/iscsi.conf
 killprocess $pid
 #echo 1 > /sys/bus/pci/rescan
 #sleep 2
