@@ -41,7 +41,7 @@
 #include "spdk/queue.h"
 #include "spdk/mmio.h"
 
-/* Allocate 2 << 15 (32K) descriptors per channel by default. */
+/* Allocate 1 << 15 (32K) descriptors per channel by default. */
 #define IOAT_DEFAULT_ORDER			15
 
 struct ioat_descriptor {
