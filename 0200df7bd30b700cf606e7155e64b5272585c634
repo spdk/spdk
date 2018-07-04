@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce059cc3_cb9b34c4",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-04T20:42:35Z",
+      "side": 1,
+      "message": "There is nothing stopping you from moving definition of spdk_bdev_scsi_process_block_resubmit to line 1298 to get rid of this forward declaration.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 61
+      },
+      "revId": "0200df7bd30b700cf606e7155e64b5272585c634",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe5d15a5_20717dc2",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2121,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-04T20:42:35Z",
+      "side": 1,
+      "message": "Please have some mercy and invent some common spdk_bdev_scsi_resubmit function or something...",
+      "range": {
+        "startLine": 2116,
+        "startChar": 0,
+        "endLine": 2121,
+        "endChar": 2
+      },
+      "revId": "0200df7bd30b700cf606e7155e64b5272585c634",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
