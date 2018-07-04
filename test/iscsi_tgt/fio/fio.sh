@@ -58,7 +58,7 @@ $ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 echo "iscsi_tgt is listening. Running tests..."
@@ -94,10 +94,32 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	running_config
 fi
 
+# Start hotplug test case.
+$fio_py 1048576 128 rw 10 &
+fio_pid=$!
+
+sleep 3
+set +e
+$rpc_py delete_malloc_bdev 'Malloc0'
+
+wait $fio_pid
+fio_status=$?
+
+if [ $fio_status -eq 0 ]; then
+	echo "iscsi hotplug test: fio successful - expected failure"
+	set -e
+	exit 1
+else
+	echo "iscsi hotplug test: fio failed as expected"
+fi
+
+set -e
+
 iscsicleanup
 $rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
 
 rm -f ./local-job0-0-verify.state
+
 trap - SIGINT SIGTERM EXIT
 iscsicleanup
 rm -f $testdir/iscsi.conf
