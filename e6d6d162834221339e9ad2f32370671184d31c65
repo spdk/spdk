@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "36f74e31_80a4d042",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-04T08:19:27Z",
+      "side": 1,
+      "message": "thanks!",
+      "parentUuid": "5acdc3e7_c66cb784",
+      "range": {
+        "startLine": 26,
+        "startChar": 40,
+        "endLine": 26,
+        "endChar": 46
+      },
+      "revId": "e6d6d162834221339e9ad2f32370671184d31c65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46c319de_f965dfee",
         "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
         "patchSetId": 27
@@ -82,6 +106,54 @@
       "writtenOn": "2018-07-04T08:17:10Z",
       "side": 1,
       "message": "Since INITIATOR_IP is configurable here, NETMASK needs to be configured here.",
+      "parentUuid": "46c319de_f965dfee",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 7
+      },
+      "revId": "e6d6d162834221339e9ad2f32370671184d31c65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7874d577_2e468bb3",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-04T08:19:27Z",
+      "side": 1,
+      "message": "there is hardcoded initiator IP in common.sh followed with definition of NETMASK",
+      "parentUuid": "46c319de_f965dfee",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 7
+      },
+      "revId": "e6d6d162834221339e9ad2f32370671184d31c65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8d04e67_afbdbe36",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-04T08:19:27Z",
+      "side": 1,
+      "message": "there is hardcoded initiator IP in common.sh followed with definition of NETMASK",
       "parentUuid": "46c319de_f965dfee",
       "range": {
         "startLine": 75,
