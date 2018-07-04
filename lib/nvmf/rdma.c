@@ -1487,6 +1487,14 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return rc;
 	}
 
+	if (!port->id->verbs) {
+		SPDK_ERRLOG("ibv_context is null\n");
+		rdma_destroy_id(addr->id);
+		spdk_nvmf_rdma_listen_addr_free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+
 	rc = rdma_listen(port->id, 10); /* 10 = backlog */
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_listen() failed\n");
