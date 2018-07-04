@@ -9,7 +9,7 @@ spdkcli_job="python3 $SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job.py"
 function on_error_exit() {
 	set +e
 	killprocess $spdk_tgt_pid
-	rm -f $testdir/${MATCH_FILE} $testdir/spdkcli_details_vhost.test /tmp/sample_aio
+	rm -f $testdir/${MATCH_FILE} $testdir/spdkcli_details_vhost.test /tmp/sample_aio /tmp/sample_pmem
 	print_backtrace
 	exit 1
 }
