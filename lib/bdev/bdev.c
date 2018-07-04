@@ -1159,7 +1159,13 @@ spdk_bdev_channel_poll_qos(void *arg)
 
 	/* Reset for next round of rate limiting */
 	qos->io_submitted_this_timeslice = 0;
-	qos->byte_submitted_this_timeslice = 0;
+
+	/* More bytes sent in the last timeslice, allow less in this timeslice */
+	if (qos->byte_submitted_this_timeslice > qos->max_byte_per_timeslice) {
+		qos->byte_submitted_this_timeslice -= qos->max_byte_per_timeslice;
+	} else {
+		qos->byte_submitted_this_timeslice = 0;
+	}
 
 	_spdk_bdev_qos_io_submit(qos->ch);
 
