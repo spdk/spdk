@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1ecf6a6_2c3912e5",
+        "filename": "test/unit/lib/json/json_parse.c/json_parse_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-04T20:26:35Z",
+      "side": 1,
+      "message": "Following code would void this requirement:\n\n char buffer[SPDK_JSON_MAX_NESTING_DEPTH + 2] \u003d {0};\n \n memset(buffer, \u0027[\u0027 SPDK_JSON_MAX_NESTING_DEPTH);\n PARSE_FAIL(buffer, SPDK_JSON_PARSE_INCOMPLETE);\n buffer[SPDK_JSON_MAX_NESTING_DEPTH] \u003d \u0027[\u0027\n PARSE_FAIL(buffer, SPDK_JSON_PARSE_MAX_DEPTH_EXCEEDED);",
+      "range": {
+        "startLine": 539,
+        "startChar": 0,
+        "endLine": 542,
+        "endChar": 4
+      },
+      "revId": "b59fae28225925df54e46d49aa452314e287546e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
