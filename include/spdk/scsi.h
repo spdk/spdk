@@ -189,6 +189,15 @@ const char *spdk_scsi_lun_get_bdev_name(const struct spdk_scsi_lun *lun);
 const struct spdk_scsi_dev *spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun);
 
 /**
+ * Check if the logical unit is hot removing.
+ *
+ * \param \param lun Logical unit
+ *
+ * \return true if removing, false otherwise.
+ */
+bool spdk_scsi_lun_is_removing(const struct spdk_scsi_lun *lun);
+
+/**
  * Get the name of the given SCSI device.
  *
  * \param dev SCSI device.
