@@ -535,6 +535,12 @@ Example response:
 
 Unregister a block device.
 
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
 ### Example
 
 Example request:
@@ -557,12 +563,6 @@ Example response:
   "result": true
 }
 ~~~
-
-### Parameters
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-name                    | Required | string      | Block device name
 
 ## set_bdev_qos_limit_iops {#rpc_set_bdev_qos_limit_iops}
 
@@ -596,6 +596,986 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+## construct_malloc_bdev {#rpc_construct_malloc_bdev}
+
+Construct @ref bdev_config_malloc
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Bdev name to use
+block_size              | Required | number      | Block size in bytes
+num_blocks              | Required | number      | Number of blocks
+uuid                    | Optional | string      | UUID of new bdev.
+
+### Result
+
+Name of new created bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "block_size": 4096,
+    "num_blocks": 16384,
+    "name": "Malloc0",
+    "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_malloc_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "Malloc0"
+}
+~~~
+
+## delete_malloc_bdev {#rpc_delete_malloc_bdev}
+
+Delete @ref bdev_config_malloc
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Malloc0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_malloc_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_null_bdev {#rpc_construct_null_bdev}
+
+Construct @ref bdev_config_null
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Bdev name to use
+block_size              | Required | number      | Block size in bytes
+num_blocks              | Required | number      | Number of blocks
+uuid                    | Optional | string      | UUID of new bdev.
+
+### Result
+
+Name of new created bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "block_size": 4096,
+    "num_blocks": 16384,
+    "name": "Null0",
+    "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_null_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "Null0"
+}
+~~~
+
+## delete_null_bdev {#rpc_delete_null_bdev}
+
+Delete @ref bdev_config_null.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Null0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_null_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_aio_bdev {#rpc_construct_aio_bdev}
+
+Construct @ref bdev_config_aio.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name to use
+filename                | Required | number      | Path to device or file
+block_size              | Optional | number      | Block size in bytes
+
+### Result
+
+Name of new created bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "block_size": 4096,
+    "name": "Aio0",
+    "filename": "/tmp/aio_bdev_file"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_aio_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "Aio0"
+}
+~~~
+
+## delete_aio_bdev {#rpc_delete_aio_bdev}
+
+Delete @ref bdev_config_aio.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Aio0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_aio_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_nvme_bdev {#rpc_construct_nvme_bdev}
+
+Cunstruct @ref bdev_config_nvme
+
+### Result
+
+Array of names for new created bdevs.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+trtype                  | Required | string      | NVMe-oF target trtype: rdma or pcie
+traddr                  | Required | string      | NVMe-oF target address: ip or BDF
+adrfam                  | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host
+trsvcid                 | Optional | string      | NVMe-oF target trsvcid: port number
+subnqn                  | Optional | string      | VMe-oF target subnqn
+hostnqn                 | Optional | string      | VMe-oF target hostnqn
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "trtype": "pcie",
+    "name": "Nvme0",
+    "traddr": "0000:0a:00.0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_nvme_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    "Nvme0n1"
+  ]
+}
+~~~
+
+## delete_nvme {#rpc_delete_nvme}
+
+Delete @ref bdev_config_nvme
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Nvme0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_null_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_rbd_bdev {#rpc_construct_rbd_bdev}
+
+Cunstruct @ref bdev_config_rbd bdev
+
+This method is available only if SPDK was build with Cepth RBD support.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+pool_name               | Required | string      | RBD pool name
+rbd_name                | Required | string      | RBD image name
+block_size              | Required | integer     | RBD block size
+
+### Result
+
+Name of new created bdev name.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "pool_name": "rbd",
+    "rbd_name": "foo",
+    "block_size": 4096
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_rbd_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "Ceph0"
+}
+~~~
+
+## delete_rbd_bdev {#rpc_delete_rbd_bdev}
+
+Delete @ref bdev_config_rbd bdev
+
+This method is available only if SPDK was build with Cepth RBD support.
+
+### Result
+
+`true` if bdev with provided name was deleted or `false` otherwise.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Rbd0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_rbd_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_error_bdev {#rpc_construct_error_bdev}
+
+Cunstruct error bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Base bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "base_name": "Malloc0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_error_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## delete_error_bdev {#rpc_delete_error_bdev}
+
+Delete error bdev
+
+### Result
+
+`true` if bdev with provided name was deleted or `false` otherwise.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Error bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "EE_Malloc0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_error_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_iscsi_bdev {#rpc_construct_iscsi_bdev}
+
+Construct connect to iSCSI and create bdev backed by this connection.
+
+This method is available only if SPDK was build with iSCSI initiator support.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+initiator_iqn           | Required | string      | IQN name used during connection
+url                     | Required | string      | iSCSI resource URI
+
+### Result
+
+Name of constructed bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "url": "iscsi://127.0.0.1/iqn.2016-06.io.spdk:disk1/0",
+    "initiator_iqn": "iqn.2016-06.io.spdk:init",
+    "name": "iSCSI0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_iscsi_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "iSCSI0"
+}
+~~~
+
+## delete_iscsi_bdev {#rpc_delete_iscsi_bdev}
+
+Delete iSCSI bdev and terminate connection to target.
+
+This method is available only if SPDK was built with iSCSI initiator support.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Error bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "iSCSI0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_iscsi_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_pmem_bdev {#rpc_construct_pmem_bdev}
+
+Construct @ref bdev_config_pmem bdev.
+
+This method is available only if SPDK was built with PMDK support.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+pmem_file               | Required | string      | Path to existing pmem blk pool file.
+
+### Result
+
+Name of constructed bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "pmem_file": "/tmp/pmem_file",
+    "name": "Pmem0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_pmem_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "Pmem0"
+}
+~~~
+
+## delete_pmem_bdev {#rpc_delete_pmem_bdev}
+
+Delete @ref bdev_config_pmem bdev bdev. This call will not remove backing files.
+
+This method is available only if SPDK was built with PMDK support.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Pmem0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_iscsi_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## create_pmem_pool {#rpc_create_pmem_pool}
+
+Create a @ref bdev_config_pmem blk pool file. It is equivalend of following `pmempool create` command:
+
+~~~
+pmempool create -s $((num_blocks * block_size)) blk $block_size $pmem_file
+~~~
+
+This method is available only if SPDK was built with PMDK support.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+pmem_file               | Required | string      | Path to new pmem file.
+num_blocks              | Required | integer     | Number of blocks
+block_size              | Required | integer     | Size of each block in bytes
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "block_size": 512,
+    "num_blocks": 131072,
+    "pmem_file": "/tmp/pmem_file"
+  },
+  "jsonrpc": "2.0",
+  "method": "create_pmem_pool",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## pmem_pool_info {#rpc_pmem_pool_info}
+
+Retrive basic informations of PMDK memory pool. This com
+
+This method is available only if SPDK was built with PMDK support.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+pmem_file               | Required | string      | Path to new pmem file.
+
+### Result
+
+Array of objects describing memory pool:
+
+Name                    | Type        | Description
+----------------------- | -- -------- | -----------
+num_blocks              | integer     | Number of blocks
+block_size              | integer     | Size of each block in bytes
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "params": {
+    "pmem_file": "/tmp/pmem_file"
+  },
+  "jsonrpc": "2.0",
+  "method": "pmem_pool_info",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "block_size": 512,
+      "num_blocks": 129728
+    }
+  ]
+}
+~~~
+
+## delete_pmem_pool {#rpc_delete_pmem_pool}
+
+Delete provided pmem pool by removing file pointed by `pmem_file`. This method will fail if `pmem_file` is not a
+valid pmem pool file.
+
+This method is available only if SPDK was built with PMDK support.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+pmem_file               | Required | string      | Path to new pmem file.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "pmem_file": "/tmp/pmem_file"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_pmem_pool",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_passthru_bdev {#rpc_construct_passthru_bdev}
+
+Create passthru bdev. This bdev type redirects all IO to it's base bdev. It have not other purpose as being an example
+and a starting point in development of new bdev type.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+passthru_bdev_name      | Required | string      | Bdev name
+base_bdev_name          | Required | string      | Base bdev name
+
+### Result
+
+Name of constructed bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "base_bdev_name": "Malloc0",
+    "passthru_bdev_name": "Passsthru0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_passthru_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "Passsthru0"
+}
+~~~
+
+## delete_passthru_bdev {#rpc_delete_passthru_bdev}
+
+Create passthru bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Passsthru0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_passthru_bdev",
+  "id": 1
+}
+
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## construct_virtio_dev {#rpc_construct_virtio_dev}
+
+Create new initiator @ref bdev_config_virtio_scsi or @ref bdev_config_virtio_blk and expose all found bdevs.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Controller or bdev
+trtype                  | Required | string      | Virtio target trtype: pci or user
+traddr                  | Required | string      | target address: BDF or UNIX socket file path
+dev_type                | Required | string      | Virtio device type: blk or scsi
+vq_count                | Optional | number      | Number of queues this controller will utilize (default: 1)
+vq_size                 | Optional | number      | Size of each queue. Must be power of 2. (default: 512)
+
+`vq_count` and `vq_size` parameters are valid only if `trtype` is `user`.
+
+### Result
+
+Array of constructed bdev names.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "VirtioScsi0",
+    "trtype": "user",
+    "vq_size": 128,
+    "dev_type": "scsi",
+    "traddr": "/tmp/VhostScsi0",
+    "vq_count": 4
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_virtio_dev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": ["VirtioScsi0t2", "VirtioScsi0t4"]
+}
+~~~
+
+## construct_virtio_user_scsi_bdev {#rpc_construct_virtio_user_scsi_bdev}
+
+This is legacy RPC method. It is equivalend of @ref rpc_construct_virtio_dev with `trtype` set to `user` and `dev_type` set to `scsi`.
+
+Because it will be deprecated soon it is delibertly undocumented.
+
+
+## construct_virtio_pci_scsi_bdev {#rpc_construct_virtio_pci_scsi_bdev}
+
+This is legacy RPC method. It is equivalend of @ref rpc_construct_virtio_dev with `trtype` set to `pci` and `dev_type` set to `scsi`.
+
+Because it will be deprecated soon it is delibertly undocumented.
+
+## construct_virtio_user_blk_bdev {#rpc_construct_virtio_user_blk_bdev}
+
+This is legacy RPC method. It is equivalend of @ref rpc_construct_virtio_dev with `trtype` set to `user` and `dev_type` set to `blk`.
+
+Because it will be deprecated soon it is delibertly undocumented.
+
+
+## construct_virtio_pci_blk_bdev {#rpc_construct_virtio_pci_blk_bdev}
+
+This is legacy RPC method. It is equivalend of @ref rpc_construct_virtio_dev with `trtype` set to `pci` and `dev_type` set to `blk`.
+
+Because it will be deprecated soon it is delibertly undocumented.
+
+## get_virtio_scsi_devs {#rpc_get_virtio_scsi_devs}
+
+Show information about all available Virtio SCSI devices.
+
+### Parameters
+
+This method has no parameters.
+
+### Result
+
+Array of Virtio SCSI information objects.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_virtio_scsi_devs",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "VirtioScsi0",
+      "virtio": {
+          "vq_size": 128,
+          "vq_count": 4,
+          "type": "user",
+          "socket": "/tmp/VhostScsi0"
+      }
+    }
+  ]
 }
 ~~~
 
