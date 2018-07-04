@@ -40,6 +40,7 @@
 #include "iscsi/iscsi.h"
 #include "spdk/queue.h"
 #include "spdk/cpuset.h"
+#include "spdk/scsi.h"
 
 /*
  * MAX_CONNECTION_PARAMS: The numbers of the params in conn_param_table
@@ -164,6 +165,8 @@ struct spdk_iscsi_conn {
 	TAILQ_HEAD(queued_r2t_tasks, spdk_iscsi_task)	queued_r2t_tasks;
 	TAILQ_HEAD(active_r2t_tasks, spdk_iscsi_task)	active_r2t_tasks;
 	TAILQ_HEAD(queued_datain_tasks, spdk_iscsi_task)	queued_datain_tasks;
+
+	struct spdk_scsi_desc	*open_lun_descs[SPDK_SCSI_DEV_MAX_LUN];
 };
 
 extern struct spdk_iscsi_conn *g_conns_array;
