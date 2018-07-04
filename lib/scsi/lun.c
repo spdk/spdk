@@ -361,9 +361,12 @@ spdk_scsi_lun_close(struct spdk_scsi_desc *desc)
 
 	TAILQ_REMOVE(&lun->open_descs, desc, link);
 	free(desc);
+
+	assert(!TAILQ_EMPTY(&lun->open_descs) || lun->io_channel == NULL);
 }
 
-int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
+int
+_spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 {
 	if (lun->io_channel != NULL) {
 		if (spdk_get_thread() == spdk_io_channel_get_thread(lun->io_channel)) {
@@ -383,7 +386,8 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 	return 0;
 }
 
-void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
+void
+_spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
 {
 	if (lun->io_channel == NULL) {
 		return;
@@ -399,6 +403,22 @@ void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
 		spdk_put_io_channel(lun->io_channel);
 		lun->io_channel = NULL;
 	}
+}
+
+int
+spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_desc *desc)
+{
+	struct spdk_scsi_lun *lun = desc->lun;
+
+	return _spdk_scsi_lun_allocate_io_channel(lun);
+}
+
+void
+spdk_scsi_lun_free_io_channel(struct spdk_scsi_desc *desc)
+{
+	struct spdk_scsi_lun *lun = desc->lun;
+
+	_spdk_scsi_lun_free_io_channel(lun);
 }
 
 int

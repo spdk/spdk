@@ -482,18 +482,18 @@ void spdk_scsi_lun_close(struct spdk_scsi_desc *desc);
 /**
  * Allocate I/O channel for the LUN
  *
- * \param lun Logical unit.
+ * \param desc Descriptor of the logical unit.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun);
+int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_desc *desc);
 
 /**
  * Free I/O channel from the logical unit
  *
- * \param lun Logical unit.
+ * \param desc Descriptor of the logical unit..
  */
-void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);
+void spdk_scsi_lun_free_io_channel(struct spdk_scsi_desc *desc);
 
 #ifdef __cplusplus
 }
