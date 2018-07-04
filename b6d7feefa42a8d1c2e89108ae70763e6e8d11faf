@@ -16,6 +16,24 @@
       "revId": "b6d7feefa42a8d1c2e89108ae70763e6e8d11faf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9133e93c_02d60120",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1495,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-04T13:45:01Z",
+      "side": 1,
+      "message": "Thanks, this makes sense now.\n\n\u003e Maybe later, we can add something like SPDK_SCSI_STATUS_INVALID (\u003d0xFF?) and use that in spdk_scsi_lun_execute_task().  I\u0027m not sure what kind of fallout we\u0027d get from that change so I\u0027d suggest we do that later (if at all).\n\nThat sounds reasonable. Will look into that outside of this series of patches.",
+      "parentUuid": "9ec2cab9_f3265733",
+      "revId": "b6d7feefa42a8d1c2e89108ae70763e6e8d11faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
