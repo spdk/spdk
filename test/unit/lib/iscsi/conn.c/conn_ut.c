@@ -157,13 +157,35 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
 }
 
+struct spdk_scsi_lun *
+spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
+{
+	return NULL;
+}
+
+int
+spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb,
+		   void *hotremove_ctx, struct spdk_scsi_desc **desc)
+{
+	return 0;
+}
+
 void
-spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev)
+spdk_scsi_lun_close(struct spdk_scsi_desc *desc)
+{
+}
+
+int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_desc *desc)
+{
+	return 0;
+}
+
+void spdk_scsi_lun_free_io_channel(struct spdk_scsi_desc *desc)
 {
 }
 
 int
-spdk_scsi_dev_allocate_io_channels(struct spdk_scsi_dev *dev)
+spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
 {
 	return 0;
 }
