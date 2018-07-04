@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "80065e64_72d4c20e",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-04T12:02:28Z",
+      "side": 1,
+      "message": "It\u0027s required after all",
+      "parentUuid": "635b04fb_9612839e",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 17
+      },
+      "revId": "aea1fc3507435d663c3ea8b1aad4eccd027a04ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1033ffa9_bafeb5fc",
         "filename": "test/json_config/common.sh",
         "patchSetId": 39
