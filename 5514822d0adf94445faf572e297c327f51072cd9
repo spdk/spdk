@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4335cef5_549b3ce2",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-04T05:29:47Z",
+      "side": 1,
+      "message": "this should be delete_malloc_bdev.",
+      "range": {
+        "startLine": 103,
+        "startChar": 8,
+        "endLine": 103,
+        "endChar": 19
+      },
+      "revId": "5514822d0adf94445faf572e297c327f51072cd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
