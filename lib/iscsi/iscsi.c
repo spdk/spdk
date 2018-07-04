@@ -3558,7 +3558,8 @@ void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 }
 
 static void
-spdk_del_connection_queued_task(void *tailq, struct spdk_scsi_lun *lun)
+spdk_del_connection_queued_task(struct spdk_iscsi_conn *conn, void *tailq,
+				struct spdk_scsi_lun *lun)
 {
 	struct spdk_iscsi_task *task, *task_tmp;
 	/*
@@ -3571,6 +3572,10 @@ spdk_del_connection_queued_task(void *tailq, struct spdk_scsi_lun *lun)
 	TAILQ_FOREACH_SAFE(task, head, link, task_tmp) {
 		if (lun == NULL || lun == task->scsi.lun) {
 			TAILQ_REMOVE(head, task, link);
+			if (lun != NULL && spdk_scsi_lun_is_removing(lun)) {
+				spdk_scsi_task_process_null_lun(&task->scsi);
+				spdk_iscsi_task_response(conn, task);
+			}
 			spdk_iscsi_task_put(task);
 		}
 	}
@@ -3608,8 +3613,8 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	spdk_del_connection_queued_task(&conn->active_r2t_tasks, lun);
-	spdk_del_connection_queued_task(&conn->queued_r2t_tasks, lun);
+	spdk_del_connection_queued_task(conn, &conn->active_r2t_tasks, lun);
+	spdk_del_connection_queued_task(conn, &conn->queued_r2t_tasks, lun);
 
 	spdk_start_queued_transfer_tasks(conn);
 }
