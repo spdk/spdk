@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "893a75ba_04e6a3fa",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-04T22:04:00Z",
+      "side": 1,
+      "message": "\"core_id\" is mandatory parameter so this selected part and lines 222 to 226 is a dead code. If you wish to make \"core_id\" optional I think that making it int32_t and assigning -1 as default value would be better.",
+      "range": {
+        "startLine": 199,
+        "startChar": 1,
+        "endLine": 200,
+        "endChar": 14
+      },
+      "revId": "d984965562e792b6c82e380b7c2e6b20fab1d9bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36600c79_aaa61cfd",
         "filename": "scripts/rpc.py",
         "patchSetId": 14
@@ -41,6 +64,29 @@
         "startChar": 44,
         "endLine": 130,
         "endChar": 104
+      },
+      "revId": "d984965562e792b6c82e380b7c2e6b20fab1d9bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd89712f_366176c9",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-04T22:04:00Z",
+      "side": 1,
+      "message": "This is inconsistent with app_rpc.c implementation.",
+      "range": {
+        "startLine": 131,
+        "startChar": 38,
+        "endLine": 131,
+        "endChar": 43
       },
       "revId": "d984965562e792b6c82e380b7c2e6b20fab1d9bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
