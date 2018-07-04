@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4f7db190_3d1ceeaf",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-04T21:32:16Z",
+      "side": 1,
+      "message": "There will be  questions like: what is the \"IO unit size\"?\nYou can avoid them if this follow Linux kernel naming convetion like minimum_io_size.",
+      "range": {
+        "startLine": 320,
+        "startChar": 3,
+        "endLine": 320,
+        "endChar": 33
+      },
+      "revId": "f37a4878b00ca0748063f09539bdc477aad2deb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
