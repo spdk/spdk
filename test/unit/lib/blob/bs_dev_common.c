@@ -39,6 +39,7 @@
 #define DEV_BUFFER_BLOCKLEN (4096)
 #define DEV_BUFFER_BLOCKCNT (DEV_BUFFER_SIZE / DEV_BUFFER_BLOCKLEN)
 uint8_t *g_dev_buffer;
+uint64_t g_dev_write_bytes;
 
 /* Define here for UT only. */
 struct spdk_io_channel g_io_channel;
@@ -100,6 +101,7 @@ dev_write(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payloa
 	length = lba_count * dev->blocklen;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	memcpy(&g_dev_buffer[offset], payload, length);
+	g_dev_write_bytes += length;
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
@@ -156,6 +158,7 @@ dev_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		offset += iov[i].iov_len;
 	}
 
+	g_dev_write_bytes += length;
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
@@ -191,6 +194,7 @@ dev_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	length = lba_count * dev->blocklen;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	memset(&g_dev_buffer[offset], 0, length);
+	g_dev_write_bytes += length;
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
