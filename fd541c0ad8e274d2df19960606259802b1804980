@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3288d877_6bbc33fc",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1146,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T08:23:03Z",
+      "side": 1,
+      "message": "Logic looks good but please simplify this. \n\nsomething like:\n1. If parameters not ok -\u003e finish with error\n2. Remove controller.",
+      "range": {
+        "startLine": 1116,
+        "startChar": 1,
+        "endLine": 1146,
+        "endChar": 2
+      },
+      "revId": "fd541c0ad8e274d2df19960606259802b1804980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
