@@ -3238,6 +3238,7 @@ _spdk_bdev_disable_qos_done(void *cb_arg)
 {
 	struct set_qos_limit_ctx *ctx = cb_arg;
 	struct spdk_bdev *bdev = ctx->bdev;
+	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_qos *qos;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
@@ -3245,7 +3246,24 @@ _spdk_bdev_disable_qos_done(void *cb_arg)
 	bdev->internal.qos = NULL;
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
-	_spdk_bdev_abort_queued_io(&qos->queued, qos->ch);
+	while (!TAILQ_EMPTY(&qos->queued)) {
+		/* Send queued I/O back to their original thread for resubmission. */
+		bdev_io = TAILQ_FIRST(&qos->queued);
+		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
+
+		if (bdev_io->internal.io_submit_ch) {
+			/*
+			 * Channel was changed when sending it to the QoS thread - change it back
+			 *  before sending it back to the original thread.
+			 */
+			bdev_io->internal.ch = bdev_io->internal.io_submit_ch;
+			bdev_io->internal.io_submit_ch = NULL;
+		}
+
+		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->internal.ch->channel),
+				     _spdk_bdev_io_submit, bdev_io);
+	}
+
 	spdk_put_io_channel(spdk_io_channel_from_ctx(qos->ch));
 	spdk_poller_unregister(&qos->poller);
 
