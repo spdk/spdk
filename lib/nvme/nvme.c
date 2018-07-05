@@ -242,7 +242,7 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 		return 0;
 	}
 
-	if (req->submit_tick + active_proc->timeout_ticks > now_tick) {
+	if ((req->submit_tick + active_proc->timeout_ticks) < now_tick) {
 		return 1;
 	}
 
