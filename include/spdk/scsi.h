@@ -41,6 +41,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/bdev.h"
 #include "spdk/queue.h"
 
 #ifdef __cplusplus
@@ -140,6 +141,7 @@ struct spdk_scsi_task {
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
 
 	uint32_t abort_id;
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
 
 struct spdk_scsi_port;
