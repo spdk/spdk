@@ -211,7 +211,7 @@ spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 				uint32_t cdw11, uint32_t cdw12, void *payload, uint32_t payload_size,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	CU_ASSERT_FATAL(0);
+	CU_ASSERT(0);
 	return -1;
 }
 
@@ -220,7 +220,7 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 				uint32_t cdw11, void *payload, uint32_t payload_size,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	CU_ASSERT_FATAL(0);
+	CU_ASSERT(0);
 	return -1;
 }
 
@@ -1124,7 +1124,7 @@ setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 {
 	uint32_t i;
 
-	CU_ASSERT_FATAL(pthread_mutex_init(&ctrlr->ctrlr_lock, NULL) == 0);
+	CU_ASSERT(pthread_mutex_init(&ctrlr->ctrlr_lock, NULL) == 0);
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(ctrlr) == 0);
 
