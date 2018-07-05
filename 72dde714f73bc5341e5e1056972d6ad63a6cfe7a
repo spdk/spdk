@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6095628_25997efb",
+        "filename": "test/nvmf/nvmfjson/json_config.sh",
+        "patchSetId": 43
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-05T03:53:45Z",
+      "side": 1,
+      "message": "this is not used in the nvmf test. Do you plan to use this in the nvmf test? Otherwise this probably can be removed.",
+      "range": {
+        "startLine": 13,
+        "startChar": 1,
+        "endLine": 13,
+        "endChar": 10
+      },
+      "revId": "72dde714f73bc5341e5e1056972d6ad63a6cfe7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
