@@ -9,6 +9,7 @@ from . import log
 from . import lvol
 from . import nbd
 from . import net
+from . import nvme
 from . import nvmf
 from . import pmem
 from . import subsystem
