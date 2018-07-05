@@ -3135,7 +3135,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 
 	o_bit = u_bit = O_bit = U_bit = 0;
 	bidi_residual_len = residual_len = 0;
-	data_len = primary->bytes_completed;
+	data_len = primary->scsi.data_transferred;
 
 	if ((transfer_len != 0) &&
 	    (task->scsi.status == SPDK_SCSI_STATUS_GOOD)) {
