@@ -131,6 +131,64 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_chan
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
 
+struct spdk_nvme_qpair *
+spdk_bdev_nvme_get_io_qpair(struct nvme_bdev *nvme_bdev)
+{
+	struct spdk_io_channel *ch;
+	struct nvme_io_channel *nvme_ch;
+
+	ch = spdk_get_io_channel(nvme_bdev->nvme_ctrlr->ctrlr);
+	nvme_ch =  spdk_io_channel_get_ctx(ch);
+
+	return nvme_ch->qpair;
+}
+
+struct nvme_ctrlr *
+spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name)
+{
+	struct nvme_ctrlr *_nvme_ctrlr;
+
+	TAILQ_FOREACH(_nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (strcmp(ctrlr_name, _nvme_ctrlr->name) == 0) {
+			return _nvme_ctrlr;
+		}
+	}
+
+	return NULL;
+}
+
+struct nvme_bdev *
+spdk_bdev_nvme_lookup_bdev(const char *ns_name)
+{
+	struct nvme_ctrlr *_nvme_ctrlr;
+	size_t ctrlr_name_len;
+	int ns_idx = -1;
+	char tail[1];
+
+	TAILQ_FOREACH(_nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		ctrlr_name_len = strlen(_nvme_ctrlr->name);
+		/* Each nvme_bdev name has a same prefix with its controller */
+		if (strncmp(ns_name, _nvme_ctrlr->name, ctrlr_name_len) != 0) {
+			continue;
+		}
+
+		if (ctrlr_name_len == strlen(ns_name)) {
+			continue;
+		}
+
+		/* Each nvme_bdev name should have a postfix "n%d", %d is its index. */
+		if (sscanf(ns_name + ctrlr_name_len, "n%d%1s", &ns_idx, tail) != 1) {
+			continue;
+		}
+
+		if ((uint32_t)ns_idx <= _nvme_ctrlr->num_ns) {
+			return &_nvme_ctrlr->bdevs[ns_idx - 1];
+		}
+	}
+
+	return NULL;
+}
+
 static int
 bdev_nvme_get_ctx_size(void)
 {
