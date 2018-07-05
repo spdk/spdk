@@ -1,0 +1,303 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5683e79_f1c6bd75",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "Is the \u0027text\u0027 required to be valid C string? If yes this variable is not need or should be made optional.",
+      "range": {
+        "startLine": 123,
+        "startChar": 36,
+        "endLine": 123,
+        "endChar": 47
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d1f1bbe_887bfc07",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 136,
+        "startChar": 37,
+        "endLine": 136,
+        "endChar": 48
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cff053d6_17cf7d84",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "If you increment all valid characters by one and replace 255 with 0 you can easly use https://graphics.stanford.edu/~seander/bithacks.html#ZeroInWord for checking for invalid character. This approach will also easly scale for wider conversion bursts than 4 bytes at a time.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 80
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83716ee5_53120375",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "Making this to work on 8 or 16 bytes at a time might give better chance for compiler to optimize the code.",
+      "range": {
+        "startLine": 97,
+        "startChar": 1,
+        "endLine": 97,
+        "endChar": 24
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9079e9e3_b7fb333d",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "This break strict aliasing rule. Also \u0027binary\u0027 will be not aligned to 4bytes so this might generate SIGBUS or decrease performance on some platforms. I think you should use to_be32() from SPDK endian.h.",
+      "range": {
+        "startLine": 98,
+        "startChar": 12,
+        "endLine": 98,
+        "endChar": 31
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ec7cc24_cbf42b64",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "If you hack your enc_table and replace 255 with BASE64_PADDING_CHAR (or at least entry enc_table[0]) you will not need this checking at all but simply do the conversion.",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 134,
+        "endChar": 2
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c419025d_3e0eab89",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "simmilar comments like in _spdk_base64_encode()",
+      "range": {
+        "startLine": 154,
+        "startChar": 0,
+        "endLine": 154,
+        "endChar": 19
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fd0fe0b_877ce14d",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "you must validate buffer len.",
+      "range": {
+        "startLine": 163,
+        "startChar": 1,
+        "endLine": 165,
+        "endChar": 2
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39a59572_476d2124",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "There might be max 2 characters. If there is more it is na malformed base64 buffer.",
+      "range": {
+        "startLine": 168,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 2
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "150ee8b4_dc55fa3d",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "This is stright forward method to check for invalid character but you could optimize this a little bit by replacing \u0027||\u0027 (logical OR) with \u0027|\u0027 (binary OR). Or even better by using https://graphics.stanford.edu/~seander/bithacks.html#ZeroInWord",
+      "range": {
+        "startLine": 186,
+        "startChar": 6,
+        "endLine": 186,
+        "endChar": 70
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43341b12_e4e02ff2",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "from_be32(tmp)?",
+      "range": {
+        "startLine": 190,
+        "startChar": 0,
+        "endLine": 192,
+        "endChar": 21
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c6f5c16_5c4b66f7",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "is this posible if you have 4n check in line 163?",
+      "range": {
+        "startLine": 201,
+        "startChar": 1,
+        "endLine": 202,
+        "endChar": 12
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a24409c0_a4a2e2f1",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T10:46:40Z",
+      "side": 1,
+      "message": "To reduce size of this patch, can you extract this to common function that will decode 4 charactes only?",
+      "range": {
+        "startLine": 211,
+        "startChar": 0,
+        "endLine": 221,
+        "endChar": 46
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
