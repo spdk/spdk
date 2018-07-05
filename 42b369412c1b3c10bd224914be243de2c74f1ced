@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea9673e4_85bdc9f7",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-05T04:02:42Z",
+      "side": 1,
+      "message": "Do we have to delete pmem_bdev and pmem_pool by clear_config here?",
+      "revId": "42b369412c1b3c10bd224914be243de2c74f1ced",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29cfe27a_726bcd11",
+        "filename": "test/pmem/json_config/json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-05T04:02:42Z",
+      "side": 1,
+      "message": "is this necessary?",
+      "range": {
+        "startLine": 8,
+        "startChar": 1,
+        "endLine": 8,
+        "endChar": 8
+      },
+      "revId": "42b369412c1b3c10bd224914be243de2c74f1ced",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cabdfd3_fd0f7725",
+        "filename": "test/pmem/json_config/json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-05T04:02:42Z",
+      "side": 1,
+      "message": "this can be removed?",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 10
+      },
+      "revId": "42b369412c1b3c10bd224914be243de2c74f1ced",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
