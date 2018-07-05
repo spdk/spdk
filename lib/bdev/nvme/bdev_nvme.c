@@ -131,6 +131,32 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_chan
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
 
+struct spdk_nvme_qpair *
+spdk_bdev_nvme_get_io_qpair(struct nvme_bdev *nvme_bdev)
+{
+	struct spdk_io_channel *ch;
+	struct nvme_io_channel *nvme_ch;
+
+	ch = spdk_get_io_channel(nvme_bdev->nvme_ctrlr->ctrlr);
+	nvme_ch =  spdk_io_channel_get_ctx(ch);
+
+	return nvme_ch->qpair;
+}
+
+struct nvme_ctrlr *
+spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name)
+{
+	struct nvme_ctrlr *_nvme_ctrlr;
+
+	TAILQ_FOREACH(_nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (strcmp(ctrlr_name, _nvme_ctrlr->name) == 0) {
+			return _nvme_ctrlr;
+		}
+	}
+
+	return NULL;
+}
+
 static int
 bdev_nvme_get_ctx_size(void)
 {
@@ -147,6 +173,20 @@ static struct spdk_bdev_module nvme_if = {
 
 };
 SPDK_BDEV_MODULE_REGISTER(&nvme_if)
+
+struct nvme_bdev *
+spdk_bdev_nvme_lookup_bdev(const char *ns_name)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(ns_name);
+
+	if (bdev && bdev->module == &nvme_if) {
+		return (struct nvme_bdev *)bdev->ctxt;
+	}
+
+	return NULL;
+}
 
 static int
 bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
