@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c58a6ba_03dbc13e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T09:05:38Z",
+      "side": 1,
+      "message": "The following",
+      "range": {
+        "startLine": 1082,
+        "startChar": 0,
+        "endLine": 1082,
+        "endChar": 1
+      },
+      "revId": "8deb686546108c066ccce6e5a202dbf9753fc587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e9a0558_860b5df4",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1084,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T09:05:38Z",
+      "side": 1,
+      "message": "I think we can drop this part for now. We\u0027ll introduce it later",
+      "range": {
+        "startLine": 1084,
+        "startChar": 0,
+        "endLine": 1084,
+        "endChar": 78
+      },
+      "revId": "8deb686546108c066ccce6e5a202dbf9753fc587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54627f4d_8fb7fdcf",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1214,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T09:05:38Z",
+      "side": 1,
+      "message": "hot :)",
+      "range": {
+        "startLine": 1214,
+        "startChar": 67,
+        "endLine": 1214,
+        "endChar": 70
+      },
+      "revId": "8deb686546108c066ccce6e5a202dbf9753fc587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
