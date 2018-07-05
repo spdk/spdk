@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b464dde_35321607",
+        "filename": "test/bdev/dynamic_memory_allocation/bdevperf_dynamic.conf",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-05T12:31:48Z",
+      "side": 1,
+      "message": "can we shorten the path for these changes?\nLike change \"dynamic_memory_allocation\" to just \"dma\"",
+      "revId": "c3835e59ab9c8eaac7a7fd44f7c84005c62fffac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
