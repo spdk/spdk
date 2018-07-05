@@ -2,6 +2,63 @@
   "comments": [
     {
       "key": {
+        "uuid": "e86128e0_888f33de",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T16:40:15Z",
+      "side": 1,
+      "message": "Minor nitpick: BASE64 -\u003e Base64",
+      "range": {
+        "startLine": 36,
+        "startChar": 3,
+        "endLine": 36,
+        "endChar": 9
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2cfbb1b_90d8e689",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T16:40:15Z",
+      "side": 1,
+      "message": "This should define what alphabet is used (probably the standard base64 alphabet as defined in RFC 4648, but that should be mentioned in the doc comment for this function as well).",
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b990197_bc6c5c01",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T16:40:15Z",
+      "side": 1,
+      "message": "I assume the \u0027text\u0027 buffer needs to be at least as long as spdk_base64_get_text_strlen(text) - this should be documented in the comment above. (Does it need space for a null terminator character as well?)\n\nMaybe we should add a size parameter for text just so that we can validate the user did pass in the required size.\n\nAlso, a general comment about types: the type for \"binary\" should ideally be const void * so the user\u0027s buffer can be any type (we can cast it to const uint8_t * internally when accessing the data).  Also, parameters that represent the size of an in-memory data structure, like binary_len, should be size_t for consistency.",
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5683e79_f1c6bd75",
         "filename": "include/spdk/base64.h",
         "patchSetId": 4
@@ -117,6 +174,53 @@
     },
     {
       "key": {
+        "uuid": "b2619aa4_b83da395",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T16:40:15Z",
+      "side": 1,
+      "message": "Yes, please avoid this type punning and the htonl() below - the spdk/endian.h functions handle all of the unaligned access/strict aliasing details correctly.",
+      "parentUuid": "9079e9e3_b7fb333d",
+      "range": {
+        "startLine": 98,
+        "startChar": 12,
+        "endLine": 98,
+        "endChar": 31
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fe8f5f7_a03d7e5e",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T16:40:15Z",
+      "side": 1,
+      "message": "Same here, please use the spdk/endian.h helpers rather than htonl() for consistency.",
+      "range": {
+        "startLine": 117,
+        "startChar": 11,
+        "endLine": 117,
+        "endChar": 16
+      },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4ec7cc24_cbf42b64",
         "filename": "lib/util/base64.c",
         "patchSetId": 4
@@ -203,6 +307,23 @@
         "endLine": 170,
         "endChar": 2
       },
+      "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f434a3ec_6f129059",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T16:40:15Z",
+      "side": 1,
+      "message": "text_in should probably be const as well to avoid the need for this cast.",
       "revId": "9b6819791184c8b72c99c528b462e13fc0bdd860",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
