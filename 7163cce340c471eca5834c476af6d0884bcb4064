@@ -1,0 +1,146 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e650f79_05d1aceb",
+        "filename": "include/spdk/nvme_msg.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T21:19:12Z",
+      "side": 1,
+      "message": "These look error prone; can we do this using sizeof() or offsetof() with some struct element instead?",
+      "revId": "7163cce340c471eca5834c476af6d0884bcb4064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cafb605_17643ca6",
+        "filename": "include/spdk/nvme_msg.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T21:19:12Z",
+      "side": 1,
+      "message": "I\u0027m still not sure why there are 3 types; ADMIN_CMD and IO_CMD should be sufficient.\n\nIf we do need both IO_RAW_CMD and IO_CMD for some reason, the difference needs to be documented here.",
+      "revId": "7163cce340c471eca5834c476af6d0884bcb4064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bbedfb6_1231a66c",
+        "filename": "include/spdk/nvme_msg.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T21:19:12Z",
+      "side": 1,
+      "message": "Since we are defining our own layout for the passthru command, I would prefer to just use the 64-byte NVMe command structure (struct spdk_nvme_cmd) rather than defining another similar type.  We will still need a few extra fields for metadata_len, data_len, etc. inside the request, since those are not stored inside the NVMe command, but reusing the standard NVMe command structure will simplify the implementation a lot.\n\nIdeally, this should match the interface defined by spdk_bdev_nvme_admin_passthru() and spdk_bdev_nvme_io_passthru() so we don\u0027t need to do any translation of the command itself inside SPDK.",
+      "revId": "7163cce340c471eca5834c476af6d0884bcb4064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfe97689_4050914b",
+        "filename": "include/spdk/nvme_msg.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T21:19:12Z",
+      "side": 1,
+      "message": "I would also prefer to use the standard 16-byte completion queue entry (struct spdk_nvme_cpl) instead of \u0027status\u0027 and \u0027result\u0027, even if we aren\u0027t able to fill out all of the details correctly initially (they can just be zeroed/set to safe defaults for now).  That will allow the implementation to be improved in the future without breaking compatibility.",
+      "revId": "7163cce340c471eca5834c476af6d0884bcb4064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27259748_d2a9773f",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T21:19:12Z",
+      "side": 1,
+      "message": "Any reason this is using the urlsafe base64 alphabet as opposed to the default one? (Either one is fine as long as we document it, just curious.)",
+      "range": {
+        "startLine": 105,
+        "startChar": 7,
+        "endLine": 105,
+        "endChar": 33
+      },
+      "revId": "7163cce340c471eca5834c476af6d0884bcb4064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d6936e0_b6e8de39",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T21:19:12Z",
+      "side": 1,
+      "message": "It looks like the whole request (request header + command + data + metadata) is packed into a single base64 encoded string; that\u0027s probably okay (and simple for the client to implement), but maybe we can consider an alternative that uses JSON more extensively.\n\nPerhaps the request could look something like this:\n\n  {\n    \"name\": \"\u003cbdev_name\u003e\",\n    \"type\": \"admin\",\n    \"cmd\": \"\u003cbase64 encoding of 64-byte NVMe command\u003e\",\n    \"data_direction\": \"controller_to_host\", /* maybe this should be 2 bools encoding c2h and h2c instead */\n    \"data\": \"\u003cbase64-encoded input data\u003e\", /* optional */\n    \"metadata\": \"\u003cbase64-encoded metadata\u003e\" /* optional */\n  }\n\nAnd then the response could be:\n\n  {\n    \"rsp\": \"\u003cbase64-encoded 16-byte NVMe completion\u003e\",\n    \"data\": \"\u003cbase64-encoded output data\u003e\", /* optional */\n    \"metadata\": \"\u003cbase64-encoded output metadata\u003e\" /* optional */\n  }\n\nThis would mean that we could get rid of the encoded lengths inside the command (data_len, metadata_len, etc.) and use the JSON parser instead of all the manual unmarshalling.\n\n(Please wait for input from Jim and/or Ben before changing anything - this is just a suggestion.)\n\nRegardless of how we decide to represent the command, please add a section to doc/jsonrpc.md to document the new RPC method\u0027s parameters.",
+      "revId": "7163cce340c471eca5834c476af6d0884bcb4064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98cffe93_7db3182e",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T21:19:12Z",
+      "side": 1,
+      "message": "This is not necessarily an error; the user may have sent a request without an id, which is fine and just means that they don\u0027t want a response. \n\nNone of the RPC methods should be printing an error in this case; if you found one that does print an error, we should remove it there as well.",
+      "revId": "7163cce340c471eca5834c476af6d0884bcb4064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "949bb8b4_9beaa98c",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T21:19:12Z",
+      "side": 1,
+      "message": "The check for params here should probably be dropped; this method requires parameters, so we want to call spdk_json_decode_object() even with params \u003d\u003d NULL so that it can return an appropriate error.",
+      "revId": "7163cce340c471eca5834c476af6d0884bcb4064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
