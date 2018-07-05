@@ -4280,3 +4280,60 @@ Example response:
   "result": true
 }
 ~~~
+
+## send_nvme_cmd {#rpc_send_nvme_cmd}
+
+Send NVMe command directly to NVMe controller or namespace. Parameters and responses encoded by base64 urlsafe need further processing.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the operating NVMe devices
+cmd_type                | Required | string      | Type of nvme cmd. Valid values are: admin, io
+data_direction          | Required | string      | Direction of data transfer. Valid values are: c2h, h2c
+cmdbuf                  | Required | string      | NVMe command encoded by base64 urlsafe
+data                    | Optional | string      | Data transferring to controller from host, encoded by base64 urlsafe
+metadata                | Optional | string      | Metadata transferring to controller from host, encoded by base64 urlsafe
+data_len                | Optional | number      | Data length required to transfer from controller to host
+metadata_len            | Optional | number      | Metadata length required to transfer from controller to host
+timeout_ms              | Optional | number      | Command execution timeout value, in milliseconds
+
+### Response
+
+Name                    | Type        | Description
+----------------------- | ----------- | -----------
+cpl                     | string      | NVMe completion queue entry, encoded by base64 urlsafe
+data                    | string      | Data transferred from controller to host, encoded by base64 urlsafe
+metadata                | string      | Metadata transferred from controller to host, encoded by base64 urlsafe
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "send_nvme_cmd",
+  "id": 1,
+  "params": {
+    "name": "Nvme0n1",
+    "cmd_type": "admin"
+    "data_direction": "c2h",
+    "cmdbuf": "BgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAsGUs9P5_AAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+    "data_len": 60,
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result":  {
+    "cpl": "AAAAAAAAAAARAAAAWrmwABAA==",
+    "data": "sIjg6AAAAACwiODoAAAAALCI4OgAAAAAAAYAAREAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  }
+
+}
+~~~
