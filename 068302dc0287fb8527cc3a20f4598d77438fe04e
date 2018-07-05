@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68965556_d4a47467",
+        "filename": "lib/bdev/nvme/bdev_nvme.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T11:51:19Z",
+      "side": 1,
+      "message": "-\u003e const char *",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 4
+      },
+      "revId": "068302dc0287fb8527cc3a20f4598d77438fe04e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f85469e7_b4634a4e",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T11:51:19Z",
+      "side": 1,
+      "message": "const char *",
+      "range": {
+        "startLine": 226,
+        "startChar": 1,
+        "endLine": 226,
+        "endChar": 5
+      },
+      "revId": "068302dc0287fb8527cc3a20f4598d77438fe04e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
