@@ -14,6 +14,8 @@
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list;
+uint8_t g_flags;
+uint32_t g_residual_count;
 
 struct spdk_iscsi_task *
 spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
@@ -233,6 +235,26 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
+	struct iscsi_bhs_scsi_resp *rsph;
+	struct iscsi_bhs_data_in *datah;
+
+	switch (pdu->bhs.opcode) {
+	case ISCSI_OP_SCSI_DATAIN:
+		datah = (struct iscsi_bhs_data_in *)&pdu->bhs;
+
+		g_flags = datah->flags;
+		g_residual_count = datah->res_cnt;
+		break;
+	case ISCSI_OP_SCSI_RSP:
+		rsph = (struct iscsi_bhs_scsi_resp *)&pdu->bhs;
+
+		g_flags = rsph->flags;
+		g_residual_count = rsph->res_cnt;
+		break;
+	default:
+		break;
+	}
+
 	TAILQ_INSERT_TAIL(&g_write_pdu_list, pdu, tailq);
 }
 

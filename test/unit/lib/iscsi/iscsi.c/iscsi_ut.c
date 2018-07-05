@@ -238,6 +238,124 @@ maxburstlength_test(void)
 	spdk_put_pdu(req_pdu);
 }
 
+static void
+underflow_for_read_transfer_test(void)
+{
+	struct spdk_iscsi_sess sess;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_task task;
+	struct spdk_iscsi_pdu *pdu;
+	struct iscsi_bhs_scsi_req *scsi_req;
+	uint32_t residual_count = 0;
+
+	TAILQ_INIT(&g_write_pdu_list);
+
+	memset(&sess, 0, sizeof(sess));
+	memset(&conn, 0, sizeof(conn));
+	memset(&task, 0, sizeof(task));
+
+	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
+
+	conn.sess = &sess;
+	conn.MaxRecvDataSegmentLength = 8192;
+
+	pdu = spdk_get_pdu();
+	CU_ASSERT_FATAL(pdu != NULL);
+
+	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
+	if (scsi_req != NULL) {
+		scsi_req->read_bit = 1;
+	}
+
+	spdk_iscsi_task_set_pdu(&task, pdu);
+	task.parent = NULL;
+
+	task.scsi.iovs = &task.scsi.iov;
+	task.scsi.iovcnt = 1;
+	task.scsi.length = 512;
+	task.scsi.transfer_len = 512;
+	task.bytes_completed = 512;
+	task.scsi.data_transferred = 256;
+	task.scsi.status = SPDK_SCSI_STATUS_GOOD;
+
+	spdk_iscsi_task_response(&conn, &task);
+	spdk_put_pdu(pdu);
+
+	/*
+	 * In this case, a SCSI Data-In PDU should contain the Status
+	 * for the data transfer.
+	 */
+	CU_ASSERT(g_flags == (ISCSI_DATAIN_UNDERFLOW | ISCSI_FLAG_FINAL | ISCSI_DATAIN_STATUS));
+
+	to_be32(&residual_count, 256);
+	CU_ASSERT(residual_count == g_residual_count);
+
+	pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(pdu != NULL);
+	TAILQ_REMOVE(&g_write_pdu_list, pdu, tailq);
+	spdk_put_pdu(pdu);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_write_pdu_list));
+}
+
+static void
+underflow_for_zero_read_transfer_test(void)
+{
+	struct spdk_iscsi_sess sess;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_task task;
+	struct spdk_iscsi_pdu *pdu;
+	struct iscsi_bhs_scsi_req *scsi_req;
+	uint32_t residual_count = 0;
+
+	TAILQ_INIT(&g_write_pdu_list);
+
+	memset(&sess, 0, sizeof(sess));
+	memset(&conn, 0, sizeof(conn));
+	memset(&task, 0, sizeof(task));
+
+	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
+
+	conn.sess = &sess;
+	conn.MaxRecvDataSegmentLength = 8192;
+
+	pdu = spdk_get_pdu();
+	CU_ASSERT_FATAL(pdu != NULL);
+
+	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
+	if (scsi_req != NULL) {
+		scsi_req->read_bit = 1;
+	}
+
+	spdk_iscsi_task_set_pdu(&task, pdu);
+	task.parent = NULL;
+
+	task.scsi.length = 512;
+	task.scsi.transfer_len = 512;
+	task.bytes_completed = 512;
+	task.scsi.data_transferred = 0;
+	task.scsi.status = SPDK_SCSI_STATUS_GOOD;
+
+	spdk_iscsi_task_response(&conn, &task);
+	spdk_put_pdu(pdu);
+
+	/*
+	 * In this case, only a SCSI Response PDU is expected and
+	 * underflow must be set in it.
+	 * */
+	CU_ASSERT(g_flags == (ISCSI_SCSI_UNDERFLOW | 0x80));
+
+	to_be32(&residual_count, 512);
+	CU_ASSERT(residual_count == g_residual_count);
+
+	pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(pdu != NULL);
+	TAILQ_REMOVE(&g_write_pdu_list, pdu, tailq);
+	spdk_put_pdu(pdu);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_write_pdu_list));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -257,6 +375,10 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "login check target test", op_login_check_target_test) == NULL
 		|| CU_add_test(suite, "maxburstlength test", maxburstlength_test) == NULL
+		|| CU_add_test(suite, "underflow for read transfer test",
+			       underflow_for_read_transfer_test) == NULL
+		|| CU_add_test(suite, "underflow for zero read transfer test",
+			       underflow_for_zero_read_transfer_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
