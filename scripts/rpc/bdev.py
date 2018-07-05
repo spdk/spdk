@@ -395,6 +395,19 @@ def enable_bdev_queue_depth_tracking(client, name, period):
     return client.call('enable_bdev_queue_depth_tracking', params)
 
 
+def disable_bdev_queue_depth_tracking(client, name):
+    """Disable queue depth tracking on one or all bdevs.
+
+    Args:
+        name: name of a bdev. If null, this will default to all bdevs.
+    """
+
+    params = {}
+    if name:
+        params['name'] = name
+    return client.call('disable_bdev_queue_depth_tracking', params)
+
+
 def set_bdev_qos_limit_iops(client, name, ios_per_sec):
     """Set QoS IOPS limit on a block device.
 
