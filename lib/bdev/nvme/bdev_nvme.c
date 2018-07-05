@@ -111,7 +111,7 @@ static struct spdk_poller *g_hotplug_poller;
 static char *g_nvme_hostnqn = NULL;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
+TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 
 static int nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_library_init(void);
@@ -130,6 +130,18 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_chan
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
+
+struct spdk_nvme_qpair *
+spdk_bdev_nvme_get_io_qpair(struct nvme_bdev *nvme_bdev)
+{
+	struct spdk_io_channel *ch;
+	struct nvme_io_channel *nvme_ch;
+
+	ch = spdk_get_io_channel(nvme_bdev->nvme_ctrlr->ctrlr);
+	nvme_ch =  spdk_io_channel_get_ctx(ch);
+
+	return nvme_ch->qpair;
+}
 
 static int
 bdev_nvme_get_ctx_size(void)
