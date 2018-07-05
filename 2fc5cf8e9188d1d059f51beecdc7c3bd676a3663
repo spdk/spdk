@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69f30378_f1e0c766",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T08:53:47Z",
+      "side": 1,
+      "message": "This will appear among other user guide names in the main spdk.io/doc index.\nCould you name it \"Command line parameters\" so you can expect what to find here?",
+      "range": {
+        "startLine": 1,
+        "startChar": 2,
+        "endLine": 1,
+        "endChar": 9
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac5b66be_d9134a0e",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T08:53:47Z",
+      "side": 1,
+      "message": "It\u0027s SPDK applications, to be precise.\nThe SPDK library resides in in lib/ and doesn\u0027t take any parameters.",
+      "range": {
+        "startLine": 9,
+        "startChar": 5,
+        "endLine": 9,
+        "endChar": 12
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30fbb775_7ac8662b",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T08:53:47Z",
+      "side": 1,
+      "message": "I know it\u0027s copied 1:1 from `spdk_tgt -h` but could you rename it?\nHow about \"disable coredump file creation\" (?)",
+      "range": {
+        "startLine": 15,
+        "startChar": 44,
+        "endLine": 15,
+        "endChar": 74
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20471526_a378a371",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T08:53:47Z",
+      "side": 1,
+      "message": "Since targets may show more params than listed here, how about renaming to \"show all available parameters and exit\"",
+      "range": {
+        "startLine": 18,
+        "startChar": 49,
+        "endLine": 18,
+        "endChar": 59
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a442b53_5fc42aef",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T08:53:47Z",
+      "side": 1,
+      "message": "these two words could be dropped",
+      "range": {
+        "startLine": 31,
+        "startChar": 44,
+        "endLine": 31,
+        "endChar": 53
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb89fe58_9025da93",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T08:53:47Z",
+      "side": 1,
+      "message": "any PCI devices, including [...]",
+      "range": {
+        "startLine": 41,
+        "startChar": 56,
+        "endLine": 41,
+        "endChar": 76
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fce4678f_60efe57f",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T08:53:47Z",
+      "side": 1,
+      "message": "this sounds ambiguous, can you specify that it\u0027s exactly VFIO and UIO that aren\u0027t required anymore?",
+      "range": {
+        "startLine": 41,
+        "startChar": 103,
+        "endLine": 42,
+        "endChar": 24
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4ad3735_2d8cdd97",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T08:53:47Z",
+      "side": 1,
+      "message": "this sounds completely ambiguous to me. Could you elaborate? How does shared memory come into play here?",
+      "range": {
+        "startLine": 42,
+        "startChar": 48,
+        "endLine": 43,
+        "endChar": 61
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ae757a3_3154d2df",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T08:53:47Z",
+      "side": 1,
+      "message": "mentioned",
+      "range": {
+        "startLine": 71,
+        "startChar": 27,
+        "endLine": 71,
+        "endChar": 35
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
