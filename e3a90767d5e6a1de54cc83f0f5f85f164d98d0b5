@@ -49,6 +49,54 @@
     },
     {
       "key": {
+        "uuid": "fcbadcfc_3bb1a28f",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-05T02:53:41Z",
+      "side": 1,
+      "message": "Yes as it is async, it shouldn\u0027t wait here. Thank you for reviewing my code.",
+      "parentUuid": "9b629b60_ae94a73a",
+      "range": {
+        "startLine": 378,
+        "startChar": 0,
+        "endLine": 400,
+        "endChar": 2
+      },
+      "revId": "e3a90767d5e6a1de54cc83f0f5f85f164d98d0b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1008475a_af9cdfe9",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-05T02:53:41Z",
+      "side": 1,
+      "message": "Done. Thank you for reviewing my code.",
+      "parentUuid": "c768c4aa_16172c52",
+      "range": {
+        "startLine": 378,
+        "startChar": 0,
+        "endLine": 400,
+        "endChar": 2
+      },
+      "revId": "e3a90767d5e6a1de54cc83f0f5f85f164d98d0b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1b6c456c_37eec7c2",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 1
@@ -60,6 +108,24 @@
       "writtenOn": "2018-07-05T01:30:16Z",
       "side": 1,
       "message": "No need to call for_each_channel, I believe each LUN is assigned to just one channel, you can check current thread and LUN\u0027s thread is same core or not.",
+      "revId": "e3a90767d5e6a1de54cc83f0f5f85f164d98d0b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe288b5e_cf740d44",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-05T02:53:41Z",
+      "side": 1,
+      "message": "Got it. Thank you for your explanation.",
+      "parentUuid": "1b6c456c_37eec7c2",
       "revId": "e3a90767d5e6a1de54cc83f0f5f85f164d98d0b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
