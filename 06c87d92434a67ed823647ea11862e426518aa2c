@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e64c4ed0_4aa5df89",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8ec50613_d28f4c5b",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f18e4f53_d5ccc561",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-28T20:46:36Z",
       "side": 1,
       "message": "alignment",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e73d4abc_f1697391",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f18e4f53_d5ccc561",
       "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "edbaee11_e04b8b1c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1739,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d1ad70ea_f4a91c29",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ade80c9c_aac73adf",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 7
@@ -64,6 +118,24 @@
       "writtenOn": "2018-06-28T20:46:36Z",
       "side": 1,
       "message": "This aborts the AER requests, but you\u0027d only want to do that if the admin queue is being recovered.",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc82c8d6_b021052c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1783,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ade80c9c_aac73adf",
       "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "04d0571f_12324f1f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1792,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "Restored the original code in request.c and not using state_cb from rdma code any longer. Rather then that, call spdk_nvmf_rdma_qp_drained from spdk_nvmf_rdma_request_complete callback if qp is in ERROR state and there\u0027re no requests being executed.",
+      "parentUuid": "1204087f_b5272474",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7aa2c3e_095c15bc",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 7
@@ -98,6 +188,24 @@
       "writtenOn": "2018-06-28T20:46:36Z",
       "side": 1,
       "message": "This path doesn\u0027t appear to do much. It doesn\u0027t set the qpair state, so I/O won\u0027t quiesce. It also won\u0027t trigger error recovery. It appears that it does abort all I/O currently sitting in one of the RDMA state queues. Can that actually happen when we hit this state? Is that all this path really should do?",
+      "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fcee81d_cd203ca8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1867,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "I just have added a handler to IBV_EVENT_QP_LAST_WQE_REACHED, which triggers RDMA QP draining as well.\n\nEither of these two events is expected to follow IBV_EVENT_QP_FATAL to tell the WQEs (and associated resources) have been released by the hardware and can be de-allocated. It is essential to get one of these events before releasing QP resources in ERROR state.\n\n\u003e\u003e Can that actually happen when we hit this state?\nIt is the IB spec requirement, see \"10.3.1 QUEUE PAIR AND EE CONTEXT STATES\" of \"IB Specification Vol 1\".\nMost RDMA/IB drivers in the Linux kernel fire these events.\n\n\u003e\u003e Is that all this path really should do?\nI see no other use in these events rather then tell the app the resources have been released by hardware.",
+      "parentUuid": "c7aa2c3e_095c15bc",
       "revId": "06c87d92434a67ed823647ea11862e426518aa2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
