@@ -87,6 +87,18 @@ else
 fi
 rm -f badfunc.log
 
+echo -n "Checking for use of forbidden CUnit macros..."
+
+git grep --line-number -w 'CU_ASSERT_FATAL' -- 'test/*' ':!test/spdk_cunit.h' > badcunit.log || true
+if [ -s badcunit.log ]; then
+	echo " Forbidden CU_ASSERT_FATAL usage detected - use SPDK_CU_ASSERT_FATAL instead"
+	cat badcunit.log
+	rc=1
+else
+	echo " OK"
+fi
+rm -f badcunit.log
+
 echo -n "Checking blank lines at end of file..."
 
 if ! git grep -I -l -e . -z | \
