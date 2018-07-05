@@ -390,6 +390,35 @@ bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
 const struct spdk_uuid *spdk_bdev_get_uuid(const struct spdk_bdev *bdev);
 
 /**
+ * Get the most recently measured queue depth from a bdev.
+ *
+ * The reported queue depth is the aggregate of outstanding I/O
+ * across all open channels associated with this bdev.
+ *
+ * \param bdev Block device to query.
+ *
+ * \return The most recent queue depth measurement for the bdev.
+ * If tracking is not enabled, the function will return UINT64_MAX
+ * It will also return UINT64_MAX after enabling tracking
+ * but before the first period has expired.
+ */
+uint64_t
+spdk_bdev_get_measured_queue_depth(const struct spdk_bdev *bdev);
+
+/**
+ * Get the most queue depth polling period.
+ *
+ * The return value of this function is only valid if the bdev's
+ * queue depth tracking status is set to true.
+ *
+ * \param bdev Block device to query.
+ *
+ * \return The period at which this bdev's gueue depth is being refreshed.
+ */
+uint64_t
+spdk_bdev_get_queue_depth_poll_period(const struct spdk_bdev *bdev);
+
+/**
  * Obtain an I/O channel for the block device opened by the specified
  * descriptor. I/O channels are bound to threads, so the resulting I/O
  * channel may only be used from the thread it was originally obtained
@@ -947,6 +976,20 @@ int spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
  */
 void spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			   struct spdk_bdev_io_stat *stat);
+
+/**
+ * Enable queue depth tracking for this bdev.
+ *
+ * This function registers a poller with the current thread that will periodically
+ * call a function to aggregate the outstanding io on each channel for this bdev.
+ * The result of this aggregation will be reported in the bdev structure as the
+ * measured_queue_depth.
+ *
+ * \param bdev Block device on which to enable queue depth tracking.
+ * \param period The period at which to poll this bdev's queue depth. If this is set
+ * to zero, polling will be disabled.
+ */
+void spdk_bdev_set_qd_tracking_poll_period(struct spdk_bdev *bdev, uint64_t period);
 
 /**
  * Return I/O statistics for this bdev. All the required information will be passed
