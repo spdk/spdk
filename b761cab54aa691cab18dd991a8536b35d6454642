@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ece9f25_668fb29b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1492,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T17:22:21Z",
+      "side": 1,
+      "message": "port-\u003eid?",
+      "range": {
+        "startLine": 1492,
+        "startChar": 18,
+        "endLine": 1492,
+        "endChar": 26
+      },
+      "revId": "b761cab54aa691cab18dd991a8536b35d6454642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bebbef01_1a17bb2e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1494,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T17:22:21Z",
+      "side": 1,
+      "message": "This should probably be \u0026rtransport-\u003elock.",
+      "range": {
+        "startLine": 1494,
+        "startChar": 23,
+        "endLine": 1494,
+        "endChar": 35
+      },
+      "revId": "b761cab54aa691cab18dd991a8536b35d6454642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
