@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c799d4e_ded2f273",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T18:45:41Z",
+      "side": 1,
+      "message": "The +1 was in the shift - so the structures had double the entries than necessary",
+      "revId": "3b8bf849582f17f2969a711998a2e3cbfdfc236b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
