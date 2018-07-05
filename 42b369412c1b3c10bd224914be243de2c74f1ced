@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c52a2c65_d636bfa8",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-05T14:42:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea9673e4_85bdc9f7",
+      "revId": "42b369412c1b3c10bd224914be243de2c74f1ced",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "29cfe27a_726bcd11",
         "filename": "test/pmem/json_config/json_config.sh",
         "patchSetId": 3
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "ef6c1183_d9dd791c",
+        "filename": "test/pmem/json_config/json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-05T14:42:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "29cfe27a_726bcd11",
+      "range": {
+        "startLine": 8,
+        "startChar": 1,
+        "endLine": 8,
+        "endChar": 8
+      },
+      "revId": "42b369412c1b3c10bd224914be243de2c74f1ced",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5cabdfd3_fd0f7725",
         "filename": "test/pmem/json_config/json_config.sh",
         "patchSetId": 3
@@ -53,6 +95,30 @@
       "writtenOn": "2018-07-05T04:02:42Z",
       "side": 1,
       "message": "this can be removed?",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 10
+      },
+      "revId": "42b369412c1b3c10bd224914be243de2c74f1ced",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a651256_83c86f0f",
+        "filename": "test/pmem/json_config/json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-05T14:42:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5cabdfd3_fd0f7725",
       "range": {
         "startLine": 12,
         "startChar": 1,
