@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "340be0e1_1fe36a56",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T19:45:33Z",
+      "side": 1,
+      "message": "is this check needed?\n\noh - I think you need to change the CU_ASSERT_FATAL (line 263) to SPDK_CU_ASSERT_FATAL - this will make the static analyzer shut up :)",
+      "revId": "4d5dd266d981b38febc277b5302611ae9dd6b2c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b20f124c_3ca92b59",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T19:45:33Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "4d5dd266d981b38febc277b5302611ae9dd6b2c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
