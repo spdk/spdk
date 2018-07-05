@@ -193,6 +193,10 @@ test_mem_map_translation(void)
 	rc = spdk_mem_map_set_translation(map, 0x1000000000000ULL, VALUE_2MB, 0x5678);
 	CU_ASSERT(rc == -EINVAL);
 
+	/* Attempt to set translation starting at a valid address but exceeding the valid range */
+	rc = spdk_mem_map_set_translation(map, 0xffffffe00000ULL, VALUE_2MB * 2, 0x123123);
+	CU_ASSERT(rc != 0);
+
 	spdk_mem_map_free(&map);
 	CU_ASSERT(map == NULL);
 }

@@ -360,6 +360,10 @@ spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 	uint64_t idx_256tb = MAP_256TB_IDX(vfn_2mb);
 	size_t i;
 
+	if (spdk_unlikely(idx_256tb >= SPDK_COUNTOF(map->map_256tb.map))) {
+		return NULL;
+	}
+
 	map_1gb = map->map_256tb.map[idx_256tb];
 
 	if (!map_1gb) {
