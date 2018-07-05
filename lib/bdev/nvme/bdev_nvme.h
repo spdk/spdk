@@ -83,6 +83,8 @@ struct nvme_bdev {
 	struct spdk_nvme_ns	*ns;
 };
 
+struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
+struct nvme_ctrlr *spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name);
 void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_thread_fn cb, void *cb_ctx);
