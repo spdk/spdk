@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4b6d17a_a41286a2",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T20:36:54Z",
+      "side": 1,
+      "message": "Note for reviewers: the function changed above, spdk_mem_map_get_map_1gb(), is called here. The initial vaddr \u0026 ~MASK_256TB check catches invalid start addresses, but not later invalid addresses as we iterate through the loop.",
+      "revId": "223072aef24f5d67ea3a073c92265a2061d85bf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a726f18_c3adf2f5",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T20:36:54Z",
+      "side": 1,
+      "message": "This access is always safe if we got a valid map_1gb, since it masks off a specific set of bits that results in an index that is always in range.",
+      "revId": "223072aef24f5d67ea3a073c92265a2061d85bf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
