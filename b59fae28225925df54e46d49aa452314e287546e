@@ -22,6 +22,30 @@
       "revId": "b59fae28225925df54e46d49aa452314e287546e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dc040f0_b00ce868",
+        "filename": "test/unit/lib/json/json_parse.c/json_parse_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T15:52:21Z",
+      "side": 1,
+      "message": "Good idea - that way we also don\u0027t have to count to 64. :)\n\nI will update it to use this strategy.",
+      "parentUuid": "c1ecf6a6_2c3912e5",
+      "range": {
+        "startLine": 539,
+        "startChar": 0,
+        "endLine": 542,
+        "endChar": 4
+      },
+      "revId": "b59fae28225925df54e46d49aa452314e287546e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
