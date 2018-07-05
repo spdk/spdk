@@ -62,7 +62,7 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 	memset(g_buf, 0, sizeof(g_buf)); \
 	g_write_pos = g_buf; \
 	w = spdk_json_write_begin(write_cb, NULL, 0); \
-	CU_ASSERT_FATAL(w != NULL)
+	SPDK_CU_ASSERT_FATAL(w != NULL)
 
 #define END(json) \
 	CU_ASSERT(spdk_json_write_end(w) == 0); \

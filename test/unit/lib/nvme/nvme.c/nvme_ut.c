@@ -447,7 +447,7 @@ test_spdk_nvme_detach(void)
 	g_spdk_nvme_driver = &test_driver;
 	TAILQ_INIT(&test_driver.shared_attached_ctrlrs);
 	TAILQ_INSERT_TAIL(&test_driver.shared_attached_ctrlrs, &ctrlr, tailq);
-	CU_ASSERT_FATAL(pthread_mutex_init(&test_driver.lock, NULL) == 0);
+	CU_ASSERT(pthread_mutex_init(&test_driver.lock, NULL) == 0);
 
 	/*
 	 * Controllers are ref counted so mock the function that returns

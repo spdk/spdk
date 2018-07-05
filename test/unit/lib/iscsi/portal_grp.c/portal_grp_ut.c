@@ -174,7 +174,7 @@ parse_portal_ipv4_normal_case(void)
 	int rc;
 
 	cpumask_val = spdk_cpuset_alloc();
-	CU_ASSERT_FATAL(cpumask_val != NULL);
+	SPDK_CU_ASSERT_FATAL(cpumask_val != NULL);
 
 	spdk_cpuset_set_cpu(cpumask_val, 0, true);
 
@@ -201,7 +201,7 @@ parse_portal_ipv6_normal_case(void)
 	int rc;
 
 	cpumask_val = spdk_cpuset_alloc();
-	CU_ASSERT_FATAL(cpumask_val != NULL);
+	SPDK_CU_ASSERT_FATAL(cpumask_val != NULL);
 
 	spdk_cpuset_set_cpu(cpumask_val, 0, true);
 

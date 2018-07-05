@@ -197,7 +197,7 @@ maxburstlength_test(void)
 	req->final_bit = 1;
 
 	rc = spdk_iscsi_execute(&conn, req_pdu);
-	CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(rc == 0);
 
 	response_pdu = TAILQ_FIRST(&g_write_pdu_list);
 	SPDK_CU_ASSERT_FATAL(response_pdu != NULL);
