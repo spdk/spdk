@@ -395,6 +395,15 @@ if __name__ == "__main__":
     p.set_defaults(func=enable_bdev_queue_depth_tracking)
 
     @call_cmd
+    def disable_bdev_queue_depth_tracking(args):
+        rpc.bdev.enable_bdev_queue_depth_tracking(args.client,
+                                                  name=args.name)
+
+    p = subparsers.add_parser('disable_bdev_queue_depth_tracking', help='Disable tracking of a bdev\'s queue depth.')
+    p.add_argument('-b', '--name', help='Blockdev name. Example: Malloc0', required=False)
+    p.set_defaults(func=disable_bdev_queue_depth_tracking)
+
+    @call_cmd
     def set_bdev_qos_limit_iops(args):
         rpc.bdev.set_bdev_qos_limit_iops(args.client,
                                          name=args.name,

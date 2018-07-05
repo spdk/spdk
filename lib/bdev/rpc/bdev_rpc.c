@@ -535,6 +535,67 @@ error:
 SPDK_RPC_REGISTER("enable_bdev_queue_depth_tracking", spdk_rpc_enable_bdev_queue_depth_tracking,
 		  SPDK_RPC_RUNTIME)
 
+struct rpc_disable_bdev_queue_depth_tracking {
+	char *name;
+	uint64_t period;
+};
+
+static void
+free_rpc_disable_queue_depth_tracking(struct rpc_disable_bdev_queue_depth_tracking *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_disable_bdev_queue_depth_tracking_decoders[] = {
+	{"name", offsetof(struct rpc_disable_bdev_queue_depth_tracking, name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_disable_bdev_queue_depth_tracking(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
+{
+	struct rpc_disable_bdev_queue_depth_tracking req = {0};
+	struct spdk_bdev *bdev = NULL;
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_disable_bdev_queue_depth_tracking_decoders,
+					    SPDK_COUNTOF(rpc_disable_bdev_queue_depth_tracking_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			goto invalid;
+		}
+
+		if (req.name) {
+			bdev = spdk_bdev_get_by_name(req.name);
+			if (bdev == NULL) {
+				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+				goto invalid;
+			}
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (bdev != NULL) {
+		spdk_bdev_disable_qd_tracking(bdev);
+	} else {
+		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+			spdk_bdev_disable_qd_tracking(bdev);
+		}
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	free_rpc_disable_queue_depth_tracking(&req);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_disable_queue_depth_tracking(&req);
+}
+SPDK_RPC_REGISTER("disable_bdev_queue_depth_tracking", spdk_rpc_disable_bdev_queue_depth_tracking,
+		  SPDK_RPC_RUNTIME)
+
 struct rpc_set_bdev_qos_limit_iops {
 	char		*name;
 	uint64_t	ios_per_sec;
