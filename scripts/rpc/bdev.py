@@ -379,6 +379,20 @@ def bdev_inject_error(client, name, io_type, error_type, num=1):
     return client.call('bdev_inject_error', params)
 
 
+def set_bdev_qd_tracking_sampling_period(client, name, period):
+    """Enable queue depth tracking on a specified bdev.
+
+    Args:
+        name: name of a bdev on which to track queue depth.
+        period: period (in microseconds) at which to update the queue depth reading. If set to 0, polling will be disabled.
+    """
+
+    params = {}
+    params['name'] = name
+    params['period'] = period
+    return client.call('set_bdev_qd_tracking_sampling_period', params)
+
+
 def set_bdev_qos_limit_iops(client, name, ios_per_sec):
     """Set QoS IOPS limit on a block device.
 

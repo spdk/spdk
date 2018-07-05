@@ -452,6 +452,72 @@ invalid:
 }
 SPDK_RPC_REGISTER("delete_bdev", spdk_rpc_delete_bdev, SPDK_RPC_RUNTIME)
 
+struct rpc_set_bdev_qd_tracking_sampling_period {
+	char *name;
+	uint64_t period;
+};
+
+static void
+free_rpc_set_bdev_qd_tracking_sampling_period(struct rpc_set_bdev_qd_tracking_sampling_period *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder
+	rpc_set_bdev_qd_tracking_sampling_period_decoders[] = {
+	{"name", offsetof(struct rpc_set_bdev_qd_tracking_sampling_period, name), spdk_json_decode_string},
+	{"period", offsetof(struct rpc_set_bdev_qd_tracking_sampling_period, period), spdk_json_decode_uint64},
+};
+
+static void
+spdk_rpc_set_bdev_qd_tracking_sampling_period(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
+{
+	struct rpc_set_bdev_qd_tracking_sampling_period req = {0};
+	struct spdk_bdev *bdev;
+	struct spdk_json_write_ctx *w;
+
+	req.period = UINT64_MAX;
+
+	if (spdk_json_decode_object(params, rpc_set_bdev_qd_tracking_sampling_period_decoders,
+				    SPDK_COUNTOF(rpc_set_bdev_qd_tracking_sampling_period_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (req.name) {
+		bdev = spdk_bdev_get_by_name(req.name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+			goto invalid;
+		}
+	} else {
+		SPDK_ERRLOG("Missing name param\n");
+		goto invalid;
+	}
+
+	if (req.period == UINT64_MAX) {
+		SPDK_ERRLOG("Missing period param");
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_bdev_set_qd_sampling_period(bdev, req.period);
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	free_rpc_set_bdev_qd_tracking_sampling_period(&req);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_set_bdev_qd_tracking_sampling_period(&req);
+	return;
+}
+SPDK_RPC_REGISTER("set_bdev_qd_tracking_sampling_period",
+		  spdk_rpc_set_bdev_qd_tracking_sampling_period,
+		  SPDK_RPC_RUNTIME)
+
 struct rpc_set_bdev_qos_limit_iops {
 	char		*name;
 	uint64_t	ios_per_sec;
