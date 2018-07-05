@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "def94061_6679c13b",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-05T15:24:21Z",
+      "side": 1,
+      "message": "I\u0027ll fix this.",
+      "parentUuid": "d5129947_8bca02e4",
+      "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7eb43f89_4bf4a97d",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-02T21:13:39Z",
       "side": 1,
       "message": "Installing openssl-devel again shouldn\u0027t be needed - it\u0027s installed by pkgdep.sh now.",
+      "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b44efab9_51e7b49c",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-05T15:24:21Z",
+      "side": 1,
+      "message": "I\u0027ll remove this.",
+      "parentUuid": "7eb43f89_4bf4a97d",
       "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "3e997f61_ea5a5835",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-05T15:24:21Z",
+      "side": 1,
+      "message": "This is needed in the case were tsocks is not installed.",
+      "parentUuid": "5b85e16f_4e89291c",
+      "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1b6a343c_e14489ed",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 6
@@ -81,6 +135,24 @@
       "writtenOn": "2018-07-02T21:13:39Z",
       "side": 1,
       "message": "Mixed tabs/spaces.",
+      "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b9fcde4_f83b2b16",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-05T15:24:21Z",
+      "side": 1,
+      "message": "I\u0027ll fix this.",
+      "parentUuid": "1b6a343c_e14489ed",
       "revId": "98893bded70c5c0cbdfd2d0f3792259b6d803625",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
