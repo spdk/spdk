@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b27518c0_e01c09df",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 780,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-05T07:29:49Z",
+      "side": 1,
+      "message": "spdk_nvme_transport_id_compare call from nvme_ctrlr_get() uses same compare function for other parameters, so I wanted to keep it the same way.",
+      "parentUuid": "7ff28dca_b2d6299f",
+      "range": {
+        "startLine": 780,
+        "startChar": 6,
+        "endLine": 780,
+        "endChar": 16
+      },
+      "revId": "8d03b4d638bb43d096d07860bc7632e088c3f360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3af88235_d7b252d0",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 15
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-04T21:17:15Z",
       "side": 1,
       "message": "Which of those parameters have precedence is unclear to me form function documentation. For me if both parametes are passed this function should return -EINVAL or check if ctrlr with provided name match trid - which path is the right one is up to you to decide.\n\nAnother question is: why name is not enougth?",
+      "range": {
+        "startLine": 1065,
+        "startChar": 1,
+        "endLine": 1065,
+        "endChar": 20
+      },
+      "revId": "8d03b4d638bb43d096d07860bc7632e088c3f360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e11c265_9ac2c022",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1065,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-05T07:29:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3af88235_d7b252d0",
       "range": {
         "startLine": 1065,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "1ca1e265_d55db61f",
+        "filename": "lib/bdev/nvme/bdev_nvme.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-05T07:29:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "daab2283_530c5b9b",
+      "range": {
+        "startLine": 83,
+        "startChar": 15,
+        "endLine": 83,
+        "endChar": 19
+      },
+      "revId": "8d03b4d638bb43d096d07860bc7632e088c3f360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "78c80070_e9d1f70d",
         "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 15
@@ -82,6 +154,30 @@
       "writtenOn": "2018-07-04T21:17:15Z",
       "side": 1,
       "message": "So many useless parameters...",
+      "range": {
+        "startLine": 166,
+        "startChar": 0,
+        "endLine": 169,
+        "endChar": 14
+      },
+      "revId": "8d03b4d638bb43d096d07860bc7632e088c3f360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "584798df_9474b5d2",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-05T07:29:49Z",
+      "side": 1,
+      "message": "We use all of them to build trid.",
+      "parentUuid": "78c80070_e9d1f70d",
       "range": {
         "startLine": 166,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "228fc528_39c3c1e6",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-05T07:29:49Z",
+      "side": 1,
+      "message": "In general I agree with you. I\u0027ve added this, because this may be useful for some users and it makes our tests scripts simpler (we do not need to retrieve controller name - we can delete it just based on the bdev name). In this code (this part of the code) it does not matter what is controller name or bdev name. It will find controller based on bdevs list assigned to the controller.",
+      "parentUuid": "c98fdc8d_43ce08ec",
+      "range": {
+        "startLine": 260,
+        "startChar": 1,
+        "endLine": 260,
+        "endChar": 34
+      },
+      "revId": "8d03b4d638bb43d096d07860bc7632e088c3f360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a96e6e82_d79806a7",
         "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
         "patchSetId": 15
@@ -128,6 +248,24 @@
       "writtenOn": "2018-07-04T21:17:15Z",
       "side": 1,
       "message": "Empty line -\u003e move after fi",
+      "revId": "8d03b4d638bb43d096d07860bc7632e088c3f360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35f2966b_465a40fa",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-05T07:29:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a96e6e82_d79806a7",
       "revId": "8d03b4d638bb43d096d07860bc7632e088c3f360",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
