@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bdc7a756_de9ee010",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-05T19:32:59Z",
+      "side": 1,
+      "message": "There were no error paths (or at least handled ones) in the original path of this function. I only introduced one by allocating a context buffer.\nSince the allocation will only fail right at the beginning of the function call, can I add a return value to spdk_nvmf_qpair_disconnect to indicate this failure? If I fail the allocation, I will not call the callback and immediately return with the bad status.\nI am assuming that since this is the only point of failure, I can skip adding a status code to the argument list for the callback function since any time the callback has been reached, the disconnect was successful?",
+      "parentUuid": "5c4e1b29_cab9f617",
+      "revId": "b5e53752b308379095f569a12b531f1689f6289c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18d0c813_5f5c003c",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-05T18:30:29Z",
       "side": 1,
       "message": "The way we typically handle this is the function can return an error code if it fails immediately. Otherwise, it will return success and call the callback (potentially with an error code).",
+      "revId": "b5e53752b308379095f569a12b531f1689f6289c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c9009ad_62f040a1",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-05T19:32:59Z",
+      "side": 1,
+      "message": "Thanks, that\u0027s good advice. I will remember that strategy.",
+      "parentUuid": "18d0c813_5f5c003c",
       "revId": "b5e53752b308379095f569a12b531f1689f6289c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
