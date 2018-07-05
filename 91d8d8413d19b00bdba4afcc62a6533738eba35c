@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4029852e_a6e1eb54",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T23:21:27Z",
+      "side": 1,
+      "message": "String -\u003e string for consistency",
+      "range": {
+        "startLine": 1264,
+        "startChar": 37,
+        "endLine": 1264,
+        "endChar": 43
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "638604bf_4d813251",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T23:21:27Z",
+      "side": 1,
+      "message": "String -\u003e string",
+      "range": {
+        "startLine": 1265,
+        "startChar": 37,
+        "endLine": 1265,
+        "endChar": 43
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c979c1e_2542f580",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1456,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T23:21:27Z",
+      "side": 1,
+      "message": "The lvol bdev is looked up via spdk_bdev_get_by_name(), so either the UUID or the lvs_name/lvol_name alias should work here.",
+      "range": {
+        "startLine": 1456,
+        "startChar": 51,
+        "endLine": 1456,
+        "endChar": 88
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c89846d_1f7fe8d2",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1483,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T23:21:27Z",
+      "side": 1,
+      "message": "This should describe what \"inflate\" means (allocate all clusters of a thin-provisioned lvol).",
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7efe9966_7b0d3e12",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1516,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-05T23:21:27Z",
+      "side": 1,
+      "message": "This probably deserves a little more explanation (why this is useful - e.g. if this lvol is a clone, this allows deletion of the parent snapshot).",
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
