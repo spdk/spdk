@@ -297,6 +297,22 @@ struct spdk_bdev {
 
 		/** points to a reset bdev_io if one is in progress. */
 		struct spdk_bdev_io *reset_in_progress;
+
+		/** tells us whether we are tracking the queue depth for this device */
+		bool tracking_qd;
+
+		/** poller for tracking the queue_depth of a device, NULL if not tracking */
+		struct spdk_poller *qd_poller;
+
+		/** period at which we poll for queue depth information */
+		uint64_t period;
+
+		/** temporary queue depth used when aggregating from multiple queues. */
+		uint64_t temporary_queue_depth;
+
+		/** queue depth as calculated the last time the telemetry poller checked. */
+		uint64_t measured_queue_depth;
+
 	} internal;
 };
 
