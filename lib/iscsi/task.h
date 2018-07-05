@@ -37,6 +37,7 @@
 
 #include "iscsi/iscsi.h"
 #include "spdk/scsi.h"
+#include "spdk/util.h"
 
 struct spdk_iscsi_task {
 	struct spdk_scsi_task	scsi;
@@ -169,7 +170,7 @@ struct spdk_iscsi_task *spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 static inline struct spdk_iscsi_task *
 spdk_iscsi_task_from_scsi_task(struct spdk_scsi_task *task)
 {
-	return (struct spdk_iscsi_task *)((uintptr_t)task - offsetof(struct spdk_iscsi_task, scsi));
+	return SPDK_CONTAINEROF(task, struct spdk_iscsi_task, scsi);
 }
 
 static inline struct spdk_iscsi_task *

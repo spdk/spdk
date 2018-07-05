@@ -47,6 +47,7 @@
 #include "spdk/queue.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/thread.h"
+#include "spdk/util.h"
 #include "spdk/uuid.h"
 
 /** Block device module */
@@ -690,8 +691,7 @@ struct spdk_bdev_module *spdk_bdev_module_list_find(const char *name);
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)
 {
-	return (struct spdk_bdev_io *)
-	       ((uintptr_t)ctx - offsetof(struct spdk_bdev_io, driver_ctx));
+	return SPDK_CONTAINEROF(ctx, struct spdk_bdev_io, driver_ctx);
 }
 
 struct spdk_bdev_part_base;
