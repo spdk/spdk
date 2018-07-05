@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60c44f95_e8390515",
+        "filename": "lib/virtio/virtio_pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T16:51:15Z",
+      "side": 1,
+      "message": "It would be awesome if we could defer this to the IO channel creation so we could guess proper socket ID. But it is issue to be addressed in another patch.",
+      "range": {
+        "startLine": 269,
+        "startChar": 28,
+        "endLine": 269,
+        "endChar": 50
+      },
+      "revId": "7f71d8466d99d15835d2b489879affd70839cb2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
