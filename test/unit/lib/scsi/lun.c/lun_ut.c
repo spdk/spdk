@@ -599,7 +599,6 @@ main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
-	int		rc;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
@@ -649,15 +648,6 @@ main(int argc, char **argv)
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
-
-	if (argc > 1) {
-		rc = spdk_cunit_print_results(argv[1]);
-		if (rc != 0) {
-			CU_cleanup_registry();
-			return rc;
-		}
-	}
-
 	CU_cleanup_registry();
 	return num_failures;
 }
