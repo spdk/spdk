@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56b38959_14ee5a8f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T21:39:00Z",
+      "side": 1,
+      "message": "those names are static. Why you can\u0027t just pass \"session_mp\" to spdk_mempool_create?",
+      "range": {
+        "startLine": 234,
+        "startChar": 1,
+        "endLine": 234,
+        "endChar": 55
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75704498_4be7c890",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T21:39:00Z",
+      "side": 1,
+      "message": "What about g_vbdev_pmds? Is this going to be released in case of error?",
+      "range": {
+        "startLine": 332,
+        "startChar": 3,
+        "endLine": 332,
+        "endChar": 20
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "add598e9_03e5c0f9",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T21:39:00Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 467,
+        "startChar": 24,
+        "endLine": 467,
+        "endChar": 25
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cfd0f2a_60ec772a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-05T21:39:00Z",
+      "side": 1,
+      "message": "It will be released when you free bdev_io. See spdk_bdev_free_io(). So for writes you should be able to use spdk_bdev_io_get_buf() on base_bdev and don\u0027t care about allocating and free\u0027ing this bufer (this is why this function was created).\n\nBasicaly for READs this should also be possible but the _crypto_operation() is quite complicated so I\u0027m not 100% sure right now.",
+      "range": {
+        "startLine": 788,
+        "startChar": 0,
+        "endLine": 791,
+        "endChar": 5
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
