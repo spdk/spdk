@@ -1642,6 +1642,81 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 	return &bdev->uuid;
 }
 
+bool
+spdk_bdev_get_qd_tracking_status(const struct spdk_bdev *bdev)
+{
+	return bdev->internal.tracking_qd;
+}
+
+uint64_t
+spdk_bdev_get_measured_queue_depth(const struct spdk_bdev *bdev)
+{
+	return bdev->internal.measured_queue_depth;
+}
+
+uint64_t
+spdk_bdev_get_queue_depth_poll_period(const struct spdk_bdev *bdev)
+{
+	return bdev->internal.period;
+}
+
+static void
+_calculate_measured_qd_cpl(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
+
+	bdev->internal.measured_queue_depth = bdev->internal.temporary_queue_depth;
+}
+
+static void
+_calculate_measured_qd(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(io_ch);
+
+	bdev->internal.temporary_queue_depth += ch->io_outstanding;
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static int
+spdk_bdev_calculate_measured_queue_depth(void *ctx)
+{
+	struct spdk_bdev *bdev = ctx;
+	bdev->internal.temporary_queue_depth = 0;
+	spdk_for_each_channel(__bdev_to_io_dev(bdev), _calculate_measured_qd, bdev,
+			      _calculate_measured_qd_cpl);
+	return 0;
+}
+
+bool
+spdk_bdev_enable_qd_tracking(struct spdk_bdev *bdev, uint64_t period)
+{
+
+	if (bdev->internal.qd_poller != NULL) {
+		spdk_poller_unregister(&bdev->internal.qd_poller);
+	}
+	bdev->internal.qd_poller = spdk_poller_register(spdk_bdev_calculate_measured_queue_depth, bdev,
+				   period);
+	if (bdev->internal.qd_poller == NULL) {
+		bdev->internal.tracking_qd = NULL;
+	} else {
+		bdev->internal.tracking_qd = true;
+	}
+
+	return bdev->internal.tracking_qd;
+}
+
+void
+spdk_bdev_disable_qd_tracking(struct spdk_bdev *bdev)
+{
+
+	bdev->internal.tracking_qd = false;
+	if (bdev->internal.qd_poller != NULL) {
+		spdk_poller_unregister(&bdev->internal.qd_poller);
+	}
+}
+
 int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 {
@@ -3072,6 +3147,8 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 			SPDK_ERRLOG("Unable to shut down QoS poller. It will continue running on the current thread.\n");
 		}
 	}
+
+	spdk_bdev_disable_qd_tracking(bdev);
 
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
 		do_unregister = true;
