@@ -398,12 +398,12 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	uint64_t idx_1gb;
 	struct map_2mb *map_2mb;
 
-	/* For now, only 2 MB-aligned registrations are supported */
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %lu\n", vaddr);
 		return -EINVAL;
 	}
 
+	/* For now, only 2 MB-aligned registrations are supported */
 	if (((uintptr_t)vaddr & MASK_2MB) || (size & MASK_2MB)) {
 		DEBUG_PRINT("invalid %s parameters, vaddr=%lu len=%ju\n",
 			    __func__, vaddr, size);
@@ -438,12 +438,12 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 	uint64_t idx_1gb;
 	struct map_2mb *map_2mb;
 
-	/* For now, only 2 MB-aligned registrations are supported */
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %lu\n", vaddr);
 		return -EINVAL;
 	}
 
+	/* For now, only 2 MB-aligned registrations are supported */
 	if (((uintptr_t)vaddr & MASK_2MB) || (size & MASK_2MB)) {
 		DEBUG_PRINT("invalid %s parameters, vaddr=%lu len=%ju\n",
 			    __func__, vaddr, size);
