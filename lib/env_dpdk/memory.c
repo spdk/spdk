@@ -55,7 +55,7 @@
 #define FN_4KB_TO_2MB(fn)	(fn >> (SHIFT_2MB - SHIFT_4KB))
 
 #define MAP_256TB_IDX(vfn_2mb)	((vfn_2mb) >> (SHIFT_1GB - SHIFT_2MB))
-#define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB + 1)) - 1))
+#define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB)) - 1))
 
 /* Translation of a single 2MB page. */
 struct map_2mb {
@@ -67,14 +67,14 @@ struct map_2mb {
  * been retrieved yet.
  */
 struct map_1gb {
-	struct map_2mb map[1ULL << (SHIFT_1GB - SHIFT_2MB + 1)];
+	struct map_2mb map[1ULL << (SHIFT_1GB - SHIFT_2MB)];
 };
 
 /* Top-level map table indexed by bits [30..46] of the virtual address.
  * Each entry points to a second-level map table or NULL.
  */
 struct map_256tb {
-	struct map_1gb *map[1ULL << (SHIFT_256TB - SHIFT_1GB + 1)];
+	struct map_1gb *map[1ULL << (SHIFT_256TB - SHIFT_1GB)];
 };
 
 /* Page-granularity memory address translation */
