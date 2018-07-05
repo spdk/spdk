@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e609d143_32c34a10",
+        "filename": "test/spdkcli/spdkcli.test.match",
+        "patchSetId": 13
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-05T12:02:37Z",
+      "side": 1,
+      "message": "This will fail if there are more than 1 bdevs on test server.",
+      "range": {
+        "startLine": 17,
+        "startChar": 4,
+        "endLine": 18,
+        "endChar": 132
+      },
+      "revId": "daf7122ca63eb5849a5e335776c6b1f8fe3d5076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfe88d94_f3e8b0ad",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-05T12:02:37Z",
+      "side": 1,
+      "message": "This will cause problems with match expected output.\nHere you construct possibly multiple NVMe bdevs (if there more than 1 NVMe) which makes checking the output with spdkcli.test.match a little problematic.\na) nvme .... [Bdevs: 1] - bdevs number will vary (can be fixed by making \"1\" a variable)\nb) There will be more entries than just \"Nvme0n1\" in bdevs/nvme subtree. This is a little more problematic, not sure if you can parametrize that in match app.\n\nI\u0027d suggest testing with only one NVMe.",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 84
+      },
+      "revId": "daf7122ca63eb5849a5e335776c6b1f8fe3d5076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
