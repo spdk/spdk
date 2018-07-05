@@ -2,6 +2,98 @@
   "comments": [
     {
       "key": {
+        "uuid": "a61995df_9f29d813",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-05T12:23:08Z",
+      "side": 1,
+      "message": "Need to add deps for Debian based systems",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 31
+      },
+      "revId": "daf7122ca63eb5849a5e335776c6b1f8fe3d5076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6818c193_c4812b1d",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-05T12:23:08Z",
+      "side": 1,
+      "message": "Not needed IMO, it\u0027s a default location",
+      "range": {
+        "startLine": 22,
+        "startChar": 51,
+        "endLine": 22,
+        "endChar": 72
+      },
+      "revId": "daf7122ca63eb5849a5e335776c6b1f8fe3d5076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f12c0e44_7725320b",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-05T12:23:08Z",
+      "side": 1,
+      "message": "Is this file needed? You don\u0027t do anything with out_file and on line 36 you overwrite in anyway.",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 51
+      },
+      "revId": "daf7122ca63eb5849a5e335776c6b1f8fe3d5076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9c3ec60_6ef408bf",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-05T12:23:08Z",
+      "side": 1,
+      "message": "You can use $spdk_rpc_py as you already have that defined",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 30
+      },
+      "revId": "daf7122ca63eb5849a5e335776c6b1f8fe3d5076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e609d143_32c34a10",
         "filename": "test/spdkcli/spdkcli.test.match",
         "patchSetId": 13
@@ -25,6 +117,29 @@
     },
     {
       "key": {
+        "uuid": "d8376461_d888a678",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-05T12:23:08Z",
+      "side": 1,
+      "message": "can we split this function into separate smaller functions?\nFor bdevs, lvols, vhost, etc.",
+      "range": {
+        "startLine": 39,
+        "startChar": 4,
+        "endLine": 39,
+        "endChar": 20
+      },
+      "revId": "daf7122ca63eb5849a5e335776c6b1f8fe3d5076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cfe88d94_f3e8b0ad",
         "filename": "test/spdkcli/spdkcli_job.py",
         "patchSetId": 13
@@ -41,6 +156,29 @@
         "startChar": 0,
         "endLine": 53,
         "endChar": 84
+      },
+      "revId": "daf7122ca63eb5849a5e335776c6b1f8fe3d5076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89905a30_6e06f7b7",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-05T12:23:08Z",
+      "side": 1,
+      "message": "what does \"in_ls\" mean? Why do we need this variable?",
+      "range": {
+        "startLine": 98,
+        "startChar": 4,
+        "endLine": 98,
+        "endChar": 9
       },
       "revId": "daf7122ca63eb5849a5e335776c6b1f8fe3d5076",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
