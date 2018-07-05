@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "586c5360_acb1313a",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-05T04:28:06Z",
+      "side": 1,
+      "message": "The original logic is right, why need to change it here ?",
+      "revId": "496a07d7bb77e936502651559ec84be122b967fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
