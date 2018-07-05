@@ -45,6 +45,30 @@
       "revId": "7f71d8466d99d15835d2b489879affd70839cb2e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69548d66_c83d3d94",
+        "filename": "lib/virtio/virtio_pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-05T17:02:29Z",
+      "side": 1,
+      "message": "planned after rte_vhost2 release",
+      "parentUuid": "60c44f95_e8390515",
+      "range": {
+        "startLine": 269,
+        "startChar": 28,
+        "endLine": 269,
+        "endChar": 50
+      },
+      "revId": "7f71d8466d99d15835d2b489879affd70839cb2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
