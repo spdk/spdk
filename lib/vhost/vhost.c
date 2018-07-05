@@ -1071,6 +1071,12 @@ start_device(int vid)
 		goto out;
 	}
 
+	if (vtgt->broken) {
+		SPDK_ERRLOG("Can't start devices on a broken target '%s'.\n",
+			    vtgt->name);
+		goto out;
+	}
+
 	vdev->max_queues = 0;
 	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
@@ -1272,6 +1278,12 @@ new_connection(int vid)
 		goto err;
 	}
 
+	if (vtgt->broken) {
+		SPDK_ERRLOG("Can't create devices on a broken target '%s'.\n",
+			    vtgt->name);
+		goto err;
+	}
+
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev) {
 		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
@@ -1307,6 +1319,7 @@ err:
 static void
 destroy_connection(int vid)
 {
+	struct spdk_vhost_tgt *vtgt;
 	struct spdk_vhost_dev *vdev;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
@@ -1317,9 +1330,14 @@ destroy_connection(int vid)
 		return;
 	}
 
-	TAILQ_REMOVE(&vdev->vtgt->vdevs, vdev, tailq);
+	vtgt = vdev->vtgt;
+	TAILQ_REMOVE(&vtgt->vdevs, vdev, tailq);
 	free(vdev->name);
 	spdk_dma_free(vdev);
+
+	if (vtgt->broken && TAILQ_EMPTY(&vtgt->vdevs)) {
+		//TODO schedule target remove
+	}
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 

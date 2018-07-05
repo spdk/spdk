@@ -180,6 +180,11 @@ struct spdk_vhost_tgt {
 	/* Active devices built on top of this target. */
 	TAILQ_HEAD(, spdk_vhost_dev) vdevs;
 
+	/* The target is broken, won't allow creating new devices, and will
+	 * be removed as soon as all current devices are removed.
+	 */
+	bool broken;
+
 	TAILQ_ENTRY(spdk_vhost_tgt) tailq;
 };
 
