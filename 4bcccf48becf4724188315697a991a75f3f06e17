@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5e00c6f_1a811aa5",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "I don\u0027t see any asynchronous paths through this function.  I think it should just return int rather than using the spdk_delete_nvme_complete callback.",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf2aef8c_cd184237",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "Could we just have two separate functions?\n\nspdk_bdev_nvme_remove_ctrlr_by_trid\nspdk_bdev_nvme_remove_ctrlr_by_name\n\nThen we avoid having to do the extra checks if user specifies both a trid and a name and they don\u0027t match.",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a210ff84_4d9000c4",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1721,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "if (ctrlr \u003d\u003d NULL) {\n  return NULL;\n}\n\nThen you avoid having to indent the rest of the code.",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e62499fd_583637f1",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1724,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "you could simplify the code by adding:\n\nconst char *name \u003d NULL;\n\nand then here, if you find the matching ctrlr, do:\n\nname \u003d nvme_ctrlr-\u003ename;\nbreak;\n\nthen just return name at the end\n\nThis way you can just do a single unlock after the TAILQ_FOREACH",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ce30de2_00ecc9bb",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T17:35:32Z",
+      "side": 1,
+      "message": "I think this function is synchronous, so there doesn\u0027t need to be a callback function - just put that code here (see previous comment).",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
