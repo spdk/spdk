@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c4e1b29_cab9f617",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-05T18:30:29Z",
+      "side": 1,
+      "message": "How do you report errors?",
+      "revId": "b5e53752b308379095f569a12b531f1689f6289c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18d0c813_5f5c003c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-05T18:30:29Z",
+      "side": 1,
+      "message": "The way we typically handle this is the function can return an error code if it fails immediately. Otherwise, it will return success and call the callback (potentially with an error code).",
+      "revId": "b5e53752b308379095f569a12b531f1689f6289c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
