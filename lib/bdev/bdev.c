@@ -1642,6 +1642,63 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 	return &bdev->uuid;
 }
 
+uint64_t
+spdk_bdev_get_qd(const struct spdk_bdev *bdev)
+{
+	return bdev->internal.measured_queue_depth;
+}
+
+uint64_t
+spdk_bdev_get_qd_sampling_period(const struct spdk_bdev *bdev)
+{
+	return bdev->internal.period;
+}
+
+static void
+_calculate_measured_qd_cpl(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
+
+	bdev->internal.measured_queue_depth = bdev->internal.temporary_queue_depth;
+}
+
+static void
+_calculate_measured_qd(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(io_ch);
+
+	bdev->internal.temporary_queue_depth += ch->io_outstanding;
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static int
+spdk_bdev_calculate_measured_queue_depth(void *ctx)
+{
+	struct spdk_bdev *bdev = ctx;
+	bdev->internal.temporary_queue_depth = 0;
+	spdk_for_each_channel(__bdev_to_io_dev(bdev), _calculate_measured_qd, bdev,
+			      _calculate_measured_qd_cpl);
+	return 0;
+}
+
+void
+spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period)
+{
+	bdev->internal.period = period;
+
+	if (bdev->internal.qd_poller != NULL) {
+		spdk_poller_unregister(&bdev->internal.qd_poller);
+		bdev->internal.measured_queue_depth = UINT64_MAX;
+	}
+
+	if (period != 0) {
+		bdev->internal.qd_poller = spdk_poller_register(spdk_bdev_calculate_measured_queue_depth, bdev,
+					   period);
+	}
+}
+
 int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 {
@@ -2748,6 +2805,7 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 	}
 
 	bdev->internal.status = SPDK_BDEV_STATUS_READY;
+	bdev->internal.measured_queue_depth = UINT64_MAX;
 
 	TAILQ_INIT(&bdev->internal.open_descs);
 
@@ -3090,6 +3148,8 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 			SPDK_ERRLOG("Unable to shut down QoS poller. It will continue running on the current thread.\n");
 		}
 	}
+
+	spdk_bdev_set_qd_sampling_period(bdev, 0);
 
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
 		do_unregister = true;
