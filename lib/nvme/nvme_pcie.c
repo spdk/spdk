@@ -316,14 +316,14 @@ static inline struct nvme_pcie_ctrlr *
 nvme_pcie_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
 	assert(ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE);
-	return (struct nvme_pcie_ctrlr *)((uintptr_t)ctrlr - offsetof(struct nvme_pcie_ctrlr, ctrlr));
+	return SPDK_CONTAINEROF(ctrlr, struct nvme_pcie_ctrlr, ctrlr);
 }
 
 static inline struct nvme_pcie_qpair *
 nvme_pcie_qpair(struct spdk_nvme_qpair *qpair)
 {
 	assert(qpair->trtype == SPDK_NVME_TRANSPORT_PCIE);
-	return (struct nvme_pcie_qpair *)((uintptr_t)qpair - offsetof(struct nvme_pcie_qpair, qpair));
+	return SPDK_CONTAINEROF(qpair, struct nvme_pcie_qpair, qpair);
 }
 
 static volatile void *
