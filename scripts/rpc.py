@@ -1776,6 +1776,33 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     domain:bus:device.function format or domain.bus.device.function format""")
     p.set_defaults(func=scan_ioat_copy_engine)
 
+    # send_nvme_cmd
+    @call_cmd
+    def send_nvme_cmd(args):
+        print_dict(rpc.nvme.send_nvme_cmd(args.client,
+                                          name=args.nvme_name,
+                                          cmd_type=args.cmd_type,
+                                          data_direction=args.data_direction,
+                                          cmdbuf=args.cmdbuf,
+                                          data=args.data,
+                                          metadata=args.metadata,
+                                          data_len=args.data_length,
+                                          metadata_len=args.metadata_length,
+                                          timeout_ms=args.timeout_ms))
+
+    p = subparsers.add_parser('send_nvme_cmd', help='NVMe passthrough cmd.')
+    p.add_argument('-n', '--nvme-name', help="""Name of the operating NVMe devices""")
+    p.add_argument('-t', '--cmd-type', help="""Type of nvme cmd. Valid values are: admin, io""")
+    p.add_argument('-r', '--data-direction', help="""Direction of data transfer. Valid values are: c2h, h2c""")
+    p.add_argument('-c', '--cmdbuf', help="""NVMe command encoded by base64 urlsafe""")
+    p.add_argument('-d', '--data', help="""Data transferring to controller from host, encoded by base64 urlsafe""")
+    p.add_argument('-m', '--metadata', help="""Metadata transferring to controller from host, encoded by base64 urlsafe""")
+    p.add_argument('-D', '--data-length', help="""Data length required to transfer from controller to host""", type=int)
+    p.add_argument('-M', '--metadata-length', help="""Metadata length required to transfer from controller to host""", type=int)
+    p.add_argument('-T', '--timeout-ms',
+                   help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int, default=0)
+    p.set_defaults(func=send_nvme_cmd)
+
     args = parser.parse_args()
 
     try:
