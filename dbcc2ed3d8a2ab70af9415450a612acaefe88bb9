@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "663bcc4d_09d5c5ae",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1680,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T16:01:11Z",
+      "side": 1,
+      "message": "can you try putting this in the #if 0 as well?\n\nshouldn\u0027t matter for QD\u003d1 - but for higher QD operations, this will result in serializing one I/O at a time",
+      "revId": "dbcc2ed3d8a2ab70af9415450a612acaefe88bb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
