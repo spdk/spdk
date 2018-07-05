@@ -181,6 +181,18 @@ test_mem_map_translation(void)
 	addr = spdk_mem_map_translate(map, 2 * VALUE_2MB, VALUE_2MB);
 	CU_ASSERT(addr == default_translation);
 
+	/* Set translation for the last valid 2MB region */
+	rc = spdk_mem_map_set_translation(map, 0xffffffe00000ULL, VALUE_2MB, 0x1234);
+	CU_ASSERT(rc == 0);
+
+	/* Verify translation for last valid 2MB region */
+	addr = spdk_mem_map_translate(map, 0xffffffe00000ULL, VALUE_2MB);
+	CU_ASSERT(addr == 0x1234);
+
+	/* Attempt to set translation for the first invalid address */
+	rc = spdk_mem_map_set_translation(map, 0x1000000000000ULL, VALUE_2MB, 0x5678);
+	CU_ASSERT(rc == -EINVAL);
+
 	spdk_mem_map_free(&map);
 	CU_ASSERT(map == NULL);
 }
