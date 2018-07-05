@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1205daa6_ad3e8e9a",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-05T19:35:30Z",
+      "side": 1,
+      "message": "The CU_ASSERT should be here - right after spdk_nvme_qpair_add_cmd_error_injection() is called.\n\nThe unit tests should do more than just call the functions though.  For example:\n\nCU_ASSERT(!TAIL_EMPTY(\u0026qpair.err_cmd_head))\n\nThen after spdk_nvme_qpair_remove_cmd_error_injection():\n\nCU_ASSERT(TAIL_EMPTY(\u0026qpair.err_cmd_head))\n\nYou could also do checks like provide the same opc, and check that it overwrites the existing entry rather than allocating a new one.",
+      "revId": "ca0f5f9e4f4da6ed09ff5f3a9d53d63d3bb9d28d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
