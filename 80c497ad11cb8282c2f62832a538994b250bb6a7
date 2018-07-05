@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a26365d6_b3381e7f",
+        "filename": "test/bdev/bdevjson/rbd_json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-05T15:15:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a029c979_5c894bfa",
+      "range": {
+        "startLine": 12,
+        "startChar": 8,
+        "endLine": 12,
+        "endChar": 17
+      },
+      "revId": "80c497ad11cb8282c2f62832a538994b250bb6a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf989dff_a0e2cffa",
         "filename": "test/json_config/common.sh",
         "patchSetId": 3
@@ -36,6 +60,24 @@
       "writtenOn": "2018-07-05T03:56:36Z",
       "side": 1,
       "message": "rbd_bdev doesn\u0027t look to be removed. add clear_config here?",
+      "revId": "80c497ad11cb8282c2f62832a538994b250bb6a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0034710_70cb7644",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-05T15:15:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bf989dff_a0e2cffa",
       "revId": "80c497ad11cb8282c2f62832a538994b250bb6a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
