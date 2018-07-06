@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1820c496_ea6d87c3",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-06T10:36:51Z",
+      "side": 1,
+      "message": "This is not only for command line parameters. Maybe \"Common user guides informations\" or \"Introduction\"?",
+      "parentUuid": "69f30378_f1e0c766",
+      "range": {
+        "startLine": 1,
+        "startChar": 2,
+        "endLine": 1,
+        "endChar": 9
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ac5b66be_d9134a0e",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 4
@@ -220,6 +244,30 @@
       "writtenOn": "2018-07-05T08:53:47Z",
       "side": 1,
       "message": "this sounds completely ambiguous to me. Could you elaborate? How does shared memory come into play here?",
+      "range": {
+        "startLine": 42,
+        "startChar": 48,
+        "endLine": 43,
+        "endChar": 61
+      },
+      "revId": "2fc5cf8e9188d1d059f51beecdc7c3bd676a3663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c01b6923_8c040f57",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-06T10:36:51Z",
+      "side": 1,
+      "message": "all devices will be shared using primary-secondary process relation. What will happen if you launch 2 x spdk_tgt with the same devices and UIO driver?\n\nif downvoted I can remove this sentence.",
+      "parentUuid": "e4ad3735_2d8cdd97",
       "range": {
         "startLine": 42,
         "startChar": 48,
