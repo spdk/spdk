@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f8de702_442b8148",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:03:33Z",
+      "side": 1,
+      "message": "You can avoid this calloc by just putting a zero length spdk_io_channel * array at the end of your pvol_bdev_io_channel, and specifying the total length to spdk_io_device_register:\n\ni.e. sizeof(struct pvol_bdev_io_channel) + sizeof(struct spdk_io_channel) * num_base_bdevs\n\nThis has the added advantage of removing an extra pointer chase in the io path.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a55f6da_5cbdceff",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:03:33Z",
+      "side": 1,
+      "message": "Do we have any data that shows the benefit from this?  I\u0027m just wondering if it\u0027s actually needed.  pvol won\u0027t typically be used when number of bdev devices is only 1.  And when it is used, we won\u0027t typically be splitting enough where we would notice a performance impact (unless user specifies a ridiculous strip size like 4KB).\n\nI\u0027d rather leave this out if we don\u0027t need it.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5995ec44_915e6bb4",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:03:33Z",
+      "side": 1,
+      "message": "This should just be embedded directly.  The idea is that you don\u0027t want to have to do an extra memory allocation if the spdk_bdev_io function returns -ENOMEM.  This means that once you get a bdev_io through your submit_request function, you are guaranteed to be able to make forward progress (i.e. you aren\u0027t susceptible to failing because you can\u0027t allocate an spdk_bdev_io_wait_entry).",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1359bd6_68778373",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:03:33Z",
+      "side": 1,
+      "message": "maybe put \"tailq\" in the struct names?  this isn\u0027t typically how TAILQ_HEADs are defined in SPDK but I understand why you\u0027re doing it here.  putting \"tailq\" in the name will make it clear in the .c file definitions that these are tailqs and the user won\u0027t be searching for where \"struct spdk_pvol_configured\" is defined",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cda46fb_127d7e08",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:03:33Z",
+      "side": 1,
+      "message": "does not specify required\u003dTrue\n\nget_pvols seems to assume that this will be specified though\n\nI think it\u0027s OK for the user to not specify it - just default it to \"all\".",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9e8d2af_9dd68255",
+        "filename": "test/unit/lib/bdev/bdev_pvol.c/Makefile",
+        "patchSetId": 23
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:03:33Z",
+      "side": 1,
+      "message": "cunit library has been removed",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
