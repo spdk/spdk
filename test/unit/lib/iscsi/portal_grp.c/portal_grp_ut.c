@@ -170,7 +170,7 @@ parse_portal_ipv4_normal_case(void)
 	const char *host_str = "192.168.2.0";
 	const char *port_str = "3260";
 	struct spdk_cpuset *cpumask_val;
-	struct spdk_iscsi_portal *p;
+	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
 	cpumask_val = spdk_cpuset_alloc();
@@ -180,6 +180,7 @@ parse_portal_ipv4_normal_case(void)
 
 	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
@@ -197,7 +198,7 @@ parse_portal_ipv6_normal_case(void)
 	const char *host_str = "[2001:ad6:1234::]";
 	const char *port_str = "3260";
 	struct spdk_cpuset *cpumask_val;
-	struct spdk_iscsi_portal *p;
+	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
 	cpumask_val = spdk_cpuset_alloc();
@@ -207,6 +208,7 @@ parse_portal_ipv6_normal_case(void)
 
 	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
@@ -224,13 +226,14 @@ parse_portal_ipv4_skip_cpumask_case(void)
 	const char *host_str = "192.168.2.0";
 	const char *port_str = "3260";
 	struct spdk_cpuset *cpumask_val;
-	struct spdk_iscsi_portal *p;
+	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
 	cpumask_val = spdk_app_get_core_mask();
 
 	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
@@ -246,13 +249,14 @@ parse_portal_ipv6_skip_cpumask_case(void)
 	const char *host_str = "[2001:ad6:1234::]";
 	const char *port_str = "3260";
 	struct spdk_cpuset *cpumask_val;
-	struct spdk_iscsi_portal *p;
+	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
 	cpumask_val = spdk_app_get_core_mask();
 
 	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
@@ -268,13 +272,14 @@ parse_portal_ipv4_skip_port_and_cpumask_case(void)
 	const char *host_str = "192.168.2.0";
 	const char *port_str = "3260";
 	struct spdk_cpuset *cpumask_val;
-	struct spdk_iscsi_portal *p;
+	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
 	cpumask_val = spdk_app_get_core_mask();
 
 	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
@@ -290,13 +295,14 @@ parse_portal_ipv6_skip_port_and_cpumask_case(void)
 	const char *host_str = "[2001:ad6:1234::]";
 	const char *port_str = "3260";
 	struct spdk_cpuset *cpumask_val;
-	struct spdk_iscsi_portal *p;
+	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
 	cpumask_val = spdk_app_get_core_mask();
 
 	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
