@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eff56042_c680af9c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1141,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-06T11:58:40Z",
+      "side": 1,
+      "message": "Not related to this particular instance, more a general question: what does \"Optional\" mean?\n\nMay be omitted from JSON entirely, may be an empty string, or both?\n\nThis should be defined somewhere.",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7992186_a1244ebc",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1220,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-06T11:58:40Z",
+      "side": 1,
+      "message": "Can\u0027t the valid range also be something else than 0 to 7? That\u0027s merely the default based on SPDK_VHOST_SCSI_CTRLR_MAX_DEVS. See https://github.com/spdk/spdk/issues/328\n\nThe documentation can only document this as the default, but callers can\u0027t rely on this being the actual values used by the RPC server they talk to.",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52a4f9a5_5f7e354d",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1251,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-06T11:58:40Z",
+      "side": 1,
+      "message": "\"target\" or \"controller\"?",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ef6965b_a01b99eb",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-06T11:58:40Z",
+      "side": 1,
+      "message": "Is this \"readonly\" mode also possible for VHost SCSI? It\u0027s not part of the API (add_vhost_scsi_lun).",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "baebd403_c65fe0b0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1390,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-06T11:58:40Z",
+      "side": 1,
+      "message": "Showing an example response is not enough. Someone using this API with a more strict client (like I do with Go) needs to know exactly what the structure of the response will be. I ended up looking for that in the source code, but only for the SCSI Vhost controller and only for the minimum amount of information that I needed.\n\nIn general the API should be defined in this document and the implementation should conform to that, not the other way around.",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d569d99a_dab56cbd",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1427,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-06T11:58:40Z",
+      "side": 1,
+      "message": "\"least\"\n\n\"Might\" or \"will\" fail? Sounds like it always *will* fail under these conditions.",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0343696f_0ddfce4a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1428,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-06T11:58:40Z",
+      "side": 1,
+      "message": "In *the* latter case, please ...\n\nI probably sounds like a broken record, but a program calling the API needs a way to detect the reason for the failure, otherwise it cannot implement such error handling - just something I felt is worth pointing out here, not something that is part of the PR.",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
