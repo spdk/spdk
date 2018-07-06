@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0488984_848d812c",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T16:52:57Z",
+      "side": 1,
+      "message": "\u0027period\u0027 doesn\u0027t seem to be used.",
+      "revId": "2064de1101c0adb2f4f5a7526c8305173e6f4d97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d076d5d_19aca819",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T16:52:57Z",
+      "side": 1,
+      "message": "Please document new RPCs in doc/jsonrpc.md.",
+      "revId": "2064de1101c0adb2f4f5a7526c8305173e6f4d97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3d88a5a_628209e5",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T16:52:57Z",
+      "side": 1,
+      "message": "enable_ vs disable_?",
+      "range": {
+        "startLine": 399,
+        "startChar": 17,
+        "endLine": 399,
+        "endChar": 49
+      },
+      "revId": "2064de1101c0adb2f4f5a7526c8305173e6f4d97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
