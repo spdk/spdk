@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6135e85f_70ad10b3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-06T22:51:48Z",
+      "side": 1,
+      "message": "For consistency, I\u0027d prefer to name this RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST. I know that we batch the completion with the data transfer in this state, so it\u0027s not a perfect inverse of RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER, but it\u0027s close.",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "997a8204_9f9839e4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-06T22:51:48Z",
+      "side": 1,
+      "message": "I think the name of this state is a misnomer. In-capsule makes me think of in-capsule data, but this state doesn\u0027t have anything to do with that. This is the state a request transitions through when it sends a completion without an associated data transfer (i.e. all NVMe writes, or many admin commands). I think you could leave the state named \"RDMA_REQUEST_STATE_COMPLETING\" and it would be clearer. It\u0027s still a bit tricky that a request goes through either RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST or RDMA_REQUEST_STATE_COMPLETING, but we can add a comment to explain that.",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3605042f_13b1b829",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-06T22:51:48Z",
+      "side": 1,
+      "message": "You call this from two locations right now, but you only actually need to call it from line 477. Once it goes down to a single location, it makes more sense to just paste the body of this function into that one location on line 477 instead of having a separate function.",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3d61d4f_b6d07c23",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1205,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-06T22:51:48Z",
+      "side": 1,
+      "message": "Instead of adding an extra parameter to this function, you can figure out if a data transfer was initiated by checking req-\u003exfer \u003d\u003d SPDK_NVME_DATA_CONTROLLER_TO_HOST",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5753c65_7a92c62e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1992,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-06T22:51:48Z",
+      "side": 1,
+      "message": "Extra whitespace changes",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
