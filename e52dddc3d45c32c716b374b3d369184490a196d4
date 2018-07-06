@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "c02fd524_a450cf55",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-06T20:27:41Z",
+      "side": 1,
+      "message": "This part is actually much more complex. When setting up the reactors, there are events that we actually want to target at a specific core (not a thread). These events can fire both before and after threads exist at all. So I left in the old event mechanism as a way to handle these. We could probably make the event pool much smaller though.\n\nI think in a future patch, these events will be the mechanism by which threads are passed between reactors too.",
+      "parentUuid": "7bc646b4_2c5444ce",
+      "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "87f554cb_65e8fdb7",
         "filename": "lib/event/reactor.c",
         "patchSetId": 2
