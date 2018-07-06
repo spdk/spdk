@@ -1,0 +1,205 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c430db97_aff0b16e",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T13:13:21Z",
+      "side": 1,
+      "message": "ENODEV",
+      "range": {
+        "startLine": 115,
+        "startChar": 31,
+        "endLine": 115,
+        "endChar": 36
+      },
+      "revId": "79adc506b3a94a6509654231df7acef269122f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9316486f_5076cf23",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T13:13:21Z",
+      "side": 1,
+      "message": "ENODEV",
+      "range": {
+        "startLine": 126,
+        "startChar": 29,
+        "endLine": 126,
+        "endChar": 34
+      },
+      "revId": "79adc506b3a94a6509654231df7acef269122f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80730b3a_753727a1",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T13:13:21Z",
+      "side": 1,
+      "message": "Same thing with req freeing as below.",
+      "range": {
+        "startLine": 224,
+        "startChar": 0,
+        "endLine": 224,
+        "endChar": 38
+      },
+      "revId": "79adc506b3a94a6509654231df7acef269122f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bafcb75a_c1e79572",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T13:13:21Z",
+      "side": 1,
+      "message": "struct rpc_remove_virtio_dev *req doesn\u0027t seem used here, why not pass struct spdk_jsonrpc_request *request directly ?",
+      "range": {
+        "startLine": 303,
+        "startChar": 0,
+        "endLine": 303,
+        "endChar": 33
+      },
+      "revId": "79adc506b3a94a6509654231df7acef269122f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9dde249a_f19afd0f",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T13:13:21Z",
+      "side": 1,
+      "message": "Pass request here, instead of req",
+      "range": {
+        "startLine": 342,
+        "startChar": 76,
+        "endLine": 342,
+        "endChar": 79
+      },
+      "revId": "79adc506b3a94a6509654231df7acef269122f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "272c8787_5e836723",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T13:13:21Z",
+      "side": 1,
+      "message": "I\u0027m fine with how it is now, but might have been better to have separate call to get info of device by name - like type of virtio dev. \n\nFor now, lets check if rc \u003d\u003d EINVAL (meaning bdev was found, but does not match virtio_blk), before calling scsi removal.",
+      "range": {
+        "startLine": 343,
+        "startChar": 5,
+        "endLine": 343,
+        "endChar": 12
+      },
+      "revId": "79adc506b3a94a6509654231df7acef269122f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20ba2385_5d02e09f",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T13:13:21Z",
+      "side": 1,
+      "message": "Pass request here, instead of req",
+      "range": {
+        "startLine": 344,
+        "startChar": 78,
+        "endLine": 344,
+        "endChar": 81
+      },
+      "revId": "79adc506b3a94a6509654231df7acef269122f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1d61f82_2e6fc864",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T13:13:21Z",
+      "side": 1,
+      "message": "Why not free_rpc_remove_virtio_dev(req); here ?",
+      "revId": "79adc506b3a94a6509654231df7acef269122f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de06fdfb_473e034f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 1490,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T13:13:21Z",
+      "side": 1,
+      "message": "\"deprecated\"\n\nWe need to establish some process for deprecation. Time frame (1 release ahead?), where to report (changelog?), etc.",
+      "range": {
+        "startLine": 1490,
+        "startChar": 68,
+        "endLine": 1490,
+        "endChar": 79
+      },
+      "revId": "79adc506b3a94a6509654231df7acef269122f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
