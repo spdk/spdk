@@ -425,10 +425,14 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 					0x1000, NULL);
 	rqpair->cpls = spdk_dma_zmalloc(rqpair->max_queue_depth * sizeof(*rqpair->cpls),
 					0x1000, NULL);
-	rqpair->bufs = spdk_dma_zmalloc(rqpair->max_queue_depth * rtransport->in_capsule_data_size,
-					0x1000, NULL);
+
+	if (rtransport->in_capsule_data_size) {
+		rqpair->bufs = spdk_dma_zmalloc(rqpair->max_queue_depth * rtransport->in_capsule_data_size,
+						0x1000, NULL);
+	}
+
 	if (!rqpair->reqs || !rqpair->recvs || !rqpair->cmds ||
-	    !rqpair->cpls || !rqpair->bufs) {
+	    !rqpair->cpls || (rtransport->in_capsule_data_size && !rqpair->bufs)) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
@@ -440,11 +444,16 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair->cpls_mr = ibv_reg_mr(rqpair->cm_id->pd, rqpair->cpls,
 				     rqpair->max_queue_depth * sizeof(*rqpair->cpls),
 				     0);
-	rqpair->bufs_mr = ibv_reg_mr(rqpair->cm_id->pd, rqpair->bufs,
-				     rqpair->max_queue_depth * rtransport->in_capsule_data_size,
-				     IBV_ACCESS_LOCAL_WRITE |
-				     IBV_ACCESS_REMOTE_WRITE);
-	if (!rqpair->cmds_mr || !rqpair->cpls_mr || !rqpair->bufs_mr) {
+
+	if (rtransport->in_capsule_data_size) {
+		rqpair->bufs_mr = ibv_reg_mr(rqpair->cm_id->pd, rqpair->bufs,
+					     rqpair->max_queue_depth * rtransport->in_capsule_data_size,
+					     IBV_ACCESS_LOCAL_WRITE |
+					     IBV_ACCESS_REMOTE_WRITE);
+	}
+
+	if (!rqpair->cmds_mr || !rqpair->cpls_mr || (rtransport->in_capsule_data_size &&
+			!rqpair->bufs_mr)) {
 		SPDK_ERRLOG("Unable to register required memory for RDMA queue.\n");
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
@@ -453,8 +462,10 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		      rqpair->cmds, rqpair->max_queue_depth * sizeof(*rqpair->cmds), rqpair->cmds_mr->lkey);
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Completion Array: %p Length: %lx LKey: %x\n",
 		      rqpair->cpls, rqpair->max_queue_depth * sizeof(*rqpair->cpls), rqpair->cpls_mr->lkey);
-	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "In Capsule Data Array: %p Length: %x LKey: %x\n",
-		      rqpair->bufs, rqpair->max_queue_depth * rtransport->in_capsule_data_size, rqpair->bufs_mr->lkey);
+	if (rqpair->bufs && rqpair->bufs_mr) {
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "In Capsule Data Array: %p Length: %x LKey: %x\n",
+			      rqpair->bufs, rqpair->max_queue_depth * rtransport->in_capsule_data_size, rqpair->bufs_mr->lkey);
+	}
 
 	for (i = 0; i < rqpair->max_queue_depth; i++) {
 		struct ibv_recv_wr *bad_wr = NULL;
@@ -463,19 +474,24 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_recv->qpair = rqpair;
 
 		/* Set up memory to receive commands */
-		rdma_recv->buf = (void *)((uintptr_t)rqpair->bufs + (i * rtransport->in_capsule_data_size));
+		if (rqpair->bufs) {
+			rdma_recv->buf = (void *)((uintptr_t)rqpair->bufs + (i * rtransport->in_capsule_data_size));
+		}
 
 		rdma_recv->sgl[0].addr = (uintptr_t)&rqpair->cmds[i];
 		rdma_recv->sgl[0].length = sizeof(rqpair->cmds[i]);
 		rdma_recv->sgl[0].lkey = rqpair->cmds_mr->lkey;
+		rdma_recv->wr.num_sge = 1;
 
-		rdma_recv->sgl[1].addr = (uintptr_t)rdma_recv->buf;
-		rdma_recv->sgl[1].length = rtransport->in_capsule_data_size;
-		rdma_recv->sgl[1].lkey = rqpair->bufs_mr->lkey;
+		if (rdma_recv->buf && rqpair->bufs_mr) {
+			rdma_recv->sgl[1].addr = (uintptr_t)rdma_recv->buf;
+			rdma_recv->sgl[1].length = rtransport->in_capsule_data_size;
+			rdma_recv->sgl[1].lkey = rqpair->bufs_mr->lkey;
+			rdma_recv->wr.num_sge++;
+		}
 
 		rdma_recv->wr.wr_id = (uintptr_t)rdma_recv;
 		rdma_recv->wr.sg_list = rdma_recv->sgl;
-		rdma_recv->wr.num_sge = SPDK_COUNTOF(rdma_recv->sgl);
 
 		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
 		if (rc) {
