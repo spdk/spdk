@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1eb92d1_b93126ae",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 37
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:33:15Z",
+      "side": 1,
+      "message": "I would suggest removing this CHANGELOG change from this patch.\n\nI think after all of the destroy_*_bdev functions are implemented, we should add an entry to CHANGELOG that just says that delete_bdev is basically deprecated (I\u0027m not sure it should even be used for debug purposes).\n\nI know that all of this work was really done for this lvol case, but from a user level the main impact is really that delete_bdev should no longer be used.",
+      "revId": "1aa10877a2a45642bb58e247390d5ba8b6414182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c612c6c_be9c05ef",
+        "filename": "doc/bdev.md",
+        "patchSetId": 37
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:33:15Z",
+      "side": 1,
+      "message": "I\u0027d rather just remove this altogether if we can.",
+      "revId": "1aa10877a2a45642bb58e247390d5ba8b6414182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e464dd70_08060d1c",
+        "filename": "doc/lvol.md",
+        "patchSetId": 37
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:33:15Z",
+      "side": 1,
+      "message": "Let\u0027s try to get rid of this section and just remove the delete_bdev RPC altogether.",
+      "revId": "1aa10877a2a45642bb58e247390d5ba8b6414182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f4d21e1_50910aa2",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:33:15Z",
+      "side": 1,
+      "message": "this isn\u0027t an lvol errno - it\u0027s a bdev errno",
+      "revId": "1aa10877a2a45642bb58e247390d5ba8b6414182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3718e11f_aba53ab9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:33:15Z",
+      "side": 1,
+      "message": "I think you can remove this comment.  It explains why you\u0027re making this code change, but I\u0027m not sure it helps readers who are looking at the code for the first time.",
+      "revId": "1aa10877a2a45642bb58e247390d5ba8b6414182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3db38193_7a13eb04",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:33:15Z",
+      "side": 1,
+      "message": "I would suggest a different name than lvolerrno.  This error code didn\u0027t come from the lvol layer - it came from bdev.",
+      "revId": "1aa10877a2a45642bb58e247390d5ba8b6414182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3fedb72_cd3d7dc5",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:33:15Z",
+      "side": 1,
+      "message": "We exit this function with the lock held?  that seems really dangerous\n\nI understand why you\u0027re doing it, but maybe there\u0027s a better way?  What if you just automatically delete the alias and unregister the bdev.  Once the bdev is unregistered, try to delete the lvol.  If it can\u0027t be deleted, re-register the bdev and recreate the alias.\n\nI just think that checking if it can be deleted first means that you have to do things like hold locks which makes things a lot more complicated in the long run.",
+      "revId": "1aa10877a2a45642bb58e247390d5ba8b6414182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
