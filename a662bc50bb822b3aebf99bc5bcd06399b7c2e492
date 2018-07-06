@@ -16,6 +16,24 @@
       "revId": "a662bc50bb822b3aebf99bc5bcd06399b7c2e492",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dc18b4e_fefb462e",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:41:32Z",
+      "side": 1,
+      "message": "SAM (SCSI Architecture Model) spec says that INTERMEDIATE is actually obsolete now (as is INTERMEDIATE_CONDITION_MET).  So we probably shouldn\u0027t use them.  I suggested using 0xFF since that\u0027s a reserved SCSI status code.\n\nNote that it\u0027s not unset - the code initializes task.status to 0xFF in ut_init_task (via the 0xFF memset).  So this is testing that spdk_bdev_scsi_execute did not result in setting the scsi status, since the I/O is not completed yet.",
+      "parentUuid": "95f71f86_dfa76d7a",
+      "revId": "a662bc50bb822b3aebf99bc5bcd06399b7c2e492",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
