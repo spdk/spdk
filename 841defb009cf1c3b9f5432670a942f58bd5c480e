@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "975e33ce_9b1b63ef",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T21:08:03Z",
+      "side": 1,
+      "message": "I\u0027m not sure it\u0027s safe to call spdk_nvme_ctrlr_reset() here; the user may not be expecting the controller to be reset (including tearing down of queues, etc.) inside a spdk_nvme_qpair_process_completions() call.\n\nI think the right approach would be to move this check and the reset handling into the timeout callback in bdev/nvme - if other users want this behavior, they can implement it in their timeout callback as well.",
+      "revId": "841defb009cf1c3b9f5432670a942f58bd5c480e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
