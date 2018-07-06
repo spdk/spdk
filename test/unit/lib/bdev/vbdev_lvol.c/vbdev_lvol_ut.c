@@ -861,7 +861,7 @@ ut_lvol_clone(void)
 	g_lvolerrno = -1;
 	rc = vbdev_lvol_create(g_lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	CU_ASSERT(g_lvol != NULL);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
 	lvol = g_lvol;
@@ -869,7 +869,7 @@ ut_lvol_clone(void)
 	/* Successful snap create */
 	vbdev_lvol_create_snapshot(lvol, "snap", vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	CU_ASSERT(g_lvol != NULL);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
 	snap = g_lvol;
@@ -878,7 +878,7 @@ ut_lvol_clone(void)
 	vbdev_lvol_create_clone(snap, "clone", vbdev_lvol_create_complete, NULL);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	CU_ASSERT(g_lvol != NULL);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
 	clone = g_lvol;
@@ -942,12 +942,6 @@ ut_lvol_examine(void)
 	g_bs_dev = NULL;
 	g_lvserrno = 0;
 	g_examine_done = false;
-
-	/* Examine with NULL bdev */
-	vbdev_lvs_examine(NULL);
-	CU_ASSERT(g_bs_dev == NULL);
-	CU_ASSERT(g_lvol_store == NULL);
-	CU_ASSERT(g_examine_done == true);
 
 	/* Examine unsuccessfully - bdev already opened */
 	g_bs_dev = NULL;
@@ -1375,15 +1369,16 @@ ut_lvol_read_write(void)
 static void
 ut_vbdev_lvol_submit_request(void)
 {
+	struct spdk_lvol request_lvol = {};
 	g_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct lvol_task));
 	SPDK_CU_ASSERT_FATAL(g_io != NULL);
 	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
 	g_task = (struct lvol_task *)g_io->driver_ctx;
-
 	g_io->bdev = g_base_bdev;
 
 	g_io->type = SPDK_BDEV_IO_TYPE_READ;
+	g_base_bdev->ctxt = &request_lvol;
 	vbdev_lvol_submit_request(g_ch, g_io);
 
 	free(g_io);
