@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "781be0c9_5b897226",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T21:33:04Z",
+      "side": 1,
+      "message": "how about eliminating this function, and just make spdk_bdev_get_queue_depth_poll_period return 0 if its not enabled?",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fabfb6d9_5adec75c",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T21:33:04Z",
+      "side": 1,
+      "message": "maybe mention this is an aggregate across all of the channels open for the bdev",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7329a452_ca90df9e",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T21:33:04Z",
+      "side": 1,
+      "message": "same here - what if we rename this to spdk_bdev_set_queue_depth_poll_period?\n\ngreater than 0 to enable it\n0 to disable it\n\nThis is actually similar to what we do for QoS (spdk_bdev_set_qos_limit_iops)",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca8f54ff_a6affe8c",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T21:33:04Z",
+      "side": 1,
+      "message": "just use period \u003d\u003d 0 to denote if its enabled",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f654658d_769b9c70",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T21:33:04Z",
+      "side": 1,
+      "message": "how about:\n\nused to aggregate queue depth while iterating across the bdev\u0027s open channels",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98f8e6c5_28f52df6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1699,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T21:33:04Z",
+      "side": 1,
+      "message": "spdk_poller_register is always assumed to succeed - we don\u0027t check return value anywhere else to my knowledge\n\nso that means you can then change this function to return void instead",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
