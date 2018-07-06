@@ -903,7 +903,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('decouple_parent_lvol_bdev', help='Decouple parent of lvol')
     p.add_argument('name', help='lvol bdev name')
-    p.set_defaults(func=inflate_lvol_bdev)
+    p.set_defaults(func=decouple_parent_lvol_bdev)
 
     @call_cmd
     def resize_lvol_bdev(args):
