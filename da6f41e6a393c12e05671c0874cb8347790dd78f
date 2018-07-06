@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "716f2a06_0c9f9009",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-06T16:24:25Z",
+      "side": 1,
+      "message": "More of a question than a comment: I noticed that we don\u0027t specify a NUMA node here. I assume we do that to avoid failing an allocation while there is still memory left somewhere on the system.\nIf we were to specify the NUMA node corresponding to our thread\u0027s core, do you think there would be much of a performance difference on some machines?",
+      "revId": "da6f41e6a393c12e05671c0874cb8347790dd78f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
