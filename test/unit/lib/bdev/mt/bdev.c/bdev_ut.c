@@ -353,7 +353,8 @@ static void
 aborted_reset(void)
 {
 	struct spdk_io_channel *io_ch[2];
-	enum spdk_bdev_io_status status1, status2;
+	enum spdk_bdev_io_status status1 = SPDK_BDEV_IO_STATUS_PENDING,
+				 status2 = SPDK_BDEV_IO_STATUS_PENDING;
 
 	setup_test();
 
