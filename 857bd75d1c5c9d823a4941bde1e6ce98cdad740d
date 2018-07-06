@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccbb6bc2_fc4f6725",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:07:11Z",
+      "side": 1,
+      "message": "spacing between type name and variable name is not consistent for these variables\n\nit should just be one space, or if you want them to be aligned, use tabs",
+      "revId": "857bd75d1c5c9d823a4941bde1e6ce98cdad740d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c38feb9a_351b0460",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:07:11Z",
+      "side": 1,
+      "message": "this could all be on one line",
+      "revId": "857bd75d1c5c9d823a4941bde1e6ce98cdad740d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcfdfe60_ed193653",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:07:11Z",
+      "side": 1,
+      "message": "CU_ASSERT(TAILQ_NEXT(TAILQ_FIRST(\u0026qpair.err_cmd_head), link) \u003d\u003d NULL)\n\nshould also work - this just checks that there is no entry after the first one\n\nit\u0027s a bit simpler I think than the err_cmd_repeat",
+      "revId": "857bd75d1c5c9d823a4941bde1e6ce98cdad740d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "790502b5_40f25adb",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:07:11Z",
+      "side": 1,
+      "message": "this could all be on one line",
+      "revId": "857bd75d1c5c9d823a4941bde1e6ce98cdad740d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b66d5e2d_e1ba1991",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:07:11Z",
+      "side": 1,
+      "message": "this could all be on one line",
+      "revId": "857bd75d1c5c9d823a4941bde1e6ce98cdad740d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
