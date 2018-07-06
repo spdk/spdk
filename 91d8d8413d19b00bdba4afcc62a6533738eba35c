@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7d97047f_c0539344",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-06T04:51:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4029852e_a6e1eb54",
+      "range": {
+        "startLine": 1264,
+        "startChar": 37,
+        "endLine": 1264,
+        "endChar": 43
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "638604bf_4d813251",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 6
@@ -48,6 +72,145 @@
     },
     {
       "key": {
+        "uuid": "aa77f63c_0254443a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-06T04:51:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "638604bf_4d813251",
+      "range": {
+        "startLine": 1265,
+        "startChar": 37,
+        "endLine": 1265,
+        "endChar": 43
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fafcdb4_3f17570f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1308,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-06T04:51:29Z",
+      "side": 1,
+      "message": "UUID or alias",
+      "range": {
+        "startLine": 1308,
+        "startChar": 51,
+        "endLine": 1308,
+        "endChar": 55
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8de4f950_139dbec1",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1347,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-06T04:51:29Z",
+      "side": 1,
+      "message": "UUID or alias",
+      "range": {
+        "startLine": 1347,
+        "startChar": 51,
+        "endLine": 1347,
+        "endChar": 55
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed824bd5_b5fa7f3c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1348,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-06T04:51:29Z",
+      "side": 1,
+      "message": "Name",
+      "range": {
+        "startLine": 1348,
+        "startChar": 51,
+        "endLine": 1348,
+        "endChar": 55
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0800497_9ee62ba7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1386,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-06T04:51:29Z",
+      "side": 1,
+      "message": "UUID or alias of the",
+      "range": {
+        "startLine": 1386,
+        "startChar": 50,
+        "endLine": 1386,
+        "endChar": 51
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fe69b02_8665dfe9",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1421,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-06T04:51:29Z",
+      "side": 1,
+      "message": "UUID or alias",
+      "range": {
+        "startLine": 1421,
+        "startChar": 51,
+        "endLine": 1421,
+        "endChar": 55
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c979c1e_2542f580",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 6
@@ -59,6 +222,30 @@
       "writtenOn": "2018-07-05T23:21:27Z",
       "side": 1,
       "message": "The lvol bdev is looked up via spdk_bdev_get_by_name(), so either the UUID or the lvs_name/lvol_name alias should work here.",
+      "range": {
+        "startLine": 1456,
+        "startChar": 51,
+        "endLine": 1456,
+        "endChar": 88
+      },
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fe390e8_d73fb059",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1456,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-06T04:51:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8c979c1e_2542f580",
       "range": {
         "startLine": 1456,
         "startChar": 51,
@@ -99,6 +286,29 @@
       "writtenOn": "2018-07-05T23:21:27Z",
       "side": 1,
       "message": "This probably deserves a little more explanation (why this is useful - e.g. if this lvol is a clone, this allows deletion of the parent snapshot).",
+      "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaf4e273_202704c3",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1522,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-06T04:51:29Z",
+      "side": 1,
+      "message": "UUID or alias",
+      "range": {
+        "startLine": 1522,
+        "startChar": 51,
+        "endLine": 1522,
+        "endChar": 55
+      },
       "revId": "91d8d8413d19b00bdba4afcc62a6533738eba35c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
