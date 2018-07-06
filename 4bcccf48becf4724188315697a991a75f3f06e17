@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bf284e88_23afd0d8",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-06T07:54:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e5e00c6f_1a811aa5",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf2aef8c_cd184237",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 20
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "8378ce30_cb25df92",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1108,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-06T07:54:25Z",
+      "side": 1,
+      "message": "But what if user specifies both? We still need to decide which one to use, but this time it will be on RPC layer. We can still have a conflict. Or do we want to do two separate RPC calls - one for trid, one for name?",
+      "parentUuid": "cf2aef8c_cd184237",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a210ff84_4d9000c4",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 20
@@ -47,6 +83,24 @@
       "writtenOn": "2018-07-05T17:35:32Z",
       "side": 1,
       "message": "if (ctrlr \u003d\u003d NULL) {\n  return NULL;\n}\n\nThen you avoid having to indent the rest of the code.",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ab7cdbe_48e9c842",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1721,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-06T07:54:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a210ff84_4d9000c4",
       "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "43a1160b_f38451ab",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1724,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-06T07:54:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e62499fd_583637f1",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ce30de2_00ecc9bb",
         "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 20
@@ -81,6 +153,24 @@
       "writtenOn": "2018-07-05T17:35:32Z",
       "side": 1,
       "message": "I think this function is synchronous, so there doesn\u0027t need to be a callback function - just put that code here (see previous comment).",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd487971_5bd879ac",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-06T07:54:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7ce30de2_00ecc9bb",
       "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
