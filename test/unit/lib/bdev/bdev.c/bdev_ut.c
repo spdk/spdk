@@ -432,7 +432,7 @@ open_write_test(void)
 	/* Open bdev0 read-only.  This should succeed. */
 	rc = spdk_bdev_open(bdev[0], false, NULL, NULL, &desc[0]);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc[0] != NULL);
+	SPDK_CU_ASSERT_FATAL(desc[0] != NULL);
 	spdk_bdev_close(desc[0]);
 
 	/*
@@ -452,7 +452,7 @@ open_write_test(void)
 	/* Open bdev4 read-only.  This should succeed. */
 	rc = spdk_bdev_open(bdev[4], false, NULL, NULL, &desc[4]);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc[4] != NULL);
+	SPDK_CU_ASSERT_FATAL(desc[4] != NULL);
 	spdk_bdev_close(desc[4]);
 
 	/*
@@ -461,7 +461,7 @@ open_write_test(void)
 	 */
 	rc = spdk_bdev_open(bdev[8], true, NULL, NULL, &desc[8]);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc[8] != NULL);
+	SPDK_CU_ASSERT_FATAL(desc[8] != NULL);
 	spdk_bdev_close(desc[8]);
 
 	/*
@@ -474,7 +474,7 @@ open_write_test(void)
 	/* Open bdev4 read-only.  This should succeed. */
 	rc = spdk_bdev_open(bdev[5], false, NULL, NULL, &desc[5]);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc[5] != NULL);
+	SPDK_CU_ASSERT_FATAL(desc[5] != NULL);
 	spdk_bdev_close(desc[5]);
 
 	free_vbdev(bdev[8]);
@@ -519,7 +519,8 @@ static void
 num_blocks_test(void)
 {
 	struct spdk_bdev bdev;
-	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc = NULL;
+	int rc;
 
 	memset(&bdev, 0, sizeof(bdev));
 	bdev.name = "num_blocks";
@@ -534,7 +535,9 @@ num_blocks_test(void)
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 30) == 0);
 
 	/* In case bdev opened */
-	spdk_bdev_open(&bdev, false, NULL, NULL, &desc);
+	rc = spdk_bdev_open(&bdev, false, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
 
 	/* Growing block number */
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 80) == 0);
