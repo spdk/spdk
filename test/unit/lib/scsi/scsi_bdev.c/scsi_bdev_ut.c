@@ -616,8 +616,7 @@ task_complete_test(void)
 
 	ut_init_task(&task);
 
-	TAILQ_INIT(&lun.tasks);
-	TAILQ_INSERT_TAIL(&lun.tasks, &task, scsi_link);
+	lun.task_cnt = 1;
 	task.lun = &lun;
 
 	bdev_io.internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;

@@ -103,7 +103,8 @@ struct spdk_scsi_lun {
 	/** Argument for hotremove_cb */
 	void *hotremove_ctx;
 
-	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* pending tasks */
+	/** Pending tasks */
+	uint64_t task_cnt;
 };
 
 struct spdk_lun_db_entry {

@@ -213,7 +213,7 @@ static void
 lun_destruct(struct spdk_scsi_lun *lun)
 {
 	/* LUN will defer its removal if there are any unfinished tasks */
-	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&lun->tasks));
+	SPDK_CU_ASSERT_FATAL(lun->task_cnt == 0);
 
 	spdk_scsi_lun_destruct(lun);
 }
@@ -274,7 +274,7 @@ lun_task_mgmt_execute_abort_task_not_supported(void)
 	spdk_scsi_lun_execute_task(lun, &task);
 
 	/* task should now be on the tasks list */
-	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
+	CU_ASSERT(lun->task_cnt == 1);
 
 	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task, SPDK_SCSI_TASK_FUNC_ABORT_TASK);
 
@@ -337,7 +337,7 @@ lun_task_mgmt_execute_abort_task_all_not_supported(void)
 	spdk_scsi_lun_execute_task(lun, &task);
 
 	/* task should now be on the tasks list */
-	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
+	CU_ASSERT(lun->task_cnt == 1);
 
 	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task, SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET);
 
@@ -511,12 +511,12 @@ lun_execute_scsi_task_pending(void)
 	/* the tasks list should still be empty since it has not been
 	   executed yet
 	 */
-	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
+	CU_ASSERT(lun->task_cnt == 0);
 
 	spdk_scsi_lun_execute_task(lun, &task);
 
 	/* Assert the task has been successfully added to the tasks queue */
-	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
+	CU_ASSERT(lun->task_cnt == 1);
 
 	/* task is still on the tasks list */
 	CU_ASSERT_EQUAL(g_task_count, 1);
@@ -548,12 +548,12 @@ lun_execute_scsi_task_complete(void)
 	/* the tasks list should still be empty since it has not been
 	   executed yet
 	 */
-	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
+	CU_ASSERT(lun->task_cnt == 0);
 
 	spdk_scsi_lun_execute_task(lun, &task);
 
 	/* Assert the task has not been added to the tasks queue */
-	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
+	CU_ASSERT(lun->task_cnt == 0);
 
 	lun_destruct(lun);
 

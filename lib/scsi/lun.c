@@ -43,7 +43,8 @@ void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	if (lun) {
-		TAILQ_REMOVE(&lun->tasks, task, scsi_link);
+		assert(lun->task_cnt > 0);
+		lun->task_cnt--;
 		spdk_trace_record(TRACE_SCSI_TASK_DONE, lun->dev->id, 0, (uintptr_t)task, 0);
 	}
 	task->cpl_fn(task);
@@ -157,7 +158,8 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 
 	task->status = SPDK_SCSI_STATUS_GOOD;
 	spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
-	TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
+	assert(lun->task_cnt < UINT64_MAX);
+	lun->task_cnt++;
 	if (!lun->removed) {
 		rc = spdk_bdev_scsi_execute(task);
 	} else {
@@ -305,7 +307,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 		return NULL;
 	}
 
-	TAILQ_INIT(&lun->tasks);
+	lun->task_cnt = 0;
 
 	lun->bdev = bdev;
 	lun->io_channel = NULL;
@@ -380,5 +382,5 @@ spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun)
 bool
 spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
 {
-	return !TAILQ_EMPTY(&lun->tasks);
+	return lun->task_cnt > 0;
 }
