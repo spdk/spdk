@@ -70,6 +70,41 @@
     },
     {
       "key": {
+        "uuid": "0672a5af_6dbf6b7c",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:45:43Z",
+      "side": 1,
+      "message": "Sorry - mistyped that \"y\".\n\nYou should rebase this patch from latest master.  Some of these fields have been moved to an internal structure and should not be touched from the bdev module itself.",
+      "parentUuid": "b3fbb620_5d8896f2",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d3689ae_e567bd3d",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:45:43Z",
+      "side": 1,
+      "message": "Just picking one of these PVOL_DEBUG\u0027s to comment on...\n\nThis is a ton of extra code and somewhat duplicates io statistics we have in the generic bdev layer.  I would hate to see all of our bdev modules do this independently.  Could you use the generic bdev layer stats instead?  Even if it means we have to make additions to it.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a55f6da_5cbdceff",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 23
@@ -81,6 +116,125 @@
       "writtenOn": "2018-07-06T22:03:33Z",
       "side": 1,
       "message": "Do we have any data that shows the benefit from this?  I\u0027m just wondering if it\u0027s actually needed.  pvol won\u0027t typically be used when number of bdev devices is only 1.  And when it is used, we won\u0027t typically be splitting enough where we would notice a performance impact (unless user specifies a ridiculous strip size like 4KB).\n\nI\u0027d rather leave this out if we don\u0027t need it.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fb7ac1f_fbeddfb9",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:45:43Z",
+      "side": 1,
+      "message": "I think you should instead assert if this function returns !\u003d 0.  If it doesn\u0027t return 0, that\u0027s a huge programming error (either you didn\u0027t set the bdev correctly, or -ENOMEM wasn\u0027t returned from the previous submit call).",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de9a8fda_20bc39c2",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:45:43Z",
+      "side": 1,
+      "message": "This won\u0027t work.  We have to support iovcnt \u003e 0.  For example, vhost depends on it.\n\nI know that\u0027s extra work but it has to be done.  It\u0027s a requirement for all new bdev modules added to SPDK.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d8a1de6_b227ee67",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:45:43Z",
+      "side": 1,
+      "message": "A lot of the code from here to line 725 seems to be duplicating what is in pvol_bdev_waitq_io_process.  Would be good to remove that duplication.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "567382e5_e8928cde",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:45:43Z",
+      "side": 1,
+      "message": "We need to support UNMAP too.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e976807c_ca06f132",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:45:43Z",
+      "side": 1,
+      "message": "I don\u0027t think blocklen_shift is needed.  We already print out the blocklen at the generic bdev layer.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4389f18_aa00391c",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:45:43Z",
+      "side": 1,
+      "message": "Can we use spdk_json_write_array_begin/end here?  And I think we can just make it an array of names.\n\nWe don\u0027t need the \"base_bdev_\" prefix - we already know this is the list of base bdevs.  I\u0027m also not really sure \"remove_scheduled\" is useful here.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50f49f03_7bdd6bf6",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T22:45:43Z",
+      "side": 1,
+      "message": "After rebase, you will need to change this to .examine_config",
       "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
