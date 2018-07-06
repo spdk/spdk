@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "04cbf04f_820ed78b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1108,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-06T12:46:09Z",
+      "side": 1,
+      "message": "I\u0027m not sure separate RPC would be way to go, at least most RPC at this time try to consolidate such logic inside. Rather than offer two similar calls.\n\nI\u0027m not opposed to doing two calls here and choose one in RPC. Yet code that is currently in patch looks fine to me anyway.",
+      "parentUuid": "8378ce30_cb25df92",
+      "revId": "4bcccf48becf4724188315697a991a75f3f06e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a210ff84_4d9000c4",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 20
