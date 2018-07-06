@@ -53,6 +53,4 @@
 		}				\
 	} while (0)
 
-int spdk_cunit_print_results(const char *filename);
-
 #endif /* SPDK_CUNIT_H */
