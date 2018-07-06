@@ -50,6 +50,40 @@
       "revId": "4e42760809fb468be30f2daebcf0abea988a19cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e58414f6_bd04385d",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:38:40Z",
+      "side": 1,
+      "message": "where is this used?",
+      "revId": "4e42760809fb468be30f2daebcf0abea988a19cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f97b4d05_fda8d914",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:38:40Z",
+      "side": 1,
+      "message": "Lots of code in here that is commented out - it should be removed if not needed.",
+      "revId": "4e42760809fb468be30f2daebcf0abea988a19cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
