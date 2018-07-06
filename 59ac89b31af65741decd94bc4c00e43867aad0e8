@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "b00ac157_5327aa3a",
+        "filename": "doc/Doxyfile",
+        "patchSetId": 5
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:15:21Z",
+      "side": 1,
+      "message": "This should be moved further down - in the list starting with \"about.md\".\n\nThis list here (intro.md through performance_reports.md) is meant to match the order in which the main pages appear in the left navigation bar when viewing the documentation.  Since this new user_guides_common is a subpage of user_guides, it should not be in this list.\n\nSorry - this rule is not documented at all here - there was no way you could have known this!",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5a965cb_9c474d7c",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:15:21Z",
+      "side": 1,
+      "message": "Common User Guide Topics?",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "010a5bf2_9c898e5f",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:15:21Z",
+      "side": 1,
+      "message": "Command Line Parameters",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6dafbaba_ba1e8660",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 5
@@ -16,6 +67,109 @@
       "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8777b8a_0a80ad53",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:15:21Z",
+      "side": 1,
+      "message": "Agreed - I would replace \"targets\" with \"applications\".\n\nAlso \"command line parameters\" instead of just \"parameters\".",
+      "parentUuid": "6dafbaba_ba1e8660",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c57d5806_23b95294",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:15:21Z",
+      "side": 1,
+      "message": "first core in CPU mask?",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9193d758_147d73d0",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:15:21Z",
+      "side": 1,
+      "message": "I would remove this last sentence.  Multiple SPDK based application can be launched without shared memory ID parameter - if they specify non-overlapping whitelists.",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2650f0c9_6e0202e9",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:15:21Z",
+      "side": 1,
+      "message": "in the code we call it STARTUP (SPDK_RPC_STARTUP), not PRE INIT.",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6979771a_6ff38a36",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:15:21Z",
+      "side": 1,
+      "message": "It might be good to mention that preconfiguring subsystems is necessary to set up global parameters for starting the application and which cannot be changed later.",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f30eebe_12b5aca5",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:15:21Z",
+      "side": 1,
+      "message": "should this be ###?",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
