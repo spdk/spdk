@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8329218e_b8d0a303",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1089,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:02:07Z",
+      "side": 1,
+      "message": "It is not specific to logical volumes - but not all bdev modules support it.\n\nThe main difference is that for logical volumes, the UUID is stored in metadata on disk.  For ephemeral/temporary bdevs (like malloc and null) there is no persistence obviously.\n\nWe are also getting rid of delete_bdev - each bdev module will have its own RPC method for deleting its type of bdev.",
+      "parentUuid": "9fcd44c2_010c61be",
+      "revId": "6fb650887cdcbb6e6fb99a15801985bda6d2d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8c33fed9_eaee1ef5",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-06T12:07:38Z",
       "side": 1,
       "message": "Should this perhaps use the same format as the parameters, i.e. a table?",
+      "revId": "6fb650887cdcbb6e6fb99a15801985bda6d2d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "879f8ea2_c28a84fd",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:02:07Z",
+      "side": 1,
+      "message": "Good idea.\n\nUnfortunately none of the other RPCs describe the response in table format.  I\u0027d suggest we leave this as-is for now to keep it consistent.  A lot of the other RPCs don\u0027t describe simple responses in a table, but they probably should.\n\nI\u0027ve added a low-hanging fruit Trello card to change these response sections:\n\nhttps://trello.com/c/2tTyNbXB/12-modify-jsonrpcmd-to-describe-responses-in-table-format",
+      "parentUuid": "8c33fed9_eaee1ef5",
       "revId": "6fb650887cdcbb6e6fb99a15801985bda6d2d77d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
