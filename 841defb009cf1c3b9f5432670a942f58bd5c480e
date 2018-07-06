@@ -16,6 +16,24 @@
       "revId": "841defb009cf1c3b9f5432670a942f58bd5c480e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b46a356_8f729a68",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T21:28:25Z",
+      "side": 1,
+      "message": "Another thing to keep in mind is that spdk_nvme_ctrlr_get_regs_csts() will result in an admin command + poll/wait sequence on NVMe-oF, which is probably not a good idea if a command has already timed out.",
+      "parentUuid": "975e33ce_9b1b63ef",
+      "revId": "841defb009cf1c3b9f5432670a942f58bd5c480e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
