@@ -16,6 +16,24 @@
       "revId": "c3835e59ab9c8eaac7a7fd44f7c84005c62fffac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6b5dbb1_761e8b3c",
+        "filename": "test/bdev/dynamic_memory_allocation/bdevperf_dynamic.conf",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-06T16:10:58Z",
+      "side": 1,
+      "message": "Not that someone really familiar with the code base would do it, but dma is also direct memory access. Might be confusing.",
+      "parentUuid": "2b464dde_35321607",
+      "revId": "c3835e59ab9c8eaac7a7fd44f7c84005c62fffac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
