@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4c7faae_e25f96cb",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:43:31Z",
+      "side": 1,
+      "message": "Is this right?  I think you still want to keep status \u003d 0xFF so that you can confirm that spdk_bdev_scsi_execute() did not set the SCSI status.",
+      "revId": "a2a5b181ec275a1ffe377f1486e418fae592d367",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
