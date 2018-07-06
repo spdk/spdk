@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "866ef303_2ea066e3",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T15:29:19Z",
+      "side": 1,
+      "message": "should the second sizeof be cq_mz_name to be safe?",
+      "revId": "ce3222e38316e28c173dea92a05e7590857a0b73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ad8b8c0_dfc23a6a",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1358,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T15:29:19Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "ce3222e38316e28c173dea92a05e7590857a0b73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
