@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d227fbba_23550568",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T16:55:20Z",
+      "side": 1,
+      "message": "Please document new RPC methods in doc/jsonrpc.md.",
+      "revId": "f1649ccd4d9740f0d9ae39df8e63b5176701865f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af910027_2b42401a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T16:55:20Z",
+      "side": 1,
+      "message": "Rather than escaping the quote, you could just use a double-quoted string.",
+      "range": {
+        "startLine": 391,
+        "startChar": 97,
+        "endLine": 391,
+        "endChar": 100
+      },
+      "revId": "f1649ccd4d9740f0d9ae39df8e63b5176701865f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d29d302_de095535",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T16:55:20Z",
+      "side": 1,
+      "message": "Flag-based arguments are already not required by default, so I don\u0027t think you need required\u003dFalse (also below).",
+      "range": {
+        "startLine": 392,
+        "startChar": 75,
+        "endLine": 392,
+        "endChar": 89
+      },
+      "revId": "f1649ccd4d9740f0d9ae39df8e63b5176701865f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
