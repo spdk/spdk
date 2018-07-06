@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66e946d0_8e709a04",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-06T21:44:29Z",
+      "side": 1,
+      "message": "You\u0027re just looking for the first qpair that matches this subsystem, right? Can\u0027t you just write:\n\nTAILQ_FOREACH(qpair, \u0026group-\u003eqpairs, link) {\n    if (qpair-\u003ectrlr-\u003esubsys \u003d\u003d subsystem) {\n        break;\n}\n\nif (qpair) {\n// disconnect\n} else {\n// remove subsystem\n}",
+      "revId": "9eaeea78ac25be8db9f32c1a11e3211cb3f5110c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
