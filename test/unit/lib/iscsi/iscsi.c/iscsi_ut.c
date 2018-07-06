@@ -457,6 +457,76 @@ underflow_for_request_sense_test(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_write_pdu_list));
 }
 
+static void
+underflow_for_check_condition_test(void)
+{
+	struct spdk_iscsi_sess sess;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_task task;
+	struct spdk_iscsi_pdu *pdu;
+	struct iscsi_bhs_scsi_req *scsi_req;
+	struct iscsi_bhs_scsi_resp *resph;
+	uint32_t data_segment_len;
+
+	TAILQ_INIT(&g_write_pdu_list);
+
+	memset(&sess, 0, sizeof(sess));
+	memset(&conn, 0, sizeof(conn));
+	memset(&task, 0, sizeof(task));
+
+	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
+
+	conn.sess = &sess;
+	conn.MaxRecvDataSegmentLength = 8192;
+
+	pdu = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu != NULL);
+
+	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
+	scsi_req->read_bit = 1;
+
+	spdk_iscsi_task_set_pdu(&task, pdu);
+	task.parent = NULL;
+
+	spdk_iscsi_task_set_pdu(&task, pdu);
+	task.parent = NULL;
+
+	task.scsi.iovs = &task.scsi.iov;
+	task.scsi.iovcnt = 1;
+	task.scsi.length = 512;
+	task.scsi.transfer_len = 512;
+	task.bytes_completed = 512;
+
+	task.scsi.sense_data_len = 18;
+	task.scsi.data_transferred = 18;
+	task.scsi.status = SPDK_SCSI_STATUS_CHECK_CONDITION;
+
+	spdk_iscsi_task_response(&conn, &task);
+	spdk_put_pdu(pdu);
+
+	/*
+	 * In this case, a SCSI Response PDU is returned.
+	 * Sense data is set in sense area.
+	 * Underflow is not set.
+	 */
+	pdu = TAILQ_FIRST(&g_write_pdu_list);
+	SPDK_CU_ASSERT_FATAL(pdu != NULL);
+
+	CU_ASSERT(pdu->bhs.opcode == ISCSI_OP_SCSI_RSP);
+
+	resph = (struct iscsi_bhs_scsi_resp *)&pdu->bhs;
+
+	CU_ASSERT(resph->flags == 0x80);
+
+	data_segment_len = DGET24(resph->data_segment_len);
+	CU_ASSERT(data_segment_len == task.scsi.sense_data_len + 2);
+	CU_ASSERT(resph->res_cnt == 0);
+
+	TAILQ_REMOVE(&g_write_pdu_list, pdu, tailq);
+	spdk_put_pdu(pdu);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_write_pdu_list));
+}
 int
 main(int argc, char **argv)
 {
@@ -482,6 +552,8 @@ main(int argc, char **argv)
 			       underflow_for_zero_read_transfer_test) == NULL
 		|| CU_add_test(suite, "underflow for request sense test",
 			       underflow_for_request_sense_test) == NULL
+		|| CU_add_test(suite, "underflow for check condition test",
+			       underflow_for_check_condition_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
