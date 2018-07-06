@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6dafbaba_ba1e8660",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-06T11:58:57Z",
+      "side": 1,
+      "message": "What is a \"target\"? Perhaps better call it commands or applications and list some examples?",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
