@@ -69,6 +69,24 @@
       "revId": "6fb650887cdcbb6e6fb99a15801985bda6d2d77d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e8a151c_6d9994ff",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T20:06:28Z",
+      "side": 1,
+      "message": "The responses of some RPC methods are bare strings, bools, etc. rather than objects, so a table would not be appropriate for those.  However, it might be a good idea to do a one-time switch of some/all of these RPCs to return an object to allow for future extensibility without API breaks.",
+      "parentUuid": "879f8ea2_c28a84fd",
+      "revId": "6fb650887cdcbb6e6fb99a15801985bda6d2d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
