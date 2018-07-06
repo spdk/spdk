@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "e9b7cba0_250263f3",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1089,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T20:07:05Z",
+      "side": 1,
+      "message": "lvol is also the only bdev that currently registers the UUID as a bdev alias, so it is somewhat unique to lvol.",
+      "parentUuid": "8329218e_b8d0a303",
+      "revId": "6fb650887cdcbb6e6fb99a15801985bda6d2d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8c33fed9_eaee1ef5",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 9
