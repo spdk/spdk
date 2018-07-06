@@ -2806,7 +2806,7 @@ spdk_bdev_start(struct spdk_bdev *bdev)
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (module->examine) {
+		if (module->examine && bdev->internal.claim_module != NULL) {
 			module->internal.action_in_progress++;
 			module->examine(bdev);
 		}
