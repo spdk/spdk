@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "8d87f920_35d4fc97",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1181,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T16:19:52Z",
+      "side": 1,
+      "message": "This is duplicating spdk_nvme_ns_get_max_io_xfer_size().",
+      "revId": "4e42760809fb468be30f2daebcf0abea988a19cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f31306ef_b6abf47b",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 3
