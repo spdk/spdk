@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f3e7d40_4a276983",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-06T16:04:56Z",
+      "side": 1,
+      "message": "looup -\u003e lookup?",
+      "revId": "c50772f41db065493ab48668e05e60c709676ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "633c2a79_859f8cde",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-06T16:04:56Z",
+      "side": 1,
+      "message": "referenced here too.",
+      "revId": "c50772f41db065493ab48668e05e60c709676ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
