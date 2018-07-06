@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95f71f86_dfa76d7a",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-06T15:52:00Z",
+      "side": 1,
+      "message": "I\u0027m not as familiar with SCSI, but should we be using some of the other status codes while processing the I/O, such as SPDK_SCSI_STATUS_INTERMEDIATE instead of leaving the value unset?",
+      "revId": "a662bc50bb822b3aebf99bc5bcd06399b7c2e492",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
