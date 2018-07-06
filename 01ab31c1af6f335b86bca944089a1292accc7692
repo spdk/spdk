@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "550dd479_48d3bde9",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:45:13Z",
+      "side": 1,
+      "message": "Should \"SCSI\" be removed here?  I think this is used for both scsi and blk.  Or maybe change it to \"SCSI or BLK\".",
+      "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc3ad012_6b0d79ed",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:45:13Z",
+      "side": 1,
+      "message": "BLK help shows the default but this one doesn\u0027t",
+      "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd789e31_c0287620",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:45:13Z",
+      "side": 1,
+      "message": "Yeah - I like the idea of showing the socket patch instead.  That\u0027s probably the most useful piece of information (needed to start qemu).",
+      "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17362d46_c2c5a352",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:45:13Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
