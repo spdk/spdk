@@ -22,6 +22,30 @@
       "revId": "122dae7201f0d3b33db848d09a81238e0c67a367",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bd8b9a3_690ca330",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T21:06:04Z",
+      "side": 1,
+      "message": "The lun_construct hot remove cb should be removed in the future.\n\nI think for multi-connection vhost-scsi, you can just run all connections for the same target on the same core.  That is what is done currently for multi-connection iSCSI.  I\u0027m only saying that because getting bdev to work multi-threaded has been a huge undertaking.  If we absolutely need a SCSI lun to be accessible from multiple threads for performance reasons, we could do it but I\u0027m not sure it\u0027s highest priority.\n\nFor r2t, we don\u0027t want to track pending r2t transfers as SCSI tasks.  They aren\u0027t SCSI tasks until we\u0027re received the corresponding data out PDU.  And we purposely do not ask for all of the data out PDUs immediately because we can\u0027t allocate enough memory to always handle all of them.  If a device is hot removed, we will never issue the R2Ts to get the rest of the data, we just want to cancel the original SCSI request altogether.",
+      "parentUuid": "1a67ce54_819f5d42",
+      "range": {
+        "startLine": 117,
+        "startChar": 1,
+        "endLine": 117,
+        "endChar": 41
+      },
+      "revId": "122dae7201f0d3b33db848d09a81238e0c67a367",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
