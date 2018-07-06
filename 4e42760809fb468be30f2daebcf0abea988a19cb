@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f31306ef_b6abf47b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1188,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T16:18:18Z",
+      "side": 1,
+      "message": "I don\u0027t think we should add this API; the default io_queue_size can be set via controller options, but it can also be overridden on a per-queue basis.  (If we do keep the API, it should at least be named consistently - something like spdk_nvme_ctrlr_get_default_io_queue_size().)",
+      "revId": "4e42760809fb468be30f2daebcf0abea988a19cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "caa6fd77_cabb482e",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-06T16:18:18Z",
+      "side": 1,
+      "message": "Not sure why this is max() - if anything, it should be taking the smaller of the two.\n\nHowever, sectors_per_stripe has nothing to do with the largest I/O supported anyway - it can be larger than MDTS.",
+      "revId": "4e42760809fb468be30f2daebcf0abea988a19cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
