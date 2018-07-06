@@ -16,6 +16,24 @@
       "revId": "9eaeea78ac25be8db9f32c1a11e3211cb3f5110c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c63bfe8_851bc532",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-06T22:58:50Z",
+      "side": 1,
+      "message": "I am looking for both the first and second qpair that match the subsystem. I need to hold onto the second one because by the time we get back to the callback, we have already freed the current qpair and removed it from the tailq. This is the only way I could think of to keep track of where I am at in the tailq.",
+      "parentUuid": "66e946d0_8e709a04",
+      "revId": "9eaeea78ac25be8db9f32c1a11e3211cb3f5110c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
