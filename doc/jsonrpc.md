@@ -52,7 +52,9 @@ enabled                 | Optional | boolean     | Enable (`true`) or disable (`
 
 ### Response
 
-The current state of context switch monitoring is returned as a boolean.
+Name                    | Type        | Description
+----------------------- | ----------- | -----------
+enabled                 | boolean     | The current state of context switch monitoring
 
 ### Example
 
@@ -73,7 +75,9 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": false
+  "result": {
+    "enabled": false
+  }
 }
 ~~~
 
