@@ -115,6 +115,7 @@ fi
 
 cd ~
 
+# rxe_cfg is used in the NVMe-oF tests
 # The librxe-dev repository provides a command line tool called rxe_cfg which makes it
 # very easy to use Soft-RoCE. The build pool utilizes this command line tool in the absence
 # of any real RDMA NICs to simulate one for the NVMe-oF tests.
@@ -131,6 +132,7 @@ else
     cd ~
 fi
 
+# iscsiadm is used in the iscsi_tgt tests
 # The version of iscsiadm that ships with fedora 26 was broken as of November 3 2017.
 # There is already a bug report out about it, and hopefully it is fixed soon, but in the event that
 # that version is still broken when you do your setup, the below steps will fix the issue.
@@ -177,6 +179,9 @@ else
     sudo git -C /usr/src/rocksdb checkout spdk-v5.6.1
     echo "rocksdb already in /usr/src. Not checking out again"
 fi
+
+# This version of fio is installed in /usr/src/fio to enable
+# building the spdk fio plugin.
 if [ ! -d /usr/src/fio ]; then
     if [ ! -d fio ]; then
         git clone http://git.kernel.dk/fio.git
@@ -197,6 +202,7 @@ else
 fi
 cd ~
 
+# Flamegraph is used when printing out timing graphs for the tests.
 if [ ! -d /usr/local/FlameGraph ]; then
     git clone https://github.com/brendangregg/FlameGraph.git
     mkdir -p /usr/local
@@ -204,6 +210,8 @@ if [ ! -d /usr/local/FlameGraph ]; then
 else
     echo "flamegraph already installed. Skipping"
 fi
+
+# Qemu is used in the vhost tests.
 SPDK_QEMU_BRANCH=spdk-2.12-pre
 mkdir -p qemu
 cd qemu
@@ -213,6 +221,9 @@ else
     echo "qemu already checked out. Skipping"
 fi
 cd "$SPDK_QEMU_BRANCH"
+
+# Most tsocks proxies rely on a configuration file in /etc/tsocks.conf.
+# If using tsocks, please make sure to complete this config before trying to build qemu.
 if hash tsocks 2> /dev/null; then
     git_param="--with-git='tsocks git'"
 fi
