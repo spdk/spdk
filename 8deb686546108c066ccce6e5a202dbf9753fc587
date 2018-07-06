@@ -94,6 +94,30 @@
     },
     {
       "key": {
+        "uuid": "8acaae9c_910d3e6e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-06T10:37:28Z",
+      "side": 1,
+      "message": "It\u0027s doable.",
+      "parentUuid": "26a02b89_b21dd23d",
+      "range": {
+        "startLine": 1094,
+        "startChar": 97,
+        "endLine": 1094,
+        "endChar": 102
+      },
+      "revId": "8deb686546108c066ccce6e5a202dbf9753fc587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eda4eff9_0da13e46",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 2
