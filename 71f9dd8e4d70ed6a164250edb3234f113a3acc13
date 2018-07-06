@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "182f53c4_9c524876",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T15:25:35Z",
+      "side": 1,
+      "message": "I think these two lines are duplicated.",
+      "revId": "71f9dd8e4d70ed6a164250edb3234f113a3acc13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
