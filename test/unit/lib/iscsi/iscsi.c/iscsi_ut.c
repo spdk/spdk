@@ -224,7 +224,7 @@ maxburstlength_test(void)
 	rc = spdk_iscsi_execute(&conn, data_out_pdu);
 	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
 
-	CU_ASSERT(response_pdu->task != NULL);
+	SPDK_CU_ASSERT_FATAL(response_pdu->task != NULL);
 	spdk_iscsi_task_disassociate_pdu(response_pdu->task);
 	spdk_iscsi_task_put(response_pdu->task);
 	spdk_put_pdu(response_pdu);
