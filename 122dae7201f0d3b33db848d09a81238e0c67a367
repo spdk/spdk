@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a67ce54_819f5d42",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-06T11:08:26Z",
+      "side": 1,
+      "message": "So far we\u0027ve been tracking submitted, pending tasks. Now with those open_descs we additionally track pending r2t task chains. This gets the job done, but starts to become a mess.\n\nWhat\u0027s more, spdk_scsi_lun_construct still has a hotremove_cb, which introduces even more mess. It serves the same purpose as open/close API.\n\nSuch open/close API might be useful in future, but for now we could just track all constructed scsi tasks instead of just submitted ones. That is, we could remove the lun-\u003etasks list, replace it with a task_cnt counter, increment the counter in spdk_scsi_task_construct and decrement it in spdk_scsi_task_put. The r2t root entity in iscsi is also a task, after all. It\u0027s just not being submitted via spdk_scsi_dev_queue_task. If we wait until that task is put, this implies we wait until all r2t tasks are finished. I suggest to go this way.\n\nI\u0027ll also mention that I plan to put even more stress on the scsi layer soon. The newest vhost patches allow accessing the same vhost target from multiple connections, and we want to process those connections from multiple threads. That is, we want to make the scsi I/O processing fully multi-threaded. We already accommodated equivalent changes to vhost-blk. Since it relies directly on bdev and io_channel APIs, there was almost no effort doing so. With vhost-scsi, we need to do a lot of refactoring, but that\u0027s all possible.\n\nI think I mentioned all this once already, but I don\u0027t remember the conclusion we came up with. If you do - could you remind me, please?",
+      "range": {
+        "startLine": 117,
+        "startChar": 1,
+        "endLine": 117,
+        "endChar": 41
+      },
+      "revId": "122dae7201f0d3b33db848d09a81238e0c67a367",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
