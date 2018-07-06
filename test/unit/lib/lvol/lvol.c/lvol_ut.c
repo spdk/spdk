@@ -1866,6 +1866,7 @@ static void lvol_refcnt(void)
 	CU_ASSERT(g_lvol->ref_count == 1);
 
 	spdk_lvol_open(g_lvol, lvol_op_with_handle_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	CU_ASSERT(g_lvol->ref_count == 2);
 
 	/* Trying to destroy lvol while its open should fail */

@@ -4527,7 +4527,7 @@ blob_relations(void)
 	spdk_blob_id blobid, cloneid, snapshotid, cloneid2, snapshotid2;
 	int rc;
 	size_t count;
-	spdk_blob_id ids[10];
+	spdk_blob_id ids[10] = {0};
 
 	dev = init_dev();
 	spdk_bs_opts_init(&bs_opts);
