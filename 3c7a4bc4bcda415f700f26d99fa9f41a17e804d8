@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9230f77_14e258c7",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T21:36:19Z",
+      "side": 1,
+      "message": "I don\u0027t think this one is helpful, unless we aggregate queue depth samples over time.\n\nI\u0027d also suggest adding a patch before this one that changes this function to use spdk_json_write_named_* variants.  Then this patch can just add spdk_json_write_named_* variants as well.",
+      "revId": "3c7a4bc4bcda415f700f26d99fa9f41a17e804d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
