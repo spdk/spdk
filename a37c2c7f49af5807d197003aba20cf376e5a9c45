@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ffea4c9_23b8f4a5",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:01:21Z",
+      "side": 1,
+      "message": "rc should never be !\u003d 0 - if it is, that\u0027s a programming error\n\nI think you can just assert(rc \u003d\u003d 0) and return SPDK_SCSI_TASK_PENDING",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a61ce7d_df53a00f",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1393,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:01:21Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a7a3a88_bedcc612",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1442,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:01:21Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "089f7580_18fbade0",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:01:21Z",
+      "side": 1,
+      "message": "same here\n\nthe only way spdk_bdev_queue_io_wait can fail is if:\n\n1) you didn\u0027t set the bdev in the io_wait_entry structure, or\n2) there are bdev_ios available in the per-thread cache (which is impossible if you just got -ENOMEM)\n\nI think to simplify this, just change spdk_bdev_scsi_queue_io to return void - have that function check the return code of spdk_bdev_queue_io_wait if you must, something like:\n\nint rc;\n\nrc \u003d spdk_bdev_queue_io_wait();\nif (rc !\u003d 0) {\n  assert(false);\n}",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1e0dfdb_c38920ac",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T20:01:21Z",
+      "side": 1,
+      "message": "just a note (for a possible separate patch) - we don\u0027t use the return code from this function anywhere - it could just return void instead",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
