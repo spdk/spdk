@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9eb99924_27f4aca0",
+        "filename": "include/spdk/util.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:34:48Z",
+      "side": 1,
+      "message": "can be done in later patch, but you should remove SPDK_BDEV_SEC_TO_USEC and have bdev.c use this one now instead",
+      "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48d46662_b0ef7736",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:34:48Z",
+      "side": 1,
+      "message": "I think this breaks the tsc tracking code that Vishal added.\n\nI\u0027m not sure exactly how we should handle this - maybe longer term the tsc stats stuff should be in the thread, not the reactor?  But for now, I think you need to do:\n\nrc \u003d spdk_thread_poll(thread, 0);\n\nrc is supposed to be 1, 0, or -1 to indicate if the spdk_thread_poll call did real work, didn\u0027t do any real work (i.e. no events and the poller didn\u0027t really do anything, for example the nvme completion queue had no completions), or unknown.",
+      "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bc646b4_2c5444ce",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:34:48Z",
+      "side": 1,
+      "message": "do we still need this for test code I\u0027m guessing?",
+      "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87f554cb_65e8fdb7",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-06T19:34:48Z",
+      "side": 1,
+      "message": "declaration out of place (should be before previous statement)",
+      "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
