@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "76e9b5dc_8a4f3bac",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-07T23:02:33Z",
+      "side": 1,
+      "message": "totally can",
+      "parentUuid": "56b38959_14ee5a8f",
+      "range": {
+        "startLine": 234,
+        "startChar": 1,
+        "endLine": 234,
+        "endChar": 55
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "75704498_4be7c890",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 38
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-05T21:39:00Z",
       "side": 1,
       "message": "What about g_vbdev_pmds? Is this going to be released in case of error?",
+      "range": {
+        "startLine": 332,
+        "startChar": 3,
+        "endLine": 332,
+        "endChar": 20
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b635e2a2_0111e819",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-07T23:02:33Z",
+      "side": 1,
+      "message": "I assume you mean the variable pmd? Yeah, looks like I missed that one thanks.",
+      "parentUuid": "75704498_4be7c890",
       "range": {
         "startLine": 332,
         "startChar": 3,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "ab4f844e_a99e7810",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-07T23:02:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "add598e9_03e5c0f9",
+      "range": {
+        "startLine": 467,
+        "startChar": 24,
+        "endLine": 467,
+        "endChar": 25
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3cfd0f2a_60ec772a",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 38
@@ -82,6 +154,30 @@
       "writtenOn": "2018-07-05T21:39:00Z",
       "side": 1,
       "message": "It will be released when you free bdev_io. See spdk_bdev_free_io(). So for writes you should be able to use spdk_bdev_io_get_buf() on base_bdev and don\u0027t care about allocating and free\u0027ing this bufer (this is why this function was created).\n\nBasicaly for READs this should also be possible but the _crypto_operation() is quite complicated so I\u0027m not 100% sure right now.",
+      "range": {
+        "startLine": 788,
+        "startChar": 0,
+        "endLine": 791,
+        "endChar": 5
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75b7c2fe_f859a94b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-07T23:02:33Z",
+      "side": 1,
+      "message": "I\u0027m not sure we\u0027re on the same page here, the note for for the special case of incoming IOV being NULL which Jim was explaining to me could happen a while back.  I don\u0027t think any of the tests I\u0027ve run so far do that.  This doesn\u0027t have anything to do with writes or even \"normal\" reads.  Once I get through all the other todo items, mostly UT right now, I\u0027ll look at this last. There are lots of comments within _crypto_operation that hopefully make it clear how we handle reads and writes differently.  Basically we always decrypt in place on reads using the provided buffer so I never allocate anything for reads.  For writes we never encrypt in place so there\u0027s always a buffer allocated in _crypto_operation that is used as the crypto destination target on encrypt, then when that operation is done the buffer is used in the spdk_write and freed when complete.",
+      "parentUuid": "3cfd0f2a_60ec772a",
       "range": {
         "startLine": 788,
         "startChar": 0,
