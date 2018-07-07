@@ -89,17 +89,24 @@ spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
 	}
 }
 
+int ut_spdk_dma_malloc = (int)MOCK_PASS_THRU;
+void *ut_p_spdk_dma_malloc = &ut_spdk_dma_malloc;
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	void *buf = NULL;
-	if (posix_memalign(&buf, align, size)) {
-		return NULL;
+	if (ut_p_spdk_dma_malloc &&
+	    ut_spdk_dma_malloc == (int)MOCK_PASS_THRU) {
+		void *buf = NULL;
+		if (posix_memalign(&buf, align, size)) {
+			return NULL;
+		}
+		if (phys_addr) {
+			*phys_addr = (uint64_t)buf;
+		}
+		return buf;
+	} else {
+		return ut_p_spdk_dma_malloc;
 	}
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
-	}
-	return buf;
 }
 
 int ut_spdk_dma_zmalloc = (int)MOCK_PASS_THRU;
