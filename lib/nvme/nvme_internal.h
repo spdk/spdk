@@ -126,6 +126,13 @@ extern pid_t g_spdk_nvme_pid;
 #define DEFAULT_ADMIN_QUEUE_REQUESTS	(32)
 #define DEFAULT_IO_QUEUE_REQUESTS	(512)
 
+/* We want to fit submission and completion rings each in a single 2MB
+ * hugepage to ensure physical address contiguity.
+ */
+#define MAX_IO_QUEUE_ENTRIES		(0x200000 / spdk_max( \
+						sizeof(struct spdk_nvme_cmd), \
+						sizeof(struct spdk_nvme_cpl)))
+
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
 

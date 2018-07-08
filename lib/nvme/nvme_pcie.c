@@ -971,7 +971,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	volatile uint32_t	*doorbell_base;
 	uint64_t		offset;
 	uint16_t		num_trackers;
-	size_t			page_size = sysconf(_SC_PAGESIZE);
+	size_t			page_align = 0x200000;
 
 	/*
 	 * Limit the maximum number of completions to return per call to prevent wraparound,
@@ -993,15 +993,19 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	/* cmd and cpl rings must be aligned on page size boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {
 		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					      page_size, &offset) == 0) {
+					      sysconf(_SC_PAGESIZE), &offset) == 0) {
 			pqpair->cmd = pctrlr->cmb_bar_virt_addr + offset;
 			pqpair->cmd_bus_addr = pctrlr->cmb_bar_phys_addr + offset;
 			pqpair->sq_in_cmb = true;
 		}
 	}
+
+	/* To ensure physical address contiguity we make each ring occupy
+	 * a single hugepage only. See MAX_IO_QUEUE_ENTRIES.
+	 */
 	if (pqpair->sq_in_cmb == false) {
 		pqpair->cmd = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					       page_size,
+					       page_align,
 					       &pqpair->cmd_bus_addr);
 		if (pqpair->cmd == NULL) {
 			SPDK_ERRLOG("alloc qpair_cmd failed\n");
@@ -1010,7 +1014,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	}
 
 	pqpair->cpl = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
-				       page_size,
+				       page_align,
 				       &pqpair->cpl_bus_addr);
 	if (pqpair->cpl == NULL) {
 		SPDK_ERRLOG("alloc qpair_cpl failed\n");
