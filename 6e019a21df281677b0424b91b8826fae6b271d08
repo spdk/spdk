@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "682b3419_7f1e1c2e",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "I had done this so that during debugging in gdb it is easier to see which pointers are null and which are not. Hope this is fine.",
+      "parentUuid": "7f8de702_442b8148",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "079f634f_5983e8fb",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 23
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "180ad5da_24baec7b",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "079f634f_5983e8fb",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d0eb703_c995d421",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 23
@@ -47,6 +83,24 @@
       "writtenOn": "2018-07-06T22:15:23Z",
       "side": 1,
       "message": "why print this information again here?",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db336e61_7b598b5d",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4d0eb703_c995d421",
       "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -88,6 +142,24 @@
     },
     {
       "key": {
+        "uuid": "f2c19b9f_b8d89ad7",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Code is already rebased to latest master and I can see some fields in spdk_bdev_io are moved to internal structure. I think here I am not accessing any of those fields which are in internal.",
+      "parentUuid": "0672a5af_6dbf6b7c",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d3689ae_e567bd3d",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 23
@@ -99,6 +171,24 @@
       "writtenOn": "2018-07-06T22:45:43Z",
       "side": 1,
       "message": "Just picking one of these PVOL_DEBUG\u0027s to comment on...\n\nThis is a ton of extra code and somewhat duplicates io statistics we have in the generic bdev layer.  I would hate to see all of our bdev modules do this independently.  Could you use the generic bdev layer stats instead?  Even if it means we have to make additions to it.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba1124aa_99c0ad86",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "This was written for developer\u0027s early stage debugging help so I was just keeping this code, may be I can remove it for now from review and submission. Will be using bdev io stats wherever possible in future.",
+      "parentUuid": "9d3689ae_e567bd3d",
       "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -122,6 +212,24 @@
     },
     {
       "key": {
+        "uuid": "2b312aee_da9f1755",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "When we compared the pvol of 1 disk vs Single Nvme, we did not saw some performance drop in various strip sizes and in lowest QD latency was more. We disabled splitting when pvol having single drive and then we saw the performance numbers were almost similar for pvol with 1 disk and Single NVMe.",
+      "parentUuid": "9a55f6da_5cbdceff",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2fb7ac1f_fbeddfb9",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 23
@@ -133,6 +241,24 @@
       "writtenOn": "2018-07-06T22:45:43Z",
       "side": 1,
       "message": "I think you should instead assert if this function returns !\u003d 0.  If it doesn\u0027t return 0, that\u0027s a huge programming error (either you didn\u0027t set the bdev correctly, or -ENOMEM wasn\u0027t returned from the previous submit call).",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6ac77d3_79ec9525",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Sure, putting the assert. In non-debug builds, since assert is disabled, i am keeping pvol_bdev_io_terminate()",
+      "parentUuid": "2fb7ac1f_fbeddfb9",
       "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -156,6 +282,24 @@
     },
     {
       "key": {
+        "uuid": "ec16a722_5318fe3c",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Yes, I was planning to take it in next submission after this. Since nvmf pulls the data from host in contiguous buffer (spdk_bdev_read_blocks) I had put this. Will it be ok to take it in next checkin after this checkin, we can open spdk request to track it separately and fix it?",
+      "parentUuid": "de9a8fda_20bc39c2",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d8a1de6_b227ee67",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 23
@@ -167,6 +311,24 @@
       "writtenOn": "2018-07-06T22:45:43Z",
       "side": 1,
       "message": "A lot of the code from here to line 725 seems to be duplicating what is in pvol_bdev_waitq_io_process.  Would be good to remove that duplication.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9e0a394_099b5423",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d8a1de6_b227ee67",
       "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -190,6 +352,24 @@
     },
     {
       "key": {
+        "uuid": "b31a9239_554fe39c",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Yes, I was planning to take it in next submission after this submission, Will it be ok to take it in next submission, we can open spdk request to track it separately and fix it?",
+      "parentUuid": "567382e5_e8928cde",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e976807c_ca06f132",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 23
@@ -201,6 +381,24 @@
       "writtenOn": "2018-07-06T22:45:43Z",
       "side": 1,
       "message": "I don\u0027t think blocklen_shift is needed.  We already print out the blocklen at the generic bdev layer.",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0dca1d2a_2314f411",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e976807c_ca06f132",
       "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -224,6 +422,24 @@
     },
     {
       "key": {
+        "uuid": "5e9d4df6_040e2346",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c4389f18_aa00391c",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50f49f03_7bdd6bf6",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 23
@@ -235,6 +451,24 @@
       "writtenOn": "2018-07-06T22:45:43Z",
       "side": 1,
       "message": "After rebase, you will need to change this to .examine_config",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0b3c31e_16d13294",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1123,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Sure, I will do the final rebase when most of the reviewers are done with to avoid multiple time rebase. This will be fixed in that rebase.",
+      "parentUuid": "50f49f03_7bdd6bf6",
       "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -258,6 +492,24 @@
     },
     {
       "key": {
+        "uuid": "16a60356_e34a5cf9",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "I replied this to Daniel also, just wanted to put my thoughts on this, please comment back if you think it is fine. The waitq entry embedded in pvol_bdev_io is 32Bytes in size. In normal straight path IO scenarios, we don\u0027t expect the waitq logic to execute often, so when it actually happens then we allocate 32Bytes which should not happen much. But if we allocate it inside pvol_bdev_io embedded, then we are putting extra 32Bytes in pvol_bdev_io which mostly won\u0027t get used. Also this 32B per pvol_bdeV_io will multiple for every bdev_io structure today. Please let me know if it is ok to keep a pointer. I just wanted to save (32B * num of bdev_ios)",
+      "parentUuid": "5995ec44_915e6bb4",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1359bd6_68778373",
         "filename": "lib/bdev/pvol/bdev_pvol.h",
         "patchSetId": 23
@@ -269,6 +521,24 @@
       "writtenOn": "2018-07-06T22:03:33Z",
       "side": 1,
       "message": "maybe put \"tailq\" in the struct names?  this isn\u0027t typically how TAILQ_HEADs are defined in SPDK but I understand why you\u0027re doing it here.  putting \"tailq\" in the name will make it clear in the .c file definitions that these are tailqs and the user won\u0027t be searching for where \"struct spdk_pvol_configured\" is defined",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "894b4c14_b97a9c4f",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c1359bd6_68778373",
       "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -292,6 +562,24 @@
     },
     {
       "key": {
+        "uuid": "a494f8a4_dd5c7856",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "when i specify here required\u003dTrue, i get error\nTypeError: \u0027required\u0027 is an invalid argument for positionals\n\nSo i removed this",
+      "parentUuid": "9cda46fb_127d7e08",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9e8d2af_9dd68255",
         "filename": "test/unit/lib/bdev/bdev_pvol.c/Makefile",
         "patchSetId": 23
@@ -303,6 +591,24 @@
       "writtenOn": "2018-07-06T22:03:33Z",
       "side": 1,
       "message": "cunit library has been removed",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd1bc939_5ca19644",
+        "filename": "test/unit/lib/bdev/bdev_pvol.c/Makefile",
+        "patchSetId": 23
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-08T08:27:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c9e8d2af_9dd68255",
       "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
