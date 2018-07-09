@@ -264,7 +264,12 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	void *queue_mem;
 	uint64_t queue_mem_phys_addr;
 
-	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VIRTIO_PCI_VRING_ALIGN, &queue_mem_phys_addr);
+	/* To ensure physical address contiguity we make the queue occupy
+	 * only a single hugepage (2MB). The queue size is limited by the
+	 * Virtio 1.0 spec and can't exceed 2MB.
+	 */
+	assert(vq->vq_ring_size < 0x200000);
+	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, 0x200000, &queue_mem_phys_addr);
 	if (queue_mem == NULL) {
 		return -ENOMEM;
 	}
