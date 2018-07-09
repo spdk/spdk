@@ -159,10 +159,10 @@ void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 	return;
 }
 
-int
+void
 spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 {
-	return 0;
+	return;
 }
 
 int
