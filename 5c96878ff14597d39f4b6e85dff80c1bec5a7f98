@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dee7be74_f1fc43ca",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T19:24:58Z",
+      "side": 1,
+      "message": "These configure lines are almost all completely duplicated.\n\nI think you can just do:\n\nif [ $(echo $CONF | grep tsocks) ]; then\n    if hash tsocks 2\u003e /dev/null; then\n        git_param\u003d\"--with-git\u003d\u0027tsocks git\u0027\"\n    fi\nfi\n\nThen just use $git_param.\n\nThis is what the original code did.  Daniel\u0027s comment on revision 6 was just that you don\u0027t have to explicitly set $git_param to be empty.",
+      "revId": "5c96878ff14597d39f4b6e85dff80c1bec5a7f98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
