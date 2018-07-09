@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89a5c646_083b3ea9",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-09T14:53:47Z",
+      "side": 1,
+      "message": "With modular repo urls for all of these packages, we should specify the directory to clone them into. That way there is no chance that the cd command on the next line will fail.",
+      "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
