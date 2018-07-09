@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1daa63f4_5d282789",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-09T05:48:21Z",
+      "side": 1,
+      "message": "I prefer to keep this as a list, this allow us adding task abort feature in future(maybe other feature).",
+      "revId": "13cf2da1625878df0c29b8aa5edd6fe465cbf6d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
