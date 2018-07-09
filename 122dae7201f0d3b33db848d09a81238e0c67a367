@@ -46,6 +46,30 @@
       "revId": "122dae7201f0d3b33db848d09a81238e0c67a367",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32adf7fb_d93745f5",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-09T07:36:38Z",
+      "side": 1,
+      "message": "OK\n\n\u003e I think for multi-connection vhost-scsi, you can just [...]\n\nThat\u0027s what we\u0027re going for right now.",
+      "parentUuid": "3bd8b9a3_690ca330",
+      "range": {
+        "startLine": 117,
+        "startChar": 1,
+        "endLine": 117,
+        "endChar": 41
+      },
+      "revId": "122dae7201f0d3b33db848d09a81238e0c67a367",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
