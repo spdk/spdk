@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "112a4ec7_22fbed51",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-09T20:30:43Z",
+      "side": 1,
+      "message": "I removed the \\t because it wasn\u0027t very pretty.  Yes, I could have put them in the previous patch.",
+      "parentUuid": "9640f58f_e0e3d32e",
+      "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89a5c646_083b3ea9",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 2
