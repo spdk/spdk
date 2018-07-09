@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4477937d_025b7f63",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1141,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-09T10:10:41Z",
+      "side": 1,
+      "message": "It mean that you can omit \"Optional\" parameter and it will get some default value (if any) - eg if no cpumask is given vhost will use application CPU mask when contructing controller.\n\nI will add this.",
+      "parentUuid": "eff56042_c680af9c",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c7992186_a1244ebc",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3
