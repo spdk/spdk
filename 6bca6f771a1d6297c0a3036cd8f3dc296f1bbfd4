@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5b199330_9d7fa0b4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-09T17:16:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6135e85f_70ad10b3",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "997a8204_9f9839e4",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-06T22:51:48Z",
       "side": 1,
       "message": "I think the name of this state is a misnomer. In-capsule makes me think of in-capsule data, but this state doesn\u0027t have anything to do with that. This is the state a request transitions through when it sends a completion without an associated data transfer (i.e. all NVMe writes, or many admin commands). I think you could leave the state named \"RDMA_REQUEST_STATE_COMPLETING\" and it would be clearer. It\u0027s still a bit tricky that a request goes through either RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST or RDMA_REQUEST_STATE_COMPLETING, but we can add a comment to explain that.",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "136fee4c_3fc08703",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-09T17:16:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "997a8204_9f9839e4",
       "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "f6167aeb_bd40eb91",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-09T17:16:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3605042f_13b1b829",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3d61d4f_b6d07c23",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 13
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "1002490e_0f41d978",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1205,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-09T17:16:02Z",
+      "side": 1,
+      "message": "There\u0027s a condition when the xfer requires sending data but the response status is NOK and the data is not sent. See line 608.",
+      "parentUuid": "c3d61d4f_b6d07c23",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5753c65_7a92c62e",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 13
@@ -81,6 +153,24 @@
       "writtenOn": "2018-07-06T22:51:48Z",
       "side": 1,
       "message": "Extra whitespace changes",
+      "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6785c59e_19886cb6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1992,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-09T17:16:02Z",
+      "side": 1,
+      "message": "I\u0027m getting these white spaces from check_format.sh aligning of the function args.",
+      "parentUuid": "c5753c65_7a92c62e",
       "revId": "6bca6f771a1d6297c0a3036cd8f3dc296f1bbfd4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
