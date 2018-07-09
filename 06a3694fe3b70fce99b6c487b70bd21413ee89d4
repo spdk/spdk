@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b954cf6e_26b29732",
+        "filename": "dpdk",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T21:34:46Z",
+      "side": 1,
+      "message": "The DPDK version should not have changed here",
+      "revId": "06a3694fe3b70fce99b6c487b70bd21413ee89d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b37041f1_fb2319b7",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 1
