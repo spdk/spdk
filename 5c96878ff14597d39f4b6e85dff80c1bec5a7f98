@@ -16,6 +16,24 @@
       "revId": "5c96878ff14597d39f4b6e85dff80c1bec5a7f98",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2e5c893_00cd43fd",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-09T20:19:56Z",
+      "side": 1,
+      "message": "I tried this multiple times.  The .configure utility does NOT handle $git_param\u003d\"\"",
+      "parentUuid": "dee7be74_f1fc43ca",
+      "revId": "5c96878ff14597d39f4b6e85dff80c1bec5a7f98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
