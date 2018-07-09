@@ -358,12 +358,6 @@ _spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
 	struct spdk_lvol_store *lvs;
 
-	if (lvolerrno != 0) {
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
-		free(req);
-		return;
-	}
-
 	lvs = calloc(1, sizeof(*lvs));
 	if (lvs == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol store\n");
@@ -375,8 +369,12 @@ _spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 	lvs->bs_dev = req->bs_dev;
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
-
 	req->lvol_store = lvs;
+
+	if (lvolerrno != 0) {
+		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
+		return;
+	}
 
 	spdk_bs_get_super(bs, _spdk_lvs_open_super, req);
 }
