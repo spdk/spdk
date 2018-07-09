@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7666e363_39451fb4",
+        "filename": "test/nvmf/nvmfjson/json_config.sh",
+        "patchSetId": 48
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T17:49:13Z",
+      "side": 1,
+      "message": "I was playing around with some of the other JSON config tests and I feel like too much of the test code is buried in json_config/common.sh. By that, I mean there are functions like \u0027create_nvmf_subsystem_config\u0027 that will only be used in the nvmf JSON test, so why put them off in a common library? That makes the test more difficult to follow because you have to jump between files. Something to consider.",
+      "revId": "8c573aeabefcdc22fdf7f6acbfdaaa0e8eaf7cea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
