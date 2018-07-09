@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "5c0e05d7_99506048",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-09T21:27:44Z",
+      "side": 1,
+      "message": "What do you think about instead of requiring a configuration file, allowing for a default setting of the various git parameters inside the script, then we could give the user an option of specifying a configuration file?\nSomething similar to how we use autorun-spdk.conf in the spdk repository.\nI see merits both ways.",
+      "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9640f58f_e0e3d32e",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 2
@@ -120,6 +137,24 @@
       "side": 1,
       "message": "I\u0027d like to remove the cd ~ in the next round of patches.  Otherwise, the problem with removing cd ~, is that it make it harder for the script to understand the relative location of where it\u0027s being run from.  We can\u0027t assume that this script is run from w/in the spdk repository.   There are assumptions baked into this script about where the caller is executing the script from.",
       "parentUuid": "89a5c646_083b3ea9",
+      "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d5c01ca_2de44156",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-09T21:27:44Z",
+      "side": 1,
+      "message": "That makes sense to me. With a little more parameterization, we will be able to avoid any direct references to file paths in the script. Although it makes it more difficult for a first time user to run the script.",
+      "parentUuid": "bef2ae16_4e71669b",
       "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
