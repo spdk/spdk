@@ -100,10 +100,7 @@ void spdk_vhost_shutdown_cb(void);
  * storage set up by the target.
  *
  * All vtgt-changing functions operate directly on this object. Note that
- * \c spdk_vhost_tgt cannot be acquired directly. This object is only
- * accessible as a callback parameter via \c spdk_vhost_call_external_event.
- * This ensures that all access to the vtgt is piped through a single,
- * thread-safe API.
+ * \c spdk_vhost_tgt must be accessed under \c spdk_vhost_lock.
  */
 struct spdk_vhost_tgt;
 
@@ -342,34 +339,6 @@ int spdk_vhost_tgt_remove(struct spdk_vhost_tgt *vtgt);
  * \return SPDK bdev associated with given vtgt.
  */
 struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_tgt *vtgt);
-
-/**
- * Call an event for given vhost target. It will be called from within
- * this function.
- *
- * This function is thread safe.
- *
- * \param vtgt_name name of the vhost target to run this event on.
- * \param fn function to be called. The first parameter of callback function is
- * either actual spdk_vhost_tgt pointer or NULL in case vtgt with given name doesn't
- * exist. The second param is user provided argument *arg*.
- * \param arg parameter to be passed to *fn*.
- */
-void spdk_vhost_call_external_event(const char *vtgt_name, spdk_vhost_event_fn fn, void *arg);
-
-/**
- * Call a function for each available vhost target. It will be called
- * synchronously from within this function. After it was called
- * for all targets, it will be called once again with the first param
- * (vtgt) set to NULL.
- *
- * This function is thread safe.
- *
- * \param fn function to be called for each vtgt. The first param will be
- * either vtgt pointer or NULL. The second param is user provided argument *arg*.
- * \param arg parameter to be passed to *fn*.
- */
-void spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg);
 
 #ifdef __cplusplus
 }

@@ -416,13 +416,14 @@ spdk_vhost_blk_get_dev(struct spdk_vhost_tgt *vtgt)
 static int
 _bdev_remove_vdev_cb(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev, void *arg)
 {
-	struct spdk_vhost_blk_tgt *bvtgt = arg;
+	struct spdk_vhost_blk_tgt *bvtgt;
 	struct spdk_vhost_blk_dev *bvdev;
 
 	if (vtgt == NULL) {
 		/* our target has gone down */
 		return 0;
 	}
+	bvtgt = to_blk_tgt(vtgt);
 
 	if (vdev == NULL) {
 		/* no more devices to iterate through */
@@ -441,22 +442,18 @@ _bdev_remove_vdev_cb(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev, v
 	return 0;
 }
 
-static int
-_bdev_remove_cb(struct spdk_vhost_tgt *vtgt, void *arg)
-{
-	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
-		     vtgt->name);
-
-	spdk_vhost_tgt_foreach_vdev(vtgt, _bdev_remove_vdev_cb, arg);
-	return 0;
-}
-
 static void
 bdev_remove_cb(void *remove_ctx)
 {
 	struct spdk_vhost_blk_tgt *bvtgt = remove_ctx;
+	struct spdk_vhost_tgt *vtgt = &bvtgt->vtgt;
 
-	spdk_vhost_call_external_event(bvtgt->vtgt.name, _bdev_remove_cb, bvtgt);
+	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
+		     vtgt->name);
+
+	spdk_vhost_lock();
+	spdk_vhost_tgt_foreach_vdev(vtgt, _bdev_remove_vdev_cb, NULL);
+	spdk_vhost_unlock();
 }
 
 static void
