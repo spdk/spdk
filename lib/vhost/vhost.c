@@ -631,6 +631,16 @@ spdk_vhost_tgt_find(const char *vtgt_name)
 	return NULL;
 }
 
+struct spdk_vhost_tgt *
+spdk_vhost_tgt_next(struct spdk_vhost_tgt *prev)
+{
+	if (prev == NULL) {
+		return TAILQ_FIRST(&g_spdk_vhost_tgts);
+	}
+
+	return TAILQ_NEXT(prev, tailq);
+}
+
 static int
 spdk_vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
