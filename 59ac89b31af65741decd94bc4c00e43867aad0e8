@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f83f494a_227b026a",
+        "filename": "doc/Doxyfile",
+        "patchSetId": 5
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-09T12:17:05Z",
+      "side": 1,
+      "message": "ohhh, ok I will move it.",
+      "parentUuid": "b00ac157_5327aa3a",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5a965cb_9c474d7c",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 5
@@ -167,6 +185,24 @@
       "writtenOn": "2018-07-06T19:15:21Z",
       "side": 1,
       "message": "should this be ###?",
+      "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe0feee5_04b34472",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-09T12:17:05Z",
+      "side": 1,
+      "message": "Hmm.. my intention was to create chapter about CPU masks used in SPDK - not only for `-m` parameter. I use this from jsonrpc.md file when @ref cpu_mask is used.",
+      "parentUuid": "9f30eebe_12b5aca5",
       "revId": "59ac89b31af65741decd94bc4c00e43867aad0e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
