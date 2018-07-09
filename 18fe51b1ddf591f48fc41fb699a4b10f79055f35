@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "994485e7_7d9dfb06",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1220,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-09T10:32:29Z",
+      "side": 1,
+      "message": "This is exactly the same as 0..SPDK_VHOST_SCSI_CTRLR_MAX_DEVS. The target ID is passed directly to vhost SCSI API and this API will fail if ID will be outside of 0..7. This is the same situation as for `construct_nvmf_subsystem` the `nsid` param.\n\nIf SPDK_VHOST_SCSI_CTRLR_MAX_DEVS ever change this documentation will also be updated and changelog will receive proper information.",
+      "parentUuid": "c7992186_a1244ebc",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "52a4f9a5_5f7e354d",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3
@@ -88,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "1b91f9d9_d3f7cc1e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-09T10:32:29Z",
+      "side": 1,
+      "message": "Nope, this is only for vhost blk as this is only Virtio Block feature. See http://docs.oasis-open.org/virtio/virtio/v1.0/virtio-v1.0.html chapter 5.2.3 and 5.2.5.",
+      "parentUuid": "7ef6965b_a01b99eb",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "baebd403_c65fe0b0",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3
@@ -99,6 +135,24 @@
       "writtenOn": "2018-07-06T11:58:40Z",
       "side": 1,
       "message": "Showing an example response is not enough. Someone using this API with a more strict client (like I do with Go) needs to know exactly what the structure of the response will be. I ended up looking for that in the source code, but only for the SCSI Vhost controller and only for the minimum amount of information that I needed.\n\nIn general the API should be defined in this document and the implementation should conform to that, not the other way around.",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a41a0dff_2f5a6a57",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1390,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-09T10:32:29Z",
+      "side": 1,
+      "message": "OK, will try to do that.",
+      "parentUuid": "baebd403_c65fe0b0",
       "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -133,6 +187,24 @@
       "writtenOn": "2018-07-06T11:58:40Z",
       "side": 1,
       "message": "In *the* latter case, please ...\n\nI probably sounds like a broken record, but a program calling the API needs a way to detect the reason for the failure, otherwise it cannot implement such error handling - just something I felt is worth pointing out here, not something that is part of the PR.",
+      "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b39b8539_41c8e9eb",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1428,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-09T10:32:29Z",
+      "side": 1,
+      "message": "Yes, 100% right but lets fix one issue at the time.",
+      "parentUuid": "0343696f_0ddfce4a",
       "revId": "18fe51b1ddf591f48fc41fb699a4b10f79055f35",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
