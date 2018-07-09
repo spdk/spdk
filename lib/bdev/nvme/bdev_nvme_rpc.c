@@ -49,6 +49,67 @@ struct open_descriptors {
 };
 typedef TAILQ_HEAD(, open_descriptors) open_descriptors_t;
 
+static int
+decode_rpc_action_on_timeout(const struct spdk_json_val *val, void *out)
+{
+	enum spdk_bdev_timeout_action *action = out;
+
+	if (spdk_json_strequal(val, "none") == 0) {
+		*action = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE;
+	} else if (spdk_json_strequal(val, "reset") == 0) {
+		*action = SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT;
+	} else if (spdk_json_strequal(val, "abort") == 0) {
+		*action = SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET;
+	} else {
+		SPDK_NOTICELOG("Invalid parameter: action_on_timeout");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = {
+	{"action_on_timeout", offsetof(struct spdk_bdev_nvme_opts, action_on_timeout), decode_rpc_action_on_timeout, true},
+	{"timeout", offsetof(struct spdk_bdev_nvme_opts, timeout_s), spdk_json_decode_uint32, true},
+	{"retry_count", offsetof(struct spdk_bdev_nvme_opts, retry_count), spdk_json_decode_uint32, true},
+	{"nvme_adminq_poll_period_us", offsetof(struct spdk_bdev_nvme_opts, nvme_adminq_poll_period_us), spdk_json_decode_uint32, true},
+	{"nvme_hotplug_poll_period_us", offsetof(struct spdk_bdev_nvme_opts, nvme_hotplug_poll_period_us), spdk_json_decode_int32, true},
+};
+
+static void
+spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct spdk_bdev_nvme_opts opts;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	spdk_bdev_nvme_get_opts(&opts);
+	if (params && spdk_json_decode_object(params, rpc_bdev_nvme_options_decoders,
+					      SPDK_COUNTOF(rpc_bdev_nvme_options_decoders),
+					      &opts)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	if (rc) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w != NULL) {
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	}
+
+	return;
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("set_bdev_nvme_options", spdk_rpc_set_bdev_nvme_options, SPDK_RPC_STARTUP)
+
 struct rpc_construct_nvme {
 	char *name;
 	char *trtype;
