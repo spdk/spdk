@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9640f58f_e0e3d32e",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T19:27:55Z",
+      "side": 1,
+      "message": "these whitespace changes should have gone in the previous patch",
+      "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89a5c646_083b3ea9",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 2
@@ -13,6 +30,24 @@
       "writtenOn": "2018-07-09T14:53:47Z",
       "side": 1,
       "message": "With modular repo urls for all of these packages, we should specify the directory to clone them into. That way there is no chance that the cd command on the next line will fail.",
+      "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "840d2e21_71053c15",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T19:27:55Z",
+      "side": 1,
+      "message": "hey Seth - which \"cd\" do you mean?  the one on line 235 or the one on line 223?  the next line is a mv, not a cd",
+      "parentUuid": "89a5c646_083b3ea9",
       "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
