@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c61ab972_5a0098a5",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:35:57Z",
+      "side": 1,
+      "message": "Why the cast to int here? Was the compiler complaining? Why can\u0027t this just be a bool?",
+      "revId": "66d67e1dd25730652799b0d6f59fcfb1707ab592",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6f1c6bf_fff0f5df",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:35:57Z",
+      "side": 1,
+      "message": "Can\u0027t this just be if (!ut_spdk_dma_malloc) { if ut_spdk_dma_malloc was a bool?",
+      "revId": "66d67e1dd25730652799b0d6f59fcfb1707ab592",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
