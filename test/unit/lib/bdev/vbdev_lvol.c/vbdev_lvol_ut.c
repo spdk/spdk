@@ -1331,15 +1331,6 @@ ut_vbdev_lvol_io_type_supported(void)
 }
 
 static void
-ut_lvol_op_comp(void)
-{
-	struct lvol_task task;
-
-	lvol_op_comp(&task, 1);
-	CU_ASSERT(task.status == SPDK_BDEV_IO_STATUS_FAILED);
-}
-
-static void
 ut_lvol_read_write(void)
 {
 	g_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct lvol_task));
@@ -1468,7 +1459,6 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_get_io_channel", ut_vbdev_lvol_get_io_channel) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_io_type_supported", ut_vbdev_lvol_io_type_supported) == NULL ||
-		CU_add_test(suite, "ut_lvol_op_comp", ut_lvol_op_comp) == NULL ||
 		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
 		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL ||
