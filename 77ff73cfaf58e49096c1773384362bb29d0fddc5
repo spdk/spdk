@@ -69,6 +69,24 @@
       "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "246c9ed7_a1c758ba",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-09T20:29:15Z",
+      "side": 1,
+      "message": "I agree that adding a location or target directory would be a good addition.\n\nSomething like git clone -C \"${GIT_FIO_DIR}\" \"${GIT_REPO_FIO}\"\n\nEd and I would also like to get rid of the hardcoded revisions.  Something like\n\ngit -C \"${GIT_FIO_DIR}\" checkout \"${GIT_FIO_BRANCH}\"\n\nI\u0027m hoping this will all be improved in the future.",
+      "parentUuid": "acd623a7_0a8e6773",
+      "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
