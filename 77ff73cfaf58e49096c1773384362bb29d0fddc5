@@ -51,6 +51,24 @@
       "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acd623a7_0a8e6773",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-09T19:55:39Z",
+      "side": 1,
+      "message": "Oh sorry, I picked the wrong example. I am actually talking about the following line pairs:\n92-95\n149-152\n289-290\n320-324\n\nBut pretty much everywhere we clone a directory using a parameterized name we should also specify the directory into which we clone it.",
+      "parentUuid": "840d2e21_71053c15",
+      "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
