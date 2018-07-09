@@ -1283,13 +1283,11 @@ spdk_vhost_nvme_tgt_construct(const char *name, const char *cpumask, uint32_t nu
 		return -EINVAL;
 	}
 
-	spdk_vhost_lock();
 	rc = spdk_vhost_tgt_register(&dev->vtgt, name, cpumask,
 				     &spdk_vhost_nvme_tgt_backend);
 
 	if (rc) {
 		spdk_dma_free(dev);
-		spdk_vhost_unlock();
 		return rc;
 	}
 
@@ -1300,7 +1298,6 @@ spdk_vhost_nvme_tgt_construct(const char *name, const char *cpumask, uint32_t nu
 	spdk_vhost_nvme_ctrlr_identify_update(dev);
 
 	SPDK_NOTICELOG("Controller %s: Constructed\n", name);
-	spdk_vhost_unlock();
 	return rc;
 }
 
@@ -1390,6 +1387,7 @@ spdk_vhost_nvme_controller_construct(void)
 	struct spdk_vhost_tgt *vtgt;
 	uint32_t ctrlr_num, io_queues;
 
+	spdk_vhost_lock();
 	for (sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
 		if (!spdk_conf_section_match_prefix(sp, "VhostNvme")) {
 			continue;
@@ -1441,6 +1439,7 @@ spdk_vhost_nvme_controller_construct(void)
 		}
 	}
 
+	spdk_vhost_unlock();
 	return 0;
 }
 
