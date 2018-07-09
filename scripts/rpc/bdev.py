@@ -147,6 +147,32 @@ def delete_aio_bdev(client, name):
     return client.call('delete_aio_bdev', params)
 
 
+def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry_count=None, nvme_adminq_poll_period_us=None):
+    """Set options for the bdev nvme. This is startup command.
+
+    Args:
+        action_on_timeout:  action to take on command time out. Valid valies are: none, reset, abort (optional)
+        timeout_s: Timeout for each command, in seconds. If 0, don't track timeouts (optional)
+        retry_count: The number of attempts per I/O when an I/O fails (optional)
+        nvme_adminq_poll_period_us: how often the admin queue is polled for asynchronous events in microsecon (optional)
+    """
+    params = {}
+
+    if action_on_timeout:
+        params['action_on_timeout'] = action_on_timeout
+
+    if timeout_us:
+        params['timeout_us'] = timeout_us
+
+    if retry_count:
+        params['retry_count'] = retry_count
+
+    if nvme_adminq_poll_period_us:
+        params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
+
+    return client.call('set_bdev_nvme_options', params)
+
+
 def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None):
     """Construct NVMe namespace block device.
 

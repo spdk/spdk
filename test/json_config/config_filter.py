@@ -8,7 +8,8 @@ def filter_methods(filename, do_remove_startup_rpcs):
         'set_iscsi_options',
         'set_nvmf_target_config',
         'set_nvmf_target_options',
-        'set_bdev_options'
+        'set_bdev_options',
+        'set_bdev_nvme_options'
     ]
 
     with open(filename) as json_file:
