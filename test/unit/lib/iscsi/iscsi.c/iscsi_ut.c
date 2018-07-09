@@ -524,6 +524,91 @@ underflow_for_check_condition_test(void)
 
 	CU_ASSERT(TAILQ_EMPTY(&g_write_pdu_list));
 }
+
+static void
+add_transfer_task_test(void)
+{
+	struct spdk_iscsi_sess sess;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_task task;
+	struct spdk_iscsi_pdu *pdu, *tmp;
+	struct iscsi_bhs_r2t *r2th;
+	int rc, count = 0;
+	uint32_t buffer_offset, desired_xfer_len;
+
+	memset(&sess, 0, sizeof(sess));
+	memset(&conn, 0, sizeof(conn));
+	memset(&task, 0, sizeof(task));
+
+	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;	/* 1M */
+	sess.MaxOutstandingR2T = DEFAULT_MAXR2T;	/* 4 */
+
+	conn.sess = &sess;
+	TAILQ_INIT(&conn.queued_r2t_tasks);
+	TAILQ_INIT(&conn.active_r2t_tasks);
+
+	pdu = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu != NULL);
+
+	pdu->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;	/* 64K */
+	task.scsi.transfer_len = 16 * 1024 * 1024;
+	spdk_iscsi_task_set_pdu(&task, pdu);
+
+	/* The following tests if the task is queued because R2T tasks are full. */
+	conn.pending_r2t = DEFAULT_MAXR2T;
+
+	rc = spdk_add_transfer_task(&conn, &task);
+
+	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(TAILQ_FIRST(&conn.queued_r2t_tasks) == &task);
+
+	TAILQ_REMOVE(&conn.queued_r2t_tasks, &task, link);
+	CU_ASSERT(TAILQ_EMPTY(&conn.queued_r2t_tasks));
+
+	/* The following tests if multiple R2Ts are issued. */
+	conn.pending_r2t = 0;
+
+	rc = spdk_add_transfer_task(&conn, &task);
+
+	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(TAILQ_FIRST(&conn.active_r2t_tasks) == &task);
+
+	TAILQ_REMOVE(&conn.active_r2t_tasks, &task, link);
+	CU_ASSERT(TAILQ_EMPTY(&conn.active_r2t_tasks));
+
+	CU_ASSERT(conn.data_out_cnt == 255);
+	CU_ASSERT(conn.pending_r2t == 1);
+	CU_ASSERT(conn.outstanding_r2t_tasks[0] == &task);
+	CU_ASSERT(conn.ttt == 1);
+
+	CU_ASSERT(task.data_out_cnt == 255);
+	CU_ASSERT(task.ttt == 1);
+	CU_ASSERT(task.outstanding_r2t == sess.MaxOutstandingR2T);
+	CU_ASSERT(task.next_r2t_offset ==
+		  pdu->data_segment_len + sess.MaxBurstLength * sess.MaxOutstandingR2T);
+
+
+	while (!TAILQ_EMPTY(&g_write_pdu_list)) {
+		tmp = TAILQ_FIRST(&g_write_pdu_list);
+		TAILQ_REMOVE(&g_write_pdu_list, tmp, tailq);
+
+		r2th = (struct iscsi_bhs_r2t *)&tmp->bhs;
+
+		buffer_offset = from_be32(&r2th->buffer_offset);
+		CU_ASSERT(buffer_offset == pdu->data_segment_len + sess.MaxBurstLength * count);
+
+		desired_xfer_len = from_be32(&r2th->desired_xfer_len);
+		CU_ASSERT(desired_xfer_len == sess.MaxBurstLength);
+
+		spdk_put_pdu(tmp);
+		count++;
+	}
+
+	CU_ASSERT(count == DEFAULT_MAXR2T);
+
+	spdk_put_pdu(pdu);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -551,6 +636,7 @@ main(int argc, char **argv)
 			       underflow_for_request_sense_test) == NULL
 		|| CU_add_test(suite, "underflow for check condition test",
 			       underflow_for_check_condition_test) == NULL
+		|| CU_add_test(suite, "add transfer task test", add_transfer_task_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
