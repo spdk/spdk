@@ -609,6 +609,67 @@ add_transfer_task_test(void)
 	spdk_put_pdu(pdu);
 }
 
+static void
+get_transfer_task_test(void)
+{
+	struct spdk_iscsi_sess sess;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_task task1, task2, *task;
+	struct spdk_iscsi_pdu *pdu1, *pdu2, *pdu;
+	int rc;
+
+	memset(&sess, 0, sizeof(sess));
+	memset(&conn, 0, sizeof(conn));
+	memset(&task1, 0, sizeof(task1));
+	memset(&task2, 0, sizeof(task2));
+
+	sess.MaxBurstLength = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	sess.MaxOutstandingR2T = 1;
+
+	conn.sess = &sess;
+	TAILQ_INIT(&conn.active_r2t_tasks);
+
+	pdu1 = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu1 != NULL);
+
+	pdu1->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	task1.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	spdk_iscsi_task_set_pdu(&task1, pdu1);
+
+	rc = spdk_add_transfer_task(&conn, &task1);
+	CU_ASSERT(rc == SPDK_SUCCESS);
+
+	pdu2 = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu2 != NULL);
+
+	pdu2->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	task2.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	spdk_iscsi_task_set_pdu(&task2, pdu2);
+
+	rc = spdk_add_transfer_task(&conn, &task2);
+	CU_ASSERT(rc == SPDK_SUCCESS);
+
+	task = spdk_get_transfer_task(&conn, 1);
+	CU_ASSERT(task == &task1);
+
+	task = spdk_get_transfer_task(&conn, 2);
+	CU_ASSERT(task == &task2);
+
+	while (!TAILQ_EMPTY(&conn.active_r2t_tasks)) {
+		task = TAILQ_FIRST(&conn.active_r2t_tasks);
+		TAILQ_REMOVE(&conn.active_r2t_tasks, task, link);
+	}
+
+	while (!TAILQ_EMPTY(&g_write_pdu_list)) {
+		pdu = TAILQ_FIRST(&g_write_pdu_list);
+		TAILQ_REMOVE(&g_write_pdu_list, pdu, tailq);
+		spdk_put_pdu(pdu);
+	}
+
+	spdk_put_pdu(pdu2);
+	spdk_put_pdu(pdu1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -637,6 +698,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "underflow for check condition test",
 			       underflow_for_check_condition_test) == NULL
 		|| CU_add_test(suite, "add transfer task test", add_transfer_task_test) == NULL
+		|| CU_add_test(suite, "get transfer task test", get_transfer_task_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
