@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c78e0da_05c375de",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T21:39:44Z",
+      "side": 1,
+      "message": "Is this \u0027icsi\u0027 meant to be \u0027iscsi\u0027?",
+      "range": {
+        "startLine": 92,
+        "startChar": 29,
+        "endLine": 92,
+        "endChar": 33
+      },
+      "revId": "2d5303d83fdd87f6809c6924f7f27b38e6bdb896",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
