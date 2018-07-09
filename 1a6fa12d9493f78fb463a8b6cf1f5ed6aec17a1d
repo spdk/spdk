@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4133cb3_9736d2be",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T22:10:29Z",
+      "side": 1,
+      "message": "I think you can remove this check, if you change the previous line to use SPDK_CU_ASSERT_FATAL instead.",
+      "revId": "1a6fa12d9493f78fb463a8b6cf1f5ed6aec17a1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
