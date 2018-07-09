@@ -85,6 +85,98 @@
       "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c00286f9_cdbe7ad1",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T20:53:04Z",
+      "side": 1,
+      "message": "Super nitpick: maybe _MSG_ rather than _MESSAGE_ for consistency.",
+      "range": {
+        "startLine": 50,
+        "startChar": 12,
+        "endLine": 50,
+        "endChar": 20
+      },
+      "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e481367d_ad5461e9",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T20:53:04Z",
+      "side": 1,
+      "message": "I know all of this is just moved from reactor.c, and it\u0027s best to keep the diff small to make review easier, but there\u0027s several comments here that should probably have \u0027reactor\u0027 changed to \u0027thread\u0027.",
+      "range": {
+        "startLine": 79,
+        "startChar": 36,
+        "endLine": 79,
+        "endChar": 43
+      },
+      "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62839183_703e4251",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T20:53:04Z",
+      "side": 1,
+      "message": "reactor -\u003e thread?\n\n(More below as well)",
+      "range": {
+        "startLine": 112,
+        "startChar": 46,
+        "endLine": 112,
+        "endChar": 53
+      },
+      "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17ad7414_cd8fc4df",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T20:53:04Z",
+      "side": 1,
+      "message": "This should probably be SPDK_MAX_MEMZONE_NAME_LEN.",
+      "range": {
+        "startLine": 181,
+        "startChar": 19,
+        "endLine": 181,
+        "endChar": 21
+      },
+      "revId": "e52dddc3d45c32c716b374b3d369184490a196d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
