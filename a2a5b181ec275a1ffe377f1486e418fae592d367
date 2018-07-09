@@ -16,6 +16,24 @@
       "revId": "a2a5b181ec275a1ffe377f1486e418fae592d367",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee94a6b3_87781257",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-09T07:04:54Z",
+      "side": 1,
+      "message": "Its not really right. This is due to status \u003d\u003d GOOD meaning two things in context of unmap (since there can be multiple ios sent):\n- all bdev io submitted so far were successful\n- status is unchanged\n\nThis would require change discussed previously. Since spdk_scsi_lun_execute_task() sets status \u003d GOOD, \n- spdk_scsi_lun_execute_task() default state should be 0xFF\n- spdk_bdev_scsi_task_complete_unmap_cmd() would set state according to first io returned\n- for subsequent io, check against status \u003d GOOD (as is now)\n\nShould I create that patch before this one ? Or is it fine to leave UT doing same thing that spdk_scsi_lun_execute_task() does at this time ?",
+      "parentUuid": "c4c7faae_e25f96cb",
+      "revId": "a2a5b181ec275a1ffe377f1486e418fae592d367",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
