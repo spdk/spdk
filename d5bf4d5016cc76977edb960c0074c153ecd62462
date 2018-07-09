@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9857aeba_5a0b7658",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:42:05Z",
+      "side": 1,
+      "message": "should we add this -32602 value here?  this just seems completely arbitrary; it would be better to maybe have a table of response error codes, and then here we can just say it it set to SPDK_JSONRPC_ERROR_INVALID_PARAMS",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "774ed648_2d3259a2",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:42:05Z",
+      "side": 1,
+      "message": "Those \u003d\u003e These",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "930bdc9e_688d04f8",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:42:05Z",
+      "side": 1,
+      "message": "omitted\n\nIf an optional parameter",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d288c48_551648ce",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:42:05Z",
+      "side": 1,
+      "message": "Should we drop this paragraph for now?  Like you and others have noted, we have tons of RPC methods which don\u0027t return helpful messages.",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dbdef6a_ba0426d7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:42:05Z",
+      "side": 1,
+      "message": "effort\nmessages",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
