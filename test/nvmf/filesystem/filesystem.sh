@@ -20,67 +20,73 @@ if [ -z $NVMF_FIRST_TARGET_IP ]; then
 fi
 
 timing_enter fs_test
-timing_enter start_nvmf_tgt
-# Start up the NVMf target in another process
-$NVMF_APP -c $testdir/../nvmf.conf &
-nvmfpid=$!
 
-trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+for incapsule in 0 4096; do
+	# Start up the NVMf target in another process
+	cp $testdir/../nvmf.conf /tmp/nvmf.conf
+	echo "InCapsuleDataSize $incapsule" >> /tmp/nvmf.conf
+	$NVMF_APP -c /tmp/nvmf.conf &
+	nvmfpid=$!
 
-waitforlisten $nvmfpid
-timing_exit start_nvmf_tgt
+	trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
-bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+	waitforlisten $nvmfpid
 
-modprobe -v nvme-rdma
+	bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+	bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "$bdevs"
+	modprobe -v nvme-rdma
 
-nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "$bdevs"
 
-waitforblk "nvme0n1"
-waitforblk "nvme0n2"
+	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
-mkdir -p /mnt/device
+	waitforblk "nvme0n1"
+	waitforblk "nvme0n2"
 
-devs=`lsblk -l -o NAME | grep nvme`
+	mkdir -p /mnt/device
 
-for dev in $devs; do
-	timing_enter parted
-	parted -s /dev/$dev mklabel msdos  mkpart primary '0%' '100%'
-	timing_exit parted
-	sleep 1
+	devs=`lsblk -l -o NAME | grep nvme`
 
-	for fstype in "ext4" "btrfs" "xfs"; do
-		timing_enter $fstype
-		if [ $fstype = ext4 ]; then
-			force=-F
-		else
-			force=-f
-		fi
+	for dev in $devs; do
+		timing_enter parted
+		parted -s /dev/$dev mklabel msdos  mkpart primary '0%' '100%'
+		timing_exit parted
+		sleep 1
 
-		mkfs.${fstype} $force /dev/${dev}p1
+		for fstype in "ext4" "btrfs" "xfs"; do
+			timing_enter $fstype
+			if [ $fstype = ext4 ]; then
+				force=-F
+			else
+				force=-f
+			fi
 
-		mount /dev/${dev}p1 /mnt/device
-		touch /mnt/device/aaa
-		sync
-		rm /mnt/device/aaa
-		sync
-		umount /mnt/device
-		timing_exit $fstype
+			mkfs.${fstype} $force /dev/${dev}p1
+
+			mount /dev/${dev}p1 /mnt/device
+			touch /mnt/device/aaa
+			sync
+			rm /mnt/device/aaa
+			sync
+			umount /mnt/device
+			timing_exit $fstype
+		done
+
+		parted -s /dev/$dev rm 1
 	done
 
-	parted -s /dev/$dev rm 1
+	sync
+	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
+
+	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+
+	trap - SIGINT SIGTERM EXIT
+
+	nvmfcleanup
+	killprocess $nvmfpid
 done
 
-sync
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
+rm -f /tmp/nvmf.conf
 
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
-
-trap - SIGINT SIGTERM EXIT
-
-nvmfcleanup
-killprocess $nvmfpid
 timing_exit fs_test
