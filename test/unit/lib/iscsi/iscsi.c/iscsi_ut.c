@@ -670,6 +670,125 @@ get_transfer_task_test(void)
 	spdk_put_pdu(pdu1);
 }
 
+static void
+del_transfer_task_test(void)
+{
+	struct spdk_iscsi_sess sess;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_task task1, task2, task3, task4, task5, *task;
+	struct spdk_iscsi_pdu *pdu1, *pdu2, *pdu3, *pdu4, *pdu5, *pdu;
+	int rc;
+
+	memset(&sess, 0, sizeof(sess));
+	memset(&conn, 0, sizeof(conn));
+	memset(&task1, 0, sizeof(task1));
+	memset(&task2, 0, sizeof(task2));
+	memset(&task3, 0, sizeof(task3));
+	memset(&task4, 0, sizeof(task4));
+	memset(&task5, 0, sizeof(task5));
+
+	sess.MaxBurstLength = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	sess.MaxOutstandingR2T = 1;
+
+	conn.sess = &sess;
+	TAILQ_INIT(&conn.active_r2t_tasks);
+	TAILQ_INIT(&conn.queued_r2t_tasks);
+
+	pdu1 = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu1 != NULL);
+
+	pdu1->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	task1.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	spdk_iscsi_task_set_pdu(&task1, pdu1);
+	task1.tag = 11;
+
+	rc = spdk_add_transfer_task(&conn, &task1);
+	CU_ASSERT(rc == SPDK_SUCCESS);
+
+	pdu2 = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu2 != NULL);
+
+	pdu2->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	task2.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	spdk_iscsi_task_set_pdu(&task2, pdu2);
+	task2.tag = 12;
+
+	rc = spdk_add_transfer_task(&conn, &task2);
+	CU_ASSERT(rc == SPDK_SUCCESS);
+
+	pdu3 = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu3 != NULL);
+
+	pdu3->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	task3.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	spdk_iscsi_task_set_pdu(&task3, pdu3);
+	task3.tag = 13;
+
+	rc = spdk_add_transfer_task(&conn, &task3);
+	CU_ASSERT(rc == SPDK_SUCCESS);
+
+	pdu4 = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu4 != NULL);
+
+	pdu4->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	task4.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	spdk_iscsi_task_set_pdu(&task4, pdu4);
+	task4.tag = 14;
+
+	rc = spdk_add_transfer_task(&conn, &task4);
+	CU_ASSERT(rc == SPDK_SUCCESS);
+
+	pdu5 = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu5 != NULL);
+
+	pdu5->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	task5.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	spdk_iscsi_task_set_pdu(&task5, pdu5);
+	task5.tag = 15;
+
+	rc = spdk_add_transfer_task(&conn, &task5);
+	CU_ASSERT(rc == SPDK_SUCCESS);
+
+	CU_ASSERT(spdk_get_transfer_task(&conn, 1) == &task1);
+	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == NULL);
+	spdk_del_transfer_task(&conn, 11);
+	CU_ASSERT(spdk_get_transfer_task(&conn, 1) == NULL);
+	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == &task5);
+
+	CU_ASSERT(spdk_get_transfer_task(&conn, 2) == &task2);
+	spdk_del_transfer_task(&conn, 12);
+	CU_ASSERT(spdk_get_transfer_task(&conn, 2) == NULL);
+
+	CU_ASSERT(spdk_get_transfer_task(&conn, 3) == &task3);
+	spdk_del_transfer_task(&conn, 13);
+	CU_ASSERT(spdk_get_transfer_task(&conn, 3) == NULL);
+
+	CU_ASSERT(spdk_get_transfer_task(&conn, 4) == &task4);
+	spdk_del_transfer_task(&conn, 14);
+	CU_ASSERT(spdk_get_transfer_task(&conn, 4) == NULL);
+
+	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == &task5);
+	spdk_del_transfer_task(&conn, 15);
+	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == NULL);
+
+	while (!TAILQ_EMPTY(&conn.active_r2t_tasks)) {
+		task = TAILQ_FIRST(&conn.active_r2t_tasks);
+		TAILQ_REMOVE(&conn.active_r2t_tasks, task, link);
+	}
+
+	while (!TAILQ_EMPTY(&g_write_pdu_list)) {
+		pdu = TAILQ_FIRST(&g_write_pdu_list);
+		TAILQ_REMOVE(&g_write_pdu_list, pdu, tailq);
+		spdk_put_pdu(pdu);
+	}
+
+	spdk_put_pdu(pdu5);
+	spdk_put_pdu(pdu4);
+	spdk_put_pdu(pdu3);
+	spdk_put_pdu(pdu2);
+	spdk_put_pdu(pdu1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -699,6 +818,7 @@ main(int argc, char **argv)
 			       underflow_for_check_condition_test) == NULL
 		|| CU_add_test(suite, "add transfer task test", add_transfer_task_test) == NULL
 		|| CU_add_test(suite, "get transfer task test", get_transfer_task_test) == NULL
+		|| CU_add_test(suite, "del transfer task test", del_transfer_task_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
