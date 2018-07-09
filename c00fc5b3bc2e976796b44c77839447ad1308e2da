@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6e3733f_aafb0594",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T21:43:18Z",
+      "side": 1,
+      "message": "Actually, I\u0027m not sure why this needs to be mocked - this function doesn\u0027t have a return value, so setting the mock to anything else will just make this function leak the buffer.\n\nWhat is your use case for mocking spdk_mempool_put()?",
+      "revId": "c00fc5b3bc2e976796b44c77839447ad1308e2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
