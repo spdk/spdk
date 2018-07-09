@@ -12,7 +12,12 @@ out_file_details=$testdir/spdkcli_details.test
 
 function on_error_exit() {
 	set +e
-	killprocess $spdk_tgt_pid
+	if [ ! -z $virtio_pid ]; then
+		killprocess $virtio_pid
+	fi
+	if [ ! -z $spdk_tgt_pid ]; then
+		killprocess $spdk_tgt_pid
+	fi
 	rm -f $out_file $out_file_details /tmp/sample_aio
 	print_backtrace
 	exit 1
@@ -23,6 +28,13 @@ function run_spdk_tgt() {
 	spdk_tgt_pid=$!
 
 	waitforlisten $spdk_tgt_pid
+}
+
+function run_virtio_initiator() {
+        $SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock &
+        virtio_pid=$!
+
+        waitforlisten $virtio_pid /var/tmp/virtio.sock
 }
 
 function run_bdevs_test() {
@@ -49,6 +61,16 @@ function run_pmem_test() {
 	python3 $SPDK_BUILD_DIR/test/spdkcli/spdkcli_job.py -job clear_spdk_tgt_pmem
 }
 
+function run_virtio_test() {
+	run_spdk_tgt
+	run_virtio_initiator
+
+	python3 $SPDK_BUILD_DIR/test/spdkcli/spdkcli_job.py -job load_spdk_tgt_virtio
+	python3 $SPDK_BUILD_DIR/test/spdkcli/spdkcli_job.py -job clear_spdk_tgt_virtio
+	rm -f $out_file $out_file_details /tmp/sample_aio
+	killprocess $spdk_tgt_pid
+	killprocess $virtio_pid
+}
 timing_enter spdk_cli
 trap 'on_error_exit' ERR
 
@@ -58,6 +80,7 @@ case $1 in
                 echo "Test type can be:"
 		echo "	--vhost"
 		echo "	--pmem"
+		echo "	--virtio"
 	;;
         -v|--vhost)
 		run_bdevs_test
@@ -65,6 +88,9 @@ case $1 in
         -p|--pmem)
 		run_pmem_test
                 ;;
+	-v|--virtio)
+		run_virtio_test
+		;;
         *)
                 echo "unknown test type: $1"
                 exit 1
