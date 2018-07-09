@@ -211,6 +211,26 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_aio_bdev)
 
     @call_cmd
+    def set_bdev_nvme_options(args):
+        rpc.bdev.set_bdev_nvme_options(args.client,
+                                       action_on_timeout=args.action_on_timeout,
+                                       timeout_s=args.timeout_s,
+                                       retry_count=args.retry_count,
+                                       nvme_adminq_poll_period_us=args.nvme_adminq_poll_period_us)
+
+    p = subparsers.add_parser('set_bdev_nvme_options',
+                              help='Set options for the bdev nvme type. This is startup command.')
+    p.add_argument('-a', '--action-on-timeout',
+                   help="Action to take on command time out. Valid valies are: none, reset, abort")
+    p.add_argument('-t', '--timeout-s',
+                   help="Timeout for each command, in seconds. If 0, don't track timeouts.", type=int)
+    p.add_argument('-n', '--retry-count',
+                   help='the number of attempts per I/O when an I/O fails', type=int)
+    p.add_argument('-p', '--nvme-adminq-poll-period-us',
+                   help='How often the admin queue is polled for asynchronous events', type=int)
+    p.set_defaults(func=set_bdev_nvme_options)
+
+    @call_cmd
     def construct_nvme_bdev(args):
         print_array(rpc.bdev.construct_nvme_bdev(args.client,
                                                  name=args.name,

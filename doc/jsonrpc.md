@@ -890,6 +890,48 @@ Example response:
 }
 ~~~
 
+## set_bdev_nvme_options {#rpc_set_bdev_nvme_options}
+
+Set global parameters for all bdev NVMe. This RPC may only be called before SPDK subsystems have been initialized.
+
+### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+retry_count                | Optional | number      | The number of attempts per I/O before an I/O fails
+nvme_adminq_poll_period_us | Optional | number      | How often the admin queue is polled for asynchronous events
+timeout_s                  | Optional | number      | Timeout for each command, in seconds. If 0, don't track timeouts
+action_on_timeout          | Optional | string      | Action to take on command time out: none, reset or abort
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "params": {
+    "retry_count": 5,
+    "nvme_adminq_poll_period_us": 2000,
+    "timeout_s": 10,
+    "action_on_timeout": "reset"
+  },
+  "jsonrpc": "2.0",
+  "method": "set_bdev_nvme_options",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## construct_nvme_bdev {#rpc_construct_nvme_bdev}
 
 Construct @ref bdev_config_nvme
