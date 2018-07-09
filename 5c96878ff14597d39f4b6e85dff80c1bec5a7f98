@@ -68,6 +68,24 @@
       "revId": "5c96878ff14597d39f4b6e85dff80c1bec5a7f98",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bacb6433_f6f71277",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:27:22Z",
+      "side": 1,
+      "message": "I don\u0027t understand.  If git_param is not defined, then adding $git_param to the ./configure line should be a nop.  And it has to literally be $git_param, not \"$git_param\" like it was in a previous revision.",
+      "parentUuid": "c2e5c893_00cd43fd",
+      "revId": "5c96878ff14597d39f4b6e85dff80c1bec5a7f98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
