@@ -225,8 +225,6 @@ struct spdk_vhost_dev {
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
 
-struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *vtgt_name);
-
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len);
 
 uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
@@ -308,8 +306,6 @@ void spdk_vhost_dump_info_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_wri
 void spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt, spdk_vhost_dev_fn fn, void *arg);
 void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 void spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt, spdk_vhost_dev_fn fn, void *arg);
-void spdk_vhost_lock(void);
-void spdk_vhost_unlock(void);
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
 int spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf);
 int spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd);
