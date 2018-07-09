@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1ba1b94_38b42ff7",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T22:08:24Z",
+      "side": 1,
+      "message": "I think this should also set up the Parameter List Length field in the CDB (bytes 7-8) - this should be the size of the descriptors passed in data below.\n\n(It would also be interesting to add tests where the Parameter List Length exceeds the size of the provided data buffer to make sure we correctly fail the command and don\u0027t access data out of bounds.)",
+      "revId": "dac622970897f7da905515bacca0693329adb748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28bc9b1f_890f64f9",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T22:08:24Z",
+      "side": 1,
+      "message": "This should probably pass the actual size of the unmap descriptors rather than the whole 4k buffer, although an oversized buffer is probably fine in this case.",
+      "revId": "dac622970897f7da905515bacca0693329adb748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37c6bfb2_a121decd",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T22:08:24Z",
+      "side": 1,
+      "message": "I think this is actually SYNCHRONIZE CACHE (16).",
+      "range": {
+        "startLine": 889,
+        "startChar": 16,
+        "endLine": 889,
+        "endChar": 32
+      },
+      "revId": "dac622970897f7da905515bacca0693329adb748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83ea3ed8_41351b25",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T22:08:24Z",
+      "side": 1,
+      "message": "I\u0027m not sure Flush should have a transfer_len (it doesn\u0027t transfer any data).",
+      "revId": "dac622970897f7da905515bacca0693329adb748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87968c7b_956d541e",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T22:08:24Z",
+      "side": 1,
+      "message": "Some more interesting tests for SYNCHRONIZE CACHE (not necessarily in this patch, just commenting on these as I\u0027m already reading the spec):\n\n- Check that Number of Logical Blocks \u003d\u003d 0 flushes the remainder of the disk starting at LBA (special case defined by the spec).\n- Check that a LBA + Number of Logical Blocks exceeding the size of the disk returns the expected sense code.",
+      "revId": "dac622970897f7da905515bacca0693329adb748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
