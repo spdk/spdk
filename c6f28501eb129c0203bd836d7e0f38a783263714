@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b24ad9b5_e65cec89",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:53:28Z",
+      "side": 1,
+      "message": "I think you can remove this sentence and clarify it in the \\return instead.",
+      "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "924a89d1_5f12436d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:53:28Z",
+      "side": 1,
+      "message": "Add \"Returns 0 if queue depth not currently tracked for the specified block device.\"\n\nOr actually maybe we should have it return UINT64_MAX if we don\u0027t have a valid value?  Then callers can clearly differentiate between 0 and \u0027unknown\u0027.\n\nTechnically if someone tries to get the qd immediately after enabling tracking but before the first time period expired, we also would not have valid data.  Probably should mention that too.",
+      "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f7a53e6_cb160cee",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:53:28Z",
+      "side": 1,
+      "message": "repeatedly \u003d\u003e periodically",
+      "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5253cef5_ac9a90ed",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:53:28Z",
+      "side": 1,
+      "message": "I think you can take out \"tracking\" from the name to make it shorter.",
+      "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "017c70b5_6287c9bd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1692,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T20:53:28Z",
+      "side": 1,
+      "message": "you should set bdev-\u003emeasured_queue_depth to UINT64_MAX here",
+      "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
