@@ -94,18 +94,18 @@ struct nvme_probe_ctx {
 	const char *hostnqn;
 };
 
-enum timeout_action {
-	TIMEOUT_ACTION_NONE = 0,
-	TIMEOUT_ACTION_RESET,
-	TIMEOUT_ACTION_ABORT,
+struct spdk_bdev_nvme_opts g_opts = {
+	.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE,
+	.timeout_s = 0,
+	.retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT,
+	.nvme_adminq_poll_period_us = 1000000,
+	.nvme_hotplug_poll_period_us = -1,
 };
 
+static bool g_bdev_nvme_init_done = false;
+
 static int g_hot_insert_nvme_controller_index = 0;
-static enum timeout_action g_action_on_timeout = TIMEOUT_ACTION_NONE;
-static int g_timeout = 0;
-static int g_nvme_adminq_poll_timeout_us = 0;
-static bool g_nvme_hotplug_enabled = false;
-static int g_nvme_hotplug_poll_timeout_us = 0;
+static bool g_nvme_hotplug_enabled = false; /* FIXME: Obsolete, remove along with config files */
 static struct spdk_poller *g_hotplug_poller;
 static char *g_nvme_hostnqn = NULL;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -832,8 +832,8 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
 
-	switch (g_action_on_timeout) {
-	case TIMEOUT_ACTION_ABORT:
+	switch (g_opts.action_on_timeout) {
+	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
 		if (qpair) {
 			rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid,
 						       spdk_nvme_abort_cpl, ctrlr);
@@ -845,13 +845,13 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 		}
 
 	/* FALLTHROUGH */
-	case TIMEOUT_ACTION_RESET:
+	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
 		rc = spdk_nvme_ctrlr_reset(ctrlr);
 		if (rc) {
 			SPDK_ERRLOG("Resetting controller failed.\n");
 		}
 		break;
-	case TIMEOUT_ACTION_NONE:
+	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
 		break;
 	}
 }
@@ -941,12 +941,12 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	nvme_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
-					  g_nvme_adminq_poll_timeout_us);
+					  g_opts.nvme_adminq_poll_period_us);
 
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
-	if (g_action_on_timeout != TIMEOUT_ACTION_NONE) {
-		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
+	if (g_opts.action_on_timeout != SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE) {
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_s,
 				timeout_cb, NULL);
 	}
 
@@ -1019,6 +1019,27 @@ bdev_nvme_hotplug(void *arg)
 	}
 
 	return -1;
+}
+
+void
+spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts)
+{
+	*opts = g_opts;
+}
+
+int
+spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
+{
+	if (g_bdev_nvme_init_done) {
+		return -EPERM;
+	}
+
+	g_opts = *opts;
+
+	/* FIXME: remove along with config files */
+	g_nvme_hotplug_enabled = opts->nvme_hotplug_poll_period_us > 0;
+
+	return 0;
 }
 
 int
@@ -1096,6 +1117,7 @@ bdev_nvme_library_init(void)
 	struct spdk_conf_section *sp;
 	const char *val;
 	int rc = 0;
+	int intval;
 	size_t i;
 	struct nvme_probe_ctx *probe_ctx = NULL;
 	int retry_count;
@@ -1122,25 +1144,27 @@ bdev_nvme_library_init(void)
 		}
 	}
 
-	spdk_nvme_retry_count = retry_count;
+	g_opts.retry_count = retry_count;
 
-	if ((g_timeout = spdk_conf_section_get_intval(sp, "Timeout")) < 0) {
+	if ((intval = spdk_conf_section_get_intval(sp, "Timeout")) < 0) {
 		/* Check old name for backward compatibility */
-		if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
-			g_timeout = 0;
+		if ((intval = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
+			intval = 0;
 		} else {
 			SPDK_WARNLOG("NvmeTimeoutValue was renamed to Timeout\n");
 			SPDK_WARNLOG("Please update your configuration file\n");
 		}
 	}
 
-	if (g_timeout > 0) {
+	g_opts.timeout_s = intval;
+
+	if (g_opts.timeout_s > 0) {
 		val = spdk_conf_section_get_val(sp, "ActionOnTimeout");
 		if (val != NULL) {
 			if (!strcasecmp(val, "Reset")) {
-				g_action_on_timeout = TIMEOUT_ACTION_RESET;
+				g_opts.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET;
 			} else if (!strcasecmp(val, "Abort")) {
-				g_action_on_timeout = TIMEOUT_ACTION_ABORT;
+				g_opts.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT;
 			}
 		} else {
 			/* Handle old name for backward compatibility */
@@ -1150,30 +1174,25 @@ bdev_nvme_library_init(void)
 				SPDK_WARNLOG("Please update your configuration file\n");
 
 				if (spdk_conf_section_get_boolval(sp, "ResetControllerOnTimeout", false)) {
-					g_action_on_timeout = TIMEOUT_ACTION_RESET;
+					g_opts.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET;
 				}
 			}
 		}
 	}
 
-	g_nvme_adminq_poll_timeout_us = spdk_conf_section_get_intval(sp, "AdminPollRate");
-	if (g_nvme_adminq_poll_timeout_us <= 0) {
-		g_nvme_adminq_poll_timeout_us = 1000000;
+	intval = spdk_conf_section_get_intval(sp, "AdminPollRate");
+	if (intval > 0) {
+		g_opts.nvme_adminq_poll_period_us = intval;
 	}
 
 	if (spdk_process_is_primary()) {
 		g_nvme_hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", false);
 	}
 
-	g_nvme_hotplug_poll_timeout_us = spdk_conf_section_get_intval(sp, "HotplugPollRate");
-	if (g_nvme_hotplug_poll_timeout_us <= 0 || g_nvme_hotplug_poll_timeout_us > 100000) {
-		g_nvme_hotplug_poll_timeout_us = 100000;
-	}
+	g_opts.nvme_hotplug_poll_period_us = spdk_conf_section_get_intval(sp, "HotplugPollRate");
 
 	g_nvme_hostnqn = spdk_conf_section_get_val(sp, "HostNQN");
-	if (g_nvme_hostnqn) {
-		probe_ctx->hostnqn = g_nvme_hostnqn;
-	}
+	probe_ctx->hostnqn = g_nvme_hostnqn;
 
 	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
@@ -1257,12 +1276,25 @@ bdev_nvme_library_init(void)
 		}
 	}
 
-	if (g_nvme_hotplug_enabled) {
-		g_hotplug_poller = spdk_poller_register(bdev_nvme_hotplug, NULL,
-							g_nvme_hotplug_poll_timeout_us);
+end:
+	if (rc == 0) {
+		spdk_nvme_retry_count = g_opts.retry_count;
+
+		/* For legacy cofnig. For RPC hotplug will be enabled if period > 0
+		 * FIXME: Remove it along with config files.
+		 */
+		if (g_nvme_hotplug_enabled) {
+			if (g_opts.nvme_hotplug_poll_period_us < 0 || g_opts.nvme_hotplug_poll_period_us > 100000) {
+				g_opts.nvme_hotplug_poll_period_us = 100000;
+			}
+
+			g_hotplug_poller = spdk_poller_register(bdev_nvme_hotplug, NULL,
+								g_opts.nvme_hotplug_poll_period_us);
+		}
+
+		g_bdev_nvme_init_done = true;
 	}
 
-end:
 	free(probe_ctx);
 	return rc;
 }
@@ -1270,7 +1302,7 @@ end:
 static void
 bdev_nvme_library_fini(void)
 {
-	if (g_nvme_hotplug_enabled) {
+	if (g_hotplug_poller) {
 		spdk_poller_unregister(&g_hotplug_poller);
 	}
 }
@@ -1567,21 +1599,21 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "RetryCount %d\n", spdk_nvme_retry_count);
 	fprintf(fp, "\n"
 		"# Timeout for each command, in seconds. If 0, don't track timeouts.\n");
-	fprintf(fp, "Timeout %d\n", g_timeout);
+	fprintf(fp, "Timeout %d\n", g_opts.timeout_s);
 
 	fprintf(fp, "\n"
 		"# Action to take on command time out. Only valid when Timeout is greater\n"
 		"# than 0. This may be 'Reset' to reset the controller, 'Abort' to abort\n"
 		"# the command, or 'None' to just print a message but do nothing.\n"
 		"# Admin command timeouts will always result in a reset.\n");
-	switch (g_action_on_timeout) {
-	case TIMEOUT_ACTION_NONE:
+	switch (g_opts.action_on_timeout) {
+	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
 		fprintf(fp, "ActionOnTimeout None\n");
 		break;
-	case TIMEOUT_ACTION_RESET:
+	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
 		fprintf(fp, "ActionOnTimeout Reset\n");
 		break;
-	case TIMEOUT_ACTION_ABORT:
+	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
 		fprintf(fp, "ActionOnTimeout Abort\n");
 		break;
 	}
@@ -1589,7 +1621,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n"
 		"# Set how often the admin queue is polled for asynchronous events.\n"
 		"# Units in microseconds.\n");
-	fprintf(fp, "AdminPollRate %d\n", g_nvme_adminq_poll_timeout_us);
+	fprintf(fp, "AdminPollRate %d\n", g_opts.nvme_adminq_poll_period_us);
 	fprintf(fp, "\n"
 		"# Disable handling of hotplug (runtime insert and remove) events,\n"
 		"# users can set to Yes if want to enable it.\n"
@@ -1598,7 +1630,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n"
 		"# Set how often the hotplug is processed for insert and remove events."
 		"# Units in microseconds.\n");
-	fprintf(fp, "HotplugPollRate %d\n", g_nvme_hotplug_poll_timeout_us);
+	fprintf(fp, "HotplugPollRate %d\n", g_opts.nvme_hotplug_poll_period_us);
 	if (g_nvme_hostnqn) {
 		fprintf(fp, "HostNQN %s\n",  g_nvme_hostnqn);
 	}
