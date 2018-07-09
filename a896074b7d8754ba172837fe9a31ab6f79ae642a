@@ -187,6 +187,30 @@
       "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87d31521_da161f40",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-09T22:39:28Z",
+      "side": 1,
+      "message": "\u003e Basically we always decrypt in place on reads using the provided buffer so I never allocate anything for reads.\n\nI\u0027m not an security guru here but is this wise to expose our self to known-plaintext-attack? I\u0027m asking in face of vhost when initiator can observe progress of decryption byte-by-byte. Someone creative could just use those data to something not pleasant.\n\n\u003e For writes we never encrypt in place so there\u0027s always a buffer allocated in _crypto_operation that is used as the crypto destination target on encrypt,\n\nAnd this is the place then spdk_bdev_io_get_buf() should be used to offload you from manual buffer allocation.",
+      "parentUuid": "75b7c2fe_f859a94b",
+      "range": {
+        "startLine": 788,
+        "startChar": 0,
+        "endLine": 791,
+        "endChar": 5
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
