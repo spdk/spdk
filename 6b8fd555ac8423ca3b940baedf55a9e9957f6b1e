@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c479d733_5df3f9d0",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-09T03:46:38Z",
+      "side": 1,
+      "message": "I think you can just use the hardcoded value 0x8000 here, and say why this value comes from.",
+      "revId": "6b8fd555ac8423ca3b940baedf55a9e9957f6b1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
