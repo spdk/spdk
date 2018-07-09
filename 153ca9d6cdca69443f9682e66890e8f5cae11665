@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "938216f8_34000a4b",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-09T17:23:22Z",
+      "side": 1,
+      "message": "this need to be reworded, also new line need to be added.",
+      "range": {
+        "startLine": 64,
+        "startChar": 17,
+        "endLine": 64,
+        "endChar": 55
+      },
+      "revId": "153ca9d6cdca69443f9682e66890e8f5cae11665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
