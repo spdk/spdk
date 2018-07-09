@@ -334,11 +334,22 @@ spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
 	}
 }
 
+static int
+_set_coalescing_cb(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev, void *arg)
+{
+	if (vtgt == NULL || vdev == NULL) {
+		return 0;
+	}
+
+	vdev->coalescing_delay_time_base = vdev->vtgt->coalescing_delay_time_base;
+	vdev->coalescing_io_rate_threshold = vdev->vtgt->coalescing_io_rate_threshold;
+	return 0;
+}
+
 int
 spdk_vhost_set_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t delay_base_us,
 			  uint32_t iops_threshold)
 {
-	struct spdk_vhost_dev *vdev;
 	uint64_t delay_time_base = delay_base_us * spdk_get_ticks_hz() / 1000000ULL;
 	uint32_t io_rate = iops_threshold * SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS / 1000U;
 
@@ -357,11 +368,7 @@ spdk_vhost_set_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t delay_base_us,
 	vtgt->coalescing_delay_us = delay_base_us;
 	vtgt->coalescing_iops_threshold = iops_threshold;
 
-	vdev = vtgt->vdev;
-	if (vdev) {
-		vdev->coalescing_delay_time_base = vtgt->coalescing_delay_time_base;
-		vdev->coalescing_io_rate_threshold = vtgt->coalescing_io_rate_threshold;
-	}
+	spdk_vhost_tgt_foreach_vdev(vtgt, _set_coalescing_cb, NULL);
 	return 0;
 }
 
@@ -1332,6 +1339,13 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_tgt *vtgt,
 	}
 
 	spdk_vhost_event_async_send(vtgt, fn, arg, true);
+}
+
+void
+spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt,
+			    spdk_vhost_dev_fn fn, void *arg)
+{
+	fn(vtgt, vtgt->vdev, arg);
 }
 
 void
