@@ -7,6 +7,12 @@ import os
 import sys
 
 
+testdir = os.path.dirname(os.path.realpath(sys.argv[0]))
+pci_scsi = None
+pci_blk = None
+child = None
+virtio_child = None
+
 def get_nvme_disks():
     out = subprocess.check_output([os.path.join(testdir, "../../scripts/gen_nvme.sh"), "--json"])
     disks = json.loads(out.decode())
@@ -17,7 +23,6 @@ def get_nvme_disks():
 def execute_command(cmd, element=None, element_exists=False):
     child.sendline(cmd)
     child.expect("/>")
-    print("before: %s" % child.before.decode())
     if "error response" in child.before.decode():
         print("Error in cmd: %s" % cmd)
         exit(1)
@@ -103,8 +108,62 @@ def clear_spdk_tgt_pmem():
     execute_command("/bdevs/pmemblk delete pmem_bdev", "pmem_bdev")
     execute_command("/bdevs/pmemblk delete_pmem_pool /tmp/sample_pmem")
 
+
+def get_scsi_pci():
+    pci_scsi = subprocess.check_output("lspci -nn -D | grep '1af4:1004'"
+                                       " | head -1 | awk '{print $1;}'", shell=True)
+
+    return pci_scsi
+
+
+def get_blk_pci():
+    pci_blk = subprocess.check_output("lspci -nn -D | grep '1af4:1001'"
+                                      " | head -1 | awk '{print $1;}'", shell=True)
+
+    return pci_blk
+
+
+def load_spdk_tgt_virtio():
+    global pci_blk, pci_scsi, virtio_child, child
+    execute_command("/bdevs/malloc create 32 512 Malloc0", "Malloc0", True)
+    execute_command("/bdevs/malloc create 32 512 Malloc1", "Malloc1", True)
+    pci_blk = get_blk_pci()
+    if pci_blk:
+        execute_command("/bdevs/virtioblk_disk create virtioblk_pci pci 0000:00:07.0", "virtioblk_pci", True)
+    pci_scsi = get_scsi_pci()
+    if pci_scsi:
+        execute_command("/bdevs/virtioscsi_disk create virtioscsi_pci pci 0000:00:06.0", "virtioscsi_pci", True)
+    execute_command("/vhost/scsi create sample_scsi", "sample_scsi", True)
+    execute_command("/vhost/scsi/sample_scsi add_lun 0 Malloc0", "Malloc0", True)
+    execute_command("/vhost/block create sample_block Malloc1", "Malloc1", True)
+    base_child = child
+    child = virtio_child
+    execute_command("/bdevs/virtioblk_disk create virtioblk_user user  %s" %
+                    os.path.join(testdir, "sample_block"), "virtioblk_user", True)
+    execute_command("/bdevs/virtioscsi_disk create virtioscsi_user user  %s" %
+                    os.path.join(testdir, "sample_scsi"), "virtioscsi_user", True)
+    child = base_child
+
+
+def clear_spdk_tgt_virtio():
+    global virtio_child, child
+    base_child = child
+    child = virtio_child
+    execute_command("/bdevs/virtioscsi_disk delete virtioscsi_user")
+    execute_command("/bdevs/virtioblk_disk delete virtioblk_user")
+    child = base_child
+    execute_command("/vhost/block delete sample_block", "sample_block")
+    execute_command("/vhost/scsi/sample_scsi remove_target 0", "Malloc0")
+    execute_command("/vhost/scsi delete sample_scsi", " sample_scsi")
+    if pci_blk:
+        execute_command("/bdevs/virtioblk_disk delete virtioblk_pci", "virtioblk_pci")
+    if pci_scsi:
+        execute_command("/bdevs/virtioscsi_disk delete virtioscsi_pci", "virtioscsi_pci")
+    execute_command("/bdevs/malloc delete Malloc0", "Malloc0")
+    execute_command("/bdevs/malloc delete Malloc1", "Malloc1")
+
+
 if __name__ == "__main__":
-    testdir = os.path.dirname(os.path.realpath(sys.argv[0]))
     child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py"))
     child.expect(">")
     child.sendline("cd /")
@@ -125,3 +184,13 @@ if __name__ == "__main__":
         load_spdk_tgt_pmem()
     if args.job == "clear_spdk_tgt_pmem":
         clear_spdk_tgt_pmem()
+    if args.job in ["load_spdk_tgt_virtio", "clear_spdk_tgt_virtio"]:
+        cmd = os.path.join(testdir, "../../scripts/spdkcli.py") + " -s /var/tmp/virtio.sock"
+        virtio_child = pexpect.spawn(cmd)
+        virtio_child.expect(">")
+        virtio_child.sendline("cd /")
+        virtio_child.expect(">")
+    if args.job == "load_spdk_tgt_virtio":
+        load_spdk_tgt_virtio()
+    if args.job == "clear_spdk_tgt_virtio":
+        clear_spdk_tgt_virtio()
