@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11efd726_cb0e0b97",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "Maybe a better title would be \"Configuration SPDK Applications\"",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86d34d86_2c6fb2a2",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "This guide covers topics common to all applications that leverage SPDK\u0027s application framework.",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66129f58_af88813c",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "The SPDK application framework defines a set of base command line flags for all applications that use it. Specific applications may implement additional flags.",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cdb6a14_0064ddfa",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "Historically, the SPDK application framework was configured using a configuration file. This is still supported, but is considered deprecated in favor of JSON RPC configuration. See @ref jsonrpc for details.",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc2f5a6c_c43abd0c",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "PCI device -\u003e PCI devices",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdb5f4ff_246acc63",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "subsystems initialization -\u003e subsystem initialization",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15f7a5a7_e3022a57",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "Consider explaining first, in a paragraph above this one, that SPDK applications progress through a set of states, including STARTUP and RUNTIME.",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c61c7d5_8f19f6ce",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "Maybe give some examples of what a BDF looks like.",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5102e641_21ce25bd",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "list separated by what - commas? I know there\u0027s an example below that makes it clearer, but we should say comma separated and inside [].",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c715be2c_970f679d",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:11:04Z",
+      "side": 1,
+      "message": "The following",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
