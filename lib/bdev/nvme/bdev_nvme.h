@@ -42,6 +42,19 @@
 
 #define NVME_MAX_CONTROLLERS 1024
 
+enum spdk_bdev_timeout_action {
+	SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE = 0,
+	SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET,
+	SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT,
+};
+
+struct spdk_bdev_nvme_opts {
+	enum spdk_bdev_timeout_action action_on_timeout;
+	uint32_t timeout_s;
+	uint32_t retry_count;
+	uint32_t nvme_adminq_poll_period_us;
+};
+
 struct nvme_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -69,6 +82,9 @@ struct nvme_bdev {
 	bool			active;
 	struct spdk_nvme_ns	*ns;
 };
+
+void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
+int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 
 int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
