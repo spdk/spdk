@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09ef8892_7a92b2e4",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2041,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T16:23:42Z",
+      "side": 1,
+      "message": "This doesn\u0027t seem safe - spdk_bdev_reset() can fail due to lack of bdev_ios in the pool, and it won\u0027t call the callback in that case.\n\nIf you don\u0027t want to propagate the error handling beyond this function, then maybe we should check the return code and call spdk_bdev_scsi_task_complete_mgmt() here if the bdev function failed?",
+      "revId": "44c6a21915c3af7dfe5561cffd33b5734fda30dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
