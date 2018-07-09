@@ -342,20 +342,6 @@ int spdk_vhost_tgt_remove(struct spdk_vhost_tgt *vtgt);
 struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_tgt *vtgt);
 
 /**
- * Call an event for given vhost target. It will be called from within
- * this function.
- *
- * This function is thread safe.
- *
- * \param vtgt_name name of the vhost target to run this event on.
- * \param fn function to be called. The first parameter of callback function is
- * either actual spdk_vhost_tgt pointer or NULL in case vtgt with given name doesn't
- * exist. The second param is user provided argument *arg*.
- * \param arg parameter to be passed to *fn*.
- */
-void spdk_vhost_call_external_event(const char *vtgt_name, spdk_vhost_event_fn fn, void *arg);
-
-/**
  * Call a function for each available vhost target. It will be called
  * synchronously from within this function. After it was called
  * for all targets, it will be called once again with the first param
