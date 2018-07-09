@@ -99,8 +99,8 @@
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
   RetryCount 4
-  # Timeout for each command, in seconds. If 0, don't track timeouts.
-  Timeout 0
+  # Timeout for each command, in microseconds. If 0, don't track timeouts.
+  TimeoutUsec 0
   # Action to take on command time out. Only valid when Timeout is greater
   # than 0. This may be 'Reset' to reset the controller, 'Abort' to abort
   # the command, or 'None' to just print a message but do nothing.
