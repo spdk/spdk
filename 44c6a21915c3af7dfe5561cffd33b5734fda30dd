@@ -34,6 +34,24 @@
       "revId": "44c6a21915c3af7dfe5561cffd33b5734fda30dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54c85c02_7d414761",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2041,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T21:46:22Z",
+      "side": 1,
+      "message": "I see, this is fixed up in the next patch with spdk_bdev_queue_io_wait().  I\u0027m OK with checking this in as long as both patches go in together.",
+      "parentUuid": "22b2d7f8_d708db3b",
+      "revId": "44c6a21915c3af7dfe5561cffd33b5734fda30dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
