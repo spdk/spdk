@@ -16,6 +16,24 @@
       "revId": "32657074fae998f9f5731a801201f17d4b5e9886",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4c2bca6_a5c3e587",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1013112
+      },
+      "writtenOn": "2018-07-09T06:26:28Z",
+      "side": 1,
+      "message": "Yes. We thought about it during internal review but thought of checking with community before deciding it. I\u0027ll fix and update the code diff.",
+      "parentUuid": "ee86e2de_f2ca262a",
+      "revId": "32657074fae998f9f5731a801201f17d4b5e9886",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
