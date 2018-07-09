@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2768160_6adbd6cf",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T21:29:04Z",
+      "side": 1,
+      "message": "in the C API, you use \"qd\" instead of \"queue_depth\" - I would suggest making these consistent",
+      "revId": "59e6383164888901cb18069d432483fe41be8d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d59fc1e6_8d94c441",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T21:29:04Z",
+      "side": 1,
+      "message": "only C commenting style in SPDK - /* */\n\nbut I don\u0027t think we should provide a default - make the user specify it - otherwise we have to document the default and how does the RPC python script know what it is?",
+      "revId": "59e6383164888901cb18069d432483fe41be8d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "092967d0_1cbceb3a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T21:29:04Z",
+      "side": 1,
+      "message": "nowhere does this talk about how to disable it (i.e. set period to 0)",
+      "revId": "59e6383164888901cb18069d432483fe41be8d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9b6299d_e0165ceb",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T21:29:04Z",
+      "side": 1,
+      "message": "the 1000 here has to be kept consistent with the 1000 in the .c file - so I think it\u0027s best to just remove the default and always require it",
+      "revId": "59e6383164888901cb18069d432483fe41be8d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "427a0028_a15c1bf8",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T21:29:04Z",
+      "side": 1,
+      "message": "one bdev",
+      "revId": "59e6383164888901cb18069d432483fe41be8d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7fa4be5_5f55fe5c",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T21:29:04Z",
+      "side": 1,
+      "message": "this needs to be updated",
+      "revId": "59e6383164888901cb18069d432483fe41be8d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "075190de_5e15d706",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T21:29:04Z",
+      "side": 1,
+      "message": "needs to be changed too",
+      "revId": "59e6383164888901cb18069d432483fe41be8d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
