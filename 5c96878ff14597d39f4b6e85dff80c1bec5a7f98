@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "7b663ced_3ff7185c",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T20:21:33Z",
+      "side": 1,
+      "message": "It\u0027s been explained in IRC that this is due to non-standard version of OpenSSL installed by the VPP setup - we should investigate that and make the VPP setup return the OpenSSL version to the default if possible, but that can be another patch. (If and when we do fix that, this --allowerasing should be removed.)",
+      "revId": "5c96878ff14597d39f4b6e85dff80c1bec5a7f98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af0324a0_59bfdd93",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T20:21:33Z",
+      "side": 1,
+      "message": "All of these checks can be simplified to get rid of the subshell and the test:\n\n   if echo $CONF | grep -q tsocks; then",
+      "revId": "5c96878ff14597d39f4b6e85dff80c1bec5a7f98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dee7be74_f1fc43ca",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 9
