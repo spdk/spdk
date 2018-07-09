@@ -5,6 +5,26 @@
 SPDK implements a [JSON-RPC 2.0](http://www.jsonrpc.org/specification) server
 to allow external management tools to dynamically configure SPDK components.
 
+## Parameters
+
+Most of the commands can take parameters. If present, parameter is validated against its domain. If this check fail
+whole command will fail with response error code set to -32602 and error message "Invalid parameters".
+
+### Required parameters
+
+These parameters are mandatory. If any required parameter is missing RPC command will fail with response code -32602.
+
+### Optional parameters
+
+Those parameters might be omitted. If an optional parameter is present it must be valid otherwise command will fail with
+response code set to -32602.
+
+## Error response message
+
+Each error response will contain proper message. As much as possible those messages should indicate what went wrong with
+current command. There is ongoing effort to customize those mssages but some RPC methods just return "Invalid parameters"
+as message body for any kind of error.
+
 # App Framework {#jsonrpc_components_app}
 
 ## kill_instance {#rpc_kill_instance}
