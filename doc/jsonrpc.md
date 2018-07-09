@@ -5,6 +5,55 @@
 SPDK implements a [JSON-RPC 2.0](http://www.jsonrpc.org/specification) server
 to allow external management tools to dynamically configure SPDK components.
 
+## Parameters
+
+Most of the commands can take parameters. If present, parameter is validated against its domain. If this check fail
+whole command will fail with response error message [Invalid params](@ref jsonrpc_error_message).
+
+### Required parameters
+
+These parameters are mandatory. If any required parameter is missing RPC command will fail with proper error response.
+
+### Optional parameters
+
+Those parameters might be omitted. If an optional parameter is present it must be valid otherwise command will fail
+proper error response.
+
+## Error response message {#jsonrpc_error_message}
+
+Each error response will contain proper message. As much as possible the message should indicate what went wrong during
+command processing.
+
+Code   | Description
+------ | -----------
+-32700 | @ref jsonrpc_parser_error
+-32600 | Invalid request - not compliant with JSON-RPC 2.0 Specification
+-32601 | Method not found
+-32602 | @ref jsonrpc_invalid_params
+-32603 | Internal error for e.g.: errors like out of memory
+-1     | Invalid state - given method exists but it is not callable in [current runtime state](@ref rpc_start_subsystem_init)
+
+### Parser error {#jsonrpc_parser_error}
+
+Encountered some error during parsing request like:
+
+- the JSON object is illformed
+- parameter is too long
+- request is too long
+
+### Invalid params {#jsonrpc_invalid_params}
+
+This type of error is most common one. It mean that there is an error while processing the request like:
+
+- Parameters decoding in RPC method handler failed because required parameter is missing.
+- Unknown parameter present encountered.
+- Parameter type doesn't match expected type e.g.: given number when expected a string.
+- Parameter domain check failed.
+- Request is valid but some other error occurred during processing request. If possible message explains the error reason nature.
+
+There is ongoing effort to customize this messages but some RPC methods just return "Invalid parameters"
+as message body for any kind of error.
+
 # App Framework {#jsonrpc_components_app}
 
 ## kill_instance {#rpc_kill_instance}
