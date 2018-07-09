@@ -763,6 +763,7 @@ spdk_vhost_blk_controller_construct(void)
 	char *name;
 	bool readonly;
 
+	spdk_vhost_lock();
 	for (sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
 		if (!spdk_conf_section_match_prefix(sp, "VhostBlk")) {
 			continue;
@@ -793,6 +794,7 @@ spdk_vhost_blk_controller_construct(void)
 		}
 	}
 
+	spdk_vhost_unlock();
 	return 0;
 }
 
@@ -803,7 +805,6 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	struct spdk_bdev *bdev;
 	int ret = 0;
 
-	spdk_vhost_lock();
 	bdev = spdk_bdev_get_by_name(dev_name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("Controller %s: bdev '%s' not found\n",
@@ -850,7 +851,6 @@ out:
 	if (ret != 0 && bvtgt) {
 		spdk_dma_free(bvtgt);
 	}
-	spdk_vhost_unlock();
 	return ret;
 }
 

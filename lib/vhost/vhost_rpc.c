@@ -77,7 +77,9 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	spdk_vhost_lock();
 	rc = spdk_vhost_scsi_tgt_construct(req.ctrlr, req.cpumask);
+	spdk_vhost_unlock();
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -358,7 +360,9 @@ spdk_rpc_construct_vhost_blk_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	spdk_vhost_lock();
 	rc = spdk_vhost_blk_construct(req.ctrlr, req.cpumask, req.dev_name, req.readonly);
+	spdk_vhost_unlock();
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -666,7 +670,9 @@ spdk_rpc_construct_vhost_nvme_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	spdk_vhost_lock();
 	rc = spdk_vhost_nvme_tgt_construct(req.ctrlr, req.cpumask, req.io_queues);
+	spdk_vhost_unlock();
 	if (rc < 0) {
 		free_rpc_vhost_nvme_ctrlr(&req);
 		goto invalid;
