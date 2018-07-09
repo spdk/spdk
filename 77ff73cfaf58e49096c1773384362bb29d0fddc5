@@ -105,6 +105,24 @@
       "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bef2ae16_4e71669b",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-09T20:37:09Z",
+      "side": 1,
+      "message": "I\u0027d like to remove the cd ~ in the next round of patches.  Otherwise, the problem with removing cd ~, is that it make it harder for the script to understand the relative location of where it\u0027s being run from.  We can\u0027t assume that this script is run from w/in the spdk repository.   There are assumptions baked into this script about where the caller is executing the script from.",
+      "parentUuid": "89a5c646_083b3ea9",
+      "revId": "77ff73cfaf58e49096c1773384362bb29d0fddc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
