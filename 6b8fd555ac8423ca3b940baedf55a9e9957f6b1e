@@ -34,6 +34,24 @@
       "revId": "6b8fd555ac8423ca3b940baedf55a9e9957f6b1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c01455a2_51eb3b61",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-09T09:09:36Z",
+      "side": 1,
+      "message": "It\u0027s up to you, I think magic number here makes code more clear, NVMe specification won\u0027t change the size of spdk_nvme_cmd and spdk_nvme_cpl so frequently.",
+      "parentUuid": "c63bacd8_f1dfca4a",
+      "revId": "6b8fd555ac8423ca3b940baedf55a9e9957f6b1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
