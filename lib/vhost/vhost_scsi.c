@@ -728,7 +728,6 @@ spdk_vhost_scsi_tgt_construct(const char *name, const char *cpumask)
 		return -ENOMEM;
 	}
 
-	spdk_vhost_lock();
 	rc = spdk_vhost_tgt_register(&svtgt->vtgt, name, cpumask,
 				     &g_vhost_scsi_tgt_backend);
 
@@ -736,7 +735,6 @@ spdk_vhost_scsi_tgt_construct(const char *name, const char *cpumask)
 		spdk_dma_free(svtgt);
 	}
 
-	spdk_vhost_unlock();
 	return rc;
 }
 
@@ -1075,6 +1073,7 @@ spdk_vhost_scsi_controller_construct(void)
 	char *name;
 	char *tgt = NULL;
 
+	spdk_vhost_lock();
 	while (sp != NULL) {
 		if (!spdk_conf_section_match_prefix(sp, "VhostScsi")) {
 			sp = spdk_conf_next_section(sp);
@@ -1128,6 +1127,7 @@ spdk_vhost_scsi_controller_construct(void)
 		sp = spdk_conf_next_section(sp);
 	}
 
+	spdk_vhost_unlock();
 	return 0;
 }
 
