@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2808a8c_3a6bc129",
+        "filename": "lib/nvme/nvme_ns_ocssd_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T18:27:39Z",
+      "side": 1,
+      "message": "While this works, I think for future-proofing this needs to use some of our existing infrastructure for setting the metadata pointer. Specifically, instead of calling nvme_allocate_request_null, call nvme_allocate_request instead with a payload that contains a NULL buffer and the chunk_info as the metadata. Something like this:\n\nstruct nvme_payload payload;\n\npayload \u003d NVME_PAYLOAD_CONTIG(NULL, chunk_info);\nreq \u003d nvme_allocate_request(qpair, \u0026payload, 0, cb_fn, cb_arg);\n\nHowever, doing this today won\u0027t work because of some checks in nvme_pcie.c in nvme_pcie_qpair_submit_request. Specifically:\n\nif (req-\u003epayload_size \u0026\u0026 req-\u003epayload.md) {\n\nshould probably just become\n\nif (req-\u003epayload.md) {\n\nUntil this command, it wasn\u0027t possible to submit metadata for a command that didn\u0027t also contain data. I\u0027m concerned that the way this command is defined in the specification may lead to trouble down the road - the lba_list should probably be described by PRPs or SGLs like any other data payload, and then these sort of inconsistencies should clear up.\n\nYour patch is fine for now - I just wanted to point some of these things out.",
+      "revId": "8e769150a8323ba3b966f02943e0b47c2b1f4215",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
