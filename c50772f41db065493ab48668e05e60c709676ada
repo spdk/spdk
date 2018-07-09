@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ef6799e8_8df087d7",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-09T14:17:29Z",
+      "side": 1,
+      "message": "Good catch",
+      "parentUuid": "9f3e7d40_4a276983",
+      "revId": "c50772f41db065493ab48668e05e60c709676ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "633c2a79_859f8cde",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 2
