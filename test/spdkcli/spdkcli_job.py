@@ -7,7 +7,6 @@ import sys
 def execute_command(cmd, element=None, element_exists=False):
     child.sendline(cmd)
     child.expect("/>")
-    print("before: %s" % child.before.decode())
     if "error response" in child.before.decode():
         print("Error in cmd: %s" % cmd)
         exit(1)
@@ -25,11 +24,15 @@ def execute_command(cmd, element=None, element_exists=False):
                 print("Element %s is in list" % element)
                 exit(1)
 
+
 if __name__ == "__main__":
+    socket = "/var/tmp/spdk.sock"
+    if len(sys.argv) == 5:
+        socket = sys.argv[4]
     testdir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py"))
+    child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py") + " -s %s" % socket)
     child.expect(">")
     child.sendline("cd /")
     child.expect("/>")
 
-    execute_command(*sys.argv[1:])
+    execute_command(*sys.argv[1:4])
