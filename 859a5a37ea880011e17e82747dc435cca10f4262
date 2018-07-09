@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "26d66f41_5cc8754a",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T21:48:33Z",
+      "side": 1,
+      "message": "Ben: Configuration -\u003e Configuring?",
+      "parentUuid": "11efd726_cb0e0b97",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86d34d86_2c6fb2a2",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 6
