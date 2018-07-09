@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df9aac38_5b184d78",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T22:20:49Z",
+      "side": 1,
+      "message": "describe return value?",
+      "revId": "0d3b7d5b65cb809693b578a4e750bdaef064e323",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e112e78_0641c7d0",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T22:20:49Z",
+      "side": 1,
+      "message": "describe return value?",
+      "revId": "0d3b7d5b65cb809693b578a4e750bdaef064e323",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4e44862_5b7dba5f",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T22:20:49Z",
+      "side": 1,
+      "message": "what are the error return cases?",
+      "revId": "0d3b7d5b65cb809693b578a4e750bdaef064e323",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "043a01cf_3b5b1400",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-09T22:20:49Z",
+      "side": 1,
+      "message": "error return cases?",
+      "revId": "0d3b7d5b65cb809693b578a4e750bdaef064e323",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
