@@ -148,6 +148,34 @@ const char *spdk_vhost_tgt_get_name(struct spdk_vhost_tgt *vtgt);
 const struct spdk_cpuset *spdk_vhost_tgt_get_cpumask(struct spdk_vhost_tgt *vtgt);
 
 /**
+ * Acquire the vhost target access lock.
+ */
+void spdk_vhost_lock(void);
+
+/**
+ * Release the vhost target access lock.
+ */
+void spdk_vhost_unlock(void);
+
+/**
+ * Get the next vhost target. This must be called under \c spdk_vhost_lock.
+ *
+ * \param prev if NULL, the first target will be returned
+ *
+ * \return next vhost target or NULL
+ */
+struct spdk_vhost_tgt *spdk_vhost_tgt_next(struct spdk_vhost_tgt *prev);
+
+/**
+ * Find a target with given name. This must be called under \c spdk_vhost_lock.
+ *
+ * \param vtgt_name vhost target name
+ *
+ * \return vhost target or NULL
+ */
+struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *vtgt_name);
+
+/**
  * By default, events are generated when asked, but for high queue depth and
  * high IOPS this prove to be inefficient both for guest kernel that have to
  * handle a lot more IO completions and for SPDK vhost that need to make more
@@ -195,7 +223,7 @@ void spdk_vhost_get_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t *delay_base
  *
  * \see spdk_vhost_tgt
  *
- * This function is thread-safe.
+ * This function must be called under \c spdk_vhost_lock.
  *
  * \param name name of the vhost target. The name will also be used
  * for socket name, which is exactly \c socket_base_dir/name
@@ -280,7 +308,7 @@ int spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tg
  *
  * \see spdk_vhost_tgt
  *
- * This function is thread-safe.
+ * This function must be called under \c spdk_vhost_lock.
  *
  * \param name name of the vhost block target. The name will also be
  * used for socket name, which is exactly \c socket_base_dir/name
