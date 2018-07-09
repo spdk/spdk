@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "969bae2a_220c7cfc",
+        "filename": "dpdk",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T21:30:33Z",
+      "side": 1,
+      "message": "The DPDK version should not change as part of this patch",
+      "revId": "b45f38fb4be567452314c2d749768f088d9c81b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8377e3ee_72c3df9e",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 1772,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T21:30:33Z",
+      "side": 1,
+      "message": "This should be named spdk_nvme_init_hooks()\n\nDo the hooks need to be transport-specific?",
+      "revId": "b45f38fb4be567452314c2d749768f088d9c81b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "912f9896_fa618309",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T21:30:33Z",
+      "side": 1,
+      "message": "This file should not include RDMA stuff. The default hooks needs to get initialized in the transport-layer instead.",
+      "revId": "b45f38fb4be567452314c2d749768f088d9c81b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0bd1079_d140b469",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1356,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T21:30:33Z",
+      "side": 1,
+      "message": "Shouldn\u0027t hooks be filled out by the user? Isn\u0027t this supposed to be the API the user calls to pass in their own set of hooks?",
+      "revId": "b45f38fb4be567452314c2d749768f088d9c81b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c889967b_de280cf5",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 9
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-09T21:30:33Z",
+      "side": 1,
+      "message": "We can only link against these libraries of CONFIG_RDMA is true. I think you can revert the change to this file.",
+      "revId": "b45f38fb4be567452314c2d749768f088d9c81b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
