@@ -16,6 +16,24 @@
       "revId": "6b8fd555ac8423ca3b940baedf55a9e9957f6b1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c63bacd8_f1dfca4a",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-09T05:56:13Z",
+      "side": 1,
+      "message": "Why would I do that? The less magic numbers, the better.\nWe don\u0027t use this in any fast I/O path. Even if we did, this should get optimized to a fixed value anyway.",
+      "parentUuid": "c479d733_5df3f9d0",
+      "revId": "6b8fd555ac8423ca3b940baedf55a9e9957f6b1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
