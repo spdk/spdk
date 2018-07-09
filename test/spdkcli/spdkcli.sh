@@ -9,7 +9,12 @@ spdkcli_job="python3 $SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job.py"
 
 function on_error_exit() {
 	set +e
-	killprocess $spdk_tgt_pid
+	if [ ! -z $virtio_pid ]; then
+		killprocess $virtio_pid
+	fi
+	if [ ! -z $spdk_tgt_pid ]; then
+		killprocess $spdk_tgt_pid
+	fi
 	rm -f $testdir/spdkcli.test $testdir/spdkcli_details.test /tmp/sample_aio
 	rm -f $testdir/spdkcli.test_pmem /tmp/sample_pmem
 	print_backtrace
@@ -23,6 +28,13 @@ function run_spdk_tgt() {
 
 	waitforlisten $spdk_tgt_pid
 	timing_exit run_spdk_tgt
+}
+
+function run_virtio_initiator() {
+        $SPDKCLI_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock &
+        virtio_pid=$!
+
+        waitforlisten $virtio_pid /var/tmp/virtio.sock
 }
 
 function create_bdevs() {
@@ -116,6 +128,41 @@ function run_pmem_test() {
 	timing_exit spdkcli_pmem
 }
 
+function run_virtio_test() {
+	run_spdk_tgt
+	run_virtio_initiator
+
+	$spdkcli_job "/bdevs/malloc create 32 512 Malloc0" "Malloc0" True
+	$spdkcli_job "/bdevs/malloc create 32 512 Malloc1" "Malloc1" True
+        pci_blk=$(lspci -nn -D | grep '1af4:1001' | head -1 | awk '{print $1;}')
+	echo "sadas: $pci_blk"
+        if [ $pci_blk ]; then
+        	$spdkcli_job "/bdevs/virtioblk_disk create virtioblk_pci pci $pci_blk" "virtioblk_pci" True
+	fi
+	pci_scsi=$(lspci -nn -D | grep '1af4:1004' | head -1 | awk '{print $1;}')
+	if [ $pci_scsi ]; then
+	        $spdkcli_job "/bdevs/virtioscsi_disk create virtioscsi_pci pci $pci_scsi" "virtioscsi_pci" True
+	fi
+	$spdkcli_job "/vhost/scsi create sample_scsi" "sample_scsi" True
+	$spdkcli_job "/vhost/scsi/sample_scsi add_lun 0 Malloc0" "Malloc0" True
+	$spdkcli_job "/vhost/block create sample_block Malloc1" "Malloc1" True
+	$spdkcli_job "/bdevs/virtioblk_disk create virtioblk_user user $testdir/../../sample_block" "virtioblk_user" True "/var/tmp/virtio.sock"
+	$spdkcli_job "/bdevs/virtioscsi_disk create virtioscsi_user user $testdir/../../sample_scsi" "virtioscsi_user" True "/var/tmp/virtio.sock"
+
+	$spdkcli_job "/bdevs/virtioscsi_disk delete virtioscsi_user" "" False "/var/tmp/virtio.sock"
+	$spdkcli_job "/bdevs/virtioblk_disk delete virtioblk_user" "" False "/var/tmp/virtio.sock"
+	$spdkcli_job "/vhost/block delete sample_block" "sample_block"
+	$spdkcli_job "/vhost/scsi/sample_scsi remove_target 0" "Malloc0"
+	$spdkcli_job "/vhost/scsi delete sample_scsi" " sample_scsi"
+	if [ $pci_blk ]; then
+		$spdkcli_job "/bdevs/virtioblk_disk delete virtioblk_pci" "virtioblk_pci"
+	fi
+	if [ $pci_scsi ]; then
+		$spdkcli_job "/bdevs/virtioscsi_disk delete virtioscsi_pci" "virtioscsi_pci"
+	fi
+	$spdkcli_job "/bdevs/malloc delete Malloc0" "Malloc0"
+	$spdkcli_job "/bdevs/malloc delete Malloc1" "Malloc1"
+}
 timing_enter spdk_cli
 trap 'on_error_exit' ERR
 
@@ -127,20 +174,29 @@ case $1 in
 		echo "Test type can be:"
 		echo "	--vhost"
 		echo "	--pmem"
+		echo "	--virtio"
 	;;
 	-v|--vhost)
 		run_vhost_test
 		;;
 	-p|--pmem)
 		run_pmem_test
+                ;;
+	-v|--virtio)
+		run_virtio_test
 		;;
-	*)
-		echo "unknown test type: $1"
-		exit 1
-	;;
+        *)
+                echo "Unknown test type: $1"
+                exit 1
+        ;;
 esac
 
-killprocess $spdk_tgt_pid
+if [ ! -z $virtio_pid ]; then
+	killprocess $virtio_pid
+fi
+if [ ! -z $spdk_tgt_pid ]; then
+	killprocess $spdk_tgt_pid
+fi
 rm -f $testdir/spdkcli.test $testdir/spdkcli_details.test /tmp/sample_aio
 rm -f $testdir/spdkcli.test_pmem /tmp/sample_pmem
 timing_exit spdk_cli
