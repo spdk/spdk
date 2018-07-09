@@ -2033,11 +2033,10 @@ spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
 	return rc;
 }
 
-int
+void
 spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 
-	return spdk_bdev_reset(lun->bdev_desc, lun->io_channel,
-			       spdk_bdev_scsi_task_complete_mgmt, task);
+	spdk_bdev_reset(lun->bdev_desc, lun->io_channel, spdk_bdev_scsi_task_complete_mgmt, task);
 }
