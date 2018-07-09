@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "416a30a1_53a78763",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-09T07:05:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7ffea4c9_23b8f4a5",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a61ce7d_df53a00f",
         "filename": "lib/scsi/scsi_bdev.c",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-06T20:01:21Z",
       "side": 1,
       "message": "same here",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b495c944_bf11b5cc",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1393,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-09T07:05:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a61ce7d_df53a00f",
       "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "bb00417c_07814a60",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1442,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-09T07:05:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a7a3a88_bedcc612",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "089f7580_18fbade0",
         "filename": "lib/scsi/scsi_bdev.c",
         "patchSetId": 10
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "8f357402_2bd5addc",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-09T07:05:27Z",
+      "side": 1,
+      "message": "You are right. Missed that per_thread_cache_count condition being impossible when using spdk_bdev_queue_io_wait() properly.\n\nChanged as suggested.",
+      "parentUuid": "089f7580_18fbade0",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1e0dfdb_c38920ac",
         "filename": "lib/scsi/scsi_bdev.c",
         "patchSetId": 10
@@ -81,6 +153,24 @@
       "writtenOn": "2018-07-06T20:01:21Z",
       "side": 1,
       "message": "just a note (for a possible separate patch) - we don\u0027t use the return code from this function anywhere - it could just return void instead",
+      "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5989fb43_f4f8a939",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2114,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-09T07:05:27Z",
+      "side": 1,
+      "message": "Done as separate patch before this one.",
+      "parentUuid": "d1e0dfdb_c38920ac",
       "revId": "a37c2c7f49af5807d197003aba20cf376e5a9c45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
