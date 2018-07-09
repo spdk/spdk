@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "044f9030_b6e7708f",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-07-09T16:35:09Z",
+      "side": 1,
+      "message": "Is this meant to be \"nvmf\" or \"nbd\"?",
+      "range": {
+        "startLine": 100,
+        "startChar": 4,
+        "endLine": 100,
+        "endChar": 17
+      },
+      "revId": "4e1e0f6ff24e4d42a341c180d47494c0526e3500",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
