@@ -16,6 +16,24 @@
       "revId": "e42b208524be6d4e85852dd2893743abd70f1552",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb325143_87c494a2",
+        "filename": "lib/virtio/virtio_pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-09T19:53:06Z",
+      "side": 1,
+      "message": "The absolute maximum of vq-\u003evq_ring_size is around 800KB as of Virtio 1.0, so if we somehow manage to exceed 2MB as of today, it means we\u0027re not setting this variable correctly or have a memory corruption of some kind. \n\nLet me take a second look at this tomorrow.",
+      "parentUuid": "7613a3a2_32bbac0d",
+      "revId": "e42b208524be6d4e85852dd2893743abd70f1552",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
