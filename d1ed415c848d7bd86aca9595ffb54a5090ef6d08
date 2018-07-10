@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4235ea9b_f01db4a4",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T21:21:37Z",
+      "side": 1,
+      "message": "Could we add \"FC\" or \"NVMF_RC\" in these #defines?  Otherwise I\u0027m concerned these will conflict with other #defines in the future that aren\u0027t FC/NVMf specific.",
+      "revId": "d1ed415c848d7bd86aca9595ffb54a5090ef6d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
