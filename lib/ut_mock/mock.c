@@ -33,13 +33,13 @@
 
 #include "spdk_internal/mock.h"
 
-DEFINE_WRAPPER(calloc, void *, (size_t nmemb, size_t size), (nmemb, size), (void *)MOCK_PASS_THRU)
+DEFINE_WRAPPER(calloc, void *, (size_t nmemb, size_t size), (nmemb, size))
 
 DEFINE_WRAPPER(pthread_mutex_init, int,
 	       (pthread_mutex_t *mtx, const pthread_mutexattr_t *attr),
-	       (mtx, attr), MOCK_PASS_THRU)
+	       (mtx, attr))
 
 DEFINE_WRAPPER(pthread_mutexattr_init, int,
-	       (pthread_mutexattr_t *attr), (attr), MOCK_PASS_THRU)
+	       (pthread_mutexattr_t *attr), (attr))
 
-DEFINE_WRAPPER(pthread_self, pthread_t, (void), (), (pthread_t)MOCK_PASS_THRU)
+DEFINE_WRAPPER(pthread_self, pthread_t, (void), ())
