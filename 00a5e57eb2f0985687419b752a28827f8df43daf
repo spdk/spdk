@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "264b3fb7_21a2ca9f",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T15:33:37Z",
+      "side": 1,
+      "message": "It isn\u0027t possible for me to discern right now, but one potential area where we may request changes is to move data structures out of header files and into implementation files where we can. We work very hard to encapsulate as much as we possibly can inside of individual compilation units to keep the code modular.",
+      "revId": "00a5e57eb2f0985687419b752a28827f8df43daf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
