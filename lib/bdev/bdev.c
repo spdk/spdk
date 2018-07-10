@@ -1100,6 +1100,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_thread *thread = spdk_io_channel_get_thread(bdev_io->internal.ch->channel);
 
+	assert(thread != NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev_io->internal.ch->flags & BDEV_CH_QOS_ENABLED) {
