@@ -25,7 +25,10 @@ export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i 0"
 
 run_test test/nvmf/filesystem/filesystem.sh
 run_test test/nvmf/discovery/discovery.sh
-run_test test/nvmf/nvme_cli/nvme_cli.sh
+if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
+	run_test test/nvmf/nvme_cli/nvme_cli.sh
+	report_test_completion "nvmf_spdk_nvme_cli"
+fi
 run_test test/nvmf/lvol/nvmf_lvol.sh
 run_test test/nvmf/shutdown/shutdown.sh
 
