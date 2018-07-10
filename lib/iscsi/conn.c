@@ -271,10 +271,6 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 		conn->sess_param_state_negotiated[i] = false;
 	}
 
-	for (i = 0; i < DEFAULT_MAXR2T; i++) {
-		conn->outstanding_r2t_tasks[i] = NULL;
-	}
-
 	TAILQ_INIT(&conn->write_pdu_list);
 	TAILQ_INIT(&conn->snack_pdu_list);
 	TAILQ_INIT(&conn->queued_r2t_tasks);
