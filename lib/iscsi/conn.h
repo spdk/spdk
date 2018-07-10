@@ -108,7 +108,6 @@ struct spdk_iscsi_conn {
 	TAILQ_HEAD(, spdk_iscsi_pdu) snack_pdu_list;
 
 	int pending_r2t;
-	struct spdk_iscsi_task *outstanding_r2t_tasks[DEFAULT_MAXR2T];
 
 	uint16_t cid;
 
