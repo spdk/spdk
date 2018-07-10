@@ -36,41 +36,71 @@
 
 #include "spdk/stdinc.h"
 
-/* used to signify pass through */
-#define MOCK_PASS_THRU (0xdeadbeef)
-#define MOCK_PASS_THRU_P (void*)0xdeadbeef
-/* helper for initializing struct value with mock macros */
 #define MOCK_STRUCT_INIT(...) \
 	{ __VA_ARGS__ }
+
+#define DEFINE_RETURN_MOCK(fn, ret) \
+	bool ut_ ## fn ## _mocked = false; \
+	ret ut_ ## fn
 
 /*
  * For controlling mocked function behavior, setting
  * and getting values from the stub, the _P macros are
  * for mocking functions that return pointer values.
  */
-#define MOCK_SET(fn, ret, val) \
-	ut_ ## fn = (ret)val
-
-#define MOCK_SET_P(fn, ret, val) \
-	ut_p_ ## fn = (ret)val
+#define MOCK_SET(fn, val) \
+	ut_ ## fn ## _mocked = true; \
+	ut_ ## fn = val
 
 #define MOCK_GET(fn) \
 	ut_ ## fn
 
-#define MOCK_GET_P(fn) \
-	ut_p_ ## fn
+#if __STDC_VERSION__ >= 201112L
+/*
+ * Beware: C11 trickery is afoot.
+ * It's common for a user to use MOCK_SET to set the value
+ * of the global to point at a stack location. When clearing
+ * the mock, if it's a pointer, we want to also NULL out the
+ * pointer so analysis tools don't flag the problem.
+ *
+ * C11 added the _Generic keyword, which is effectively a switch
+ * statement on types, performed at compile time. However,
+ * there is no general purpose "pointer" type, so we use an
+ * even more devious trick. Subtracting two values yields
+ * a value of the same type, in general, except for pointers
+ * which yields a ptrdiff_t. However, ptrdiff_t is just a typedef
+ * for an integer (usually long on x64), so the ptrdiff_t case
+ * also matches integers. That's fine, because NULL and 0 are
+ * the same thing.
+ *
+ * This won't work for clearing out mocked functions that return
+ * custom structures. We don't do that anywhere today, but it
+ * is something to consider.
+ */
+#define MOCK_CLEAR(fn) \
+	ut_ ## fn ## _mocked = false; \
+	_Generic(MOCK_GET(fn) - MOCK_GET(fn), \
+			ptrdiff_t: ut_ ## fn = 0, \
+			default: ut_ ## fn ## _mocked = false)
+#else
+
+#define MOCK_CLEAR(fn) \
+	ut_ ## fn ## _mocked = false
+
+#endif
 
 /* for declaring function protoypes for wrappers */
 #define DECLARE_WRAPPER(fn, ret, args) \
+	extern bool ut_ ## fn ## _mocked; \
 	extern ret ut_ ## fn; \
 	ret __wrap_ ## fn args; ret __real_ ## fn args;
 
 /* for defining the implmentation of wrappers for syscalls */
-#define DEFINE_WRAPPER(fn, ret, dargs, pargs, val) \
-	ret ut_ ## fn = val; \
+#define DEFINE_WRAPPER(fn, ret, dargs, pargs) \
+	DEFINE_RETURN_MOCK(fn, ret); \
 	__attribute__((used)) ret __wrap_ ## fn dargs \
 	{ \
-		if (ut_ ## fn == (ret)MOCK_PASS_THRU) { \
+		if (!ut_ ## fn ## _mocked) { \
 			return __real_ ## fn pargs; \
 		} else { \
 			return MOCK_GET(fn); \
@@ -79,21 +109,12 @@
 
 /* DEFINE_STUB is for defining the implmentation of stubs for SPDK funcs. */
 #define DEFINE_STUB(fn, ret, dargs, val) \
+	bool ut_ ## fn ## _mocked = true; \
 	ret ut_ ## fn = val; \
 	ret fn dargs; \
 	ret fn dargs \
 	{ \
 		return MOCK_GET(fn); \
-	}
-
-/* DEFINE_STUB_P macro is for stubs that return pointer values */
-#define DEFINE_STUB_P(fn, ret, dargs, val) \
-	ret ut_ ## fn = val; \
-	ret* ut_p_ ## fn = &(ut_ ## fn); \
-	ret* fn dargs; \
-	ret* fn dargs \
-	{ \
-		return MOCK_GET_P(fn); \
 	}
 
 /* DEFINE_STUB_V macro is for stubs that don't have a return value */
@@ -103,14 +124,11 @@
 	{ \
 	}
 
-/* DEFINE_STUB_VP macro is for stubs that return void pointer values */
-#define DEFINE_STUB_VP(fn, dargs, val) \
-	void* ut_p_ ## fn = val; \
-	void* fn dargs; \
-	void* fn dargs \
-	{ \
-		return MOCK_GET_P(fn); \
+#define HANDLE_RETURN_MOCK(fn) \
+	if (ut_ ## fn ## _mocked) { \
+		return ut_ ## fn; \
 	}
+
 
 /* declare wrapper protos (alphabetically please) here */
 DECLARE_WRAPPER(calloc, void *, (size_t nmemb, size_t size));
