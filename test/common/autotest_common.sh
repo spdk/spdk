@@ -43,6 +43,7 @@ fi
 : ${SPDK_TEST_ISCSI=1}; export SPDK_TEST_ISCSI
 : ${SPDK_TEST_ISCSI_INITIATOR=1}; export SPDK_TEST_ISCSI_INITIATOR
 : ${SPDK_TEST_NVME=1}; export SPDK_TEST_NVME
+: ${SPDK_TEST_NVME_CLI=1}; export SPDK_TEST_NVME_CLI
 : ${SPDK_TEST_NVMF=1}; export SPDK_TEST_NVMF
 : ${SPDK_TEST_RBD=1}; export SPDK_TEST_RBD
 : ${SPDK_TEST_VHOST=1}; export SPDK_TEST_VHOST
@@ -159,6 +160,10 @@ if [ -d /usr/include/iscsi ]; then
 	fi
 else
 	export SPDK_TEST_ISCSI_INITIATOR=0
+fi
+
+if [ ! -d "${DEPENDENCY_DIR}/nvme-cli" ]; then
+	export SPDK_TEST_NVME_CLI=0
 fi
 
 export config_params
