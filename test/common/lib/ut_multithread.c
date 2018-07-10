@@ -110,13 +110,19 @@ __stop_poller(struct spdk_poller *poller, void *thread_ctx)
 	free(poller);
 }
 
-static uintptr_t g_thread_id = MOCK_PASS_THRU;
+#define INVALID_THREAD 0x1000
+
+static uintptr_t g_thread_id = INVALID_THREAD;
 
 static void
 set_thread(uintptr_t thread_id)
 {
 	g_thread_id = thread_id;
-	MOCK_SET(pthread_self, pthread_t, (pthread_t)thread_id);
+	if (thread_id == INVALID_THREAD) {
+		MOCK_CLEAR(pthread_self);
+	} else {
+		MOCK_SET(pthread_self, (pthread_t)thread_id);
+	}
 }
 
 int
@@ -141,7 +147,7 @@ allocate_threads(int num_threads)
 		TAILQ_INIT(&g_ut_threads[i].pollers);
 	}
 
-	set_thread(MOCK_PASS_THRU);
+	set_thread(INVALID_THREAD);
 	return 0;
 }
 
@@ -205,7 +211,7 @@ poll_thread(uintptr_t thread_id)
 	uintptr_t original_thread_id;
 	TAILQ_HEAD(, ut_poller)	tmp_pollers;
 
-	CU_ASSERT(thread_id != (uintptr_t)MOCK_PASS_THRU);
+	CU_ASSERT(thread_id != (uintptr_t)INVALID_THREAD);
 	CU_ASSERT(thread_id < g_ut_num_threads);
 
 	original_thread_id = g_thread_id;
