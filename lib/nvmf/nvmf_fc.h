@@ -40,12 +40,7 @@
 #include "spdk/nvmf_fc_spec.h"
 #include "spdk/event.h"
 #include "spdk/io_channel.h"
-
 #include "nvmf_internal.h"
-
-#define SPDK_ERR_INVALID_ARGS 1
-#define SPDK_ERR_INTERNAL 2
-#define SPDK_ERR_NOMEM 3
 
 #define SPDK_NVMF_FC_TR_ADDR_LEN 64
 
