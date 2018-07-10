@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4e3e50f_eed8a75d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T09:34:15Z",
+      "side": 1,
+      "message": "from",
+      "range": {
+        "startLine": 77,
+        "startChar": 84,
+        "endLine": 77,
+        "endChar": 85
+      },
+      "revId": "c8031867c2d0b0e4743f87e46ea76bf56cdd1871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "379a3b68_21e0eea4",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T09:34:15Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 78,
+        "startChar": 12,
+        "endLine": 78,
+        "endChar": 13
+      },
+      "revId": "c8031867c2d0b0e4743f87e46ea76bf56cdd1871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

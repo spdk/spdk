@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "53549aa8_f3f82595",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T09:34:15Z",
+      "side": 1,
+      "message": "\u003e So what is the UUID of a Malloc BDev good for? The API is only using the name as far as I understand it (see delete_malloc_bdev).\n\nAs the commit say:\n\n\u003e \u003e This can be used to force specific UUIDs for testing.\n\n\u003e Are there constraints for block_size\nWill add this info. Thanks.\n\n\u003e either in SPDK or in how the BDev gets used\nThis is topic for other doc page.",
+      "parentUuid": "8fd1e1ae_fa581c2c",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "57d5089f_0f67bc3d",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-10T07:27:21Z",
       "side": 1,
       "message": "Is this really still an array? I thought 160850f0a6051b80c59ba7c8662efc2696b8f937 had changed that to a single string for all construct calls.",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0974b936_8a0962d2",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T09:34:15Z",
+      "side": 1,
+      "message": "Only for RPC that create only one bdev like construct_malloc_bdev. Nvme can create more than one bdev from physical device.",
+      "parentUuid": "57d5089f_0f67bc3d",
       "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -64,6 +100,24 @@
       "writtenOn": "2018-07-10T07:27:21Z",
       "side": 1,
       "message": "See above.",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "964354d2_f81b3f23",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 909,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T09:34:15Z",
+      "side": 1,
+      "message": "This is reponse from current master.",
+      "parentUuid": "8a276b60_1177c3b5",
       "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -132,6 +186,24 @@
       "writtenOn": "2018-07-10T07:27:21Z",
       "side": 1,
       "message": "base_name or name?",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10f3a27d_26c55782",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1053,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T09:34:15Z",
+      "side": 1,
+      "message": "base_name -\u003e fixed Parameter table.",
+      "parentUuid": "df506519_c4c138b7",
       "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
