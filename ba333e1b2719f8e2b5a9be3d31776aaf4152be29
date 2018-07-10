@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f417851c_9a6bf09c",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T22:54:31Z",
+      "side": 1,
+      "message": "to receive UINT64_MAX",
+      "revId": "ba333e1b2719f8e2b5a9be3d31776aaf4152be29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
