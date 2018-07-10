@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "8998004d_9233cd3b",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-10T11:31:11Z",
+      "side": 1,
+      "message": "I agree. -S is missing in help description.",
+      "parentUuid": "95b38f59_390bb25e",
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3bb49f59_92a6357a",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 8
