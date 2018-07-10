@@ -16,6 +16,24 @@
       "revId": "51dfab0f7796f664a08cd22117a14747907a97ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9577d61_307a8a30",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T17:43:38Z",
+      "side": 1,
+      "message": "yeah - good point",
+      "parentUuid": "a2ff870c_ce4a4cdf",
+      "revId": "51dfab0f7796f664a08cd22117a14747907a97ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
