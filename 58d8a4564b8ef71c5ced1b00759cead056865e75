@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4cfe68c_e3e9d636",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-10T22:57:02Z",
+      "side": 0,
+      "message": "John, is the plan to convert everything in the fc library to use errno\u0027s now?",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 24
+      },
+      "revId": "58d8a4564b8ef71c5ced1b00759cead056865e75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
