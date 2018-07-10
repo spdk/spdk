@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "619a2771_9458901d",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:41:23Z",
+      "side": 1,
+      "message": "mssages -\u003e messages",
+      "range": {
+        "startLine": 25,
+        "startChar": 60,
+        "endLine": 25,
+        "endChar": 67
+      },
+      "revId": "50b1d5117f3f7e34de6bf14cbcfc5e7df9ef3f42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
