@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "94298965_19856861",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T12:12:26Z",
+      "side": 1,
+      "message": "It is optional.",
+      "parentUuid": "4045dd03_373ecd1e",
+      "range": {
+        "startLine": 958,
+        "startChar": 0,
+        "endLine": 958,
+        "endChar": 60
+      },
+      "revId": "8e143d6f3d652d973606f5039d4725f4d92b199d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60633c40_f74b5592",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 12
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-10T11:21:54Z",
       "side": 1,
       "message": "Name of virtio bdev",
+      "range": {
+        "startLine": 1492,
+        "startChar": 51,
+        "endLine": 1493,
+        "endChar": 69
+      },
+      "revId": "8e143d6f3d652d973606f5039d4725f4d92b199d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ab857a8_52aa0dd7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 1493,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T12:12:26Z",
+      "side": 1,
+      "message": "for virtio scsi this will be base name for new bdevs like for splits. I try reword this and add sentence explaining this after parameters table.",
+      "parentUuid": "60633c40_f74b5592",
       "range": {
         "startLine": 1492,
         "startChar": 51,
