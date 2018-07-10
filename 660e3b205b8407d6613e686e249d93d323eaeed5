@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "27ecbf09_de0cb127",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-10T17:07:37Z",
+      "side": 1,
+      "message": "One major problem with this change is it changes the BDEV APU.\nOur bdev module uses the spdk_bdev_io_type to identify what the\nNVMe command is.  This data structure has changed since 17.03,  Here\u0027s \nthe version that our NetApp bdev module uses.\n\n/** Blockdev I/O type */\nenum spdk_bdev_io_type {\n        SPDK_BDEV_IO_TYPE_INVALID,   /* Internal error */\n        SPDK_BDEV_IO_TYPE_READ,      /* NVMe Read command */\n        SPDK_BDEV_IO_TYPE_WRITE,     /* NVMe Write command */\n        SPDK_BDEV_IO_TYPE_UNMAP,     /* NVMe DSM/Deallocate command */\n        SPDK_BDEV_IO_TYPE_FLUSH,     /* NVMe Flush command */\n        SPDK_BDEV_IO_TYPE_RESET,     /* NVMe Controller Reset Operation */\n};\n\nI need a zero copy BDEV API the preserves the NVME command semantics of the original spdk_bdev_io_type.  Changing the spdk_bdev_io_type from READ or WRITE, or WRITE_ZERO to ZCOPY doesn\u0027t work for our bdev.\n\nI\u0027ll note that we also need to add more bdev_io_types to this API in the near future.  The big one is SPDK_BDEV_IO_TYPE_ABORT.  We need a BDEV API to support NVMe Abort.",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 106,
+        "endChar": 25
+      },
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c15aef5_310d0c9a",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 9
