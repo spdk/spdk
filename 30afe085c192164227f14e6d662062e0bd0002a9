@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c99414b3_bd627c4c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T23:24:58Z",
+      "side": 1,
+      "message": "I don\u0027t actually need these two lines.",
+      "revId": "30afe085c192164227f14e6d662062e0bd0002a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
