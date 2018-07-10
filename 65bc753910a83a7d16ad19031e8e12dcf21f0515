@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8868c502_229628de",
+        "filename": "test/iscsi_tgt/iscsijson/json_config.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-10T13:07:09Z",
+      "side": 1,
+      "message": "Any2 doesn\u0027t have specific meaning in spdk iscsi but it may be OK for config test.",
+      "revId": "65bc753910a83a7d16ad19031e8e12dcf21f0515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ae5ec8f_cfadd31d",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-10T13:07:09Z",
+      "side": 1,
+      "message": "get_portal_groups and get_target_nodes are contained in the iscsi json config file as the form of add_portal_group and construct_target_node.\n\nHence I think just comparing iscsi config file is enough and you can remove these temporary files.\n\nSorry for my wrong feedback.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 49
+      },
+      "revId": "65bc753910a83a7d16ad19031e8e12dcf21f0515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59a5fa32_31d75a1f",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-10T13:07:09Z",
+      "side": 1,
+      "message": "I think you can remove these calls.",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 86,
+        "endChar": 70
+      },
+      "revId": "65bc753910a83a7d16ad19031e8e12dcf21f0515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6b64ea9_61941911",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-10T13:07:09Z",
+      "side": 1,
+      "message": "you can remove them as same as above",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 70
+      },
+      "revId": "65bc753910a83a7d16ad19031e8e12dcf21f0515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6119bf85_b60b3fff",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-10T13:07:09Z",
+      "side": 1,
+      "message": "comparing two json config files will be enough.",
+      "range": {
+        "startLine": 104,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 43
+      },
+      "revId": "65bc753910a83a7d16ad19031e8e12dcf21f0515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40ec61e6_cbdf6a39",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-10T13:07:09Z",
+      "side": 1,
+      "message": "-f is still necessary? It\u0027s OK if necessary.",
+      "range": {
+        "startLine": 110,
+        "startChar": 4,
+        "endLine": 110,
+        "endChar": 6
+      },
+      "revId": "65bc753910a83a7d16ad19031e8e12dcf21f0515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc964645_525362ac",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-10T13:07:09Z",
+      "side": 1,
+      "message": "you can remove them.",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 114,
+        "endChar": 46
+      },
+      "revId": "65bc753910a83a7d16ad19031e8e12dcf21f0515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
