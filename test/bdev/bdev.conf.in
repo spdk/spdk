@@ -31,4 +31,4 @@
   # of 10000
   #
   # Assign 20000 IOPS for the Malloc0 block device
-  Limit_IOPS Malloc0 20000
+ # Limit_IOPS Malloc0 20000
