@@ -16,6 +16,24 @@
       "revId": "d1ed415c848d7bd86aca9595ffb54a5090ef6d08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "099861cb_276c70f0",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-10T21:47:27Z",
+      "side": 1,
+      "message": "I agree that these errors could conflict with others error definitions in other modules.  How about if we add a separate file: include/spdk/spdk_error.h to keep definitions like this.\n\n\nThat was the real intention here.",
+      "parentUuid": "4235ea9b_f01db4a4",
+      "revId": "d1ed415c848d7bd86aca9595ffb54a5090ef6d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
