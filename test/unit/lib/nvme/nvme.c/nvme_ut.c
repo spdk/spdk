@@ -78,10 +78,10 @@ DEFINE_STUB(dummy_probe_cb, bool,
 	    (void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	     struct spdk_nvme_ctrlr_opts *opts), false)
 
-DEFINE_STUB_P(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr,
-	      (const struct spdk_nvme_transport_id *trid,
-	       const struct spdk_nvme_ctrlr_opts *opts,
-	       void *devhandle), {0})
+DEFINE_STUB(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr *,
+	    (const struct spdk_nvme_transport_id *trid,
+	     const struct spdk_nvme_ctrlr_opts *opts,
+	     void *devhandle), NULL)
 
 DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
 	    (struct spdk_nvme_qpair *qpair,
@@ -154,7 +154,7 @@ test_spdk_nvme_probe(void)
 
 	/* driver init fails */
 	MOCK_SET(spdk_process_is_primary, bool, false);
-	MOCK_SET_P(spdk_memzone_lookup, void *, NULL);
+	MOCK_SET(spdk_memzone_lookup, void *, NULL);
 	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
 	CU_ASSERT(rc == -1);
 
@@ -173,16 +173,16 @@ test_spdk_nvme_probe(void)
 	/* driver init passes, transport available, secondary call attach_cb */
 	MOCK_SET(spdk_nvme_transport_available, bool, true);
 	MOCK_SET(spdk_process_is_primary, bool, false);
-	MOCK_SET_P(spdk_memzone_lookup, void *, g_spdk_nvme_driver);
+	MOCK_SET(spdk_memzone_lookup, void *, g_spdk_nvme_driver);
 	dummy.initialized = true;
 	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
 	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
 	CU_ASSERT(pthread_mutex_init(&dummy.lock, &attr) == 0);
 	TAILQ_INIT(&dummy.shared_attached_ctrlrs);
 	TAILQ_INSERT_TAIL(&dummy.shared_attached_ctrlrs, &ctrlr, tailq);
-	MOCK_SET(attach_cb_called, bool, false);
+	ut_attach_cb_called = false;
 	/* setup nvme_transport_ctrlr_scan() stub to also check the trype */
-	MOCK_SET(check_trtype, bool, true);
+	ut_check_trtype = true;
 	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ut_attach_cb_called == true);
@@ -195,8 +195,8 @@ test_spdk_nvme_probe(void)
 
 	g_spdk_nvme_driver = NULL;
 	/* reset to pre-test values */
-	MOCK_SET_P(spdk_memzone_lookup, void *, MOCK_PASS_THRU_P);
-	MOCK_SET(check_trtype, bool, false);
+	MOCK_CLEAR(spdk_memzone_lookup);
+	ut_check_trtype = false;
 
 	pthread_mutex_destroy(&dummy.lock);
 	pthread_mutexattr_destroy(&attr);
@@ -225,7 +225,7 @@ test_spdk_nvme_connect(void)
 
 	/* driver init passes, transport available, secondary process connects ctrlr */
 	MOCK_SET(spdk_process_is_primary, bool, false);
-	MOCK_SET_P(spdk_memzone_lookup, void *, g_spdk_nvme_driver);
+	MOCK_SET(spdk_memzone_lookup, void *, g_spdk_nvme_driver);
 	MOCK_SET(spdk_nvme_transport_available, bool, true);
 	memset(&trid, 0, sizeof(trid));
 	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
@@ -282,7 +282,7 @@ test_spdk_nvme_connect(void)
 
 	/* test driver init failure return */
 	MOCK_SET(spdk_process_is_primary, bool, false);
-	MOCK_SET_P(spdk_memzone_lookup, void *, NULL);
+	MOCK_SET(spdk_memzone_lookup, void *, NULL);
 	ret_ctrlr = spdk_nvme_connect(&trid, NULL, 0);
 	CU_ASSERT(ret_ctrlr == NULL);
 }
@@ -378,20 +378,20 @@ test_nvme_driver_init(void)
 	 */
 	g_spdk_nvme_driver = NULL;
 	MOCK_SET(spdk_process_is_primary, bool, true);
-	MOCK_SET_P(spdk_memzone_reserve, void *, NULL);
+	MOCK_SET(spdk_memzone_reserve, void *, NULL);
 	rc = nvme_driver_init();
 	CU_ASSERT(rc == -1);
 
 	/* process is not primary, no mem already reserved */
 	MOCK_SET(spdk_process_is_primary, bool, false);
-	MOCK_SET_P(spdk_memzone_lookup, void *, NULL);
+	MOCK_SET(spdk_memzone_lookup, void *, NULL);
 	g_spdk_nvme_driver = NULL;
 	rc = nvme_driver_init();
 	CU_ASSERT(rc == -1);
 
 	/* process is not primary, mem is already reserved & init'd */
 	MOCK_SET(spdk_process_is_primary, bool, false);
-	MOCK_SET_P(spdk_memzone_lookup, void *, &dummy);
+	MOCK_SET(spdk_memzone_lookup, void *, &dummy);
 	dummy.initialized = true;
 	rc = nvme_driver_init();
 	CU_ASSERT(rc == 0);
@@ -399,14 +399,14 @@ test_nvme_driver_init(void)
 	/* process is not primary, mem is reserved but not intiialized */
 	/* and times out */
 	MOCK_SET(spdk_process_is_primary, bool, false);
-	MOCK_SET_P(spdk_memzone_reserve, void *, &dummy);
+	MOCK_SET(spdk_memzone_reserve, void *, &dummy);
 	dummy.initialized = false;
 	rc = nvme_driver_init();
 	CU_ASSERT(rc == -1);
 
 	/* process is primary, got mem but mutex won't init */
 	MOCK_SET(spdk_process_is_primary, bool, true);
-	MOCK_SET_P(spdk_memzone_reserve, void *, &dummy);
+	MOCK_SET(spdk_memzone_reserve, void *, &dummy);
 	MOCK_SET(pthread_mutexattr_init, int, -1);
 	g_spdk_nvme_driver = NULL;
 	dummy.initialized = true;
@@ -420,7 +420,7 @@ test_nvme_driver_init(void)
 
 	/* process is primary, got mem, mutex OK */
 	MOCK_SET(spdk_process_is_primary, bool, true);
-	MOCK_SET(pthread_mutexattr_init, int, MOCK_PASS_THRU);
+	MOCK_CLEAR(pthread_mutexattr_init);
 	g_spdk_nvme_driver = NULL;
 	rc = nvme_driver_init();
 	CU_ASSERT(g_spdk_nvme_driver->initialized == false);
@@ -429,8 +429,8 @@ test_nvme_driver_init(void)
 	CU_ASSERT(rc == 0);
 
 	g_spdk_nvme_driver = NULL;
-	MOCK_SET_P(spdk_memzone_reserve, void *, MOCK_PASS_THRU_P);
-	MOCK_SET_P(spdk_memzone_lookup, void *, NULL);
+	MOCK_CLEAR(spdk_memzone_reserve);
+	MOCK_CLEAR(spdk_memzone_lookup);
 }
 
 static void
@@ -541,7 +541,7 @@ test_nvme_user_copy_cmd_complete(void)
 	SPDK_CU_ASSERT_FATAL(req.user_buffer != NULL);
 	memset(req.user_buffer, 0, buff_size);
 	req.payload_size = buff_size;
-	buff = malloc(buff_size);
+	buff = spdk_dma_zmalloc(buff_size, 0x100, NULL);
 	SPDK_CU_ASSERT_FATAL(buff != NULL);
 	req.payload = NVME_PAYLOAD_CONTIG(buff, NULL);
 	memcpy(buff, &test_data, buff_size);
@@ -551,11 +551,6 @@ test_nvme_user_copy_cmd_complete(void)
 	/* zero out the test value set in the callback */
 	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
 
-	/*
-	 * Mocking this to prevent the calling code from freeing the
-	 * buff as it confuses either valgrind or the static analyzer.
-	 */
-	MOCK_SET_P(spdk_dma_zmalloc, void *, NULL);
 	nvme_user_copy_cmd_complete(&req, &cpl);
 	CU_ASSERT(memcmp(req.user_buffer, &test_data, buff_size) == 0);
 	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
@@ -566,6 +561,10 @@ test_nvme_user_copy_cmd_complete(void)
 	 */
 	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
 	memset(req.user_buffer, 0, buff_size);
+	buff = spdk_dma_zmalloc(buff_size, 0x100, NULL);
+	SPDK_CU_ASSERT_FATAL(buff != NULL);
+	req.payload = NVME_PAYLOAD_CONTIG(buff, NULL);
+	memcpy(buff, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	nvme_user_copy_cmd_complete(&req, &cpl);
 	CU_ASSERT(memcmp(req.user_buffer, &test_data, buff_size) != 0);
@@ -573,10 +572,9 @@ test_nvme_user_copy_cmd_complete(void)
 
 	/* clean up */
 	free(req.user_buffer);
-	free(buff);
 
 	/* return spdk_dma_zmalloc/freee to unmocked */
-	MOCK_SET_P(spdk_dma_zmalloc, void *, &ut_spdk_dma_zmalloc);
+	MOCK_CLEAR(spdk_dma_zmalloc);
 }
 
 static void
@@ -722,19 +720,20 @@ test_nvme_allocate_request_user_copy(void)
 
 	/* good buffer and valid payload size but make spdk_dma_zmalloc fail */
 	/* set the mock pointer to NULL for spdk_dma_zmalloc */
-	MOCK_SET_P(spdk_dma_zmalloc, void *, NULL);
+	MOCK_SET(spdk_dma_zmalloc, void *, NULL);
 	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
 					      cb_arg, host_to_controller);
 	CU_ASSERT(req == NULL);
 	free(buffer);
 	/* restore mock function back to the way it was */
-	MOCK_SET_P(spdk_dma_zmalloc, void *, &ut_spdk_dma_zmalloc);
+	MOCK_SET(spdk_dma_zmalloc, void *, &ut_spdk_dma_zmalloc);
 }
 
 static void
 test_nvme_ctrlr_probe(void)
 {
 	int rc = 0;
+	struct spdk_nvme_ctrlr ctrlr = {};
 	const struct spdk_nvme_transport_id trid = {};
 	void *devhandle = NULL;
 	void *cb_ctx = NULL;
@@ -747,8 +746,8 @@ test_nvme_ctrlr_probe(void)
 
 	/* probe_cb returns true but we can't construct a ctrl */
 	MOCK_SET(dummy_probe_cb, bool, true);
-	MOCK_SET_P(nvme_transport_ctrlr_construct,
-		   struct spdk_nvme_ctrlr *, NULL);
+	MOCK_SET(nvme_transport_ctrlr_construct,
+		 struct spdk_nvme_ctrlr *, NULL);
 	rc = nvme_ctrlr_probe(&trid, devhandle, dummy_probe_cb, cb_ctx);
 	CU_ASSERT(rc == -1);
 
@@ -756,13 +755,14 @@ test_nvme_ctrlr_probe(void)
 	g_spdk_nvme_driver = malloc(sizeof(struct nvme_driver));
 	SPDK_CU_ASSERT_FATAL(g_spdk_nvme_driver != NULL);
 	MOCK_SET(dummy_probe_cb, bool, true);
-	MOCK_SET_P(nvme_transport_ctrlr_construct,
-		   struct spdk_nvme_ctrlr *, &ut_nvme_transport_ctrlr_construct);
+	MOCK_SET(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr *, &ctrlr);
 	TAILQ_INIT(&g_nvme_init_ctrlrs);
 	rc = nvme_ctrlr_probe(&trid, devhandle, dummy_probe_cb, cb_ctx);
 	CU_ASSERT(rc == 0);
 	dummy = TAILQ_FIRST(&g_nvme_init_ctrlrs);
-	CU_ASSERT(dummy == &ut_nvme_transport_ctrlr_construct);
+	CU_ASSERT(dummy == ut_nvme_transport_ctrlr_construct);
+	TAILQ_REMOVE(&g_nvme_init_ctrlrs, dummy, tailq);
+	MOCK_CLEAR(nvme_transport_ctrlr_construct);
 
 	free(g_spdk_nvme_driver);
 }
