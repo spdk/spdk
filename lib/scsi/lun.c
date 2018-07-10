@@ -196,6 +196,7 @@ spdk_scsi_lun_check_io_channel(void *arg)
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
 	if (lun->io_channel) {
+		spdk_scsi_lun_free_io_channel(lun);
 		return -1;
 	}
 	spdk_poller_unregister(&lun->hotremove_poller);
