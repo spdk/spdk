@@ -123,13 +123,13 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 }
 
 int
-spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
+_spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 {
 	return 0;
 }
 
 void
-spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
+_spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
 {
 }
 
