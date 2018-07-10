@@ -791,10 +791,10 @@ test_prp_list_append(void)
 	CU_ASSERT(prp_index == 2);
 
 	/* 4K buffer, 4K aligned, but vtophys fails */
-	ut_fail_vtophys = true;
+	MOCK_SET(spdk_vtophys, SPDK_VTOPHYS_ERROR);
 	prp_list_prep(&tr, &req, &prp_index);
 	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000, 0x1000, 0x1000) == -EINVAL);
-	ut_fail_vtophys = false;
+	MOCK_CLEAR(spdk_vtophys);
 
 	/* Largest aligned buffer that can be described in NVME_MAX_PRP_LIST_ENTRIES (plus PRP1) */
 	prp_list_prep(&tr, &req, &prp_index);
