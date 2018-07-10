@@ -139,6 +139,24 @@
       "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5bbce5a_fb751b6d",
+        "filename": "lib/nvmf/nvmf_fc_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T15:24:59Z",
+      "side": 1,
+      "message": "There are 6 stray typedef\u0027d enums in the code out of ~150 total enums. Those 6 cases also do not follow our style guide and I will fix those. Please remove the typedefs here.",
+      "parentUuid": "ec59bf7b_aca362fc",
+      "revId": "9c36e7d11e849c901b1ae15a48c0d14c36885239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
