@@ -16,6 +16,24 @@
       "revId": "00a5e57eb2f0985687419b752a28827f8df43daf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18fa9b94_3fbdcf20",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-07-10T16:46:38Z",
+      "side": 1,
+      "message": "Unlike RDMA, there will be at least 3 modules for the FC transport to handle general IO, LS cmd. processing and the FC admin API. Additionally some modules of the FC LLD will use definitions in this file. This file should only contain definitions that are shared by all these modules.",
+      "parentUuid": "264b3fb7_21a2ca9f",
+      "revId": "00a5e57eb2f0985687419b752a28827f8df43daf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
