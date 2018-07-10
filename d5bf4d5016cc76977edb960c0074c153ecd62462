@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "4622e4b3_83d6ccfe",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T12:48:53Z",
+      "side": 1,
+      "message": "OK, will fix this.",
+      "parentUuid": "057e1ab6_14771058",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "774ed648_2d3259a2",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 1
