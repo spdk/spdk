@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "886e2842_a25a164a",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T23:01:21Z",
+      "side": 1,
+      "message": "just \"tick_rate\"?  we don\u0027t prepend \"spdk\" on other parameters usually",
+      "revId": "b04a7abb7b35120cc9fd91395366a432b6e539da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
