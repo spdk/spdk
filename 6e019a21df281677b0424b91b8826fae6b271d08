@@ -510,6 +510,24 @@
     },
     {
       "key": {
+        "uuid": "3c904231_7d60a6f6",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T18:40:07Z",
+      "side": 1,
+      "message": "You\u0027re only saving 24 bytes, since the pointer here takes 8 bytes.  :-)\n\nBut I would just add the extra storage.  It saves extra complexity.  Longer term, once everything in SPDK is using spdk_bdev_io_wait_entry, we could even reduce the number of spdk_bdev_io in the pool to get back some storage.  Right now we allocate 64K buffers which is likely way more than are really needed to maximize performance.",
+      "parentUuid": "16a60356_e34a5cf9",
+      "revId": "6e019a21df281677b0424b91b8826fae6b271d08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1359bd6_68778373",
         "filename": "lib/bdev/pvol/bdev_pvol.h",
         "patchSetId": 23
