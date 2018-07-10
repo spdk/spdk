@@ -1541,7 +1541,7 @@ blob_rw_verify_iov_nomem(void)
 	spdk_blob_io_writev(blob, channel, iov_write, 3, 250, 10, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno = -ENOMEM);
 	CU_ASSERT(req_count == bs_channel_get_req_count(channel));
-	MOCK_SET(calloc, void *, (void *)MOCK_PASS_THRU);
+	MOCK_CLEAR(calloc);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -4527,7 +4527,7 @@ blob_relations(void)
 	spdk_blob_id blobid, cloneid, snapshotid, cloneid2, snapshotid2;
 	int rc;
 	size_t count;
-	spdk_blob_id ids[10];
+	spdk_blob_id ids[10] = {};
 
 	dev = init_dev();
 	spdk_bs_opts_init(&bs_opts);
