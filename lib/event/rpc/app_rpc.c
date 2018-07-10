@@ -153,3 +153,115 @@ spdk_rpc_context_switch_monitor(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("context_switch_monitor", spdk_rpc_context_switch_monitor, SPDK_RPC_RUNTIME)
+
+struct rpc_get_pollers_config {
+	uint32_t lcore_id;
+};
+
+static const struct spdk_json_object_decoder rpc_get_pollers_decoders[] = {
+	{"lcore_id", offsetof(struct rpc_get_pollers_config, lcore_id), spdk_json_decode_uint32},
+};
+
+static void
+_print_poller_information(struct spdk_json_write_ctx *w, uint64_t *addresses, int count,
+			  char *name)
+{
+	int i;
+
+	spdk_json_write_named_array_begin(w, name);
+	for (i = 0; i < count; i++) {
+		spdk_json_write_uint64(w, addresses[i]);
+	}
+	spdk_json_write_array_end(w);
+}
+
+static void
+spdk_rpc_get_pollers(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
+{
+	struct rpc_get_pollers_config req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_cpuset *core_mask;
+	uint64_t *timed_poller_addresses, *active_poller_addresses;
+	int timed_poller_count, active_poller_count;
+	uint32_t core_id;
+
+	req.lcore_id = UINT32_MAX;
+	core_mask = spdk_app_get_core_mask();
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_get_pollers_decoders,
+					    SPDK_COUNTOF(rpc_get_pollers_decoders), &req)) {
+			SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "invalid parameters");
+			return;
+		}
+	}
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+	spdk_json_write_array_begin(w);
+	if (req.lcore_id == UINT32_MAX) {
+		for (core_id = 0; core_id < SPDK_CPUSET_SIZE; core_id++) {
+			if (spdk_cpuset_get_cpu(core_mask, core_id)) {
+				timed_poller_count = spdk_reactor_get_timed_pollers(core_id, &timed_poller_addresses);
+				if (timed_poller_count == -1) {
+					goto error;
+				}
+
+				active_poller_count = spdk_reactor_get_active_pollers(core_id, &active_poller_addresses);
+				if (active_poller_count == -1) {
+					free(timed_poller_addresses);
+					goto error;
+				}
+
+				spdk_json_write_object_begin(w);
+				spdk_json_write_named_uint32(w, "core_number", core_id);
+				_print_poller_information(w, timed_poller_addresses, timed_poller_count, "timed pollers");
+				_print_poller_information(w, active_poller_addresses, active_poller_count, "active pollers");
+				free(timed_poller_addresses);
+				free(active_poller_addresses);
+				spdk_json_write_object_end(w);
+			}
+		}
+	} else {
+		if (req.lcore_id >= SPDK_CPUSET_SIZE) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "lcore ID is too large.");
+			return;
+		} else if (!spdk_cpuset_get_cpu(core_mask, req.lcore_id)) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST,
+							 "specified core is turned off.");
+			return;
+		}
+
+		timed_poller_count = spdk_reactor_get_timed_pollers(req.lcore_id, &timed_poller_addresses);
+		if (timed_poller_count == -1) {
+			goto error;
+		}
+
+		active_poller_count = spdk_reactor_get_active_pollers(req.lcore_id, &active_poller_addresses);
+		if (active_poller_count == -1) {
+			free(timed_poller_addresses);
+			goto error;
+		}
+
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_uint32(w, "core_number", req.lcore_id);
+		_print_poller_information(w, timed_poller_addresses, timed_poller_count, "timed pollers");
+		_print_poller_information(w, active_poller_addresses, active_poller_count, "active pollers");
+		spdk_json_write_object_end(w);
+		free(timed_poller_addresses);
+		free(active_poller_addresses);
+	}
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+error:
+	spdk_json_write_array_end(w);
+	spdk_json_write_end(w);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+					 "Failed to allocate memory for poller information.");
+}
+SPDK_RPC_REGISTER("get_pollers", spdk_rpc_get_pollers, SPDK_RPC_RUNTIME)
