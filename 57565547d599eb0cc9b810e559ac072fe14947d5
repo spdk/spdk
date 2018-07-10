@@ -16,6 +16,24 @@
       "revId": "57565547d599eb0cc9b810e559ac072fe14947d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0954ea9_e3011c7e",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-10T22:46:40Z",
+      "side": 1,
+      "message": "Agreed. So in this way, I will modify the current RPC methon (set_bdev_qos_limit_iops) to set_bdev_qos_limit and add some optional parameters like (-l IOPS or -l BPS) where l stands for limit. The default can be IOPS limit. This can eliminate much duplicated code here. Is this proposal OK for you. Thanks, Gang.\nMy current change is try to backward compatibility and not modify the existing set_bdev_qos_limit_iops RPC method. So that to introduce this new one. If it\u0027s no problem to update the existing method, I will start to change it.",
+      "parentUuid": "a983bafd_defe824f",
+      "revId": "57565547d599eb0cc9b810e559ac072fe14947d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
