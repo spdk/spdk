@@ -66,6 +66,8 @@ function usage() {
                                     755: 'clone_writing_clone',
                                     756: 'clone_and_snapshot_consistency',
                                     757: 'clone_inflate',
+                                    758: 'clone_decouple_parent',
+                                    759: 'clone_decouple_parent_rw',
                                     800: 'rename_positive',
                                     801: 'rename_lvs_nonexistent',
                                     802: 'rename_lvs_EEXIST',
