@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37956a30_7f0b8e83",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T19:49:44Z",
+      "side": 1,
+      "message": "In order to get this to work on our setup which uses tsocks, I had to change the following lines.\n\n-    git_param\u003d\"--prefix\u003d/usr/local/qemu/$SPDK_QEMU_BRANCH\"\n+    declare -a opt_params\u003d(\"--prefix\u003d/usr/local/qemu/$SPDK_QEMU_BRANCH\")\n \n     # Most tsocks proxies rely on a configuration file in /etc/tsocks.conf.\n     # If using tsocks, please make sure to complete this config before trying to build qemu.\n     if echo $CONF | grep -q tsocks; then\n         if hash tsocks 2\u003e /dev/null; then\n-            git_param\u003d\"--prefix\u003d/usr/local/qemu/$SPDK_QEMU_BRANCH --with-git\u003d\u0027tsocks git\u0027\"\n+\t\topt_params+\u003d(--with-git\u003d\u0027tsocks git\u0027)\n         fi\n     fi\n \n-    ./configure \"${git_param}\" --target-list\u003d\"x86_64-softmmu\" --enable-kvm --enable-linux-aio --enable-numa\n+    ./configure \"${opt_params[@]}\" --target-list\u003d\"x86_64-softmmu\" --enable-kvm --enable-linux-aio --enable-numa",
+      "revId": "6202e80f1fd18d6163311349809e5b2a6a6e7005",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
