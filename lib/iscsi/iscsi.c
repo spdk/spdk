@@ -3516,7 +3516,8 @@ spdk_add_transfer_task(struct spdk_iscsi_conn *conn,
 	return SPDK_SUCCESS;
 }
 
-void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
+void
+spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 {
 	struct spdk_iscsi_task *task, *tmp;
 	int i;
@@ -3531,6 +3532,13 @@ void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 				conn->outstanding_r2t_tasks[i] = conn->outstanding_r2t_tasks[i + 1];
 			}
 			conn->outstanding_r2t_tasks[conn->pending_r2t] = NULL;
+			break;
+		}
+	}
+
+	TAILQ_FOREACH(task, &conn->active_r2t_tasks, link) {
+		if (task->tag == task_tag) {
+			TAILQ_REMOVE(&conn->active_r2t_tasks, task, link);
 			break;
 		}
 	}

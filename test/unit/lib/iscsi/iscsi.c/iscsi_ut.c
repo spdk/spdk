@@ -670,6 +670,20 @@ get_transfer_task_test(void)
 	spdk_put_pdu(pdu1);
 }
 
+static struct spdk_iscsi_task *
+ut_get_transfer_task(struct spdk_iscsi_conn *conn, uint32_t transfer_tag)
+{
+	struct spdk_iscsi_task *task;
+
+	TAILQ_FOREACH(task, &conn->active_r2t_tasks, link) {
+		if (task->ttt == transfer_tag) {
+			return task;
+		}
+	}
+
+	return NULL;
+}
+
 static void
 del_transfer_task_test(void)
 {
@@ -751,25 +765,37 @@ del_transfer_task_test(void)
 
 	CU_ASSERT(spdk_get_transfer_task(&conn, 1) == &task1);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == NULL);
+	CU_ASSERT(ut_get_transfer_task(&conn, 1) == &task1);
+	CU_ASSERT(ut_get_transfer_task(&conn, 5) == NULL);
 	spdk_del_transfer_task(&conn, 11);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 1) == NULL);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == &task5);
+	CU_ASSERT(ut_get_transfer_task(&conn, 1) == NULL);
+	CU_ASSERT(ut_get_transfer_task(&conn, 5) == &task5);
 
 	CU_ASSERT(spdk_get_transfer_task(&conn, 2) == &task2);
+	CU_ASSERT(ut_get_transfer_task(&conn, 2) == &task2);
 	spdk_del_transfer_task(&conn, 12);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 2) == NULL);
+	CU_ASSERT(ut_get_transfer_task(&conn, 2) == NULL);
 
 	CU_ASSERT(spdk_get_transfer_task(&conn, 3) == &task3);
+	CU_ASSERT(ut_get_transfer_task(&conn, 3) == &task3);
 	spdk_del_transfer_task(&conn, 13);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 3) == NULL);
+	CU_ASSERT(ut_get_transfer_task(&conn, 3) == NULL);
 
 	CU_ASSERT(spdk_get_transfer_task(&conn, 4) == &task4);
+	CU_ASSERT(ut_get_transfer_task(&conn, 4) == &task4);
 	spdk_del_transfer_task(&conn, 14);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 4) == NULL);
+	CU_ASSERT(ut_get_transfer_task(&conn, 4) == NULL);
 
 	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == &task5);
+	CU_ASSERT(ut_get_transfer_task(&conn, 5) == &task5);
 	spdk_del_transfer_task(&conn, 15);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == NULL);
+	CU_ASSERT(ut_get_transfer_task(&conn, 5) == NULL);
 
 	while (!TAILQ_EMPTY(&conn.active_r2t_tasks)) {
 		task = TAILQ_FIRST(&conn.active_r2t_tasks);
