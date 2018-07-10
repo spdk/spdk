@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "a3ead54e_768f6eb5",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T23:21:46Z",
+      "side": 1,
+      "message": "I already correctly report support for the ZCOPY type independently of READ and WRITE, and a patch later in this series goes so far as to emulate the ZCOPY commands automatically in the generic bdev code for modules that don\u0027t support it. This allows targets like NVMe-oF and iSCSI to simply always use the zcopy API and have it just do the right thing.\n\nA zero-copy I/O has different semantics than an I/O from a user provided buffer. They work entirely differently - so it makes sense to have them as separate types. It is possible to hack up a zero copy read like we did, but only for that one specific case and you can\u0027t do write that way.",
+      "parentUuid": "01ab8915_e4569e96",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 106,
+        "endChar": 25
+      },
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4c15aef5_310d0c9a",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 9
@@ -178,6 +202,24 @@
     },
     {
       "key": {
+        "uuid": "e65e8ea9_49f23c6f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1874,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T23:21:46Z",
+      "side": 1,
+      "message": "In the NVMe-oF target, spdk_nvmf_request_exec will certainly need to be split up into two separate phases. One phase to initially parse the NVMe command and obtain a data buffer (which may call spdk_bdev_zcopy_start for I/O commands, or obtain a buffer from the pool to emulate admin commands), and a second phase to commit changes/release previously acquired resources.",
+      "parentUuid": "29492c78_fd4f5294",
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c0dfd04c_0b4106c3",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 9
@@ -189,6 +231,24 @@
       "writtenOn": "2018-07-10T17:46:20Z",
       "side": 1,
       "message": "The allocated buffer here is a different type and a different structure(bdev_io-\u003eu.zcopy). Didn\u0027t understand how this will be used for bdev_io type of read or write while submitting the actual request.",
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cc17e33_fac9c1aa",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1915,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T23:21:46Z",
+      "side": 1,
+      "message": "You don\u0027t use bdev_io types of read or write anymore. The NVMe-oF target will need to be converted entirely to use zero copy semantics.",
+      "parentUuid": "c0dfd04c_0b4106c3",
       "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
