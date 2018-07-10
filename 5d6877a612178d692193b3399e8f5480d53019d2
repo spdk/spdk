@@ -1,0 +1,293 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "920202cd_33a98921",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "Just making sure I understand - we need scratch space for 40K pointers for each of these?  That seems like a lot...",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abb7d9ea_beb585c8",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "Can you explain why a lock is needed?  Nowhere else in SPDK do we acquire locks like this every time a poller is run.  If there are multiple threads that need to share a resources, it should pass messages instead.",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a397f4b_10cf572b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "you should be able to use spdk_bdev_io_from_ctx() to get the original bdev_io from the struct crypto_bdev_io - it saves space plus avoids a pointer chase since it\u0027s just pointer arithmetic",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9f43047_9205d12b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "across",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e31d9f7_85e16079",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "could we just skip this PMD instead of aborting?  then at least the SW PMD could be used (still print an error message though)",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "297db2cf_e479b55b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "potential",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fef8045e_7b70e05c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "this comment seems misplaced",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d31046c1_812f3e7c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "particular",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7d34626_e3d20d54",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "its",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45cf9353_907256f4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "associated",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5faeb85b_4c4885a2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "dequeued",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9787ea53_afd96343",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "is it possible that mbuf_cnt could be as big as 40K?  that seems super high",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77bb03df_ee4322a2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "describe\n\n\"these buffers will describe\"?",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "873b1a52_7c0e1d02",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "where does this break up an iov that spans multiple blocks?\n\nthere is also the case where the data for one block is spread across multiple iovs\n\nvhost really stresses this case a lot",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c15dc4d8_24a5c1fd",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "use spdk_bdev_io_get_buf to allocate the buffer\n\nthe buffer then gets freed after the I/O is completed and the caller calls spdk_bdev_free_io()",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6fa8383_7bd93cd0",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "you can use spdk_json_write_named_object_begin\n\nalso spdk_json_write_named_string",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "707f7215_c298fa0f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 921,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T00:29:54Z",
+      "side": 1,
+      "message": "Finished reviewing here...",
+      "revId": "5d6877a612178d692193b3399e8f5480d53019d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
