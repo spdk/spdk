@@ -1237,6 +1237,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 /* Public API callbacks begin here */
 
+static int spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport);
+
 static struct spdk_nvmf_transport *
 spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 {
@@ -1253,7 +1255,16 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		return NULL;
 	}
 
-	pthread_mutex_init(&rtransport->lock, NULL);
+	if (pthread_mutex_init(&rtransport->lock, NULL)) {
+		SPDK_ERRLOG("pthread_mutex_init() failed\n");
+		free(rtransport);
+		return NULL;
+	}
+
+	spdk_io_device_register(rtransport, spdk_nvmf_rdma_mgmt_channel_create,
+				spdk_nvmf_rdma_mgmt_channel_destroy,
+				sizeof(struct spdk_nvmf_rdma_mgmt_channel));
+
 	TAILQ_INIT(&rtransport->devices);
 	TAILQ_INIT(&rtransport->ports);
 
@@ -1275,14 +1286,14 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	sge_count = rtransport->max_io_size / rtransport->io_unit_size;
 	if (sge_count > SPDK_NVMF_MAX_SGL_ENTRIES) {
 		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", rtransport->io_unit_size);
-		free(rtransport);
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
 		return NULL;
 	}
 
 	rtransport->event_channel = rdma_create_event_channel();
 	if (rtransport->event_channel == NULL) {
 		SPDK_ERRLOG("rdma_create_event_channel() failed, %s\n", spdk_strerror(errno));
-		free(rtransport);
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
 		return NULL;
 	}
 
@@ -1290,7 +1301,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	if (fcntl(rtransport->event_channel->fd, F_SETFL, flag | O_NONBLOCK) < 0) {
 		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
 			    rtransport->event_channel->fd, spdk_strerror(errno));
-		free(rtransport);
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
 		return NULL;
 	}
 
@@ -1301,21 +1312,14 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!rtransport->data_buf_pool) {
 		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
-		free(rtransport);
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
 		return NULL;
 	}
-
-	spdk_io_device_register(rtransport, spdk_nvmf_rdma_mgmt_channel_create,
-				spdk_nvmf_rdma_mgmt_channel_destroy,
-				sizeof(struct spdk_nvmf_rdma_mgmt_channel));
 
 	contexts = rdma_get_devices(NULL);
 	if (contexts == NULL) {
 		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
-		rdma_destroy_event_channel(rtransport->event_channel);
-		spdk_mempool_free(rtransport->data_buf_pool);
-		spdk_io_device_unregister(rtransport, NULL);
-		free(rtransport);
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
 		return NULL;
 	}
 
@@ -1351,34 +1355,32 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
 		i++;
 	}
+	rdma_free_devices(contexts);
 
 	if (rc < 0) {
-		TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
-			TAILQ_REMOVE(&rtransport->devices, device, link);
-			free(device);
-		}
-		spdk_mempool_free(rtransport->data_buf_pool);
-		rdma_destroy_event_channel(rtransport->event_channel);
-		free(rtransport);
-		rdma_free_devices(contexts);
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
 		return NULL;
-	} else {
-		/* Set up poll descriptor array to monitor events from RDMA and IB
-		 * in a single poll syscall
-		 */
-		rtransport->npoll_fds = i + 1;
-		i = 0;
-		rtransport->poll_fds = calloc(rtransport->npoll_fds, sizeof(struct pollfd));
-		rtransport->poll_fds[i].fd = rtransport->event_channel->fd;
-		rtransport->poll_fds[i++].events = POLLIN;
-
-		TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
-			rtransport->poll_fds[i].fd = device->context->async_fd;
-			rtransport->poll_fds[i++].events = POLLIN;
-		}
 	}
 
-	rdma_free_devices(contexts);
+	/* Set up poll descriptor array to monitor events from RDMA and IB
+	 * in a single poll syscall
+	 */
+	rtransport->npoll_fds = i + 1;
+	i = 0;
+	rtransport->poll_fds = calloc(rtransport->npoll_fds, sizeof(struct pollfd));
+	if (rtransport->poll_fds == NULL) {
+		SPDK_ERRLOG("poll_fds allocation failed\n");
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
+		return NULL;
+	}
+
+	rtransport->poll_fds[i].fd = rtransport->event_channel->fd;
+	rtransport->poll_fds[i++].events = POLLIN;
+
+	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
+		rtransport->poll_fds[i].fd = device->context->async_fd;
+		rtransport->poll_fds[i++].events = POLLIN;
+	}
 
 	return &rtransport->transport;
 }
@@ -1422,6 +1424,7 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 
 	spdk_mempool_free(rtransport->data_buf_pool);
 	spdk_io_device_unregister(rtransport, NULL);
+	pthread_mutex_destroy(&rtransport->lock);
 	free(rtransport);
 
 	return 0;
