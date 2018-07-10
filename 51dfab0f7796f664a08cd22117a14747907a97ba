@@ -34,6 +34,24 @@
       "revId": "51dfab0f7796f664a08cd22117a14747907a97ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34dde1dd_b9c1d223",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T18:04:33Z",
+      "side": 1,
+      "message": "Wait - if the bdev module fails the ZCOPY start, why would the bdev module need to clean up the loved?\n\nFor an upper layer protocol like NVMe-oF, if the RDMA operation failed, then yes, you still have to do spdk_bdev_zcopy_end.  But that\u0027s not the case here - this callback is for the bedv ZCOPY start itself.",
+      "parentUuid": "c9577d61_307a8a30",
+      "revId": "51dfab0f7796f664a08cd22117a14747907a97ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
