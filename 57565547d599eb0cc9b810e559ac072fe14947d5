@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a983bafd_defe824f",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T21:12:52Z",
+      "side": 1,
+      "message": "We\u0027ve been going back and forth on this, but I think ultimately we should only add one RPC to configure QoS. In that RPC, the user can specify each type of limit they want, all at once, as a JSON dictionary. That will remove a lot of the repeated boilerplate code in this patch series.",
+      "revId": "57565547d599eb0cc9b810e559ac072fe14947d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
