@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69793013_548e99fb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T21:03:43Z",
+      "side": 1,
+      "message": "I don\u0027t think you need these forward declarations",
+      "revId": "7ba30682080d235f4789adcd536ee234eed8e5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a5535ed_1771ae77",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 2315,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T21:03:43Z",
+      "side": 1,
+      "message": "This seems like it will just leak the rdma_recv. Where does it get re-posted after the queue recovers?",
+      "revId": "7ba30682080d235f4789adcd536ee234eed8e5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
