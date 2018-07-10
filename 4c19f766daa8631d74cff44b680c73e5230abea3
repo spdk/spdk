@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "40097a83_1f161eb2",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:31:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "df4a5c29_fe877386",
+      "revId": "4c19f766daa8631d74cff44b680c73e5230abea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e09de56_392b922d",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-09T21:30:55Z",
       "side": 1,
       "message": "qpair?",
+      "revId": "4c19f766daa8631d74cff44b680c73e5230abea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "652f7026_3c22efb6",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:31:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e09de56_392b922d",
       "revId": "4c19f766daa8631d74cff44b680c73e5230abea3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
