@@ -292,6 +292,28 @@ bool spdk_reactor_context_switch_monitor_enabled(void);
  */
 int spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t core_id);
 
+/**
+ * Get the address of all timed poller functions on a given lcore.
+ *
+ * \param lcore The lcore id.
+ * \param a pointer to an array of poller addresses. This will be allocated inside the function.
+ * It is the calling function's resposibility to free the array.
+ *
+ * \return The length of poller_addresses. or -1 if allocation fails.
+ */
+int spdk_reactor_get_timed_pollers(uint32_t lcore, uint64_t **poller_addresses);
+
+/**
+ * Get the address of all active poller functions on a given lcore.
+ *
+ * \param lcore The lcore id.
+ * \param a pointer to an array of poller addresses. This will be allocated inside the function.
+ * It is the calling function's resposibility to free the array.
+ *
+ * \return The length of poller_addresses. or -1 if allocation fails.
+ */
+int spdk_reactor_get_active_pollers(uint32_t lcore, uint64_t **poller_addresses);
+
 #ifdef __cplusplus
 }
 #endif

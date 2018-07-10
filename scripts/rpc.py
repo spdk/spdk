@@ -121,6 +121,14 @@ if __name__ == "__main__":
     p.add_argument('-d', '--disable', action='store_true', help='Disable context switch monitoring')
     p.set_defaults(func=context_switch_monitor)
 
+    @call_cmd
+    def get_pollers(args):
+        print_dict(rpc.app.get_pollers(args.client, args.lcore_id))
+
+    p = subparsers.add_parser('get_pollers', help='retrieve information about poller functions')
+    p.add_argument('-c', '--lcore_id', help='The lcore for which to report poller functions. If blank, all ', type=int)
+    p.set_defaults(func=get_pollers)
+
     # bdev
     @call_cmd
     def set_bdev_options(args):
