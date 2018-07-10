@@ -84,4 +84,5 @@ trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 killprocess $nvmfpid
+report_test_completion "nvmf_spdk_nvme_cli"
 timing_exit nvme_cli
