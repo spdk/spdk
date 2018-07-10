@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "057e1ab6_14771058",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:46:43Z",
+      "side": 1,
+      "message": "I get that, but referring directly to a value might be more confusing than helpful. SPDK_JSONRPC_ERROR_INVALID_PARAMS is in public header anyway. Having a table letting everyone which error code from JSON RPC spec corresponds to descriptions here (or defines in included header), might be more useful. At least doc will be more human readable that way.",
+      "parentUuid": "c3492d1c_b7cac263",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "774ed648_2d3259a2",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 1
