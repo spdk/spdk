@@ -1,0 +1,239 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec26db28_181d7860",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1108,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "implies",
+      "range": {
+        "startLine": 1108,
+        "startChar": 64,
+        "endLine": 1108,
+        "endChar": 69
+      },
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5911ef6b_3411130e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1109,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "needs",
+      "range": {
+        "startLine": 1109,
+        "startChar": 15,
+        "endLine": 1109,
+        "endChar": 19
+      },
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00ff9c6b_ab699810",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1111,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "\"@ref cpu_mask parameter is\"",
+      "range": {
+        "startLine": 1111,
+        "startChar": 18,
+        "endLine": 1111,
+        "endChar": 27
+      },
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ef71525_503dedc7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1112,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "Why plural here ? Shouldn\u0027t it be:\n\"This implies that name concatenated..\"\n\"@ref cpu_mask parameter is\"",
+      "range": {
+        "startLine": 1108,
+        "startChar": 0,
+        "endLine": 1112,
+        "endChar": 44
+      },
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d75a2e7_03e7c996",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1113,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "Since cpu_mask is optional, can you mention the default ?",
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ebb9148_de12c781",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "As nit picking goes, I think it might take the cake.\nShould we use comma at the end of line for description ? Since those are single sentence or two word descriptions, I don\u0027t think they are needed.\nSame for all below.",
+      "range": {
+        "startLine": 1126,
+        "startChar": 97,
+        "endLine": 1126,
+        "endChar": 98
+      },
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b985ff3c_918799cd",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "-\u003e\"connected, but doesn\u0027t support\"",
+      "range": {
+        "startLine": 1237,
+        "startChar": 38,
+        "endLine": 1237,
+        "endChar": 65
+      },
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17378702_90217fa8",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "Mention that by default it is set to false. May be obvious, but for completeness.",
+      "range": {
+        "startLine": 1364,
+        "startChar": 51,
+        "endLine": 1364,
+        "endChar": 89
+      },
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdd0f80a_267ccb31",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1402,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "-\u003e Response",
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ab463c1_825301a3",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "-\u003eleast",
+      "range": {
+        "startLine": 1541,
+        "startChar": 70,
+        "endLine": 1541,
+        "endChar": 76
+      },
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8917dd8b_3b546bf5",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1602,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:25:44Z",
+      "side": 1,
+      "message": "-\u003e Response",
+      "revId": "c6ac3742f654c56e5b36fcd162a65864244c4aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
