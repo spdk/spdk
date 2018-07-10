@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2d4be7cb_00cc20a7",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-10T11:09:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "550dd479_48d3bde9",
+      "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc3ad012_6b0d79ed",
         "filename": "scripts/spdkcli/ui_node.py",
         "patchSetId": 15
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-06T20:45:13Z",
       "side": 1,
       "message": "BLK help shows the default but this one doesn\u0027t",
+      "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2274a7fb_872ff8a6",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-10T11:09:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bc3ad012_6b0d79ed",
       "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "04e75d39_f1d90944",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-10T11:09:26Z",
+      "side": 1,
+      "message": "I agree. But we are not able to get this path in easy way. By get_vhost_controllers we don\u0027t get socket path.",
+      "parentUuid": "fd789e31_c0287620",
+      "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17362d46_c2c5a352",
         "filename": "scripts/spdkcli/ui_node.py",
         "patchSetId": 15
@@ -64,6 +118,24 @@
       "writtenOn": "2018-07-06T20:45:13Z",
       "side": 1,
       "message": "Same here.",
+      "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36082ba9_09d8ab5d",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-10T11:09:26Z",
+      "side": 1,
+      "message": "Same as above.",
+      "parentUuid": "17362d46_c2c5a352",
       "revId": "01ab31c1af6f335b86bca944089a1292accc7692",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
