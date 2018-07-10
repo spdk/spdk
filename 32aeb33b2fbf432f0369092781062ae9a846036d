@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9e62a83_f997017d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1314,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T18:24:16Z",
+      "side": 1,
+      "message": "could you do these in the reverse order?  i.e.\n\nio_device_unregister\nmempool_free\ndestroy_event_channel\nfree(rtransport)\n\nThis order would be fine, but I think doing reverse order is more safe/correct in the long run.",
+      "revId": "32aeb33b2fbf432f0369092781062ae9a846036d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
