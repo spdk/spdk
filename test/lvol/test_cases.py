@@ -135,6 +135,8 @@ def case_message(func):
             755: 'clone_writing_clone',
             756: 'clone_and_snapshot_consistency',
             757: 'clone_inflate',
+            758: 'decouple_parent',
+            759: 'decouple_parent_rw',
             800: 'rename_positive',
             801: 'rename_lvs_nonexistent',
             802: 'rename_lvs_EEXIST',
@@ -1791,6 +1793,182 @@ class TestCases(object):
 
         # Destroy lvol bdev
         fail_count += self.c.destroy_lvol_bdev(lvol_bdev['name'])
+
+        # Destroy lvol store
+        fail_count += self.c.destroy_lvol_store(uuid_store)
+
+        # Delete malloc
+        fail_count += self.c.delete_malloc_bdev(base_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - no other operation fails
+        return fail_count
+
+    @case_message
+    def test_case758(self):
+        """
+        clone_decouple_parent
+
+        """
+
+        fail_count = 0
+        snapshot_name = "snapshot"
+        nbd_name = "/dev/nbd0"
+
+        # Create malloc bdev
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+
+        # Create lvol store
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                   self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        size = int(int(lvs[0][u'free_clusters'] * lvs[0]['cluster_size']) / 4 / MEGABYTE)
+
+        # Construct thin provisioned lvol bdev
+        uuid_bdev0 = self.c.construct_lvol_bdev(uuid_store,
+                                                self.lbd_name, size, thin=True)
+        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
+
+        # Decouple parent lvol bdev and check if it fails
+        ret_value = self.c.decouple_parent_lvol_bdev(lvol_bdev['name'])
+        if ret_value == 0:
+            print("ERROR: Decouple parent on bdev without parent should "
+                  "fail but didn't")
+            fail_count += 1
+
+        # Create snapshot of thin provisioned lvol bdev
+        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
+
+        # Try to destroy snapshot and check if it fails
+        ret_value = self.c.destroy_lvol_bdev(snapshot_bdev['name'])
+        if ret_value == 0:
+            print("ERROR: Delete snapshot should fail but didn't")
+            fail_count += 1
+
+        # Decouple parent lvol bdev
+        fail_count += self.c.decouple_parent_lvol_bdev(lvol_bdev['name'])
+        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
+        if lvol_bdev['driver_specific']['lvol']['thin_provision'] is not True:
+            fail_count += 1
+
+        # Destroy snapshot
+        fail_count += self.c.destroy_lvol_bdev(snapshot_bdev['name'])
+
+        # Destroy lvol bdev
+        fail_count += self.c.destroy_lvol_bdev(lvol_bdev['name'])
+
+        # Destroy lvol store
+        fail_count += self.c.destroy_lvol_store(uuid_store)
+
+        # Delete malloc
+        fail_count += self.c.delete_malloc_bdev(base_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - no other operation fails
+        return fail_count
+
+    @case_message
+    def test_case759(self):
+        """
+        clone_decouple_parent_rw
+
+        """
+        fail_count = 0
+        snapshot_name = "snapshot"
+        snapshot_name2 = "snapshot2"
+        nbd_name = "/dev/nbd0"
+
+        # Create malloc bdev
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+
+        # Create lvol store
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                   self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        size = int(5 * lvs[0]['cluster_size'] / MEGABYTE)
+
+        # Construct thin provisioned lvol bdev
+        uuid_bdev0 = self.c.construct_lvol_bdev(uuid_store,
+                                                self.lbd_name, size, thin=True)
+        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
+
+        # Fill part of clone with data of known pattern
+        fail_count += self.c.start_nbd_disk(lvol_bdev['name'], nbd_name)
+        begin_fill = 0
+        end_fill = int(size * 4 / 5)
+        fail_count += self.run_fio_test(nbd_name, begin_fill * MEGABYTE,
+                                        end_fill * MEGABYTE, "write", "0xdd", 0)
+
+        # Create snapshot of thin provisioned lvol bdev
+        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
+
+        # Fill part of clone with data of known pattern
+        start_fill = int(size / 5)
+        fill_range = int(size / 5)
+        fail_count += self.run_fio_test(nbd_name, start_fill * MEGABYTE,
+                                        fill_range * MEGABYTE, "write", "0xcc", 0)
+        start_fill = int(size * 3 / 5)
+        fail_count += self.run_fio_test(nbd_name, start_fill * MEGABYTE,
+                                        fill_range * MEGABYTE, "write", "0xcc", 0)
+
+        # Create second snapshot of thin provisioned lvol bdev
+        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name2)
+        snapshot_bdev2 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name2)
+
+        # Fill part of clone with data of known pattern
+        start_fill = int(size / 5)
+        fail_count += self.run_fio_test(nbd_name, start_fill * MEGABYTE,
+                                        fill_range * MEGABYTE, "write", "0xee", 0)
+
+        # Check data consistency
+        pattern = ["0xdd", "0xee", "0xdd", "0xcc", "0x00"]
+        for i in range(0, 5):
+            begin_fill = int(size * i / 5)
+            fail_count += self.run_fio_test(nbd_name, begin_fill * MEGABYTE,
+                                            fill_range * MEGABYTE, "read", pattern[i])
+
+        # Delete snapshot and check if it fails
+        ret_value = self.c.destroy_lvol_bdev(snapshot_bdev2['name'])
+        if ret_value == 0:
+            print("ERROR: Delete snapshot should fail but didn't")
+            fail_count += 1
+
+        # Decouple parent
+        fail_count += self.c.decouple_parent_lvol_bdev(lvol_bdev['name'])
+        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
+
+        # Check data consistency
+        for i in range(0, 5):
+            begin_fill = int(size * i / 5)
+            fail_count += self.run_fio_test(nbd_name, begin_fill * MEGABYTE,
+                                            fill_range * MEGABYTE, "read", pattern[i])
+
+        # Delete second snapshot
+        ret_value = self.c.destroy_lvol_bdev(snapshot_bdev2['name'])
+
+        # Check data consistency
+        for i in range(0, 5):
+            begin_fill = int(size * i / 5)
+            fail_count += self.run_fio_test(nbd_name, begin_fill * MEGABYTE,
+                                            fill_range * MEGABYTE, "read", pattern[i])
+
+        # Destroy snapshot
+        fail_count += self.c.destroy_lvol_bdev(lvol_bdev['name'])
+
+        # Destroy lvol bdev
+        fail_count += self.c.destroy_lvol_bdev(snapshot_bdev['name'])
 
         # Destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
