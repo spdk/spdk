@@ -60,6 +60,24 @@
     },
     {
       "key": {
+        "uuid": "c2b1b61a_4cbfcfd2",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T12:32:56Z",
+      "side": 1,
+      "message": "This falls under \"Specific applications...\"",
+      "parentUuid": "8998004d_9233cd3b",
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3bb49f59_92a6357a",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 8
@@ -83,6 +101,30 @@
     },
     {
       "key": {
+        "uuid": "35667d07_6f67c1c3",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T12:32:56Z",
+      "side": 1,
+      "message": "Ok",
+      "parentUuid": "3bb49f59_92a6357a",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 52
+      },
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "124ed346_d4287a8c",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 8
@@ -94,6 +136,30 @@
       "writtenOn": "2018-07-10T11:20:49Z",
       "side": 1,
       "message": "I don\u0027t think SPDK ever tries or wants to take over NICs. Is there need to mention that here ?",
+      "range": {
+        "startLine": 38,
+        "startChar": 95,
+        "endLine": 38,
+        "endChar": 99
+      },
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5a1e86a_6a4ca838",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T12:32:56Z",
+      "side": 1,
+      "message": "This is translated to DPDK \u0027--no-pci\u0027 parameter. It is worth mentioning for those who use master DPDK instead of SPDK/DPDK",
+      "parentUuid": "124ed346_d4287a8c",
       "range": {
         "startLine": 38,
         "startChar": 95,
