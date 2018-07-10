@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7abba913_d0e372ca",
+        "filename": "doc/vhost.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:49:40Z",
+      "side": 1,
+      "message": "are",
+      "range": {
+        "startLine": 38,
+        "startChar": 30,
+        "endLine": 38,
+        "endChar": 34
+      },
+      "revId": "3087b028814c56438a9780573c7be5753fca2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -78,6 +78,24 @@
     },
     {
       "key": {
+        "uuid": "93739cf5_f2bf1291",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:49:40Z",
+      "side": 1,
+      "message": "Ok.",
+      "parentUuid": "c2b1b61a_4cbfcfd2",
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3bb49f59_92a6357a",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 8
@@ -160,6 +178,30 @@
       "side": 1,
       "message": "This is translated to DPDK \u0027--no-pci\u0027 parameter. It is worth mentioning for those who use master DPDK instead of SPDK/DPDK",
       "parentUuid": "124ed346_d4287a8c",
+      "range": {
+        "startLine": 38,
+        "startChar": 95,
+        "endLine": 38,
+        "endChar": 99
+      },
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dfc6502_0bd8ce89",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T12:49:40Z",
+      "side": 1,
+      "message": "That makes sense, thanks.",
+      "parentUuid": "e5a1e86a_6a4ca838",
       "range": {
         "startLine": 38,
         "startChar": 95,
