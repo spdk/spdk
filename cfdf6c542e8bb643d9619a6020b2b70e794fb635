@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f23f9ea1_3ec68e9e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T13:07:48Z",
+      "side": 1,
+      "message": "be",
+      "range": {
+        "startLine": 635,
+        "startChar": 77,
+        "endLine": 635,
+        "endChar": 79
+      },
+      "revId": "cfdf6c542e8bb643d9619a6020b2b70e794fb635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f9ef285_99f30cf8",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T13:07:48Z",
+      "side": 1,
+      "message": "Same nit pick as previous patch about comma at the end.",
+      "range": {
+        "startLine": 637,
+        "startChar": 67,
+        "endLine": 637,
+        "endChar": 68
+      },
+      "revId": "cfdf6c542e8bb643d9619a6020b2b70e794fb635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0f835dc_77d67f24",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T13:07:48Z",
+      "side": 1,
+      "message": "-\u003eName of newly created bdev.\nor\n-\u003eName of new bdev.\n\nSame for all below.",
+      "range": {
+        "startLine": 641,
+        "startChar": 8,
+        "endLine": 641,
+        "endChar": 11
+      },
+      "revId": "cfdf6c542e8bb643d9619a6020b2b70e794fb635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a93fceff_1c0b53f0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 912,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T13:07:48Z",
+      "side": 1,
+      "message": "I suppose this section is being done ahead of the call ? Please refer to https://review.gerrithub.io/#/c/spdk/spdk/+/416546/\n\nThis call is named delete_nvme_controller and has bit more parameters.",
+      "revId": "cfdf6c542e8bb643d9619a6020b2b70e794fb635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d1c096f_490ec4e7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 959,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T13:07:48Z",
+      "side": 1,
+      "message": "Capitalize",
+      "range": {
+        "startLine": 959,
+        "startChar": 51,
+        "endLine": 959,
+        "endChar": 52
+      },
+      "revId": "cfdf6c542e8bb643d9619a6020b2b70e794fb635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23367eee_52018dbc",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T13:07:48Z",
+      "side": 1,
+      "message": "Capitalize",
+      "range": {
+        "startLine": 960,
+        "startChar": 51,
+        "endLine": 960,
+        "endChar": 52
+      },
+      "revId": "cfdf6c542e8bb643d9619a6020b2b70e794fb635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60ee7b4c_24602ffd",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T13:07:48Z",
+      "side": 1,
+      "message": "Capitalize",
+      "range": {
+        "startLine": 961,
+        "startChar": 51,
+        "endLine": 961,
+        "endChar": 52
+      },
+      "revId": "cfdf6c542e8bb643d9619a6020b2b70e794fb635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d19bac3d_74aa9493",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 1165,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T13:07:48Z",
+      "side": 1,
+      "message": "-\u003eBdev name",
+      "range": {
+        "startLine": 1165,
+        "startChar": 51,
+        "endLine": 1165,
+        "endChar": 66
+      },
+      "revId": "cfdf6c542e8bb643d9619a6020b2b70e794fb635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
