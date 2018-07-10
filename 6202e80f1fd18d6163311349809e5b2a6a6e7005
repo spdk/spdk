@@ -16,6 +16,24 @@
       "revId": "6202e80f1fd18d6163311349809e5b2a6a6e7005",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68b9d27d_0eded4cc",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-10T21:14:04Z",
+      "side": 1,
+      "message": "No problems I will checkout out your update to this patch and test it now.",
+      "parentUuid": "37956a30_7f0b8e83",
+      "revId": "6202e80f1fd18d6163311349809e5b2a6a6e7005",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
