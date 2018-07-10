@@ -1100,10 +1100,11 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_thread *thread = spdk_io_channel_get_thread(bdev_io->internal.ch->channel);
 
+	assert(thread != NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev_io->internal.ch->flags & BDEV_CH_QOS_ENABLED) {
-		if (thread == bdev->internal.qos->thread) {
+		if ((thread == bdev->internal.qos->thread) || !bdev->internal.qos->thread) {
 			_spdk_bdev_io_submit(bdev_io);
 		} else {
 			bdev_io->internal.io_submit_ch = bdev_io->internal.ch;
@@ -1481,8 +1482,12 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 
 	bdev->internal.qos = new_qos;
 
-	spdk_thread_send_msg(old_qos->thread, spdk_bdev_qos_channel_destroy,
-			     old_qos);
+	if (old_qos->thread == NULL) {
+		spdk_bdev_qos_channel_destroy(old_qos);
+	} else {
+		spdk_thread_send_msg(old_qos->thread, spdk_bdev_qos_channel_destroy,
+				     old_qos);
+	}
 
 	/* It is safe to continue with destroying the bdev even though the QoS channel hasn't
 	 * been destroyed yet. The destruction path will end up waiting for the final
