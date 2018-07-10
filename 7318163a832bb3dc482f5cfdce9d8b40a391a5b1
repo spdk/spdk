@@ -22,6 +22,30 @@
       "revId": "7318163a832bb3dc482f5cfdce9d8b40a391a5b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ce61158_809e6b75",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-10T21:31:00Z",
+      "side": 1,
+      "message": "I consider using SPDK_BDEV_IO_TYPE_READ for both the zero copy and regular cases as overloaded. This is undoing that overloading.\n\nCan you provide the technical reasons for why it is important to you to preserve the bdev_io type as SPDK_BDEV_IO_TYPE_READ?",
+      "parentUuid": "08fddff6_9dc8dfc0",
+      "range": {
+        "startLine": 386,
+        "startChar": 0,
+        "endLine": 386,
+        "endChar": 48
+      },
+      "revId": "7318163a832bb3dc482f5cfdce9d8b40a391a5b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
