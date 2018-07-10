@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1dfdcf1f_4a4958dd",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:11:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "781be0c9_5b897226",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fabfb6d9_5adec75c",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-06T21:33:04Z",
       "side": 1,
       "message": "maybe mention this is an aggregate across all of the channels open for the bdev",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e09d76bc_e84d95e1",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:11:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fabfb6d9_5adec75c",
       "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d1109584_a1cb6202",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:11:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7329a452_ca90df9e",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca8f54ff_a6affe8c",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2018-07-06T21:33:04Z",
       "side": 1,
       "message": "just use period \u003d\u003d 0 to denote if its enabled",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b22a7711_afd25bb3",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:11:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca8f54ff_a6affe8c",
       "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "02b0db3c_b4e045db",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:11:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f654658d_769b9c70",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98f8e6c5_28f52df6",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -98,6 +188,24 @@
       "writtenOn": "2018-07-06T21:33:04Z",
       "side": 1,
       "message": "spdk_poller_register is always assumed to succeed - we don\u0027t check return value anywhere else to my knowledge\n\nso that means you can then change this function to return void instead",
+      "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "228153e2_a121aa49",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1699,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:11:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "98f8e6c5_28f52df6",
       "revId": "bfdf29d7bd44841f6aba80c29a342e2e6111c909",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

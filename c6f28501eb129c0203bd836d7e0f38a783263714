@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "94a819a4_c78eb5d7",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:11:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "924a89d1_5f12436d",
+      "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f7a53e6_cb160cee",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 6
@@ -47,6 +65,24 @@
       "writtenOn": "2018-07-09T20:53:28Z",
       "side": 1,
       "message": "repeatedly \u003d\u003e periodically",
+      "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b550764c_163c9af6",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:11:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f7a53e6_cb160cee",
       "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -99,6 +135,24 @@
       "writtenOn": "2018-07-09T20:53:28Z",
       "side": 1,
       "message": "you should set bdev-\u003emeasured_queue_depth to UINT64_MAX here",
+      "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab8b7273_d2367717",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1692,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-10T21:11:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "017c70b5_6287c9bd",
       "revId": "c6f28501eb129c0203bd836d7e0f38a783263714",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
