@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24aa62e9_2207056f",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-10T01:52:45Z",
+      "side": 1,
+      "message": "I think iscsi.h has already defined this response code, see enum iscsi_task_func_resp for reference.",
+      "revId": "aa8afc5f19b9aed959df1098118e070179f30973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf4b4c54_340b3624",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-10T01:52:45Z",
+      "side": 1,
+      "message": "You can use spdk_thread_send_msg to let the reset being processed at the same thread.",
+      "revId": "aa8afc5f19b9aed959df1098118e070179f30973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
