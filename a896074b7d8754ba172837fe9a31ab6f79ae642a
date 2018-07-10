@@ -235,6 +235,30 @@
       "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "797eedc5_4945c3db",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T15:11:28Z",
+      "side": 1,
+      "message": "\u003e What do you suggest?\n\nUsing spdk_bdev_io_get_buf for both read and write to avoid in-place operations.",
+      "parentUuid": "bb9d4723_1953052e",
+      "range": {
+        "startLine": 788,
+        "startChar": 0,
+        "endLine": 791,
+        "endChar": 5
+      },
+      "revId": "a896074b7d8754ba172837fe9a31ab6f79ae642a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
