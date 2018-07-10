@@ -22,6 +22,52 @@
       "revId": "2d5303d83fdd87f6809c6924f7f27b38e6bdb896",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47d8c8b8_d5f94bd9",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-10T02:32:12Z",
+      "side": 1,
+      "message": "there is no initiator and from the viewpoint of test for config, get_portal_groups and get_initiator_groups should be used instead.",
+      "range": {
+        "startLine": 85,
+        "startChar": 9,
+        "endLine": 85,
+        "endChar": 30
+      },
+      "revId": "2d5303d83fdd87f6809c6924f7f27b38e6bdb896",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4af2cf1d_92933066",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-10T02:32:12Z",
+      "side": 1,
+      "message": "scsi device is implicit in iSCSI and get_target_nodes will be more appropriate here.",
+      "range": {
+        "startLine": 86,
+        "startChar": 9,
+        "endLine": 86,
+        "endChar": 25
+      },
+      "revId": "2d5303d83fdd87f6809c6924f7f27b38e6bdb896",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
