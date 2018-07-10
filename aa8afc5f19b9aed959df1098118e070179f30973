@@ -19,6 +19,52 @@
     },
     {
       "key": {
+        "uuid": "2154346d_6981394d",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T08:36:45Z",
+      "side": 1,
+      "message": "Are sure this is always uint32_t ?",
+      "range": {
+        "startLine": 353,
+        "startChar": 16,
+        "endLine": 353,
+        "endChar": 29
+      },
+      "revId": "aa8afc5f19b9aed959df1098118e070179f30973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "430cea87_22af1790",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T08:36:45Z",
+      "side": 1,
+      "message": "Can you reorder this and put unuinitialized variables always after initilized.",
+      "range": {
+        "startLine": 368,
+        "startChar": 1,
+        "endLine": 368,
+        "endChar": 8
+      },
+      "revId": "aa8afc5f19b9aed959df1098118e070179f30973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf4b4c54_340b3624",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 3
