@@ -48,6 +48,8 @@
 #define SPDK_EVENT_BATCH_SIZE		8
 #define SPDK_SEC_TO_USEC		1000000ULL
 
+typedef TAILQ_HEAD(pollers_head, spdk_poller) poller_tailq_head_t;
+
 enum spdk_poller_state {
 	/* The poller is registered with a reactor but not currently executing its fn. */
 	SPDK_POLLER_STATE_WAITING,
@@ -104,12 +106,12 @@ struct spdk_reactor {
 	 *  of the ring, executes it, then puts it back at the tail of
 	 *  the ring.
 	 */
-	TAILQ_HEAD(, spdk_poller)			active_pollers;
+	poller_tailq_head_t				active_pollers;
 
 	/**
 	 * Contains pollers running on this reactor with a periodic timer.
 	 */
-	TAILQ_HEAD(timer_pollers_head, spdk_poller)	timer_pollers;
+	poller_tailq_head_t				timer_pollers;
 
 	struct spdk_ring				*events;
 
@@ -246,7 +248,7 @@ _spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poll
 	 * Insert poller in the reactor's timer_pollers list in sorted order by next scheduled
 	 * run time.
 	 */
-	TAILQ_FOREACH_REVERSE(iter, &reactor->timer_pollers, timer_pollers_head, tailq) {
+	TAILQ_FOREACH_REVERSE(iter, &reactor->timer_pollers, pollers_head, tailq) {
 		if (iter->next_run_tick <= next_run_tick) {
 			TAILQ_INSERT_AFTER(&reactor->timer_pollers, iter, poller, tailq);
 			return;
