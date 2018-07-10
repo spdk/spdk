@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ead3946f_302c5524",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T22:59:36Z",
+      "side": 1,
+      "message": "this should also probably be changed to free_rpc_set_bdev_qd_tracking_poll_period",
+      "revId": "d1738a01eb381ccc2cfac14cb3457403bb14579c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b27c191_b00aaf97",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T22:59:36Z",
+      "side": 1,
+      "message": "I think you should initialize req.period to UINT64_MAX.  Then after you decode the object, if it is still set to UINT64_MAX, you know the caller did not specify it and you should fail the RPC.\n\nJust assuming 0 (to disable it) is probably OK, but using UINT64_MAX is more precise IMO.",
+      "revId": "d1738a01eb381ccc2cfac14cb3457403bb14579c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
