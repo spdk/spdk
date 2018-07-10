@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0ec659c6_03c079fc",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T17:53:52Z",
+      "side": 1,
+      "message": "Some changes to your bdev module will be required.  But when you get a ZCOPY command, you can get the populate flag to indicate whether the specified buffers need to be allocated (for a read) or not.  Then when the ZCOPY end occurs, the commit flag will indicate if its a write.\n\nWe purposely want to keep ZCOPY as a different IO type than read/write.  zcopy means that the bdev module is allocating or specifying the I/O buffers, while for read/write, the caller is supplying the IO buffers.",
+      "parentUuid": "27ecbf09_de0cb127",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 106,
+        "endChar": 25
+      },
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c15aef5_310d0c9a",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 9
@@ -90,6 +114,23 @@
       "side": 1,
       "message": "Yep - I like that name better.",
       "parentUuid": "6801fd96_15c8cddb",
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d5c494f_95c7f96e",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-10T17:53:52Z",
+      "side": 1,
+      "message": "this needs to be two separate flags - one for populate, one for commit\n\nthen when ZCOPY end occurs, the bdev module can know whether the ZCOPY start specified populate or not",
       "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
