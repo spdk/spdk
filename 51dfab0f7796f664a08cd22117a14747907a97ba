@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2ff870c_ce4a4cdf",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-10T17:06:05Z",
+      "side": 1,
+      "message": "zcopy end would have to be called to clean up the iovec regardless of whether the io failed or not.",
+      "revId": "51dfab0f7796f664a08cd22117a14747907a97ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
