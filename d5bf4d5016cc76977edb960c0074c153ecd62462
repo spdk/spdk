@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "ac2c8927_01a1db33",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:06:43Z",
+      "side": 1,
+      "message": "I think it is useful to describe the goal and at the same time mention that this is still work in progress. Then new developers can stop wondering whether they should file bugs.",
+      "parentUuid": "5d288c48_551648ce",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8dbdef6a_ba0426d7",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 1
