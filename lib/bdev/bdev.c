@@ -393,7 +393,7 @@ spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
 	}
 
 	if (buf != NULL) {
-		aligned_buf = (void *)(((uintptr_t)buf + 512) & ~511UL);
+		aligned_buf = (void *)(((uintptr_t)buf + 511) & ~511UL);
 		len = len - ((uintptr_t)aligned_buf - (uintptr_t)buf);
 	} else {
 		aligned_buf = NULL;
