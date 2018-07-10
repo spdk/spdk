@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b9f03a6a_f9a3ef8f",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T16:46:43Z",
+      "side": 1,
+      "message": "Sure, thanks. Will add UT later, card for that here https://trello.com/c/GBjKvDP7",
+      "parentUuid": "d1ba1b94_38b42ff7",
+      "revId": "dac622970897f7da905515bacca0693329adb748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "28bc9b1f_890f64f9",
         "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
         "patchSetId": 8
@@ -59,6 +77,30 @@
     },
     {
       "key": {
+        "uuid": "2926df06_202e9cd4",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T16:46:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "37c6bfb2_a121decd",
+      "range": {
+        "startLine": 889,
+        "startChar": 16,
+        "endLine": 889,
+        "endChar": 32
+      },
+      "revId": "dac622970897f7da905515bacca0693329adb748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83ea3ed8_41351b25",
         "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
         "patchSetId": 8
@@ -76,6 +118,24 @@
     },
     {
       "key": {
+        "uuid": "70118386_a21a6273",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T16:46:43Z",
+      "side": 1,
+      "message": "It shouldn\u0027t, you are right.",
+      "parentUuid": "83ea3ed8_41351b25",
+      "revId": "dac622970897f7da905515bacca0693329adb748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "87968c7b_956d541e",
         "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
         "patchSetId": 8
@@ -87,6 +147,24 @@
       "writtenOn": "2018-07-09T22:08:24Z",
       "side": 1,
       "message": "Some more interesting tests for SYNCHRONIZE CACHE (not necessarily in this patch, just commenting on these as I\u0027m already reading the spec):\n\n- Check that Number of Logical Blocks \u003d\u003d 0 flushes the remainder of the disk starting at LBA (special case defined by the spec).\n- Check that a LBA + Number of Logical Blocks exceeding the size of the disk returns the expected sense code.",
+      "revId": "dac622970897f7da905515bacca0693329adb748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75775a50_faee9bb6",
+        "filename": "test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T16:46:43Z",
+      "side": 1,
+      "message": "Sure, thanks. Will add it later, card for that here https://trello.com/c/GBjKvDP7",
+      "parentUuid": "87968c7b_956d541e",
       "revId": "dac622970897f7da905515bacca0693329adb748",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
