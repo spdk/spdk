@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08fddff6_9dc8dfc0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-10T17:12:38Z",
+      "side": 1,
+      "message": "Basically, I don\u0027t want to overload the bdev_io-\u003etype like this.",
+      "range": {
+        "startLine": 386,
+        "startChar": 0,
+        "endLine": 386,
+        "endChar": 48
+      },
+      "revId": "7318163a832bb3dc482f5cfdce9d8b40a391a5b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

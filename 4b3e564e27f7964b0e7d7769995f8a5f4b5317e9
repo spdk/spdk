@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54489f2f_01e835fc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-10T17:12:38Z",
+      "side": 0,
+      "message": "During the call this morning you called this a hack.  However, this change preserved the bdev_io-\u003etype command semantics so I think it is better than the current proposed change.",
+      "range": {
+        "startLine": 385,
+        "startChar": 0,
+        "endLine": 385,
+        "endChar": 38
+      },
+      "revId": "4b3e564e27f7964b0e7d7769995f8a5f4b5317e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
