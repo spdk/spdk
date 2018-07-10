@@ -1,0 +1,242 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fd1e1ae_fa581c2c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "So what is the UUID of a Malloc BDev good for? The API is only using the name as far as I understand it (see delete_malloc_bdev).\n\nAre there constraints for block_size, either in SPDK or in how the BDev gets used?",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57d5089f_0f67bc3d",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "Is this really still an array? I thought 160850f0a6051b80c59ba7c8662efc2696b8f937 had changed that to a single string for all construct calls.",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba0659ac_da27bf26",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "NVMe-oF instead of VMe-oF?",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a276b60_1177c3b5",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 909,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "See above.",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55e9406e_2c88a909",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "Construct",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c34c1c8f_74b073de",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 999,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "Ceph",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "daa33a85_4346d0ca",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "Construct",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df506519_c4c138b7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1053,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "base_name or name?",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c98d912e_010f07f6",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1274,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "equivalent",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a4a8656_d9ac9d72",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1319,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "information about",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da6565b6_14daf67d",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1327,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "to a new or an existing pmem file?",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab7a12bf_d95994fb",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1371,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "pointed to by",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dae02c32_6b9ea7f5",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1409,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "It has no other purpose than being...",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "619aa2d4_acaa32dd",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1540,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-07-10T07:27:21Z",
+      "side": 1,
+      "message": "is intentionally undocumented (search/replace in entire document)",
+      "revId": "f1a7e725847532aa78439ef48b6a5e3e23a0c300",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
