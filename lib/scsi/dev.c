@@ -355,7 +355,7 @@ spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev)
 		if (dev->lun[i] == NULL) {
 			continue;
 		}
-		spdk_scsi_lun_free_io_channel(dev->lun[i]);
+		_spdk_scsi_lun_free_io_channel(dev->lun[i]);
 	}
 }
 
@@ -368,7 +368,7 @@ spdk_scsi_dev_allocate_io_channels(struct spdk_scsi_dev *dev)
 		if (dev->lun[i] == NULL) {
 			continue;
 		}
-		rc = spdk_scsi_lun_allocate_io_channel(dev->lun[i]);
+		rc = _spdk_scsi_lun_allocate_io_channel(dev->lun[i]);
 		if (rc < 0) {
 			spdk_scsi_dev_free_io_channels(dev);
 			return -1;
