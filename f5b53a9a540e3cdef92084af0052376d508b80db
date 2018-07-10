@@ -1,0 +1,176 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "666f34f4_ad1bf4e6",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "spdk-\u003eSPDK",
+      "range": {
+        "startLine": 15,
+        "startChar": 85,
+        "endLine": 15,
+        "endChar": 89
+      },
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95b38f59_390bb25e",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "Should we mention \"-S\" in vhost apps or that falls under \"Specific applications may implement additional flags\" ?",
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bb49f59_92a6357a",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "Can you move this section next to PCI address blacklist or white list so it is not missed. They relate in functionality somewhat (or at least exclude each other).",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 52
+      },
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "124ed346_d4287a8c",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "I don\u0027t think SPDK ever tries or wants to take over NICs. Is there need to mention that here ?",
+      "range": {
+        "startLine": 38,
+        "startChar": 95,
+        "endLine": 38,
+        "endChar": 99
+      },
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7d97058_61861e84",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "white list -\u003e whitelist",
+      "range": {
+        "startLine": 54,
+        "startChar": 30,
+        "endLine": 54,
+        "endChar": 40
+      },
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44a822ca_633beff0",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "May be obvious, but add info that SPDK needs to be compiled with debug flags enabled beforehand.",
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b07d61ca_909b06c9",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "cpu -\u003e CPU",
+      "range": {
+        "startLine": 71,
+        "startChar": 42,
+        "endLine": 71,
+        "endChar": 45
+      },
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c37b0da1_b9d23b49",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "Please consider same capitalization throughout.\n\ncpus -\u003e CPUs",
+      "range": {
+        "startLine": 71,
+        "startChar": 26,
+        "endLine": 71,
+        "endChar": 30
+      },
+      "revId": "f5b53a9a540e3cdef92084af0052376d508b80db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

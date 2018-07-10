@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "ad143625_83c43058",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "\u003e Ben: Configuration -\u003e Configuring?",
+      "parentUuid": "26d66f41_5cc8754a",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86d34d86_2c6fb2a2",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 6
@@ -139,6 +157,24 @@
     },
     {
       "key": {
+        "uuid": "378a2bcf_089042bc",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "\u003e Consider explaining first, in a paragraph above this one, that SPDK\n \u003e applications progress through a set of states, including STARTUP\n \u003e and RUNTIME.",
+      "parentUuid": "15f7a5a7_e3022a57",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6c61c7d5_8f19f6ce",
         "filename": "doc/user_guides_common.md",
         "patchSetId": 6
@@ -150,6 +186,24 @@
       "writtenOn": "2018-07-09T18:11:04Z",
       "side": 1,
       "message": "Maybe give some examples of what a BDF looks like.",
+      "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec3e6ccd_fe0f48b9",
+        "filename": "doc/user_guides_common.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-10T11:20:49Z",
+      "side": 1,
+      "message": "\u003e Maybe give some examples of what a BDF looks like.",
+      "parentUuid": "6c61c7d5_8f19f6ce",
       "revId": "859a5a37ea880011e17e82747dc435cca10f4262",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
