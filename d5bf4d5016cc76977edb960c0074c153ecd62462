@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "c3492d1c_b7cac263",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T11:58:31Z",
+      "side": 1,
+      "message": "This code (-32602) is from JSON RPC spec. I can invent some alias for that but don\u0027t think exposing SPDK_JSONRPC_ERROR_INVALID_PARAMS is good here. What you think?",
+      "parentUuid": "9857aeba_5a0b7658",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "774ed648_2d3259a2",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 1
@@ -117,6 +135,24 @@
       "writtenOn": "2018-07-10T11:41:23Z",
       "side": 1,
       "message": "This will always be ongoing effort to improve error messaging.\nI vote to change it to just to let user know that, error response message with more details is provided when returning error code.",
+      "parentUuid": "ac2c8927_01a1db33",
+      "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fb4dc65_debdc3c1",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-10T11:58:31Z",
+      "side": 1,
+      "message": "+1 for Patrick.",
       "parentUuid": "ac2c8927_01a1db33",
       "revId": "d5bf4d5016cc76977edb960c0074c153ecd62462",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
