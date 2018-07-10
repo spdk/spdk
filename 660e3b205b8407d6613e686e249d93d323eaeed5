@@ -93,6 +93,40 @@
       "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29492c78_fd4f5294",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1874,
+      "author": {
+        "id": 1011327
+      },
+      "writtenOn": "2018-07-10T17:46:20Z",
+      "side": 1,
+      "message": "I was talking about this code path in today\u0027s meeting (similarly for other media cmds).\nspdk_nvmf_request_exec\n spdk_nvmf_ctrlr_process_io_cmd\n  nvmf_bdev_ctrlr_write_cmd\n   spdk_bdev_writev_blocks\n\nHere bdev_io is being allocated. Is this changing with zcopy?",
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0dfd04c_0b4106c3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1915,
+      "author": {
+        "id": 1011327
+      },
+      "writtenOn": "2018-07-10T17:46:20Z",
+      "side": 1,
+      "message": "The allocated buffer here is a different type and a different structure(bdev_io-\u003eu.zcopy). Didn\u0027t understand how this will be used for bdev_io type of read or write while submitting the actual request.",
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
