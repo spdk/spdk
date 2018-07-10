@@ -50,6 +50,8 @@
 
 typedef TAILQ_HEAD(pollers_head, spdk_poller) poller_tailq_head_t;
 
+extern char __executable_start;
+
 enum spdk_poller_state {
 	/* The poller is registered with a reactor but not currently executing its fn. */
 	SPDK_POLLER_STATE_WAITING,
@@ -448,6 +450,59 @@ spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t co
 	*tsc_stats = reactor->tsc_stats;
 
 	return 0;
+}
+
+static int
+spdk_reactor_get_pollers(poller_tailq_head_t *head, struct spdk_reactor *reactor,
+			 uint64_t **poller_addresses)
+{
+	int num_pollers = 0, poller_iter = 0;
+	struct spdk_poller *poller;
+	uint64_t *temporary_addresses;
+
+	TAILQ_FOREACH(poller, head, tailq) {
+		num_pollers++;
+	}
+
+	*poller_addresses = calloc(num_pollers, sizeof(uint64_t));
+
+	if (! *poller_addresses) {
+		return -1;
+	}
+
+	TAILQ_FOREACH(poller, head, tailq) {
+		(*poller_addresses)[poller_iter] = (char *)poller->fn - &__executable_start;
+		poller_iter++;
+	}
+	return poller_iter;
+}
+
+int
+spdk_reactor_get_timed_pollers(uint32_t lcore, uint64_t **poller_addresses)
+{
+	struct spdk_reactor *reactor;
+
+	reactor = spdk_reactor_get(lcore);
+
+	if (!reactor) {
+		return -1;
+	}
+
+	return spdk_reactor_get_pollers(&reactor->timer_pollers, reactor, poller_addresses);
+}
+
+int
+spdk_reactor_get_active_pollers(uint32_t lcore, uint64_t **poller_addresses)
+{
+	struct spdk_reactor *reactor;
+
+	reactor = spdk_reactor_get(lcore);
+
+	if (!reactor) {
+		return -1;
+	}
+
+	return spdk_reactor_get_pollers(&reactor->active_pollers, reactor, poller_addresses);
 }
 
 /**

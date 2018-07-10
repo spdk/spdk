@@ -21,3 +21,18 @@ def context_switch_monitor(client, enabled=None):
     if enabled is not None:
         params['enabled'] = enabled
     return client.call('context_switch_monitor', params)
+
+
+def get_pollers(client, lcore_id):
+    """Retrieve the offset of each poller function from the from the start of the executable's text section.
+
+    Args:
+        lcore_id: If set, provide information on the specified lcore. If unset provide information on all cores.
+
+    Returns:
+        A list of poller offsets for one or all cores, separated between timed and active pollers.
+    """
+    params = {}
+    if lcore_id is not None:
+        params['lcore_id'] = lcore_id
+    return client.call('get_pollers', params)
