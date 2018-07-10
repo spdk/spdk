@@ -14,23 +14,19 @@
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list;
+struct spdk_iscsi_task iscsi_task;
 
 struct spdk_iscsi_task *
 spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 		    struct spdk_iscsi_task *parent,
 		    spdk_scsi_task_cpl cpl_fn)
 {
-	struct spdk_iscsi_task *task;
-
-	task = calloc(1, sizeof(*task));
-
-	return task;
+	return &iscsi_task;
 }
 
 void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
-	free(task);
 }
 
 void
