@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f47e81f4_6e802bf6",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-10T17:25:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2ba99be3_70b000fe",
+      "range": {
+        "startLine": 747,
+        "startChar": 3,
+        "endLine": 747,
+        "endChar": 42
+      },
+      "revId": "94678fc0c65960a997c05407ec71cf8bce1ceaeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd6e7d11_8548521b",
         "filename": "lib/bdev/pvol/bdev_pvol.h",
         "patchSetId": 24
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-09T21:52:47Z",
       "side": 1,
       "message": "As I remember, if not explicitly initialized, enums are always counting from zero. I think this property of SPDK can be found in multiple places. Can we stop doing such things? Thanks.",
+      "range": {
+        "startLine": 45,
+        "startChar": 23,
+        "endLine": 45,
+        "endChar": 27
+      },
+      "revId": "94678fc0c65960a997c05407ec71cf8bce1ceaeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4018323a_b94a60af",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-10T17:25:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd6e7d11_8548521b",
       "range": {
         "startLine": 45,
         "startChar": 23,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "caf58ebd_34118aa9",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-10T17:25:51Z",
+      "side": 1,
+      "message": "Sure, as of now bdev_pvol.c does not need such function. In future, if it requires will move to bdev_pvol.c",
+      "parentUuid": "6f339120_2f052c7c",
+      "range": {
+        "startLine": 65,
+        "startChar": 2,
+        "endLine": 65,
+        "endChar": 81
+      },
+      "revId": "94678fc0c65960a997c05407ec71cf8bce1ceaeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99abf746_e945cfe6",
         "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
         "patchSetId": 24
@@ -82,6 +154,30 @@
       "writtenOn": "2018-07-09T21:52:47Z",
       "side": 1,
       "message": "It would be really nice to inform user why bdev can\u0027t be added.",
+      "range": {
+        "startLine": 426,
+        "startChar": 9,
+        "endLine": 426,
+        "endChar": 33
+      },
+      "revId": "94678fc0c65960a997c05407ec71cf8bce1ceaeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e383de98_3843143a",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-10T17:25:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99abf746_e945cfe6",
       "range": {
         "startLine": 426,
         "startChar": 9,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "93fb6ff1_f5e9ed25",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-10T17:25:51Z",
+      "side": 1,
+      "message": "I got your point that when w \u003d\u003d NULL just don\u0027t send the response but completion the operation, so I will just return if w\u003d\u003dNULL in this case",
+      "parentUuid": "4e7ac8ef_73f04587",
+      "range": {
+        "startLine": 433,
+        "startChar": 1,
+        "endLine": 433,
+        "endChar": 17
+      },
+      "revId": "94678fc0c65960a997c05407ec71cf8bce1ceaeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a79ca6f7_7b64414e",
         "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
         "patchSetId": 24
@@ -128,6 +248,30 @@
       "writtenOn": "2018-07-09T21:52:47Z",
       "side": 1,
       "message": "if spdk_jsonrpc_begin_result return NULL it only mean that no one is waiting for response but you still must finish you command, just don\u0027t send response. So proper action is to move  those lines after line 631.",
+      "range": {
+        "startLine": 613,
+        "startChar": 0,
+        "endLine": 617,
+        "endChar": 2
+      },
+      "revId": "94678fc0c65960a997c05407ec71cf8bce1ceaeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecb32d15_b29515e5",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-10T17:25:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a79ca6f7_7b64414e",
       "range": {
         "startLine": 613,
         "startChar": 0,
