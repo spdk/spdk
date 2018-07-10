@@ -258,7 +258,12 @@ def add_initiators_to_initiator_group(
     Returns:
         True or False
     """
-    params = {'tag': tag, 'initiators': initiators, 'netmasks': netmasks}
+    params = {'tag': tag}
+
+    if initiators:
+        params['initiators'] = initiators
+    if netmasks:
+        params['netmasks'] = netmasks
     return client.call('add_initiators_to_initiator_group', params)
 
 
@@ -274,7 +279,12 @@ def delete_initiators_from_initiator_group(
     Returns:
         True or False
     """
-    params = {'tag': tag, 'initiators': initiators, 'netmasks': netmasks}
+    params = {'tag': tag}
+
+    if initiators:
+        params['initiators'] = initiators
+    if netmasks:
+        params['netmasks'] = netmasks
     return client.call('delete_initiators_from_initiator_group', params)
 
 
