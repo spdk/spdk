@@ -1310,6 +1310,15 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 				sizeof(struct spdk_nvmf_rdma_mgmt_channel));
 
 	contexts = rdma_get_devices(NULL);
+	if (contexts == NULL) {
+		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		rdma_destroy_event_channel(rtransport->event_channel);
+		spdk_mempool_free(rtransport->data_buf_pool);
+		spdk_io_device_unregister(rtransport, NULL);
+		free(rtransport);
+		return NULL;
+	}
+
 	i = 0;
 	rc = 0;
 	while (contexts[i] != NULL) {
