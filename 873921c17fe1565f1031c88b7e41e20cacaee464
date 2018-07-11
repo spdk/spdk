@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "73bb5c16_0042d736",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T20:09:14Z",
+      "side": 1,
+      "message": "We cannot remove set_bdev_qos_limit_iops now.  Deprecate means that it will be removed in the future.  After 18.07 is released, we can remove it for the next release (18.10).",
+      "revId": "873921c17fe1565f1031c88b7e41e20cacaee464",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c1a1f3d_2e36b164",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 13
