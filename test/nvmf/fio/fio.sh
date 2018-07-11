@@ -22,12 +22,14 @@ fi
 timing_enter fio
 timing_enter start_nvmf_tgt
 # Start up the NVMf target in another process
-$NVMF_APP -c $testdir/../nvmf.conf &
+$NVMF_APP -m 0xF -w &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
+$rpc_py set_nvmf_target_options -u 8192 -p 4
+$rpc_py start_subsystem_init
 timing_exit start_nvmf_tgt
 
 malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
