@@ -34,6 +34,24 @@
       "revId": "9eaeea78ac25be8db9f32c1a11e3211cb3f5110c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58c8dd27_1955faaa",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-11T21:30:31Z",
+      "side": 1,
+      "message": "Why not just start from the beginning every time to keep it simple? This isn\u0027t in the performance path and in the grand scheme of things there aren\u0027t that many connections.",
+      "parentUuid": "0c63bfe8_851bc532",
+      "revId": "9eaeea78ac25be8db9f32c1a11e3211cb3f5110c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
