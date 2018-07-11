@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ce3487a_c1236457",
+        "filename": "scripts/cleanup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T01:47:12Z",
+      "side": 1,
+      "message": "I am concerned that this would delete files for applications that are still running.",
+      "revId": "f63e3a12d3e514787eadee9e27a45ec74a34ead0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
