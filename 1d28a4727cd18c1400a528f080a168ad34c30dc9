@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "140754f4_ce3dc69d",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T20:03:19Z",
+      "side": 1,
+      "message": "remove \"tracking\"",
+      "revId": "1d28a4727cd18c1400a528f080a168ad34c30dc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba88aa0c_e84fe63e",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T20:03:19Z",
+      "side": 1,
+      "message": "set_bdev_qd_sampling_period",
+      "revId": "1d28a4727cd18c1400a528f080a168ad34c30dc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d293c687_9d15ddcb",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T20:03:19Z",
+      "side": 1,
+      "message": "set_bdev_qd_sampling_period",
+      "revId": "1d28a4727cd18c1400a528f080a168ad34c30dc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b47193e_d98e5ee2",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T20:03:19Z",
+      "side": 1,
+      "message": "remove \"tracking\"",
+      "revId": "1d28a4727cd18c1400a528f080a168ad34c30dc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "220a9d2a_05a4a3a7",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T20:03:19Z",
+      "side": 1,
+      "message": "should remove \"tracking\" here - also this can be used to disable sampling as well",
+      "revId": "1d28a4727cd18c1400a528f080a168ad34c30dc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
