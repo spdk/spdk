@@ -22,12 +22,14 @@ fi
 timing_enter shutdown
 timing_enter start_nvmf_tgt
 # Start up the NVMf target in another process
-$NVMF_APP -c $testdir/../nvmf.conf &
+$NVMF_APP -m 0xF -w &
 pid=$!
 
 trap "killprocess $pid; nvmfcleanup; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+$rpc_py set_nvmf_target_options -u 8192 -p 4
+$rpc_py start_subsystem_init
 timing_exit start_nvmf_tgt
 
 num_subsystems=10

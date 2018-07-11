@@ -19,12 +19,14 @@ fi
 timing_enter aer
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -s 512 -c $testdir/../nvmf.conf &
+$NVMF_APP -m 0xF -w &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
+$rpc_py set_nvmf_target_options -u 8192 -p 4
+$rpc_py start_subsystem_init
 timing_exit start_nvmf_tgt
 
 modprobe -v nvme-rdma
