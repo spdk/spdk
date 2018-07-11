@@ -98,8 +98,7 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 
 int
 spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_id,
-		      void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-		      void *hotremove_ctx)
+		      spdk_scsi_remove_cb_t hotremove_cb, void *hotremove_ctx)
 {
 	if (bdev_name == NULL) {
 		return -1;
