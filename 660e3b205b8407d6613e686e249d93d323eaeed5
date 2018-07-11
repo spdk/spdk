@@ -220,6 +220,24 @@
     },
     {
       "key": {
+        "uuid": "9c3c0ebb_514ba471",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1874,
+      "author": {
+        "id": 1011327
+      },
+      "writtenOn": "2018-07-11T05:00:30Z",
+      "side": 1,
+      "message": "It was not clear since other changes (changes to rdma state machine, request_exec split up) are not part of this review. I think I got a bit more clarity on what you intent to do.\nLet me know if the below understanding is correct.\nFor write:\nspdk_nvmf_request_exec\n spdk_nvmf_ctrlr_process_io_cmd\n  nvmf_bdev_ctrlr_write_cmd\n   if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {\n    spdk_bdev_zcopy_start(..., populate\u003dfalse, req-\u003eqpair-\u003etransport-\u003eops-\u003ereq_r2t, req);\n   } else {\n    spdk_bdev_writev_blocks()\n   }\n\nrdma_req_r2t_handler\n perform host 2 controller transfer\n Once buffer is ready:\n  spdk_nvmf_request_bdev_exec\n   spdk_bdev_zcopy_end(bdev_io, commit\u003dtrue, nvmf_bdev_ctrlr_complete_cmd, args);\n\nFor read:\nspdk_nvmf_request_exec\n spdk_nvmf_ctrlr_process_io_cmd\n  nvmf_bdev_ctrlr_read_cmd\n   if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {\n    spdk_bdev_zcopy_start(..., populate\u003dtrue, read_data_in_rsp, args);\n   } else {\n    spdk_bdev_readv_blocks()\n   }\nread_data_in_rsp:\n spdk_bdev_zcopy_end(bdev_io, commit\u003dfalse, nvmf_bdev_ctrlr_complete_cmd, args);",
+      "parentUuid": "e65e8ea9_49f23c6f",
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c0dfd04c_0b4106c3",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 9
