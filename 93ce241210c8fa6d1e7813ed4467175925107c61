@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "575b8614_b0b887d9",
+        "filename": "doc/vhost.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T15:39:53Z",
+      "side": 1,
+      "message": "This seems unrelated to the reset of this patch, but I\u0027m fine with it.",
+      "revId": "93ce241210c8fa6d1e7813ed4467175925107c61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
