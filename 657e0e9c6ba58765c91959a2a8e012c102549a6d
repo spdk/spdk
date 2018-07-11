@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "835dd01b_fa1b3fee",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-11T14:52:48Z",
+      "side": 1,
+      "message": "There is already RFC link so why this copy-paste here?",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 36
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47b7ddb7_18208579",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-11T14:52:48Z",
+      "side": 1,
+      "message": "Those names shouldn\u0027t start from underscore.",
+      "range": {
+        "startLine": 93,
+        "startChar": 38,
+        "endLine": 93,
+        "endChar": 65
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c91bf8f_b8165731",
+        "filename": "lib/util/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-11T14:52:48Z",
+      "side": 1,
+      "message": "keep this list sorted",
+      "range": {
+        "startLine": 37,
+        "startChar": 103,
+        "endLine": 37,
+        "endChar": 112
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7c49415_bc5046c1",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-11T14:52:48Z",
+      "side": 1,
+      "message": "you can omit size when initializing.",
+      "range": {
+        "startLine": 41,
+        "startChar": 35,
+        "endLine": 41,
+        "endChar": 37
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c311df28_1afb9b5f",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-11T14:52:48Z",
+      "side": 1,
+      "message": "and here",
+      "range": {
+        "startLine": 46,
+        "startChar": 43,
+        "endLine": 46,
+        "endChar": 45
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92bf6181_ada914d7",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-11T14:52:48Z",
+      "side": 1,
+      "message": "Don\u0027t think loop is needed to check two elements.",
+      "range": {
+        "startLine": 213,
+        "startChar": 1,
+        "endLine": 218,
+        "endChar": 2
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e88620c_2f86d8c2",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-11T14:52:48Z",
+      "side": 1,
+      "message": "Whole code can be optimized a lot so do it or remove it.",
+      "range": {
+        "startLine": 242,
+        "startChar": 2,
+        "endLine": 242,
+        "endChar": 95
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
