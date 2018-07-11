@@ -1654,12 +1654,47 @@ spdk_bdev_get_qd_sampling_period(const struct spdk_bdev *bdev)
 	return bdev->internal.period;
 }
 
+uint64_t
+spdk_bdev_get_weighted_io_time(const struct spdk_bdev *bdev)
+{
+	return bdev->internal.weighted_io_time;
+}
+
+uint64_t
+spdk_bdev_get_io_time(const struct spdk_bdev *bdev)
+{
+	return bdev->internal.current_io_time;
+}
+
+static uint64_t
+_bdev_calculate_weighted_io_time(struct spdk_bdev *bdev)
+{
+	uint64_t time_difference = bdev->internal.current_io_time - bdev->internal.prev_io_time;
+
+	/* check for overflow here */
+	if (bdev->internal.prev_io_time <= UINT64_MAX / time_difference) {
+		return bdev->internal.measured_queue_depth * time_difference;
+	} else {
+		return UINT64_MAX;
+	}
+}
+
 static void
 _calculate_measured_qd_cpl(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
 
 	bdev->internal.measured_queue_depth = bdev->internal.temporary_queue_depth;
+
+	if (bdev->internal.measured_queue_depth) {
+		bdev->internal.current_io_time += bdev->internal.period;
+	}
+
+	if (bdev->internal.prev_io_time != UINT64_MAX) {
+		bdev->internal.weighted_io_time += _bdev_calculate_weighted_io_time(bdev);
+	}
+
+	bdev->internal.prev_io_time = bdev->internal.current_io_time;
 }
 
 static void
@@ -1687,6 +1722,7 @@ void
 spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period)
 {
 	bdev->internal.period = period;
+	bdev->internal.prev_io_time = UINT64_MAX;
 
 	if (bdev->internal.qd_poller != NULL) {
 		spdk_poller_unregister(&bdev->internal.qd_poller);
