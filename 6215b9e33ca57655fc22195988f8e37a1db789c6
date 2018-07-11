@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18a3c3ae_bff7bcb6",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3616,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T00:46:55Z",
+      "side": 1,
+      "message": "I guess this is only needed if there is more than one LUN?  Because if there is only one LUN, then the previous line will have made this list empty.\n\nIf so, maybe add a comment explaining this?  It took me a few seconds to realize this at first.  :)",
+      "revId": "6215b9e33ca57655fc22195988f8e37a1db789c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
