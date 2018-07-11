@@ -886,18 +886,18 @@ clear_all_transfer_tasks_test(void)
 
 	spdk_clear_all_transfer_task(&conn, &lun1);
 
+	CU_ASSERT(TAILQ_EMPTY(&conn.queued_r2t_tasks));
 	CU_ASSERT(spdk_get_transfer_task(&conn, 1) == NULL);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 2) == NULL);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 3) == NULL);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 4) == task4);
-	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == NULL);
+	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == task5);
 
 	spdk_clear_all_transfer_task(&conn, NULL);
 
 	CU_ASSERT(spdk_get_transfer_task(&conn, 4) == NULL);
 	CU_ASSERT(spdk_get_transfer_task(&conn, 5) == NULL);
 
-	CU_ASSERT(TAILQ_EMPTY(&conn.queued_r2t_tasks));
 	CU_ASSERT(TAILQ_EMPTY(&conn.active_r2t_tasks));
 	while (!TAILQ_EMPTY(&g_write_pdu_list)) {
 		pdu = TAILQ_FIRST(&g_write_pdu_list);
