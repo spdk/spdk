@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9739416c_77b721dc",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T05:04:47Z",
+      "side": 1,
+      "message": "value ?",
+      "range": {
+        "startLine": 253,
+        "startChar": 3,
+        "endLine": 253,
+        "endChar": 9
+      },
+      "revId": "dc63ce84db8459220c59860ada62696b4615202c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

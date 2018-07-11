@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdb3db1f_fbc1c8f7",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T05:04:47Z",
+      "side": 0,
+      "message": "I learned two spaces is correct in English but reducing to one will be allowed.",
+      "range": {
+        "startLine": 317,
+        "startChar": 55,
+        "endLine": 317,
+        "endChar": 56
+      },
+      "revId": "635a1aa8a962fea5cec9a400893f46078b50e83d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
