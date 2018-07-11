@@ -165,6 +165,8 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	if (virtio_dev_backend_ops(dev)->setup_queue(dev, vq) < 0) {
 		SPDK_ERRLOG("setup_queue failed\n");
+		spdk_dma_free(vq);
+		dev->vqs[vtpci_queue_idx] = NULL;
 		return -EINVAL;
 	}
 

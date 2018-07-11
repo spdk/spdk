@@ -281,6 +281,7 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	vq->vq_ring_virt_mem = queue_mem;
 
 	if (!check_vq_phys_addr_ok(vq)) {
+		spdk_dma_free(queue_mem);
 		return -1;
 	}
 
