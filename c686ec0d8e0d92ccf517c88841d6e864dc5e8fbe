@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81b1ede0_0223fe8d",
+        "filename": "include/spdk/nvme_msg.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T01:25:55Z",
+      "side": 1,
+      "message": "I still do not know why we need two separate IO rpc types.  Xiaodong - could you give an example?\n\nI don\u0027t see where NVME_IO_CMD would get processed in the next file.  It looks like the code right now only handles NVME_IO_RAW_CMD.\n\nI know that the Linux kernel has IOCTL_SUBMIT_IO and IOCTL_IO_CMD - but I find that really confusing.  We should avoid multiple IO RPCs if we can avoid it I think.  But please provide the example since there\u0027s probably something I\u0027m not understanding.\n\nThanks.",
+      "revId": "c686ec0d8e0d92ccf517c88841d6e864dc5e8fbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "753d7c82_a9c50b4f",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T01:25:55Z",
+      "side": 1,
+      "message": "should use /* */ style comments (I\u0027m not exactly sure what the comment is referring to though)",
+      "revId": "c686ec0d8e0d92ccf517c88841d6e864dc5e8fbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11e0371d_ae236653",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T01:25:55Z",
+      "side": 1,
+      "message": "I don\u0027t think data_len and metdata_len are needed for h2c.  We can just infer it from the length of data and metadata.\n\nFor c2h, this structure is not used.",
+      "revId": "c686ec0d8e0d92ccf517c88841d6e864dc5e8fbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
