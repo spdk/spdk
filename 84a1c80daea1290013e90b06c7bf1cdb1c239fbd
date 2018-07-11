@@ -16,6 +16,24 @@
       "revId": "84a1c80daea1290013e90b06c7bf1cdb1c239fbd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94af27f7_940ec185",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:26:17Z",
+      "side": 1,
+      "message": "Good point - I will make this change.",
+      "parentUuid": "d1dfc4d2_b93d867a",
+      "revId": "84a1c80daea1290013e90b06c7bf1cdb1c239fbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
