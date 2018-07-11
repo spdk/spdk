@@ -118,6 +118,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 {
 	unsigned int vq_size, size;
 	struct virtqueue *vq;
+	int rc;
 
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "setting up queue: %"PRIu16"\n", vtpci_queue_idx);
 
@@ -163,11 +164,12 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	vq->owner_thread = NULL;
 
-	if (virtio_dev_backend_ops(dev)->setup_queue(dev, vq) < 0) {
+	rc = virtio_dev_backend_ops(dev)->setup_queue(dev, vq);
+	if (rc < 0) {
 		SPDK_ERRLOG("setup_queue failed\n");
 		spdk_dma_free(vq);
 		dev->vqs[vtpci_queue_idx] = NULL;
-		return -EINVAL;
+		return rc;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vq->vq_ring_mem:      0x%" PRIx64 "\n",
@@ -255,7 +257,7 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	rc = virtio_dev_backend_ops(dev)->set_features(dev, req_features & host_features);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to negotiate device features.\n");
-		return -1;
+		return rc;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "negotiated features = %" PRIx64 "\n",
@@ -264,7 +266,7 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_FEATURES_OK);
 	if (!(virtio_dev_get_status(dev) & VIRTIO_CONFIG_S_FEATURES_OK)) {
 		SPDK_ERRLOG("failed to set FEATURES_OK status!\n");
-		return -1;
+		return -EIO;
 	}
 
 	return 0;
@@ -303,13 +305,13 @@ virtio_dev_reset(struct virtio_dev *dev, uint64_t req_features)
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_ACKNOWLEDGE);
 	if (!(virtio_dev_get_status(dev) & VIRTIO_CONFIG_S_ACKNOWLEDGE)) {
 		SPDK_ERRLOG("Failed to set VIRTIO_CONFIG_S_ACKNOWLEDGE status.\n");
-		return -1;
+		return -EIO;
 	}
 
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_DRIVER);
 	if (!(virtio_dev_get_status(dev) & VIRTIO_CONFIG_S_DRIVER)) {
 		SPDK_ERRLOG("Failed to set VIRTIO_CONFIG_S_DRIVER status.\n");
-		return -1;
+		return -EIO;
 	}
 
 	return virtio_negotiate_features(dev, req_features);

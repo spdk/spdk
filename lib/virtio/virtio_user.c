@@ -128,11 +128,13 @@ virtio_user_queue_setup(struct virtio_dev *vdev,
 			int (*fn)(struct virtio_dev *, uint32_t))
 {
 	uint32_t i;
+	int rc;
 
 	for (i = 0; i < vdev->max_queues; ++i) {
-		if (fn(vdev, i) < 0) {
+		rc = fn(vdev, i);
+		if (rc < 0) {
 			SPDK_ERRLOG("setup tx vq fails: %"PRIu32".\n", i);
-			return -1;
+			return rc;
 		}
 	}
 
@@ -158,7 +160,7 @@ virtio_user_start_device(struct virtio_dev *vdev)
 	/* negotiate the number of I/O queues. */
 	ret = dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &host_max_queues);
 	if (ret < 0) {
-		return -1;
+		return ret;
 	}
 
 	if (vdev->max_queues > host_max_queues + vdev->fixed_queues_num) {
@@ -170,18 +172,20 @@ virtio_user_start_device(struct virtio_dev *vdev)
 	}
 
 	/* tell vhost to create queues */
-	if (virtio_user_queue_setup(vdev, virtio_user_create_queue) < 0) {
-		return -1;
+	ret = virtio_user_queue_setup(vdev, virtio_user_create_queue);
+	if (ret < 0) {
+		return ret;
 	}
 
 	/* share memory regions */
 	ret = dev->ops->send_request(dev, VHOST_USER_SET_MEM_TABLE, NULL);
 	if (ret < 0) {
-		return -1;
+		return ret;
 	}
 
 	/* kick queues */
-	if (virtio_user_queue_setup(vdev, virtio_user_kick_queue) < 0) {
+	ret = virtio_user_queue_setup(vdev, virtio_user_kick_queue);
+	if (ret < 0) {
 		return -1;
 	}
 
@@ -208,11 +212,7 @@ virtio_user_dev_setup(struct virtio_dev *vdev)
 
 	dev->ops = &ops_user;
 
-	if (dev->ops->setup(dev) < 0) {
-		return -1;
-	}
-
-	return 0;
+	return dev->ops->setup(dev);
 }
 
 static int
@@ -221,6 +221,7 @@ virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 	struct vhost_user_config cfg = {0};
+	int rc;
 
 	if ((dev->protocol_features & (1ULL << VHOST_USER_PROTOCOL_F_CONFIG)) == 0) {
 		return -ENOTSUP;
@@ -229,9 +230,10 @@ virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 	cfg.offset = 0;
 	cfg.size = VHOST_USER_MAX_CONFIG_SIZE;
 
-	if (dev->ops->send_request(dev, VHOST_USER_GET_CONFIG, &cfg) < 0) {
-		SPDK_ERRLOG("get_config failed: %s\n", spdk_strerror(errno));
-		return -errno;
+	rc = dev->ops->send_request(dev, VHOST_USER_GET_CONFIG, &cfg);
+	if (rc < 0) {
+		SPDK_ERRLOG("get_config failed: %s\n", spdk_strerror(-rc));
+		return rc;
 	}
 
 	memcpy(dst, cfg.region + offset, length);
@@ -244,6 +246,7 @@ virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 	struct vhost_user_config cfg = {0};
+	int rc;
 
 	if ((dev->protocol_features & (1ULL << VHOST_USER_PROTOCOL_F_CONFIG)) == 0) {
 		return -ENOTSUP;
@@ -253,9 +256,10 @@ virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 	cfg.size = length;
 	memcpy(cfg.region, src, length);
 
-	if (dev->ops->send_request(dev, VHOST_USER_SET_CONFIG, &cfg) < 0) {
-		SPDK_ERRLOG("set_config failed: %s\n", spdk_strerror(errno));
-		return -errno;
+	rc = dev->ops->send_request(dev, VHOST_USER_SET_CONFIG, &cfg);
+	if (rc < 0) {
+		SPDK_ERRLOG("set_config failed: %s\n", spdk_strerror(-rc));
+		return rc;
 	}
 
 	return 0;
@@ -297,9 +301,11 @@ virtio_user_get_features(struct virtio_dev *vdev)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 	uint64_t features;
+	int rc;
 
-	if (dev->ops->send_request(dev, VHOST_USER_GET_FEATURES, &features) < 0) {
-		SPDK_ERRLOG("get_features failed: %s\n", spdk_strerror(errno));
+	rc = dev->ops->send_request(dev, VHOST_USER_GET_FEATURES, &features);
+	if (rc < 0) {
+		SPDK_ERRLOG("get_features failed: %s\n", spdk_strerror(-rc));
 		return 0;
 	}
 
@@ -315,7 +321,7 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 
 	ret = dev->ops->send_request(dev, VHOST_USER_SET_FEATURES, &features);
 	if (ret < 0) {
-		return -1;
+		return ret;
 	}
 
 	vdev->negotiated_features = features;
@@ -328,13 +334,13 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 
 	ret = dev->ops->send_request(dev, VHOST_USER_GET_PROTOCOL_FEATURES, &protocol_features);
 	if (ret < 0) {
-		return -1;
+		return ret;
 	}
 
 	protocol_features &= VIRTIO_USER_SUPPORTED_PROTOCOL_FEATURES;
 	ret = dev->ops->send_request(dev, VHOST_USER_SET_PROTOCOL_FEATURES, &protocol_features);
 	if (ret < 0) {
-		return -1;
+		return ret;
 	}
 
 	dev->protocol_features = protocol_features;
@@ -358,12 +364,11 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	uint16_t queue_idx = vq->vq_queue_index;
 	void *queue_mem;
 	uint64_t desc_addr, avail_addr, used_addr;
-	int callfd;
-	int kickfd;
+	int callfd, kickfd, rc;
 
 	if (dev->callfds[queue_idx] != -1 || dev->kickfds[queue_idx] != -1) {
 		SPDK_ERRLOG("queue %"PRIu16" already exists\n", queue_idx);
-		return -1;
+		return -EEXIST;
 	}
 
 	/* May use invalid flag, but some backend uses kickfd and
@@ -373,14 +378,14 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	callfd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
 	if (callfd < 0) {
 		SPDK_ERRLOG("callfd error, %s\n", spdk_strerror(errno));
-		return -1;
+		return -errno;
 	}
 
 	kickfd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
 	if (kickfd < 0) {
 		SPDK_ERRLOG("kickfd error, %s\n", spdk_strerror(errno));
 		close(callfd);
-		return -1;
+		return -errno;
 	}
 
 	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VIRTIO_PCI_VRING_ALIGN, NULL);
@@ -396,12 +401,14 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	state.index = vq->vq_queue_index;
 	state.num = 0;
 
-	if (virtio_dev_has_feature(vdev, VHOST_USER_F_PROTOCOL_FEATURES) &&
-	    dev->ops->send_request(dev, VHOST_USER_SET_VRING_ENABLE, &state) < 0) {
-		SPDK_ERRLOG("failed to send VHOST_USER_SET_VRING_ENABLE: %s\n",
-			    spdk_strerror(errno));
-		spdk_dma_free(queue_mem);
-		return -1;
+	if (virtio_dev_has_feature(vdev, VHOST_USER_F_PROTOCOL_FEATURES)) {
+		rc = dev->ops->send_request(dev, VHOST_USER_SET_VRING_ENABLE, &state);
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to send VHOST_USER_SET_VRING_ENABLE: %s\n",
+				    spdk_strerror(-rc));
+			spdk_dma_free(queue_mem);
+			return -rc;
+		}
 	}
 
 	dev->callfds[queue_idx] = callfd;
@@ -511,19 +518,19 @@ virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path
 
 	if (name == NULL) {
 		SPDK_ERRLOG("No name gived for controller: %s\n", path);
-		return -1;
+		return -EINVAL;
 	}
 
 	dev = calloc(1, sizeof(*dev));
 	if (dev == NULL) {
-		return -1;
+		return -ENOMEM;
 	}
 
 	rc = virtio_dev_construct(vdev, name, &virtio_user_ops, dev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to init device: %s\n", path);
 		free(dev);
-		return -1;
+		return rc;
 	}
 
 	vdev->is_hw = 0;
@@ -531,13 +538,15 @@ virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path
 	snprintf(dev->path, PATH_MAX, "%s", path);
 	dev->queue_size = queue_size;
 
-	if (virtio_user_dev_setup(vdev) < 0) {
+	rc = virtio_user_dev_setup(vdev);
+	if (rc < 0) {
 		SPDK_ERRLOG("backend set up fails\n");
 		goto err;
 	}
 
-	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
-		SPDK_ERRLOG("set_owner fails: %s\n", spdk_strerror(errno));
+	rc = dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("set_owner fails: %s\n", spdk_strerror(-rc));
 		goto err;
 	}
 
@@ -545,5 +554,5 @@ virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path
 
 err:
 	virtio_dev_destruct(vdev);
-	return -1;
+	return rc;
 }
