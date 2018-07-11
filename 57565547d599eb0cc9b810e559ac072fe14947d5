@@ -34,6 +34,24 @@
       "revId": "57565547d599eb0cc9b810e559ac072fe14947d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ea9e2fc_a1e21749",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T00:55:19Z",
+      "side": 1,
+      "message": "Yes - let\u0027s add a new one, and mark the old/existing one as deprecated in the CHANGELOG.  Then next release we will remove it.\n\nThe RPC should allow the caller to specify multiple limits at once.  The rpc.py script can use the optional parameters like you describe.  Maybe rpc.py only sets one limit at a time, but the RPC itself should support multiple.",
+      "parentUuid": "b0954ea9_e3011c7e",
+      "revId": "57565547d599eb0cc9b810e559ac072fe14947d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
