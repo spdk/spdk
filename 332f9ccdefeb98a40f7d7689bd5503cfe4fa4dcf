@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68377c0c_c8f168c5",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T08:33:45Z",
+      "side": 1,
+      "message": "this check may be OK to remove.",
+      "revId": "332f9ccdefeb98a40f7d7689bd5503cfe4fa4dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4db2b42c_f2ae27bb",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T08:33:45Z",
+      "side": 1,
+      "message": "this check may be OK to remove.",
+      "revId": "332f9ccdefeb98a40f7d7689bd5503cfe4fa4dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a155b9e_468f2778",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T08:33:45Z",
+      "side": 1,
+      "message": "please return if calloc failed.",
+      "revId": "332f9ccdefeb98a40f7d7689bd5503cfe4fa4dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d3539b2_1d208b29",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T08:33:45Z",
+      "side": 1,
+      "message": "the following may be simplified a little.\n\n  qpair \u003d TAILQ_FIRST(\u0026group-\u003eqpairs);\n  if (qpair) {\n    ctx-\u003enext \u003d TAILQ_NEXT(qpair, link);\n    rc \u003d spdk_nvmf_qpair_disconnect(qpair, _nvmf_tgt_disconnect_next_qpair, ctx);\n    if (rc \u003d\u003d 0) {\n      return;\n    }\n  }\n\n  _spdk_nvmf_tgt_destroy_poll_group_cb(group, rc);\n  free(ctx);",
+      "revId": "332f9ccdefeb98a40f7d7689bd5503cfe4fa4dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
