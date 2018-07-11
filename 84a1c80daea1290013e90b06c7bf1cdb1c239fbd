@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1dfc4d2_b93d867a",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-11T02:19:06Z",
+      "side": 1,
+      "message": "I think that an assert(ch-\u003eref \u003e 0); should be added to make sure that we should caught ch-\u003eref\u003d\u003d0 case.",
+      "revId": "84a1c80daea1290013e90b06c7bf1cdb1c239fbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
