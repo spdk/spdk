@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "441275ee_61a6a948",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T11:07:16Z",
+      "side": 1,
+      "message": "iscsi_io-\u003estatus is updated in the bdev_iscsi_io_complete too, Hence the following may be better.\n\nif (tmp_response \u003d\u003d ISCSI_TASK_FUNC_RESP_COMPLETE) {\n  bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_SUCCESS);\n} else {\n  bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);\n}",
+      "revId": "b2d2ace5f616eafda38ee483621a1ce761a3e3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
