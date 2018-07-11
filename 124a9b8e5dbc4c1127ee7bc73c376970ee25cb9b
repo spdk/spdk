@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9e8f101_cb640143",
+        "filename": "scripts/vagrant/autorun-spdk.conf",
+        "patchSetId": 15
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-11T14:05:32Z",
+      "side": 1,
+      "message": "Note that in this file I\u0027ve disable most of the tests.  The goal here is to changes these entries from 0 to 1 as I get each of these autorun tests working on the vagrant platforms.\n\nThis is going to take some work.  The tests I have enabled here \"should\" work, but I am still seeing problems like the HUGEMEM problem which cause run-autorun.sh to fail.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 20
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c27e744_65369d26",
+        "filename": "scripts/vagrant/autorun-spdk.conf",
+        "patchSetId": 15
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-11T14:05:32Z",
+      "side": 1,
+      "message": "setup.sh seems to ignore this.  There are autotests which fail because HUGEMEM is not 4096",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 12
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81af410d_b209bd4f",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-11T14:05:32Z",
+      "side": 1,
+      "message": "As soon as we figure out how to support this on FreeBSD we can changes this.  Also, I think there are a couple of bugs in this code.  I\u0027ve had trouble debugging this because this script is executed by the vagrant ruby code.",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 50
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d568dbd_847963c4",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-11T14:05:32Z",
+      "side": 1,
+      "message": "I added this to support http-proxy, but I haven\u0027t be able to test this.  If some one can test this for me that would be great.",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 3
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72ba3543_c08330dd",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-11T14:05:32Z",
+      "side": 1,
+      "message": "I added this to support http-proxy, but I haven\u0027t been able to test it.  If someone else can test this for me that would be great.",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 3
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19406121_6d0d24c9",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-11T14:05:32Z",
+      "side": 1,
+      "message": "Previous versions of this script failed here when you provisioned your vbox with less than 4096kb of memory.\n\nI made this change last night.  Hopefully it will enable provisioning VMs with any memory size. With this change I can run up to 4 VMs on my MacOS platform, however, provisioning VMS with less than 4096kb of memory means these VMs don\u0027t run very well.   It\u0027s a trade off between hardware resources and VM resources.",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 62
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5d11556_607f742d",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-11T14:05:32Z",
+      "side": 1,
+      "message": "I\u0027m thinking of changes all the places where things are updated in this script, similiar to the way we\u0027ve changed vm_setup.sh.  I don\u0027t like hardcoding updates like this... but then I the that pkgdep.sh may do this too.",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 15
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
