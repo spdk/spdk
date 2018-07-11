@@ -474,14 +474,14 @@ bdev_iscsi_create_cb(void *io_device, void *ctx_buf)
 	struct bdev_iscsi_lun *lun = io_device;
 
 	pthread_mutex_lock(&lun->mutex);
-	if (lun->ch_count == 0) {
-		assert(lun->master_ch == NULL);
-		assert(lun->master_td == NULL);
-		lun->master_ch = ch;
-		lun->master_td = spdk_get_thread();
-		ch->poller = spdk_poller_register(bdev_iscsi_poll, ch, 0);
-		ch->lun = lun;
-	}
+	assert(lun->ch_count == 0);
+	assert(lun->master_ch == NULL);
+	assert(lun->master_td == NULL);
+
+	lun->master_ch = ch;
+	lun->master_td = spdk_get_thread();
+	ch->poller = spdk_poller_register(bdev_iscsi_poll, ch, 0);
+	ch->lun = lun;
 	lun->ch_count++;
 	pthread_mutex_unlock(&lun->mutex);
 
@@ -495,16 +495,14 @@ bdev_iscsi_destroy_cb(void *io_device, void *ctx_buf)
 	struct bdev_iscsi_lun *lun = io_device;
 
 	pthread_mutex_lock(&lun->mutex);
-	lun->ch_count--;
-	if (lun->ch_count == 0) {
-		assert(lun->master_ch != NULL);
-		assert(lun->master_td != NULL);
-		assert(lun->master_td == spdk_get_thread());
+	assert(lun->ch_count == 1);
+	assert(lun->master_ch != NULL);
+	assert(lun->master_td != NULL);
+	assert(lun->master_td == spdk_get_thread());
 
-		lun->master_ch = NULL;
-		lun->master_td = NULL;
-		spdk_poller_unregister(&io_channel->poller);
-	}
+	lun->master_ch = NULL;
+	lun->master_td = NULL;
+	spdk_poller_unregister(&io_channel->poller);
 	pthread_mutex_unlock(&lun->mutex);
 }
 
