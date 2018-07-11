@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f2e0746_dcb95641",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T15:35:51Z",
+      "side": 1,
+      "message": "can we just use NVME_IO_CMD?  this is then similar to NVME_ADMIN_CMD",
+      "revId": "f8232762d591589e32a79ba81e61c1c83d48afde",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
