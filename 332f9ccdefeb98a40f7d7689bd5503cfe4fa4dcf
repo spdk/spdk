@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "b44e6fa1_e11d9ac3",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T23:33:30Z",
+      "side": 1,
+      "message": "I\u0027m not fixed in removal. I understood that we should not link disconnect_next_qpair with destroy_force_group forcefully. Thanks for kind explanation.",
+      "parentUuid": "48afe303_9c2349c7",
+      "revId": "332f9ccdefeb98a40f7d7689bd5503cfe4fa4dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4db2b42c_f2ae27bb",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 6
@@ -118,6 +136,24 @@
       "side": 1,
       "message": "Thanks. I made substantial changes in this next revision. I think they incorporate the main idea of this comment.",
       "parentUuid": "3d3539b2_1d208b29",
+      "revId": "332f9ccdefeb98a40f7d7689bd5503cfe4fa4dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41e2b430_4ad5716c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T23:33:30Z",
+      "side": 1,
+      "message": "New one is much better. Thank you.",
+      "parentUuid": "2a329ca0_3195d074",
       "revId": "332f9ccdefeb98a40f7d7689bd5503cfe4fa4dcf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
