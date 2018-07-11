@@ -3516,9 +3516,28 @@ spdk_add_transfer_task(struct spdk_iscsi_conn *conn,
 	return SPDK_SUCCESS;
 }
 
-void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
+/* If there are additional large writes queued for R2Ts, start them now.
+ *  This is called when a large write is just completed or when multiple LUNs
+ *  are attached and large write tasks for the specific LUN are cleared.
+ */
+static void
+spdk_start_queued_transfer_tasks(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_task *task, *tmp;
+
+	TAILQ_FOREACH_SAFE(task, &conn->queued_r2t_tasks, link, tmp) {
+		if (conn->pending_r2t < DEFAULT_MAXR2T) {
+			TAILQ_REMOVE(&conn->queued_r2t_tasks, task, link);
+			spdk_add_transfer_task(conn, task);
+		} else {
+			break;
+		}
+	}
+}
+
+void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
+{
+	struct spdk_iscsi_task *task;
 	int i;
 
 	for (i = 0; i < conn->pending_r2t; i++) {
@@ -3535,20 +3554,7 @@ void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 		}
 	}
 
-	/*
-	 * A large write was just completed, so if there are additional large
-	 *  writes queued for R2Ts, start them now.  But first check to make
-	 *  sure each of the tasks will fit without the connection's allotment
-	 *  for total R2T tasks.
-	 */
-	TAILQ_FOREACH_SAFE(task, &conn->queued_r2t_tasks, link, tmp) {
-		if (conn->pending_r2t < DEFAULT_MAXR2T) {
-			TAILQ_REMOVE(&conn->queued_r2t_tasks, task, link);
-			spdk_add_transfer_task(conn, task);
-		} else {
-			break;
-		}
-	}
+	spdk_start_queued_transfer_tasks(conn);
 }
 
 static void
@@ -3604,6 +3610,8 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 
 	spdk_del_connection_queued_task(&conn->active_r2t_tasks, lun);
 	spdk_del_connection_queued_task(&conn->queued_r2t_tasks, lun);
+
+	spdk_start_queued_transfer_tasks(conn);
 }
 
 /* This function is used to handle the r2t snack */
