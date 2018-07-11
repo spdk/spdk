@@ -50,6 +50,23 @@
       "revId": "0eb7f18ba999278961b00d280866f30a300fd10b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b08f8bc7_b1abf03d",
+        "filename": "test/unit/lib/util/base64.c/base64_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1014621
+      },
+      "writtenOn": "2018-07-11T18:04:22Z",
+      "side": 1,
+      "message": "This new unit test needs to be added to test/unit/unittest.sh so it gets executed.",
+      "revId": "0eb7f18ba999278961b00d280866f30a300fd10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
