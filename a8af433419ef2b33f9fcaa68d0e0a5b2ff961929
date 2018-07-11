@@ -16,6 +16,24 @@
       "revId": "a8af433419ef2b33f9fcaa68d0e0a5b2ff961929",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4108dc07_1effd580",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-11T19:58:27Z",
+      "side": 1,
+      "message": "Yes - you can set the populate and commit flags in any combination.",
+      "parentUuid": "db170f8f_5504b930",
+      "revId": "a8af433419ef2b33f9fcaa68d0e0a5b2ff961929",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
