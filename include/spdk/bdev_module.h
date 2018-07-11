@@ -603,9 +603,9 @@ void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb 
  * \param buf The buffer to set as the active data buffer.
  * \param len The length of the buffer.
  *
- * \return The usable size of the buffer, after adjustments of alignment.
+ * \return 0 on success. Negated errno on failure.
  */
-size_t spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len);
+int spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len);
 
 /**
  * Complete a bdev_io
