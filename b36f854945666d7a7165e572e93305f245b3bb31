@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01660aad_243487ca",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-11T21:05:52Z",
+      "side": 1,
+      "message": "This needs to return an integer",
+      "revId": "b36f854945666d7a7165e572e93305f245b3bb31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
