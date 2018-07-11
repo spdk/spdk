@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "479e391c_988f7be2",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T01:39:05Z",
+      "side": 1,
+      "message": "If we could not add the subsystem, why do we need to remove it?",
+      "revId": "78343708dc9aa839b96e516bdfc27623b168643c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c665b5c_e4e70363",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T01:39:05Z",
+      "side": 1,
+      "message": "If we return -1 here, it will indicate to the thread library that io channel could not be created, and will free it.\n\nBen - I see you suggested informing the user that not all of them worked via some return code - but how can that be done?  This is a channel create_cb - returning -1 here is fatal.",
+      "revId": "78343708dc9aa839b96e516bdfc27623b168643c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d27d3ea_f06e77cf",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 793,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T01:39:05Z",
+      "side": 1,
+      "message": "I think just \"Could not allocate I/O channel.\" will be sufficient.  \"May config fewer cores\" will probably not help much - a lot more explanation would be needed.",
+      "revId": "78343708dc9aa839b96e516bdfc27623b168643c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
