@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "6371e623_91efda3f",
+        "filename": "test/iscsi_tgt/iscsijson/json_config.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T03:03:01Z",
+      "side": 1,
+      "message": "I saw that ANY is already used and ANY is wildcard. Hence you can remove this.\n\nI have submitted a patch to change -n and -m to optional but you don\u0027t have to wait for the patch.",
+      "parentUuid": "63e68d1f_4375db98",
+      "revId": "65bc753910a83a7d16ad19031e8e12dcf21f0515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ae5ec8f_cfadd31d",
         "filename": "test/json_config/common.sh",
         "patchSetId": 14
@@ -188,6 +206,30 @@
       "side": 1,
       "message": "If test crashes before entering test_json_config, trap will try deleting this files but since they are not existing at this moment, it would generate additional errors and backlogs. But isn\u0027t crucial, it can be removed",
       "parentUuid": "40ec61e6_cbdf6a39",
+      "range": {
+        "startLine": 110,
+        "startChar": 4,
+        "endLine": 110,
+        "endChar": 6
+      },
+      "revId": "65bc753910a83a7d16ad19031e8e12dcf21f0515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34c37238_59288c85",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-11T03:03:01Z",
+      "side": 1,
+      "message": "Thank you for explaining this change kindly. As you did, removal from this patch will prevent us from confusion.\n\nBut I think this change is reasonable and you can propose this change by another patch later.",
+      "parentUuid": "e8e0c68b_1db717b6",
       "range": {
         "startLine": 110,
         "startChar": 4,
