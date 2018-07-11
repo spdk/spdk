@@ -16,6 +16,41 @@
       "revId": "68d915f17063193cd3997c4c15dea09c24623a07",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "538f10f1_77eb80ba",
+        "filename": "test/unit/lib/iscsi/common.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T00:44:03Z",
+      "side": 1,
+      "message": "I looked at this more.  I think there are two problems.\n\ntasks in next file need to be allocated using spdk_iscsi_task_get.\n\nThen spdk_scsi_task_put needs to use SPDK_CONTAINEROF - similar to spdk_iscsI_task_from_scsi_task.  Or you could probably just use spdk_iscsI_task_from_scsi_task here.",
+      "parentUuid": "08bfd302_9fd2e331",
+      "revId": "68d915f17063193cd3997c4c15dea09c24623a07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "779a7f58_b6d80dca",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T00:44:03Z",
+      "side": 1,
+      "message": "I think these need to be allocated using spdk_iscsi_task_get().",
+      "revId": "68d915f17063193cd3997c4c15dea09c24623a07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
