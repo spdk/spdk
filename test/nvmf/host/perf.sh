@@ -22,19 +22,18 @@ fi
 timing_enter perf
 timing_enter start_nvmf_tgt
 
-cp $testdir/../nvmf.conf $testdir/nvmf.conf
-$rootdir/scripts/gen_nvme.sh >> $testdir/nvmf.conf
-
-local_nvme_trid=$(grep TransportID $testdir/nvmf.conf | head -n1 | awk -F"\"" '{print $2}')
-
-$NVMF_APP -c $testdir/nvmf.conf -i 0 &
+$NVMF_APP -m 0xF -w -i 0 &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
+$rpc_py set_nvmf_target_options -u 8192 -p 4
+$rpc_py start_subsystem_init
+$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 timing_exit start_nvmf_tgt
 
+local_nvme_trid="trtype:PCIe traddr:"$($rpc_py get_subsystem_config bdev | jq -r '.[].params | select(.name=="Nvme0").traddr')
 bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
 if [ -n "$local_nvme_trid" ]; then
@@ -86,8 +85,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 fi
 
 trap - SIGINT SIGTERM EXIT
-
-rm -f $testdir/nvmf.conf
 
 killprocess $nvmfpid
 timing_exit perf
