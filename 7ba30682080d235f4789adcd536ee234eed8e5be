@@ -69,6 +69,24 @@
       "revId": "7ba30682080d235f4789adcd536ee234eed8e5be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4ae597a_1ca10821",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 2315,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-11T16:59:17Z",
+      "side": 1,
+      "message": "WRT re-posting, just for memories:\nThe peer shall not see PSN discontinuity after SPDK restores its QP.\nNote: ibv_modify_qp allows setting the value of PSN.",
+      "parentUuid": "f3fc47b1_f9f1d018",
+      "revId": "7ba30682080d235f4789adcd536ee234eed8e5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
