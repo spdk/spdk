@@ -206,7 +206,7 @@ modern_set_features(struct virtio_dev *dev, uint64_t features)
 
 	if ((features & (1ULL << VIRTIO_F_VERSION_1)) == 0) {
 		SPDK_ERRLOG("VIRTIO_F_VERSION_1 feature is not enabled.\n");
-		return -1;
+		return -EINVAL;
 	}
 
 	spdk_mmio_write_4(&hw->common_cfg->guest_feature_select, 0);
@@ -282,7 +282,7 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 
 	if (!check_vq_phys_addr_ok(vq)) {
 		spdk_dma_free(queue_mem);
-		return -1;
+		return -ENOMEM;
 	}
 
 	desc_addr = vq->vq_ring_mem;
@@ -398,7 +398,7 @@ virtio_read_caps(struct virtio_hw *hw)
 	ret = spdk_pci_device_cfg_read(hw->pci_dev, &pos, 1, PCI_CAPABILITY_LIST);
 	if (ret < 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "failed to read pci capability list\n");
-		return -1;
+		return ret;
 	}
 
 	while (pos) {
@@ -447,7 +447,11 @@ next:
 	if (hw->common_cfg == NULL || hw->notify_base == NULL ||
 	    hw->dev_cfg == NULL    || hw->isr == NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "no modern virtio pci device found.\n");
-		return -1;
+		if (ret < 0) {
+			return ret;
+		} else {
+			return -EINVAL;
+		}
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "found modern virtio pci device.\n");
@@ -574,7 +578,7 @@ virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
 
 	rc = virtio_dev_construct(vdev, name, &modern_ops, pci_ctx);
 	if (rc != 0) {
-		return -1;
+		return rc;
 	}
 
 	vdev->is_hw = 1;

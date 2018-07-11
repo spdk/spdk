@@ -108,7 +108,11 @@ vhost_user_write(int fd, void *buf, int len, int *fds, int fd_num)
 		r = sendmsg(fd, &msgh, 0);
 	} while (r < 0 && errno == EINTR);
 
-	return r;
+	if (r == -1) {
+		return -errno;
+	}
+
+	return 0;
 }
 
 static int
@@ -122,14 +126,18 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 	if ((size_t)ret != sz_hdr) {
 		SPDK_WARNLOG("Failed to recv msg hdr: %zd instead of %zu.\n",
 			     ret, sz_hdr);
-		goto fail;
+		if (ret == -1) {
+			return -errno;
+		} else {
+			return -EBUSY;
+		}
 	}
 
 	/* validate msg flags */
 	if (msg->flags != (valid_flags)) {
 		SPDK_WARNLOG("Failed to recv msg: flags %"PRIx32" instead of %"PRIx32".\n",
 			     msg->flags, valid_flags);
-		goto fail;
+		return -EIO;
 	}
 
 	sz_payload = msg->size;
@@ -137,7 +145,7 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 	if (sizeof(*msg) - sz_hdr < sz_payload) {
 		SPDK_WARNLOG("Received oversized msg: payload size %zu > available space %zu\n",
 			     sz_payload, sizeof(*msg) - sz_hdr);
-		goto fail;
+		return -EIO;
 	}
 
 	if (sz_payload) {
@@ -145,14 +153,15 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 		if ((size_t)ret != sz_payload) {
 			SPDK_WARNLOG("Failed to recv msg payload: %zd instead of %"PRIu32".\n",
 				     ret, msg->size);
-			goto fail;
+			if (ret == -1) {
+				return -errno;
+			} else {
+				return -EBUSY;
+			}
 		}
 	}
 
 	return 0;
-
-fail:
-	return -1;
 }
 
 struct hugepage_file_info {
@@ -172,7 +181,7 @@ struct hugepage_file_info {
 static int
 get_hugepage_file_info(struct hugepage_file_info huges[], int max)
 {
-	int idx;
+	int idx, rc;
 	FILE *f;
 	char buf[BUFSIZ], *tmp, *tail;
 	char *str_underline, *str_start;
@@ -182,14 +191,17 @@ get_hugepage_file_info(struct hugepage_file_info huges[], int max)
 	f = fopen("/proc/self/maps", "r");
 	if (!f) {
 		SPDK_ERRLOG("cannot open /proc/self/maps\n");
-		return -1;
+		rc = -errno;
+		assert(rc < 0); /* scan-build hack */
+		return rc;
 	}
 
 	idx = 0;
 	while (fgets(buf, sizeof(buf), f) != NULL) {
 		if (sscanf(buf, "%" PRIx64 "-%" PRIx64, &v_start, &v_end) < 2) {
 			SPDK_ERRLOG("Failed to parse address\n");
-			goto error;
+			rc = -EIO;
+			goto out;
 		}
 
 		tmp = strchr(buf, ' ') + 1; /** skip address */
@@ -224,7 +236,8 @@ get_hugepage_file_info(struct hugepage_file_info huges[], int max)
 
 		if (idx >= max) {
 			SPDK_ERRLOG("Exceed maximum of %d\n", max);
-			goto error;
+			rc = -ENOSPC;
+			goto out;
 		}
 
 		if (idx > 0 &&
@@ -240,12 +253,10 @@ get_hugepage_file_info(struct hugepage_file_info huges[], int max)
 		idx++;
 	}
 
+	rc = idx;
+out:
 	fclose(f);
-	return idx;
-
-error:
-	fclose(f);
-	return -1;
+	return rc;
 }
 
 static int
@@ -257,7 +268,7 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 	num = get_hugepage_file_info(huges, VHOST_MEMORY_MAX_NREGIONS);
 	if (num < 0) {
 		SPDK_ERRLOG("Failed to prepare memory for vhost-user\n");
-		return -1;
+		return num;
 	}
 
 	for (i = 0; i < num; ++i) {
@@ -303,7 +314,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 	int need_reply = 0;
 	int fds[VHOST_MEMORY_MAX_NREGIONS];
 	int fd_num = 0;
-	int i, len;
+	int i, len, rc;
 	int vhostfd = dev->vhostfd;
 
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_USER, "sent message %d = %s\n", req, vhost_msg_strings[req]);
@@ -331,8 +342,9 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		break;
 
 	case VHOST_USER_SET_MEM_TABLE:
-		if (prepare_vhost_memory_user(&msg, fds) < 0) {
-			return -1;
+		rc = prepare_vhost_memory_user(&msg, fds);
+		if (rc < 0) {
+			return rc;
 		}
 		fd_num = msg.payload.memory.nregions;
 		msg.size = sizeof(msg.payload.memory.nregions);
@@ -387,15 +399,16 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		break;
 
 	default:
-		SPDK_ERRLOG("trying to send unhandled msg type\n");
-		return -1;
+		SPDK_ERRLOG("trying to send unknown msg\n");
+		return -EINVAL;
 	}
 
 	len = VHOST_USER_HDR_SIZE + msg.size;
-	if (vhost_user_write(vhostfd, &msg, len, fds, fd_num) < 0) {
+	rc = vhost_user_write(vhostfd, &msg, len, fds, fd_num);
+	if (rc < 0) {
 		SPDK_ERRLOG("%s failed: %s\n",
-			    vhost_msg_strings[req], spdk_strerror(errno));
-		return -1;
+			    vhost_msg_strings[req], spdk_strerror(-rc));
+		return rc;
 	}
 
 	if (req == VHOST_USER_SET_MEM_TABLE)
@@ -404,14 +417,15 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		}
 
 	if (need_reply) {
-		if (vhost_user_read(vhostfd, &msg) < 0) {
-			SPDK_WARNLOG("Received msg failed: %s\n", spdk_strerror(errno));
-			return -1;
+		rc = vhost_user_read(vhostfd, &msg);
+		if (rc < 0) {
+			SPDK_WARNLOG("Received msg failed: %s\n", spdk_strerror(-rc));
+			return rc;
 		}
 
 		if (req != msg.request) {
 			SPDK_WARNLOG("Received unexpected msg type\n");
-			return -1;
+			return -EIO;
 		}
 
 		switch (req) {
@@ -420,14 +434,14 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		case VHOST_USER_GET_QUEUE_NUM:
 			if (msg.size != sizeof(msg.payload.u64)) {
 				SPDK_WARNLOG("Received bad msg size\n");
-				return -1;
+				return -EIO;
 			}
 			*((__u64 *)arg) = msg.payload.u64;
 			break;
 		case VHOST_USER_GET_VRING_BASE:
 			if (msg.size != sizeof(msg.payload.state)) {
 				SPDK_WARNLOG("Received bad msg size\n");
-				return -1;
+				return -EIO;
 			}
 			memcpy(arg, &msg.payload.state,
 			       sizeof(struct vhost_vring_state));
@@ -435,13 +449,13 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		case VHOST_USER_GET_CONFIG:
 			if (msg.size != sizeof(msg.payload.cfg)) {
 				SPDK_WARNLOG("Received bad msg size\n");
-				return -1;
+				return -EIO;
 			}
 			memcpy(arg, &msg.payload.cfg, sizeof(msg.payload.cfg));
 			break;
 		default:
 			SPDK_WARNLOG("Received unexpected msg type\n");
-			return -1;
+			return -EBADMSG;
 		}
 	}
 
@@ -466,7 +480,7 @@ vhost_user_setup(struct virtio_user_dev *dev)
 	fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0) {
 		SPDK_ERRLOG("socket() error, %s\n", spdk_strerror(errno));
-		return -1;
+		return -errno;
 	}
 
 	flag = fcntl(fd, F_GETFD);
@@ -480,12 +494,16 @@ vhost_user_setup(struct virtio_user_dev *dev)
 	if (rc < 0 || (size_t)rc >= sizeof(un.sun_path)) {
 		SPDK_ERRLOG("socket path too long\n");
 		close(fd);
-		return -1;
+		if (rc < 0) {
+			return -errno;
+		} else {
+			return -EINVAL;
+		}
 	}
 	if (connect(fd, (struct sockaddr *)&un, sizeof(un)) < 0) {
 		SPDK_ERRLOG("connect error, %s\n", spdk_strerror(errno));
 		close(fd);
-		return -1;
+		return -errno;
 	}
 
 	dev->vhostfd = fd;
