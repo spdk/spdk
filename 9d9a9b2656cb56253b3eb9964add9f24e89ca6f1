@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "902beb66_c9984673",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3558,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-11T12:01:52Z",
+      "side": 1,
+      "message": "I think this comment should be updated and some should be put in spdk_start_queued_transfer_tasks functions.  I see that spdk_start_queued_transfered_tasks are also invoked in other place.",
+      "range": {
+        "startLine": 3553,
+        "startChar": 0,
+        "endLine": 3558,
+        "endChar": 4
+      },
+      "revId": "9d9a9b2656cb56253b3eb9964add9f24e89ca6f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
