@@ -768,7 +768,7 @@ spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num)
 }
 
 static void
-spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
+spdk_vhost_scsi_lun_hotremove(struct spdk_scsi_lun *lun, void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
 	const struct spdk_scsi_dev *scsi_dev;

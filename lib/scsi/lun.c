@@ -290,8 +290,7 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
  */
 _spdk_scsi_lun *
 spdk_scsi_lun_construct(struct spdk_bdev *bdev,
-			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-			void *hotremove_ctx)
+			spdk_scsi_remove_cb_t hotremove_cb, void *hotremove_ctx)
 {
 	struct spdk_scsi_lun *lun;
 	int rc;

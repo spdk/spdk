@@ -118,8 +118,7 @@ spdk_scsi_dev_find_lowest_free_lun_id(struct spdk_scsi_dev *dev)
 
 int
 spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_id,
-		      void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-		      void *hotremove_ctx)
+		      spdk_scsi_remove_cb_t hotremove_cb, void *hotremove_ctx)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_scsi_lun *lun;
@@ -181,8 +180,7 @@ typedef struct spdk_scsi_dev _spdk_scsi_dev;
 _spdk_scsi_dev *
 spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 			int *lun_id_list, int num_luns, uint8_t protocol_id,
-			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-			void *hotremove_ctx)
+			spdk_scsi_remove_cb_t hotremove_cb, void *hotremove_ctx)
 {
 	struct spdk_scsi_dev *dev;
 	size_t name_len;

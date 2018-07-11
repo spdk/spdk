@@ -105,7 +105,7 @@ struct spdk_scsi_lun {
 	bool removed;
 
 	/** Callback to be fired when LUN removal is first triggered. */
-	void (*hotremove_cb)(const struct spdk_scsi_lun *lun, void *arg);
+	spdk_scsi_remove_cb_t hotremove_cb;
 
 	/** Argument for hotremove_cb */
 	void *hotremove_ctx;
@@ -130,7 +130,7 @@ extern struct spdk_lun_db_entry *spdk_scsi_lun_list_head;
 typedef struct spdk_scsi_lun _spdk_scsi_lun;
 
 _spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
-					void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+					spdk_scsi_remove_cb_t hotremove_cb,
 					void *hotremove_ctx);
 void spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 

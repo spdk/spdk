@@ -331,7 +331,7 @@ struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
 		int *lun_id_list,
 		int num_luns,
 		uint8_t protocol_id,
-		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		spdk_scsi_remove_cb_t hotremove_cb,
 		void *hotremove_ctx);
 
 /**
@@ -353,8 +353,7 @@ void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev, struct spdk_scsi_lun *l
  * \param hotremove_ctx Additional argument to hotremove_cb.
  */
 int spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_id,
-			  void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-			  void *hotremove_ctx);
+			  spdk_scsi_remove_cb_t hotremove_cb, void *hotremove_ctx);
 
 /**
  * Create a new SCSI port.
