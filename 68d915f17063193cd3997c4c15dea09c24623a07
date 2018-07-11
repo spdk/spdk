@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08bfd302_9fd2e331",
+        "filename": "test/unit/lib/iscsi/common.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T00:28:48Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nCan you explain this change?  This would seem to hide memory leaks.\n\n-Jim",
+      "revId": "68d915f17063193cd3997c4c15dea09c24623a07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
