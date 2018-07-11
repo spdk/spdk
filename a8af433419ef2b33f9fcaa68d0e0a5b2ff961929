@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db170f8f_5504b930",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011327
+      },
+      "writtenOn": "2018-07-11T17:24:21Z",
+      "side": 1,
+      "message": "For abort scenarios it may not be committed even though the data is modified. I am guessing we can ride on the commit flag to abort a write request. Meaning commit can be set to false even if populate was set to true. Do you agree?\n\nAn IO can be aborted at any point in the zero copy IO life cycle.\n1) An IO can be in pending list\n   Its not a big issue as it can be aborted easily without performing zcopy_start.\n2) IO can be bdev module\n   we implemented spdk_bdev_io_abort internally and we are yet to upstream.\n3) IO can be in transport waiting for dma.\n   when IO comes back I am guessing zcopy_end can be called with commit\u003dfalse(only for write as read is just releasing buffers anyway). If you think commit should not be overloaded, there should be an explicit flag for abort either as an argument to zcopy_end or as a field in bdev_io.",
+      "revId": "a8af433419ef2b33f9fcaa68d0e0a5b2ff961929",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
