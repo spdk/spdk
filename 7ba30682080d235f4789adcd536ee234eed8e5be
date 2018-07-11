@@ -87,6 +87,24 @@
       "revId": "7ba30682080d235f4789adcd536ee234eed8e5be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6348950f_415e0e21",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 2315,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-11T17:51:49Z",
+      "side": 1,
+      "message": "I don\u0027t think we can just leak requests. The queue pair is supposed to guarantee a fixed queue depth when it comes back online, and the user may post a full queue depth worth of requests and shouldn\u0027t see any failures.\n\nOne option to fix this would be to modify spdk_nvmf_rdma_qpair_process_pending to skip checking rqpair-\u003eincoming_queue if the QPAIR is in the error state. That will leave the rdma_recv objects in the rqpair-\u003eincoming_queue. When the queue pair resumes, it can pick up the command, match it to a full request object and continue processing.",
+      "parentUuid": "b4ae597a_1ca10821",
+      "revId": "7ba30682080d235f4789adcd536ee234eed8e5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
