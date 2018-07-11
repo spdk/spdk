@@ -88,6 +88,12 @@ spdk_rpc_get_bdevs_iostat_cb(struct spdk_bdev *bdev,
 
 			spdk_json_write_name(w, "queue_depth");
 			spdk_json_write_uint64(w, spdk_bdev_get_qd(bdev));
+
+			spdk_json_write_name(w, "io_time");
+			spdk_json_write_uint64(w, spdk_bdev_get_io_time(bdev));
+
+			spdk_json_write_name(w, "weighted_io_time");
+			spdk_json_write_uint64(w, spdk_bdev_get_weighted_io_time(bdev));
 		}
 
 		spdk_json_write_object_end(w);
