@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa0ded42_92d352af",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T19:59:29Z",
+      "side": 1,
+      "message": "Sorry Seth.  I modified this patch yesterday and didn\u0027t tell you about it so you just overwrite my changes.\n\nThis should say \"It will also return UINT64_MAX after enabling...\"",
+      "revId": "e32dff300baff9de72defa88294990ff6a38109d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49bc56d2_ba2e48fc",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T19:59:29Z",
+      "side": 1,
+      "message": "Let\u0027s try to use \"qd\" consistently.  So spdk_bdev_get_qd.",
+      "revId": "e32dff300baff9de72defa88294990ff6a38109d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e425f64_c30e4de4",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T19:59:29Z",
+      "side": 1,
+      "message": "How about spdk_bdev_set_qd_sampling_period?  This is inline with Ben\u0027s suggestion.  But uses \"set\" instead of \"enable\" since this can be used to disable as well.\n\nAlso should we move this function declaration up by spdk_bdev_get_qd_sampling_period?",
+      "revId": "e32dff300baff9de72defa88294990ff6a38109d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
