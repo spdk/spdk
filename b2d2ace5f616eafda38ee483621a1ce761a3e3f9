@@ -16,6 +16,24 @@
       "revId": "b2d2ace5f616eafda38ee483621a1ce761a3e3f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff326b35_02c0d712",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-11T11:48:26Z",
+      "side": 1,
+      "message": "I agree with Shuhei\u0027s comment.",
+      "parentUuid": "441275ee_61a6a948",
+      "revId": "b2d2ace5f616eafda38ee483621a1ce761a3e3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
