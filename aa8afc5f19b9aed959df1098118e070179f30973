@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b952ac79_58a40d7f",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-11T02:07:50Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nI think you mean enum iscsi_task_mgmt_response from libiscsi library iscsi.h.\nHowever, some previous version doesn\u0027t have this enum. So I use enum iscsi_task_func_resp from spdk library iscsi_spec.h. Thank you.",
+      "parentUuid": "24aa62e9_2207056f",
+      "revId": "aa8afc5f19b9aed959df1098118e070179f30973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2154346d_6981394d",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 3
@@ -30,6 +48,30 @@
       "writtenOn": "2018-07-10T08:36:45Z",
       "side": 1,
       "message": "Are sure this is always uint32_t ?",
+      "range": {
+        "startLine": 353,
+        "startChar": 16,
+        "endLine": 353,
+        "endChar": 29
+      },
+      "revId": "aa8afc5f19b9aed959df1098118e070179f30973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35bc2967_800ab0fc",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-11T02:07:50Z",
+      "side": 1,
+      "message": "Hi Powel,\nYes I think so. I refered to test case test_async_lu_reset_simple.c in libiscsi.Thank you.",
+      "parentUuid": "2154346d_6981394d",
       "range": {
         "startLine": 353,
         "startChar": 16,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "cf37a461_2b212491",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-11T02:07:50Z",
+      "side": 1,
+      "message": "Done. Thank you for reviewing my code.",
+      "parentUuid": "430cea87_22af1790",
+      "range": {
+        "startLine": 368,
+        "startChar": 1,
+        "endLine": 368,
+        "endChar": 8
+      },
+      "revId": "aa8afc5f19b9aed959df1098118e070179f30973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf4b4c54_340b3624",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 3
@@ -76,6 +142,24 @@
       "writtenOn": "2018-07-10T01:52:45Z",
       "side": 1,
       "message": "You can use spdk_thread_send_msg to let the reset being processed at the same thread.",
+      "revId": "aa8afc5f19b9aed959df1098118e070179f30973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e52b99f8_8e180088",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-11T02:07:50Z",
+      "side": 1,
+      "message": "Done. Thank you for reviewing my code.",
+      "parentUuid": "cf4b4c54_340b3624",
       "revId": "aa8afc5f19b9aed959df1098118e070179f30973",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
