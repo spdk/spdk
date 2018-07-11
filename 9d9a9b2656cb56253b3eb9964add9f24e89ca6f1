@@ -22,6 +22,30 @@
       "revId": "9d9a9b2656cb56253b3eb9964add9f24e89ca6f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "890b1376_8644aec1",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3558,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T15:26:14Z",
+      "side": 1,
+      "message": "Good point.  I think just moving this comment spdk_start_queued_transfer_tasks() is fine.  Then the reader can find the comment in one place, rather duplicating it for every call to this function.",
+      "parentUuid": "902beb66_c9984673",
+      "range": {
+        "startLine": 3553,
+        "startChar": 0,
+        "endLine": 3558,
+        "endChar": 4
+      },
+      "revId": "9d9a9b2656cb56253b3eb9964add9f24e89ca6f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
