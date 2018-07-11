@@ -50,6 +50,24 @@
       "revId": "c686ec0d8e0d92ccf517c88841d6e864dc5e8fbe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f57a8f08_0bcc03ac",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-11T01:56:51Z",
+      "side": 1,
+      "message": "For c2h, explicit \"data_len\"\"metadata_len\" are used.\nSince based on previous talk, we will not extract the length information from nvme cmdbuf, but directly show them outside to simplify the transfer and parse work.\n\nFor h2c, we can just infer them from the transferred length of data and metadata.\nBut for c2h, it is not necessary for rpc request to transfer data and metadata. But the SPDK side should know these required lengths in order to realize how much data should be sent back.",
+      "parentUuid": "11e0371d_ae236653",
+      "revId": "c686ec0d8e0d92ccf517c88841d6e864dc5e8fbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
