@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "087f5f72_ee5a299f",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "mention that the caller must free the returned array\n\nalso, this isn\u0027t really returning the poller addresses - more accurately it is returning the offset of the poller\u0027s function pointer from the start of the process\u0027 executable text section",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7fffe92_1110d6a3",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "should return -1 if poller_addresses allocation fails",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88f34fda_716e8fdd",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "181f33de_5c76cbbe",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d38a3a09_6b50be75",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "i say just run through the list once to get the count, then do a single alloc\n\nthis doesn\u0027t need to be high performing - in fact, for larger arrays, it may be faster since you avoid the realloc",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1416deec_8c078513",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "\"int i\" is sufficient for small loops like this\n\nyou don\u0027t need to change it (unless you want to) - just for future reference",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cb0a5dc_2180fa86",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "maybe just \"spdk_rpc_get_pollers\"?",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e0b31d4_be68e21c",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "why can\u0027t you just write a uint32?",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c33ccf35_34522483",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "same here - why can\u0027t you just write the core_number as a uint32 directly?",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e44845d6_42b337ed",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "get_pollers",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93a416c4_8d52759d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "get_pollers\n\nI wouldn\u0027t mention addresses here.  Just say retrieve information about pollers.",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9fde136_badebccb",
+        "filename": "scripts/rpc/app.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T02:23:38Z",
+      "side": 1,
+      "message": "abs?\n\nHere you could add more detail on how this returns the offsets of the function pointer from the executable start.",
+      "revId": "b9b9394f6e10745fb877486760f128c7fcfe2221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
