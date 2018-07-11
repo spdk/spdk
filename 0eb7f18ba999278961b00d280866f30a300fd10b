@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "241ecee7_7837cee1",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1014621
+      },
+      "writtenOn": "2018-07-11T18:03:38Z",
+      "side": 1,
+      "message": "I think this whole comment (starting at \"Notes\") doesn\u0027t really need to be in the public API header - if you want to keep it, it could go in the base64.c file, but it\u0027s basically just describing the same thing as the Base64 RFC above.",
+      "revId": "0eb7f18ba999278961b00d280866f30a300fd10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29fb011d_f5f13ebc",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1014621
+      },
+      "writtenOn": "2018-07-11T18:03:38Z",
+      "side": 1,
+      "message": "I\u0027m not sure why the parameter names have underscore prefixes - can we remove those?\n\nAlso, it would be good to be more specific about what \"freed\" means - please specify if it needs to be passed to free(), for example.",
+      "revId": "0eb7f18ba999278961b00d280866f30a300fd10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a83f2818_0b4f90b9",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1014621
+      },
+      "writtenOn": "2018-07-11T18:03:38Z",
+      "side": 1,
+      "message": "C doesn\u0027t have optional parameters, so please describe what the user should pass here (presumably by \"optional\" you actually mean that NULL is valid if the user doesn\u0027t need to know the length).",
+      "revId": "0eb7f18ba999278961b00d280866f30a300fd10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
