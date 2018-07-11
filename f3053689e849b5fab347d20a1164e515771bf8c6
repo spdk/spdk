@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc090337_171bdc92",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T21:55:41Z",
+      "side": 1,
+      "message": "comment needs to be updated some more (see earlier review)",
+      "revId": "f3053689e849b5fab347d20a1164e515771bf8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca4f8d7d_89af2938",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T21:55:41Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "f3053689e849b5fab347d20a1164e515771bf8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfcca1ee_3cecb0ec",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T21:55:41Z",
+      "side": 1,
+      "message": "I think it would be simpler to just do:\n\nif (TAILQ_EMPTY(head)) {\n  return 0;\n}\n\nThen the rest of the code is simpler.",
+      "revId": "f3053689e849b5fab347d20a1164e515771bf8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ec42be1_bdd841cc",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T21:55:41Z",
+      "side": 1,
+      "message": "usually no space between ! and *",
+      "revId": "f3053689e849b5fab347d20a1164e515771bf8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
