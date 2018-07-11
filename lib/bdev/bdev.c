@@ -1641,12 +1641,28 @@ spdk_bdev_get_qd_sampling_period(const struct spdk_bdev *bdev)
 	return bdev->internal.period;
 }
 
+uint64_t
+spdk_bdev_get_weighted_io_time(const struct spdk_bdev *bdev)
+{
+	return bdev->internal.weighted_io_time;
+}
+
+uint64_t
+spdk_bdev_get_io_time(const struct spdk_bdev *bdev)
+{
+	return bdev->internal.io_time;
+}
+
 static void
 _calculate_measured_qd_cpl(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
 
 	bdev->internal.measured_queue_depth = bdev->internal.temporary_queue_depth;
+
+	if (bdev->internal.measured_queue_depth) {
+		bdev->internal.weighted_io_time += bdev->internal.period * bdev->internal.measured_queue_depth;
+	}
 }
 
 static void
