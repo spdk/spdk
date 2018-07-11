@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b18a1364_8957888f",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1014621
+      },
+      "writtenOn": "2018-07-11T17:04:12Z",
+      "side": 1,
+      "message": "Should this be MOCK_CLEAR()?",
+      "revId": "10204d89c78b8bce892e6b23d448b50b830dd5af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
