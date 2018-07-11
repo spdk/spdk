@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fee72504_630f2b87",
+        "filename": "test/iscsi_tgt/iscsijson/json_config.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-11T10:17:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c35013d6_a124b21c",
+      "range": {
+        "startLine": 21,
+        "startChar": 1,
+        "endLine": 21,
+        "endChar": 82
+      },
+      "revId": "aa36991f403eb63d7990ce54e7d95fcbdc5ce82b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ce432e0_af7c72ed",
         "filename": "test/json_config/common.sh",
         "patchSetId": 15
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-11T03:03:01Z",
       "side": 1,
       "message": "Will you remove these 3 whitespaces?",
+      "range": {
+        "startLine": 100,
+        "startChar": 4,
+        "endLine": 100,
+        "endChar": 5
+      },
+      "revId": "aa36991f403eb63d7990ce54e7d95fcbdc5ce82b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23598298_7a8a0ff5",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-11T10:17:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7ce432e0_af7c72ed",
       "range": {
         "startLine": 100,
         "startChar": 4,
