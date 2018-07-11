@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05ec31f1_79bca3b5",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-11T13:30:21Z",
+      "side": 1,
+      "message": "this needs more space!",
+      "range": {
+        "startLine": 228,
+        "startChar": 36,
+        "endLine": 228,
+        "endChar": 46
+      },
+      "revId": "f3959447930960ee2d9faf4951525a407323d04c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
