@@ -238,6 +238,24 @@
     },
     {
       "key": {
+        "uuid": "0cb88959_2ac1f444",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1874,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-11T16:17:41Z",
+      "side": 1,
+      "message": "It won\u0027t check whether SPDK_BDEV_IO_TYPE_ZCOPY is supported - it will always do the zcopy call. For bdev modules that don\u0027t support zcopy, I\u0027ve added emulation in the bdev layer that translates them to read and write calls automatically.\n\nBut generally speaking, yes - this is exactly the flow the NVMe-oF target will need to have.",
+      "parentUuid": "9c3c0ebb_514ba471",
+      "revId": "660e3b205b8407d6613e686e249d93d323eaeed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c0dfd04c_0b4106c3",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 9
