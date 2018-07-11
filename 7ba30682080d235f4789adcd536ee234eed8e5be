@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7716f202_af93095e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-11T15:38:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "69793013_548e99fb",
+      "revId": "7ba30682080d235f4789adcd536ee234eed8e5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a5535ed_1771ae77",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 24
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-10T21:03:43Z",
       "side": 1,
       "message": "This seems like it will just leak the rdma_recv. Where does it get re-posted after the queue recovers?",
+      "revId": "7ba30682080d235f4789adcd536ee234eed8e5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3fc47b1_f9f1d018",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 2315,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-07-11T15:38:56Z",
+      "side": 1,
+      "message": "Removed this if-clause. The requests then will go through NEW to COMPLETED for the QP in ERROR state.\n\nA good point about re-posting, this patch offers dropping of the outstanding requests and resource de-allocation.\n\nGetting the outstanding requests re-posted is TBD (a config option: drop/repost?).",
+      "parentUuid": "8a5535ed_1771ae77",
       "revId": "7ba30682080d235f4789adcd536ee234eed8e5be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
