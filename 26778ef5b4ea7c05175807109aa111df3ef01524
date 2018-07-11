@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "266ba666_f9e305f2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1967,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-07-11T11:49:59Z",
+      "side": 1,
+      "message": "This snapshot is a new parent of lvol_bdev and should be deleted after it. This delete will always fail.",
+      "range": {
+        "startLine": 1967,
+        "startChar": 0,
+        "endLine": 1967,
+        "endChar": 69
+      },
+      "revId": "26778ef5b4ea7c05175807109aa111df3ef01524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
