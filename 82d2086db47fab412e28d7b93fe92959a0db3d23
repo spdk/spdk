@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8472b849_ae6c2913",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-11T08:25:28Z",
+      "side": 1,
+      "message": "true, will fix",
+      "parentUuid": "3fc8ea7d_0f7c7527",
+      "revId": "82d2086db47fab412e28d7b93fe92959a0db3d23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "410b9c1f_50b3ac3c",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-11T05:07:29Z",
       "side": 1,
       "message": "It should be assigned NULL? Since there is a NULL check in function bdev_nvme_library_fini.",
+      "revId": "82d2086db47fab412e28d7b93fe92959a0db3d23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6b9e34e_d85ca54a",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-11T08:25:28Z",
+      "side": 1,
+      "message": "It is NULL by default.",
+      "parentUuid": "410b9c1f_50b3ac3c",
       "revId": "82d2086db47fab412e28d7b93fe92959a0db3d23",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
