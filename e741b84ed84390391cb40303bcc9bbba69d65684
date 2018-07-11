@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd97a168_2209bf59",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T15:44:50Z",
+      "side": 1,
+      "message": "I\u0027d suggest putting these in numerical order.\n\nI think starting with -1 is fine (doesn\u0027t have to be numerically increasing - but in order).",
+      "revId": "e741b84ed84390391cb40303bcc9bbba69d65684",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e39f5837_5a57ac0a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T15:44:50Z",
+      "side": 1,
+      "message": "I think \"malformed\" is a better word to use here.",
+      "revId": "e741b84ed84390391cb40303bcc9bbba69d65684",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0510a38_27296c19",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T15:44:50Z",
+      "side": 1,
+      "message": "I\u0027m OK leaving this in based on everyone\u0027s feedback.  I would move it up, just before the table though.  After reading the responses to my comment, I was starting to think you\u0027d removed it anyways until I saw it way down here.  :-)",
+      "revId": "e741b84ed84390391cb40303bcc9bbba69d65684",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
