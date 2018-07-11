@@ -23,14 +23,14 @@ timing_enter fs_test
 
 for incapsule in 0 4096; do
 	# Start up the NVMf target in another process
-	cp $testdir/../nvmf.conf /tmp/nvmf.conf
-	echo "InCapsuleDataSize $incapsule" >> /tmp/nvmf.conf
-	$NVMF_APP -c /tmp/nvmf.conf &
+	$NVMF_APP -m 0xF -w &
 	nvmfpid=$!
 
 	trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 	waitforlisten $nvmfpid
+	$rpc_py set_nvmf_target_options -q 8192 -p 4 -c $incapsule
+	$rpc_py start_subsystem_init
 
 	bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 	bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
