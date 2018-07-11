@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d504016d_4c1fe5cf",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-11T16:45:03Z",
+      "side": 1,
+      "message": "Maybe spdk_bdev_get_queue_depth? I\u0027m not sure the \"measured\" part is adding any new information.",
+      "revId": "7e26704127ae4922dee32d601906b4333d8be4f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1ebe857_0641a27b",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-11T16:45:03Z",
+      "side": 1,
+      "message": "Stray \u0027most\u0027",
+      "revId": "7e26704127ae4922dee32d601906b4333d8be4f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f723ee40_58a4e293",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-11T16:45:03Z",
+      "side": 1,
+      "message": "The function below calls it \"qd\" but this writes out \"queue_depth\" - we should be consistent. Maybe spdk_bdev_get_queue_depth_sampling_period is a better name.",
+      "revId": "7e26704127ae4922dee32d601906b4333d8be4f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9764b275_2866c9e9",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-11T16:45:03Z",
+      "side": 1,
+      "message": "Maybe name this spdk_bdev_enable_queue_depth_sampling? The user doesn\u0027t really care about how it is implemented, just what the ultimate effect is. You can describe how it works by saying something like:\n\nThis enables queue depth sampling for the given bdev. The queue depth reported is the total queue depth across all channels as of the most recent sample.",
+      "revId": "7e26704127ae4922dee32d601906b4333d8be4f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
