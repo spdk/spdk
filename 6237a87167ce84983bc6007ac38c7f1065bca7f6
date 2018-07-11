@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd8386cc_e59a027f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-11T01:04:17Z",
+      "side": 1,
+      "message": "I think it would be better to fix this in _spdk_bdev_qos_io_submit instead.  I see how this happens, but it is confusing I think.  My first question when reading this was \"why did we allow more bytes to be sent in the first place?\".\n\nSo get the io size in bytes, and if adding it to byte_submitted_this_timeslice would exceed the max, break.",
+      "revId": "6237a87167ce84983bc6007ac38c7f1065bca7f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
