@@ -319,6 +319,15 @@ struct spdk_bdev {
 		/** queue depth as calculated the last time the telemetry poller checked. */
 		uint64_t measured_queue_depth;
 
+		/** previous value of ticks spent performing I/O. Used to calculate the weighted time doing I/O */
+		uint64_t prev_io_time;
+
+		/** most recent value of ticks spent performing I/O. Used to calculate the weighted time doing I/O */
+		uint64_t current_io_time;
+
+		/** weighted time performing I/O. Equal to measured_queue_depth * (current_io_time - prev_io_time) */
+		uint64_t weighted_io_time;
+
 	} internal;
 };
 

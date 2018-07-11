@@ -432,6 +432,32 @@ spdk_bdev_get_qd_sampling_period(const struct spdk_bdev *bdev);
 void spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period);
 
 /**
+ * get the time spent processing IO for this device.
+ *
+ * This value is dependent upon the queue depth sampling period and is
+ * incremented at sampling time by the sampling period only if the measured
+ * queue depth is greater than 0.
+ *
+ * \param bdev Block device to query.
+ *
+ * \return The io time for this device in microseconds.
+ */
+uint64_t spdk_bdev_get_io_time(const struct spdk_bdev *bdev);
+
+/**
+ * Get the weighted IO processing time for this bdev.
+ *
+ * This value is dependent upon the queue depth sampling period and is
+ * equal to the time spent reading from or writing to a device times
+ * the measured queue depth during each sampling period.
+ *
+ * \param bdev Block device to query.
+ *
+ * \return The weighted io time for this device in microseconds.
+ */
+uint64_t spdk_bdev_get_weighted_io_time(const struct spdk_bdev *bdev);
+
+/**
  * Obtain an I/O channel for the block device opened by the specified
  * descriptor. I/O channels are bound to threads, so the resulting I/O
  * channel may only be used from the thread it was originally obtained
