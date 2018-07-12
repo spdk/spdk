@@ -83,6 +83,10 @@ case $1 in
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
 		report_test_completion "vhost_perf_blk"
 		;;
+	-s|--shared)
+		echo 'Running shared controllers suite...'
+		$WORKDIR/shared/shared.sh
+		;;
 	-m|--migration)
 		echo 'Running migration suite...'
 		run_test case $WORKDIR/migration/migration.sh -x \
