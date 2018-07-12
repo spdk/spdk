@@ -1,0 +1,17 @@
+{
+  "subsystem": "iscsi",
+  "config": [
+    {
+      "params": {
+        "allow_duplicated_isid": true,
+        "nop_timeout": 30,
+        "nop_in_interval": 10,
+        "discovery_auth_group": 1,
+        "max_sessions": 256,
+        "error_recovery_level": 2,
+        "auth_file": "/usr/local/etc/auth.conf"
+      },
+      "method": "set_iscsi_options"
+    }
+  ]
+}
