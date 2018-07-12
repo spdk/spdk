@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "40b740fd_990934cc",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-12T05:03:04Z",
+      "side": 1,
+      "message": "just for a quick understand on mapping relationship between base64 text and binary",
+      "parentUuid": "835dd01b_fa1b3fee",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 36
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47b7ddb7_18208579",
         "filename": "include/spdk/base64.h",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-11T14:52:48Z",
       "side": 1,
       "message": "Those names shouldn\u0027t start from underscore.",
+      "range": {
+        "startLine": 93,
+        "startChar": 38,
+        "endLine": 93,
+        "endChar": 65
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37925405_edbbadda",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-12T05:03:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47b7ddb7_18208579",
       "range": {
         "startLine": 93,
         "startChar": 38,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "ab8a01dd_6b1e0a33",
+        "filename": "lib/util/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-12T05:03:04Z",
+      "side": 1,
+      "message": "Oh, it should be. Forgot to sort it.",
+      "parentUuid": "3c91bf8f_b8165731",
+      "range": {
+        "startLine": 37,
+        "startChar": 103,
+        "endLine": 37,
+        "endChar": 112
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7c49415_bc5046c1",
         "filename": "lib/util/base64.c",
         "patchSetId": 7
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "ea64b82e_728a8fb0",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-12T05:03:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7c49415_bc5046c1",
+      "range": {
+        "startLine": 41,
+        "startChar": 35,
+        "endLine": 41,
+        "endChar": 37
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c311df28_1afb9b5f",
         "filename": "lib/util/base64.c",
         "patchSetId": 7
@@ -105,6 +201,30 @@
       "writtenOn": "2018-07-11T14:52:48Z",
       "side": 1,
       "message": "and here",
+      "range": {
+        "startLine": 46,
+        "startChar": 43,
+        "endLine": 46,
+        "endChar": 45
+      },
+      "revId": "657e0e9c6ba58765c91959a2a8e012c102549a6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37720ff6_f71404f0",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-12T05:03:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c311df28_1afb9b5f",
       "range": {
         "startLine": 46,
         "startChar": 43,
