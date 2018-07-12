@@ -46,6 +46,11 @@ enum spdk_nvme_rpc_type {
 	NVME_IO_CMD,
 };
 
+enum spdk_nvme_dev_type {
+	NVME_DEV_CTRLR = 0x1,
+	NVME_DEV_NS = 0x2,
+};
+
 struct rpc_send_nvme_cmd_req {
 	char			*name;
 	int			cmd_type;
@@ -499,3 +504,78 @@ invalid:
 	return;
 }
 SPDK_RPC_REGISTER("send_nvme_cmd", spdk_rpc_send_nvme_cmd, SPDK_RPC_RUNTIME)
+
+struct rpc_list_nvme_device {
+	int type;
+};
+
+static int
+rpc_decode_nvme_device_type(const struct spdk_json_val *val, void *out)
+{
+	int *type = out;
+
+	if (spdk_json_strequal(val, "controller") == true) {
+		*type = NVME_DEV_CTRLR;
+	} else if (spdk_json_strequal(val, "namespace") == true) {
+		*type = NVME_DEV_NS;
+	} else if (spdk_json_strequal(val, "all") == true) {
+		*type = NVME_DEV_CTRLR | NVME_DEV_NS;
+	} else {
+		SPDK_NOTICELOG("Invalid parameter value: type\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static const struct spdk_json_object_decoder rpc_list_nvme_device_decoders[] = {
+	{"type",  0, rpc_decode_nvme_device_type, true},
+};
+
+static void
+spdk_rpc_list_nvme_device(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_list_nvme_device req;
+	struct spdk_json_write_ctx *w;
+	struct nvme_ctrlr *ctrlr;
+	struct nvme_bdev *bdev;
+
+	/* Set default device type to be "all" */
+	req.type = NVME_DEV_CTRLR | NVME_DEV_NS;
+
+	if (spdk_json_decode_object(params, rpc_list_nvme_device_decoders,
+				    SPDK_COUNTOF(rpc_list_nvme_device_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_array_begin(w, "device_names");
+
+	if (req.type & NVME_DEV_CTRLR) {
+		for (ctrlr = spdk_bdev_nvme_first_ctrlr(); ctrlr; ctrlr = spdk_bdev_nvme_next_ctrlr(ctrlr)) {
+			spdk_json_write_string(w, ctrlr->name);
+		}
+	}
+
+	if (req.type & NVME_DEV_NS) {
+		for (bdev = spdk_bdev_nvme_first_bdev(); bdev; bdev = spdk_bdev_nvme_next_bdev(bdev)) {
+			spdk_json_write_string(w, bdev->disk.name);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+}
+SPDK_RPC_REGISTER("list_nvme_device", spdk_rpc_list_nvme_device, SPDK_RPC_RUNTIME)
