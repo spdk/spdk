@@ -11,21 +11,21 @@ fi
 
 timing_enter ext4test
 
-cp $testdir/iscsi.conf.in $testdir/iscsi.conf
-$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
-
-
 rpc_py="python $rootdir/scripts/rpc.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -c $testdir/iscsi.conf &
+$ISCSI_APP -w &
 pid=$!
 echo "Process pid: $pid"
 
 trap "$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; rm -f $testdir/iscsi.conf; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+$rpc_py set_iscsi_options -o 30 -a 4 -b "iqn.2013-06.com.intel.ch.spdk"
+$rpc_py start_subsystem_init
+$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+$rpc_py construct_malloc_bdev 512 4096 --name Malloc0
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
@@ -58,7 +58,6 @@ if [ $? -eq 0 ]; then
 	echo "mkfs successful - expected failure"
 	iscsicleanup
 	killprocess $pid
-	rm -f $testdir/iscsi.conf
 	exit 1
 else
 	echo "mkfs failed as expected"
@@ -116,7 +115,6 @@ done
 
 trap - SIGINT SIGTERM EXIT
 
-rm -f $testdir/iscsi.conf
 iscsicleanup
 $rpc_py destruct_split_vbdev Nvme0n1
 $rpc_py delete_error_bdev EE_Malloc0

@@ -87,7 +87,6 @@ iscsicleanup
 $rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target1'
 
 rm -f ./local-job0-0-verify.state
-rm -f $testdir/iscsi.conf
 trap - SIGINT SIGTERM EXIT
 killprocess $pid
 
