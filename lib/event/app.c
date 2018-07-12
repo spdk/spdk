@@ -420,6 +420,7 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.master_core = opts->master_core;
 	env_opts.mem_size = opts->mem_size;
 	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
+	env_opts.unlink_hugepage = opts->unlink_hugepage;
 	env_opts.no_pci = opts->no_pci;
 	env_opts.num_pci_addr = opts->num_pci_addr;
 	env_opts.pci_blacklist = opts->pci_blacklist;
@@ -645,6 +646,7 @@ usage(void (*app_usage)(void))
 	printf(" -u         disable PCI access.\n");
 	printf(" -w         wait for RPCs to initialize subsystems\n");
 	printf(" -B addr    pci addr to blacklist\n");
+	printf(" -R         unlink huge files after initialization\n");
 	printf(" -W addr    pci addr to whitelist (-B and -W cannot be used at the same time)\n");
 	spdk_tracelog_usage(stdout, "-L");
 	if (app_usage) {
@@ -793,6 +795,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->print_level = SPDK_LOG_DEBUG;
 			break;
 #endif
+		case 'R':
+			opts->unlink_hugepage = true;
+			break;
 		case 'W':
 			if (opts->pci_blacklist) {
 				free(opts->pci_blacklist);
