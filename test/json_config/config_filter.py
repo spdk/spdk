@@ -3,13 +3,14 @@ import json
 import argparse
 
 
-def filter_methods(filename, do_remove_startup_rpcs):
-    startup_rpcs = [
+def filter_methods(filename, do_remove_global_rpcs):
+    global_rpcs = [
         'set_iscsi_options',
         'set_nvmf_target_config',
         'set_nvmf_target_options',
         'set_bdev_options',
-        'set_bdev_nvme_options'
+        'set_bdev_nvme_options',
+        'set_bdev_nvme_hotplug',
     ]
 
     with open(filename) as json_file:
@@ -20,8 +21,8 @@ def filter_methods(filename, do_remove_startup_rpcs):
             s_config = []
             for config in s['config']:
                 m_name = config['method']
-                is_startup_rpc = m_name in startup_rpcs
-                if do_remove_startup_rpcs != is_startup_rpc:
+                is_global_rpc = m_name in global_rpcs
+                if do_remove_global_rpcs != is_global_rpc:
                     s_config.append(config)
         else:
             s_config = None
