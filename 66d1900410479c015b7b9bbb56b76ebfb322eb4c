@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5f375b0_f63d3bf7",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 27
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:44:11Z",
+      "side": 1,
+      "message": "it\u0027s a nit, but these should be in alphabetical order",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ac1802a_d8497ca2",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:44:11Z",
+      "side": 1,
+      "message": "for these global lists, could you prepend g_?  So g_spdk_raid_config, g_spdk_raid_bdev_configured_list, etc.\n\nthis is the convention we use in SPDK to name global variables - makes it easy when viewing the code to know that its a global variable instead of local",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f0f971e_f8df38e1",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:44:11Z",
+      "side": 1,
+      "message": "can you just do spdk_bdev_io_complete(parent_io, raid_bdev_io-\u003estatus)?",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cc1143f_90591cb9",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:44:11Z",
+      "side": 1,
+      "message": "I would really like to just avoid this extra function and always go through bdev_submit_children.  If we later find that it needs to be optimized, we can change it later.  But better not to optimize now if it\u0027s not needed - this just adds extra code.",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25b20415_a4951a22",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:44:11Z",
+      "side": 1,
+      "message": "i see why you need to store this  :-(\n\nthis is fine for now - but it shows that we could improve the bdev API so that you can get the channel from the original bdev_io instead of having to save its value separately",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca028be1_61a93b93",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 27
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:44:11Z",
+      "side": 1,
+      "message": "this should be vbdev_raid",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
