@@ -41,3 +41,17 @@ def nvme_cmd(client, name, type, data_direction, cmdbuf,
         params['timeout_ms'] = timeout_ms
 
     return client.call('nvme_cmd', params)
+
+
+def nvme_device_list(client, type='all'):
+    """Get nvme device list
+
+    Args:
+        type: Type of required devices. Valid values are: controller, namespace, all
+
+    Returns:
+        Number of NVMe devices, .name array of NVMe devices.
+    """
+    params = {'type': type}
+
+    return client.call('nvme_device_list', params)

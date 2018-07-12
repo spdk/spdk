@@ -1535,6 +1535,17 @@ if __name__ == "__main__":
                    help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int, default=0)
     p.set_defaults(func=nvme_cmd)
 
+    # nvme_device_list
+    @call_cmd
+    def nvme_device_list(args):
+        print_dict(rpc.nvme.nvme_device_list(args.client,
+                                             type=args.type))
+
+    p = subparsers.add_parser('nvme_device_list', help='List available NVMe devices.')
+    p.add_argument('-t', '--type',
+                   help="""Type of required devices. Valid values are: controller, namespace, all""", default="all")
+    p.set_defaults(func=nvme_device_list)
+
     args = parser.parse_args()
 
     try:
