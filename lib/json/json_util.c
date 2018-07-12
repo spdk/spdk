@@ -277,6 +277,30 @@ spdk_json_number_to_uint32(const struct spdk_json_val *val, uint32_t *num)
 }
 
 int
+spdk_json_number_to_int64(const struct spdk_json_val *val, int64_t *num)
+{
+	struct spdk_json_num split_num;
+	int rc;
+
+	rc = spdk_json_number_split(val, &split_num);
+	if (rc) {
+		return rc;
+	}
+
+	if (split_num.exponent) {
+		return -ERANGE;
+	}
+
+	/* for int64_t everything is already checked in spdk_json_number_split() */
+	*num = (int64_t)split_num.significand;
+	if (split_num.negative) {
+		*num *= -1ULL;
+	}
+
+	return 0;
+}
+
+int
 spdk_json_number_to_uint64(const struct spdk_json_val *val, uint64_t *num)
 {
 	struct spdk_json_num split_num;
@@ -430,12 +454,21 @@ spdk_json_decode_uint32(const struct spdk_json_val *val, void *out)
 }
 
 int
+spdk_json_decode_int64(const struct spdk_json_val *val, void *out)
+{
+	int64_t *i = out;
+
+	return spdk_json_number_to_int64(val, i);
+}
+
+int
 spdk_json_decode_uint64(const struct spdk_json_val *val, void *out)
 {
 	uint64_t *i = out;
 
 	return spdk_json_number_to_uint64(val, i);
 }
+
 
 int
 spdk_json_decode_string(const struct spdk_json_val *val, void *out)
