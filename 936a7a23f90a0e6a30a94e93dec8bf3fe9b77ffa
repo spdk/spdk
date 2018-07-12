@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6e1caad_dea4dfd9",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T01:06:37Z",
+      "side": 1,
+      "message": "This last sentence should be removed - it\u0027s not called \"measured_queue_depth\" anymore and this really is talking about how its implemented and what it will do after its called.  Let\u0027s leave it here for now - but remove it in a follow-up patch so you don\u0027t have to rebase the whole series.",
+      "revId": "936a7a23f90a0e6a30a94e93dec8bf3fe9b77ffa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
