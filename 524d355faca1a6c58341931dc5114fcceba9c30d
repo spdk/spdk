@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa3b6d20_556c9a7f",
+        "filename": "scripts/cleanup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T16:18:38Z",
+      "side": 1,
+      "message": "this may only work on FreeBSD - not sure FreeBSD puts shared memory files in /dev/shm\n\nshould either fail the script if run on FreeBSD, or even better, check on FreeBSD where /dev/shm files are",
+      "revId": "524d355faca1a6c58341931dc5114fcceba9c30d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73b5ff9d_4309bf82",
+        "filename": "scripts/cleanup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T16:18:38Z",
+      "side": 1,
+      "message": "Delete leftover SPDK generated files from terminated processes.",
+      "revId": "524d355faca1a6c58341931dc5114fcceba9c30d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bffcdfcf_d7cb1dd2",
+        "filename": "scripts/cleanup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T16:18:38Z",
+      "side": 1,
+      "message": "there are a lot of other spdk apps besides these - i really think pawel\u0027s method is better; look through the files that exist, extract the PID, then do a kill -0 PID to see if that PID is still running\n\npawel suggested checking /proc/$PID but that is linux specific; kill -0 PID works on FreeBSD too",
+      "revId": "524d355faca1a6c58341931dc5114fcceba9c30d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
