@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abb5c834_8ccbf3d1",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T23:10:13Z",
+      "side": 1,
+      "message": "crypto vbdev as well as the crypto vbdev module itself?\n\ndo you mean it will build the crypto libraries and the vbdev module?",
+      "revId": "66ed1ccd15617cb202d151f5b40920596fe6ee39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e2f243e_f1c9e992",
+        "filename": "CONFIG",
+        "patchSetId": 10
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T23:10:13Z",
+      "side": 1,
+      "message": "crypto",
+      "revId": "66ed1ccd15617cb202d151f5b40920596fe6ee39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2109e977_c7c02106",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T23:10:13Z",
+      "side": 1,
+      "message": "Maybe add that is requires \u0027recent\u0027 nasm?",
+      "revId": "66ed1ccd15617cb202d151f5b40920596fe6ee39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dd4a8e2_48fb8731",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T23:10:13Z",
+      "side": 1,
+      "message": "this if/else logic doesn\u0027t look right\n\nif CONFIG_CRYPTO\u003dy, but TARGET_MACHINE !\u003d x86_64, then none of these options will get set\n\nsame for the other two checks after this one",
+      "revId": "66ed1ccd15617cb202d151f5b40920596fe6ee39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "456e4c0d_bf804c4b",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T23:10:13Z",
+      "side": 1,
+      "message": "is this needed if we have a submodule?  i\u0027m trying to understand when we wouldn\u0027t have this README file",
+      "revId": "66ed1ccd15617cb202d151f5b40920596fe6ee39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b3be48c_8c31e88c",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T23:10:13Z",
+      "side": 1,
+      "message": "can we add nasm as a pkg dependency?\n\nbut i know old versions of nasm don\u0027t work - so that probably doesn\u0027t work; but then i\u0027d argue that this check doesn\u0027t really help - this check would need to detect the version of nasm (or as Daniel had suggested, try to actually assemble a file that contains the instructions we need and see if it passes)",
+      "revId": "66ed1ccd15617cb202d151f5b40920596fe6ee39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
