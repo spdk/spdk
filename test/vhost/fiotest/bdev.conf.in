@@ -1,0 +1,4 @@
+[VirtioUser0]
+  Path path_to_controller
+  Type Blk
+  Queues 2
