@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97b6e052_d2dbd900",
+        "filename": "autotest.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T07:59:08Z",
+      "side": 1,
+      "message": "We should REALLY think of a way to run these tests in more friendly manner:P",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 198,
+        "endChar": 40
+      },
+      "revId": "31942a6cd116a32eccfe9136902ca0705cde29f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6001612_39f9e7c5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1778,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T07:59:08Z",
+      "side": 1,
+      "message": "I dont\u0027 think this change is related",
+      "range": {
+        "startLine": 1778,
+        "startChar": 9,
+        "endLine": 1778,
+        "endChar": 69
+      },
+      "revId": "31942a6cd116a32eccfe9136902ca0705cde29f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca36c95c_8b55d5d5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1840,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T07:59:08Z",
+      "side": 1,
+      "message": "\"should fail but didn\u0027t\" would be more clear",
+      "range": {
+        "startLine": 1840,
+        "startChar": 65,
+        "endLine": 1840,
+        "endChar": 76
+      },
+      "revId": "31942a6cd116a32eccfe9136902ca0705cde29f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d133712b_f5644195",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1917,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T07:59:08Z",
+      "side": 1,
+      "message": "* 1?",
+      "range": {
+        "startLine": 1917,
+        "startChar": 30,
+        "endLine": 1917,
+        "endChar": 33
+      },
+      "revId": "31942a6cd116a32eccfe9136902ca0705cde29f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b5f67f7_4dfff5ea",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1930,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T07:59:08Z",
+      "side": 1,
+      "message": "Why do we multiply by 1?:P",
+      "range": {
+        "startLine": 1930,
+        "startChar": 30,
+        "endLine": 1930,
+        "endChar": 33
+      },
+      "revId": "31942a6cd116a32eccfe9136902ca0705cde29f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
