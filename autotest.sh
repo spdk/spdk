@@ -206,6 +206,7 @@ if [ $SPDK_TEST_LVOL -eq 1 ]; then
 fi
 
 if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
+	run_test ./test/vhost/spdk_vhost.sh --shared
 	run_test ./test/vhost/initiator/blockdev.sh
 	run_test ./test/vhost/initiator/json_config.sh
 	report_test_completion "vhost_initiator"
