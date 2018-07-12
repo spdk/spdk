@@ -422,6 +422,7 @@ if __name__ == "__main__":
     p.set_defaults(func=apply_firmware)
 
     # iSCSI
+    @call_cmd
     def set_iscsi_options(args):
         rpc.iscsi.set_iscsi_options(
             args.client,
