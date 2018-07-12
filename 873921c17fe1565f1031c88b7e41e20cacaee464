@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ab63dcbc_b7c331cf",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-12T14:24:28Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "73bb5c16_0042d736",
+      "revId": "873921c17fe1565f1031c88b7e41e20cacaee464",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c1a1f3d_2e36b164",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 13
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "ed164118_38e765c7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 3390,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-12T14:24:28Z",
+      "side": 1,
+      "message": "So far the logic is to use a small timeslice to control. For example, 1000 IOPS corresponding to 1 IO per millisecond.\n\nIf we allow any target, like 1111, the each small timeslice could be incorrect and not concise. If we want to have a concise control, will need somewhat complex code logic to handle. So that add a restriction here to the multiple of the minimum where the minimum itself is 10000 and can be well handled in each timeslice (10 per millisecond).",
+      "parentUuid": "4c1a1f3d_2e36b164",
+      "revId": "873921c17fe1565f1031c88b7e41e20cacaee464",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7fbf8c2_3d2af0c7",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 13
@@ -47,6 +83,24 @@
       "writtenOn": "2018-07-11T20:13:38Z",
       "side": 1,
       "message": "I think it will make our lives a lot easier if you define this structure like this:\n\nstatic const struct spdk_json_object_decoder rpc_set_bdev_qos_limit_decoders[] \u003d {\n  {\"name\", ...},\n  {\"rw_io_per_second\", ...},\n  {\"read_io_per_second\", ...},\n  {\"write_io_per_second\", ...},\n  {\"rw_bytes_per_second\", ... },\n   ...\n};\n\nThe reason this is going to make things easier is eventually you\u0027re going to need to add an RPC that gets all of the limits, and for the JSON config file it will need to get the limits, then on next load set them all again. It\u0027s very convenient if the JSON structure returned in the get can just be passed directly to the set.",
+      "revId": "873921c17fe1565f1031c88b7e41e20cacaee464",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d87e11d0_0996c224",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-12T14:24:28Z",
+      "side": 1,
+      "message": "Updated as suggested. Thanks.",
+      "parentUuid": "c7fbf8c2_3d2af0c7",
       "revId": "873921c17fe1565f1031c88b7e41e20cacaee464",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
