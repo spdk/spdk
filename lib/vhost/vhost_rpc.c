@@ -477,6 +477,7 @@ spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)
 	spdk_json_write_named_string_fmt(ctx->w, "cpumask", "0x%s", spdk_cpuset_fmt(vdev->cpumask));
 	spdk_json_write_named_uint32(ctx->w, "delay_base_us", delay_base_us);
 	spdk_json_write_named_uint32(ctx->w, "iops_threshold", iops_threshold);
+	spdk_json_write_named_string(ctx->w, "socket", vdev->path);
 
 	spdk_json_write_named_object_begin(ctx->w, "backend_specific");
 	spdk_vhost_dump_info_json(vdev, ctx->w);
