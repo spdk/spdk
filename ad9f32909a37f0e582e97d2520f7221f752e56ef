@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "875eaa7e_7331d6ff",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-12T01:31:36Z",
+      "side": 1,
+      "message": "A sentence or two defining zero-copy would be good here with docs having a much more expanded explanation of course. I believe zero-copy can be thought of in a few different ways",
+      "revId": "ad9f32909a37f0e582e97d2520f7221f752e56ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "842d5f24_fd1850da",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-12T01:31:36Z",
+      "side": 1,
+      "message": "do we use \"SG buffer\" terminology anywhere else? Maybe just leave it at \"Array of iovecs to transfer\"",
+      "revId": "ad9f32909a37f0e582e97d2520f7221f752e56ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e39bc7a_e78446ce",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-12T01:31:36Z",
+      "side": 1,
+      "message": "So technically this isn\u0027t the total size, its the total number of blocks :)",
+      "revId": "ad9f32909a37f0e582e97d2520f7221f752e56ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "898b9391_68d13791",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-12T01:31:36Z",
+      "side": 1,
+      "message": "\"Real\" seems a little odd, as opposed to \"fake\"? Maybe \"populated with data from the backing device\"?",
+      "revId": "ad9f32909a37f0e582e97d2520f7221f752e56ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b966dcd_4de2c17a",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-12T01:31:36Z",
+      "side": 1,
+      "message": "So I think I know the answer to this but just in case, what\u0027s the use case for commit \u003d false?",
+      "revId": "ad9f32909a37f0e582e97d2520f7221f752e56ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
