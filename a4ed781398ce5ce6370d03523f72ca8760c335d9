@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "080695f0_6efe08ee",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T08:27:19Z",
+      "side": 1,
+      "message": "couldn\u0027t we have \"run_spdk_tgt\" called just once outside of functions, and run the tests after it\u0027s started?",
+      "range": {
+        "startLine": 56,
+        "startChar": 1,
+        "endLine": 56,
+        "endChar": 13
+      },
+      "revId": "a4ed781398ce5ce6370d03523f72ca8760c335d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6fc518c_5e565fda",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T08:27:19Z",
+      "side": 1,
+      "message": "unused variable?",
+      "range": {
+        "startLine": 57,
+        "startChar": 1,
+        "endLine": 57,
+        "endChar": 39
+      },
+      "revId": "a4ed781398ce5ce6370d03523f72ca8760c335d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
