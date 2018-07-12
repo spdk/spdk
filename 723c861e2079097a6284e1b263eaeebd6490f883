@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15d46a07_ae9c3e4b",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 957,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-12T00:16:01Z",
+      "side": 1,
+      "message": "It seems like the period essentially acts as a sleep after we reach the state NBD_KERNEL_STATE_STARTED. How did you decide on the period for which you needed to sleep?\n\nI don\u0027t know as much about the nbd driver, but it looks like there isn\u0027t really anything supplied from the __nbd_ioctl function, or any side effects created when that function reaches a blocking state that you could measure in order to determine that we aern\u0027t racing with NBD_DO_IT.\n\nWhat happens if we start our poller before the NBD_DO_IT ioctl reaches the blocking state?",
+      "revId": "723c861e2079097a6284e1b263eaeebd6490f883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
