@@ -47,8 +47,8 @@ enum spdk_nvme_rpc_type {
 };
 
 enum spdk_nvme_dev_type {
-	NVME_DEV_CTRLR = 0,
-	NVME_DEV_NS,
+	NVME_DEV_CTRLR = 0x1,
+	NVME_DEV_NS = 0x2,
 };
 
 struct rpc_nvme_cmd_req {
@@ -87,6 +87,8 @@ static int nvme_rpc_admin_cmd_bdev_nvme(void *dev, int dev_type, struct spdk_nvm
 static int nvme_rpc_io_cmd_bdev_nvme(void *dev, int dev_type, struct spdk_nvme_cmd *cmd,
 				     void *buf, size_t nbytes, void *md_buf, size_t md_len,
 				     uint32_t timeout_ms, struct rpc_nvme_cmd_ctx *ctx);
+
+static int nvme_rpc_dev_list_bdev_nvme(char *dev_names[], int dev_type);
 
 static void
 free_rpc_nvme_cmd_ctx(struct rpc_nvme_cmd_ctx *ctx)
@@ -433,6 +435,98 @@ invalid:
 }
 SPDK_RPC_REGISTER("nvme_cmd", spdk_rpc_nvme_cmd, SPDK_RPC_RUNTIME)
 
+struct rpc_nvme_device_list {
+	char *type;
+};
+
+static void
+free_rpc_nvme_device_list(struct rpc_nvme_device_list *req)
+{
+	free(req->type);
+}
+
+static const struct spdk_json_object_decoder rpc_nvme_device_list_decoders[] = {
+	{"type", offsetof(struct rpc_nvme_device_list, type), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_nvme_device_list(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_nvme_device_list req = {};
+	struct spdk_json_write_ctx *w;
+	char **device_names = NULL;
+	int device_type, dev_num = 0;
+
+	if (spdk_json_decode_object(params, rpc_nvme_device_list_decoders,
+				    SPDK_COUNTOF(rpc_nvme_device_list_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto invalid;
+	}
+
+	if (strcmp(req.type, "controller") == 0) {
+		device_type = NVME_DEV_CTRLR;
+	} else if (strcmp(req.type, "namespace") == 0) {
+		device_type = NVME_DEV_NS;
+	} else if (strcmp(req.type, "all") == 0) {
+		device_type = NVME_DEV_CTRLR | NVME_DEV_NS;
+	} else {
+		SPDK_ERRLOG("Invalid device type '%s'\n", req.type);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid device type '%s'", req.type);
+		goto invalid;
+	}
+
+	dev_num = nvme_rpc_dev_list_bdev_nvme(NULL, device_type);
+
+	if (dev_num) {
+		device_names = malloc(sizeof(*device_names) * dev_num);
+		if (!device_names) {
+			SPDK_ERRLOG("Failed at malloc device_names\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+			goto invalid;
+		}
+
+		nvme_rpc_dev_list_bdev_nvme(device_names, device_type);
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		goto invalid;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_name(w, "device_num");
+	spdk_json_write_int32(w, dev_num);
+
+	spdk_json_write_name(w, "device_names");
+	spdk_json_write_array_begin(w);
+	for (; dev_num > 0; dev_num--) {
+		spdk_json_write_string(w, device_names[dev_num - 1]);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+	free_rpc_nvme_device_list(&req);
+	if (device_names) {
+		free(device_names);
+	}
+
+	return;
+
+invalid:
+	free_rpc_nvme_device_list(&req);
+	if (device_names) {
+		free(device_names);
+	}
+}
+SPDK_RPC_REGISTER("nvme_device_list", spdk_rpc_nvme_device_list, SPDK_RPC_RUNTIME)
+
 static void
 nvme_rpc_bdev_nvme_cb(void *ref, const struct spdk_nvme_cpl *cpl)
 {
@@ -511,4 +605,34 @@ out:
 	}
 
 	return dev;
+}
+
+static int
+nvme_rpc_dev_list_bdev_nvme(char *dev_names[], int dev_type)
+{
+	struct nvme_ctrlr *_nvme_ctrlr;
+	int i = 0;
+	uint32_t n;
+
+	TAILQ_FOREACH(_nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		/* List NVMe controllers */
+		if (dev_type & NVME_DEV_CTRLR) {
+			if (dev_names) {
+				dev_names[i] = _nvme_ctrlr->name;
+			}
+			i++;
+		}
+
+		/* List NVMe namespace */
+		if (dev_type & NVME_DEV_NS) {
+			for (n = 0; n < _nvme_ctrlr->num_ns; n++) {
+				if (dev_names) {
+					dev_names[i] = _nvme_ctrlr->bdevs[n].disk.name;
+				}
+				i++;
+			}
+		}
+	}
+
+	return i;
 }
