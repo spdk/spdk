@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec90d15e_f225abe4",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T15:48:37Z",
+      "side": 1,
+      "message": "should be bdeverrno?  (see last review)",
+      "revId": "daae365805a2c8ee126ee90b3d565cd4b327c4bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "982cc54d_1dfd914d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T15:48:37Z",
+      "side": 1,
+      "message": "bdeverrno?  this isn\u0027t an lvol callback, it\u0027s a bdev callback (i made this comment also in previous revision)",
+      "revId": "daae365805a2c8ee126ee90b3d565cd4b327c4bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83cd742f_4a7e2682",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T15:48:37Z",
+      "side": 1,
+      "message": "remove lock",
+      "revId": "daae365805a2c8ee126ee90b3d565cd4b327c4bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
