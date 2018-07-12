@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8c1fc129_27ea957a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1918,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-12T04:12:07Z",
+      "side": 1,
+      "message": "I know I originally wrote it using readv, then changed it because I ran into some problem where something had to be initialized in a special way, but now I think I\u0027ve managed to simplify my way back out of that. I\u0027ll take a close look and see if I can\u0027t just call those functions again.",
+      "parentUuid": "5d295a08_737beb10",
+      "revId": "a997095842b5ded1f4d9dc8c8ec75009f6a825af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "558290a1_7d87cad0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 9
