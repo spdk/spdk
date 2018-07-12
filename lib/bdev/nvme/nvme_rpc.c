@@ -43,6 +43,9 @@
 #include "spdk/base64.h"
 #include "spdk/nvme_msg.h"
 
+#define NVME_DEVICE_TYPE_CTRLR 0x1
+#define NVME_DEVICE_TYPE_NS 0x2
+
 extern TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs;
 
 struct nvme_rpc_ctx {
@@ -83,7 +86,7 @@ struct spdk_nvme_rpc_ops {
 
 	/* TODO: consider proper function elements. */
 	/* List names of devices mastered by this ops */
-	int (*dev_list_func)(void);
+	int (*dev_list_func)(char *device_names[], int device_type);
 
 	TAILQ_ENTRY(spdk_nvme_rpc_ops) tailq;
 };
@@ -399,6 +402,104 @@ invalid:
 }
 SPDK_RPC_REGISTER("nvme_cmd", spdk_rpc_nvme_cmd, SPDK_RPC_RUNTIME)
 
+struct rpc_nvme_device_list {
+	char *type;
+};
+
+static void
+free_rpc_nvme_device_list(struct rpc_nvme_device_list *req)
+{
+	free(req->type);
+}
+
+static const struct spdk_json_object_decoder rpc_nvme_device_list_decoders[] = {
+	{"type", offsetof(struct rpc_nvme_device_list, type), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_nvme_device_list(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_nvme_device_list req = {};
+	struct spdk_nvme_rpc_ops *ops;
+	struct spdk_json_write_ctx *w;
+	char **device_names = NULL;
+	int device_type, dev_num = 0;
+
+	if (spdk_json_decode_object(params, rpc_nvme_device_list_decoders,
+				    SPDK_COUNTOF(rpc_nvme_device_list_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto invalid;
+	}
+
+	if (strcmp(req.type, "controller") == 0) {
+		device_type = NVME_DEVICE_TYPE_CTRLR;
+	} else if (strcmp(req.type, "namespace") == 0) {
+		device_type = NVME_DEVICE_TYPE_NS;
+	} else if (strcmp(req.type, "all") == 0) {
+		device_type = NVME_DEVICE_TYPE_CTRLR | NVME_DEVICE_TYPE_NS;
+	} else {
+		SPDK_ERRLOG("Invalid device type '%s'\n", req.type);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid device type '%s'", req.type);
+		goto invalid;
+	}
+
+	TAILQ_FOREACH(ops, &g_nvme_rpc_ops, tailq) {
+		dev_num += ops->dev_list_func(NULL, device_type);
+	}
+
+	if (dev_num) {
+		device_names = malloc(sizeof(*device_names) * dev_num);
+		if (!device_names) {
+			SPDK_ERRLOG("Failed at malloc device_names\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+			goto invalid;
+		}
+
+		dev_num = 0;
+		TAILQ_FOREACH(ops, &g_nvme_rpc_ops, tailq) {
+			dev_num += ops->dev_list_func(&device_names[dev_num], device_type);
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		goto invalid;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_name(w, "device_num");
+	spdk_json_write_int32(w, dev_num);
+
+	spdk_json_write_name(w, "device_names");
+	spdk_json_write_array_begin(w);
+	for (; dev_num > 0; dev_num--) {
+		spdk_json_write_string(w, device_names[dev_num - 1]);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+	free_rpc_nvme_device_list(&req);
+	if (device_names) {
+		free(device_names);
+	}
+
+	return;
+
+invalid:
+	free_rpc_nvme_device_list(&req);
+	if (device_names) {
+		free(device_names);
+	}
+}
+SPDK_RPC_REGISTER("nvme_device_list", spdk_rpc_nvme_device_list, SPDK_RPC_RUNTIME)
+
 struct nvme_rpc_bdev_ctx {
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
@@ -511,11 +612,37 @@ static void *nvme_rpc_dev_lookup_bdev(const char *name)
 	return (void *)spdk_bdev_get_by_name(name);
 }
 
+static int
+nvme_rpc_dev_list_bdev(char *device_names[], int device_type)
+{
+	struct spdk_bdev *bdev = NULL;
+	int i = 0;
+
+	if ((device_type & NVME_DEVICE_TYPE_NS) == 0) {
+		return 0;
+	}
+
+	for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+		if (strcmp(spdk_bdev_get_product_name(bdev), "NVMe disk")) {
+			continue;
+		}
+
+		if (device_names) {
+			device_names[i] = (char *)spdk_bdev_get_name(bdev);
+		}
+
+		i++;
+	}
+
+	return i;
+}
+
 static struct spdk_nvme_rpc_ops nvme_rpc_ops_bdev = {
 	.name = "nvme_rpc_ops_bdev",
 	.dev_lookup_func = nvme_rpc_dev_lookup_bdev,
 	.admin_cmd_func = nvme_rpc_admin_cmd_bdev,
 	.io_cmd_func = nvme_rpc_io_cmd_bdev,
+	.dev_list_func = nvme_rpc_dev_list_bdev,
 };
 
 SPDK_NVME_RPC_OPS_REGISTER(nvme_rpc_ops_bdev);
@@ -574,11 +701,33 @@ nvme_rpc_dev_lookup_bdev_nvme(const char *name)
 	return NULL;
 }
 
+static int
+nvme_rpc_dev_list_bdev_nvme(char *ctrlr_names[], int device_type)
+{
+	struct nvme_ctrlr	*nvme_ctrlr;
+	int i = 0;
+
+	if ((device_type & NVME_DEVICE_TYPE_CTRLR) == 0) {
+		return 0;
+	}
+
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (ctrlr_names) {
+			ctrlr_names[i] = nvme_ctrlr->name;
+		}
+
+		i++;
+	}
+
+	return i;
+}
+
 static struct spdk_nvme_rpc_ops nvme_rpc_ops_bdev_nvme = {
 	.name = "nvme_rpc_ops_bdev_nvme",
 	.dev_lookup_func = nvme_rpc_dev_lookup_bdev_nvme,
 	.admin_cmd_func = nvme_rpc_admin_cmd_bdev_nvme,
 	.io_cmd_func = nvme_rpc_io_cmd_bdev_nvme,
+	.dev_list_func = nvme_rpc_dev_list_bdev_nvme,
 };
 
 SPDK_NVME_RPC_OPS_REGISTER(nvme_rpc_ops_bdev_nvme);
