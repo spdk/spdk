@@ -453,15 +453,43 @@ static void bdev_iscsi_submit_request(struct spdk_io_channel *_ch, struct spdk_b
 }
 
 static bool
+bdev_iscsi_inquiry_unmap_supported(struct bdev_iscsi_lun *lun)
+{
+	struct iscsi_context *context = lun->context;
+	struct scsi_inquiry_logical_block_provisioning *lbp_inq = NULL;
+	struct scsi_task *lbp_task = NULL;
+
+	lbp_task = iscsi_inquiry_sync(context, 0, 1, SCSI_INQUIRY_PAGECODE_LOGICAL_BLOCK_PROVISIONING,
+				      255);
+	if (lbp_task == NULL || lbp_task->status != SCSI_STATUS_GOOD) {
+		SPDK_ERRLOG("iscsi inquiry sync failed: %s\n", iscsi_get_error(context));
+		scsi_free_scsi_task(lbp_task);
+		return false;
+	}
+
+	lbp_inq = scsi_datain_unmarshall(lbp_task);
+	scsi_free_scsi_task(lbp_task);
+
+	if (lbp_inq != NULL && lbp_inq->lbpu) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+static bool
 bdev_iscsi_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+	struct bdev_iscsi_lun *lun = ctx;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return true;
 
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return bdev_iscsi_inquiry_unmap_supported(lun);
 	default:
 		return false;
 	}
