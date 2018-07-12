@@ -97,6 +97,9 @@ if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 	if [ $(uname -s) = Linux ]; then
 		run_test test/bdev/bdevjson/json_config.sh
 	fi
+	timing_enter shared_controllers
+	run_test ./test/vhost/spdk_vhost.sh --shared
+	timing_exit shared_controllers
 fi
 
 if [ $SPDK_TEST_EVENT -eq 1 ]; then
