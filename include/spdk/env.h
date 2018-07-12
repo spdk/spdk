@@ -80,6 +80,7 @@ struct spdk_env_opts {
 	int			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;
+	bool			unlink_hugepage;
 	size_t			num_pci_addr;
 	struct spdk_pci_addr	*pci_blacklist;
 	struct spdk_pci_addr	*pci_whitelist;

@@ -250,6 +250,14 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	/* unlink hugepages after initialization */
+	if (opts->unlink_hugepage) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--huge-unlink"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
 	if (opts->num_pci_addr) {
 		size_t i;
 		char bdf[32];
