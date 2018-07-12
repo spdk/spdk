@@ -141,6 +141,10 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	run_test ./test/vhost/spdk_vhost.sh --negative
 	timing_exit negative
 
+	timing_enter shared_controllers
+	run_test ./test/vhost/spdk_vhost.sh --shared
+	timing_exit shared_controllers
+
 	timing_enter vhost_json_config
 	run_test ./test/vhost/json_config/json_config.sh
 	timing_exit vhost_json_config
