@@ -45,6 +45,30 @@
       "revId": "63aa4bb0812b16515615bd012db417c7ca652003",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdd75029_7ea14ff5",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-12T11:51:18Z",
+      "side": 1,
+      "message": "This variable indicates if execute_command should check whether the element should exist in elements tree or not",
+      "parentUuid": "9e90ff7f_bcd8e5d0",
+      "range": {
+        "startLine": 103,
+        "startChar": 4,
+        "endLine": 103,
+        "endChar": 16
+      },
+      "revId": "63aa4bb0812b16515615bd012db417c7ca652003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
