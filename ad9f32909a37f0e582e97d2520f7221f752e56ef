@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "05e86caa_376e4984",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011327
+      },
+      "writtenOn": "2018-07-12T04:49:15Z",
+      "side": 1,
+      "message": "Ideally the buffers should be allocated without a context switch. Since this design is expecting a callback, I am assuming there will be one.\n\nOne can still do a callback in the same thread context, however for write path to trigger R2T/RDMA_READ it probably will re-enter the rdma state machine. When it unwinds after zcopy_start into rdma codepath, the local stack context will be invalid.\nFor example:\nspdk_nvmf_rdma_request_process\n spdk_nvmf_request_exec\n  spdk_nvmf_ctrlr_process_io_cmd\n   nvmf_bdev_ctrlr_write_cmd\n    spdk_bdev_zcopy_start(..., populate\u003dfalse, req-\u003eqpair-\u003etransport-\u003eops-\u003ereq_r2t, req);\n     spdk_bdev_io_submit\n      bdev-\u003efn_table-\u003esubmit_request\n       Allocate buffers\n       callback_fn()\n        spdk_nvmf_rdma_request_r2t\n         spdk_nvmf_rdma_request_process\n\nOnce it unwinds to rdma_request_process, the code should not rely on anything on stack. This is something one can\u0027t strictly enforce.",
+      "revId": "ad9f32909a37f0e582e97d2520f7221f752e56ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "842d5f24_fd1850da",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 14
