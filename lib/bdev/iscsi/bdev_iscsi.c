@@ -85,6 +85,7 @@ struct bdev_iscsi_lun {
 	struct spdk_thread		*master_td;
 	struct spdk_poller		*no_master_ch_poller;
 	struct spdk_thread		*no_master_ch_poller_td;
+	bool				unmap_support;
 	TAILQ_ENTRY(bdev_iscsi_lun)	link;
 };
 
@@ -452,15 +453,49 @@ static void bdev_iscsi_submit_request(struct spdk_io_channel *_ch, struct spdk_b
 	_bdev_iscsi_submit_request(bdev_io);
 }
 
+static void
+bdev_iscsi_inquiry_cb(struct iscsi_context *context, int status, void *_task, void *_lun)
+{
+	struct scsi_task *lbp_task = _task;
+	struct bdev_iscsi_lun *lun = _lun;
+	struct scsi_inquiry_logical_block_provisioning *lbp_inq = NULL;
+
+	lbp_inq = scsi_datain_unmarshall(lbp_task);
+	scsi_free_scsi_task(lbp_task);
+	if (lbp_inq != NULL && lbp_inq->lbpu) {
+		lun->unmap_support = true;
+	} else {
+		lun->unmap_support = false;
+	}
+}
+
+static void
+bdev_iscsi_inquiry_unmap_supported(struct bdev_iscsi_lun *lun)
+{
+	struct iscsi_context *context = lun->context;
+	struct scsi_task *lbp_task = NULL;
+
+	lbp_task = iscsi_inquiry_task(context, 0, 1, SCSI_INQUIRY_PAGECODE_LOGICAL_BLOCK_PROVISIONING,
+				      255, bdev_iscsi_inquiry_cb, lun);
+	if (lbp_task == NULL) {
+		SPDK_ERRLOG("iscsi inquiry task failed: %s\n", iscsi_get_error(context));
+		scsi_free_scsi_task(lbp_task);
+	}
+}
+
 static bool
 bdev_iscsi_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+	struct bdev_iscsi_lun *lun = ctx;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return true;
+
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return lun->unmap_support;
 
 	default:
 		return false;
@@ -610,6 +645,7 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, 
 	lun->no_master_ch_poller = spdk_poller_register(bdev_iscsi_no_master_ch_poll, lun,
 				   BDEV_ISCSI_NO_MASTER_CH_POLL_US);
 
+	bdev_iscsi_inquiry_unmap_supported(lun);
 	TAILQ_INSERT_TAIL(&g_iscsi_lun_head, lun, link);
 	*bdev = &lun->bdev;
 	return 0;
