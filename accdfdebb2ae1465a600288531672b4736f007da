@@ -71,6 +71,29 @@
     },
     {
       "key": {
+        "uuid": "062d808d_73c31e2d",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T08:27:50Z",
+      "side": 1,
+      "message": "Why not have this in \"main\" instead of functions?",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 48,
+        "endChar": 13
+      },
+      "revId": "accdfdebb2ae1465a600288531672b4736f007da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97535345_4f5546e8",
         "filename": "test/spdkcli/spdkcli.sh",
         "patchSetId": 1
