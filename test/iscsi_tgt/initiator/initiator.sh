@@ -16,11 +16,13 @@ timing_enter start_iscsi_tgt
 
 # Start the iSCSI target without using stub
 # Reason: Two SPDK processes will be started
-$ISCSI_APP -c $testdir/iscsi.conf -m 0x2 -p 1 -s 512 &
+$ISCSI_APP -m 0x2 -p 1 -s 512 -w &
 pid=$!
 echo "iSCSI target launched. pid: $pid"
 trap "killprocess $pid;exit 1" SIGINT SIGTERM EXIT
 waitforlisten $pid
+$rpc_py load_subsystem_config -f $testdir/conf.json
+$rpc_py start_subsystem_init
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt

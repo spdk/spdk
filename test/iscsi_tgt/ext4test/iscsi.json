@@ -1,0 +1,16 @@
+{
+  "subsystem": "iscsi",
+  "config": [
+    {
+      "params": {
+        "timeout": 30,
+        "immediate_data": true,
+        "node_base": "iqn.2013-06.com.intel.ch.spdk",
+        "max_sessions": 4,
+        "error_recovery_level": 0,
+        "auth_file": "/usr/local/etc/auth.conf"
+      },
+      "method": "set_iscsi_options"
+    }
+  ]
+}
