@@ -27,21 +27,21 @@ NETMASK=$INITIATOR_IP/32
 
 function run_nvme_remote() {
 	echo "now use $1 method to run iscsi tgt."
-	cp $testdir/iscsi.conf $testdir/iscsi.conf.tmp
 
-	if [ "$1" = "remote" ]; then
-		echo "[NVMe]" >> $testdir/iscsi.conf.tmp
-		echo "  HostNQN nqn.2016-06.io.spdk:host1" >> $testdir/iscsi.conf.tmp
-		echo "  TransportID \"trtype:RDMA adrfam:ipv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420 subnqn:nqn.2016-06.io.spdk:cnode1\" Nvme0" >> $testdir/iscsi.conf.tmp
-	fi
 	# Start the iSCSI target without using stub
 	iscsi_rpc_addr="/var/tmp/spdk-iscsi.sock"
 	ISCSI_APP="$rootdir/app/iscsi_tgt/iscsi_tgt"
-	$ISCSI_APP -r "$iscsi_rpc_addr" -c $testdir/iscsi.conf.tmp -m 0x1 -p 0 -s 512 &
+	$ISCSI_APP -r "$iscsi_rpc_addr" -m 0x1 -p 0 -s 512 -w &
 	iscsipid=$!
 	echo "iSCSI target launched. pid: $iscsipid"
-	trap "killprocess $iscsipid; killprocess $nvmfpid; rm -f $testdir/iscsi.conf.tmp; exit 1" SIGINT SIGTERM EXIT
+	trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 	waitforlisten $iscsipid "$iscsi_rpc_addr"
+	$rpc_py -s "$iscsi_rpc_addr" set_iscsi_options -o 30 -a 16
+	$rpc_py -s "$iscsi_rpc_addr" start_subsystem_init
+	if [ "$1" = "remote" ]; then
+		$rpc_py -s $iscsi_rpc_addr construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
+	fi
+
 	echo "iSCSI target has started."
 
 	timing_exit start_iscsi_tgt
@@ -64,11 +64,13 @@ timing_enter nvme_remote
 
 # Start the NVMf target
 NVMF_APP="$rootdir/app/nvmf_tgt/nvmf_tgt"
-$NVMF_APP -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 512 &
+$NVMF_APP -m 0x2 -p 1 -s 512 -w &
 nvmfpid=$!
 echo "NVMf target launched. pid: $nvmfpid"
-trap "killprocess $nvmfpid; rm -f $testdir/iscsi.conf.tmp; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid
+$rpc_py set_nvmf_target_options -u 8192 -p 4
+$rpc_py start_subsystem_init
 echo "NVMf target has started."
 bdevs=$($rpc_py construct_malloc_bdev 64 512)
 $rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "$bdevs"
@@ -78,7 +80,7 @@ timing_enter start_iscsi_tgt
 
 run_nvme_remote "local"
 
-trap "iscsicleanup; killprocess $iscsipid; killprocess $nvmfpid; rm -f $testdir/iscsi.conf.tmp; \
+trap "iscsicleanup; killprocess $iscsipid; killprocess $nvmfpid; \
 	rm -f ./local-job0-0-verify.state; exit 1" SIGINT SIGTERM EXIT
 sleep 1
 
@@ -88,7 +90,6 @@ $fio_py 4096 1 randrw 1 verify
 rm -f ./local-job0-0-verify.state
 iscsicleanup
 killprocess $iscsipid
-rm -f $testdir/iscsi.conf.tmp
 
 run_nvme_remote "remote"
 
@@ -100,7 +101,6 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $iscsipid
-rm -f $testdir/iscsi.conf.tmp
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 killprocess $nvmfpid
 
