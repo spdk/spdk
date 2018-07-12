@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e5335bb_f4ccbbbd",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T22:25:14Z",
+      "side": 1,
+      "message": "yeah - code looks simpler now that we\u0027ve made this function synchronous - ignore my previous comments on making this two separate functions",
+      "revId": "c37e826f22c3d592500c4a1e34ece043b439d0b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55e922c3_7f43221c",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T22:25:14Z",
+      "side": 1,
+      "message": "should we name this similar to the RPC name?  i.e. use delete instead of remove",
+      "revId": "c37e826f22c3d592500c4a1e34ece043b439d0b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e9405f7_5ca152bc",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T22:25:14Z",
+      "side": 1,
+      "message": "i don\u0027t think you need to do any of these checks; spdk_rpc_construct_nvme_bdev doesn\u0027t do them - it just relies on spdk_bdev_nvme_create() to fail\n\nyou can do the same; spdk_bdev_nvme_remove_ctrlr will fail if any of these aren\u0027t specified",
+      "revId": "c37e826f22c3d592500c4a1e34ece043b439d0b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e82933dc_accc193a",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T22:25:14Z",
+      "side": 1,
+      "message": "trtype is a required parameter, so you shouldn\u0027t need to check it here\n\nyou should also check the return value from ..._id_parse_trtype() - see spdk_rpc_construct_nvme_bdev",
+      "revId": "c37e826f22c3d592500c4a1e34ece043b439d0b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf1a4370_183855e4",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T22:25:14Z",
+      "side": 1,
+      "message": "this should check return code of spdk_nvme_transport_id_parse_adrfam (see spdk_rpc_construct_nvme_bdev)",
+      "revId": "c37e826f22c3d592500c4a1e34ece043b439d0b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a209a80_5274f137",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T22:25:14Z",
+      "side": 1,
+      "message": "let\u0027s make this spdk_bdev_nvme_delete() - that matches spdk_bdev_nvme_create()",
+      "revId": "c37e826f22c3d592500c4a1e34ece043b439d0b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
