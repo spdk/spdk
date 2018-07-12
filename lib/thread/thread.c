@@ -223,18 +223,21 @@ spdk_poller_register(spdk_poller_fn fn,
 
 	thread = spdk_get_thread();
 	if (!thread) {
-		abort();
+		assert(false);
+		return NULL;
 	}
 
 	if (!thread->start_poller_fn || !thread->stop_poller_fn) {
 		SPDK_ERRLOG("No related functions to start requested poller\n");
-		abort();
+		assert(false);
+		return NULL;
 	}
 
 	poller = thread->start_poller_fn(thread->thread_ctx, fn, arg, period_microseconds);
 	if (!poller) {
 		SPDK_ERRLOG("Unable to start requested poller\n");
-		abort();
+		assert(false);
+		return NULL;
 	}
 
 	return poller;
