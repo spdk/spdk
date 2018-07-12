@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ceaa75e_092d5466",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-12T14:41:36Z",
+      "side": 1,
+      "message": "Since these rate limits settings are optional value， if not specified, the default value is 0. In this case, to differentiate the optional default 0 and previous disable value 0, I\u0027ve changed here to use \"-1\" as the disable operation. Internally, it stills uses 0 to handle the disable logic. Meanwhile, by dosing so, it has only one meaning for 0 which is the related rate limits are not set explicitly. As least one rate limit setting needs on the command line, otherwise it will just return error. This is the check from the line above.",
+      "range": {
+        "startLine": 529,
+        "startChar": 31,
+        "endLine": 529,
+        "endChar": 55
+      },
+      "revId": "cebac06002be0538e1fafffd864b00f8af72ed01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
