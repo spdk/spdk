@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "33143668_aa12d1e4",
+        "filename": "lib/bdev/nvme/bdev_nvme.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-12T12:21:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d158c11_154bdcc9",
+      "range": {
+        "startLine": 82,
+        "startChar": 35,
+        "endLine": 82,
+        "endChar": 39
+      },
+      "revId": "613f1bc17ed4a641f73f773296113870acf04ed7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e160620e_5da7ade4",
         "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 23
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-06T12:46:09Z",
       "side": 1,
       "message": "Please set rc to EINVAL",
+      "range": {
+        "startLine": 213,
+        "startChar": 3,
+        "endLine": 213,
+        "endChar": 16
+      },
+      "revId": "613f1bc17ed4a641f73f773296113870acf04ed7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4f529f3_1e5767f6",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-12T12:21:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e160620e_5da7ade4",
       "range": {
         "startLine": 213,
         "startChar": 3,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "4bc9829b_d846d78e",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-12T12:21:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "85b89bc5_62ff91d5",
+      "range": {
+        "startLine": 245,
+        "startChar": 0,
+        "endLine": 247,
+        "endChar": 9
+      },
+      "revId": "613f1bc17ed4a641f73f773296113870acf04ed7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dceddcaa_b9cd31a8",
         "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 23
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "91f724a4_2f98fb92",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-12T12:21:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dceddcaa_b9cd31a8",
+      "range": {
+        "startLine": 260,
+        "startChar": 78,
+        "endLine": 260,
+        "endChar": 98
+      },
+      "revId": "613f1bc17ed4a641f73f773296113870acf04ed7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff6827ad_851aee53",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 23
@@ -105,6 +201,30 @@
       "writtenOn": "2018-07-06T12:46:09Z",
       "side": 1,
       "message": "Why not separate text same as below for consistency ? \") (\" -\u003e \"; \"",
+      "range": {
+        "startLine": 144,
+        "startChar": 61,
+        "endLine": 144,
+        "endChar": 64
+      },
+      "revId": "613f1bc17ed4a641f73f773296113870acf04ed7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29823959_aed9c7ae",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-12T12:21:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff6827ad_851aee53",
       "range": {
         "startLine": 144,
         "startChar": 61,
