@@ -156,6 +156,18 @@ spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name)
 	return NULL;
 }
 
+struct nvme_ctrlr *
+spdk_bdev_nvme_first_ctrlr(void)
+{
+	return TAILQ_FIRST(&g_nvme_ctrlrs);
+}
+
+struct nvme_ctrlr *
+spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev)
+{
+	return TAILQ_NEXT(prev, tailq);
+}
+
 static int
 bdev_nvme_get_ctx_size(void)
 {

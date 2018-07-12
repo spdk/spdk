@@ -37,3 +37,18 @@ def send_nvme_cmd(client, name, cmd_type, data_direction, cmdbuf,
         params['timeout_ms'] = timeout_ms
 
     return client.call('send_nvme_cmd', params)
+
+
+def get_nvme_controllers(client, name=None):
+    """Get information about NVMe controllers.
+
+    Args:
+        name: NVMe controller name to query (optional; if omitted, query all NVMe controllers)
+
+    Returns:
+        List of NVMe controller information objects.
+    """
+    params = {}
+    if name:
+        params['name'] = name
+    return client.call('get_nvme_controllers', params)

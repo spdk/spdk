@@ -292,6 +292,16 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_nvme_bdev)
 
     @call_cmd
+    def get_nvme_controllers(args):
+        print_dict(rpc.nvme.get_nvme_controllers(args.client,
+                                                 name=args.name))
+
+    p = subparsers.add_parser(
+        'get_nvme_controllers', help='Display current NVMe controllers list or required NVMe controller')
+    p.add_argument('-n', '--name', help="Name of the NVMe controller. Example: Nvme0", required=False)
+    p.set_defaults(func=get_nvme_controllers)
+
+    @call_cmd
     def delete_nvme_controller(args):
         rpc.bdev.delete_nvme_controller(args.client,
                                         name=args.name)
