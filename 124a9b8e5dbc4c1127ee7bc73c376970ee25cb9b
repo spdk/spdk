@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "85a66a01_4462097e",
+        "filename": "scripts/vagrant/autorun-spdk.conf",
+        "patchSetId": 15
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:31:46Z",
+      "side": 1,
+      "message": "Totally makes sense.  I agree with this approach.",
+      "parentUuid": "a9e8f101_cb640143",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 20
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c27e744_65369d26",
         "filename": "scripts/vagrant/autorun-spdk.conf",
         "patchSetId": 15
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-11T14:05:32Z",
       "side": 1,
       "message": "setup.sh seems to ignore this.  There are autotests which fail because HUGEMEM is not 4096",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 12
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0799bc5_69fb19f2",
+        "filename": "scripts/vagrant/autorun-spdk.conf",
+        "patchSetId": 15
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:31:46Z",
+      "side": 1,
+      "message": "OK.  I haven\u0027t looked at this yet.  We can fix this later I think.",
+      "parentUuid": "2c27e744_65369d26",
       "range": {
         "startLine": 25,
         "startChar": 0,
@@ -105,6 +153,30 @@
       "writtenOn": "2018-07-11T14:05:32Z",
       "side": 1,
       "message": "I added this to support http-proxy, but I haven\u0027t been able to test it.  If someone else can test this for me that would be great.",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 3
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48d0c6ad_667519a6",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:31:46Z",
+      "side": 1,
+      "message": "seems to work for me - is there a way to check if it\u0027s installed already before trying to install it again?  not a show-stopped, just noticed this when i ran for the second time",
+      "parentUuid": "72ba3543_c08330dd",
       "range": {
         "startLine": 148,
         "startChar": 0,
