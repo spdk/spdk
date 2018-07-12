@@ -183,6 +183,30 @@
       "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "069c144a_d082d0fc",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T21:18:03Z",
+      "side": 1,
+      "message": "I get the same with Ubuntu 18.  I also removed these Dpkg options and everything continued fine.",
+      "parentUuid": "da77bdfa_2b7027b2",
+      "range": {
+        "startLine": 78,
+        "startChar": 2,
+        "endLine": 78,
+        "endChar": 149
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
