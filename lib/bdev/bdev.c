@@ -1260,7 +1260,7 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 }
 
 /* Caller must hold bdev->internal.mutex. */
-static int
+static void
 _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_qos *qos = bdev->internal.qos;
@@ -1293,8 +1293,6 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 
 		ch->flags |= BDEV_CH_QOS_ENABLED;
 	}
-
-	return 0;
 }
 
 static int
@@ -1367,13 +1365,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 #endif
 
 	pthread_mutex_lock(&bdev->internal.mutex);
-
-	if (_spdk_bdev_enable_qos(bdev, ch)) {
-		_spdk_bdev_channel_destroy_resource(ch);
-		pthread_mutex_unlock(&bdev->internal.mutex);
-		return -1;
-	}
-
+	_spdk_bdev_enable_qos(bdev, ch);
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
 	return 0;
@@ -3341,12 +3333,11 @@ _spdk_bdev_enable_qos_msg(struct spdk_io_channel_iter *i)
 	struct spdk_bdev *bdev = __bdev_from_io_dev(io_device);
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
-	rc = _spdk_bdev_enable_qos(bdev, bdev_ch);
+	_spdk_bdev_enable_qos(bdev, bdev_ch);
 	pthread_mutex_unlock(&bdev->internal.mutex);
-	spdk_for_each_channel_continue(i, rc);
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
