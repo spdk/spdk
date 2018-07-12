@@ -11,6 +11,7 @@ remote_fio_bin=""
 fio_jobs=""
 test_type=spdk_vhost_scsi
 reuse_vms=false
+shared_controllers=false
 vms=()
 used_vms=""
 x=""
@@ -35,6 +36,7 @@ function usage()
 	echo "    --work-dir=WORK_DIR   Where to find build file. Must exist. [default: $TEST_DIR]"
 	echo "    --dry-run             Don't perform any tests, run only and wait for enter to terminate"
 	echo "    --no-shutdown         Don't shutdown at the end but leave envirionment working"
+	echo "    --shared-controllers  Run test that use already used controller"
 	echo "    --vm=NUM[,OS][,DISKS] VM configuration. This parameter might be used more than once:"
 	echo "                          NUM - VM number (mandatory)"
 	echo "                          OS - VM os disk path (optional)"
@@ -55,6 +57,7 @@ while getopts 'xh-:' optchar; do
 			dry-run) dry_run=true ;;
 			no-shutdown) no_shutdown=true ;;
 			test-type=*) test_type="${OPTARG#*=}" ;;
+			shared-controllers) shared_controllers=true ;;
 			vm=*) vms+=("${OPTARG#*=}") ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
@@ -199,7 +202,34 @@ if $dry_run; then
 	exit 0
 fi
 
-run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" $fio_disks
+run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" $fio_disks &
+run_fio_pid=$!
+sleep 1
+if $shared_controllers; then
+        cat <<EOF >> $AUTOTEST_BASE_DIR/bdev.conf
+[VirtioUser0]
+  Path $(get_vhost_dir)/naa.Nvme0n1p0.0
+  Type Blk
+  Queues 2
+EOF
+	bdevs=$(discover_bdevs $AUTOTEST_BASE_DIR/../../.. $AUTOTEST_BASE_DIR/bdev.conf | jq -r '.[]')
+	fio_config_gen $AUTOTEST_BASE_DIR/bdev.fio verify
+	echo "offset=0" >> $AUTOTEST_BASE_DIR/bdev.fio
+	echo "size=49%" >> $AUTOTEST_BASE_DIR/bdev.fio
+	echo "iodepth=8=0" >> $AUTOTEST_BASE_DIR/bdev.fio
+	echo "bs=4k" >> $AUTOTEST_BASE_DIR/bdev.fio
+	echo "runtime=5" >> $AUTOTEST_BASE_DIR/bdev.fio
+	for b in $(echo $bdevs | jq -r '.name'); do
+		fio_config_add_job $AUTOTEST_BASE_DIR/bdev.fio $b
+	done
+	LD_PRELOAD=$AUTOTEST_BASE_DIR/../../../examples/bdev/fio_plugin/fio_plugin /root/fio_3.3/fio \
+	--ioengine=spdk_bdev $AUTOTEST_BASE_DIR/bdev.fio \
+	--spdk_conf=$AUTOTEST_BASE_DIR/bdev.conf --spdk_single_seg=1
+fi
+wait $run_fio_pid
+rm -f $AUTOTEST_BASE_DIR/bdev.conf
+rm -f *.state
+rm -f $AUTOTEST_BASE_DIR/bdev.fio
 
 if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 	for vm_num in $used_vms; do
