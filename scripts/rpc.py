@@ -235,6 +235,18 @@ if __name__ == "__main__":
     p.set_defaults(func=set_bdev_nvme_options)
 
     @call_cmd
+    def set_bdev_nvme_hotplug(args):
+        rpc.bdev.set_bdev_nvme_hotplug(args.client, enabled=args.enabled, period_us=args.period_us)
+
+    p = subparsers.add_parser('set_bdev_nvme_hotplug',
+                              help='Set hotplug options for bdev nvme type.')
+    p.add_argument('--enabled',
+                   help="Enable or disable hotplug", action='store_true')
+    p.add_argument('-r', '--period-us',
+                   help='How often the hotplug is processed for insert and remove events', type=int)
+    p.set_defaults(func=set_bdev_nvme_hotplug)
+
+    @call_cmd
     def construct_nvme_bdev(args):
         print_array(rpc.bdev.construct_nvme_bdev(args.client,
                                                  name=args.name,

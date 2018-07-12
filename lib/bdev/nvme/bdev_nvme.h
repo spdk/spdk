@@ -53,9 +53,6 @@ struct spdk_bdev_nvme_opts {
 	uint32_t timeout_s;
 	uint32_t retry_count;
 	uint32_t nvme_adminq_poll_period_us;
-
-	/** Less than zero to disable hotplug */
-	int32_t nvme_hotplug_poll_period_us;
 };
 
 struct nvme_ctrlr {
@@ -88,6 +85,7 @@ struct nvme_bdev {
 
 void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
+int spdk_bdev_nvme_set_hotplug(bool enabled, int32_t period_us, spdk_thread_fn cb, void *cb_ctx);
 
 int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
