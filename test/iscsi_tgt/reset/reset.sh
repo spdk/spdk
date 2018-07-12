@@ -21,13 +21,15 @@ fi
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -c $testdir/iscsi.conf &
+$ISCSI_APP -w &
 pid=$!
 echo "Process pid: $pid"
 
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+$rpc_py set_iscsi_options -o 30 -a 16
+$rpc_py start_subsystem_init
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt

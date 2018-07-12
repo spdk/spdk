@@ -46,13 +46,15 @@ do
 	rpc_addr="/var/tmp/spdk${i}.sock"
 
 	# TODO: run the different iSCSI instances on non-overlapping CPU masks
-	$ISCSI_APP -r $rpc_addr -c $testdir/iscsi.conf -s 1000 -i $i -m $ISCSI_TEST_CORE_MASK &
+	$ISCSI_APP -r $rpc_addr -s 1000 -i $i -m $ISCSI_TEST_CORE_MASK -w &
 	pid=$!
 	echo "Process pid: $pid"
 
 	trap "kill_all_iscsi_target; exit 1" SIGINT SIGTERM EXIT
 
 	waitforlisten $pid $rpc_addr
+	$rpc_py -s $rpc_addr set_iscsi_options -o 30 -a 64
+	$rpc_py -s $rpc_addr start_subsystem_init
 	echo "iscsi_tgt is listening. Running tests..."
 
 	timing_exit start_iscsi_tgt_$i
