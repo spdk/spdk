@@ -7,12 +7,12 @@ INITIATOR_JSON_DIR=$(readlink -f $(dirname $0))
 # Test also virtio_pci bdevs
 function construct_vhost_devices() {
 	$rpc_py construct_split_vbdev Nvme0n1 4
-	$rpc_py construct_vhost_scsi_controller $JSON_DIR/naa.Nvme0n1p0.0
-	$rpc_py construct_vhost_scsi_controller $JSON_DIR/naa.Nvme0n1p1.1
-	$rpc_py add_vhost_scsi_lun $JSON_DIR/naa.Nvme0n1p0.0 0 Nvme0n1p0
-	$rpc_py add_vhost_scsi_lun $JSON_DIR/naa.Nvme0n1p1.1 0 Nvme0n1p1
-	$rpc_py construct_vhost_blk_controller $JSON_DIR/naa.Nvme0n1p2.0 Nvme0n1p2
-	$rpc_py construct_vhost_blk_controller $JSON_DIR/naa.Nvme0n1p3.1 Nvme0n1p3
+	$rpc_py construct_vhost_scsi_controller naa.Nvme0n1p0.0
+	$rpc_py construct_vhost_scsi_controller naa.Nvme0n1p1.1
+	$rpc_py add_vhost_scsi_lun naa.Nvme0n1p0.0 0 Nvme0n1p0
+	$rpc_py add_vhost_scsi_lun naa.Nvme0n1p1.1 0 Nvme0n1p1
+	$rpc_py construct_vhost_blk_controller naa.Nvme0n1p2.0 Nvme0n1p2
+	$rpc_py construct_vhost_blk_controller naa.Nvme0n1p3.1 Nvme0n1p3
 	pci_scsi=$(lspci -nn -D | grep '1af4:1004' | head -1 | awk '{print $1;}')
 	pci_blk=$(lspci -nn -D | grep '1af4:1001' | head -1 | awk '{print $1;}')
 	if [ ! -z $pci_scsi ]; then
@@ -25,8 +25,8 @@ function construct_vhost_devices() {
 
 # Load virtio initiator with bdevs
 function connect_to_vhost_devices_from_initiator() {
-	$rpc_py construct_virtio_dev -t user -a $JSON_DIR/naa.Nvme0n1p0.0 -d scsi Nvme0n1p0
-	$rpc_py construct_virtio_dev -t user -a $JSON_DIR/naa.Nvme0n1p2.0 -d blk Nvme0n1p2
+	$rpc_py construct_virtio_dev -t user -a naa.Nvme0n1p0.0 -d scsi Nvme0n1p0
+	$rpc_py construct_virtio_dev -t user -a naa.Nvme0n1p2.0 -d blk Nvme0n1p2
 }
 
 function disconnect_and_clear_vhost_devices() {
