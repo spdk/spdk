@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68013398_429fc723",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 1245,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-12T01:44:22Z",
+      "side": 1,
+      "message": "please replace this by delete_pmem_bdev.",
+      "revId": "86f2a4ee491b29867314c4da65cf3ac70f60ff56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba14b3b1_b3460d6a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 1266,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-12T01:44:22Z",
+      "side": 1,
+      "message": "Moving create_pmem_pool, pmem_pool_info, and delete_pmem_pool to above create_pmem_bdev and delete_pmem_bdev may be better because pmem_bdev looks based on pmem_pool",
+      "revId": "86f2a4ee491b29867314c4da65cf3ac70f60ff56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
