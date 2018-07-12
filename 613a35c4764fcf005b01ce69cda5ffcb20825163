@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "1e9fbf33_527503fd",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-07-12T17:04:35Z",
+      "side": 1,
+      "message": "I can change the first argument to be the transport rather than the target.  But, I do not get the requirement for the cb_fn and cb_arg arguments.  This function acts synchronously on the transport.  Why do you think it needs to be asynchronous?",
+      "parentUuid": "e821dfa6_de9a8595",
+      "revId": "613a35c4764fcf005b01ce69cda5ffcb20825163",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c6c26dd6_5bfec4fb",
         "filename": "include/spdk/nvmf.h",
         "patchSetId": 2
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "I\u0027m ok with either strategy, but my comment says it has to be one way or the other. Either:\n\n1) spdk_nvmf_tgt_transport_create can be made asynchronous and spdk_nvmf_add_transport can be removed.\n\n2) spdk_nvmf_tgt_transport_create becomes instead spdk_nvmf_transport_create and is synchronous and doesn\u0027t take the tgt as a parameter. And spdk_nvmf_add_transport becomes spdk_nvmf_tgt_add_transport but otherwise mostly works the same way.\n\nI slightly prefer #2 and I think #2 also leads to solutions for some other unrelated problems we have.",
       "parentUuid": "195abb08_ebe8f187",
+      "revId": "613a35c4764fcf005b01ce69cda5ffcb20825163",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7bd6a28_48461d28",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-07-12T17:04:35Z",
+      "side": 1,
+      "message": "Regarding #2, I can merge the transport create code in nvmf.c into the spdk_nvmf_transport_create function in transport.c.  But, that means moving (and I\u0027m assuming renaming) transport.h into include/spdk/.  Is that what you want?",
+      "parentUuid": "b4fefe75_88b5f3dc",
       "revId": "613a35c4764fcf005b01ce69cda5ffcb20825163",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
