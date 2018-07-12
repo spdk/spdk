@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b058d32_9758f029",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-12T12:31:03Z",
+      "side": 1,
+      "message": "-f flag is missing",
+      "range": {
+        "startLine": 101,
+        "startChar": 1,
+        "endLine": 103,
+        "endChar": 47
+      },
+      "revId": "f4723d185f4b4040d52dbd7de3cbcc687cd23a71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
