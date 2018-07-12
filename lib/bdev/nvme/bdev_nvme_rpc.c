@@ -268,6 +268,90 @@ invalid:
 }
 SPDK_RPC_REGISTER("construct_nvme_bdev", spdk_rpc_construct_nvme_bdev, SPDK_RPC_RUNTIME)
 
+static void
+spdk_rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
+				   struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct spdk_nvme_transport_id	*trid;
+
+	trid = &nvme_ctrlr->trid;
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", nvme_ctrlr->name);
+
+	spdk_json_write_named_object_begin(w, "trid");
+	spdk_bdev_nvme_dump_trid_json(trid, w);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+struct rpc_get_nvme_controllers {
+	char *name;
+};
+
+static void
+free_rpc_get_nvme_controllers(struct rpc_get_nvme_controllers *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_get_nvme_controllers_decoders[] = {
+	{"name", offsetof(struct rpc_get_nvme_controllers, name), spdk_json_decode_string, true},
+};
+
+static void
+spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct rpc_get_nvme_controllers req = {};
+	struct spdk_json_write_ctx *w;
+	struct nvme_ctrlr *ctrlr = NULL;
+
+	if (params && spdk_json_decode_object(params, rpc_get_nvme_controllers_decoders,
+					      SPDK_COUNTOF(rpc_get_nvme_controllers_decoders),
+					      &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (req.name) {
+		ctrlr = spdk_bdev_nvme_lookup_ctrlr(req.name);
+		if (ctrlr == NULL) {
+			SPDK_ERRLOG("ctrlr '%s' does not exist\n", req.name);
+			goto invalid;
+		}
+	}
+
+	free_rpc_get_nvme_controllers(&req);
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	if (ctrlr != NULL) {
+		spdk_rpc_dump_nvme_controller_info(w, ctrlr);
+	} else {
+		for (ctrlr = spdk_bdev_nvme_first_ctrlr(); ctrlr; ctrlr = spdk_bdev_nvme_next_ctrlr(ctrlr))  {
+			spdk_rpc_dump_nvme_controller_info(w, ctrlr);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+
+	free_rpc_get_nvme_controllers(&req);
+}
+SPDK_RPC_REGISTER("get_nvme_controllers", spdk_rpc_get_nvme_controllers, SPDK_RPC_RUNTIME)
+
 struct rpc_delete_nvme {
 	char *name;
 };
