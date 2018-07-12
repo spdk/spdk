@@ -23,8 +23,8 @@ rpc_py="python $rootdir/scripts/rpc.py"
 calsoft_py="python $testdir/calsoft.py"
 
 # Copy the calsoft config file to /usr/local/etc
-mkdir -p /usr/local/etc
-cp $testdir/its.conf /usr/local/etc/
+mkdir -p /usr/local/etc/
+cp $testdir/its.conf //usr/local/etc/
 cp $testdir/auth.conf /usr/local/etc/
 
 # Append target ip to calsoft config
@@ -32,13 +32,15 @@ echo "IP=$TARGET_IP" >> /usr/local/etc/its.conf
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -c $testdir/iscsi.conf -m 0x1 &
+$ISCSI_APP -m 0x1 -w &
 pid=$!
 echo "Process pid: $pid"
 
 trap "killprocess $pid; delete_tmp_conf_files; exit 1 " SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+$rpc_py load_subsystem_config -f $testdir/iscsi.json
+$rpc_py start_subsystem_init
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
