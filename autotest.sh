@@ -219,6 +219,7 @@ if [ $SPDK_TEST_LVOL -eq 1 ]; then
 fi
 
 if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
+	run_test suite ./test/vhost/spdk_vhost.sh --shared
 	run_test suite ./test/vhost/initiator/blockdev.sh
 	run_test suite ./test/vhost/initiator/json_config.sh
 	run_test suite ./test/spdkcli/virtio.sh
