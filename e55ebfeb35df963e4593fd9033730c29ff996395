@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d217f61_5e17b7a2",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T22:36:59Z",
+      "side": 1,
+      "message": "do we need the -f flag here?  Pawel Kaminski mentioned this on last revision\n\nPawel K. still marked this as +1 so maybe we don\u0027t need them?  but seems like adding -f would be good",
+      "revId": "e55ebfeb35df963e4593fd9033730c29ff996395",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
