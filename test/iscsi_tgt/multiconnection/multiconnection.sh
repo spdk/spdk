@@ -31,29 +31,17 @@ function remove_backends()
 set -e
 timing_enter multiconnection
 
-# Create conf file for iscsi multiconnection.
-cat > $testdir/iscsi.conf << EOL
-[iSCSI]
-  NodeBase "iqn.2016-06.io.spdk"
-  AuthFile /usr/local/etc/spdk/auth.conf
-  Timeout 30
-  DiscoveryAuthMethod Auto
-  MaxSessions 128
-  ImmediateData Yes
-  ErrorRecoveryLevel 0
-EOL
-
-# Get nvme info through filtering gen_nvme.sh's result.
-$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
-
 timing_enter start_iscsi_tgt
 # Start the iSCSI target without using stub.
-$ISCSI_APP -c $testdir/iscsi.conf &
+$ISCSI_APP &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
 trap "remove_backends; iscsicleanup; killprocess $iscsipid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $iscsipid
+$rpc_py set_iscsi_options -o 30 -a 128
+$rpc_py start_subsystem_init
+$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
@@ -87,7 +75,6 @@ sync
 
 trap - SIGINT SIGTERM EXIT
 
-rm -f $testdir/iscsi.conf
 rm -f ./local-job*
 iscsicleanup
 remove_backends
