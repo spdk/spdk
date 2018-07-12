@@ -1317,7 +1317,21 @@ int
 spdk_vhost_init(void)
 {
 	uint32_t last_core;
+	size_t len;
 	int ret;
+
+	if (dev_dirname[0] == '\0') {
+		if (getcwd(dev_dirname, sizeof(dev_dirname) - 1) == NULL) {
+			SPDK_ERRLOG("getcwd failed (%d): %s\n", errno, spdk_strerror(errno));
+			return -1;
+		}
+
+		len = strlen(dev_dirname);
+		if (dev_dirname[len - 1] != '/') {
+			dev_dirname[len] = '/';
+			dev_dirname[len + 1] = '\0';
+		}
+	}
 
 	last_core = spdk_env_get_last_core();
 	g_num_ctrlrs = calloc(last_core + 1, sizeof(uint32_t));
