@@ -155,6 +155,18 @@ spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name)
 	return NULL;
 }
 
+struct nvme_ctrlr *
+spdk_bdev_nvme_first_ctrlr(void)
+{
+	return TAILQ_FIRST(&g_nvme_ctrlrs);
+}
+
+struct nvme_ctrlr *
+spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev)
+{
+	return TAILQ_NEXT(prev, tailq);
+}
+
 static int
 bdev_nvme_get_ctx_size(void)
 {
@@ -181,6 +193,34 @@ spdk_bdev_nvme_lookup_bdev(const char *ns_name)
 
 	if (bdev && bdev->module == &nvme_if) {
 		return (struct nvme_bdev *)bdev->ctxt;
+	}
+
+	return NULL;
+}
+
+struct nvme_bdev *
+spdk_bdev_nvme_first_bdev(void)
+{
+	struct spdk_bdev *bdev;
+
+	for (bdev = spdk_bdev_first_leaf(); bdev; bdev = spdk_bdev_next_leaf(bdev)) {
+		if (bdev->module == &nvme_if) {
+			return (struct nvme_bdev *)bdev->ctxt;
+		}
+	}
+
+	return NULL;
+}
+
+struct nvme_bdev *
+spdk_bdev_nvme_next_bdev(struct nvme_bdev *prev)
+{
+	struct spdk_bdev *bdev = &prev->disk;;
+
+	for (bdev = spdk_bdev_next_leaf(bdev); bdev; bdev = spdk_bdev_next_leaf(bdev)) {
+		if (bdev->module == &nvme_if) {
+			return (struct nvme_bdev *)bdev->ctxt;
+		}
 	}
 
 	return NULL;

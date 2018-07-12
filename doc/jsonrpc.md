@@ -4340,3 +4340,51 @@ Example response:
 
 }
 ~~~
+
+## list_nvme_device {#rpc_list_nvme_device}
+
+List names of List available NVMe devices.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+type                    | Optional | string      | Type of required devices. Valid values are: controller, namespace, all. (default: all)
+
+### Response
+
+Name                    | Type        | Description
+----------------------- | ----------- | -----------
+device_names            | array       | Name array of NVMe devices.
+device_num              | number      | Number of NVMe devices
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "list_nvme_device",
+  "id": 1,
+  "params": {
+    "type": "all"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "device_names": [
+      "Nvme1",
+      "Nvme0",
+      "Nvme1n1",
+      "Nvme0n1"
+    ],
+    "device_num": 4
+  }
+}
+~~~

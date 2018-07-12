@@ -1797,6 +1797,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int, default=0)
     p.set_defaults(func=send_nvme_cmd)
 
+    # list_nvme_device
+    @call_cmd
+    def list_nvme_device(args):
+        print_dict(rpc.nvme.list_nvme_device(args.client,
+                                             type=args.type))
+
+    p = subparsers.add_parser('list_nvme_device', help='List available NVMe devices.')
+    p.add_argument('-t', '--type',
+                   help="""Type of required devices. Valid values are: controller, namespace, all""", default="all")
+    p.set_defaults(func=list_nvme_device)
+
     args = parser.parse_args()
 
     try:
