@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e815322_c5c2a07e",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T20:37:22Z",
+      "side": 1,
+      "message": "yeah - I think I see Ziye\u0027s point\n\nthere is other cleanup that doesn\u0027t happen though for failures - for example, the traps above don\u0027t remove $testdir/iscsi.conf nor local-job0-0-verify.state\n\nyou could save an exit state here, and then do an exit $exit_val at the end of this script, but then it pretty much requires that this test always has to be last in this script\n\nwhat if instead of all of this, you just printed the error message, set -e and exit 1?  then won\u0027t the trap run and do cleanup?  then we do the same cleanup here as we would for other failures",
+      "revId": "f0a8803edc8806e6b0ee188a0ca7b0d6e2c65c33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
