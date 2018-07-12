@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a6f20a6_c5e4e6de",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T08:22:08Z",
+      "side": 1,
+      "message": "I think this can stay outside of function",
+      "range": {
+        "startLine": 24,
+        "startChar": 1,
+        "endLine": 24,
+        "endChar": 82
+      },
+      "revId": "accdfdebb2ae1465a600288531672b4736f007da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d133884_6fa0859f",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T08:22:08Z",
+      "side": 1,
+      "message": "Should be just \"python3\" as you can\u0027t be sure if there is python3.5, 3.4 or 3.6 installed on server.",
+      "range": {
+        "startLine": 35,
+        "startChar": 1,
+        "endLine": 35,
+        "endChar": 10
+      },
+      "revId": "accdfdebb2ae1465a600288531672b4736f007da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecba9df1_ec0690d8",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T08:22:08Z",
+      "side": 1,
+      "message": "same thing here",
+      "range": {
+        "startLine": 41,
+        "startChar": 1,
+        "endLine": 41,
+        "endChar": 10
+      },
+      "revId": "accdfdebb2ae1465a600288531672b4736f007da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97535345_4f5546e8",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T08:22:08Z",
+      "side": 1,
+      "message": "tabs/spaces consistency (use tabs)",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 2
+      },
+      "revId": "accdfdebb2ae1465a600288531672b4736f007da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b94b3ddb_2d8d3d22",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T08:22:08Z",
+      "side": 1,
+      "message": "This part looks different now, need to rebase.\nIf this approach you have here will be used:\n\n    if args.job \u003d\u003d \"clear_spdk_tgt_pmem\":\n        clear_spdk_tgt_pmem()\n\nThen consider changing to something like:\n\n_ \u003d dict(locals())\nfunctions \u003d {x:y for x,y in _.items() if type(y) is types.FunctionType}\nfunctions[args.job]()\n\nThis would allow you to avoid multiple if statements.",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 29
+      },
+      "revId": "accdfdebb2ae1465a600288531672b4736f007da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
