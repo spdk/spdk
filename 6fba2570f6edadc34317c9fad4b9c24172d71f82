@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b34293e3_a2770b1a",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-12T08:14:23Z",
+      "side": 1,
+      "message": "lun_free_io_channel must be called in the callback.\nas meant by the name, this just wait until the io channel is freed.\n\nForceful call of lun_free_io_channel() here will be possible only after timeout.\n\nI want to add the basic mechanism (no timeout) and then extension like timeout + forceful_free_io_channel.",
+      "revId": "6fba2570f6edadc34317c9fad4b9c24172d71f82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
