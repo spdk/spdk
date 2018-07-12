@@ -932,6 +932,45 @@ Example response:
 }
 ~~~
 
+## set_bdev_nvme_hotplug {#rpc_set_bdev_nvme_hotplug}
+
+Change settings of the NVMe hotplug feature. If enabled, PCIe NVMe bdevs will be automatically discovered on insertion
+and deleted on removal.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+enabled                 | Required | string      | True to enable, false to disable
+period_us               | Optional | number      | How often to poll for hot-insert and hot-remove events. Values: -1 - reset to default or 0 to 10000000. 
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "params": {
+    "enabled": true,
+    "period_us": 2000
+  },
+  "jsonrpc": "2.0",
+  "method": "set_bdev_nvme_hotplug",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## construct_nvme_bdev {#rpc_construct_nvme_bdev}
 
 Construct @ref bdev_config_nvme

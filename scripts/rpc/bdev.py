@@ -105,7 +105,7 @@ def delete_aio_bdev(client, name):
 
 
 def set_bdev_nvme_options(client, action_on_timeout=None, timeout_s=None, retry_count=None,
-                          nvme_adminq_poll_period_us=None, nvme_hotplug_poll_period_us=None):
+                          nvme_adminq_poll_period_us=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -129,6 +129,23 @@ def set_bdev_nvme_options(client, action_on_timeout=None, timeout_s=None, retry_
         params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
 
     return client.call('set_bdev_nvme_options', params)
+
+
+def set_bdev_nvme_hotplug(client, enabled, period_us=None):
+    """Set options for the bdev nvme. This is startup command.
+
+    Args:
+       enabled: True to enable hotplug, False to disable.
+       period_us: how often the hotplug is processed for insert and remove events. Set -1 to reset to default. (optional)
+    """
+    params = {
+        'enabled': enabled
+    }
+
+    if period_us:
+        params['period_us'] = period_us
+
+    return client.call('set_bdev_nvme_hotplug', params)
 
 
 def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None):
