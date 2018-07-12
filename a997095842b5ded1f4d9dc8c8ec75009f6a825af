@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d295a08_737beb10",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1918,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T00:26:20Z",
+      "side": 1,
+      "message": "can you just use spdk_bdev_readv_blocks() here?",
+      "revId": "a997095842b5ded1f4d9dc8c8ec75009f6a825af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "558290a1_7d87cad0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2003,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T00:26:20Z",
+      "side": 1,
+      "message": "can this use spdk_bdev_writev_blocks?\n\ni\u0027m absolutely sure there\u0027s a reason you can\u0027t - I just haven\u0027t thought through why (yet)",
+      "revId": "a997095842b5ded1f4d9dc8c8ec75009f6a825af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
