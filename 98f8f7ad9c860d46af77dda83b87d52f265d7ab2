@@ -22,6 +22,30 @@
       "revId": "98f8f7ad9c860d46af77dda83b87d52f265d7ab2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4ff7a45_9d3d1b32",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-12T11:19:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "17bf27d0_14178cd2",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 93
+      },
+      "revId": "98f8f7ad9c860d46af77dda83b87d52f265d7ab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

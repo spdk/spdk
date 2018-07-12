@@ -124,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "1a71e3cc_26373263",
+        "filename": "test/unit/lib/util/base64.c/base64_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-12T11:19:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b08f8bc7_b1abf03d",
+      "revId": "0eb7f18ba999278961b00d280866f30a300fd10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0074d457_256f92b7",
         "filename": "test/unit/lib/util/base64.c/base64_ut.c",
         "patchSetId": 8
@@ -135,6 +153,30 @@
       "writtenOn": "2018-07-12T08:38:19Z",
       "side": 1,
       "message": "spdk_base64_decode takes void ** and you use memcmp so you change binary type to \u0027void *\u0027 so all casts to (void **) won\u0027t be needed (in whole file).",
+      "range": {
+        "startLine": 128,
+        "startChar": 26,
+        "endLine": 128,
+        "endChar": 35
+      },
+      "revId": "0eb7f18ba999278961b00d280866f30a300fd10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d358aeba_81f93b67",
+        "filename": "test/unit/lib/util/base64.c/base64_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-12T11:19:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0074d457_256f92b7",
       "range": {
         "startLine": 128,
         "startChar": 26,
