@@ -34,6 +34,24 @@
       "revId": "c3835e59ab9c8eaac7a7fd44f7c84005c62fffac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "466ac38e_d939eee2",
+        "filename": "test/bdev/dynamic_memory_allocation/bdevperf_dynamic.conf",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T07:49:05Z",
+      "side": 1,
+      "message": "Yeah, didn\u0027t consider this... How about \"dynamic_memalloc\"? It\u0027s 9 chars shorter:P",
+      "parentUuid": "c6b5dbb1_761e8b3c",
+      "revId": "c3835e59ab9c8eaac7a7fd44f7c84005c62fffac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
