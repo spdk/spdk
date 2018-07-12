@@ -101,11 +101,12 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.nvme_adminq_poll_period_us = 1000000,
 };
 
-static bool g_bdev_nvme_init_done = false;
+#define NVME_HOTPLUG_POLL_PERIOD_DEFAULT		10000
 
 static int g_hot_insert_nvme_controller_index = 0;
-static int g_nvme_hotplug_poll_timeout_us = 0;
+static int32_t g_nvme_hotplug_poll_period_us = NVME_HOTPLUG_POLL_PERIOD_DEFAULT;
 static bool g_nvme_hotplug_enabled = false;
+static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
 static char *g_nvme_hostnqn = NULL;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -753,7 +754,7 @@ hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_ctrlr_opts *opts)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attaching to %s\n", trid->traddr);
-
+	SPDK_ERRLOG("Attaching to %s\n", trid->traddr);
 	return true;
 }
 
@@ -912,6 +913,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_ctrlr *nvme_ctrlr;
 
+	SPDK_ERRLOG("Create %s\n", name);
 	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
 	if (nvme_ctrlr == NULL) {
 		SPDK_ERRLOG("Failed to allocate device struct\n");
@@ -1030,12 +1032,57 @@ spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts)
 int
 spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
-	if (g_bdev_nvme_init_done) {
+	if (g_bdev_nvme_init_thread != NULL) {
 		return -EPERM;
 	}
 
 	g_opts = *opts;
+	return 0;
+}
+struct set_nvme_hotplug_ctx {
+	int32_t period_us;
+	bool enabled;
+	spdk_thread_fn fn;
+	void *fn_ctx;
+};
 
+static void
+set_nvme_hotplug_period_cb(void *_ctx)
+{
+	struct set_nvme_hotplug_ctx *ctx = _ctx;
+
+	SPDK_ERRLOG("hotplug: enable=%d period=%"PRIi32"\n", ctx->enabled, ctx->period_us);
+	spdk_poller_unregister(&g_hotplug_poller);
+	if (ctx->enabled) {
+		g_hotplug_poller = spdk_poller_register(bdev_nvme_hotplug, NULL, ctx->period_us);
+	}
+
+	g_nvme_hotplug_poll_period_us = ctx->period_us;
+	g_nvme_hotplug_enabled = ctx->enabled;
+	if (ctx->fn) {
+		ctx->fn(ctx->fn_ctx);
+	}
+
+	free(ctx);
+}
+
+int
+spdk_bdev_nvme_set_hotplug(bool enabled, int32_t period_us, spdk_thread_fn cb, void *cb_ctx)
+{
+	struct set_nvme_hotplug_ctx *ctx = calloc(1, sizeof(*ctx));
+
+	if (ctx == NULL) {
+		return -ENOMEM;
+	} else if (enabled == true && !spdk_process_is_primary()) {
+		return -EPERM;
+	}
+
+	ctx->period_us = period_us < 0 ? NVME_HOTPLUG_POLL_PERIOD_DEFAULT : period_us;
+	ctx->enabled = enabled;
+	ctx->fn = cb;
+	ctx->fn_ctx = cb_ctx;
+
+	spdk_thread_send_msg(g_bdev_nvme_init_thread, set_nvme_hotplug_period_cb, ctx);
 	return 0;
 }
 
@@ -1119,8 +1166,10 @@ bdev_nvme_library_init(void)
 	struct nvme_probe_ctx *probe_ctx = NULL;
 	int retry_count;
 	uint32_t local_nvme_num = 0;
+	int32_t hotplug_period;
+	bool hotplug_enabled = g_nvme_hotplug_enabled;
 
-	g_bdev_nvme_init_done = true;
+	g_bdev_nvme_init_thread = spdk_get_thread();
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
 	if (sp == NULL) {
@@ -1185,13 +1234,10 @@ bdev_nvme_library_init(void)
 	}
 
 	if (spdk_process_is_primary()) {
-		g_nvme_hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", false);
+		hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", false);
 	}
 
-	g_nvme_hotplug_poll_timeout_us = spdk_conf_section_get_intval(sp, "HotplugPollRate");
-	if (g_nvme_hotplug_poll_timeout_us <= 0 || g_nvme_hotplug_poll_timeout_us > 100000) {
-		g_nvme_hotplug_poll_timeout_us = 100000;
-	}
+	hotplug_period = spdk_conf_section_get_intval(sp, "HotplugPollRate");
 
 	g_nvme_hostnqn = spdk_conf_section_get_val(sp, "HostNQN");
 	probe_ctx->hostnqn = g_nvme_hostnqn;
@@ -1278,15 +1324,10 @@ bdev_nvme_library_init(void)
 		}
 	}
 
-	if (g_nvme_hotplug_enabled) {
-		g_hotplug_poller = spdk_poller_register(bdev_nvme_hotplug, NULL,
-							g_nvme_hotplug_poll_timeout_us);
-	}
-
+	/* FIXME: revert this */
+	spdk_bdev_nvme_set_hotplug(hotplug_period, hotplug_enabled, NULL, NULL);
 end:
-	if (rc == 0) {
-		spdk_nvme_retry_count = g_opts.retry_count;
-	}
+	spdk_nvme_retry_count = g_opts.retry_count;
 
 	free(probe_ctx);
 	return rc;
@@ -1295,7 +1336,7 @@ end:
 static void
 bdev_nvme_library_fini(void)
 {
-	if (g_nvme_hotplug_enabled) {
+	if (g_hotplug_poller) {
 		spdk_poller_unregister(&g_hotplug_poller);
 	}
 }
@@ -1623,7 +1664,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n"
 		"# Set how often the hotplug is processed for insert and remove events."
 		"# Units in microseconds.\n");
-	fprintf(fp, "HotplugPollRate %d\n", g_nvme_hotplug_poll_timeout_us);
+	fprintf(fp, "HotplugPollRate %d\n", g_nvme_hotplug_poll_period_us);
 	if (g_nvme_hostnqn) {
 		fprintf(fp, "HostNQN %s\n",  g_nvme_hostnqn);
 	}
@@ -1690,6 +1731,19 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 		spdk_json_write_object_end(w);
 	}
+
+	/* Dump as last parameter to give all NVMe bdevs chance to be constructed
+	 * before enabling hotplug poller.
+	 */
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "set_bdev_nvme_hotplug");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_int32(w, "period_us", g_nvme_hotplug_poll_period_us);
+	spdk_json_write_named_bool(w, "enabled", g_nvme_hotplug_enabled);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
 
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	return 0;
