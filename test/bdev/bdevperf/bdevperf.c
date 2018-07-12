@@ -101,7 +101,7 @@ struct io_target {
 	TAILQ_HEAD(, bdevperf_task)	task_list;
 };
 
-struct io_target **head;
+struct io_target **g_head;
 uint32_t *coremap;
 static int g_target_count = 0;
 
@@ -119,16 +119,16 @@ blockdev_heads_init(void)
 	uint32_t i, idx = 0;
 	uint32_t core_count = spdk_env_get_core_count();
 
-	head = calloc(core_count, sizeof(struct io_target *));
-	if (!head) {
-		fprintf(stderr, "Cannot allocate head array with size=%u\n",
+	g_head = calloc(core_count, sizeof(struct io_target *));
+	if (!g_head) {
+		fprintf(stderr, "Cannot allocate g_head array with size=%u\n",
 			core_count);
 		return -1;
 	}
 
 	coremap = calloc(core_count, sizeof(uint32_t));
 	if (!coremap) {
-		free(head);
+		free(g_head);
 		fprintf(stderr, "Cannot allocate coremap array with size=%u\n",
 			core_count);
 		return -1;
@@ -162,9 +162,13 @@ blockdev_heads_destroy(void)
 	uint32_t i, core_count;
 	struct io_target *target, *next_target;
 
+	if (!g_head) {
+		return;
+	}
+
 	core_count = spdk_env_get_core_count();
 	for (i = 0; i < core_count; i++) {
-		target = head[i];
+		target = g_head[i];
 		while (target != NULL) {
 			next_target = target->next;
 			bdevperf_free_target(target);
@@ -172,7 +176,7 @@ blockdev_heads_destroy(void)
 		}
 	}
 
-	free(head);
+	free(g_head);
 	free(coremap);
 }
 
@@ -221,7 +225,7 @@ bdevperf_construct_targets(void)
 		target->bdev = bdev;
 		/* Mapping each target to lcore */
 		index = g_target_count % spdk_env_get_core_count();
-		target->next = head[index];
+		target->next = g_head[index];
 		target->lcore = coremap[index];
 		target->io_completed = 0;
 		target->current_queue_depth = 0;
@@ -250,7 +254,7 @@ bdevperf_construct_targets(void)
 		target->reset_timer = NULL;
 		TAILQ_INIT(&target->task_list);
 
-		head[index] = target;
+		g_head[index] = target;
 		g_target_count++;
 
 		bdev = spdk_bdev_next_leaf(bdev);
@@ -636,7 +640,7 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
 	for (index = 0; index < spdk_env_get_core_count(); index++) {
-		target = head[index];
+		target = g_head[index];
 		if (target != NULL) {
 			lcore_id = target->lcore;
 			printf("\r Logical core: %u\n", lcore_id);
@@ -691,7 +695,7 @@ bdevperf_construct_targets_tasks(void)
 
 	/* Initialize task list for each target */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		target = head[i];
+		target = g_head[i];
 		if (!target) {
 			break;
 		}
@@ -767,7 +771,7 @@ bdevperf_run(void *arg1, void *arg2)
 	g_master_core = spdk_env_get_current_core();
 	/* Send events to start all I/O */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		target = head[i];
+		target = g_head[i];
 		if (target == NULL) {
 			break;
 		}
@@ -801,7 +805,7 @@ spdk_bdevperf_shutdown_cb(void)
 
 	/* Send events to stop all I/O on each core */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		target = head[i];
+		target = g_head[i];
 		if (target == NULL) {
 			break;
 		}
