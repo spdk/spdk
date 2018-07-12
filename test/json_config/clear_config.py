@@ -76,6 +76,9 @@ def clear_bdev_subsystem(args, bdev_config):
         if destroy_method:
             args.client.call(destroy_method, {bdev_name_key: bdev_name})
 
+    ''' Disable and reset hotplug '''
+    rpc.bdev.set_bdev_nvme_hotplug(args.client, False)
+
 
 def get_nvmf_destroy_method(nvmf):
     destroy_method_map = {'construct_nvmf_subsystem': "delete_nvmf_subsystem",
