@@ -22,6 +22,30 @@
       "revId": "30d2ffea4deaca17d537cd4c9a09c9fe5a00b592",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "448181f0_e6e471a0",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-12T08:29:12Z",
+      "side": 1,
+      "message": "Hi Ziye, thank you and your question is very reasonable.\n\nHonestly I just restored the original code but we can find the same logic in the hotplug test in test/nvmf/fio/fio.sh.\n\nHow about restoring the original code first and then refactor both iscsi and nvmf?\n\nI wish I find good idea until then but you may have better one.",
+      "parentUuid": "add71df6_08970c13",
+      "range": {
+        "startLine": 113,
+        "startChar": 1,
+        "endLine": 113,
+        "endChar": 7
+      },
+      "revId": "30d2ffea4deaca17d537cd4c9a09c9fe5a00b592",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
