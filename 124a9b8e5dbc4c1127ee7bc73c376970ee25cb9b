@@ -160,6 +160,29 @@
       "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da77bdfa_2b7027b2",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-12T14:35:50Z",
+      "side": 1,
+      "message": "Does not work for me. I\u0027ve run vagrant with Ubuntu 16 and apt-get upgrade fails with:\n\ndpkg: error: need an action option\n\nType dpkg --help for help about installing and deinstalling packages [*];\nUse \u0027apt\u0027 or \u0027aptitude\u0027 for user-friendly package management;\nType dpkg -Dhelp for a list of dpkg debug flag values;\nType dpkg --force-help for a list of forcing options;\nType dpkg-deb --help for help about manipulating *.deb files;\n\n\nRemoving Dpkg options allows the script to carry on. Any advice on what might be wrong?",
+      "range": {
+        "startLine": 78,
+        "startChar": 2,
+        "endLine": 78,
+        "endChar": 149
+      },
+      "revId": "124a9b8e5dbc4c1127ee7bc73c376970ee25cb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
