@@ -1033,6 +1033,54 @@ Example response:
 }
 ~~~
 
+## get_nvme_controllers {#rpc_get_nvme_controllers}
+
+Get information about NVMe controllers.
+
+### Parameters
+
+The user may specify no parameters in order to list all NVMe controllers, or one NVMe controller may be
+specified by name.
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | NVMe controller name
+
+### Response
+
+The response is an array of objects containing information about the requested NVMe controllers.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_nvme_controllers",
+  "params": {
+    "name": "Nvme0"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "Nvme0",
+      "trid": {
+        "trtype": "PCIe",
+        "traddr": "0000:05:00.0"
+      }
+    }
+  ]
+}
+~~~
+
 ## delete_nvme_controller {#rpc_delete_nvme_controller}
 
 Delete NVMe controller.
