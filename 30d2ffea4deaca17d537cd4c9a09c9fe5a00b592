@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "add71df6_08970c13",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-12T07:27:48Z",
+      "side": 1,
+      "message": "I have a question, if we exit here, it means that we will not call timing_exit fio and doing the other clean up, right?\nYou can if the test failed, it will do the recycle work. So my question is that, do we need to exit here? Or I mean that we just need to print the message, and do the cleanup as the else case.",
+      "range": {
+        "startLine": 113,
+        "startChar": 1,
+        "endLine": 113,
+        "endChar": 7
+      },
+      "revId": "30d2ffea4deaca17d537cd4c9a09c9fe5a00b592",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
