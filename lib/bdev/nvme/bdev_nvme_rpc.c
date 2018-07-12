@@ -73,7 +73,6 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = 
 	{"timeout_s", offsetof(struct spdk_bdev_nvme_opts, timeout_s), spdk_json_decode_uint32, true},
 	{"retry_count", offsetof(struct spdk_bdev_nvme_opts, retry_count), spdk_json_decode_uint32, true},
 	{"nvme_adminq_poll_period_us", offsetof(struct spdk_bdev_nvme_opts, nvme_adminq_poll_period_us), spdk_json_decode_uint32, true},
-	{"nvme_hotplug_poll_period_us", offsetof(struct spdk_bdev_nvme_opts, nvme_hotplug_poll_period_us), spdk_json_decode_int32, true},
 };
 
 static void
@@ -109,6 +108,54 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("set_bdev_nvme_options", spdk_rpc_set_bdev_nvme_options, SPDK_RPC_STARTUP)
+
+struct rpc_bdev_nvme_hotplug {
+	bool enabled;
+	int32_t period_us;
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_nvme_hotplug_decoders[] = {
+	{"enabled", offsetof(struct rpc_bdev_nvme_hotplug, enabled), spdk_json_decode_bool},
+	{"period_us", offsetof(struct rpc_bdev_nvme_hotplug, period_us), spdk_json_decode_int32, true},
+};
+
+static void
+rpc_set_bdev_nvme_hotplug_done(void *ctx)
+{
+	struct spdk_jsonrpc_request *request = ctx;
+	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
+
+	if (w != NULL) {
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	}
+}
+
+static void
+spdk_rpc_set_bdev_nvme_hotplug(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_bdev_nvme_hotplug req = {false, -1};
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_nvme_hotplug_decoders,
+				    SPDK_COUNTOF(rpc_bdev_nvme_hotplug_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_bdev_nvme_set_hotplug(req.enabled, req.period_us, rpc_set_bdev_nvme_hotplug_done,
+					request);
+	if (rc) {
+		goto invalid;
+	}
+
+	return;
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("set_bdev_nvme_hotplug", spdk_rpc_set_bdev_nvme_hotplug, SPDK_RPC_RUNTIME)
 
 struct rpc_construct_nvme {
 	char *name;
