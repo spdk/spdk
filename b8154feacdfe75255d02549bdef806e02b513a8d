@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f54842e4_66a72382",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1680,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-12T20:23:24Z",
+      "side": 1,
+      "message": "I think this TAILQ_INSERT_TAIL should also be moved so that it is only done when there is a backing blob.\n\nThis TAILQ_INSERT_TAIL is only needed to make sure we aren\u0027t allocating tons of cluster-sized buffers for copy on write operations - we should only have one of those at a time.  But if we aren\u0027t doing a copy-on-write, there\u0027s no reason to wait.\n\nThat also means that line 1621 should check for parent_id !\u003d SPDK_BLOBID_INVALID.  If this blob doesn\u0027t have a parent ID, but some other blob does and has a copy-on-write operation in progress, we should still continue with the operation instead of queueing it.",
+      "revId": "b8154feacdfe75255d02549bdef806e02b513a8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
