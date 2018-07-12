@@ -43,10 +43,10 @@ if [ $rc -ne 0 ]; then
 	exit $rc
 fi
 
-echo "${MAKE} clean " >> make.log
-$MAKE clean  >> make.log 2>&1
-echo "${MAKE} CONFIG_DEBUG=y CONFIG_WERROR=y " >> make.log
-$MAKE CONFIG_DEBUG=y CONFIG_WERROR=y  >> make.log 2>&1
+echo "${MAKE} SKIP_DPDK_BUILD=1 clean " >> make.log
+$MAKE clean SKIP_DPDK_BUILD=1 >> make.log 2>&1
+echo "${MAKE} CONFIG_DEBUG=y CONFIG_WERROR=y SKIP_DPDK_BUILD=1 " >> make.log
+$MAKE CONFIG_DEBUG=y CONFIG_WERROR=y SKIP_DPDK_BUILD=1  >> make.log 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then
 	tail -20 make.log
@@ -102,10 +102,10 @@ tail -20 make.log
 	exit $rc
 fi
 
-echo "make clean CC=clang CXX=clang++ " >> make.log
-$MAKE clean CC=clang CXX=clang++ >> make.log 2>&1
-echo "make CONFIG_DEBUG=y CONFIG_WERROR=y CC=clang CXX=clang++ " >> make.log
-$MAKE CONFIG_DEBUG=y CONFIG_WERROR=y CC=clang CXX=clang++  >> make.log 2>&1
+echo "make clean CC=clang CXX=clang++ SKIP_DPDK_BUILD=1 " >> make.log
+$MAKE clean CC=clang CXX=clang++ SKIP_DPDK_BUILD=1 >> make.log 2>&1
+echo "make CONFIG_DEBUG=y CONFIG_WERROR=y CC=clang CXX=clang++ SKIP_DPDK_BUILD=1 " >> make.log
+$MAKE CONFIG_DEBUG=y CONFIG_WERROR=y CC=clang CXX=clang++ SKIP_DPDK_BUILD=1 >> make.log 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then
 	tail -20 make.log
