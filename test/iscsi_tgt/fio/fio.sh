@@ -7,24 +7,24 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 function running_config() {
 	# generate a config file from the running iscsi_tgt
-	#  running_config.sh will leave the file at /tmp/iscsi.conf
-	$testdir/running_config.sh $pid
-	sleep 1
+	$rpc_py save_config -f /tmp/iscsi.json
 
 	# now start iscsi_tgt again using the generated config file
 	# keep the same iscsiadm configuration to confirm that the
 	#  config file matched the running configuration
-	killprocess $pid
-	trap "iscsicleanup; exit 1" SIGINT SIGTERM EXIT
+	trap "iscsicleanup; rm -f /tmp/iscsi.json; exit 1" SIGINT SIGTERM EXIT
 
 	timing_enter start_iscsi_tgt2
 
-	$ISCSI_APP -c /tmp/iscsi.conf &
+	$ISCSI_APP -w &
 	pid=$!
 	echo "Process pid: $pid"
 	trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 	waitforlisten $pid
+	$rpc_py load_subsystem_config -f /tmp/iscsi.json
+	$rpc_py start_subsystem_init
 	echo "iscsi_tgt is listening. Running tests..."
+	rm -f /tmp/iscsi.json
 
 	timing_exit start_iscsi_tgt2
 
@@ -44,8 +44,6 @@ fi
 
 timing_enter fio
 
-cp $testdir/iscsi.conf.in $testdir/iscsi.conf
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
@@ -54,13 +52,15 @@ fio_py="python $rootdir/scripts/fio.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -c $testdir/iscsi.conf &
+$ISCSI_APP -w &
 pid=$!
 echo "Process pid: $pid"
 
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+$rpc_py set_iscsi_options -o 30 -a 16
+$rpc_py start_subsystem_init
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
@@ -100,7 +100,6 @@ $rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
 rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
 iscsicleanup
-rm -f $testdir/iscsi.conf
 killprocess $pid
 #echo 1 > /sys/bus/pci/rescan
 #sleep 2

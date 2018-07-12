@@ -22,12 +22,14 @@ fio_py="python $rootdir/scripts/fio.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -c $testdir/iscsi.conf -m $ISCSI_TEST_CORE_MASK &
+$ISCSI_APP -m $ISCSI_TEST_CORE_MASK -w &
 pid=$!
 
 trap "killprocess $pid; rbd_cleanup; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+$rpc_py set_iscsi_options -o 30 -a 16
+$rpc_py start_subsystem_init
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
