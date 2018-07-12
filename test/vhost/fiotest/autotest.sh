@@ -11,6 +11,7 @@ remote_fio_bin=""
 fio_jobs=""
 test_type=spdk_vhost_scsi
 reuse_vms=false
+shared_controllers=true
 vms=()
 used_vms=""
 x=""
@@ -35,6 +36,7 @@ function usage()
 	echo "    --work-dir=WORK_DIR   Where to find build file. Must exist. [default: $TEST_DIR]"
 	echo "    --dry-run             Don't perform any tests, run only and wait for enter to terminate"
 	echo "    --no-shutdown         Don't shutdown at the end but leave envirionment working"
+	echo "    --shared-controllers  Run test that use already used controller"
 	echo "    --vm=NUM[,OS][,DISKS] VM configuration. This parameter might be used more than once:"
 	echo "                          NUM - VM number (mandatory)"
 	echo "                          OS - VM os disk path (optional)"
@@ -55,6 +57,7 @@ while getopts 'xh-:' optchar; do
 			dry-run) dry_run=true ;;
 			no-shutdown) no_shutdown=true ;;
 			test-type=*) test_type="${OPTARG#*=}" ;;
+			shared-controllers) shared_controllers=true ;;
 			vm=*) vms+=("${OPTARG#*=}") ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
@@ -199,7 +202,20 @@ if $dry_run; then
 	exit 0
 fi
 
-run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" $fio_disks
+if $shared_controllers; then
+	run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" $fio_disks &
+	run_fio_pid=$!
+	sleep 1
+	cp $AUTOTEST_BASE_DIR/bdev.conf.in $AUTOTEST_BASE_DIR/bdev.conf
+	sed -i "s#path_to_controller#$(get_vhost_dir)/naa.Nvme0n1p0.0#g" $AUTOTEST_BASE_DIR/bdev.conf
+	cat $AUTOTEST_BASE_DIR/bdev.conf
+	#$AUTOTEST_BASE_DIR/../../bdev/bdevperf/bdevperf -c $AUTOTEST_BASE_DIR/bdev.conf -q 128 -s 4096 -w verify -t 5
+	$AUTOTEST_BASE_DIR/../../bdev/bdevio/bdevio $AUTOTEST_BASE_DIR/bdev.conf
+	wait $run_fio_pid
+	rm -f $AUTOTEST_BASE_DIR/bdev.conf
+else
+	run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" $fio_disks
+fi
 
 if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 	for vm_num in $used_vms; do
