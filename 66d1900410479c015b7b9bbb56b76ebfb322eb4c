@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7ff113c2_67dc4851",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 27
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-13T14:59:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b5f375b0_f63d3bf7",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8ac1802a_d8497ca2",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 27
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-12T21:44:11Z",
       "side": 1,
       "message": "for these global lists, could you prepend g_?  So g_spdk_raid_config, g_spdk_raid_bdev_configured_list, etc.\n\nthis is the convention we use in SPDK to name global variables - makes it easy when viewing the code to know that its a global variable instead of local",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85599288_92e6acb8",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-13T14:59:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8ac1802a_d8497ca2",
       "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "a3d0cd1e_eb44c901",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-13T14:59:27Z",
+      "side": 1,
+      "message": "I can do like:\n        if (raid_bdev_io-\u003estatus) {\n            spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_SUCCESS);\n        } else {\n            spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_FAILED;\n        }\n\n\nbecause completion function gives success flag in bool which is true for pass, false for fail but spdk_bdev_io_complete() function we have to pass SPDK_BDEV_IO_STATUS_FAILED (value is -1), for that we need a check of status.",
+      "parentUuid": "6f0f971e_f8df38e1",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3cc1143f_90591cb9",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 27
@@ -64,6 +118,24 @@
       "writtenOn": "2018-07-12T21:44:11Z",
       "side": 1,
       "message": "I would really like to just avoid this extra function and always go through bdev_submit_children.  If we later find that it needs to be optimized, we can change it later.  But better not to optimize now if it\u0027s not needed - this just adds extra code.",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1456d8ed_fe44ad18",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-13T14:59:27Z",
+      "side": 1,
+      "message": "Performance is dropping for a single pvol drive if we don\u0027t do optimization. After doing this, I am able to match the single drive pvol performance with independent NVMe performance which we already explored, so might need to keep this",
+      "parentUuid": "3cc1143f_90591cb9",
       "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "653c43e7_8929e3b1",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-13T14:59:27Z",
+      "side": 1,
+      "message": "Sure, please let me know when bdev API does this changes, we an integrate later",
+      "parentUuid": "25b20415_a4951a22",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca028be1_61a93b93",
         "filename": "mk/spdk.modules.mk",
         "patchSetId": 27
@@ -98,6 +188,24 @@
       "writtenOn": "2018-07-12T21:44:11Z",
       "side": 1,
       "message": "this should be vbdev_raid",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03b82045_f02af577",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 27
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-13T14:59:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca028be1_61a93b93",
       "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
