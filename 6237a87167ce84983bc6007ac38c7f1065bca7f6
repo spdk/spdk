@@ -16,6 +16,24 @@
       "revId": "6237a87167ce84983bc6007ac38c7f1065bca7f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c81aed6d_51efeff6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-13T09:08:28Z",
+      "side": 1,
+      "message": "Hi Jim, thanks for the comment. The problem here is that I/O size is variant and not like the count, we allow 10 in one timeslice, than it will always allow only 10. For the bytes, if the I/O size is larger, it could either exceed the allowed total bytes (e.g., 100KB) or just not send it. This is not same as number of I/Os. With larger size of I/O, the bytes limit can be even not concise. So that for the next timeslice, I added the logic here to compensate this issue. If in the last timeslice, 10KB more sent due to a single 16KB I/O, then in this timeslice, will allow fewer bytes (10KB) to sent.\n\nLong has verified this and the issue is not relating to \"why more bytes at sent\". It just due to the each single I/O\u0027s size.\n\nHope this explanation makes it clear.\n\nThanks again for the comment. Gang",
+      "parentUuid": "dd8386cc_e59a027f",
+      "revId": "6237a87167ce84983bc6007ac38c7f1065bca7f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
