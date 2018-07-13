@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3669f85_0bf1b975",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-13T02:23:55Z",
+      "side": 1,
+      "message": "Using Inquiry\u0027s bit flag is an good improvement, but I suggest sending this inquiry command when construct each block device, but not here.",
+      "revId": "80b6b46a292fd78d569cef88d93444c50a084f6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
