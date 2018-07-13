@@ -1589,12 +1589,12 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
 
 			/*
-			 * Wait 2 secsonds before accessing PCI registers.
+			 * Wait 2.5 seconds before accessing PCI registers.
 			 * Not using sleep() to avoid blocking other controller's initialization.
 			 */
 			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVME, "Applying quirk: delay 2 seconds before reading registers\n");
-				ctrlr->sleep_timeout_tsc = spdk_get_ticks() + 2 * spdk_get_ticks_hz();
+				SPDK_DEBUGLOG(SPDK_LOG_NVME, "Applying quirk: delay 2.5 seconds before reading registers\n");
+				ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (2500 * spdk_get_ticks_hz() / 1000);
 			}
 			return 0;
 		} else {
