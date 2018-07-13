@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "532abd71_4064c23a",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-13T11:40:50Z",
+      "side": 1,
+      "message": "The problem here has to do with bash variable expression.  I\u0027ve commented this out for now and hardcoded this.  Hoping that maybe Seth or Drv will be able to fix this problem properly with a future change.",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 30
+      },
+      "revId": "0857281948572a85643a21be90c629f47d5da961",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
