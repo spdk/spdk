@@ -34,6 +34,24 @@
       "revId": "e55ebfeb35df963e4593fd9033730c29ff996395",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dccae015_7edecb50",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-13T09:51:21Z",
+      "side": 1,
+      "message": "Done :)",
+      "parentUuid": "234046cf_5642e3c6",
+      "revId": "e55ebfeb35df963e4593fd9033730c29ff996395",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
