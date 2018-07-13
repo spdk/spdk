@@ -47,6 +47,7 @@ extern "C" {
 #define SPDK_PCI_ANY_ID			0xffff
 #define SPDK_PCI_VID_INTEL		0x8086
 #define SPDK_PCI_VID_MEMBLAZE		0x1c5f
+#define SPDK_PCI_VID_SAMSUNG		0x144d
 #define SPDK_PCI_VID_VIRTUALBOX		0x80ee
 #define SPDK_PCI_VID_VIRTIO		0x1af4
 #define SPDK_PCI_VID_CNEXLABS		0x1d1d
