@@ -512,12 +512,14 @@ struct spdk_nvmf_fc_ls_rqst {
 /*
  * RQ Buffer LS Overlay Structure
  */
+#define FCNVME_LS_RSVD_SIZE (FCNVME_MAX_LS_BUFFER_SIZE - \
+	(sizeof(struct spdk_nvmf_fc_ls_rqst) + FCNVME_MAX_LS_REQ_SIZE + FCNVME_MAX_LS_RSP_SIZE))
+
 struct __attribute__((__packed__)) spdk_nvmf_fc_rq_buf_ls_request {
 	uint8_t rqst[FCNVME_MAX_LS_REQ_SIZE];
 	uint8_t resp[FCNVME_MAX_LS_RSP_SIZE];
 	struct spdk_nvmf_fc_ls_rqst ls_rqst;
-	uint8_t rsvd[FCNVME_MAX_LS_BUFFER_SIZE - (sizeof(struct spdk_nvmf_fc_ls_rqst) +
-						  FCNVME_MAX_LS_REQ_SIZE + FCNVME_MAX_LS_RSP_SIZE)];
+	uint8_t rsvd[FCNVME_LS_RSVD_SIZE];
 };
 
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fc_rq_buf_ls_request) ==
