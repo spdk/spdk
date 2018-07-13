@@ -1,6 +1,7 @@
 from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
 import rpc.client
 import rpc
+from functools import wraps
 
 
 class UIRoot(UINode):
@@ -13,6 +14,7 @@ class UIRoot(UINode):
         self.current_lvol_stores = []
         self.current_vhost_ctrls = []
         self.set_rpc_target(s)
+        self.verbose = False
 
     def refresh(self):
         self._children = set([])
@@ -25,6 +27,21 @@ class UIRoot(UINode):
 
     def print_array(self, a):
         return " ".join(a)
+
+    def verbose(f):
+        # For any configuration calls (create, delete, construct, etc.)
+        # Check if verbose option is to be used and set appropriately.
+        # Do not use for "get_*" methods so that output is not
+        # flooded.
+        def w(self, **kwargs):
+            if self.verbose is True:
+                self.client.verbose = True
+                r = f(self, **kwargs)
+                self.client.verbose = False
+            else:
+                r = f(self, **kwargs)
+            return r
+        return w
 
     def get_bdevs(self, bdev_type):
         self.current_bdevs = rpc.bdev.get_bdevs(self.client)
@@ -41,92 +58,113 @@ class UIRoot(UINode):
     def get_bdevs_iostat(self, **kwargs):
         return rpc.bdev.get_bdevs_iostat(self.client, **kwargs)
 
+    @verbose
     def split_bdev(self, **kwargs):
         response = rpc.bdev.construct_split_vbdev(self.client, **kwargs)
         return self.print_array(response)
 
+    @verbose
     def destruct_split_bdev(self, **kwargs):
         rpc.bdev.destruct_split_vbdev(self.client, **kwargs)
 
+    @verbose
     def delete_bdev(self, name):
         rpc.bdev.delete_bdev(self.client, bdev_name=name)
 
+    @verbose
     def create_malloc_bdev(self, **kwargs):
         response = rpc.bdev.construct_malloc_bdev(self.client, **kwargs)
         return response
 
+    @verbose
     def delete_malloc_bdev(self, **kwargs):
         rpc.bdev.delete_malloc_bdev(self.client, **kwargs)
 
+    @verbose
     def create_iscsi_bdev(self, **kwargs):
         response = rpc.bdev.construct_iscsi_bdev(self.client, **kwargs)
         return response
 
+    @verbose
     def delete_iscsi_bdev(self, **kwargs):
         rpc.bdev.delete_iscsi_bdev(self.client, **kwargs)
 
+    @verbose
     def create_aio_bdev(self, **kwargs):
         response = rpc.bdev.construct_aio_bdev(self.client, **kwargs)
         return response
 
+    @verbose
     def delete_aio_bdev(self, **kwargs):
         rpc.bdev.delete_aio_bdev(self.client, **kwargs)
 
+    @verbose
     def create_lvol_bdev(self, **kwargs):
         response = rpc.lvol.construct_lvol_bdev(self.client, **kwargs)
         return response
 
+    @verbose
     def create_nvme_bdev(self, **kwargs):
         response = rpc.bdev.construct_nvme_bdev(self.client, **kwargs)
         return response
 
+    @verbose
     def create_null_bdev(self, **kwargs):
         response = rpc.bdev.construct_null_bdev(self.client, **kwargs)
         return response
 
+    @verbose
     def delete_null_bdev(self, **kwargs):
         rpc.bdev.delete_null_bdev(self.client, **kwargs)
 
+    @verbose
     def create_error_bdev(self, **kwargs):
         response = rpc.bdev.construct_error_bdev(self.client, **kwargs)
 
+    @verbose
     def delete_error_bdev(self, **kwargs):
         rpc.bdev.delete_error_bdev(self.client, **kwargs)
 
+    @verbose
     def get_lvol_stores(self):
         self.current_lvol_stores = rpc.lvol.get_lvol_stores(self.client)
         for lvs in self.current_lvol_stores:
             yield LvolStore(lvs)
 
+    @verbose
     def create_lvol_store(self, **kwargs):
         response = rpc.lvol.construct_lvol_store(self.client, **kwargs)
-        new_lvs = rpc.lvol.get_lvol_stores(self.client,
-                                           response,
-                                           lvs_name=None)
-        return new_lvs[0]["name"]
+        return response
 
+    @verbose
     def delete_lvol_store(self, **kwargs):
         rpc.lvol.destroy_lvol_store(self.client, **kwargs)
 
+    @verbose
     def create_pmem_pool(self, **kwargs):
         response = rpc.pmem.create_pmem_pool(self.client, **kwargs)
         return response
 
+    @verbose
     def delete_pmem_pool(self, **kwargs):
         rpc.pmem.delete_pmem_pool(self.client, **kwargs)
 
+    @verbose
     def create_pmem_bdev(self, **kwargs):
         response = rpc.bdev.construct_pmem_bdev(self.client, **kwargs)
         return response
 
+    @verbose
     def create_rbd_bdev(self, **kwargs):
         response = rpc.bdev.construct_rbd_bdev(self.client, **kwargs)
         return response
 
+    @verbose
     def create_virtio_dev(self, **kwargs):
         response = rpc.vhost.construct_virtio_dev(self.client, **kwargs)
         return self.print_array(response)
 
+    @verbose
     def remove_virtio_scsi_bdev(self, **kwargs):
         response = rpc.vhost.remove_virtio_scsi_bdev(self.client, **kwargs)
         return response
@@ -140,29 +178,30 @@ class UIRoot(UINode):
         self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
 
     def get_vhost_ctrlrs(self, ctrlr_type):
+        self.list_vhost_ctrls()
         for ctrlr in filter(lambda x: ctrlr_type in x["backend_specific"].keys(),
                             self.current_vhost_ctrls):
             yield VhostCtrlr(ctrlr)
 
+    @verbose
     def remove_vhost_controller(self, **kwargs):
         rpc.vhost.remove_vhost_controller(self.client, **kwargs)
-        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
 
+    @verbose
     def create_vhost_scsi_controller(self, **kwargs):
         rpc.vhost.construct_vhost_scsi_controller(self.client, **kwargs)
-        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
 
+    @verbose
     def create_vhost_blk_controller(self, **kwargs):
         rpc.vhost.construct_vhost_blk_controller(self.client, **kwargs)
-        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
 
+    @verbose
     def remove_vhost_scsi_target(self, **kwargs):
         rpc.vhost.remove_vhost_scsi_target(self.client, **kwargs)
-        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
 
+    @verbose
     def add_vhost_scsi_lun(self, **kwargs):
         rpc.vhost.add_vhost_scsi_lun(self.client, **kwargs)
-        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
 
     def set_vhost_controller_coalescing(self, **kwargs):
         rpc.vhost.set_vhost_controller_coalescing(self.client, **kwargs)
