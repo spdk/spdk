@@ -1518,6 +1518,7 @@ struct spdk_blob_copy_cluster_ctx {
 	uint8_t *buf;
 	uint64_t page;
 	uint64_t new_cluster;
+	spdk_bs_user_op_t *op;
 	spdk_bs_sequence_t *seq;
 };
 
@@ -1529,20 +1530,31 @@ _spdk_blob_allocate_and_copy_cluster_cpl(void *cb_arg, int bserrno)
 	TAILQ_HEAD(, spdk_bs_request_set) requests;
 	spdk_bs_user_op_t *op;
 
-	TAILQ_INIT(&requests);
-	TAILQ_SWAP(&set->channel->need_cluster_alloc, &requests, spdk_bs_request_set, link);
+	if (ctx->op != NULL) {
 
-	while (!TAILQ_EMPTY(&requests)) {
-		op = TAILQ_FIRST(&requests);
-		TAILQ_REMOVE(&requests, op, link);
 		if (bserrno == 0) {
-			spdk_bs_user_op_execute(op);
+			spdk_bs_user_op_execute(ctx->op);
 		} else {
-			spdk_bs_user_op_abort(op);
+			spdk_bs_user_op_abort(ctx->op);
 		}
-	}
 
-	spdk_dma_free(ctx->buf);
+	} else {
+
+		TAILQ_INIT(&requests);
+		TAILQ_SWAP(&set->channel->need_cluster_alloc, &requests, spdk_bs_request_set, link);
+
+		while (!TAILQ_EMPTY(&requests)) {
+			op = TAILQ_FIRST(&requests);
+			TAILQ_REMOVE(&requests, op, link);
+			if (bserrno == 0) {
+				spdk_bs_user_op_execute(op);
+			} else {
+				spdk_bs_user_op_abort(op);
+			}
+		}
+
+		spdk_dma_free(ctx->buf);
+	}
 	free(ctx);
 }
 
@@ -1618,7 +1630,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 	ch = spdk_io_channel_get_ctx(_ch);
 
-	if (!TAILQ_EMPTY(&ch->need_cluster_alloc)) {
+	if (blob->parent_id != SPDK_BLOBID_INVALID && !TAILQ_EMPTY(&ch->need_cluster_alloc)) {
 		/* There are already operations pending. Queue this user op
 		 * and return because it will be re-executed when the outstanding
 		 * cluster allocation completes. */
@@ -1676,16 +1688,20 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		return;
 	}
 
-	/* Queue the user op to block other incoming operations */
-	TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
-
 	if (blob->parent_id != SPDK_BLOBID_INVALID) {
+		/* Queue the user op to block other incoming operations */
+		TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
+
 		/* Read cluster from backing device */
 		spdk_bs_sequence_read_bs_dev(ctx->seq, blob->back_bs_dev, ctx->buf,
 					     _spdk_bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
 					     _spdk_bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz),
 					     _spdk_blob_write_copy, ctx);
 	} else {
+		/* Set the user op to be executed when cluster allocation succeed */
+		ctx->op = op;
+
+		/* Insert new cluster */
 		_spdk_blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
 						       _spdk_blob_insert_cluster_cpl, ctx);
 	}
