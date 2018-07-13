@@ -16,6 +16,23 @@
       "revId": "e4b1a470672bb4471c6345f5c7043b4d06bb661b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aab75694_f0093689",
+        "filename": "test/iscsi_tgt/iscsijson/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T21:14:34Z",
+      "side": 1,
+      "message": "What\u0027s the point of the \"test_subsystems\" function? It\u0027s only called from one place - why not just move the body of the function to right here?",
+      "revId": "e4b1a470672bb4471c6345f5c7043b4d06bb661b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
