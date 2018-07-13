@@ -16,6 +16,24 @@
       "revId": "e55ebfeb35df963e4593fd9033730c29ff996395",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "234046cf_5642e3c6",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-13T07:13:15Z",
+      "side": 1,
+      "message": "Hi Pawel Niedzwiecki,\n\nThis was my completely wrong feedback.\n\nI thought by mistake that \"rm -f\" is added by you in this patch.\nand these rm -f have own important purpose and you can do them separately.\n \nBut these important addition has been already merged.\n\nSo you don\u0027t have to remove -f.\n\nI apologize for confusing you much. I couldn\u0027t catch up the progress.\n\nPlease remove keep 3 \"rm -f\"",
+      "parentUuid": "5d217f61_5e17b7a2",
+      "revId": "e55ebfeb35df963e4593fd9033730c29ff996395",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
