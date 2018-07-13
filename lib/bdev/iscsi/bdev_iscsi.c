@@ -330,10 +330,20 @@ bdev_iscsi_unmap(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 		 uint64_t lba, uint64_t num_blocks)
 {
 	struct scsi_task *task;
-	struct unmap_list list[1];
+	uint32_t desc = 0;
+	uint32_t num = (uint32_t)(num_blocks / UINT32_MAX);
+	struct unmap_list list[num + 1];
 
-	list[0].lba = lba;
-	list[0].num = num_blocks;
+	while (num_blocks > UINT32_MAX) {
+		list[desc].lba = lba;
+		list[desc].num = UINT32_MAX;
+		num_blocks -= UINT32_MAX;
+		desc++;
+	}
+
+	list[desc].lba = lba;
+	list[desc].num = num_blocks;
+
 	task = iscsi_unmap_task(lun->context, 0, 0, 0, list, 1,
 				bdev_iscsi_command_cb, iscsi_io);
 	if (task == NULL) {
