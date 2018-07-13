@@ -42,6 +42,7 @@
 #include "spdk/assert.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
+#include "spdk/thread.h"
 
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
@@ -252,6 +253,8 @@ struct spdk_nvmf_subsystem {
 	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
 };
 
+typedef void(*spdk_nvmf_poll_group_mod_done)(void *cb_arg, int status);
+
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);
 
@@ -259,14 +262,15 @@ int spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 				       struct spdk_nvmf_transport *transport);
 int spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
-				       struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
-		struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
-		struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
-		struct spdk_nvmf_subsystem *subsystem);
+void spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
+					struct spdk_nvmf_subsystem *subsystem,
+					spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
+void spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem, spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
+void spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem, spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
+void spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem, spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
