@@ -22,6 +22,224 @@
       "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7530f4a0_c216601c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "This call can now report fail when doing destroy on snapshot (which is probably on the earlier on lvs-\u003elvols list). It should be handled around here - first destroying clones, then coming back to snapshot.\n\nSince this patch focuses on disallowing snapshot deletion via RPC when there are clones. I\u0027m fine with having this handling in separate patch.",
+      "range": {
+        "startLine": 400,
+        "startChar": 4,
+        "endLine": 400,
+        "endChar": 63
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ea7d1c9_2e10e540",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "This error is not really true, since we are not closing lvol.\n\"Could not unregister bdev during lvol destroy\"",
+      "range": {
+        "startLine": 541,
+        "startChar": 37,
+        "endLine": 541,
+        "endChar": 58
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5de88f9_f055733e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1174,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "This section should be fixed in separate patch. Since lvol was opened, it should be closed here instead of blob.",
+      "range": {
+        "startLine": 1171,
+        "startChar": 0,
+        "endLine": 1174,
+        "endChar": 13
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3eca5402_971acb02",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 40
+      },
+      "lineNbr": 1774,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "Another test for checking return from destroy_lvol_bdev when deleting snapshot with clones preset should be added.\nIt is ok for me to do that in separate patch.",
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f0a6243_cfc5e18a",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "cb_fn should always be provided. This can be asserted.",
+      "range": {
+        "startLine": 248,
+        "startChar": 0,
+        "endLine": 248,
+        "endChar": 21
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36aaa018_041b5a12",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "Is there ever a case when cb_fn is not provided ? Original lvol close has assert for that.\n\nPlease remove this check, or even add assert.",
+      "range": {
+        "startLine": 436,
+        "startChar": 0,
+        "endLine": 438,
+        "endChar": 2
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "405221ee_c9d36245",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "Always true ? Since this patch add this functionality, it should be checked both ways.",
+      "range": {
+        "startLine": 444,
+        "startChar": 1,
+        "endLine": 444,
+        "endChar": 13
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae3e8e32_1e0f267e",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1102,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "Please add separate new UT for functionality added in this patch. Example ones (in no particular order):\n- try destroying snapshot when clone is present\n- try destroying snapshot when clone is no longer present\nProbably other too.",
+      "range": {
+        "startLine": 1102,
+        "startChar": 1,
+        "endLine": 1102,
+        "endChar": 27
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eed58d5e_f502f77f",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1105,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "Please add some condition for failure, why not check if spdk_bdev_destruct_done() was called without error?",
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24ea121c_12cf3d14",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 1,
+      "message": "How come this is freed here ?\nI get that on lvol.c level the spdk_lvol struct is not freed after spdk_lvol_close(), since we want to let user destroy it as well. Its only the spdk_lvs_unload() that frees those.\n\nAssuming that delete_bdev() no longer exists, hot-remove of lvol is always part of lvs_unload.\n\nThis should be a separate UT, or some more appropriate place should be found rather than ut_lvol_rename().",
+      "range": {
+        "startLine": 1106,
+        "startChar": 0,
+        "endLine": 1107,
+        "endChar": 14
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f473326_0ea167ed",
+        "filename": "doc/bdev.md",
+        "patchSetId": 40
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T11:24:45Z",
+      "side": 0,
+      "message": "I get that we want to remove delete_bdev RPC. Lets remove docs and the functionality itself in separate patch.\nBesides there is separate patch that updates docs https://review.gerrithub.io/#/c/spdk/spdk/+/417278/",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 53
+      },
+      "revId": "5e5cc5ac9cece8031cabfae506175306cdc292bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
