@@ -1,0 +1,225 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "460b36c2_394881c6",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "Since the user listed all of the devices, you don\u0027t really need them to specify the NumDevices. It\u0027s implicit.",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f334e055_1ca3b4d8",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 848,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "It would likely be easier to manage this raid_bdev_config array if it was a TAILQ instead.",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b940b44_0c050224",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1006,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "If you moved this to the bottom of the file, you wouldn\u0027t need to forward declare functions. That\u0027s what we usually do.",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0182427_4c341f14",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "raid_bdev_parse_config is a fairly small function and it is only called from here. I would just remove the function and put the code directly here.",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "075b5324_8dcaf4fb",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1222,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "For iterators, single character variable names are typically better. For instance, here just use \u0027i\u0027. There is value in being descriptive, but there\u0027s also value in having the code be compact and it\u0027s always a balance between the two.",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a2ca84e_b9e102ad",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "Does this state also encompass volumes that were fully functional, but one disk failed or was removed? On the RAID stacks I\u0027ve worked on, this is typically called \"degraded\" state.",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5c9fce7_89bc8d7b",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "Is this worth even storing? It\u0027s cheap to compute if you have the power of 2.",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48c40676_5d157465",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "An enum might make sense here",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "309c04bc_3a891f64",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "Does this really need to be a different data structure than raid_bdev?",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85dc7e63_14d87c80",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "Is this an array?",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca466d12_1205c4ac",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "The length of this array likely needs to be stored here, so that threads can access a thread-local version of the count. This will be important if the number of base bdevs in a raid volume ever changes dynamically.",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "703174b0_3d32f6ae",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "Isn\u0027t the list of all raid_bdevs easily calculated from the other 3 lists? I think it may be safer to only keep the raid bdevs in one list at a time to avoid mistakes.",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82700f4f_770b6bda",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "Category might be better described as \"state\"",
+      "revId": "9004f282a6bf183764b6d16b5fb235c1f0e8d958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

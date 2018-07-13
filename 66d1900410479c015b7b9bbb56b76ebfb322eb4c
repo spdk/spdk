@@ -142,6 +142,23 @@
     },
     {
       "key": {
+        "uuid": "68ed420a_241fa42a",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T23:30:29Z",
+      "side": 1,
+      "message": "In the RAID stacks I\u0027ve worked on, this is called \"degraded\" state.",
+      "revId": "66d1900410479c015b7b9bbb56b76ebfb322eb4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25b20415_a4951a22",
         "filename": "lib/bdev/raid/bdev_raid.h",
         "patchSetId": 27
