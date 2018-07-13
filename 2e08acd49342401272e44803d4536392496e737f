@@ -22,6 +22,30 @@
       "revId": "2e08acd49342401272e44803d4536392496e737f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df580061_000b2e66",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-13T04:56:50Z",
+      "side": 1,
+      "message": "Oh, really one silly action.\n\nDone.\nThank you point it out, Pawel.",
+      "parentUuid": "962d4237_4c97e2b8",
+      "range": {
+        "startLine": 114,
+        "startChar": 21,
+        "endLine": 114,
+        "endChar": 50
+      },
+      "revId": "2e08acd49342401272e44803d4536392496e737f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
