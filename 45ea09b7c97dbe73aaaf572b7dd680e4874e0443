@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30024782_3f18fd3b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 3428,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T22:36:20Z",
+      "side": 1,
+      "message": "Why do you need this types parameter? Can\u0027t you just go through each field in the limits structure and if it is not 0, set the limit? To make this way simpler, why not just copy the data in *limits into the equivalent structure embedded into bdev-\u003einternal.qos?",
+      "revId": "45ea09b7c97dbe73aaaf572b7dd680e4874e0443",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0f79110_f794562d",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T22:36:20Z",
+      "side": 1,
+      "message": "Does -1 mean no rate limit, or does 0? I think we could just use 0 to mean no limit and it would be a lot simpler.",
+      "revId": "45ea09b7c97dbe73aaaf572b7dd680e4874e0443",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
