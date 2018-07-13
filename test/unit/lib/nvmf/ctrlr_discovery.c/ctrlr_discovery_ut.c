@@ -170,32 +170,36 @@ spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
-int
+void
 spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
-				   struct spdk_nvmf_subsystem *subsystem)
+				   struct spdk_nvmf_subsystem *subsystem,
+				   struct spdk_io_channel_iter *i)
 {
-	return 0;
+	return;
 }
 
-int
+void
 spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem)
+				      struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_io_channel_iter *i)
 {
-	return 0;
+	return;
 }
 
-int
+void
 spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
-				     struct spdk_nvmf_subsystem *subsystem)
+				     struct spdk_nvmf_subsystem *subsystem,
+				     struct spdk_io_channel_iter *i)
 {
-	return 0;
+	return;
 }
 
-int
+void
 spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem)
+				      struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_io_channel_iter *i)
 {
-	return 0;
+	return;
 }
 
 static void
