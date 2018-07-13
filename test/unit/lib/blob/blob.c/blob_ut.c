@@ -4929,6 +4929,200 @@ blob_relations(void)
 	g_bs = NULL;
 }
 
+
+
+static void
+test_io_unit(struct spdk_blob *blob, struct spdk_io_channel *channel)
+{
+	uint8_t payload_read[10 * 4096];
+	uint8_t payload_ff[10 * 4096];
+	uint8_t payload_aa[10 * 4096];
+	uint8_t payload_00[10 * 4096];
+	uint8_t *device_data;
+
+	memset(payload_ff, 0xFF, sizeof(payload_ff));
+	memset(payload_aa, 0xAA, sizeof(payload_aa));
+	memset(payload_00, 0x00, sizeof(payload_00));
+
+	/* WRITE */
+
+	/* Try to perform I/O with io unit = 512 */
+	spdk_blob_io_write(blob, channel, payload_ff, 0, 1, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* If thin provisioned is set cluster should be allocated now */
+	device_data = &g_dev_buffer[blob->active.clusters[0] * 512];
+
+	/* Each character below symbolizes single io_unit. */
+	/* device_data: F000 0000 0000 0000 ... */
+	CU_ASSERT(memcmp(device_data + 0 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 1 * 512, payload_00, 7 * 512) == 0);
+
+	/* Verify write with offset on first page */
+	spdk_blob_io_write(blob, channel, payload_ff, 2, 1, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* device_data: F0F0 0000 0000 0000 ... */
+	CU_ASSERT(memcmp(device_data + 0 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 1 * 512, payload_00, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 2 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 3 * 512, payload_00, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 4 * 512, payload_00, 4 * 512) == 0);
+
+	/* Verify write with offset on first page */
+	spdk_blob_io_write(blob, channel, payload_ff, 4, 4, blob_op_complete, NULL);
+
+	/* device_data: F0F0 FFFF 0000 0000 ... */
+	CU_ASSERT(memcmp(device_data + 0 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 1 * 512, payload_00, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 2 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 3 * 512, payload_00, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 4 * 512, payload_ff, 4 * 512) == 0);
+	CU_ASSERT(memcmp(device_data + 8 * 512, payload_00, 4 * 512) == 0);
+
+	/* Verify write with offset on second page */
+	spdk_blob_io_write(blob, channel, payload_ff, 8, 4, blob_op_complete, NULL);
+
+	/* device_data: F0F0 FFFF FFFF 0000 ... */
+	CU_ASSERT(memcmp(device_data + 0 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 1 * 512, payload_00, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 2 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 3 * 512, payload_00, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 4 * 512, payload_ff, 8 * 512) == 0);
+	CU_ASSERT(memcmp(device_data + 12 * 512, payload_00, 4 * 512) == 0);
+
+	/* Verify write across multiple pages */
+	spdk_blob_io_write(blob, channel, payload_aa, 4, 8, blob_op_complete, NULL);
+
+	/* device_data: F0F0 AAAA AAAA 0000 ... */
+	CU_ASSERT(memcmp(device_data + 0 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 1 * 512, payload_00, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 2 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 3 * 512, payload_00, 512) == 0);
+	CU_ASSERT(memcmp(device_data + 4 * 512, payload_aa, 8 * 512) == 0);
+	CU_ASSERT(memcmp(device_data + 12 * 512, payload_00, 4 * 512) == 0);
+
+	/* READ  */
+
+	/* Read only first io unit */
+	/* device_data: (F)0F0 AAAA AAAA 0000 ... */
+	/* payload_read: F000 0000 0000 ... */
+	memset(payload_read, 0x00, sizeof(payload_read));
+	spdk_blob_io_read(blob, channel, payload_read, 0, 1, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_read + 0 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(payload_read + 1 * 512, payload_00, 7 * 512) == 0);
+
+	/* Read four io_units starting from offset = 2 */
+	/* device_data: F0(F0 AA)AA AAAA 0000 ... */
+	/* payload_read: F0AA 0000 0000 ... */
+	memset(payload_read, 0x00, sizeof(payload_read));
+	spdk_blob_io_read(blob, channel, payload_read, 2, 4, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	CU_ASSERT(memcmp(payload_read + 0 * 512, payload_ff, 512) == 0);
+	CU_ASSERT(memcmp(payload_read + 1 * 512, payload_00, 512) == 0);
+	CU_ASSERT(memcmp(payload_read + 2 * 512, payload_aa, 512) == 0);
+	CU_ASSERT(memcmp(payload_read + 3 * 512, payload_aa, 512) == 0);
+
+	CU_ASSERT(memcmp(payload_read + 4 * 512, payload_00, 4 * 512) == 0);
+
+	/* Read eight io_units across multiple pages */
+	/* device_data: F0F0 (AAAA AAAA) 0000 ... */
+	/* payload_read: AAAA AAAA 0000 ... */
+	memset(payload_read, 0x00, sizeof(payload_read));
+	spdk_blob_io_read(blob, channel, payload_read, 4, 8, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	CU_ASSERT(memcmp(payload_read + 0 * 512, payload_aa, 8 * 512) == 0);
+	CU_ASSERT(memcmp(payload_read + 8 * 512, payload_00, 4 * 512) == 0);
+
+}
+
+static void
+blob_io_unit(void)
+{
+	struct spdk_bs_opts bsopts;
+	struct spdk_blob_opts opts;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	spdk_blob_id blobid;
+	struct spdk_io_channel *channel;
+
+	/* Create dev with 512 bytes io unit size */
+
+	spdk_bs_opts_init(&bsopts);
+	bsopts.cluster_sz = SPDK_BS_PAGE_SIZE * 4; // == 16 * io_unit
+	snprintf(bsopts.bstype.bstype, sizeof(bsopts.bstype.bstype), "TESTTYPE");
+
+	/* Try to initialize a new blob store with unsupported io_unit */
+	dev = init_dev();
+	dev->blocklen = 512;
+	dev->blockcnt =  DEV_BUFFER_SIZE / dev->blocklen;
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &bsopts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	CU_ASSERT(spdk_bs_get_io_unit_size(g_bs) == 512);
+	channel = spdk_bs_alloc_io_channel(g_bs);
+
+	/* Create thick provisioned blob */
+	spdk_blob_opts_init(&opts);
+	opts.thin_provision = false;
+	opts.num_clusters = 32;
+
+	spdk_bs_create_blob_ext(g_bs, &opts, blob_op_with_id_complete, NULL);
+
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	test_io_unit(blob, channel);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+
+	/* Create thin provisioned blob */
+
+	spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	opts.num_clusters = 32;
+
+	spdk_bs_create_blob_ext(g_bs, &opts, blob_op_with_id_complete, NULL);
+
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	test_io_unit(blob, channel);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -4993,7 +5187,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_relations", blob_relations) == NULL ||
 		CU_add_test(suite, "blob_inflate_rw", blob_inflate_rw) == NULL ||
 		CU_add_test(suite, "blob_snapshot_freeze_io", blob_snapshot_freeze_io) == NULL ||
-		CU_add_test(suite, "blob_operation_split_rw", blob_operation_split_rw) == NULL
+		CU_add_test(suite, "blob_operation_split_rw", blob_operation_split_rw) == NULL ||
+		CU_add_test(suite, "blob_io_unit", blob_io_unit) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

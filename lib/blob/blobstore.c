@@ -1697,17 +1697,20 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 }
 
 static void
-_spdk_blob_calculate_lba_and_lba_count(struct spdk_blob *blob, uint64_t page, uint64_t length,
+_spdk_blob_calculate_lba_and_lba_count(struct spdk_blob *blob, uint64_t io_unit, uint64_t length,
 				       uint64_t *lba,	uint32_t *lba_count)
 {
-	*lba_count = _spdk_bs_page_to_lba(blob->bs, length);
+	uint64_t page;
+
+	page = _spdk_bs_io_unit_to_page(blob->bs, io_unit);
+	*lba_count = _spdk_bs_io_unit_to_lba(blob->bs, length);
 
 	if (!_spdk_bs_page_is_allocated(blob, page)) {
 		assert(blob->back_bs_dev != NULL);
-		*lba = _spdk_bs_dev_page_to_lba(blob->back_bs_dev, page);
+		*lba = _spdk_bs_io_unit_to_lba(blob->bs, io_unit);
 		*lba_count = _spdk_bs_blob_lba_to_back_dev_lba(blob, *lba_count);
 	} else {
-		*lba = _spdk_bs_blob_page_to_lba(blob, page);
+		*lba = _spdk_bs_blob_io_unit_to_lba(blob, io_unit);
 	}
 }
 
@@ -1941,12 +1944,13 @@ _spdk_blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_ch
 		return;
 	}
 
-	if (offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster) {
+	if (offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster *
+	    blob->bs->io_units_per_page) {
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
 
-	if (length <= _spdk_bs_num_pages_to_cluster_boundary(blob, offset)) {
+	if (length / blob->bs->io_units_per_page <= _spdk_bs_num_pages_to_cluster_boundary(blob, offset)) {
 		_spdk_blob_request_submit_op_single(_channel, blob, payload, offset, length,
 						    cb_fn, cb_arg, op_type);
 	} else {
@@ -2048,10 +2052,11 @@ _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 
 static void
 _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_channel,
-				 struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+				 struct iovec *iov, int iovcnt, uint64_t blob_io_unit_offset, uint64_t length,
 				 spdk_blob_op_complete cb_fn, void *cb_arg, bool read)
 {
 	struct spdk_bs_cpl	cpl;
+	uint64_t page_offset = blob_io_unit_offset * blob->bs->io_units_per_page;
 
 	assert(blob != NULL);
 
@@ -2065,7 +2070,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 		return;
 	}
 
-	if (offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster) {
+	if (page_offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster) {
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
@@ -2084,11 +2089,12 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 	 *  in a batch.  That would also require creating an intermediate spdk_bs_cpl that would get called
 	 *  when the batch was completed, to allow for freeing the memory for the iov arrays.
 	 */
-	if (spdk_likely(length <= _spdk_bs_num_pages_to_cluster_boundary(blob, offset))) {
+	if (spdk_likely(length * blob->bs->io_units_per_page <= _spdk_bs_num_pages_to_cluster_boundary(blob,
+			page_offset))) {
 		uint32_t lba_count;
 		uint64_t lba;
 
-		_spdk_blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
+		_spdk_blob_calculate_lba_and_lba_count(blob, blob_io_unit_offset, length, &lba, &lba_count);
 
 		cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 		cpl.u.blob_basic.cb_fn = cb_fn;
@@ -2098,7 +2104,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 			spdk_bs_user_op_t *op;
 			struct spdk_bs_channel *bs_channel = spdk_io_channel_get_ctx(_channel);
 
-			op = spdk_bs_user_op_alloc(_channel, &cpl, read, blob, iov, iovcnt, offset, length);
+			op = spdk_bs_user_op_alloc(_channel, &cpl, read, blob, iov, iovcnt, blob_io_unit_offset, length);
 			if (!op) {
 				cb_fn(cb_arg, -ENOMEM);
 				return;
@@ -2118,14 +2124,14 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 				return;
 			}
 
-			if (_spdk_bs_page_is_allocated(blob, offset)) {
+			if (_spdk_bs_page_is_allocated(blob, page_offset)) {
 				spdk_bs_sequence_readv_dev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
 			} else {
 				spdk_bs_sequence_readv_bs_dev(seq, blob->back_bs_dev, iov, iovcnt, lba, lba_count,
 							      _spdk_rw_iov_done, NULL);
 			}
 		} else {
-			if (_spdk_bs_page_is_allocated(blob, offset)) {
+			if (_spdk_bs_page_is_allocated(blob, page_offset)) {
 				spdk_bs_sequence_t *seq;
 
 				seq = spdk_bs_sequence_start(_channel, &cpl);
@@ -2139,13 +2145,14 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 				/* Queue this operation and allocate the cluster */
 				spdk_bs_user_op_t *op;
 
-				op = spdk_bs_user_op_alloc(_channel, &cpl, SPDK_BLOB_WRITEV, blob, iov, iovcnt, offset, length);
+				op = spdk_bs_user_op_alloc(_channel, &cpl, SPDK_BLOB_WRITEV, blob, iov, iovcnt, blob_io_unit_offset,
+							   length);
 				if (!op) {
 					cb_fn(cb_arg, -ENOMEM);
 					return;
 				}
 
-				_spdk_bs_allocate_and_copy_cluster(blob, _channel, offset, op);
+				_spdk_bs_allocate_and_copy_cluster(blob, _channel, page_offset, op);
 			}
 		}
 	} else {
@@ -2164,7 +2171,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 		ctx->read = read;
 		ctx->orig_iov = iov;
 		ctx->iovcnt = iovcnt;
-		ctx->page_offset = offset;
+		ctx->page_offset = page_offset;
 		ctx->pages_remaining = length;
 		ctx->pages_done = 0;
 
@@ -2458,6 +2465,8 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_b
 	 *  even multiple of the cluster size.
 	 */
 	bs->cluster_sz = opts->cluster_sz;
+	bs->io_unit = dev->blocklen;
+	bs->io_units_per_page = SPDK_BS_PAGE_SIZE / dev->blocklen;
 	bs->total_clusters = dev->blockcnt / (bs->cluster_sz / dev->blocklen);
 	bs->pages_per_cluster = bs->cluster_sz / SPDK_BS_PAGE_SIZE;
 	bs->num_free_clusters = bs->total_clusters;
@@ -3097,6 +3106,19 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
 	}
 
+	if (ctx->super->blocklen == 0) {
+		/* Compatibility mode. When blocklen set to 0, load it with SPDK_BS_PAGE_SIZE */
+		ctx->bs->io_unit = SPDK_BS_PAGE_SIZE;
+	} else if (ctx->bs->dev->blocklen != ctx->super->blocklen) {
+		SPDK_NOTICELOG("Blocklen mismatch, dev: %u, blobstore: %u\n",
+			       ctx->bs->dev->blocklen, ctx->super->blocklen);
+		_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
+		return;
+	} else {
+		ctx->bs->io_unit = ctx->super->blocklen;
+	}
+	ctx->bs->io_units_per_page = SPDK_BS_PAGE_SIZE / ctx->bs->io_unit;
+
 	/* Parse the super block */
 	ctx->bs->clean = 1;
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
@@ -3553,7 +3575,6 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	} else {
 		bs->md_len = opts.num_md_pages;
 	}
-
 	rc = spdk_bit_array_resize(&bs->used_md_pages, bs->md_len);
 	if (rc < 0) {
 		_spdk_bs_free(bs);
@@ -3592,6 +3613,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->super_blob = bs->super_blob;
 	ctx->super->clean = 0;
 	ctx->super->cluster_size = bs->cluster_sz;
+	ctx->super->blocklen = bs->io_unit;
 	memcpy(&ctx->super->bstype, &bs->bstype, sizeof(bs->bstype));
 
 	/* Calculate how many pages the metadata consumes at the front
@@ -3969,6 +3991,12 @@ uint64_t
 spdk_bs_get_page_size(struct spdk_blob_store *bs)
 {
 	return SPDK_BS_PAGE_SIZE;
+}
+
+uint64_t
+spdk_bs_get_io_unit_size(struct spdk_blob_store *bs)
+{
+	return bs->io_unit;
 }
 
 uint64_t

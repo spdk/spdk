@@ -168,6 +168,8 @@ struct spdk_blob_store {
 
 	pthread_mutex_t			used_clusters_mutex;
 
+	uint32_t			io_unit;
+	uint8_t				io_units_per_page;
 	uint32_t			cluster_sz;
 	uint64_t			total_clusters;
 	uint64_t			total_data_clusters;
@@ -344,8 +346,9 @@ struct spdk_bs_super_block {
 	uint32_t	used_blobid_mask_len; /* Count, in pages */
 
 	uint64_t        size; /* size of blobstore in bytes */
+	uint32_t	blocklen; /* In bytes */
 
-	uint8_t         reserved[4004];
+	uint8_t         reserved[4000];
 	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");
@@ -404,6 +407,18 @@ static inline uint64_t
 _spdk_bs_dev_page_to_lba(struct spdk_bs_dev *bs_dev, uint64_t page)
 {
 	return page * SPDK_BS_PAGE_SIZE / bs_dev->blocklen;
+}
+
+static inline uint64_t
+_spdk_bs_io_unit_to_lba(struct spdk_blob_store *bs, uint64_t io_unit)
+{
+	return io_unit * bs->io_unit / bs->dev->blocklen;
+}
+
+static inline uint64_t
+_spdk_bs_io_unit_to_page(struct spdk_blob_store *bs, uint64_t io_unit)
+{
+	return (io_unit * bs->io_unit) / SPDK_BS_PAGE_SIZE;
 }
 
 static inline uint64_t
@@ -507,6 +522,27 @@ _spdk_bs_blob_page_to_lba(struct spdk_blob *blob, uint64_t page)
 	lba = blob->active.clusters[page / pages_per_cluster];
 	lba += _spdk_bs_page_to_lba(blob->bs, page % pages_per_cluster);
 
+	return lba;
+}
+
+/* Given a page offset into a blob, look up the LBA for the
+ * start of that page.
+ */
+static inline uint64_t
+_spdk_bs_blob_io_unit_to_lba(struct spdk_blob *blob, uint64_t io_unit)
+{
+	uint64_t	lba;
+	uint64_t	pages_per_cluster;
+	uint64_t	page;
+
+	page = _spdk_bs_io_unit_to_page(blob->bs, io_unit);
+	pages_per_cluster = blob->bs->pages_per_cluster;
+//printf("IO_unit: %lu, to page %lu, cluster: %lu\n", io_unit, page, page/pages_per_cluster);
+	assert(page < blob->active.num_clusters * pages_per_cluster);
+
+	lba = blob->active.clusters[page / pages_per_cluster];
+	lba += _spdk_bs_io_unit_to_lba(blob->bs,
+				       (io_unit % (pages_per_cluster * SPDK_BS_PAGE_SIZE / blob->bs->io_unit)));
 	return lba;
 }
 
