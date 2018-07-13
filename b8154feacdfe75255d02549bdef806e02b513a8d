@@ -16,6 +16,24 @@
       "revId": "b8154feacdfe75255d02549bdef806e02b513a8d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b7ec405_bae20c40",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1680,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-07-13T12:24:06Z",
+      "side": 1,
+      "message": "I\u0027ve created new patch for it as a next step of improvement: https://review.gerrithub.io/c/spdk/spdk/+/419227",
+      "parentUuid": "f54842e4_66a72382",
+      "revId": "b8154feacdfe75255d02549bdef806e02b513a8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
