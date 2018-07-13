@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3c9d7ad_6bdc35fe",
+        "filename": "test/iscsi_tgt/iscsijson/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-13T13:37:32Z",
+      "side": 1,
+      "message": "this may not be necessary. I report to you but you can get review again without any change.",
+      "revId": "e4b1a470672bb4471c6345f5c7043b4d06bb661b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
