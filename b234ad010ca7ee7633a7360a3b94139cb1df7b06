@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "468dd18b_1bc65128",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-13T13:36:46Z",
+      "side": 1,
+      "message": "It would be much easier to unset verbose at refresh than mocking each command but your choice.",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 16
+      },
+      "revId": "b234ad010ca7ee7633a7360a3b94139cb1df7b06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4e2394e_e8b4f178",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-13T13:36:46Z",
+      "side": 1,
+      "message": "why not \nreturn rpc.bdev.construct_malloc_bdev(self.client, **kwargs)\n?",
+      "range": {
+        "startLine": 73,
+        "startChar": 8,
+        "endLine": 73,
+        "endChar": 19
+      },
+      "revId": "b234ad010ca7ee7633a7360a3b94139cb1df7b06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
