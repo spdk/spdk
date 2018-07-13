@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "cf3fc5c3_42cafc6f",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-13T12:23:49Z",
+      "side": 1,
+      "message": "Note that, if the plugin is not installed, that the http_proxy is verified by the plugin install.  However, I have no idea what happens when the plug in is already installed.\n\nI think there is code in the Vagrantfile that should validate the http_proxy defined in the environment..",
+      "range": {
+        "startLine": 151,
+        "startChar": 0,
+        "endLine": 155,
+        "endChar": 4
+      },
+      "revId": "0857281948572a85643a21be90c629f47d5da961",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "532abd71_4064c23a",
         "filename": "scripts/vagrant/update.sh",
         "patchSetId": 16
