@@ -1,6 +1,7 @@
 from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
 import rpc.client
 import rpc
+from functools import wraps
 
 
 class UIRoot(UINode):
@@ -13,6 +14,7 @@ class UIRoot(UINode):
         self.current_lvol_stores = []
         self.current_vhost_ctrls = []
         self.set_rpc_target(s)
+        self.verbose = False
 
     def refresh(self):
         self._children = set([])
@@ -51,6 +53,22 @@ class UIRoot(UINode):
     def delete_bdev(self, name):
         rpc.bdev.delete_bdev(self.client, bdev_name=name)
 
+    def xxx(f):
+        # For any configuration calls (create, delete, construct, etc.)
+        # Check if verbose option is to be used and set appropriately.
+        # Do not use for "get_*" methods so that output is not
+        # flooded.
+        def w(self, **kwargs):
+            if self.verbose is True:
+                self.client.verbose = True
+                r = f(self, **kwargs)
+                self.client.verbose = False
+            else:
+                r = f(self, **kwargs)
+            return r
+        return w
+
+    @xxx
     def create_malloc_bdev(self, **kwargs):
         response = rpc.bdev.construct_malloc_bdev(self.client, **kwargs)
         return response
