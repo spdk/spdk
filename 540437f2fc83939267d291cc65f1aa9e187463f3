@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2415c156_4374e82f",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-13T14:06:28Z",
+      "side": 1,
+      "message": "Each command take the same parameters so what is the super-important reason to introduce this code instead of \n\n  SPDK_RPC_REGISTER(\"nvme_admin_cmd\", spdk_rpc_nvme_cmd, SPDK_RPC_RUNTIME)\n\n  SPDK_RPC_REGISTER(\"nvme_io_cmd\", spdk_rpc_nvme_cmd, SPDK_RPC_RUNTIME)",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 145,
+        "endChar": 1
+      },
+      "revId": "540437f2fc83939267d291cc65f1aa9e187463f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7b8dc0e_d39660e1",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-13T14:06:28Z",
+      "side": 1,
+      "message": "pls read \u0027man 3 free\u0027 (and all *free()-like functions) and remove all those NOPs.",
+      "range": {
+        "startLine": 186,
+        "startChar": 2,
+        "endLine": 186,
+        "endChar": 24
+      },
+      "revId": "540437f2fc83939267d291cc65f1aa9e187463f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f19c6cd_1d907613",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-13T14:06:28Z",
+      "side": 1,
+      "message": "Nope. First prepare all data then start response. Otherwise, if there is an error in the middle of reponse data preparation you won\u0027t be abble to send any error response.",
+      "range": {
+        "startLine": 229,
+        "startChar": 2,
+        "endLine": 231,
+        "endChar": 3
+      },
+      "revId": "540437f2fc83939267d291cc65f1aa9e187463f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd51cf4f_4421cb11",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-13T14:06:28Z",
+      "side": 1,
+      "message": "you can introduce decoder function that will free you from error handling manually and void need of using free() for most parameters.",
+      "range": {
+        "startLine": 279,
+        "startChar": 0,
+        "endLine": 288,
+        "endChar": 2
+      },
+      "revId": "540437f2fc83939267d291cc65f1aa9e187463f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "caa76114_29158fae",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-13T14:06:28Z",
+      "side": 1,
+      "message": "The same here here and all over this file.",
+      "range": {
+        "startLine": 290,
+        "startChar": 1,
+        "endLine": 290,
+        "endChar": 46
+      },
+      "revId": "540437f2fc83939267d291cc65f1aa9e187463f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
