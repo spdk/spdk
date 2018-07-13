@@ -669,6 +669,17 @@ _spdk_nvmf_qpair_deactivate(void *ctx)
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
 
+	/* Check for outstanding I/O */
+	if (!TAILQ_EMPTY(&qpair->outstanding)) {
+		if (qpair->state_cb != NULL) {
+			qpair->state_cb = _spdk_nvmf_qpair_destroy;
+			qpair->state_cb_arg = qpair_ctx;
+		} else {
+			free(qpair_ctx);
+		}
+		return;
+	}
+
 	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING ||
 	    qpair->state == SPDK_NVMF_QPAIR_INACTIVE) {
 		/* This can occur if the connection is killed by the target,
@@ -683,13 +694,6 @@ _spdk_nvmf_qpair_deactivate(void *ctx)
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
 	qpair->state = SPDK_NVMF_QPAIR_DEACTIVATING;
-
-	/* Check for outstanding I/O */
-	if (!TAILQ_EMPTY(&qpair->outstanding)) {
-		qpair->state_cb = _spdk_nvmf_qpair_destroy;
-		qpair->state_cb_arg = qpair_ctx;
-		return;
-	}
 
 	_spdk_nvmf_qpair_destroy(qpair_ctx, 0);
 }
