@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3eb43940_66e10f76",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-13T10:01:42Z",
+      "side": 1,
+      "message": "This should stay lvolerrno as a result of vbdev_lvol_destroy.",
+      "range": {
+        "startLine": 334,
+        "startChar": 45,
+        "endLine": 334,
+        "endChar": 54
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
