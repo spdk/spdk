@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "a23cec49_c45aad65",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1545,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T13:15:47Z",
+      "side": 1,
+      "message": "Since we skip allocation of ctx-\u003ebuf, shouldn\u0027t we skip freeing it here as well ?",
+      "range": {
+        "startLine": 1545,
+        "startChar": 1,
+        "endLine": 1545,
+        "endChar": 25
+      },
+      "revId": "b8154feacdfe75255d02549bdef806e02b513a8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48fac663_9f7704ce",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1660,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T13:15:47Z",
+      "side": 1,
+      "message": "Since we skip allocation of ctx-\u003ebuf, shouldn\u0027t we skip freeing it here as well ?",
+      "range": {
+        "startLine": 1660,
+        "startChar": 2,
+        "endLine": 1660,
+        "endChar": 26
+      },
+      "revId": "b8154feacdfe75255d02549bdef806e02b513a8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "974bb20e_c8924ed6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1673,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-13T13:15:47Z",
+      "side": 1,
+      "message": "Since we skip allocation of ctx-\u003ebuf, shouldn\u0027t we skip freeing it here as well ?",
+      "range": {
+        "startLine": 1673,
+        "startChar": 2,
+        "endLine": 1673,
+        "endChar": 26
+      },
+      "revId": "b8154feacdfe75255d02549bdef806e02b513a8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f54842e4_66a72382",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
