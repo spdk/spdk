@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3ec6d90_cc149980",
+        "filename": "lib/log/log_flags.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-13T22:51:39Z",
+      "side": 1,
+      "message": "i like these changes - could you also return here instead of allowing it to continue?",
+      "revId": "25e597d07d529dd04e94050124f44914af8a6e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a149794_851afb46",
+        "filename": "lib/log/log_flags.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-13T22:51:39Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "25e597d07d529dd04e94050124f44914af8a6e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c6b5681_62f20aeb",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-13T22:51:39Z",
+      "side": 1,
+      "message": "also return NULL",
+      "revId": "25e597d07d529dd04e94050124f44914af8a6e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5736b1c0_c2b59b60",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-13T22:51:39Z",
+      "side": 1,
+      "message": "i think you can just assert(false) instead; also return NULL so we don\u0027t try to continue",
+      "revId": "25e597d07d529dd04e94050124f44914af8a6e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
