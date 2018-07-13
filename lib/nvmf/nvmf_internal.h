@@ -42,6 +42,7 @@
 #include "spdk/assert.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
+#include "spdk/thread.h"
 
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
@@ -258,14 +259,15 @@ int spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 				       struct spdk_nvmf_transport *transport);
 int spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
-				       struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
-		struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
-		struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
-		struct spdk_nvmf_subsystem *subsystem);
+void spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
+					struct spdk_nvmf_subsystem *subsystem,
+					struct spdk_io_channel_iter *i);
+void spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem, struct spdk_io_channel_iter *i);
+void spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem, struct spdk_io_channel_iter *i);
+void spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem, struct spdk_io_channel_iter *i);
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
