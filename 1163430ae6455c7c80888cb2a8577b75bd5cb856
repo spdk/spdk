@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e39641cf_a47e50f1",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-13T21:23:34Z",
+      "side": 1,
+      "message": "If the user doesn\u0027t want to test NVMe-oF, I don\u0027t think we should run these.\n\nI\u0027m not sure we should really have this test anyway - everything this tests could be tested more directly in other ways.",
+      "revId": "1163430ae6455c7c80888cb2a8577b75bd5cb856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
