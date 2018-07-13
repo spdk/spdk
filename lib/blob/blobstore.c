@@ -473,9 +473,11 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
 				for (j = 0; j < desc_extent->extents[i].length; j++) {
-					if (!spdk_bit_array_get(blob->bs->used_clusters,
-								desc_extent->extents[i].cluster_idx + j)) {
-						return -EINVAL;
+					if (desc_extent->extents[i].cluster_idx != 0) {
+						if (!spdk_bit_array_get(blob->bs->used_clusters,
+									desc_extent->extents[i].cluster_idx + j)) {
+							return -EINVAL;
+						}
 					}
 					cluster_count++;
 				}
@@ -684,6 +686,9 @@ _spdk_blob_serialize_extent(const struct spdk_blob *blob,
 	extent_idx = 0;
 	for (i = start_cluster + 1; i < blob->active.num_clusters; i++) {
 		if ((lba + lba_count) == blob->active.clusters[i]) {
+			lba_count += lba_per_cluster;
+			continue;
+		} else if (lba == 0 && blob->active.clusters[i] == 0) {
 			lba_count += lba_per_cluster;
 			continue;
 		}
