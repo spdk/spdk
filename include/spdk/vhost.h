@@ -245,6 +245,8 @@ int spdk_vhost_scsi_tgt_construct(const char *name, const char *cpumask);
  * \param vtgt vhost SCSI target.
  * \param scsi_tgt_num SCSI target slot to attach to.
  * \param bdev_name name of the SPDK bdev to associate with LUN0.
+ * \param cb_fn callback to be fired once after adding target
+ * \param cb_arg parameter to be passed to *cb_fn*.
  *
  * \return 0 on success, negative errno on error.
  */
