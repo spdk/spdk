@@ -203,6 +203,7 @@ fi
 
 if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 	run_test ./test/vhost/initiator/blockdev.sh
+	run_test ./test/vhost/shared_controllers/blockdev.sh
 	run_test ./test/vhost/initiator/json_config.sh
 	report_test_completion "vhost_initiator"
 fi

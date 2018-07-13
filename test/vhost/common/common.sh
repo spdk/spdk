@@ -733,10 +733,20 @@ function vm_setup()
 				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$queue_number,chardev=char_$disk ${eol}"
 				;;
+			spdk_vhost_scsi_shared)
+				notice "using socket $vhost_dir/naa.$disk.$vm_num"
+				cmd+="-chardev socket,id=char_${disk}_shared,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
+				cmd+="-device vhost-user-scsi-pci,id=scsi_${disk}_shared,num_queues=$queue_number,chardev=char_${disk}_shared ${eol}"
+				;;
 			spdk_vhost_blk)
 				notice "using socket $vhost_dir/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk ${eol}"
+				;;
+			spdk_vhost_blk_shared)
+				notice "using socket $vhost_dir/naa.$disk.$vm_num"
+				cmd+="-chardev socket,id=char_${disk}_shared,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
+				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_${disk}_shared ${eol}"
 				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
