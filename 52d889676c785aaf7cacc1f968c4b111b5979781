@@ -203,6 +203,30 @@
     },
     {
       "key": {
+        "uuid": "6dd10986_f117dbdc",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1102,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-07-13T14:17:15Z",
+      "side": 1,
+      "message": "Are you sure this is proper layer to test snapshot/clone relations?\nI think we can just control if lvol is marked as deletable.",
+      "parentUuid": "ae3e8e32_1e0f267e",
+      "range": {
+        "startLine": 1102,
+        "startChar": 1,
+        "endLine": 1102,
+        "endChar": 27
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eed58d5e_f502f77f",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 40
