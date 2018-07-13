@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbe74c7e_74adfa66",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-13T02:39:58Z",
+      "side": 1,
+      "message": "I think it\u0027s ok for now, only users know which LBA has been filled with data, fio plugin and perf tool have no idea to know this information.",
+      "revId": "e3bb57b55f84673c0ae9160697fc144aaca92794",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
