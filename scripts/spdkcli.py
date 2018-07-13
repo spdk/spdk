@@ -15,11 +15,14 @@ def main():
 
     parser = argparse.ArgumentParser(description="SPDK command line interface")
     parser.add_argument("-s", dest="socket", help="RPC socket path", default="/var/tmp/spdk.sock")
+    parser.add_argument("-v", dest="verbose", help="Print request/response JSON for configuration calls",
+                        default=False, action="store_true")
     parser.add_argument("commands", metavar="command", type=str, nargs="*", default="",
                         help="commands to execute by SPDKCli as one-line command")
     args = parser.parse_args()
 
     root_node = UIRoot(args.socket, shell)
+    root_node.verbose = args.verbose
     try:
         root_node.refresh()
     except BaseException:
