@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7c7324cb_43fc3727",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1545,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-07-13T13:57:07Z",
+      "side": 1,
+      "message": "When we do not allocate ctx-\u003ebuf its value is NULL. Is it unsafe to perform spdk_dma_free(NULL) avoiding additional checks? For free() function in C standard it\u0027s ok and free is ineffective for this case. I\u0027m just trying to not over-complicate the code.",
+      "parentUuid": "a23cec49_c45aad65",
+      "range": {
+        "startLine": 1545,
+        "startChar": 1,
+        "endLine": 1545,
+        "endChar": 25
+      },
+      "revId": "b8154feacdfe75255d02549bdef806e02b513a8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48fac663_9f7704ce",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
