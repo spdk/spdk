@@ -34,6 +34,24 @@
       "revId": "6237a87167ce84983bc6007ac38c7f1065bca7f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d9b3511_5e971724",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-13T23:13:05Z",
+      "side": 1,
+      "message": "This is fine.  I see now why your implementation is better than my proposal.  With your proposal, limit could be 1MB per timeslice.  User can still send 1 3MB I/O.  But will need to wait 2 extra time slices until it can send the next I/O.\n\nWith my version, it would be impossible to send a 3MB I/O.",
+      "parentUuid": "c81aed6d_51efeff6",
+      "revId": "6237a87167ce84983bc6007ac38c7f1065bca7f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
