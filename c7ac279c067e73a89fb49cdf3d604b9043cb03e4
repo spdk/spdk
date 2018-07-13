@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "2868390f_fb2a86dd",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0af60c76_c7f2f255",
+      "range": {
+        "startLine": 347,
+        "startChar": 40,
+        "endLine": 347,
+        "endChar": 55
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c98a136f_cbf98737",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -82,6 +106,30 @@
       "writtenOn": "2018-07-11T05:04:47Z",
       "side": 1,
       "message": "attach",
+      "range": {
+        "startLine": 351,
+        "startChar": 58,
+        "endLine": 351,
+        "endChar": 63
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a7812d9_9a0eedf0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c98a136f_cbf98737",
       "range": {
         "startLine": 351,
         "startChar": 58,
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "fa871999_9ca88b06",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "17123357_ed26c1a8",
+      "range": {
+        "startLine": 359,
+        "startChar": 16,
+        "endLine": 359,
+        "endChar": 31
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "127a63b6_c6b9b0f4",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -128,6 +200,30 @@
       "writtenOn": "2018-07-11T05:04:47Z",
       "side": 1,
       "message": "spdk_nvme_remove_cb",
+      "range": {
+        "startLine": 368,
+        "startChar": 40,
+        "endLine": 368,
+        "endChar": 55
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14c29f8d_e48c112b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "127a63b6_c6b9b0f4",
       "range": {
         "startLine": 368,
         "startChar": 40,
@@ -186,6 +282,30 @@
     },
     {
       "key": {
+        "uuid": "a3063c9b_6688e818",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 578,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d328fa71_773b95fe",
+      "range": {
+        "startLine": 578,
+        "startChar": 48,
+        "endLine": 578,
+        "endChar": 53
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ddf1bd2d_349c1fca",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -209,6 +329,30 @@
     },
     {
       "key": {
+        "uuid": "5f21f8d6_95cd441b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 586,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ddf1bd2d_349c1fca",
+      "range": {
+        "startLine": 586,
+        "startChar": 54,
+        "endLine": 586,
+        "endChar": 59
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49b33d21_366eab57",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -220,6 +364,30 @@
       "writtenOn": "2018-07-11T05:04:47Z",
       "side": 1,
       "message": "Completion queue entry that coontains the completion status.",
+      "range": {
+        "startLine": 624,
+        "startChar": 24,
+        "endLine": 624,
+        "endChar": 71
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "696830f1_a105ba93",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "49b33d21_366eab57",
       "range": {
         "startLine": 624,
         "startChar": 24,
@@ -278,6 +446,54 @@
     },
     {
       "key": {
+        "uuid": "a4a1979a_ff745674",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a180beb_048329c5",
+      "range": {
+        "startLine": 633,
+        "startChar": 10,
+        "endLine": 633,
+        "endChar": 19
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff04f03b_da429146",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ac50d9d3_c0aeb074",
+      "range": {
+        "startLine": 633,
+        "startChar": 20,
+        "endLine": 633,
+        "endChar": 49
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a36c832_3b52b934",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -289,6 +505,30 @@
       "writtenOn": "2018-07-11T05:04:47Z",
       "side": 1,
       "message": "Completion queue entry",
+      "range": {
+        "startLine": 635,
+        "startChar": 24,
+        "endLine": 635,
+        "endChar": 34
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3465587_e7526b6c",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8a36c832_3b52b934",
       "range": {
         "startLine": 635,
         "startChar": 24,
@@ -324,6 +564,30 @@
     },
     {
       "key": {
+        "uuid": "85df977a_26745f00",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "39c4be66_1c73786a",
+      "range": {
+        "startLine": 642,
+        "startChar": 12,
+        "endLine": 642,
+        "endChar": 30
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6740eae7_842193aa",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -335,6 +599,30 @@
       "writtenOn": "2018-07-11T05:04:47Z",
       "side": 1,
       "message": "Command ID will be better",
+      "range": {
+        "startLine": 670,
+        "startChar": 14,
+        "endLine": 670,
+        "endChar": 17
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11e96631_b2b2e14a",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6740eae7_842193aa",
       "range": {
         "startLine": 670,
         "startChar": 14,
@@ -370,6 +658,30 @@
     },
     {
       "key": {
+        "uuid": "9a84fc26_14a01c61",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "402dea9a_f4879d51",
+      "range": {
+        "startLine": 784,
+        "startChar": 16,
+        "endLine": 784,
+        "endChar": 22
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea48c6b1_15d286b0",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -381,6 +693,30 @@
       "writtenOn": "2018-07-11T05:04:47Z",
       "side": 1,
       "message": "Callback function invoked",
+      "range": {
+        "startLine": 816,
+        "startChar": 16,
+        "endLine": 816,
+        "endChar": 22
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83dba6b1_87c67e72",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 816,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea48c6b1_15d286b0",
       "range": {
         "startLine": 816,
         "startChar": 16,
@@ -416,6 +752,30 @@
     },
     {
       "key": {
+        "uuid": "d9e0e837_365cda53",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf8d8ced_2775700b",
+      "range": {
+        "startLine": 874,
+        "startChar": 16,
+        "endLine": 874,
+        "endChar": 22
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "829c4afa_abb4ff1a",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -427,6 +787,30 @@
       "writtenOn": "2018-07-11T05:04:47Z",
       "side": 1,
       "message": "Argument",
+      "range": {
+        "startLine": 1420,
+        "startChar": 17,
+        "endLine": 1420,
+        "endChar": 26
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "daf6a081_992c5537",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 1420,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "829c4afa_abb4ff1a",
       "range": {
         "startLine": 1420,
         "startChar": 17,
@@ -462,6 +846,30 @@
     },
     {
       "key": {
+        "uuid": "d1b9bdf8_71790685",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 1431,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6ff4aee0_98f86a62",
+      "range": {
+        "startLine": 1431,
+        "startChar": 17,
+        "endLine": 1431,
+        "endChar": 26
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5c9f6560_8ed256b9",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -473,6 +881,30 @@
       "writtenOn": "2018-07-11T05:04:47Z",
       "side": 1,
       "message": "Virtual address of this segment.",
+      "range": {
+        "startLine": 1432,
+        "startChar": 18,
+        "endLine": 1432,
+        "endChar": 78
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6cd028c_1c5d40bb",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 1432,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5c9f6560_8ed256b9",
       "range": {
         "startLine": 1432,
         "startChar": 18,
@@ -508,6 +940,30 @@
     },
     {
       "key": {
+        "uuid": "688b6d91_02bd815a",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 1433,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "760341ac_3b416ae5",
+      "range": {
+        "startLine": 1433,
+        "startChar": 17,
+        "endLine": 1433,
+        "endChar": 77
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6c6159b_11f9a66b",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 13
@@ -519,6 +975,30 @@
       "writtenOn": "2018-07-11T05:04:47Z",
       "side": 1,
       "message": "can be removed.",
+      "range": {
+        "startLine": 1685,
+        "startChar": 0,
+        "endLine": 1685,
+        "endChar": 2
+      },
+      "revId": "c7ac279c067e73a89fb49cdf3d604b9043cb03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6911e7c_c047b996",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 1685,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-07-13T04:35:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e6c6159b_11f9a66b",
       "range": {
         "startLine": 1685,
         "startChar": 0,
