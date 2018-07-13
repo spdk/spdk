@@ -66,6 +66,7 @@ struct nvmf_qpair_disconnect_ctx {
 struct nvmf_qpair_disconnect_many_ctx {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_poll_group *group;
+	struct spdk_io_channel_iter *channel_iter;
 	nvmf_qpair_disconnect_cpl cb_fn;
 };
 
@@ -128,7 +129,7 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 			continue;
 		}
 
-		spdk_nvmf_poll_group_add_subsystem(group, subsystem);
+		spdk_nvmf_poll_group_add_subsystem(group, subsystem, NULL);
 	}
 
 	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
@@ -847,36 +848,46 @@ spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	return poll_group_update_subsystem(group, subsystem);
 }
 
-int
+void
 spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
-				   struct spdk_nvmf_subsystem *subsystem)
+				   struct spdk_nvmf_subsystem *subsystem,
+				   struct spdk_io_channel_iter *i)
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	int rc;
+	int rc = 0;
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {
-		return rc;
+		goto fini;
 	}
 
 	sgroup = &group->sgroups[subsystem->id];
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	TAILQ_INIT(&sgroup->queued);
-
-	return 0;
+fini:
+	if (i) {
+		spdk_for_each_channel_continue(i, rc);
+	}
 }
 
 static void
 _nvmf_poll_group_remove_subsystem_cb(void *ctx, int status)
 {
+	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_poll_group *group;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_io_channel_iter *i;
 	uint32_t nsid;
 
 	if (status) {
-		return;
+		goto fini;
 	}
 
-	sgroup = ctx;
+	group = qpair_ctx->group;
+	subsystem = qpair_ctx->subsystem;
+	i = qpair_ctx->channel_iter;
+	sgroup = &group->sgroups[subsystem->id];
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 
 	for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
@@ -889,6 +900,10 @@ _nvmf_poll_group_remove_subsystem_cb(void *ctx, int status)
 	sgroup->num_channels = 0;
 	free(sgroup->channels);
 	sgroup->channels = NULL;
+fini:
+	if (i) {
+		spdk_for_each_channel_continue(i, status);
+	}
 }
 
 static void
@@ -898,7 +913,6 @@ _nvmf_subsystem_disconnect_next_qpair(void *ctx)
 	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc = 0;
 	bool match_found = false;
 
@@ -918,8 +932,7 @@ _nvmf_subsystem_disconnect_next_qpair(void *ctx)
 
 	if (!match_found || rc != 0) {
 		if (qpair_ctx->cb_fn) {
-			sgroup = &group->sgroups[subsystem->id];
-			qpair_ctx->cb_fn(sgroup, rc);
+			qpair_ctx->cb_fn(qpair_ctx, rc);
 		}
 		free(qpair_ctx);
 		return;
@@ -927,9 +940,10 @@ _nvmf_subsystem_disconnect_next_qpair(void *ctx)
 	return;
 }
 
-int
+void
 spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem)
+				      struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_io_channel_iter *i)
 {
 	struct spdk_nvmf_qpair *qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
@@ -939,12 +953,14 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
 
 	if (!ctx) {
-		return -ENOMEM;
+		SPDK_ERRLOG("Unable to allocate memory for context to remove poll subsystem\n");
+		goto fini;
 	}
 
 	ctx->cb_fn = _nvmf_poll_group_remove_subsystem_cb;
 	ctx->group = group;
 	ctx->subsystem = subsystem;
+	ctx->channel_iter = i;
 
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
 		if (qpair->ctrlr->subsys == subsystem) {
@@ -962,44 +978,56 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 
 	if (rc != 0) {
 		free(ctx);
-		return rc;
+		goto fini;
 	}
 
-	return 0;
+	return;
+fini:
+	if (i) {
+		spdk_for_each_channel_continue(i, rc);
+	}
 }
 
-int
+void
 spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
-				     struct spdk_nvmf_subsystem *subsystem)
+				     struct spdk_nvmf_subsystem *subsystem,
+				     struct spdk_io_channel_iter *i)
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	int rc = 0;
 
 	if (subsystem->id >= group->num_sgroups) {
-		return -1;
+		rc = -1;
+		goto fini;
 	}
 
 	sgroup = &group->sgroups[subsystem->id];
 	if (sgroup == NULL) {
-		return -1;
+		rc = -1;
+		goto fini;
 	}
 
 	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
 	/* TODO: This currently does not quiesce I/O */
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
-
-	return 0;
+fini:
+	if (i) {
+		spdk_for_each_channel_continue(i, rc);
+	}
 }
 
-int
+void
 spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem)
+				      struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_io_channel_iter *i)
 {
 	struct spdk_nvmf_request *req, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	int rc;
+	int rc = 0;
 
 	if (subsystem->id >= group->num_sgroups) {
-		return -1;
+		rc = -1;
+		goto fini;
 	}
 
 	sgroup = &group->sgroups[subsystem->id];
@@ -1008,7 +1036,7 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {
-		return rc;
+		goto fini;
 	}
 
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
@@ -1018,6 +1046,8 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 		TAILQ_REMOVE(&sgroup->queued, req, link);
 		spdk_nvmf_request_exec(req);
 	}
-
-	return 0;
+fini:
+	if (i) {
+		spdk_for_each_channel_continue(i, rc);
+	}
 }
