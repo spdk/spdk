@@ -423,12 +423,18 @@ subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
+subsystem_state_change_continue(void *ctx, int status)
+{
+	struct spdk_io_channel_iter *i = ctx;
+	spdk_for_each_channel_continue(i, status);
+}
+
+static void
 subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 {
 	struct subsystem_state_change_ctx *ctx;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_poll_group *group;
-	int rc = -1;
 
 	ctx = spdk_io_channel_iter_get_ctx(i);
 	ch = spdk_io_channel_iter_get_channel(i);
@@ -436,24 +442,22 @@ subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 
 	switch (ctx->requested_state) {
 	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
-		rc = spdk_nvmf_poll_group_remove_subsystem(group, ctx->subsystem);
+		spdk_nvmf_poll_group_remove_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
 		break;
 	case SPDK_NVMF_SUBSYSTEM_ACTIVE:
 		if (ctx->subsystem->state == SPDK_NVMF_SUBSYSTEM_ACTIVATING) {
-			rc = spdk_nvmf_poll_group_add_subsystem(group, ctx->subsystem);
+			spdk_nvmf_poll_group_add_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
 		} else if (ctx->subsystem->state == SPDK_NVMF_SUBSYSTEM_RESUMING) {
-			rc = spdk_nvmf_poll_group_resume_subsystem(group, ctx->subsystem);
+			spdk_nvmf_poll_group_resume_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
 		}
 		break;
 	case SPDK_NVMF_SUBSYSTEM_PAUSED:
-		rc = spdk_nvmf_poll_group_pause_subsystem(group, ctx->subsystem);
+		spdk_nvmf_poll_group_pause_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
 		break;
 	default:
 		assert(false);
 		break;
 	}
-
-	spdk_for_each_channel_continue(i, rc);
 }
 
 static int
