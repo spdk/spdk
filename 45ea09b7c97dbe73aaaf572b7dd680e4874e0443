@@ -33,6 +33,24 @@
       "revId": "45ea09b7c97dbe73aaaf572b7dd680e4874e0443",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b97e3a0_99676c3d",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-14T01:15:53Z",
+      "side": 1,
+      "message": "-1 means \"no rate limit\". As these parameters are optional so that the default value is 0. In this case, if user does not explicitly set the related rate limit (we will have total 6 rate limits), it could be implicitly to disable the related rate limit if setting 0 as the \"no rate limit\". Looks like it is somewhat not that simple. Set \"-1\" as the \"no rate limit\" is to differentiate the default value of 0 and no rate limit of 0.",
+      "parentUuid": "f0f79110_f794562d",
+      "revId": "45ea09b7c97dbe73aaaf572b7dd680e4874e0443",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
