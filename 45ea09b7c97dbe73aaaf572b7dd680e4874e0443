@@ -51,6 +51,24 @@
       "revId": "45ea09b7c97dbe73aaaf572b7dd680e4874e0443",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3508ae1c_31506466",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-14T07:17:33Z",
+      "side": 1,
+      "message": "After reconsideration of this, I\u0027ve slightly change the parameter type to string so that it can tell 0 and the optional usage. For 0, it\u0027s also a valid string and for optional, it is NULL if not explicitly set. In this way, it can avoid the confusion to use -1 or use 0 as the disable operation. We can consistently use 0 for the disable.\n\nThanks for the comments. Thanks.",
+      "parentUuid": "8b97e3a0_99676c3d",
+      "revId": "45ea09b7c97dbe73aaaf572b7dd680e4874e0443",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
