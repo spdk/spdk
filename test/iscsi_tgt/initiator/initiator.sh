@@ -34,7 +34,7 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "-d" ==> disable CHAP authentication
 $rpc_py construct_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 256 -d
 sleep 1
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; rm -f $testdir/bdev.conf; exit 1" SIGINT SIGTERM EXIT
 
 # Prepare config file for iSCSI initiator
 cp $testdir/bdev.conf.in $testdir/bdev.conf
