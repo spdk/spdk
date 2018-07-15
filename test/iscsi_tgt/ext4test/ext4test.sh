@@ -23,7 +23,7 @@ $ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; rm -f $testdir/iscsi.conf; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 echo "iscsi_tgt is listening. Running tests..."
@@ -43,7 +43,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 trap 'for new_dir in `dir -d /mnt/*dir`; do umount $new_dir; rm -rf $new_dir; done; \
-	iscsicleanup; killprocess $pid; exit 1' SIGINT SIGTERM EXIT
+	iscsicleanup; killprocess $pid; rm -f $testdir/iscsi.conf; exit 1' SIGINT SIGTERM EXIT
 
 sleep 1
 

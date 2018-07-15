@@ -40,7 +40,7 @@ function run_nvme_remote() {
 	$ISCSI_APP -r "$iscsi_rpc_addr" -c $testdir/iscsi.conf.tmp -m 0x1 -p 0 -s 512 &
 	iscsipid=$!
 	echo "iSCSI target launched. pid: $iscsipid"
-	trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+	trap "killprocess $iscsipid; killprocess $nvmfpid; rm -f $testdir/iscsi.conf.tmp; exit 1" SIGINT SIGTERM EXIT
 	waitforlisten $iscsipid "$iscsi_rpc_addr"
 	echo "iSCSI target has started."
 
@@ -67,7 +67,7 @@ NVMF_APP="$rootdir/app/nvmf_tgt/nvmf_tgt"
 $NVMF_APP -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 512 &
 nvmfpid=$!
 echo "NVMf target launched. pid: $nvmfpid"
-trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; rm -f $testdir/iscsi.conf.tmp; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid
 echo "NVMf target has started."
 bdevs=$($rpc_py construct_malloc_bdev 64 512)
@@ -78,7 +78,8 @@ timing_enter start_iscsi_tgt
 
 run_nvme_remote "local"
 
-trap "iscsicleanup; killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "iscsicleanup; killprocess $iscsipid; killprocess $nvmfpid; rm -f $testdir/iscsi.conf.tmp; \
+	rm -f ./local-job0-0-verify.state; exit 1" SIGINT SIGTERM EXIT
 sleep 1
 
 echo "Running FIO"
