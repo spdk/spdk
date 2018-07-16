@@ -69,7 +69,7 @@
 
 struct spdk_scsi_dev_vhost_state {
 	bool removed;
-	spdk_vhost_event_fn remove_cb;
+	spdk_vhost_tgt_cpl_cb remove_cb;
 	void *remove_ctx;
 };
 
@@ -108,6 +108,14 @@ struct spdk_vhost_scsi_task {
 	bool used;
 
 	struct spdk_vhost_virtqueue *vq;
+};
+
+struct scsi_tgt_modify_ctx {
+	spdk_vhost_tgt_cpl_cb cb_fn;
+	void *cb_arg;
+	unsigned scsi_tgt_num;
+	char *name;
+	bool processed;
 };
 
 static int spdk_vhost_scsi_start(struct spdk_vhost_tgt *, void *);
@@ -162,7 +170,7 @@ process_removed_devs(struct spdk_vhost_scsi_dev *svdev)
 			svtgt->scsi_dev[i] = NULL;
 			spdk_scsi_dev_destruct(dev);
 			if (state->remove_cb) {
-				state->remove_cb(&svtgt->vtgt, state->remove_ctx);
+				state->remove_cb(&svtgt->vtgt, 0, state->remove_ctx);
 				state->remove_cb = NULL;
 			}
 			SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: hot-detached device 'Dev %u'.\n",
@@ -810,16 +818,103 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	spdk_vhost_scsi_tgt_remove_tgt(vtgt, scsi_dev_num, NULL, NULL);
 }
 
-int
-spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
-			    const char *bdev_name)
+static int
+_spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt,
+			     struct spdk_vhost_dev *vdev,
+			     void *arg)
 {
+	struct scsi_tgt_modify_ctx *ctx = arg;
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_scsi_tgt *svtgt;
-	struct spdk_vhost_dev *vdev;
 	char target_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	const char *bdev_names_list[1];
+	unsigned scsi_tgt_num = ctx->scsi_tgt_num;
+	int rc;
+
+	if (ctx->processed) {
+		free(ctx->name);
+		free(ctx);
+		return 0;
+	}
+
+	ctx->processed = true;
+	if (vtgt == NULL) {
+		if (ctx->cb_fn) {
+			ctx->cb_fn(NULL, -EINTR, ctx->cb_arg);
+		}
+		free(ctx->name);
+		free(ctx);
+		return 0;
+	}
+
+	svtgt = to_scsi_tgt(vtgt);
+	assert(vdev == vtgt->vdev);
+	if (svtgt->scsi_dev[scsi_tgt_num] != NULL) {
+		SPDK_ERRLOG("Controller %s target %u already occupied\n", vtgt->name, scsi_tgt_num);
+		rc = -EEXIST;
+		goto out_cb;
+	}
+
+	/*
+	 * At this stage only one LUN per target
+	 */
+	snprintf(target_name, sizeof(target_name), "Target %u", scsi_tgt_num);
+	lun_id_list[0] = 0;
+	bdev_names_list[0] = (char *)ctx->name;
+
+	svtgt->scsi_dev_state[scsi_tgt_num].removed = false;
+	svtgt->scsi_dev[scsi_tgt_num] = spdk_scsi_dev_construct(target_name, bdev_names_list, lun_id_list,
+					1, SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svtgt);
+
+	if (svtgt->scsi_dev[scsi_tgt_num] == NULL) {
+		SPDK_ERRLOG("Couldn't create spdk SCSI target '%s' using bdev '%s' in controller: %s\n",
+			    target_name, ctx->name, vtgt->name);
+		rc = -EINVAL;
+		goto out_cb;
+	}
+	spdk_scsi_dev_add_port(svtgt->scsi_dev[scsi_tgt_num], 0, "vhost");
+
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: defined target '%s' using bdev '%s'\n",
+		     vtgt->name, target_name, ctx->name);
+
+	if (vdev == NULL || vdev->lcore == -1) {
+		/* All done. */
+		rc = 0;
+		goto out_cb;
+	}
+
+	spdk_scsi_dev_allocate_io_channels(svtgt->scsi_dev[scsi_tgt_num]);
+
+	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+		svdev = (struct spdk_vhost_scsi_dev *)vdev;
+		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET,
+			       VIRTIO_SCSI_EVT_RESET_RESCAN);
+	} else {
+		SPDK_NOTICELOG("Device %s does not support hotplug. "
+			       "Please restart the driver or perform a rescan.\n",
+			       vdev->name);
+	}
+
+	return 0;
+out_cb:
+	if (ctx->cb_fn) {
+		ctx->cb_fn(vtgt, rc, ctx->cb_arg);
+	}
+
+	free(ctx->name);
+	free(ctx);
+
+	return rc;
+}
+
+int
+spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
+			    const char *bdev_name, spdk_vhost_tgt_cpl_cb cb_fn,
+			    void *cb_arg)
+{
+	struct spdk_vhost_scsi_tgt *svtgt;
+	struct scsi_tgt_modify_ctx *ctx;
 
 	svtgt = to_scsi_tgt(vtgt);
 	if (svtgt == NULL) {
@@ -837,63 +932,111 @@ spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 		return -EINVAL;
 	}
 
-	vdev = vtgt->vdev;
-	if (svtgt->scsi_dev[scsi_tgt_num] != NULL) {
-		SPDK_ERRLOG("Controller %s target %u already occupied\n", vtgt->name, scsi_tgt_num);
-		return -EEXIST;
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("calloc() failed\n");
+		return -ENOMEM;
 	}
 
-	/*
-	 * At this stage only one LUN per target
-	 */
-	snprintf(target_name, sizeof(target_name), "Target %u", scsi_tgt_num);
-	lun_id_list[0] = 0;
-	bdev_names_list[0] = (char *)bdev_name;
-
-	svtgt->scsi_dev_state[scsi_tgt_num].removed = false;
-	svtgt->scsi_dev[scsi_tgt_num] = spdk_scsi_dev_construct(target_name, bdev_names_list, lun_id_list,
-					1, SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svtgt);
-
-	if (svtgt->scsi_dev[scsi_tgt_num] == NULL) {
-		SPDK_ERRLOG("Couldn't create spdk SCSI target '%s' using bdev '%s' in controller: %s\n",
-			    target_name, bdev_name, vtgt->name);
-		return -EINVAL;
-	}
-	spdk_scsi_dev_add_port(svtgt->scsi_dev[scsi_tgt_num], 0, "vhost");
-
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: defined target '%s' using bdev '%s'\n",
-		     vtgt->name, target_name, bdev_name);
-
-	if (vdev == NULL || vdev->lcore == -1) {
-		/* All done. */
-		return 0;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->scsi_tgt_num = scsi_tgt_num;
+	ctx->name = strdup(bdev_name);
+	if (ctx->name == NULL) {
+		SPDK_ERRLOG("strdup() failed\n");
+		free(ctx);
+		return -ENOMEM;
 	}
 
-	spdk_scsi_dev_allocate_io_channels(svtgt->scsi_dev[scsi_tgt_num]);
-
-	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-		svdev = (struct spdk_vhost_scsi_dev *)vdev;
-		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET,
-			       VIRTIO_SCSI_EVT_RESET_RESCAN);
-	} else {
-		SPDK_NOTICELOG("Device %s does not support hotplug. "
-			       "Please restart the driver or perform a rescan.\n",
-			       vdev->name);
-	}
-
+	spdk_vhost_tgt_foreach_vdev(vtgt, _spdk_vhost_scsi_tgt_add_tgt, ctx);
 	return 0;
 }
 
-int
-spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
-			       spdk_vhost_event_fn cb_fn, void *cb_arg)
+static int
+_spdk_vhost_scsi_tgt_remove_tgt_cb(struct spdk_vhost_tgt *vtgt,
+				   struct spdk_vhost_dev *vdev,
+				   void *arg)
 {
+	struct scsi_tgt_modify_ctx *ctx = arg;
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_scsi_tgt *svtgt;
 	struct spdk_scsi_dev *scsi_dev;
 	struct spdk_scsi_dev_vhost_state *scsi_dev_state;
-	struct spdk_vhost_dev *vdev;
-	int rc = 0;
+	unsigned scsi_tgt_num = ctx->scsi_tgt_num;
+	int rc;
+
+	if (ctx->processed) {
+		free(ctx);
+		return 0;
+	}
+
+	ctx->processed = true;
+	if (vtgt == NULL) {
+		if (ctx->cb_fn) {
+			ctx->cb_fn(NULL, -EINTR, ctx->cb_arg);
+		}
+		free(ctx);
+		return 0;
+	}
+
+	svtgt = to_scsi_tgt(vtgt);
+	scsi_dev = svtgt->scsi_dev[scsi_tgt_num];
+	if (scsi_dev == NULL) {
+		SPDK_ERRLOG("Controller %s target %u is not occupied\n", vtgt->name, scsi_tgt_num);
+		rc = -ENODEV;
+		goto out_cb;
+	}
+
+	assert(vdev == vtgt->vdev);
+	if (vdev == NULL || vdev->lcore == -1) {
+		/* controller is not in use, remove dev and exit */
+		svtgt->scsi_dev[scsi_tgt_num] = NULL;
+		spdk_scsi_dev_destruct(scsi_dev);
+		SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: removed target 'Target %u'\n",
+			     vtgt->name, scsi_tgt_num);
+		rc = 0;
+		goto out_cb;
+	}
+
+	if (!spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+		SPDK_WARNLOG("%s: 'Target %u' is in use and hot-detach is not enabled for this controller.\n",
+			     vtgt->name, scsi_tgt_num);
+		rc = -ENOTSUP;
+		goto out_cb;
+	}
+
+	scsi_dev_state = &svtgt->scsi_dev_state[scsi_tgt_num];
+	if (scsi_dev_state->removed) {
+		SPDK_WARNLOG("%s: 'Target %u' has been already marked to hotremove.\n", vtgt->name,
+			     scsi_tgt_num);
+		rc = -EBUSY;
+		goto out_cb;
+	}
+
+	scsi_dev_state->remove_cb = ctx->cb_fn;
+	scsi_dev_state->remove_ctx = ctx->cb_arg;
+	scsi_dev_state->removed = true;
+	svdev = (struct spdk_vhost_scsi_dev *)vdev;
+	eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
+
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: queued 'Target %u' for hot-detach.\n", vtgt->name, scsi_tgt_num);
+	return 0;
+out_cb:
+	if (ctx->cb_fn) {
+		ctx->cb_fn(vtgt, rc, ctx->cb_arg);
+	}
+
+	free(ctx);
+
+	return rc;
+}
+
+int
+spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
+			       spdk_vhost_tgt_cpl_cb cb_fn, void *cb_arg)
+{
+	struct spdk_vhost_scsi_tgt *svtgt;
+	struct scsi_tgt_modify_ctx *ctx;
 
 	if (scsi_tgt_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
 		SPDK_ERRLOG("%s: invalid target number %d\n", vtgt->name, scsi_tgt_num);
@@ -905,45 +1048,17 @@ spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_nu
 		return -ENODEV;
 	}
 
-	scsi_dev = svtgt->scsi_dev[scsi_tgt_num];
-	if (scsi_dev == NULL) {
-		SPDK_ERRLOG("Controller %s target %u is not occupied\n", vtgt->name, scsi_tgt_num);
-		return -ENODEV;
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("calloc() failed\n");
+		return -ENOMEM;
 	}
 
-	vdev = vtgt->vdev;
-	if (vdev == NULL || vdev->lcore == -1) {
-		/* controller is not in use, remove dev and exit */
-		svtgt->scsi_dev[scsi_tgt_num] = NULL;
-		spdk_scsi_dev_destruct(scsi_dev);
-		if (cb_fn) {
-			rc = cb_fn(vtgt, cb_arg);
-		}
-		SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: removed target 'Target %u'\n",
-			     vtgt->name, scsi_tgt_num);
-		return rc;
-	}
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->scsi_tgt_num = scsi_tgt_num;
 
-	if (!spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-		SPDK_WARNLOG("%s: 'Target %u' is in use and hot-detach is not enabled for this controller.\n",
-			     vtgt->name, scsi_tgt_num);
-		return -ENOTSUP;
-	}
-
-	scsi_dev_state = &svtgt->scsi_dev_state[scsi_tgt_num];
-	if (scsi_dev_state->removed) {
-		SPDK_WARNLOG("%s: 'Target %u' has been already marked to hotremove.\n", vtgt->name,
-			     scsi_tgt_num);
-		return -EBUSY;
-	}
-
-	scsi_dev_state->remove_cb = cb_fn;
-	scsi_dev_state->remove_ctx = cb_arg;
-	scsi_dev_state->removed = true;
-	svdev = (struct spdk_vhost_scsi_dev *)vdev;
-	eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
-
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: queued 'Target %u' for hot-detach.\n", vtgt->name, scsi_tgt_num);
+	spdk_vhost_tgt_foreach_vdev(vtgt, _spdk_vhost_scsi_tgt_remove_tgt_cb, ctx);
 	return 0;
 }
 
@@ -1004,7 +1119,7 @@ spdk_vhost_scsi_controller_construct(void)
 				return -1;
 			}
 
-			if (spdk_vhost_scsi_tgt_add_tgt(vtgt, dev_num, bdev_name) < 0) {
+			if (spdk_vhost_scsi_tgt_add_tgt(vtgt, dev_num, bdev_name, NULL, NULL) < 0) {
 				return -1;
 			}
 		}
