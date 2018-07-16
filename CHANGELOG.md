@@ -14,6 +14,11 @@ New API function spdk_nvme_qpair_add_cmd_error_injection() and
 spdk_nvme_qpair_remove_cmd_error_injection() have been added for NVMe error emulation,
 users can set specified command with specified error status for error emulation.
 
+Change the name `timeout_sec` parameter to `timeout_us` in API function
+spdk_nvme_ctrlr_register_timeout_callback, and also change the type from uint32_t to
+uint64_t. This will make the users can set fine-grained time out (in microseconds)
+control for calling callback function.
+
 ### Build System
 
 The build system now generates a combined shared library (libspdk.so) that may be used
