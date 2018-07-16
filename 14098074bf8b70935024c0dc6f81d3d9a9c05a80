@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05673b1a_46a3d526",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-16T08:39:42Z",
+      "side": 1,
+      "message": "If submit another version pls, can you drop redundant ( ) here?",
+      "range": {
+        "startLine": 1107,
+        "startChar": 6,
+        "endLine": 1107,
+        "endChar": 44
+      },
+      "revId": "14098074bf8b70935024c0dc6f81d3d9a9c05a80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
