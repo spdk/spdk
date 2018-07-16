@@ -102,7 +102,7 @@ enum timeout_action {
 
 static int g_hot_insert_nvme_controller_index = 0;
 static enum timeout_action g_action_on_timeout = TIMEOUT_ACTION_NONE;
-static int g_timeout = 0;
+static uint64_t g_timeout_us = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
 static bool g_nvme_hotplug_enabled = false;
 static int g_nvme_hotplug_poll_timeout_us = 0;
@@ -946,7 +946,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
 	if (g_action_on_timeout != TIMEOUT_ACTION_NONE) {
-		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout_us,
 				timeout_cb, NULL);
 	}
 
@@ -1099,6 +1099,7 @@ bdev_nvme_library_init(void)
 	size_t i;
 	struct nvme_probe_ctx *probe_ctx = NULL;
 	int retry_count;
+	int timeout;
 	uint32_t local_nvme_num = 0;
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
@@ -1124,17 +1125,29 @@ bdev_nvme_library_init(void)
 
 	spdk_nvme_retry_count = retry_count;
 
-	if ((g_timeout = spdk_conf_section_get_intval(sp, "Timeout")) < 0) {
+	val = spdk_conf_section_get_val(sp, "TimeoutUsec");
+	if (val != NULL) {
+		g_timeout_us = strtoll(val, NULL, 10);
+	} else {
 		/* Check old name for backward compatibility */
-		if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
-			g_timeout = 0;
+		timeout = spdk_conf_section_get_intval(sp, "Timeout");
+		if (timeout < 0) {
+			timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue");
+			if (timeout < 0) {
+				g_timeout_us = 0;
+			} else {
+				g_timeout_us = timeout * 1000000ULL;
+				SPDK_WARNLOG("NvmeTimeoutValue (in seconds) was renamed to TimeoutUsec (in microseconds)\n");
+				SPDK_WARNLOG("Please update your configuration file\n");
+			}
 		} else {
-			SPDK_WARNLOG("NvmeTimeoutValue was renamed to Timeout\n");
+			g_timeout_us = timeout * 1000000ULL;
+			SPDK_WARNLOG("Timeout (in seconds) was renamed to TimeoutUsec (in microseconds)\n");
 			SPDK_WARNLOG("Please update your configuration file\n");
 		}
 	}
 
-	if (g_timeout > 0) {
+	if (g_timeout_us > 0) {
 		val = spdk_conf_section_get_val(sp, "ActionOnTimeout");
 		if (val != NULL) {
 			if (!strcasecmp(val, "Reset")) {
@@ -1566,8 +1579,8 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 		"# this key to get the default behavior.\n");
 	fprintf(fp, "RetryCount %d\n", spdk_nvme_retry_count);
 	fprintf(fp, "\n"
-		"# Timeout for each command, in seconds. If 0, don't track timeouts.\n");
-	fprintf(fp, "Timeout %d\n", g_timeout);
+		"# Timeout for each command, in microseconds. If 0, don't track timeouts.\n");
+	fprintf(fp, "Timeout %"PRIu64"\n", g_timeout_us);
 
 	fprintf(fp, "\n"
 		"# Action to take on command time out. Only valid when Timeout is greater\n"
