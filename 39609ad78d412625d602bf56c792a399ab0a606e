@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43b07967_270581dd",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-16T08:40:30Z",
+      "side": 1,
+      "message": "Not correct for this calculation: lba +\u003d UINT32_MAX.",
+      "revId": "39609ad78d412625d602bf56c792a399ab0a606e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee181a22_6ef86ab4",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-16T08:40:30Z",
+      "side": 1,
+      "message": "UINT32_MAX is a big enough number, especially expressed in 512 bytes unit. For safety consideration, you can check that the requested number blocks is smaller than the real block device\u0027s capacity.",
+      "range": {
+        "startLine": 347,
+        "startChar": 8,
+        "endLine": 347,
+        "endChar": 24
+      },
+      "revId": "39609ad78d412625d602bf56c792a399ab0a606e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
