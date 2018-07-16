@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba650a4f_4ff9c6b9",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-07-16T20:11:40Z",
+      "side": 1,
+      "message": "Usually the variable definitions go at the top of the script before an commands in the other scripts I have seen.",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 7
+      },
+      "revId": "e0dfff7626349cad870cab63163f33212b4b2345",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63907d18_76d581bd",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-07-16T20:11:40Z",
+      "side": 1,
+      "message": "Be nice to the user :)\nLet change this to something like Please user root account.",
+      "range": {
+        "startLine": 68,
+        "startChar": 14,
+        "endLine": 68,
+        "endChar": 26
+      },
+      "revId": "e0dfff7626349cad870cab63163f33212b4b2345",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1786400f_2844da99",
+        "filename": "test/iscsi_tgt/perf/perf.job",
+        "patchSetId": 33
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-07-16T20:11:40Z",
+      "side": 1,
+      "message": "This name does not describe the job. Use a name that is more descriptive like 4k_rand_read_qd_128",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 11
+      },
+      "revId": "e0dfff7626349cad870cab63163f33212b4b2345",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
