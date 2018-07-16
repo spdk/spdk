@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8e296ba_46df1d7b",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-16T20:57:33Z",
+      "side": 1,
+      "message": "I\u0027ve seen this pattern where all of the files used are defined as variables at the top. I think this hurts readability considerably - can we just put the file names directly into the commands below?",
+      "revId": "43ee41ff5fc85bb1d355cd60cdd4f373c8b12491",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b92abc44_513c578f",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-16T20:57:33Z",
+      "side": 1,
+      "message": "Using Python to implement tools is fine, but we want the test logic to remain in bash. A Python tool that does effectively \"execute_command\" below is fine. But all of the calls to execute_command should likely be invoking the test tool from bash instead.",
+      "revId": "43ee41ff5fc85bb1d355cd60cdd4f373c8b12491",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
