@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f539c2c_1101780d",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-16T12:57:05Z",
+      "side": 1,
+      "message": "Please add removing pmem file",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 1
+      },
+      "revId": "179a202d5e774043a452872cc1a6e7615fe7586f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
