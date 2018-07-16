@@ -52,7 +52,6 @@ struct spdk_io_channel *g_ch = NULL;
 struct lvol_task *g_task = NULL;
 
 static struct spdk_bdev g_bdev = {};
-static struct spdk_bs_dev *g_bs_dev = NULL;
 static struct spdk_lvol_store *g_lvol_store = NULL;
 bool lvol_store_initialize_fail = false;
 bool lvol_store_initialize_cb_fail = false;
@@ -212,13 +211,14 @@ spdk_lvs_load(struct spdk_bs_dev *dev,
 		SPDK_CU_ASSERT_FATAL(lvs != NULL);
 		TAILQ_INIT(&lvs->lvols);
 		TAILQ_INIT(&lvs->pending_lvols);
-		g_lvol_store = lvs;
+		spdk_uuid_generate(&lvs->uuid);
+		lvs->bs_dev = dev;
 		for (i = 0; i < g_num_lvols; i++) {
 			_lvol_create(lvs);
 		}
 	}
 
-	cb_fn(cb_arg, g_lvol_store, g_lvserrno);
+	cb_fn(cb_arg, lvs, g_lvserrno);
 }
 
 int
@@ -255,11 +255,8 @@ spdk_bs_get_page_size(struct spdk_blob_store *bs)
 static void
 bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 {
-	CU_ASSERT(g_bs_dev != NULL);
 	CU_ASSERT(bs_dev != NULL);
-	CU_ASSERT(g_bs_dev == bs_dev);
 	free(bs_dev);
-	g_bs_dev = NULL;
 	lvol_already_opened = false;
 }
 
@@ -276,8 +273,6 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
 	bs_dev->destroy = bdev_blob_destroy;
 
-	CU_ASSERT(g_bs_dev == NULL);
-	g_bs_dev = bs_dev;
 	return bs_dev;
 }
 
@@ -327,9 +322,9 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *c
 		free(lvol);
 	}
 	g_lvol_store = NULL;
-	free(lvs);
 
-	g_bs_dev->destroy(g_bs_dev);
+	lvs->bs_dev->destroy(lvs->bs_dev);
+	free(lvs);
 
 	if (cb_fn != NULL) {
 		cb_fn(cb_arg, 0);
@@ -360,10 +355,10 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		free(lvol);
 	}
 	g_lvol_store = NULL;
+
+	lvs->bs_dev->destroy(lvs->bs_dev);
+
 	free(lvs);
-
-	g_bs_dev->destroy(g_bs_dev);
-
 	if (cb_fn != NULL) {
 		cb_fn(cb_arg, 0);
 	}
@@ -693,7 +688,7 @@ ut_lvs_destroy(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
-	CU_ASSERT(g_bs_dev != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
 
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
@@ -897,14 +892,13 @@ ut_lvol_hotremove(void)
 	lvol_store_initialize_fail = false;
 	lvol_store_initialize_cb_fail = false;
 	lvol_already_opened = false;
-	g_bs_dev = NULL;
 
 	/* Lvol store is succesfully created */
 	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store != NULL);
-	CU_ASSERT(g_bs_dev != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
 
 	/* Hot remove callback with NULL - stability check */
 	vbdev_lvs_hotremove_cb(NULL);
@@ -932,6 +926,7 @@ ut_lvs_examine_check(bool success)
 		SPDK_CU_ASSERT_FATAL(lvs_bdev != NULL);
 		g_lvol_store = lvs_bdev->lvs;
 		SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+		CU_ASSERT(g_lvol_store->bs_dev != NULL);
 	} else {
 		SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_spdk_lvol_pairs));
 		g_lvol_store = NULL;
@@ -941,33 +936,23 @@ ut_lvs_examine_check(bool success)
 static void
 ut_lvol_examine(void)
 {
-	lvol_already_opened = false;
-	g_bs_dev = NULL;
-	g_lvserrno = 0;
-	g_examine_done = false;
-
 	/* Examine unsuccessfully - bdev already opened */
-	g_bs_dev = NULL;
 	g_examine_done = false;
 	g_lvserrno = -1;
 	lvol_already_opened = true;
 	vbdev_lvs_examine(&g_bdev);
 	ut_lvs_examine_check(false);
-	CU_ASSERT(g_bs_dev == NULL);
 
 	/* Examine unsuccessfully - fail on lvol store */
-	g_bs_dev = NULL;
 	g_examine_done = false;
 	g_lvserrno = -1;
 	lvol_already_opened = false;
 	vbdev_lvs_examine(&g_bdev);
 	ut_lvs_examine_check(false);
-	CU_ASSERT(g_bs_dev == NULL);
 
 	/* Examine succesfully
 	 * - one lvol fails to load
 	 * - lvs is loaded with no lvols present */
-	g_bs_dev = NULL;
 	g_lvserrno = 0;
 	g_lvolerrno = -1;
 	g_num_lvols = 1;
@@ -976,14 +961,11 @@ ut_lvol_examine(void)
 	g_registered_bdevs = 0;
 	vbdev_lvs_examine(&g_bdev);
 	ut_lvs_examine_check(true);
-	CU_ASSERT(g_bs_dev != NULL);
 	CU_ASSERT(g_registered_bdevs == 0);
 	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->lvols));
 	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
-
-	g_bs_dev = NULL;
 	g_lvserrno = 0;
 	g_lvolerrno = 0;
 	g_examine_done = false;
@@ -991,11 +973,10 @@ ut_lvol_examine(void)
 	lvol_already_opened = false;
 	vbdev_lvs_examine(&g_bdev);
 	ut_lvs_examine_check(true);
-	CU_ASSERT(g_bs_dev != NULL);
 	CU_ASSERT(g_registered_bdevs != 0);
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
 	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
-	free(g_bs_dev);
+	CU_ASSERT(g_lvserrno == 0);
 }
 
 static void
@@ -1146,7 +1127,7 @@ ut_lvs_unload(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
-	CU_ASSERT(g_bs_dev != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
 
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
@@ -1172,7 +1153,6 @@ ut_lvs_init(void)
 {
 	int rc = 0;
 	struct spdk_lvol_store *lvs;
-	struct spdk_bs_dev *bs_dev_temp;
 
 	/* spdk_lvs_init() fails */
 	lvol_store_initialize_fail = true;
@@ -1181,7 +1161,6 @@ ut_lvs_init(void)
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
-	CU_ASSERT(g_bs_dev == NULL);
 
 	lvol_store_initialize_fail = false;
 
@@ -1192,7 +1171,6 @@ ut_lvs_init(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno != 0);
 	CU_ASSERT(g_lvol_store == NULL);
-	CU_ASSERT(g_bs_dev == NULL);
 
 	lvol_store_initialize_cb_fail = false;
 
@@ -1201,29 +1179,21 @@ ut_lvs_init(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store != NULL);
-	CU_ASSERT(g_bs_dev != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
 
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
-	bs_dev_temp = g_bs_dev;
-	g_bs_dev = NULL;
 
 	/* Bdev with lvol store already claimed */
 	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
-	CU_ASSERT(g_bs_dev == NULL);
 
 	/* Destruct lvol store */
-	g_bs_dev = bs_dev_temp;
-
 	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
-	CU_ASSERT(g_bs_dev == NULL);
-	free(g_bs_dev);
-
 }
 
 static void
@@ -1348,17 +1318,14 @@ ut_lvs_rename(void)
 	int rc = 0;
 	int sz = 10;
 	struct spdk_lvol_store *lvs;
-	struct spdk_bs_dev *b_bdev;
 
 	/* Lvol store is succesfully created */
 	rc = vbdev_lvs_create(&g_bdev, "old_lvs_name", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
-	CU_ASSERT(g_bs_dev != NULL);
-	b_bdev = g_bs_dev;
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
 
-	g_bs_dev = NULL;
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
 
@@ -1390,7 +1357,6 @@ ut_lvs_rename(void)
 
 	/* Unload lvol store */
 	g_lvol_store = lvs;
-	g_bs_dev = b_bdev;
 	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
