@@ -123,12 +123,35 @@ static const struct spdk_json_object_decoder rpc_vhost_add_lun[] = {
 	{"bdev_name", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, bdev_name), spdk_json_decode_string },
 };
 
+static void
+_spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_tgt *vtgt, int rc, void *arg)
+{
+	struct rpc_add_vhost_scsi_ctrlr_lun *rpc = arg;
+	struct spdk_jsonrpc_request *request = rpc->request;
+	struct spdk_json_write_ctx *w;
+
+	free_rpc_add_vhost_scsi_ctrlr_lun(rpc);
+
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(-rc));
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+
 static int
 spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_add_vhost_scsi_ctrlr_lun *rpc = arg;
 	struct spdk_jsonrpc_request *request = rpc->request;
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (vtgt == NULL) {
@@ -136,20 +159,12 @@ spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_tgt_add_tgt(vtgt, rpc->scsi_target_num, rpc->bdev_name);
+	rc = spdk_vhost_scsi_tgt_add_tgt(vtgt, rpc->scsi_target_num, rpc->bdev_name,
+					 _spdk_rpc_add_vhost_scsi_lun_cb, rpc);
 	if (rc < 0) {
 		goto invalid;
 	}
 
-	free_rpc_add_vhost_scsi_ctrlr_lun(rpc);
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return -1;
-	}
-
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
 	return 0;
 
 invalid:
@@ -219,8 +234,8 @@ static const struct spdk_json_object_decoder rpc_vhost_remove_target[] = {
 	{"scsi_target_num", offsetof(struct rpc_remove_vhost_scsi_ctrlr_target, scsi_target_num), spdk_json_decode_uint32},
 };
 
-static int
-spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_tgt *vtgt, void *arg)
+static void
+spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_tgt *vtgt, int rc, void *arg)
 {
 	struct rpc_remove_vhost_scsi_ctrlr_target *rpc = arg;
 	struct spdk_jsonrpc_request *request = rpc->request;
@@ -228,14 +243,19 @@ spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_tgt *vtgt, void *a
 
 	free_rpc_remove_vhost_scsi_ctrlr_target(rpc);
 
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(-rc));
+		return;
+	}
+
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
-		return -1;
+		return;
 	}
 
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
-	return 0;
 }
 
 static int
