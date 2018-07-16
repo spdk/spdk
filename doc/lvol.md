@@ -61,6 +61,10 @@ Blobs can be inflated to copy data from backing devices (e.g. snapshots) and all
 
 ![Removing backing blob and bdevs relations using inflate call](lvol_inflate_clone_snapshot.svg)
 
+## Decoupling {#lvol_decoupling}
+
+Blobs can be decoupled from all dependencies by copying data from backing devices (e.g. snapshots) for all allocated clusters. Remainig unallocated clusters are kept thin provisioned.
+
 # Configuring Logical Volumes
 
 There is no static configuration available for logical volumes. All configuration is done trough RPC. Information about logical volumes is kept on block devices.
@@ -135,6 +139,10 @@ resize_lvol_bdev [-h] name size
     -h, --help  show help
 inflate_lvol_bdev [-h] name
     Inflate lvol bdev
+    optional arguments:
+    -h, --help  show help
+decouple_parent_lvol_bdev [-h] name
+    Decouple parent of a logical volume
     optional arguments:
     -h, --help  show help
 ```
