@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "871e2bdf_1af59d43",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-16T03:35:51Z",
+      "side": 1,
+      "message": "I don\u0027t think changing seconds to microseonds make any difference here.",
+      "revId": "49b151839ec0540a88dbbe4545cf8f857ae4c0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ca90a20_befd60aa",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-16T03:35:51Z",
+      "side": 1,
+      "message": "timeout_sec should be renamed.",
+      "revId": "49b151839ec0540a88dbbe4545cf8f857ae4c0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70428ee4_8559c1cb",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2026,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-16T03:35:51Z",
+      "side": 1,
+      "message": "I think you can use a cast here instead of changing the parameter.",
+      "revId": "49b151839ec0540a88dbbe4545cf8f857ae4c0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
