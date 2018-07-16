@@ -187,7 +187,7 @@ endif
 COMMON_CFLAGS += -pthread
 LDFLAGS += -pthread
 
-CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
+CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition
 CXXFLAGS += $(COMMON_CFLAGS) -std=c++0x
 
 SYS_LIBS += -lrt
