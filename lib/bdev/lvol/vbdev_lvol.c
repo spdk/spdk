@@ -1119,6 +1119,12 @@ vbdev_lvs_get_ctx_size(void)
 }
 
 static void
+_vbdev_lvs_examine_failed(void *cb_arg, int lvserrno)
+{
+	spdk_bdev_module_examine_done(&g_lvol_if);
+}
+
+static void
 _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_lvol_store *lvs = cb_arg;
@@ -1138,10 +1144,8 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 		SPDK_ERRLOG("Cannot create bdev for lvol %s\n", lvol->unique_id);
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
 		lvs->lvol_count--;
-		spdk_blob_close(lvol->blob, _vbdev_lvol_close_cb, lvs);
+		spdk_lvol_close(lvol, _vbdev_lvol_close_cb, lvs);
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s failed\n", lvol->unique_id);
-		free(lvol->unique_id);
-		free(lvol);
 		return;
 	}
 
@@ -1168,10 +1172,12 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 			     "Name for lvolstore on device %s conflicts with name for already loaded lvs\n",
 			     req->base_bdev->name);
+		req->bs_dev->destroy(req->bs_dev);
 		spdk_bdev_module_examine_done(&g_lvol_if);
 		goto end;
 	} else if (lvserrno != 0) {
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store not found on %s\n", req->base_bdev->name);
+		req->bs_dev->destroy(req->bs_dev);
 		spdk_bdev_module_examine_done(&g_lvol_if);
 		goto end;
 	}
@@ -1179,15 +1185,14 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 	lvserrno = spdk_bs_bdev_claim(lvol_store->bs_dev, &g_lvol_if);
 	if (lvserrno != 0) {
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store base bdev already claimed by another bdev\n");
-		lvol_store->bs_dev->destroy(lvol_store->bs_dev);
-		spdk_bdev_module_examine_done(&g_lvol_if);
+		spdk_lvs_unload(lvol_store, _vbdev_lvs_examine_failed, NULL);
 		goto end;
 	}
 
 	lvs_bdev = calloc(1, sizeof(*lvs_bdev));
 	if (!lvs_bdev) {
 		SPDK_ERRLOG("Cannot alloc memory for lvs_bdev\n");
-		spdk_bdev_module_examine_done(&g_lvol_if);
+		spdk_lvs_unload(lvol_store, _vbdev_lvs_examine_failed, NULL);
 		goto end;
 	}
 
@@ -1237,6 +1242,7 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 	}
 
 	req->base_bdev = bdev;
+	req->bs_dev = bs_dev;
 
 	spdk_lvs_load(bs_dev, _vbdev_lvs_examine_cb, req);
 }
