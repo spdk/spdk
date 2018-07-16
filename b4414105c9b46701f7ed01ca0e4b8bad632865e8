@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f1222bbe_a8bffb6f",
+        "filename": "include/spdk_internal/mock.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-16T18:40:26Z",
+      "side": 1,
+      "message": "Sure, sounds good to me",
+      "parentUuid": "684750dd_9b835c2d",
+      "revId": "b4414105c9b46701f7ed01ca0e4b8bad632865e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3dbb91d3_bb778c32",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-13T16:49:56Z",
       "side": 1,
       "message": "looking more closely at the test_env.c implementation (mock) of spdk_dma_malloc() . I\u0027m OK using this now and if you want to remove the HANDLE_OVERRIDE call from there that\u0027d be fine w/me too. When I was first putting all this together I didn\u0027t quite see how everything fit together.  Or keep it, either way I think is understandable and there may be specific reasons to do either",
+      "revId": "b4414105c9b46701f7ed01ca0e4b8bad632865e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aae7df3c_49be76a7",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-16T18:40:26Z",
+      "side": 1,
+      "message": "I only changed this to spdk_dma_zmalloc because nvme_user_copy_cmd_complete is going to pass this pointer to spdk_dma_free, and those are supposed to be called in pairs. In practice, spdk_dma_zmalloc just translates to a malloc, so it\u0027s equivalent.",
+      "parentUuid": "3dbb91d3_bb778c32",
       "revId": "b4414105c9b46701f7ed01ca0e4b8bad632865e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -64,6 +100,24 @@
       "writtenOn": "2018-07-13T16:49:56Z",
       "side": 1,
       "message": "you don\u0027t *need* to do this right? I assume you\u0027re just nulling it before the clear call to be \"clear\" so to speak :) ?",
+      "revId": "b4414105c9b46701f7ed01ca0e4b8bad632865e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80e5d622_eb64ecdc",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-16T18:40:26Z",
+      "side": 1,
+      "message": "This is a bit tricky and I may end up changing the way MOCK_CLEAR works to make it easier.\n\nBasically, on line 758 I\u0027m putting a pointer to a stack value into ut_nvme_transport_ctrlr_construct. A pointer to that value also gets put into g_nvme_init_ctrlrs by the call to nvme_ctrlr_probe. The static analysis tools catch the case where I exit a function but leave dangling pointers to stack values. Prior to this patch, a global was used instead of a stack value, so while it was likely just as susceptible to problems the analysis tools didn\u0027t catch it.\n\nAll of the code I\u0027m adding here is just cleaning up those pointers. The TAILQ_REMOVE takes it out of the g_nvme_init_ctrlrs list, which is simple enough. I wanted to be able to just call MOCK_CLEAR to clear the value from ut_nvme_transport_ctrlr_construct, but MOCK_CLEAR only changes the boolean to false. It can\u0027t clear the value because it doesn\u0027t know what value to set it to. So I do a MOCK_SET to set the value to NULL, then a MOCK_CLEAR to flip the boolean to false. This is the part I\u0027m not loving about this design - I can\u0027t clear the value in MOCK_CLEAR because I don\u0027t know what type it is. I may make MOCK_CLEAR take a default value or something.",
+      "parentUuid": "fa0ed602_d3814049",
       "revId": "b4414105c9b46701f7ed01ca0e4b8bad632865e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
