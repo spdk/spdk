@@ -64,6 +64,18 @@ struct spdk_jsonrpc_request {
 
 	uint8_t *send_buf;
 
+	int batch_request_count;
+
+	struct spdk_jsonrpc_request *parent_request;
+
+	pthread_spinlock_t batch_request_lock;
+
+	/* Points to the first child */
+	TAILQ_HEAD(, spdk_jsonrpc_request) children;
+
+	/* Points to the next node in the child list */
+	TAILQ_ENTRY(spdk_jsonrpc_request) child_tailq;
+
 	STAILQ_ENTRY(spdk_jsonrpc_request) link;
 };
 

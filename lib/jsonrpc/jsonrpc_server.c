@@ -121,8 +121,10 @@ int
 spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, size_t size)
 {
 	struct spdk_jsonrpc_request *request;
-	ssize_t rc;
+	struct spdk_jsonrpc_request *request_in_batch, *child_request;
+	ssize_t rc, len;
 	void *end = NULL;
+	rc = len = 0;
 
 	/* Check to see if we have received a full JSON value. */
 	rc = spdk_json_parse(json, size, NULL, 0, &end, 0);
@@ -138,6 +140,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 
 	conn->outstanding_requests++;
 
+	request->parent_request = NULL;
 	request->conn = conn;
 	request->id.start = request->id_data;
 	request->id.len = 0;
@@ -177,8 +180,68 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	if (conn->values[0].type == SPDK_JSON_VAL_OBJECT_BEGIN) {
 		parse_single_request(request, conn->values);
 	} else if (conn->values[0].type == SPDK_JSON_VAL_ARRAY_BEGIN) {
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "Got batch array (not currently supported)\n");
-		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
+		ssize_t i;
+		pthread_spin_init(&request->batch_request_lock, 0);
+		request->batch_request_count = 0;
+
+		len = conn->values[0].len;
+		if (len == 0) {
+			SPDK_DEBUGLOG(SPDK_LOG_RPC, "Empty batch request recevied\n");
+			spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
+			return -1;
+		}
+
+		/* Initializing the first child */
+		TAILQ_INIT(&request->children);
+
+		/* Forming child requests and allocating memory for each */
+		for (i = 1; i < len; i += (conn->values[i].len + 2)) {
+			request->batch_request_count++;
+
+			request_in_batch = calloc(1, sizeof(*request));
+			if (request_in_batch == NULL) {
+				SPDK_DEBUGLOG(SPDK_LOG_RPC, "Out of memory allocating child request\n");
+				break;
+			}
+
+			request_in_batch->parent_request = request;
+
+			request_in_batch->send_buf = malloc(request->send_buf_size);
+			if (request_in_batch->send_buf == NULL) {
+				spdk_jsonrpc_free_request(request_in_batch);
+				SPDK_ERRLOG("Failed to allocate send_buf (%zu bytes)\n", request->send_buf_size);
+				break;
+			}
+
+			/* Initialising all the child requests */
+			request_in_batch->conn = conn;
+			request_in_batch->id.start = request_in_batch->id_data;
+			request_in_batch->id.len = 0;
+			request_in_batch->id.type = SPDK_JSON_VAL_INVALID;
+			request_in_batch->send_offset = 0;
+			request_in_batch->send_len = 0;
+			request_in_batch->send_buf_size = SPDK_JSONRPC_SEND_BUF_SIZE_INIT;
+
+			TAILQ_INSERT_TAIL(&request->children, request_in_batch, child_tailq);
+		}
+
+		/* If all child_requests didn't get allocated, free the allocated and return -1 */
+		if (i != len + 1) {
+			TAILQ_FOREACH(child_request, &request->children, child_tailq) {
+				spdk_jsonrpc_free_request(child_request);
+			}
+			spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR);
+			return 0;
+		}
+
+		i = 1;
+
+		/* Start processing each child request */
+		TAILQ_FOREACH(request_in_batch, &request->children, child_tailq) {
+			parse_single_request(request_in_batch, &conn->values[i]);
+			i += (conn->values[i].len + 2);
+		}
+
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_RPC, "top-level JSON value was not array or object\n");
 		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
@@ -223,6 +286,43 @@ spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
 	return 0;
 }
 
+
+/* Caller should hold batch_request_lock before calling this function */
+static void send_batch_response(struct spdk_jsonrpc_request *request)
+{
+	struct spdk_jsonrpc_request *request_in_batch;
+
+	spdk_jsonrpc_server_write_cb(request, "[", 1);
+	TAILQ_FOREACH(request_in_batch, &request->children, child_tailq) {
+		if (request_in_batch != TAILQ_FIRST(&request->children)) {
+			spdk_jsonrpc_server_write_cb(request, ",", 1);
+		}
+		/* copy the contents of child requests response to parent request response and send */
+		spdk_jsonrpc_server_write_cb(request, request_in_batch->send_buf, request_in_batch->send_len);
+	}
+	spdk_jsonrpc_server_write_cb(request, "]", 1);
+	spdk_jsonrpc_server_send_response(request->conn, request);
+
+	/* Free all the child requests */
+	TAILQ_FOREACH(request_in_batch, &request->children, child_tailq) {
+		TAILQ_REMOVE(&request->children, request_in_batch, child_tailq);
+		spdk_jsonrpc_free_request(request_in_batch);
+	}
+}
+
+static void skip_response(struct spdk_jsonrpc_request *parent_request,
+			  struct spdk_jsonrpc_request *request)
+{
+	pthread_spin_lock(&parent_request->batch_request_lock);
+	parent_request->batch_request_count--;
+	TAILQ_REMOVE(&parent_request->children, request, child_tailq);
+	if (parent_request->batch_request_count == 0) {
+		/* This call should be in batch_request_lock so that no two threads call "send_batch_response at the same time */
+		send_batch_response(parent_request);
+	}
+	pthread_spin_unlock(&parent_request->batch_request_lock);
+}
+
 static struct spdk_json_write_ctx *
 begin_response(struct spdk_jsonrpc_request *request)
 {
@@ -246,33 +346,68 @@ begin_response(struct spdk_jsonrpc_request *request)
 static void
 end_response(struct spdk_jsonrpc_request *request, struct spdk_json_write_ctx *w)
 {
+	struct spdk_jsonrpc_request *parent_request = request->parent_request;
 	spdk_json_write_object_end(w);
 	spdk_json_write_end(w);
 	spdk_jsonrpc_server_write_cb(request, "\n", 1);
-	spdk_jsonrpc_server_send_response(request->conn, request);
+
+	if (request->parent_request) {
+		pthread_spin_lock(&parent_request->batch_request_lock);
+		parent_request->batch_request_count--;
+		if (parent_request->batch_request_count == 0) {
+			send_batch_response(parent_request);
+		}
+		pthread_spin_unlock(&parent_request->batch_request_lock);
+
+	} else {
+		spdk_jsonrpc_server_send_response(request->conn, request);
+	}
 }
 
 void
 spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 {
-	request->conn->outstanding_requests--;
-	free(request->send_buf);
-	free(request);
+	if (!request->parent_request) {
+		request->conn->outstanding_requests--;
+		if (request->batch_request_lock) {
+			pthread_spin_destroy(&request->batch_request_lock);
+		}
+	}
+	if (request->send_buf) {
+		free(request->send_buf);
+	}
+	if (request) {
+		free(request);
+	}
 }
 
 struct spdk_json_write_ctx *
 spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 {
 	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *parent_request = request->parent_request;
+
 
 	if (request->id.type == SPDK_JSON_VAL_INVALID) {
 		/* Notification - no response required */
+		if (parent_request) {
+			skip_response(parent_request, request);
+			SPDK_DEBUGLOG(SPDK_LOG_RPC, "Skipping the response for request id = %s\n",
+				      (char *)request->id.start);
+		}
 		spdk_jsonrpc_free_request(request);
 		return NULL;
 	}
 
 	w = begin_response(request);
+
 	if (w == NULL) {
+		if (parent_request) {
+			skip_response(parent_request, request);
+			SPDK_ERRLOG("Skipping the response for request id = %s\n",
+				    (char *)request->id.start);
+
+		}
 		spdk_jsonrpc_free_request(request);
 		return NULL;
 	}
@@ -295,6 +430,7 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				 int error_code, const char *msg)
 {
 	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *parent_request = request->parent_request;
 
 	if (request->id.type == SPDK_JSON_VAL_INVALID) {
 		/* For error responses, if id is missing, explicitly respond with "id": null. */
@@ -303,7 +439,13 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 
 	w = begin_response(request);
 	if (w == NULL) {
-		free(request);
+		if (parent_request) {
+			skip_response(parent_request, request);
+			SPDK_ERRLOG("Skipping the response for request id = %s\n",
+				    (char *)request->id.start);
+
+		}
+		spdk_jsonrpc_free_request(request);
 		return;
 	}
 
