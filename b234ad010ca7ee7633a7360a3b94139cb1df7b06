@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c5ef2935_5a9ab74d",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-16T11:35:56Z",
+      "side": 1,
+      "message": "\u003e unset verbose at refresh\nYeah, but each class doing refresh can have a different overloaded refresh() method.\nI\u0027d then have to add self.verbose and disabling verbose in \"UINode\" class, which has nothing to do with RPC calling so I\u0027d like to avoid that.\nBesides I\u0027d have to disable/enable verbose in each \"refresh\", so in the end the result would be similar to this one here.",
+      "parentUuid": "468dd18b_1bc65128",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 16
+      },
+      "revId": "b234ad010ca7ee7633a7360a3b94139cb1df7b06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4e2394e_e8b4f178",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-13T13:36:46Z",
       "side": 1,
       "message": "why not \nreturn rpc.bdev.construct_malloc_bdev(self.client, **kwargs)\n?",
+      "range": {
+        "startLine": 73,
+        "startChar": 8,
+        "endLine": 73,
+        "endChar": 19
+      },
+      "revId": "b234ad010ca7ee7633a7360a3b94139cb1df7b06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a97dd8c1_f4bcc054",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-16T11:35:56Z",
+      "side": 1,
+      "message": "Will fix, separate patch.",
+      "parentUuid": "a4e2394e_e8b4f178",
       "range": {
         "startLine": 73,
         "startChar": 8,
