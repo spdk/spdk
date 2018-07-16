@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16642797_dbc117b3",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-16T16:47:06Z",
+      "side": 1,
+      "message": "Can you just \n\ndef w(self, **kwargs):\n  self.client.verbose \u003d self.verbose\n  r \u003d f(self, **kwargs)\n  self.client.verbose \u003d False\n  return r;\n\n??",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 37
+      },
+      "revId": "94b2aef691067cafbb1de760d0722cfc693bb2c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
