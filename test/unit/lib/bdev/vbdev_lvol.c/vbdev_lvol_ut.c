@@ -431,8 +431,6 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 {
 	struct spdk_lvs_req *destruct_req;
 
-	SPDK_CU_ASSERT_FATAL(lvol == g_lvol);
-
 	if (lvol->ref_count != 0) {
 		cb_fn(cb_arg, -ENODEV);
 	}
@@ -697,13 +695,6 @@ ut_lvs_destroy(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 	CU_ASSERT(g_bs_dev != NULL);
 
-	/* Create g_base_dev */
-	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
-	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
-	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
-	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-	g_lvs_bdev->bdev = g_base_bdev;
-
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
 
@@ -720,9 +711,6 @@ ut_lvs_destroy(void)
 	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
-
-	free(g_lvs_bdev);
-	free(g_base_bdev);
 }
 
 static void
@@ -953,8 +941,6 @@ ut_lvs_examine_check(bool success)
 static void
 ut_lvol_examine(void)
 {
-	struct spdk_bdev *bdev;
-
 	lvol_already_opened = false;
 	g_bs_dev = NULL;
 	g_lvserrno = 0;
@@ -994,18 +980,6 @@ ut_lvol_examine(void)
 	CU_ASSERT(g_lvol_store == NULL);
 
 	/* Examine succesfully */
-	g_lvs = calloc(1, sizeof(*g_lvs));
-	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
-	TAILQ_INIT(&g_lvs->lvols);
-	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
-	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
-	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
-	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-
-	/* Assign name to lvs */
-	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
-	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
-
 	g_bs_dev = NULL;
 	g_lvserrno = 0;
 	g_lvolerrno = 0;
@@ -1016,17 +990,8 @@ ut_lvol_examine(void)
 	CU_ASSERT(g_bs_dev != NULL);
 	CU_ASSERT(g_registered_bdevs != 0);
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
-	TAILQ_FIRST(&g_lvol_store->lvols)->ref_count--;
-	bdev = TAILQ_FIRST(&g_lvol_store->lvols)->bdev;
 	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
-	free(bdev->name);
-	free(bdev);
 	free(g_bs_dev);
-	free(g_lvol_store);
-
-	free(g_lvs);
-	free(g_lvs_bdev);
-	free(g_base_bdev);
 }
 
 static void
@@ -1179,13 +1144,6 @@ ut_lvs_unload(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 	CU_ASSERT(g_bs_dev != NULL);
 
-	/* Create g_base_dev */
-	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
-	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
-	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
-	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-	g_lvs_bdev->bdev = g_base_bdev;
-
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
 
@@ -1203,9 +1161,6 @@ ut_lvs_unload(void)
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(g_lvol != NULL);
-
-	free(g_lvs_bdev);
-	free(g_base_bdev);
 }
 
 static void
