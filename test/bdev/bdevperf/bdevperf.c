@@ -362,8 +362,12 @@ static void
 bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 			       void *cb_arg)
 {
-	spdk_bdev_free_io(bdev_io);
-	bdevperf_verify_submit_read(cb_arg);
+	if (success) {
+		spdk_bdev_free_io(bdev_io);
+		bdevperf_verify_submit_read(cb_arg);
+	} else {
+		bdevperf_complete(bdev_io, success, cb_arg);
+	}
 }
 
 static __thread unsigned int seed = 0;
