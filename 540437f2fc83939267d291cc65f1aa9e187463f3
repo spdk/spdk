@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "2b3f0b4d_7b576afc",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-16T17:16:45Z",
+      "side": 1,
+      "message": "The advantage is that you don\u0027t need to re-invent this code as this will be done by JSON RPC layer.",
+      "parentUuid": "8ce0b111_8bf94fd1",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 145,
+        "endChar": 1
+      },
+      "revId": "540437f2fc83939267d291cc65f1aa9e187463f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7b8dc0e_d39660e1",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 11

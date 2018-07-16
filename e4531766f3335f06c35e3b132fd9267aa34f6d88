@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06d4292c_9a4798d8",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-16T17:16:45Z",
+      "side": 1,
+      "message": "If you invent proper decoders you will not need this structure at all. Just allocate ctx before call spdk_json_decode_object() and decode directly into this ctx object.",
+      "range": {
+        "startLine": 325,
+        "startChar": 1,
+        "endLine": 325,
+        "endChar": 30
+      },
+      "revId": "e4531766f3335f06c35e3b132fd9267aa34f6d88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b02b43e_e9b9e363",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-16T17:16:45Z",
+      "side": 1,
+      "message": "So here is the pitfall I couldn\u0027t find. You should publish spdk_base64_get_text_strlen() and spdk_base64_get_binary_len() from your previouse patch. Then change these spdk_base64_* functions to take buffer from user.\n\nthen you can:\n\n  ctx-\u003ereq.data_len \u003d get_the_required_buffer_length()\n  (ctx-\u003ereq.data \u003d spdk_dma_malloc(ctx-\u003ereq.data_len)\n  ret \u003d spdk_base64_urlsafe_decode(ctx-\u003ereq.data, ctx-\u003ereq.data_len, req.data\n\n\nAnd this code you can very easily move to RPC decode function.",
+      "range": {
+        "startLine": 382,
+        "startChar": 21,
+        "endLine": 382,
+        "endChar": 22
+      },
+      "revId": "e4531766f3335f06c35e3b132fd9267aa34f6d88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
