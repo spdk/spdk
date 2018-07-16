@@ -6,6 +6,7 @@ target_vm=2
 incoming_vm_ctrlr=naa.VhostScsi0.$incoming_vm
 target_vm_ctrlr=naa.VhostScsi0.$target_vm
 share_dir=$TEST_DIR/share
+spdk_repo_share_dir=$TEST_DIR/share_spdk
 job_file=$MIGRATION_DIR/migration-tc3.job
 
 if [ -z "$MGMT_TARGET_IP" ]; then
@@ -99,14 +100,14 @@ function host1_start_nvmf()
 	mkdir -p $nvmf_dir
 	rm -rf $nvmf_dir/*
 
-	cp $SPDK_BUILD_DIR/test/nvmf/nvmf.conf $nvmf_dir/nvmf.conf
-	$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $nvmf_dir/nvmf.conf
-
 	trap 'host1_cleanup_nvmf SIGKILL; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
-	$SPDK_BUILD_DIR/app/nvmf_tgt/nvmf_tgt -s 512 -c $nvmf_dir/nvmf.conf -r $nvmf_dir/nvmf_rpc.sock &
+	$SPDK_BUILD_DIR/app/nvmf_tgt/nvmf_tgt -s 512 -m 0xF -r $nvmf_dir/nvmf_rpc.sock -w &
 	nvmf_tgt_pid=$!
 	echo $nvmf_tgt_pid > $nvmf_dir/nvmf_tgt.pid
 	waitforlisten "$nvmf_tgt_pid" "$nvmf_dir/nvmf_rpc.sock"
+	$rpc_nvmf set_nvmf_target_options -u 8192 -p 4
+	$rpc_nvmf start_subsystem_init
+	$SPDK_BUILD_DIR/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 
 	$rpc_nvmf construct_nvmf_subsystem nqn.2018-02.io.spdk:cnode1 \
 		"trtype:RDMA traddr:$RDMA_TARGET_IP trsvcid:4420" "" -a -s SPDK01 -n Nvme0n1
@@ -139,7 +140,7 @@ function cleanup_share()
 	set +e
 	notice "Cleaning up share directory on remote and local server"
 	ssh_remote $MGMT_INITIATOR_IP "umount $VM_BASE_DIR"
-	ssh_remote $MGMT_INITIATOR_IP "umount $share_dir; rm -f $share_dir/*"
+	ssh_remote $MGMT_INITIATOR_IP "umount $share_dir; rm -f $share_dir/* rm -rf $spdk_repo_share_dir"
 	rm -f $share_dir/migration.qcow2
 	rm -f $share_dir/spdk.tar.gz
 	set -e
@@ -160,6 +161,7 @@ function host_2_create_share()
 	# Copy & compile the sources for later use on remote server.
 	ssh_remote $MGMT_INITIATOR_IP "uname -a"
 	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $share_dir"
+	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $spdk_repo_share_dir"
 	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $VM_BASE_DIR"
 	ssh_remote $MGMT_INITIATOR_IP "sshfs -o\
 	 ssh_command=\"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ControlMaster=auto\
@@ -167,14 +169,14 @@ function host_2_create_share()
 	ssh_remote $MGMT_INITIATOR_IP "sshfs -o\
 	 ssh_command=\"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ControlMaster=auto\
 	 -i $SPDK_VHOST_SSH_KEY_FILE\" root@$MGMT_TARGET_IP:$share_dir $share_dir"
-	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $share_dir/spdk"
-	ssh_remote $MGMT_INITIATOR_IP "tar -zxf $share_dir/spdk.tar.gz -C $share_dir/spdk --strip-components=1"
-	ssh_remote $MGMT_INITIATOR_IP "cd $share_dir/spdk; make clean; ./configure --with-rdma --enable-debug; make -j40"
+	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $spdk_repo_share_dir/spdk"
+	ssh_remote $MGMT_INITIATOR_IP "tar -zxf $share_dir/spdk.tar.gz -C $spdk_repo_share_dir/spdk --strip-components=1"
+	ssh_remote $MGMT_INITIATOR_IP "cd $spdk_repo_share_dir/spdk; make clean; ./configure --with-rdma --enable-debug; make -j40"
 }
 
 function host_2_start_vhost()
 {
-	ssh_remote $MGMT_INITIATOR_IP "nohup $share_dir/spdk/test/vhost/migration/migration.sh\
+	ssh_remote $MGMT_INITIATOR_IP "nohup $spdk_repo_share_dir/spdk/test/vhost/migration/migration.sh\
 	 --test-cases=3b --work-dir=$TEST_DIR --os=$share_dir/migration.qcow2\
 	 --rdma-tgt-ip=$RDMA_TARGET_IP &>$share_dir/output.log &"
 	notice "Waiting for remote to be done with vhost & VM setup..."
