@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed8facae_1f558fff",
+        "filename": "include/spdk/util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-16T20:08:36Z",
+      "side": 1,
+      "message": "Thanks for moving this up to the general library. I\u0027ve had a need for this macro before.",
+      "revId": "82ffb6c828125c196c2e826afdd13ff23a5459a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
