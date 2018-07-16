@@ -108,6 +108,15 @@ void spdk_vhost_shutdown_cb(void);
 struct spdk_vhost_tgt;
 
 /**
+ * Target user event completion.
+ *
+ * \param vtgt vhost target or NULL
+ * \param rc 0 on success, negative errno otherwise
+ * \param arg user-provided argument
+ */
+typedef void (*spdk_vhost_tgt_cpl_cb)(struct spdk_vhost_tgt *vtgt, int rc, void *arg);
+
+/**
  * Synchronized vhost event used for user callbacks.
  *
  * \param vtgt vhost target.
@@ -211,11 +220,14 @@ int spdk_vhost_scsi_tgt_construct(const char *name, const char *cpumask);
  * \param vtgt vhost SCSI target.
  * \param scsi_tgt_num SCSI target slot to attach to.
  * \param bdev_name name of the SPDK bdev to associate with LUN0.
+ * \param cb_fn callback function.
+ * \param cb_arg parameter to be passed to *fn*.
  *
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
-				const char *bdev_name);
+				const char *bdev_name, spdk_vhost_tgt_cpl_cb cb_fn,
+				void *cb_arg);
 
 /**
  * Get SCSI target from given slot of a vhost SCSI target. Max number of
@@ -243,14 +255,15 @@ struct spdk_scsi_dev *spdk_vhost_scsi_tgt_get_tgt(struct spdk_vhost_tgt *vtgt, u
  *
  * \param vtgt vhost SCSI target
  * \param scsi_tgt_num slot id to delete from
- * \param cb_fn callback to be fired once the SCSI target has been
- * successfully deleted.
+ * \param cb_fn callback to be fired once after the removal
  * \param cb_arg parameter to be passed to *cb_fn*.
  *
- * \return 0 on success, negative errno on error.
+ * \return 0 on success, negative errno on error. If error is returned,
+ * the `cb_fn` is not called.
  */
 int spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
-				   spdk_vhost_event_fn cb_fn, void *cb_arg);
+				   void (*cb_fn)(struct spdk_vhost_tgt *vtgt, int rc, void *arg),
+				   void *cb_arg);
 
 /**
  * Construct a vhost block target.  This will create a Unix domain
