@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9fff292_ee5c04eb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-17T13:02:19Z",
+      "side": 1,
+      "message": "Wouldn\u0027t hurt to directly describe what you\u0027re doing, like \"add missing call_cmd decorator\"",
+      "revId": "d18b27414e2d67ffd056dc02cfc416884235c63d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
