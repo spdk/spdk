@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "164b3b53_5e5cc172",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-07-17T08:45:30Z",
+      "side": 1,
+      "message": "If user wants to set 100 us, in fact, he submits 100 seconds to bdev/nvme, and whether this \"1000000ULL\" should be removed?",
+      "revId": "13b758717c2296cba3bebfa850ecacbf7ad14cf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71e71578_8bd8972b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2018,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-07-17T08:45:30Z",
+      "side": 1,
+      "message": "Whether this parameter \"nvme_timeout\" should be consistent with the definition \"timeout_us\" in \"include/spdk/nvme.h\"?",
+      "revId": "13b758717c2296cba3bebfa850ecacbf7ad14cf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
