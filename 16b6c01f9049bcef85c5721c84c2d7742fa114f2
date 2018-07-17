@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2bb55783_40930f18",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-17T01:50:23Z",
+      "side": 1,
+      "message": "This patch looks good to me, can you add more cleanup here to remove ch_count and lun-\u003emutex as well, as I don\u0027t think those two variables are useful now.",
+      "revId": "16b6c01f9049bcef85c5721c84c2d7742fa114f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
