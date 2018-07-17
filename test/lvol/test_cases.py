@@ -733,46 +733,115 @@ class TestCases(object):
         return fail_count
 
     def test_case500(self):
+        """
+        nested_construct_lvol_bdev_on_full_lvol_store
+
+        Negative test for constructing a new nested lvol bdev.
+        Call construct_lvol_bdev on a full lvol store.
+        """
+        # Steps:
+        # - create a malloc bdev
+        # - construct_lvol_store on created malloc bdev
+        # - check correct uuid values in response get_lvol_stores command
+        # - construct_lvol_bdev on correct lvs_uuid and size is
+        #   equal to size malloc bdev
+        # - construct nested lvol store on previously created lvol_bdev
+        # - check correct uuid values in response get_lvol_stores command
+        # - construct nested lvol bdev on previously created nested lvol store
+        #   and size is equal to size lvol store
+        # - try construct another lvol bdev as in previous step; this call should fail
+        #   as nested lvol store space is already claimed by lvol bdev
+        # - delete nested lvol bdev
+        # - destroy nested lvol_store
+        # - delete base lvol bdev
+        # - delete base lvol store
+        # - delete malloc bdev
+        #
+        # Expected result:
+        # - second construct_lvol_bdev call on nested lvol store return code != 0
+        # - EEXIST response printed to stdout
+        # - no other operation fails
         print("Test of this feature not yet implemented.")
         pass
         return 0
 
     @case_message
     def test_case550(self):
+        """
+        delete_bdev_positive
+
+        Positive test for deleting malloc bdev.
+        Call construct_lvol_store with correct base bdev name.
+        """
+        # Create malloc bdev
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
+        # Construct_lvol_store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
+        # Check correct uuid values in response get_lvol_stores command
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
+        # Delete malloc bdev
         self.c.delete_malloc_bdev(base_name)
+        #  Check response get_lvol_stores command
         if self.c.check_get_lvol_stores("", "", "") == 1:
             fail_count += 1
+
+        # Expected result:
+        # - get_lvol_stores: response should be of no value after destroyed lvol store
+        # - no other operation fails
         return fail_count
 
     @case_message
     def test_case600(self):
+        """
+        construct_lvol_store_with_cluster_size_max
+
+        Negative test for constructing a new lvol store.
+        Call construct_lvol_store with cluster size is equal malloc bdev size + 1B.
+        """
         fail_count = 0
+        # Create malloc bdev
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
+        # Construct_lvol_store on correct, exisitng malloc bdev and cluster size equal
+        # malloc bdev size in bytes + 1B
         lvol_uuid = self.c.construct_lvol_store(base_name,
                                                 self.lvs_name,
                                                 (self.total_size * 1024 * 1024) + 1) == 0
         if self.c.check_get_lvol_stores(base_name, lvol_uuid) == 0:
             fail_count += 1
         fail_count += self.c.delete_malloc_bdev(base_name)
+
+        # Expected result:
+        # - return code != 0
+        # - Error code response printed to stdout
         return fail_count
 
     @case_message
     def test_case601(self):
+        """
+        construct_lvol_store_with_cluster_size_min
+
+        Negative test for constructing a new lvol store.
+        Call construct_lvol_store with cluster size smaller than minimal value of 8192.
+        """
         fail_count = 0
+        # Create malloc bdev
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
+        # Try construct lvol store on malloc bdev with cluster size 8191
         lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, 8191)
+        # Verify that lvol store was not created
         if self.c.check_get_lvol_stores(base_name, lvol_uuid) == 0:
             fail_count += 1
         fail_count += self.c.delete_malloc_bdev(base_name)
+
+        # Expected result:
+        # - construct lvol store return code != 0
+        # - Error code response printed to stdout
         return fail_count
 
     @case_message
