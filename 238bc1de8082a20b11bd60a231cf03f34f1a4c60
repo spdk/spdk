@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b28316a_e0b93489",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-17T05:54:57Z",
+      "side": 1,
+      "message": "it looks that only _spdk_nvmf_qpair_destroy is set to qpair-\u003estate_cb. why overwrite it?",
+      "range": {
+        "startLine": 674,
+        "startChar": 13,
+        "endLine": 674,
+        "endChar": 21
+      },
+      "revId": "238bc1de8082a20b11bd60a231cf03f34f1a4c60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0246f363_d596ea03",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-17T05:54:57Z",
+      "side": 1,
+      "message": "This means that qpair is busy and so do nothing now?",
+      "range": {
+        "startLine": 678,
+        "startChar": 3,
+        "endLine": 678,
+        "endChar": 19
+      },
+      "revId": "238bc1de8082a20b11bd60a231cf03f34f1a4c60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
