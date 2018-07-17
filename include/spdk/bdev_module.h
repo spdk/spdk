@@ -537,6 +537,16 @@ void spdk_bdev_module_init_done(struct spdk_bdev_module *module);
 void spdk_bdev_module_finish_done(void);
 
 /**
+ * Internal callback used during bdev subsystem init.
+ *
+ * Callback used when cleaning up during bdev module
+ * initialization in the event that one of them fails.
+ *
+ * \param cb_arg Callback argument.
+ */
+void spdk_bdev_init_failed(void *cb_arg);
+
+/**
  * Called by a bdev module to lay exclusive write claim to a bdev.
  *
  * Also upgrades that bdev's descriptor to have write access.

@@ -628,9 +628,11 @@ spdk_bdev_init_complete(int rc)
 	 * For modules that need to know when subsystem init is complete,
 	 * inform them now.
 	 */
-	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (m->init_complete) {
-			m->init_complete();
+	if (rc == 0) {
+		TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, internal.tailq) {
+			if (m->init_complete) {
+				m->init_complete();
+			}
 		}
 	}
 
@@ -705,6 +707,13 @@ spdk_bdev_modules_init(void)
 
 	g_bdev_mgr.module_init_complete = true;
 	return rc;
+}
+
+void
+spdk_dev_init_failed(void *cb_arg)
+{
+	spdk_bdev_init_complete(-1);
+	return;
 }
 
 void
@@ -811,7 +820,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	rc = spdk_bdev_modules_init();
 	if (rc != 0) {
 		SPDK_ERRLOG("bdev modules init failed\n");
-		spdk_bdev_init_complete(-1);
+		spdk_bdev_finish(spdk_bdev_init_failed, NULL);
 		return;
 	}
 
