@@ -85,6 +85,10 @@ class JSONRPCClient(object):
             msg = "\n".join([msg, buf])
             raise JSONRPCException(msg)
 
+        if verbose:
+            print("response:")
+            print(json.dumps(response, indent=2))
+
         if 'error' in response:
             msg = "\n".join(["Got JSON-RPC error response",
                              "request:",
@@ -92,9 +96,5 @@ class JSONRPCClient(object):
                              "response:",
                              json.dumps(response['error'], indent=2)])
             raise JSONRPCException(msg)
-
-        if verbose:
-            print("response:")
-            print(json.dumps(response, indent=2))
 
         return response['result']
