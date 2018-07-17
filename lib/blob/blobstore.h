@@ -53,11 +53,10 @@
 #define SPDK_BLOB_BLOBID_HIGH_BIT (1ULL << 32)
 
 struct spdk_xattr {
-	/* TODO: reorder for best packing */
 	uint32_t	index;
+	uint16_t	value_len;
 	char		*name;
 	void		*value;
-	uint16_t	value_len;
 	TAILQ_ENTRY(spdk_xattr)	link;
 };
 
