@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0790dabc_0e637013",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T17:47:13Z",
+      "side": 1,
+      "message": "orfand - orphaned",
+      "revId": "5d855269e65c8ae06e5114b1415d248bc3922374",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
