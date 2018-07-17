@@ -59,6 +59,7 @@ bool lvol_already_opened = false;
 bool g_examine_done = false;
 bool g_bdev_alias_already_exists = false;
 bool g_lvs_with_name_already_exists = false;
+bool g_lvol_deletable = true;
 
 int
 spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
@@ -236,8 +237,13 @@ spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module)
 void
 spdk_bdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	int rc;
+
 	SPDK_CU_ASSERT_FATAL(vbdev != NULL);
-	vbdev->fn_table->destruct(vbdev->ctxt);
+	rc = vbdev->fn_table->destruct(vbdev->ctxt);
+
+	SPDK_CU_ASSERT_FATAL(cb_fn != NULL);
+	cb_fn(cb_arg, rc);
 }
 
 void
@@ -418,7 +424,14 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 		}
 	}
 
+	SPDK_CU_ASSERT_FATAL(cb_fn != NULL);
 	cb_fn(cb_arg, 0);
+}
+
+bool
+spdk_lvol_deletable(struct spdk_lvol *lvol)
+{
+	return g_lvol_deletable;
 }
 
 void
@@ -730,8 +743,8 @@ ut_lvol_init(void)
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
-	/* Successful lvol destruct */
-	vbdev_lvol_destruct(g_lvol);
+	/* Successful lvol destroy */
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -771,13 +784,13 @@ ut_lvol_snapshot(void)
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
-	/* Successful lvol destruct */
-	vbdev_lvol_destruct(g_lvol);
+	/* Successful lvol destroy */
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
-	/* Successful snap destruct */
+	/* Successful lvol destroy */
 	g_lvol = lvol;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -832,17 +845,17 @@ ut_lvol_clone(void)
 
 	/* Successful lvol destruct */
 	g_lvol = lvol;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
-	/* Successful clone destruct */
+	/* Successful clone destroy */
 	g_lvol = clone;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
-	/* Successful snap destruct */
+	/* Successful lvol destroy */
 	g_lvol = snap;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -994,14 +1007,66 @@ ut_lvol_rename(void)
 	CU_ASSERT_STRING_EQUAL(lvol->name, "new_lvol_name");
 
 	/* Successful lvols destruct */
-	vbdev_lvol_destruct(lvol);
+	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
-	vbdev_lvol_destruct(lvol2);
+	vbdev_lvol_destroy(lvol2, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
 	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
+}
+
+static void
+ut_lvol_destroy(void)
+{
+	struct spdk_lvol_store *lvs;
+	struct spdk_lvol *lvol;
+	struct spdk_lvol *lvol2;
+	int sz = 10;
+	int rc;
+
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
+	lvs = g_lvol_store;
+
+	/* Successful lvols create */
+	g_lvolerrno = -1;
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+	lvol = g_lvol;
+
+	g_lvolerrno = -1;
+	rc = vbdev_lvol_create(lvs, "lvol2", sz, false, vbdev_lvol_create_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+	lvol2 = g_lvol;
+
+	/* Unsuccessful lvols destruct */
+	g_lvol_deletable = false;
+	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvserrno == -EPERM);
+
+	g_lvol_deletable = true;
+	/* Successful lvols destruct */
+	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvol == NULL);
+
+	/* Hot remove lvol bdev */
+	vbdev_lvol_unregister(lvol2);
+
+	/* Destroy lvol store */
+	vbdev_lvs_unload(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
 }
@@ -1041,7 +1106,7 @@ ut_lvol_resize(void)
 	CU_ASSERT(g_lvolerrno != 0);
 
 	/* Successful lvol destruct */
-	vbdev_lvol_destruct(lvol);
+	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Destroy lvol store */
@@ -1330,6 +1395,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
 		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL ||
 		CU_add_test(suite, "ut_lvol_rename", ut_lvol_rename) == NULL ||
+		CU_add_test(suite, "ut_lvol_destroy", ut_lvol_destroy) == NULL ||
 		CU_add_test(suite, "ut_lvs_rename", ut_lvs_rename) == NULL
 	) {
 		CU_cleanup_registry();
