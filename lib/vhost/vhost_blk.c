@@ -430,6 +430,11 @@ _bdev_remove_vdev_cb(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev, v
 		spdk_bdev_close(bvtgt->bdev_desc);
 		bvtgt->bdev_desc = NULL;
 		bvtgt->bdev = NULL;
+
+		free(vtgt->name);
+		free(vtgt->path);
+		spdk_cpuset_free(vtgt->cpumask);
+
 		return 0;
 	}
 
