@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "476323d3_baaa16be",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-17T09:33:27Z",
+      "side": 1,
+      "message": "you can remove this?",
+      "range": {
+        "startLine": 56,
+        "startChar": 1,
+        "endLine": 56,
+        "endChar": 37
+      },
+      "revId": "ae1439df6c0b046178e6db31c8995a936c8d43bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
