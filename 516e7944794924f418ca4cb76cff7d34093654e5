@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65b87ba7_4e7b45ef",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1071,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T23:17:42Z",
+      "side": 1,
+      "message": "Doesn\u0027t this logic apply read-limits to write I/O and write-limits to read I/O?\n\nFurther, once you encounter a read that needs to be throttled, you need to keep going because there may be queued writes that would still be allowed (and vis versa).",
+      "revId": "516e7944794924f418ca4cb76cff7d34093654e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
