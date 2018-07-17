@@ -3,6 +3,7 @@ import sys
 import argparse
 from os import getuid
 from configshell_fb import ConfigShell
+from configshell_fb import ExecutionError
 from spdkcli import UIRoot
 
 
@@ -25,8 +26,8 @@ def main():
     root_node.verbose = args.verbose
     try:
         root_node.refresh()
-    except BaseException:
-        pass
+    except ExecutionError as e:
+        shell.log.warning(e)
 
     if len(args.commands) > 0:
         shell.run_cmdline(" ".join(args.commands))
