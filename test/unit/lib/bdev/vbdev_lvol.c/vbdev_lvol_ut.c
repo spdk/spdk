@@ -939,6 +939,27 @@ ut_lvol_hotremove(void)
 }
 
 static void
+ut_lvs_examine_check(bool success)
+{
+	struct lvol_store_bdev *lvs_bdev;
+
+	/* Examine was finished regardless of result */
+	CU_ASSERT(g_examine_done == true);
+	g_examine_done = false;
+
+	if (success) {
+		SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_spdk_lvol_pairs));
+		lvs_bdev = TAILQ_FIRST(&g_spdk_lvol_pairs);
+		SPDK_CU_ASSERT_FATAL(lvs_bdev != NULL);
+		g_lvol_store = lvs_bdev->lvs;
+		SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	} else {
+		SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_spdk_lvol_pairs));
+		g_lvol_store = NULL;
+	}
+}
+
+static void
 ut_lvol_examine(void)
 {
 	struct spdk_bdev *bdev;
@@ -946,28 +967,22 @@ ut_lvol_examine(void)
 	lvol_already_opened = false;
 	g_bs_dev = NULL;
 	g_lvserrno = 0;
-	g_examine_done = false;
 
 	/* Examine unsuccessfully - bdev already opened */
 	g_bs_dev = NULL;
-	g_examine_done = false;
 	g_lvserrno = -1;
 	lvol_already_opened = true;
 	vbdev_lvs_examine(&g_bdev);
+	ut_lvs_examine_check(false);
 	CU_ASSERT(g_bs_dev == NULL);
-	CU_ASSERT(g_lvol_store == NULL);
-	CU_ASSERT(g_examine_done == true);
 
 	/* Examine unsuccessfully - fail on lvol store */
 	g_bs_dev = NULL;
-	g_examine_done = false;
 	g_lvserrno = -1;
 	lvol_already_opened = false;
 	vbdev_lvs_examine(&g_bdev);
+	ut_lvs_examine_check(false);
 	CU_ASSERT(g_bs_dev == NULL);
-	CU_ASSERT(g_lvol_store == NULL);
-	CU_ASSERT(g_examine_done == true);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_lvol_pairs));
 
 	/* Examine succesfully
 	 * - one lvol fails to load
@@ -976,15 +991,12 @@ ut_lvol_examine(void)
 	g_lvserrno = 0;
 	g_lvolerrno = -1;
 	g_num_lvols = 1;
-	g_examine_done = false;
 	lvol_already_opened = false;
 	g_registered_bdevs = 0;
 	vbdev_lvs_examine(&g_bdev);
+	ut_lvs_examine_check(true);
 	CU_ASSERT(g_bs_dev != NULL);
-	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
-	CU_ASSERT(g_examine_done == true);
 	CU_ASSERT(g_registered_bdevs == 0);
-	CU_ASSERT(!TAILQ_EMPTY(&g_spdk_lvol_pairs));
 	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->lvols));
 	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
@@ -1006,15 +1018,12 @@ ut_lvol_examine(void)
 	g_bs_dev = NULL;
 	g_lvserrno = 0;
 	g_lvolerrno = 0;
-	g_examine_done = false;
 	g_registered_bdevs = 0;
 	lvol_already_opened = false;
 	vbdev_lvs_examine(&g_bdev);
+	ut_lvs_examine_check(true);
 	CU_ASSERT(g_bs_dev != NULL);
-	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
-	CU_ASSERT(g_examine_done == true);
 	CU_ASSERT(g_registered_bdevs != 0);
-	CU_ASSERT(!TAILQ_EMPTY(&g_spdk_lvol_pairs));
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
 	TAILQ_FIRST(&g_lvol_store->lvols)->ref_count--;
 	bdev = TAILQ_FIRST(&g_lvol_store->lvols)->bdev;
