@@ -1,4 +1,5 @@
 from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
+from configshell_fb import ExecutionError
 import rpc.client
 import rpc
 from functools import wraps
@@ -15,8 +16,13 @@ class UIRoot(UINode):
         self.current_vhost_ctrls = []
         self.set_rpc_target(s)
         self.verbose = False
+        self.is_init = self.check_init()
 
     def refresh(self):
+        try:
+            self.assert_init()
+        except ExecutionError as e:
+            self.shell.log.warning(e)
         self._children = set([])
         UIBdevs(self)
         UILvolStores(self)
@@ -40,17 +46,29 @@ class UIRoot(UINode):
             return r
         return w
 
+    def ui_command_start_subsystem_init(self):
+        if rpc.start_subsystem_init(self.client):
+            self.is_init = True
+            self.refresh()
+
+    def get_rpc_methods(self, current=False):
+        return rpc.get_rpc_methods(self.client, current=current)
+
+    def check_init(self):
+        return "start_subsystem_init" not in self.get_rpc_methods(current=True)
+
     def get_bdevs(self, bdev_type):
-        self.current_bdevs = rpc.bdev.get_bdevs(self.client)
-        # Following replace needs to be done in order for some of the bdev
-        # listings to work: logical volumes, split disk.
-        # For example logical volumes: listing in menu is "Logical_Volume"
-        # (cannot have space), but the product name in SPDK is "Logical Volume"
-        bdev_type = bdev_type.replace("_", " ")
-        for bdev in filter(lambda x: bdev_type in x["product_name"].lower(),
-                           self.current_bdevs):
-            test = Bdev(bdev)
-            yield test
+        if self.is_init:
+            self.current_bdevs = rpc.bdev.get_bdevs(self.client)
+            # Following replace needs to be done in order for some of the bdev
+            # listings to work: logical volumes, split disk.
+            # For example logical volumes: listing in menu is "Logical_Volume"
+            # (cannot have space), but the product name in SPDK is "Logical Volume"
+            bdev_type = bdev_type.replace("_", " ")
+            for bdev in filter(lambda x: bdev_type in x["product_name"].lower(),
+                               self.current_bdevs):
+                test = Bdev(bdev)
+                yield test
 
     def get_bdevs_iostat(self, **kwargs):
         return rpc.bdev.get_bdevs_iostat(self.client, **kwargs)
@@ -124,9 +142,10 @@ class UIRoot(UINode):
 
     @verbose
     def get_lvol_stores(self):
-        self.current_lvol_stores = rpc.lvol.get_lvol_stores(self.client)
-        for lvs in self.current_lvol_stores:
-            yield LvolStore(lvs)
+        if self.is_init:
+            self.current_lvol_stores = rpc.lvol.get_lvol_stores(self.client)
+            for lvs in self.current_lvol_stores:
+                yield LvolStore(lvs)
 
     @verbose
     def create_lvol_store(self, **kwargs):
@@ -167,18 +186,21 @@ class UIRoot(UINode):
         return response
 
     def get_virtio_scsi_devs(self):
-        for bdev in rpc.vhost.get_virtio_scsi_devs(self.client):
-            test = Bdev(bdev)
-            yield test
+        if self.is_init:
+            for bdev in rpc.vhost.get_virtio_scsi_devs(self.client):
+                test = Bdev(bdev)
+                yield test
 
     def list_vhost_ctrls(self):
-        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+        if self.is_init:
+            self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
 
     def get_vhost_ctrlrs(self, ctrlr_type):
-        self.list_vhost_ctrls()
-        for ctrlr in filter(lambda x: ctrlr_type in x["backend_specific"].keys(),
-                            self.current_vhost_ctrls):
-            yield VhostCtrlr(ctrlr)
+        if self.is_init:
+            self.list_vhost_ctrls()
+            for ctrlr in filter(lambda x: ctrlr_type in x["backend_specific"].keys(),
+                                self.current_vhost_ctrls):
+                yield VhostCtrlr(ctrlr)
 
     @verbose
     def remove_vhost_controller(self, **kwargs):

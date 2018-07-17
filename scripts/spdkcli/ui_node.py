@@ -21,6 +21,18 @@ class UINode(ConfigNode):
         for child in self.children:
             child.refresh()
 
+    def assert_init(self):
+        root_node = self.get_root()
+        if not getattr(root_node, "is_init", False):
+            methods = root_node.get_rpc_methods(True)
+            methods = "\n".join(methods)
+            raise ExecutionError("SPDK Application is not yet initialized.\n"
+                                 "Please initialize subsystems with start_subsystem_init command.\n"
+                                 "List of available commands in current state:\n"
+                                 "%s" % methods)
+        else:
+            pass
+
     def ui_command_refresh(self):
         self.refresh()
 
@@ -92,7 +104,6 @@ class UILvolStores(UINode):
         bdev_name - On which bdev to create the lvol store.
         cluster_size - Cluster size to use when creating lvol store, in bytes. Default: 4194304.
         """
-
         cluster_size = self.ui_eval_param(cluster_size, "number", None)
 
         try:
@@ -164,7 +175,6 @@ class UIBdev(UINode):
         split_count -  Number of split bdevs to create
         split_size_mb- Size of each split volume in MiB (optional)
         """
-
         split_count = self.ui_eval_param(split_count, "number", None)
         split_size_mb = self.ui_eval_param(split_size_mb, "number", None)
 
@@ -185,7 +195,6 @@ class UIBdev(UINode):
         Args:
             base_bdev: name of previously split bdev
         """
-
         try:
             self.get_root().destruct_split_bdev(base_bdev=base_bdev)
         except JSONRPCException as e:
@@ -214,7 +223,6 @@ class UIMallocBdev(UIBdev):
         uuid - Optional parameter. Custom UUID to use. If empty then random
                will be generated.
         """
-
         size = self.ui_eval_param(size, "number", None)
         block_size = self.ui_eval_param(block_size, "number", None)
 
@@ -259,7 +267,6 @@ class UIAIOBdev(UIBdev):
         filename - Path to AIO backend.
         block_size - Integer, block size to use when constructing bdev.
         """
-
         block_size = self.ui_eval_param(block_size, "number", None)
 
         try:
@@ -320,7 +327,6 @@ class UINvmeBdev(UIBdev):
 
     def ui_command_create(self, name, trtype, traddr,
                           adrfam=None, trsvcid=None, subnqn=None):
-
         if "rdma" in trtype and None in [adrfam, trsvcid, subnqn]:
             self.shell.log.error("Using RDMA transport type."
                                  "Please provide arguments for adrfam, trsvcid and subnqn.")
@@ -352,7 +358,6 @@ class UINullBdev(UIBdev):
         uuid - Optional parameter. Custom UUID to use. If empty then random
                will be generated.
         """
-
         size = self.ui_eval_param(size, "number", None)
         block_size = self.ui_eval_param(block_size, "number", None)
         num_blocks = size * 1024 * 1024 // block_size
@@ -380,7 +385,6 @@ class UIErrorBdev(UIBdev):
         Arguments:
         base_name - base bdev name on top of which error bdev will be created.
         """
-
         try:
             self.get_root().create_error_bdev(base_name=base_name)
         except JSONRPCException as e:
@@ -471,6 +475,7 @@ class UIiSCSIBdev(UIBdev):
               Example: iscsi://127.0.0.1:3260/iqn.2018-06.org.spdk/0.
         initiator_iqn - IQN to use for initiating connection with the target.
         """
+
         try:
             ret_name = self.get_root().create_iscsi_bdev(name=name,
                                                          url=url,
@@ -489,6 +494,7 @@ class UIiSCSIBdev(UIBdev):
         Arguments:
         name - name of the iscsi bdev to be deleted.
         """
+
         try:
             self.get_root().delete_iscsi_bdev(name=name)
         except JSONRPCException as e:
