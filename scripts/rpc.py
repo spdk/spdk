@@ -49,7 +49,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_rpc_methods(args):
-        print_dict(rpc.get_rpc_methods(args.client, args))
+        print_dict(rpc.get_rpc_methods(args.client,
+                                       current=args.current))
 
     p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
     p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
@@ -57,7 +58,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def save_config(args):
-        rpc.save_config(args.client, args)
+        rpc.save_config(args.client,
+                        filename=args.filename,
+                        indent=args.indent)
 
     p = subparsers.add_parser('save_config', help="""Write current (live) configuration of SPDK subsystems and targets.
     If no filename is given write configuration to stdout.""")
@@ -68,7 +71,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def load_config(args):
-        rpc.load_config(args.client, args)
+        rpc.load_config(args.client,
+                        filename=args.filename)
 
     p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and tagets using JSON RPC. If no file is
     provided or file is '-' read configuration from stdin.""")
@@ -77,7 +81,10 @@ if __name__ == "__main__":
 
     @call_cmd
     def save_subsystem_config(args):
-        rpc.save_subsystem_config(args.client, args)
+        rpc.save_subsystem_config(args.client,
+                                  filename=args.filename,
+                                  indent=args.indent,
+                                  name=args.name)
 
     p = subparsers.add_parser('save_subsystem_config', help="""Write current (live) configuration of SPDK subsystem.
     If no filename is given write configuration to stdout.""")
@@ -89,7 +96,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def load_subsystem_config(args):
-        rpc.load_subsystem_config(args.client, args)
+        rpc.load_subsystem_config(args.client,
+                                  filename=args.filename)
 
     p = subparsers.add_parser('load_subsystem_config', help="""Configure SPDK subsystem using JSON RPC. If no file is
     provided or file is '-' read configuration from stdin.""")
