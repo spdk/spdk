@@ -268,12 +268,12 @@ struct spdk_iscsi_poll_group {
 struct spdk_iscsi_opts {
 	char *authfile;
 	char *nodebase;
-	int timeout;
-	int nopininterval;
+	int32_t timeout;
+	int32_t nopininterval;
 	bool no_discovery_auth;
 	bool req_discovery_auth;
 	bool req_discovery_auth_mutual;
-	int discovery_auth_group;
+	int32_t discovery_auth_group;
 	uint32_t MaxSessions;
 	uint32_t MaxConnectionsPerSession;
 	uint32_t MaxConnections;
@@ -295,12 +295,12 @@ struct spdk_iscsi_globals {
 	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
 	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
 
-	int timeout;
-	int nopininterval;
+	int32_t timeout;
+	int32_t nopininterval;
 	bool no_discovery_auth;
 	bool req_discovery_auth;
 	bool req_discovery_auth_mutual;
-	int discovery_auth_group;
+	int32_t discovery_auth_group;
 
 	uint32_t MaxSessions;
 	uint32_t MaxConnectionsPerSession;

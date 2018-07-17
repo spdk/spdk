@@ -43,7 +43,7 @@
 static const struct spdk_json_object_decoder rpc_set_iscsi_opts_decoders[] = {
 	{"auth_file", offsetof(struct spdk_iscsi_opts, authfile), spdk_json_decode_string, true},
 	{"node_base", offsetof(struct spdk_iscsi_opts, nodebase), spdk_json_decode_string, true},
-	{"timeout", offsetof(struct spdk_iscsi_opts, timeout), spdk_json_decode_int32, true},
+	{"nop_timeout", offsetof(struct spdk_iscsi_opts, timeout), spdk_json_decode_int32, true},
 	{"nop_in_interval", offsetof(struct spdk_iscsi_opts, nopininterval), spdk_json_decode_int32, true},
 	{"no_discovery_auth", offsetof(struct spdk_iscsi_opts, no_discovery_auth), spdk_json_decode_bool, true},
 	{"req_discovery_auth", offsetof(struct spdk_iscsi_opts, req_discovery_auth), spdk_json_decode_bool, true},
