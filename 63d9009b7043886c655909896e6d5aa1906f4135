@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "88bbb98c_a13ed844",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-17T20:39:41Z",
+      "side": 1,
+      "message": "tpyo (hehe).  Since there\u0027s some other comment stuff to cleanup I think it;s best to spin this one more time.  We don\u0027t (or try not to) check in typos in our docs or readme file.  Yes, I\u0027m the king of typos",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e792689_03c6788a",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-17T20:39:41Z",
+      "side": 1,
+      "message": "I think its OK to merge this now but lets remove this soon, links to questions on sites like this may contain mis-information and/or confuse and really don\u0027t belong checked into the SPDK repo",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "18ee7e03_0d46c333",
         "filename": "scripts/vagrant/update.sh",
         "patchSetId": 17
@@ -31,6 +65,24 @@
       "side": 1,
       "message": "Let\u0027s please merge this in and we can remove these commented out lines later.",
       "parentUuid": "18ee7e03_0d46c333",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06e7ffcb_54e803dd",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-17T20:39:41Z",
+      "side": 1,
+      "message": "see my other note on typo is docs, might as well do this now too",
+      "parentUuid": "2d30b0db_93a08585",
       "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
