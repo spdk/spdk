@@ -805,6 +805,9 @@ spdk_bdevperf_shutdown_cb(void)
 
 	/* Send events to stop all I/O on each core */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
+		if (g_head == NULL) {
+			break;
+		}
 		target = g_head[i];
 		if (target == NULL) {
 			break;
