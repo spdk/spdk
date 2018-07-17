@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2ed259c7_739b65b9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-17T14:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3eb43940_66e10f76",
+      "range": {
+        "startLine": 334,
+        "startChar": 45,
+        "endLine": 334,
+        "endChar": 54
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7530f4a0_c216601c",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 40
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "583756c5_72da8991",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-17T14:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9ea7d1c9_2e10e540",
+      "range": {
+        "startLine": 541,
+        "startChar": 37,
+        "endLine": 541,
+        "endChar": 58
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e5de88f9_f055733e",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 40
@@ -82,6 +130,30 @@
       "writtenOn": "2018-07-13T11:24:45Z",
       "side": 1,
       "message": "This section should be fixed in separate patch. Since lvol was opened, it should be closed here instead of blob.",
+      "range": {
+        "startLine": 1171,
+        "startChar": 0,
+        "endLine": 1174,
+        "endChar": 13
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ffa2d76_b38ca542",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1174,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-17T14:17:47Z",
+      "side": 1,
+      "message": "This was fixed in separate patch here https://review.gerrithub.io/#/c/spdk/spdk/+/419558/",
+      "parentUuid": "e5de88f9_f055733e",
       "range": {
         "startLine": 1171,
         "startChar": 0,
@@ -134,6 +206,30 @@
     },
     {
       "key": {
+        "uuid": "6f42041c_f1c25812",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-17T14:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f0a6243_cfc5e18a",
+      "range": {
+        "startLine": 248,
+        "startChar": 0,
+        "endLine": 248,
+        "endChar": 21
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36aaa018_041b5a12",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 40
@@ -157,6 +253,30 @@
     },
     {
       "key": {
+        "uuid": "416002a0_149a63c7",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-17T14:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "36aaa018_041b5a12",
+      "range": {
+        "startLine": 436,
+        "startChar": 0,
+        "endLine": 438,
+        "endChar": 2
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "405221ee_c9d36245",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 40
@@ -168,6 +288,30 @@
       "writtenOn": "2018-07-13T11:24:45Z",
       "side": 1,
       "message": "Always true ? Since this patch add this functionality, it should be checked both ways.",
+      "range": {
+        "startLine": 444,
+        "startChar": 1,
+        "endLine": 444,
+        "endChar": 13
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d770c0f5_1cb83164",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-17T14:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "405221ee_c9d36245",
       "range": {
         "startLine": 444,
         "startChar": 1,
@@ -244,6 +388,24 @@
     },
     {
       "key": {
+        "uuid": "3b90649b_7a75d6ca",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1105,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-17T14:17:47Z",
+      "side": 1,
+      "message": "This one is tricky, since we controll the error in spdk_bdev_destruct_done() via spdk_lvol_close() stub. Always calling without an error.\n\nI\u0027m open to suggestions other than finishing the unregistration via lvs unload.",
+      "parentUuid": "eed58d5e_f502f77f",
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24ea121c_12cf3d14",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 40
@@ -255,6 +417,30 @@
       "writtenOn": "2018-07-13T11:24:45Z",
       "side": 1,
       "message": "How come this is freed here ?\nI get that on lvol.c level the spdk_lvol struct is not freed after spdk_lvol_close(), since we want to let user destroy it as well. Its only the spdk_lvs_unload() that frees those.\n\nAssuming that delete_bdev() no longer exists, hot-remove of lvol is always part of lvs_unload.\n\nThis should be a separate UT, or some more appropriate place should be found rather than ut_lvol_rename().",
+      "range": {
+        "startLine": 1106,
+        "startChar": 0,
+        "endLine": 1107,
+        "endChar": 14
+      },
+      "revId": "52d889676c785aaf7cacc1f968c4b111b5979781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69f0a46f_0361b765",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-17T14:17:47Z",
+      "side": 1,
+      "message": "Both done, separated the UT as well as sorting out lvs creation/destruction to proper functions instead of mocking.",
+      "parentUuid": "24ea121c_12cf3d14",
       "range": {
         "startLine": 1106,
         "startChar": 0,

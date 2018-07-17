@@ -22,6 +22,30 @@
       "revId": "5e5cc5ac9cece8031cabfae506175306cdc292bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9af9cdc_ac086151",
+        "filename": "doc/bdev.md",
+        "patchSetId": 40
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-17T14:17:47Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "7f473326_0ea167ed",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 53
+      },
+      "revId": "5e5cc5ac9cece8031cabfae506175306cdc292bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
