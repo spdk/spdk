@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "73c1bfd7_55744547",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:33:34Z",
+      "side": 1,
+      "message": "Small grammar nitpick:\nThis will give users more fine-grained control over the timeout period for calling callback functions.",
+      "revId": "13b758717c2296cba3bebfa850ecacbf7ad14cf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "164b3b53_5e5cc172",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 5
@@ -19,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "f99b1caa_e7999e06",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:33:34Z",
+      "side": 1,
+      "message": "This global timeout was historically submitted in seconds, so converting it to microseconds before submitting it is correct.\nHowever, I would prefer to change the configuration file to say NvmeTimeoutUsec instead of NvmeTimeoutValue so as to avoid any confusion at all, and then parse it directly without the conversion.\nAlso, I couldn\u0027t find an RPC for setting this value. Do you know if we have one?",
+      "parentUuid": "164b3b53_5e5cc172",
+      "revId": "13b758717c2296cba3bebfa850ecacbf7ad14cf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "71e71578_8bd8972b",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 5
@@ -30,6 +65,24 @@
       "writtenOn": "2018-07-17T08:45:30Z",
       "side": 1,
       "message": "Whether this parameter \"nvme_timeout\" should be consistent with the definition \"timeout_us\" in \"include/spdk/nvme.h\"?",
+      "revId": "13b758717c2296cba3bebfa850ecacbf7ad14cf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1280aec_67efa942",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2018,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:33:34Z",
+      "side": 1,
+      "message": "I agree with this. Parameter names should match between definition and declaration.",
+      "parentUuid": "71e71578_8bd8972b",
       "revId": "13b758717c2296cba3bebfa850ecacbf7ad14cf5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
