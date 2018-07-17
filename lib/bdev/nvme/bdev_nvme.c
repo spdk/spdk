@@ -1048,7 +1048,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	probe_ctx->trids[0] = *trid;
 	probe_ctx->names[0] = base_name;
 	probe_ctx->hostnqn = hostnqn;
-	if (spdk_nvme_probe(trid, probe_ctx, probe_cb, attach_cb, NULL)) {
+	if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, NULL)) {
 		SPDK_ERRLOG("Failed to probe for new devices\n");
 		free(probe_ctx);
 		return -1;
