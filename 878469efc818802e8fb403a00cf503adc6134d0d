@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3804d44_8d60f12d",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T20:29:58Z",
+      "side": 1,
+      "message": "I believe if the user specifies an invalid range of blocks (i.e. that runs off the end), the command needs to fail. The lower layers will already do this correctly if you just build the descriptors and send it without doing this check.",
+      "revId": "878469efc818802e8fb403a00cf503adc6134d0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
