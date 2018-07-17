@@ -22,6 +22,23 @@
       "revId": "ae1439df6c0b046178e6db31c8995a936c8d43bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47c70c56_b2a9f2d2",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T17:37:22Z",
+      "side": 1,
+      "message": "You may already use it, but there is a really cool tool for looking at struct packing called \u0027pahole\u0027 - it\u0027s in the \u0027dwarves\u0027 package on Fedora. \n\nLooking at the output of that tool shows that the optimal packing would actually be to moved the uint16_t next to the uint32_t, and put all of the pointers after that. That will only leave a single 2 byte hole in the structure.",
+      "revId": "ae1439df6c0b046178e6db31c8995a936c8d43bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
