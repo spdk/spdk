@@ -11,13 +11,14 @@ def set_iscsi_options(
         req_discovery_auth_mutual=None,
         discovery_auth_group=None,
         max_sessions=None,
+        max_queue_depth=None,
         max_connections_per_session=None,
         default_time2wait=None,
         default_time2retain=None,
         immediate_data=None,
         error_recovery_level=None,
         allow_duplicated_isid=None,
-        min_connections_per_session=None):
+        min_connections_per_core=None):
     """Set iSCSI target options.
 
     Args:
@@ -29,8 +30,9 @@ def set_iscsi_options(
         req_discovery_auth: CHAP for discovery session should be required
         req_discovery_auth_mutual: CHAP for discovery session should be mutual
         discovery_auth_group: Authentication group ID for discovery session
-        max_sessions:Maximum number of sessions in the host
-        max_connections_per_session:Negotiated parameter, MaxConnections
+        max_sessions: Maximum number of sessions in the host
+        max_queue_depth: Maximum number of outstanding I/Os per queue
+        max_connections_per_session: Negotiated parameter, MaxConnections
         default_time2wait: Negotiated parameter, DefaultTime2Wait
         default_time2retain: Negotiated parameter, DefaultTime2Retain
         immediate_data: Negotiated parameter, ImmediateData
@@ -61,6 +63,8 @@ def set_iscsi_options(
         params['discovery_auth_group'] = discovery_auth_group
     if max_sessions:
         params['max_sessions'] = max_sessions
+    if max_queue_depth:
+        params['max_queue_depth'] = max_queue_depth
     if max_connections_per_session:
         params['max_connections_per_session'] = max_connections_per_session
     if default_time2wait:
@@ -73,8 +77,8 @@ def set_iscsi_options(
         params['error_recovery_level'] = error_recovery_level
     if allow_duplicated_isid:
         params['allow_duplicated_isid'] = allow_duplicated_isid
-    if min_connections_per_session:
-        params['min_connections_per_session'] = min_connections_per_session
+    if max_connections_per_session:
+        params['min_connections_per_core'] = min_connections_per_core
 
     return client.call('set_iscsi_options', params)
 
