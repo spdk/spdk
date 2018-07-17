@@ -23,6 +23,8 @@ def main():
 
     root_node = UIRoot(args.socket, shell)
     root_node.verbose = args.verbose
+    root_node.is_init = root_node.check_init()
+
     try:
         root_node.refresh()
     except BaseException:

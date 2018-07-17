@@ -21,7 +21,20 @@ class UINode(ConfigNode):
         for child in self.children:
             child.refresh()
 
+    def assert_init(self):
+        root_node = self.get_root()
+        if hasattr(root_node, "is_init") and root_node.is_init is False:
+            methods = root_node.get_rpc_methods(True)
+            methods = "\n".join(methods)
+            raise ExecutionError("SPDK Application is not yet initialized.\n"
+                                 "Please initialize subsystems with start_subsystem_init command.\n"
+                                 "List of available commands in current state:\n"
+                                 "%s" % methods)
+        else:
+            pass
+
     def ui_command_refresh(self):
+        self.assert_init()
         self.refresh()
 
     def ui_command_ll(self, path=None, depth=None):
@@ -69,6 +82,7 @@ class UIBdevs(UINode):
         Arguments:
         name - Is a unique identifier of the bdev to be deleted - UUID number or name alias.
         """
+        self.assert_init()
         self.get_root().delete_bdev(name=name)
         self.refresh()
 
@@ -92,6 +106,7 @@ class UILvolStores(UINode):
         bdev_name - On which bdev to create the lvol store.
         cluster_size - Cluster size to use when creating lvol store, in bytes. Default: 4194304.
         """
+        self.assert_init()
 
         cluster_size = self.ui_eval_param(cluster_size, "number", None)
 
@@ -112,6 +127,8 @@ class UILvolStores(UINode):
         name - Friendly name of the logical volume store to be deleted.
         uuid - UUID number of the logical volume store to be deleted.
         """
+        self.assert_init()
+
         if name is None and uuid is None:
             self.shell.log.error("Please specify one of the identifiers: "
                                  "lvol store name or UUID")
@@ -140,6 +157,8 @@ class UIBdev(UINode):
         Arguments:
         name - Is a unique identifier of the bdev to be deleted - UUID number or name alias.
         """
+        self.assert_init()
+
         try:
             self.get_root().delete_bdev(name=name)
         except JSONRPCException as e:
@@ -149,6 +168,8 @@ class UIBdev(UINode):
         self.refresh()
 
     def ui_command_get_bdev_iostat(self, name=None):
+        self.assert_init()
+
         try:
             ret = self.get_root().get_bdevs_iostat(name=name)
             self.shell.log.info(json.dumps(ret, indent=2))
@@ -164,6 +185,7 @@ class UIBdev(UINode):
         split_count -  Number of split bdevs to create
         split_size_mb- Size of each split volume in MiB (optional)
         """
+        self.assert_init()
 
         split_count = self.ui_eval_param(split_count, "number", None)
         split_size_mb = self.ui_eval_param(split_size_mb, "number", None)
@@ -185,6 +207,7 @@ class UIBdev(UINode):
         Args:
             base_bdev: name of previously split bdev
         """
+        self.assert_init()
 
         try:
             self.get_root().destruct_split_bdev(base_bdev=base_bdev)
@@ -214,6 +237,7 @@ class UIMallocBdev(UIBdev):
         uuid - Optional parameter. Custom UUID to use. If empty then random
                will be generated.
         """
+        self.assert_init()
 
         size = self.ui_eval_param(size, "number", None)
         block_size = self.ui_eval_param(block_size, "number", None)
@@ -236,6 +260,8 @@ class UIMallocBdev(UIBdev):
         Arguments:
         name - Is a unique identifier of the malloc bdev to be deleted - UUID number or name alias.
         """
+        self.assert_init()
+
         try:
             self.get_root().delete_malloc_bdev(name=name)
         except JSONRPCException as e:
@@ -259,6 +285,7 @@ class UIAIOBdev(UIBdev):
         filename - Path to AIO backend.
         block_size - Integer, block size to use when constructing bdev.
         """
+        self.assert_init()
 
         block_size = self.ui_eval_param(block_size, "number", None)
 
@@ -290,6 +317,8 @@ class UILvolBdev(UIBdev):
         thin_provision - Whether the bdev should be thick or thin provisioned.
               Default is False, and created bdevs are thick-provisioned.
         """
+        self.assert_init()
+
         uuid = None
         lvs_name = None
         try:
@@ -320,6 +349,7 @@ class UINvmeBdev(UIBdev):
 
     def ui_command_create(self, name, trtype, traddr,
                           adrfam=None, trsvcid=None, subnqn=None):
+        self.assert_init()
 
         if "rdma" in trtype and None in [adrfam, trsvcid, subnqn]:
             self.shell.log.error("Using RDMA transport type."
@@ -352,6 +382,7 @@ class UINullBdev(UIBdev):
         uuid - Optional parameter. Custom UUID to use. If empty then random
                will be generated.
         """
+        self.assert_init()
 
         size = self.ui_eval_param(size, "number", None)
         block_size = self.ui_eval_param(block_size, "number", None)
@@ -380,6 +411,7 @@ class UIErrorBdev(UIBdev):
         Arguments:
         base_name - base bdev name on top of which error bdev will be created.
         """
+        self.assert_init()
 
         try:
             self.get_root().create_error_bdev(base_name=base_name)
@@ -400,6 +432,7 @@ class UIPmemBdev(UIBdev):
         UIBdev.__init__(self, "pmemblk", parent)
 
     def ui_command_create_pmem_pool(self, pmem_file, total_size, block_size):
+        self.assert_init()
         total_size = self.ui_eval_param(total_size, "number", None)
         block_size = self.ui_eval_param(block_size, "number", None)
         num_blocks = int((total_size * 1024 * 1024) / block_size)
@@ -412,12 +445,14 @@ class UIPmemBdev(UIBdev):
             self.shell.log.error(e.message)
 
     def ui_command_delete_pmem_pool(self, pmem_file):
+        self.assert_init()
         try:
             self.get_root().delete_pmem_pool(pmem_file=pmem_file)
         except JSONRPCException as e:
             self.shell.log.error(e.message)
 
     def ui_command_info_pmem_pool(self, pmem_file):
+        self.assert_init()
         try:
             ret = self.get_root().delete_pmem_pool(pmem_file=pmem_file)
             self.shell.log.info(ret)
@@ -425,6 +460,7 @@ class UIPmemBdev(UIBdev):
             self.shell.log.error(e.message)
 
     def ui_command_create(self, pmem_file, name):
+        self.assert_init()
         try:
             ret_name = self.get_root().create_pmem_bdev(pmem_file=pmem_file,
                                                         name=name)
@@ -441,6 +477,7 @@ class UIRbdBdev(UIBdev):
         UIBdev.__init__(self, "rbd", parent)
 
     def ui_command_create(self, pool_name, rbd_name, block_size, name=None):
+        self.assert_init()
         block_size = self.ui_eval_param(block_size, "number", None)
 
         try:
@@ -471,6 +508,8 @@ class UIiSCSIBdev(UIBdev):
               Example: iscsi://127.0.0.1:3260/iqn.2018-06.org.spdk/0.
         initiator_iqn - IQN to use for initiating connection with the target.
         """
+        self.assert_init()
+
         try:
             ret_name = self.get_root().create_iscsi_bdev(name=name,
                                                          url=url,
@@ -489,6 +528,8 @@ class UIiSCSIBdev(UIBdev):
         Arguments:
         name - name of the iscsi bdev to be deleted.
         """
+        self.assert_init()
+
         try:
             self.get_root().delete_iscsi_bdev(name=name)
         except JSONRPCException as e:
@@ -504,6 +545,7 @@ class UIVirtioBlkBdev(UIBdev):
 
     def ui_command_create(self, name, trtype, traddr,
                           vq_count=None, vq_size=None):
+        self.assert_init()
 
         vq_count = self.ui_eval_param(vq_count, "number", None)
         vq_size = self.ui_eval_param(vq_size, "number", None)
@@ -535,6 +577,7 @@ class UIVirtioScsiBdev(UIBdev):
 
     def ui_command_create(self, name, trtype, traddr,
                           vq_count=None, vq_size=None):
+        self.assert_init()
 
         vq_count = self.ui_eval_param(vq_count, "number", None)
         vq_size = self.ui_eval_param(vq_size, "number", None)
@@ -555,6 +598,7 @@ class UIVirtioScsiBdev(UIBdev):
         self.refresh()
 
     def ui_command_delete(self, name):
+        self.assert_init()
         try:
             self.get_root().remove_virtio_scsi_bdev(name=name)
         except JSONRPCException as e:
@@ -580,6 +624,7 @@ class UIBdevObj(UINode):
         UINode.__init__(self, self.bdev.name, parent)
 
     def ui_command_show_details(self):
+        self.assert_init()
         self.shell.log.info(json.dumps(vars(self.bdev), indent=2))
 
     def summary(self):
@@ -623,6 +668,7 @@ class UILvsObj(UINode):
         self.lvs = lvs
 
     def ui_command_show_details(self):
+        self.assert_init()
         self.shell.log.info(json.dumps(vars(self.lvs), indent=2))
 
     def summary(self):
@@ -660,6 +706,7 @@ class UIVhost(UINode):
         Arguments:
         name - Controller name.
         """
+        self.assert_init()
         self.get_root().remove_vhost_controller(ctrlr=name)
         self.get_root().refresh()
         self.refresh()
@@ -687,6 +734,7 @@ class UIVhostBlk(UIVhost):
         readonly - Whether controller should be read only or not.
                    Default: False.
         """
+        self.assert_init()
         try:
             self.get_root().create_vhost_blk_controller(ctrlr=name,
                                                         dev_name=bdev,
@@ -718,6 +766,7 @@ class UIVhostScsi(UIVhost):
         cpumask - Optional. Integer to specify mask of CPUs to use.
                   Default: 1.
         """
+        self.assert_init()
         try:
             self.get_root().create_vhost_scsi_controller(ctrlr=name,
                                                          cpumask=cpumask)
@@ -736,9 +785,11 @@ class UIVhostCtrl(UINode):
         self.refresh()
 
     def ui_command_show_details(self):
+        self.assert_init()
         self.shell.log.info(json.dumps(vars(self.ctrlr), indent=2))
 
     def ui_command_set_coalescing(self, delay_base_us, iops_threshold):
+        self.assert_init()
         delay_base_us = self.ui_eval_param(delay_base_us, "number", None)
         iops_threshold = self.ui_eval_param(iops_threshold, "number", None)
 
@@ -763,6 +814,7 @@ class UIVhostScsiCtrlObj(UIVhostCtrl):
         Arguments:
         target_num - Integer identifier of target node to delete.
         """
+        self.assert_init()
         try:
             self.get_root().remove_vhost_scsi_target(ctrlr=self.ctrlr.ctrlr,
                                                      scsi_target_num=int(target_num))
@@ -785,6 +837,7 @@ class UIVhostScsiCtrlObj(UIVhostCtrl):
         target_num - Integer identifier of target node to modify.
         bdev - Which bdev to add as LUN.
         """
+        self.assert_init()
         try:
             self.get_root().add_vhost_scsi_lun(ctrlr=self.ctrlr.ctrlr,
                                                scsi_target_num=int(target_num),
@@ -828,6 +881,7 @@ class UIVhostTargetObj(UINode):
             UIVhostLunDevObj(target["bdev_name"], self)
 
     def ui_command_show_details(self):
+        self.assert_init()
         self.shell.log.info(json.dumps(self.target, indent=2))
 
     def summary(self):
