@@ -16,6 +16,24 @@
       "revId": "16b6c01f9049bcef85c5721c84c2d7742fa114f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d33aca4b_f84ef057",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-17T05:52:23Z",
+      "side": 1,
+      "message": "Can you check this function: \nbdev_iscsi_no_master_ch_poll\n\nThe count and mutex it is still used. For bdev iscsi initiator, it has the other policy. If there is no master ch poller, it will create a poller with this function (bdev_iscsi_no_master_ch_poll).\n\nThis is why ch_count and mutex are used.",
+      "parentUuid": "2bb55783_40930f18",
+      "revId": "16b6c01f9049bcef85c5721c84c2d7742fa114f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
