@@ -56,8 +56,8 @@ struct spdk_xattr {
 	/* TODO: reorder for best packing */
 	uint32_t	index;
 	char		*name;
-	void		*value;
 	uint16_t	value_len;
+	void		*value;
 	TAILQ_ENTRY(spdk_xattr)	link;
 };
 
