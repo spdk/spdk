@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68b7b617_57007ba7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-17T05:59:46Z",
+      "side": 1,
+      "message": "Maybe\n\nHow often the admin queue is polled for asynchronous events in microsecond.",
+      "range": {
+        "startLine": 902,
+        "startChar": 54,
+        "endLine": 902,
+        "endChar": 113
+      },
+      "revId": "ab4c99b488c707bd6e1f667cc046e4fadd4b1d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a05fd9b1_2b06dd58",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1289,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-17T05:59:46Z",
+      "side": 1,
+      "message": "I am not sure quite capturing this. This flag is to sync the parsing of the configuration file and the RPC setting at line 1031. So once the Conf file has been parsed, it is not allowed to accept the RPC setting. This looks like Ok. The question here is that before this flag is set, what if it is in the middle of the Conf file parsing and the PRC handling? The PRC handling is on the master call in the async event way and could be serialize together with this Conf parsing. Will only one of Conf and PRC settings take effect? It shall not be possible to mix the both setting. Do we need to have a test case to cover this scenario?\n\nThanks. Gang",
+      "range": {
+        "startLine": 1289,
+        "startChar": 1,
+        "endLine": 1289,
+        "endChar": 30
+      },
+      "revId": "ab4c99b488c707bd6e1f667cc046e4fadd4b1d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e931f6a_0ec5c5c4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-17T05:59:46Z",
+      "side": 1,
+      "message": "event is microsecond",
+      "range": {
+        "startLine": 230,
+        "startChar": 78,
+        "endLine": 230,
+        "endChar": 84
+      },
+      "revId": "ab4c99b488c707bd6e1f667cc046e4fadd4b1d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "648b0bad_38306f54",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-17T05:59:46Z",
+      "side": 1,
+      "message": "This is not needed.",
+      "range": {
+        "startLine": 108,
+        "startChar": 59,
+        "endLine": 108,
+        "endChar": 91
+      },
+      "revId": "ab4c99b488c707bd6e1f667cc046e4fadd4b1d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "283e7e97_df200962",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-17T05:59:46Z",
+      "side": 1,
+      "message": "Better to have the same parameters sequence from https://review.gerrithub.io/#/c/spdk/spdk/+/418723/14/doc/jsonrpc.md",
+      "range": {
+        "startLine": 107,
+        "startChar": 34,
+        "endLine": 108,
+        "endChar": 57
+      },
+      "revId": "ab4c99b488c707bd6e1f667cc046e4fadd4b1d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2478eb79_98119fcb",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-17T05:59:46Z",
+      "side": 1,
+      "message": "events in microsecond.",
+      "range": {
+        "startLine": 115,
+        "startChar": 89,
+        "endLine": 115,
+        "endChar": 95
+      },
+      "revId": "ab4c99b488c707bd6e1f667cc046e4fadd4b1d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
