@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "b0cb2cc0_aa5ebc19",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1289,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-17T10:19:28Z",
+      "side": 1,
+      "message": "Config files \u0027-c\u0027 and RPC config \u0027-w\u0027 are not allowed together so this won\u0027t be an issue.\n\nBut you are right, this flag can be moved at the begining of init function to not cofuse readers.",
+      "parentUuid": "a05fd9b1_2b06dd58",
+      "range": {
+        "startLine": 1289,
+        "startChar": 1,
+        "endLine": 1289,
+        "endChar": 30
+      },
+      "revId": "ab4c99b488c707bd6e1f667cc046e4fadd4b1d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e931f6a_0ec5c5c4",
         "filename": "scripts/rpc.py",
         "patchSetId": 14
@@ -105,6 +129,54 @@
       "writtenOn": "2018-07-17T05:59:46Z",
       "side": 1,
       "message": "Better to have the same parameters sequence from https://review.gerrithub.io/#/c/spdk/spdk/+/418723/14/doc/jsonrpc.md",
+      "range": {
+        "startLine": 107,
+        "startChar": 34,
+        "endLine": 108,
+        "endChar": 57
+      },
+      "revId": "ab4c99b488c707bd6e1f667cc046e4fadd4b1d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9d90122_80f6d6b4",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-17T10:19:28Z",
+      "side": 1,
+      "message": "true",
+      "parentUuid": "648b0bad_38306f54",
+      "range": {
+        "startLine": 108,
+        "startChar": 59,
+        "endLine": 108,
+        "endChar": 91
+      },
+      "revId": "ab4c99b488c707bd6e1f667cc046e4fadd4b1d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab3bbc6e_bbd40750",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-17T10:19:28Z",
+      "side": 1,
+      "message": "I will fix jsonrpc.md",
+      "parentUuid": "283e7e97_df200962",
       "range": {
         "startLine": 107,
         "startChar": 34,
