@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f2a4e699_f23e0281",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-17T18:35:55Z",
+      "side": 1,
+      "message": "I\u0027m inventing the RPC right now https://review.gerrithub.io/#/c/spdk/spdk/+/418723/. Do you wan\u0027t to express this timeout in us in RPC calls?",
+      "parentUuid": "f99b1caa_e7999e06",
+      "revId": "13b758717c2296cba3bebfa850ecacbf7ad14cf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "71e71578_8bd8972b",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 5
