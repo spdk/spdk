@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d7145db_f8f5b7b5",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T20:37:54Z",
+      "side": 1,
+      "message": "This typedef doesn\u0027t need to be in the public API",
+      "revId": "b3bc0b56bbff12b7669a7691355b4a48f390dd50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f880461f_55d1d110",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T20:37:54Z",
+      "side": 1,
+      "message": "You don\u0027t need match_found - if the loop doesn\u0027t break out early qpair will be NULL.",
+      "revId": "b3bc0b56bbff12b7669a7691355b4a48f390dd50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
