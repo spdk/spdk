@@ -720,31 +720,21 @@ ut_lvs_destroy(void)
 static void
 ut_lvol_init(void)
 {
+	struct spdk_lvol_store *lvs;
 	int sz = 10;
 	int rc;
 
-	g_lvs = calloc(1, sizeof(*g_lvs));
-	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
-	TAILQ_INIT(&g_lvs->lvols);
-	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
-	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
-	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
-	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-
-	/* Assign name to lvs */
-	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
-	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
-
-	g_lvs_bdev->lvs = g_lvs;
-	g_lvs_bdev->bdev = g_base_bdev;
-
-	spdk_uuid_generate(&g_lvs->uuid);
-
-	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
+	lvs = g_lvol_store;
 
 	/* Successful lvol create */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
@@ -753,42 +743,31 @@ ut_lvol_init(void)
 	vbdev_lvol_destruct(g_lvol);
 	CU_ASSERT(g_lvol == NULL);
 
-	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
-
-	free(g_lvs);
-	free(g_lvs_bdev);
-	free(g_base_bdev);
+	/* Destroy lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
 }
 
 static void
 ut_lvol_snapshot(void)
 {
+	struct spdk_lvol_store *lvs;
 	int sz = 10;
 	int rc;
 	struct spdk_lvol *lvol = NULL;
 
-	g_lvs = calloc(1, sizeof(*g_lvs));
-	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
-	TAILQ_INIT(&g_lvs->lvols);
-	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
-	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
-	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
-	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-
-	/* Assign name to lvs */
-	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
-	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
-
-	g_lvs_bdev->lvs = g_lvs;
-	g_lvs_bdev->bdev = g_base_bdev;
-
-	spdk_uuid_generate(&g_lvs->uuid);
-
-	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
+	lvs = g_lvol_store;
 
 	/* Successful lvol create */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
@@ -810,44 +789,33 @@ ut_lvol_snapshot(void)
 	vbdev_lvol_destruct(g_lvol);
 	CU_ASSERT(g_lvol == NULL);
 
-	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
-
-	free(g_lvs);
-	free(g_lvs_bdev);
-	free(g_base_bdev);
+	/* Destroy lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
 }
 
 static void
 ut_lvol_clone(void)
 {
+	struct spdk_lvol_store *lvs;
 	int sz = 10;
 	int rc;
 	struct spdk_lvol *lvol = NULL;
 	struct spdk_lvol *snap = NULL;
 	struct spdk_lvol *clone = NULL;
 
-	g_lvs = calloc(1, sizeof(*g_lvs));
-	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
-	TAILQ_INIT(&g_lvs->lvols);
-	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
-	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
-	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
-	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-
-	/* Assign name to lvs */
-	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
-	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
-
-	g_lvs_bdev->lvs = g_lvs;
-	g_lvs_bdev->bdev = g_base_bdev;
-
-	spdk_uuid_generate(&g_lvs->uuid);
-
-	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
+	lvs = g_lvol_store;
 
 	/* Successful lvol create */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
@@ -886,11 +854,10 @@ ut_lvol_clone(void)
 	vbdev_lvol_destruct(g_lvol);
 	CU_ASSERT(g_lvol == NULL);
 
-	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
-
-	free(g_lvs);
-	free(g_lvs_bdev);
-	free(g_base_bdev);
+	/* Destroy lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
 }
 
 static void
@@ -989,40 +956,30 @@ ut_lvol_examine(void)
 static void
 ut_lvol_rename(void)
 {
+	struct spdk_lvol_store *lvs;
 	struct spdk_lvol *lvol;
 	struct spdk_lvol *lvol2;
 	int sz = 10;
 	int rc;
 
-	g_lvs = calloc(1, sizeof(*g_lvs));
-	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
-	TAILQ_INIT(&g_lvs->lvols);
-	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
-	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
-	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
-	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-
-	/* Assign name to lvs */
-	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
-	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
-
-	g_lvs_bdev->lvs = g_lvs;
-	g_lvs_bdev->bdev = g_base_bdev;
-
-	spdk_uuid_generate(&g_lvs->uuid);
-
-	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
+	lvs = g_lvol_store;
 
 	/* Successful lvols create */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 	lvol = g_lvol;
 
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs, "lvol2", sz, false, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(lvs, "lvol2", sz, false, vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
@@ -1046,80 +1003,60 @@ ut_lvol_rename(void)
 	CU_ASSERT_STRING_EQUAL(lvol->name, "new_lvol_name");
 
 	/* Successful lvols destruct */
-	g_lvol = lvol;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destruct(lvol);
 	CU_ASSERT(g_lvol == NULL);
 
-	g_lvol = lvol2;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destruct(lvol2);
 	CU_ASSERT(g_lvol == NULL);
 
-	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
-
-	free(g_lvs);
-	free(g_lvs_bdev);
-	free(g_base_bdev);
+	/* Destroy lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
 }
 
 static void
 ut_lvol_resize(void)
 {
+	struct spdk_lvol_store *lvs;
+	struct spdk_lvol *lvol;
 	int sz = 10;
 	int rc = 0;
 
-	g_lvs = calloc(1, sizeof(*g_lvs));
-	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
-
-	TAILQ_INIT(&g_lvs->lvols);
-
-	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
-	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
-	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
-	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-
-	/* Assign name to bdev */
-	g_base_bdev->name = strdup("UNIT_TEST_LVS_NAME/old_lvol");
-	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
-
-	g_lvs_bdev->lvs = g_lvs;
-	g_lvs_bdev->bdev = g_base_bdev;
-
-	spdk_uuid_generate(&g_lvs->uuid);
-	g_base_bdev->blocklen = 4096;
-	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
+	lvs = g_lvol_store;
 
 	/* Successful lvol create */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvolerrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	lvol = g_lvol;
 
-	g_base_bdev->ctxt = g_lvol;
-
-	free(g_base_bdev->name);
-	g_base_bdev->name = spdk_sprintf_alloc("%s", g_lvol->unique_id);
-	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
-
-	g_lvolerrno = -1;
 	/* Successful lvol resize */
-	vbdev_lvol_resize(g_lvol, 20, vbdev_lvol_resize_complete, NULL);
+	g_lvolerrno = -1;
+	vbdev_lvol_resize(lvol, 20, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(g_lvolerrno == 0);
-	CU_ASSERT(g_base_bdev->blockcnt == 20 * g_cluster_size / g_base_bdev->blocklen);
+	CU_ASSERT(lvol->bdev->blockcnt == 20 * g_cluster_size / lvol->bdev->blocklen);
 
 	/* Resize with NULL lvol */
 	vbdev_lvol_resize(NULL, 20, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(g_lvolerrno != 0);
 
 	/* Successful lvol destruct */
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destruct(lvol);
 	CU_ASSERT(g_lvol == NULL);
 
-	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
-	free(g_lvs);
-	free(g_lvs_bdev);
-	free(g_base_bdev->name);
-	free(g_base_bdev);
+	/* Destroy lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
 }
 
 static void
