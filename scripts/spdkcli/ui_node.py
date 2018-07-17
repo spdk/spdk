@@ -92,7 +92,6 @@ class UILvolStores(UINode):
         bdev_name - On which bdev to create the lvol store.
         cluster_size - Cluster size to use when creating lvol store, in bytes. Default: 4194304.
         """
-
         cluster_size = self.ui_eval_param(cluster_size, "number", None)
 
         try:

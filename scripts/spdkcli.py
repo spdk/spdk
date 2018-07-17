@@ -25,7 +25,7 @@ def main():
     root_node.verbose = args.verbose
     try:
         root_node.refresh()
-    except BaseException:
+    except BaseException as e:
         pass
 
     if len(args.commands) > 0:
