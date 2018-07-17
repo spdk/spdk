@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f6de2f2_6d90ac84",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:54:05Z",
+      "side": 1,
+      "message": "at -\u003e in",
+      "revId": "16c00c7d10e269eb3e2b0cc437fc15db0c8fbf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0df76d7f_09715a35",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:54:05Z",
+      "side": 1,
+      "message": "starts,",
+      "revId": "16c00c7d10e269eb3e2b0cc437fc15db0c8fbf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "218e62f7_6e207634",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:54:05Z",
+      "side": 1,
+      "message": "It may be useful to describe how to enable tracepoints, then discuss the spdk_trace function and then talk about how you can parse the process name and ID from the startup log. I was confused when I read this paragraph the first time and had to go up and reread it after the capturing a snapshot of events section.",
+      "revId": "16c00c7d10e269eb3e2b0cc437fc15db0c8fbf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e6915ec_7d83d322",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:54:05Z",
+      "side": 1,
+      "message": "What is up with the error response in the example? I haven\u0027t really used the tracing functionality, so as an outsider, this looks funky to me.",
+      "revId": "16c00c7d10e269eb3e2b0cc437fc15db0c8fbf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5dfaf4d_47b47128",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:54:05Z",
+      "side": 1,
+      "message": "nvmf-\u003eNVMe-oF? I am not sure how consistent we are about using the official name in our docs though.",
+      "revId": "16c00c7d10e269eb3e2b0cc437fc15db0c8fbf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c7a4884_b9c96391",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:54:05Z",
+      "side": 1,
+      "message": "cummulative-\u003ecumulative",
+      "revId": "16c00c7d10e269eb3e2b0cc437fc15db0c8fbf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de411af9_fa4533ed",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:54:05Z",
+      "side": 1,
+      "message": "each I/O spends",
+      "revId": "16c00c7d10e269eb3e2b0cc437fc15db0c8fbf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c994f8c_45999812",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-17T15:54:05Z",
+      "side": 1,
+      "message": "several tracepoints",
+      "revId": "16c00c7d10e269eb3e2b0cc437fc15db0c8fbf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
