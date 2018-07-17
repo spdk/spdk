@@ -8,7 +8,7 @@ source "$rootdir/scripts/common.sh"
 function usage()
 {
 	if [ `uname` = Linux ]; then
-		options="[config|reset|status|help]"
+		options="[config|reset|status|cleanup|help]"
 	else
 		options="[config|reset|help]"
 	fi
@@ -22,6 +22,9 @@ function usage()
 	echo
 	echo "$options - as following:"
 	echo "config            Default mode. Allocate hugepages and bind PCI devices."
+	if [ `uname` = Linux ]; then
+		echo "cleanup            Remove any orphaned files that can be left in the system after SPDK application exit"
+	fi
 	echo "reset             Rebind PCI devices back to their original drivers."
 	echo "                  Also cleanup any leftover spdk files/resources."
 	echo "                  Hugepage memory size will remain unchanged."
@@ -232,6 +235,39 @@ function configure_linux_pci {
 	rm $TMP
 
 	echo "1" > "/sys/bus/pci/rescan"
+}
+
+function cleanup_linux {
+	files_to_clean="$(echo /dev/shm/* | egrep '(spdk_tgt|iscsi|vhost|nvmf|rocksdb)_trace|spdk_iscsi_conns' || true)"
+	files_to_clean="$(readlink -e assert_not_empty $files_to_clean || true)"
+	if [[ -z "$files_to_clean" ]]; then
+		echo "Clean"
+		return 0;
+	fi
+
+	shopt -s extglob
+	for fd_dir in $(echo /proc/+([0-9])); do
+		opened_files+="$(readlink -e assert_not_empty $fd_dir/fd/* || true)"
+	done
+	shopt -u extglob
+
+	if [[ -z "$opened_files" ]]; then
+		echo "Can't get list of opened files!"
+		exit 1
+	fi
+
+	echo 'Cleaning'
+	for f in $files_to_clean; do
+		if ! echo "$opened_files" | egrep -q "^$f\$"; then
+			echo "Removing:    $f"
+			rm $f
+		else
+			echo "Still open: $f"
+		fi
+	done
+	echo "Clean"
+
+	unset files_to_clean opened_files
 }
 
 function configure_linux {
@@ -518,6 +554,8 @@ if [ `uname` = Linux ]; then
 
 	if [ "$mode" == "config" ]; then
 		configure_linux
+	elif [ "$mode" == "cleanup" ]; then
+		cleanup_linux
 	elif [ "$mode" == "reset" ]; then
 		reset_linux
 	elif [ "$mode" == "status" ]; then
