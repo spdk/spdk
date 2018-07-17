@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86ad9b94_259f48bb",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T18:25:15Z",
+      "side": 1,
+      "message": "You don\u0027t actually need to declare this in a public header file. You can pass a pointer to a static function all within bdev.c",
+      "revId": "fb6d6af0154b44a73f375ac47298e54cb61aac93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
