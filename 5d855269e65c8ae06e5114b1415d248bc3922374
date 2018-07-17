@@ -16,6 +16,24 @@
       "revId": "5d855269e65c8ae06e5114b1415d248bc3922374",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4dcdd19_6d31e749",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-17T18:28:13Z",
+      "side": 1,
+      "message": "No, actually only files that are not open by any process under /dev/shm/* that match pattern that SPDK uses to create file are searched and removed (see lines 261 to 266) but this could be expanded for other places like hugepages. From what I seen for now those files are untouched if process is running",
+      "parentUuid": "0790dabc_0e637013",
+      "revId": "5d855269e65c8ae06e5114b1415d248bc3922374",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
