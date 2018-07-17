@@ -1036,7 +1036,7 @@ spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_uint32(w, "error_recovery_level", g_spdk_iscsi.ErrorRecoveryLevel);
 
-	spdk_json_write_named_uint32(w, "timeout", g_spdk_iscsi.timeout);
+	spdk_json_write_named_int32(w, "nop_timeout", g_spdk_iscsi.timeout);
 	spdk_json_write_named_int32(w, "nop_in_interval", g_spdk_iscsi.nopininterval);
 
 	spdk_json_write_named_bool(w, "no_discovery_auth", g_spdk_iscsi.no_discovery_auth);
@@ -1045,8 +1045,8 @@ spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 				   g_spdk_iscsi.req_discovery_auth_mutual);
 	spdk_json_write_named_int32(w, "discovery_auth_group", g_spdk_iscsi.discovery_auth_group);
 
-	spdk_json_write_named_int32(w, "min_connections_per_core",
-				    spdk_iscsi_conn_get_min_per_core());
+	spdk_json_write_named_uint32(w, "min_connections_per_core",
+				     spdk_iscsi_conn_get_min_per_core());
 
 	spdk_json_write_object_end(w);
 }
