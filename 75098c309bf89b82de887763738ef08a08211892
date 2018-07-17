@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0841c762_927d6030",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-07-17T05:48:18Z",
+      "side": 1,
+      "message": "This should be changed to \"spdk_bdev_init_failed\" according to your definition in bdev_module.h",
+      "range": {
+        "startLine": 713,
+        "startChar": 0,
+        "endLine": 713,
+        "endChar": 20
+      },
+      "revId": "75098c309bf89b82de887763738ef08a08211892",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
