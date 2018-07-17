@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "941dd0e6_ca2eeed3",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-17T08:53:18Z",
+      "side": 1,
+      "message": "In this case, we may just keep the original logic:\n\nlun-\u003ech_count--;\nassert(lun-\u003ech_count \u003d\u003d 0);",
+      "range": {
+        "startLine": 498,
+        "startChar": 1,
+        "endLine": 498,
+        "endChar": 28
+      },
+      "revId": "d9d3cc0e24f74136f3ef88c11600ce036c557c5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
