@@ -435,6 +435,7 @@ if __name__ == "__main__":
     p.set_defaults(func=apply_firmware)
 
     # iSCSI
+    @call_cmd
     def set_iscsi_options(args):
         rpc.iscsi.set_iscsi_options(
             args.client,
@@ -447,13 +448,14 @@ if __name__ == "__main__":
             req_discovery_auth_mutual=args.req_discovery_auth_mutual,
             discovery_auth_group=args.discovery_auth_group,
             max_sessions=args.max_sessions,
+            max_queue_depth=args.max_queue_depth,
             max_connections_per_session=args.max_connections_per_session,
             default_time2wait=args.default_time2wait,
             default_time2retain=args.default_time2retain,
             immediate_data=args.immediate_data,
             error_recovery_level=args.error_recovery_level,
             allow_duplicated_isid=args.allow_duplicated_isid,
-            min_connections_per_session=args.min_connections_per_session)
+            min_connections_per_core=args.min_connections_per_core)
 
     p = subparsers.add_parser('set_iscsi_options', help="""Set options of iSCSI subsystem""")
     p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file for discovery session')
@@ -468,13 +470,14 @@ if __name__ == "__main__":
     p.add_argument('-g', '--discovery-auth-group', help="""Authentication group ID for discovery session.
     *** Authentication group must be precreated ***""", type=int)
     p.add_argument('-a', '--max-sessions', help='Maximum number of sessions in the host.', type=int)
+    p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/Os per queue.', type=int)
     p.add_argument('-c', '--max-connections-per-session', help='Negotiated parameter, MaxConnections.', type=int)
     p.add_argument('-w', '--default-time2wait', help='Negotiated parameter, DefaultTime2Wait.', type=int)
     p.add_argument('-v', '--default-time2retain', help='Negotiated parameter, DefaultTime2Retain.', type=int)
     p.add_argument('-i', '--immediate-data', help='Negotiated parameter, ImmediateData.', action='store_true')
     p.add_argument('-l', '--error-recovery-level', help='Negotiated parameter, ErrorRecoveryLevel', type=int)
     p.add_argument('-p', '--allow-duplicated-isid', help='Allow duplicated initiator session ID.', action='store_true')
-    p.add_argument('-u', '--min-connections-per-session', help='Allocation unit of connections per core', type=int)
+    p.add_argument('-u', '--min-connections-per-core', help='Allocation unit of connections per core', type=int)
     p.set_defaults(func=set_iscsi_options)
 
     @call_cmd
