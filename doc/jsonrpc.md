@@ -1605,6 +1605,723 @@ Example response:
 }
 ~~~
 
+# iSCSI Target {#jsonrpc_components_iscsi_tgt}
+
+## set_iscsi_options method {#rpc_set_iscsi_options}
+
+Set global parameters for the iSCSI target.
+
+This RPC may only be called before SPDK subsystems have been initialized. This RPC can be called only once.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+auth_file                   | Optional | string  | Path to CHAP shared secret file for discovery session (default: none)
+node_base                   | Optional | string  | Prefix of the name of iSCSI target node (default: none)
+timeout                     | Optional | number  | Timeout in seconds to nop-in request to the initiator (default: 60)
+nop_in_interval             | Optional | number  | Time interval in secs between nop-in requests by the target (default: 60)
+no_discovery_auth           | Optional | boolean | CHAP for discovery session should be disabled (default: `false`)
+req_discovery_auth          | Optional | boolean | CHAP for discovery session should be required (default: `false`)
+req_discovery_auth_mutual   | Optional | boolean | CHAP for discovery session should be mutual (default: `false`)
+discovery_auth_group        | Optional | number  | (default: 0)
+max_sessions                | Optional | number  | Maximum number of sessions in the host (default: 128)
+max_queue_depth             | Optional | number  | (default: 64)
+max_connections_per_session | Optional | number  | (default: 2)
+default_time2wait           | Optional | number  | (default: 2)
+default_time2retain         | Optional | number  | (default: 20)
+immediate_data              | Optional | boolean | (default: `true`)
+error_recovery_level        | Optional | number  | (default: 0)
+allow_duplicated_isid       | Optional | boolean | (default: `false`)
+min_connections_per_core    | Optional | number  | (default: 4)
+
+Parameters `no_discovery_auth` and `req_discovery_auth_mutual` are mutually exclusive.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "allow_duplicated_isid": true,
+    "default_time2retain": 4,
+    "immediate_data": true,
+    "node_base": "iqn.2016-06.io.spdk",
+    "req_discovery_auth_mutual": true,
+    "max_sessions": 128,
+    "max_connections_per_session": 4,
+    "nop_timeout": 20,
+    "nop_in_interval": 60,
+    "error_recovery_level": 2,
+    "auth_file": "/usr/local/etc/spdk/auth.conf",
+    "min_connections_per_core": 3,
+    "no_discovery_auth": true,
+    "default_time2wait": 3
+  },
+  "jsonrpc": "2.0",
+  "method": "set_iscsi_options",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## get_iscsi_global_params method {#rpc_get_iscsi_global_params}
+
+### Parameters
+
+Show gloabl parameters of iSCSI target
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "jsonrpc": "2.0",
+  "method": "get_iscsi_global_params",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "allow_duplicated_isid": true,
+    "default_time2retain": 4,
+    "timeout": 20,
+    "immediate_data": true,
+    "node_base": "iqn.2016-06.io.spdk",
+    "req_discovery_auth_mutual": false,
+    "nop_in_interval": 60,
+    "discovery_auth_group": 0,
+    "max_connections_per_session": 4,
+    "max_queue_depth": 64,
+    "max_sessions": 128,
+    "error_recovery_level": 2,
+    "auth_file": "/usr/local/etc/spdk/auth.conf",
+    "min_connections_per_core": 3,
+    "no_discovery_auth": true,
+    "default_time2wait": 3,
+    "req_discovery_auth": false
+  }
+}
+~~~
+
+## get_initiator_groups method {#rpc_get_initiator_groups}
+
+### Parameters
+
+This method has no parameters.
+
+### Result
+
+Array of objects describing initiator groups.
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Initiator group tag
+initiators                  | Required | array   | Array of initiator hostnames or IP addresses
+netmasks                    | Required | array   | Array of initiator netmasks
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_initiator_groups",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "initiators": [
+        "192.168.200.100",
+        "192.168.200.101"
+      ],
+      "tag": 1,
+      "netmasks": [
+        "255.255.255.0",
+        "255.255.255.0"
+      ]
+    }
+  ]
+}
+
+~~~
+
+## add_initiator_group method {#rpc_add_initiator_group}
+
+Add initiator group.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Initiator group tag (unique, integer > 0)
+initiators                  | Required | array   | Not empty array of initiator hostnames or IP addresses
+netmasks                    | Required | array   | Not empty array of initiator netmasks
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "initiators": [
+      "192.168.200.100",
+      "192.168.200.101"
+    ],
+    "tag": 1,
+    "netmasks": [
+      "255.255.255.0",
+      "255.255.255.0"
+    ]
+  },
+  "jsonrpc": "2.0",
+  "method": "add_initiator_group",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## delete_initiator_group method {#rpc_delete_initiator_group}
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Initiator group tag (unique, integer > 0)
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "tag": 1
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_initiator_group",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+
+~~~
+
+## add_initiators_to_initiator_group method {#rpc_add_initiators_to_initiator_group}
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Existing initiator group tag.
+initiators                  | Optional | array   | Array of initiator hostnames or IP addresses
+netmasks                    | Optional | array   | Array of initiator netmasks
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "params": {
+    "initiators": [
+      "192.168.200.103",
+      "192.168.200.104"
+    ],
+    "tag": 2,
+    "netmasks": [
+      "255.255.0.0",
+      "255.255.1.0"
+    ]
+  },
+  "jsonrpc": "2.0",
+  "method": "add_initiators_to_initiator_group",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## get_target_nodes method {#rpc_get_target_nodes}
+
+### Parameters
+
+This method has no parameters.
+
+### Result
+
+Array of objects describing target node.
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+Help... :/                  |          |         |
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_target_nodes",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+Help... :/
+~~~
+
+## construct_target_node method {#rpc_construct_target_node}
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+name                        | Required | string  | Target node name (ASCII)
+alias_name                  | Required | string  | Target node alias name (ASCII)
+pg_ig_maps                  | Required | array   | Portal_Group_Tag:Initiator_Group_Tag mappings
+luns                        | Required | array   | Array of Bdev names to LUN ID mappings
+queue_depth                 | Required | number  | Target queue depth
+disable_chap                | Optional | boolean | CHAP authentication should be disabled for this target
+require_chap                | Optional | boolean | CHAP authentication should be required for this target
+mutual_chap                 | Optional | boolean | HAP authentication should be mutual (`true`) or bidirectional (`false`)
+chap_group                  | Optional | number  | Authentication group ID for this target node
+header_digest               | Optional | boolean | Header Digest should be required for this target node
+data_digest                 | Optional | boolean | Data Digest should be required for this target node
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "luns": [
+      {
+        "lun_id": 0,
+        "bdev_name": "Nvme0n1"
+      }
+    ],
+    "mutual_chap": true,
+    "name": "iSCSI-node-0",
+    "alias_name": "iScsi-node-0-alias",
+    "pg_ig_maps": [
+      {
+        "ig_tag": 1,
+        "pg_tag": 1
+      },
+      {
+        "ig_tag": 2,
+        "pg_tag": 2
+      }
+    ],
+    "data_digest": true,
+    "disable_chap": true,
+    "header_digest": true,
+    "queue_depth": 24
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_target_node",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## add_pg_ig_maps method {#rpc_add_pg_ig_maps}
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+name                        | Required | string  | Target node name (ASCII)
+pg_ig_maps                  | Required | array   | Not empty array of Portal to Initiator group mappings objects
+
+Portal to Initiator group mappings object:
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+ig_tag                      | Required | number  | Existing initiator group tag
+pg_tag                      | Required | number  | Existing portal group tag
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "pg_ig_maps": [
+      {
+        "ig_tag": 1,
+        "pg_tag": 1
+      },
+      {
+        "ig_tag": 2,
+        "pg_tag": 2
+      },
+      {
+        "ig_tag": 3,
+        "pg_tag": 3
+      }
+    ],
+    "name": "iSCSI-tgt-0"
+  },
+  "jsonrpc": "2.0",
+  "method": "add_pg_ig_maps",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## delete_pg_ig_maps method {#rpc_delete_pg_ig_maps}
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+name                        | Required | string  | Target node name (ASCII)
+pg_ig_maps                  | Required | array   | Not empty array of Portal to Initiator group mappings objects
+
+Portal to Initiator group mappings object:
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+ig_tag                      | Required | number  | Existing initiator group tag
+pg_tag                      | Required | number  | Existing portal group tag
+
+
+
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "pg_ig_maps": [
+      {
+        "ig_tag": 1,
+        "pg_tag": 1
+      },
+      {
+        "ig_tag": 2,
+        "pg_tag": 2
+      },
+      {
+        "ig_tag": 3,
+        "pg_tag": 3
+      }
+    ],
+    "name": "iSCSI-tgt-0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_pg_ig_maps",
+  "id": 1
+}
+
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## delete_target_node method {#rpc_delete_target_node}
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+name                        | Required | string  | Target node name (ASCII)
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "iSCSI-tgt-0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_target_node",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## get_portal_groups method {#rpc_get_portal_groups}
+
+List existing portals.
+
+### Parameters
+
+This method has no parameters.
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "jsonrpc": "2.0",
+  "method": "get_portal_groups",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "portals": [
+        {
+          "cpumask": "0x2",
+          "host": "127.0.0.1",
+          "port": "3260"
+        }
+      ],
+      "tag": 1
+    }
+  ]
+}
+~~~
+
+## add_portal_group method {#rpc_add_portal_group}
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Portal group tag
+portals                     | Required | array   | None empty array of portals
+
+Portal object
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+host                        | Required | string  | Hostname or IP
+port                        | Required | string  | Port number
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "portals": [
+      {
+        "host": "127.0.0.1",
+        "port": "3260"
+      }
+    ],
+    "tag": 1
+  },
+  "jsonrpc": "2.0",
+  "method": "add_portal_group",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## delete_portal_group method {#rpc_delete_portal_group}
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Existing portal group tag
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "tag": 1
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_portal_group",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## get_iscsi_connections method {#rpc_get_iscsi_connections}
+
+### Parameters
+
+This method has no parameters.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_iscsi_connections",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+Help... :/
+~~~
+
+## target_node_add_lun method {#rpc_target_node_add_lun}
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+name                        | Required | string  | Target node name (ASCII)
+bdev_name                   | Required | string  | bdev name to be added as a LUN
+lun_id                      | Optional | number  | LUN ID (default: first free)
+
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "lun_id": 2,
+    "name": "SCSI-tgt-0",
+    "bdev_name": "Malloc0"
+  },
+  "jsonrpc": "2.0",
+  "method": "target_node_add_lun",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+Help... :/
+~~~
+
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
 ## get_nvmf_subsystems method {#rpc_get_nvmf_subsystems}
