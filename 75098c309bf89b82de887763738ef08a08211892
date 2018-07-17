@@ -22,6 +22,30 @@
       "revId": "75098c309bf89b82de887763738ef08a08211892",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fa3d286_cff54323",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-17T14:31:20Z",
+      "side": 1,
+      "message": "heh, thanks :) . Yeah I left the b out in all 3 places at first and updated just 2 of them in patch set 2 :(",
+      "parentUuid": "0841c762_927d6030",
+      "range": {
+        "startLine": 713,
+        "startChar": 0,
+        "endLine": 713,
+        "endChar": 20
+      },
+      "revId": "75098c309bf89b82de887763738ef08a08211892",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
