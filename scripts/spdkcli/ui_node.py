@@ -21,6 +21,18 @@ class UINode(ConfigNode):
         for child in self.children:
             child.refresh()
 
+    def assert_init(self):
+        root_node = self.get_root()
+        if not getattr(root_node, "is_init", False):
+            methods = root_node.get_rpc_methods(True)
+            methods = "\n".join(methods)
+            raise ExecutionError("SPDK Application is not yet initialized.\n"
+                                 "Please initialize subsystems with start_subsystem_init command.\n"
+                                 "List of available commands in current state:\n"
+                                 "%s" % methods)
+        else:
+            pass
+
     def ui_command_refresh(self):
         self.refresh()
 
