@@ -4,6 +4,7 @@ import argparse
 from os import getuid
 from configshell_fb import ConfigShell
 from spdkcli import UIRoot
+from rpc.client import JSONRPCException
 
 
 def main():
@@ -23,6 +24,8 @@ def main():
 
     root_node = UIRoot(args.socket, shell)
     root_node.verbose = args.verbose
+    root_node.is_init = True if root_node.check_init() else False
+
     try:
         root_node.refresh()
     except BaseException:

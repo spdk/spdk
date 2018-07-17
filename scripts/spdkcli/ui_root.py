@@ -15,8 +15,13 @@ class UIRoot(UINode):
         self.current_vhost_ctrls = []
         self.set_rpc_target(s)
         self.verbose = False
+        self.is_init = True
 
     def refresh(self):
+        try:
+            self.assert_init()
+        except Exception as e:
+            self.shell.log.warning(e)
         self._children = set([])
         UIBdevs(self)
         UILvolStores(self)
@@ -39,6 +44,20 @@ class UIRoot(UINode):
             self.client.verbose = False
             return r
         return w
+
+    def ui_command_start_subsystem_init(self):
+        if rpc.start_subsystem_init(self.client):
+            self.is_init = True
+            self.refresh()
+
+    def get_rpc_methods(self, current=False):
+        return rpc.get_rpc_methods(self.client, current=current)
+
+    def check_init(self):
+        methods = self.get_rpc_methods(current=True)
+        if "start_subsystem_init" in methods:
+            return False
+        return True
 
     def get_bdevs(self, bdev_type):
         self.current_bdevs = rpc.bdev.get_bdevs(self.client)
