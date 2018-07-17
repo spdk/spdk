@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee58cf57_7bb43db5",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T18:09:48Z",
+      "side": 1,
+      "message": "I found the \u0027text\u0027 terminology to be confusing. Maybe a name like:\n\nspdk_base64_get_encoded_len(size_t raw_len)",
+      "revId": "648e369b1d63797e22babcfacc3e926830016e52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4922de3_1451f3c1",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T18:09:48Z",
+      "side": 1,
+      "message": "Similarly here:\n\nspdk_base64_get_raw_len(size_t encoded_len)",
+      "revId": "648e369b1d63797e22babcfacc3e926830016e52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8128ab6e_5d7288ec",
+        "filename": "include/spdk/base64.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-17T18:09:48Z",
+      "side": 1,
+      "message": "I was confused when I first looked at these functions and I think changing the parameter names would help a bit:\n\nspdk_base64_encode(char *dst, size_t *dstlen, const void *src, size_t srclen)\n\nAlso, dstlen seems entirely calculated from srclen (using spdk_base64_get_text_strlen(srclen)), so I think it may be reasonable to just not specify dstlen in the function and document that \u0027dst\u0027 must be the required size.\n\nspdk_base64_encode(char *dst, const void *src, size_t srclen)",
+      "revId": "648e369b1d63797e22babcfacc3e926830016e52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
