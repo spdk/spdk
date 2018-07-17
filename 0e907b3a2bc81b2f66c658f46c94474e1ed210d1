@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0e479963_d9eb0c17",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-17T11:27:58Z",
+      "side": 1,
+      "message": "Good Catch",
+      "parentUuid": "fff1e7eb_4805a4c7",
+      "range": {
+        "startLine": 153,
+        "startChar": 22,
+        "endLine": 153,
+        "endChar": 25
+      },
+      "revId": "0e907b3a2bc81b2f66c658f46c94474e1ed210d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "247586e8_ac58511c",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 14
@@ -71,6 +95,54 @@
     },
     {
       "key": {
+        "uuid": "f0b65821_60f37e1e",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-17T11:27:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "247586e8_ac58511c",
+      "range": {
+        "startLine": 162,
+        "startChar": 50,
+        "endLine": 162,
+        "endChar": 64
+      },
+      "revId": "0e907b3a2bc81b2f66c658f46c94474e1ed210d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6eaebcd_fe2b24bd",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-17T11:27:58Z",
+      "side": 1,
+      "message": "For decode function, additional check is necessary.\nFor encode function, error is only caused by parameters\u0027 NULL/0, it will be alright if parameters are guaranteed.\nSince length of encoded text only depends on binary length, it is not necessary to reconfirm it by the encode function.\n\nSo its addition check were removed durinig reworking.",
+      "parentUuid": "65ab41c0_cd530272",
+      "range": {
+        "startLine": 162,
+        "startChar": 44,
+        "endLine": 162,
+        "endChar": 48
+      },
+      "revId": "0e907b3a2bc81b2f66c658f46c94474e1ed210d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ae326c3_7bdfd43e",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 14
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "b0b6ec85_412e4da4",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-17T11:27:58Z",
+      "side": 1,
+      "message": "Oh...\nAshamed about it.",
+      "parentUuid": "5ae326c3_7bdfd43e",
+      "range": {
+        "startLine": 171,
+        "startChar": 9,
+        "endLine": 171,
+        "endChar": 15
+      },
+      "revId": "0e907b3a2bc81b2f66c658f46c94474e1ed210d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a090dda2_1a7f2267",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 14
@@ -105,6 +201,30 @@
       "writtenOn": "2018-07-17T10:12:33Z",
       "side": 1,
       "message": "sizeof?",
+      "range": {
+        "startLine": 178,
+        "startChar": 80,
+        "endLine": 178,
+        "endChar": 86
+      },
+      "revId": "0e907b3a2bc81b2f66c658f46c94474e1ed210d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d5cd6a1_7c4a1dfb",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-17T11:27:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a090dda2_1a7f2267",
       "range": {
         "startLine": 178,
         "startChar": 80,
