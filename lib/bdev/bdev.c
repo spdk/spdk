@@ -2273,6 +2273,8 @@ _spdk_bdev_get_each_channel_stat(struct spdk_io_channel_iter *i)
 	bdev_iostat_ctx->stat->num_read_ops += channel->stat.num_read_ops;
 	bdev_iostat_ctx->stat->bytes_written += channel->stat.bytes_written;
 	bdev_iostat_ctx->stat->num_write_ops += channel->stat.num_write_ops;
+	bdev_iostat_ctx->stat->read_latency_ticks += channel->stat.read_latency_ticks;
+	bdev_iostat_ctx->stat->write_latency_ticks += channel->stat.write_latency_ticks;
 
 	spdk_for_each_channel_continue(i, 0);
 }
