@@ -48,6 +48,47 @@
     },
     {
       "key": {
+        "uuid": "2721ac4b_ccdfa684",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T23:43:33Z",
+      "side": 1,
+      "message": "I tried Pawel\u0027s idea as follows and it looked working.\n\n    def refresh(self):\n        if self.is_init is False:\n            methods \u003d self.get_rpc_methods(current\u003dTrue)\n            methods \u003d \"\\n\".join(methods)\n            self.shell.log.warning(\"SPDK Application is not yet initialized.\\n\"\n                                   \"Please initialize subsystems with start_subsystem_init command.\\n\"\n                                   \"List of available commands in current state:\\n\"\n                                   \"%s\" % methods)\n        else:\n            pass\n        self._children \u003d set([])\n        UIBdevs(self)\n        UILvolStores(self)\n        UIVhosts(self)",
+      "parentUuid": "8ff9d946_a3514f97",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 37
+      },
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18b88e98_c5681479",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T23:43:33Z",
+      "side": 1,
+      "message": "start_subsystem_init should be checked if it is callable in the current state?",
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2dc6a5cb_57aa1130",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 3
@@ -65,6 +106,23 @@
         "endLine": 61,
         "endChar": 19
       },
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "621950bb_71e093b5",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T23:43:33Z",
+      "side": 1,
+      "message": "What is the criteria if self.is_init is added? Most method should be checked as well?",
       "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
