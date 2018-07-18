@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b2b852e_a83a2e7d",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-18T08:38:19Z",
+      "side": 1,
+      "message": "Put \"create bdevs\", \"create vhosts\", etc into smaller functions?",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 70
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a55ae3d_e535a0ff",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-18T08:38:19Z",
+      "side": 1,
+      "message": "create lvols and create vhosts kind of do not fit into timing section name \"create bdev config\"\n\nEither create separate timing sections or just change timing name to \"create config\" or something similar",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 13
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa67b861_81f3e439",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-18T08:38:19Z",
+      "side": 1,
+      "message": "spdkcli_clear_config?",
+      "range": {
+        "startLine": 64,
+        "startChar": 13,
+        "endLine": 64,
+        "endChar": 33
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
