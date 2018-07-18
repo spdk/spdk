@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "21e5483f_52175285",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T05:11:51Z",
+      "side": 1,
+      "message": "Removing request from rpc_remove_virtio_scsi_dev and rpc_remove_virtio_dev and then unifying them into rpc_remove_virtio_dev may be reasonable.",
+      "range": {
+        "startLine": 197,
+        "startChar": 7,
+        "endLine": 197,
+        "endChar": 33
+      },
+      "revId": "0585c2426071f9506dbe520234e2c3ee2f5aee7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "646927f9_3a4bd87a",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T05:11:51Z",
+      "side": 1,
+      "message": "This member is not useful now.",
+      "revId": "0585c2426071f9506dbe520234e2c3ee2f5aee7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6acdab1_fd2a4b96",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T05:11:51Z",
+      "side": 1,
+      "message": "this member is not useful now.",
+      "revId": "0585c2426071f9506dbe520234e2c3ee2f5aee7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "540cae45_87a50fea",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T05:11:51Z",
+      "side": 1,
+      "message": "These two blank lines can be removed.",
+      "range": {
+        "startLine": 271,
+        "startChar": 0,
+        "endLine": 272,
+        "endChar": 0
+      },
+      "revId": "0585c2426071f9506dbe520234e2c3ee2f5aee7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
