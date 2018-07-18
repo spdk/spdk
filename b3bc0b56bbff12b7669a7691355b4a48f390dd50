@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bcd81316_00374538",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-18T16:33:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d7145db_f8f5b7b5",
+      "revId": "b3bc0b56bbff12b7669a7691355b4a48f390dd50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f880461f_55d1d110",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-17T20:37:54Z",
       "side": 1,
       "message": "You don\u0027t need match_found - if the loop doesn\u0027t break out early qpair will be NULL.",
+      "revId": "b3bc0b56bbff12b7669a7691355b4a48f390dd50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f091fe34_25d2cd06",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-18T16:33:25Z",
+      "side": 1,
+      "message": "Thanks,\n\nthat\u0027s a good implementation detail I didn\u0027t know about. I had assumed that qpair would be pointing to the last element in the tailq.",
+      "parentUuid": "f880461f_55d1d110",
       "revId": "b3bc0b56bbff12b7669a7691355b4a48f390dd50",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
