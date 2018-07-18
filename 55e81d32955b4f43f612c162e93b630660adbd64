@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "849a0f1d_98710ae0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-18T20:35:11Z",
+      "side": 1,
+      "message": "This check is probably bogus - the caller of this function wants to set the data buffer to exactly the pointer they provided and it\u0027s their responsibility to provide a properly aligned one. The alignment requirements can be different for each module.",
+      "revId": "55e81d32955b4f43f612c162e93b630660adbd64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
