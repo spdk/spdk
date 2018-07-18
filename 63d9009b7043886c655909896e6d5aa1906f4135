@@ -299,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "b9ae92f3_f1401116",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-18T16:41:02Z",
+      "side": 1,
+      "message": "I highly recommend --enable-werror is turned on. Now that I think about it, I\u0027m not sure why this isn\u0027t on by default. I\u0027ll figure that out.",
+      "parentUuid": "954a4bb5_99bacbc7",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e9edb838_601f867a",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 17
