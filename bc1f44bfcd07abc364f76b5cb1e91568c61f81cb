@@ -68,6 +68,52 @@
       "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14a94aff_251d6814",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-18T09:48:56Z",
+      "side": 1,
+      "message": "please delete",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 15
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0637ba1_1a90d2e9",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-18T09:48:56Z",
+      "side": 1,
+      "message": "please delete",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 11
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
