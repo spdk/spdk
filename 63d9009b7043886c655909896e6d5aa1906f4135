@@ -19,6 +19,193 @@
     },
     {
       "key": {
+        "uuid": "b443b256_25090fc3",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "Ugh, I couldn\u0027t test this.  For some reason my Mac (H Sierra) either at home or at work won\u0027t install Vbox - and its not the security thing either so I\u0027m using a crappy Win10 machine to test",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce969533_0af2fc8a",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "lines 59..64 should be removed.  this is covered in our development page listed above and we want to avoid duplicating these steps (a) to avoid having to update things in more than one place if/when they change and (b) to avoid inconsistencies that can cause confusion like the suggestion below to put the repo under a \u0027github\u0027 subdir.",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7af46244_4a788d26",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "FYI I tested fedora26 and freebsd11 VMs - no issues! (well, other than the line ending thing because windows sucks)",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02520fb3_e846fd22",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "again, we should remove this /github thing not only because we don\u0027t use it anywhere but someone might think its required and/or the name has some special meaning other than being descriptive",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a658af4_0381c99f",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "nice!",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac142e66_acd46ab6",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "instead of \"your original\" can we say \"the one that you cloned earlier\"?",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5de8ce06_5711bc8d",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "suggest a \"/\" in front of \"spdk/repo\"\n\nalso, I get this crap all over the place \"/usr/bin/env: ‘bash\\r’: No such file or directory\" and believe its a git setting or some other windows related nonsense.  if you didn\u0027t see any of this ignore me but please assure me that you ran this on a windows installation and didnt run into this running .sh files",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1bcc2b5_33de8258",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "the \"--enable-werror\" isn\u0027t something we document anywhere else that I can think of.  Is there a reason why you include it here?",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9edb838_601f867a",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "typo needs to be fixed, \"pdgdep\" --\u003e \"pkgdep\"",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3898411_73b7648a",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "same question as before on the --enable-werror",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7eb57715_0156b0d3",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T01:08:55Z",
+      "side": 1,
+      "message": "should we add something at the end about stopping/pausing the VM?",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6e792689_03c6788a",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 17
