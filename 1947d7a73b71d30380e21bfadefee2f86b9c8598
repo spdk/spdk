@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "778ee586_e0ba611d",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-18T16:52:33Z",
+      "side": 1,
+      "message": "Do we only ever use a lun from a single thread? Do we only ever plan to use a lun from a single thread in the future?\n\nIf the answer to both of those questions is yes, we can just remove the ch_count parameter entirely. Further, lun-\u003emaster_ch could just become lun-\u003ech, since there is only ever one.",
+      "revId": "1947d7a73b71d30380e21bfadefee2f86b9c8598",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
