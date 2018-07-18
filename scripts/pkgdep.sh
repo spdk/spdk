@@ -13,6 +13,8 @@ if [ -s /etc/redhat-release ]; then
 		git astyle python-pep8 lcov python clang-analyzer libuuid-devel \
 		sg3_utils libiscsi-devel
 	yum install -y --allowerasing openssl-devel
+	# Additional (optional) dependencies for showing backtrace in logs
+	yum install libunwind-devel
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for DPDK
@@ -27,6 +29,8 @@ elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
 		git astyle pep8 lcov clang uuid-dev sg3-utils libiscsi-dev
+	# Additional (optional) dependencies for showing backtrace in logs
+	apt-get install libunwind-dev
 	# Additional dependencies for NVMe over Fabrics
 	apt-get install -y libibverbs-dev librdmacm-dev
 	# Additional dependencies for DPDK
@@ -40,6 +44,8 @@ elif [ -f /etc/debian_version ]; then
 elif [ -f /etc/SuSE-release ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pep8 libuuid-devel sg3_utils
+	# Additional (optional) dependencies for showing backtrace in logs
+	zypper install libunwind-devel
 	# Additional dependencies for NVMe over Fabrics
 	zypper install -y rdma-core-devel
 	# Additional dependencies for DPDK
