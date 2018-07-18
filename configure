@@ -16,6 +16,8 @@ function usage()
 	echo " --prefix=path             Configure installation prefix (default: /usr/local)"
 	echo ""
 	echo " --enable-debug            Configure for debug builds"
+	echo " --enable-log-bt=lvl       Show backtrace using libunwind when logging message at level <= lvl."
+	echo "                           Valid values are: ERROR, WARN, NOTICE, DEBUG."
 	echo " --enable-werror           Treat compiler warnings as errors"
 	echo " --enable-asan             Enable address sanitizer"
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
@@ -88,6 +90,9 @@ for i in "$@"; do
 			;;
 		--disable-debug)
 			CONFIG_DEBUG=n
+			;;
+		--enable-log-bt=*)
+			CONFIG_LOG_BACKTRACE=${i#*=}
 			;;
 		--enable-asan)
 			CONFIG_ASAN=y
@@ -294,6 +299,9 @@ if [ -n "$CONFIG_PREFIX" ]; then
 fi
 if [ -n "$CONFIG_DEBUG" ]; then
 	echo "CONFIG_DEBUG?=$CONFIG_DEBUG" >> CONFIG.local
+fi
+if [ -n "$CONFIG_LOG_BACKTRACE" ]; then
+	echo "CONFIG_LOG_BACKTRACE?=$CONFIG_LOG_BACKTRACE" >> CONFIG.local
 fi
 if [ -n "$CONFIG_WERROR" ]; then
 	echo "CONFIG_WERROR?=$CONFIG_WERROR" >> CONFIG.local
