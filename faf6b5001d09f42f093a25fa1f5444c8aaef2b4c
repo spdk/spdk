@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c3ba494_aaef0e97",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-18T17:35:49Z",
+      "side": 1,
+      "message": "getattr(root_node, \"is_init\", false)\nor\njust set\nsel.is_init \u003d None\nin constructor so the \"if self.is_init is False\" will be False.",
+      "range": {
+        "startLine": 26,
+        "startChar": 11,
+        "endLine": 26,
+        "endChar": 71
+      },
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ff9d946_a3514f97",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-18T17:35:49Z",
+      "side": 1,
+      "message": "I don\u0027t see a reason for try-except here. Can you just print here list of commands with message from asser_init() ?\n\nAlso I think assert_init() belong to this class not to UINode.",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 37
+      },
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2dc6a5cb_57aa1130",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-18T17:35:49Z",
+      "side": 1,
+      "message": "return \"start_subsystem_init\" not in self.get_rpc_methods(current\u003dTrue",
+      "range": {
+        "startLine": 59,
+        "startChar": 8,
+        "endLine": 61,
+        "endChar": 19
+      },
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
