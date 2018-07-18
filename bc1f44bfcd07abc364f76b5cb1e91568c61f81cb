@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5d502ff2_563de3b7",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-18T09:57:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5b2b852e_a83a2e7d",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 70
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a55ae3d_e535a0ff",
         "filename": "test/spdkcli/spdkcli.sh",
         "patchSetId": 32
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-18T08:38:19Z",
       "side": 1,
       "message": "create lvols and create vhosts kind of do not fit into timing section name \"create bdev config\"\n\nEither create separate timing sections or just change timing name to \"create config\" or something similar",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 13
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ae561e7_3942f82d",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-18T09:57:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a55ae3d_e535a0ff",
       "range": {
         "startLine": 41,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d29f3306_a8d83496",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-18T09:57:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fa67b861_81f3e439",
+      "range": {
+        "startLine": 64,
+        "startChar": 13,
+        "endLine": 64,
+        "endChar": 33
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14a94aff_251d6814",
         "filename": "test/spdkcli/spdkcli_job.py",
         "patchSetId": 32
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "da91bb5c_a6dea5ab",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-18T09:57:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "14a94aff_251d6814",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 15
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0637ba1_1a90d2e9",
         "filename": "test/spdkcli/spdkcli_job.py",
         "patchSetId": 32
@@ -105,6 +201,30 @@
       "writtenOn": "2018-07-18T09:48:56Z",
       "side": 1,
       "message": "please delete",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 11
+      },
+      "revId": "bc1f44bfcd07abc364f76b5cb1e91568c61f81cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fef084c3_d67949a7",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-18T09:57:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c0637ba1_1a90d2e9",
       "range": {
         "startLine": 4,
         "startChar": 0,
