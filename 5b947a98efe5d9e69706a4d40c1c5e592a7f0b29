@@ -1,0 +1,129 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f91c213_e572dcf9",
+        "filename": "test/iscsi_tgt/calsoft/calsoft.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T04:48:22Z",
+      "side": 1,
+      "message": "please revert this change",
+      "revId": "5b947a98efe5d9e69706a4d40c1c5e592a7f0b29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90497aa3_1dfebd8f",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T04:48:22Z",
+      "side": 1,
+      "message": "please revert this change",
+      "revId": "5b947a98efe5d9e69706a4d40c1c5e592a7f0b29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69156295_abab0c8c",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T04:48:22Z",
+      "side": 1,
+      "message": "please revert this change",
+      "revId": "5b947a98efe5d9e69706a4d40c1c5e592a7f0b29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4e59429_67472aa5",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T04:48:22Z",
+      "side": 1,
+      "message": "please revert this change",
+      "revId": "5b947a98efe5d9e69706a4d40c1c5e592a7f0b29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2af948a3_d306543f",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T04:48:22Z",
+      "side": 1,
+      "message": "please revert this change",
+      "revId": "5b947a98efe5d9e69706a4d40c1c5e592a7f0b29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64294066_c45e515e",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T04:48:22Z",
+      "side": 1,
+      "message": "please revert this change",
+      "revId": "5b947a98efe5d9e69706a4d40c1c5e592a7f0b29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "301eaf80_f6c7a080",
+        "filename": "test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T04:48:22Z",
+      "side": 1,
+      "message": "please revert these changes.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 158
+      },
+      "revId": "5b947a98efe5d9e69706a4d40c1c5e592a7f0b29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
