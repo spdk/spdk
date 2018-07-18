@@ -69,6 +69,24 @@
       "revId": "97e36ec565df6f57903d0301f08ab2dd1981f400",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eec41073_b529a67f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-18T01:15:55Z",
+      "side": 1,
+      "message": "After reading the comments at https://review.gerrithub.io/c/spdk/spdk/+/416672/24/lib/bdev/bdev.c#1071, this is the issue as you mentioned, for the R/W and R or W, it will pick the least rate limits. While for the R and W separate rate limits, it is the problem you identified. Thanks. I will fix that problem in the https://review.gerrithub.io/c/spdk/spdk/+/416672/ patch where separate read and write rate limits control introduced and also a utility funtion _is_read_io() introduced in that patch.\n\nThanks again to identify this issue. Gang",
+      "parentUuid": "d621ea5d_d0f6c496",
+      "revId": "97e36ec565df6f57903d0301f08ab2dd1981f400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
