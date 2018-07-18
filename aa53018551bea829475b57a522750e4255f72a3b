@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f70e9d1_f183496f",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-18T02:58:46Z",
+      "side": 1,
+      "message": "This part is used to support the two old compatibility configuration.",
+      "range": {
+        "startLine": 1128,
+        "startChar": 1,
+        "endLine": 1128,
+        "endChar": 52
+      },
+      "revId": "aa53018551bea829475b57a522750e4255f72a3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
