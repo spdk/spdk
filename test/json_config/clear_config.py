@@ -39,6 +39,7 @@ def delete_subbdevs(args, bdev, rpc_bdevs):
         if construct_method == 'construct_nvme_bdev':
             for rpc_bdev in rpc_bdevs:
                 if bdev_name in rpc_bdev['name'] and rpc_bdev['product_name'] == "NVMe disk":
+                    print("delete_bdev on {name}".format(name=rpc_bdev['name']))
                     args.client.call('delete_bdev', {'name': "%s" % rpc_bdev['name']})
                     ret_value = True
 
