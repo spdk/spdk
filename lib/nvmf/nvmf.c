@@ -688,6 +688,7 @@ _spdk_nvmf_qpair_deactivate(void *ctx)
 	if (!TAILQ_EMPTY(&qpair->outstanding)) {
 		qpair->state_cb = _spdk_nvmf_qpair_destroy;
 		qpair->state_cb_arg = qpair_ctx;
+		spdk_nvmf_qpair_free_aer(qpair);
 		return;
 	}
 

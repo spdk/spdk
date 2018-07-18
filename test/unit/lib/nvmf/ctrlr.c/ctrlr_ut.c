@@ -128,7 +128,7 @@ DEFINE_STUB(spdk_nvmf_request_complete,
 	    (struct spdk_nvmf_request *req),
 	    -1);
 
-DEFINE_STUB(spdk_nvmf_request_abort,
+DEFINE_STUB(spdk_nvmf_request_free,
 	    int,
 	    (struct spdk_nvmf_request *req),
 	    -1);
