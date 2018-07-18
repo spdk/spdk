@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9ccbe732_4b19c903",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-18T20:28:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f7c8dfc_6534a710",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 8
+      },
+      "revId": "7d22d94af1af7624a29e15bd5280b0f4826957d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "62e6fc58_209da818",
         "filename": "test/spdkcli/spdkcli.sh",
         "patchSetId": 15
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-18T08:39:14Z",
       "side": 1,
       "message": "tabs!",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 8
+      },
+      "revId": "7d22d94af1af7624a29e15bd5280b0f4826957d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51e601cc_8376a412",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-18T20:28:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "62e6fc58_209da818",
       "range": {
         "startLine": 24,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "61b54fcb_e3384ca5",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-18T20:28:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d9b71807_c408b2b6",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 40
+      },
+      "revId": "7d22d94af1af7624a29e15bd5280b0f4826957d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efb97e9a_f2c3160b",
         "filename": "test/spdkcli/spdkcli.sh",
         "patchSetId": 15
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "ef90ee6d_c15ff201",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-18T20:28:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "efb97e9a_f2c3160b",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 8
+      },
+      "revId": "7d22d94af1af7624a29e15bd5280b0f4826957d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c19434d2_2077c225",
         "filename": "test/spdkcli/spdkcli.sh",
         "patchSetId": 15
@@ -105,6 +201,30 @@
       "writtenOn": "2018-07-18T08:39:14Z",
       "side": 1,
       "message": "Commented. Remove?",
+      "range": {
+        "startLine": 98,
+        "startChar": 8,
+        "endLine": 98,
+        "endChar": 76
+      },
+      "revId": "7d22d94af1af7624a29e15bd5280b0f4826957d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc7607df_7f216f81",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-18T20:28:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c19434d2_2077c225",
       "range": {
         "startLine": 98,
         "startChar": 8,
