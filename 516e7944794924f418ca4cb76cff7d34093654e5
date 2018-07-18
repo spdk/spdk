@@ -16,6 +16,24 @@
       "revId": "516e7944794924f418ca4cb76cff7d34093654e5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1e8bcf9_e6f415f9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1071,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-18T01:33:10Z",
+      "side": 1,
+      "message": "Thanks for identifying this issue. It looks like the issue as you mentioned. Let me address this. Thanks.",
+      "parentUuid": "65b87ba7_4e7b45ef",
+      "revId": "516e7944794924f418ca4cb76cff7d34093654e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
