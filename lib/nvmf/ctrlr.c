@@ -1729,7 +1729,23 @@ spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 void
-spdk_nvmf_ctrlr_drain_aer_req(struct spdk_nvmf_ctrlr *ctrlr)
+spdk_nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	if (!spdk_nvmf_qpair_is_admin_queue(qpair)) {
+		return;
+	}
+
+	if (ctrlr->aer_req != NULL) {
+		spdk_nvmf_request_free(ctrlr->aer_req);
+		ctrlr->aer_req = NULL;
+	}
+	return;
+}
+
+void
+spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	if (!ctrlr->aer_req) {
 		return;
