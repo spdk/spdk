@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "4525ad24_f183db7f",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-18T21:52:07Z",
+      "side": 1,
+      "message": "I don\u0027t think we need this mechanism to be this flexible. It\u0027s probably going to end up being much simpler to just define 3 or 4 separate RPCs.",
+      "revId": "944bf8f7173d9f862953a25d5c08caf531ea525b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "321c1255_dc6f9917",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 16
