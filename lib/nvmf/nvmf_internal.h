@@ -292,7 +292,20 @@ struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem
 		uint16_t cntlid);
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 
+/*
+ * Drain aer is sent on a per controller basis and sends a completion for the aer to the host.
+ * This function should be called when attempting to recover in error paths when it is OK for
+ * the host to send a subsequent AER.
+ */
 void spdk_nvmf_ctrlr_drain_aer_req(struct spdk_nvmf_ctrlr *ctrlr);
+
+/*
+ * Abort aer simply frees the rdma resources for the aer without informing the host.
+ * This function should be called when deleting a qpair when one wants to make sure
+ * the qpair is completely empty before freeing the request. The reason we abort and
+ * don't send the AER response is to avoid any subsequent AERs being sent from the host.
+ */
+int spdk_nvmf_admin_qpair_abort_aer(struct spdk_nvmf_qpair *qpair);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
