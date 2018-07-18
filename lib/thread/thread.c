@@ -315,6 +315,8 @@ spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 	spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
 }
 
+extern char __executable_start;
+
 void
 spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size)
@@ -343,7 +345,12 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device == io_device) {
+			char *offset;
+
 			SPDK_ERRLOG("io_device %p already registered\n", io_device);
+			offset = (char *)dev->create_cb;
+			offset -= (uintptr_t)&__executable_start;
+			SPDK_ERRLOG("create_cb offset = %p\n", offset);
 			free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
 			return;
