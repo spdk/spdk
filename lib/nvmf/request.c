@@ -45,6 +45,51 @@
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
 
+static inline int
+spdk_nvmf_qpair_finish_request(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request *req)
+{
+	TAILQ_REMOVE(&qpair->outstanding, req, link);
+	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
+		assert(qpair->state_cb != NULL);
+
+		if (TAILQ_EMPTY(&qpair->outstanding)) {
+			qpair->state_cb(qpair->state_cb_arg, 0);
+		}
+	} else {
+		assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
+	}
+
+	return 0;
+}
+
+static int
+spdk_nvmf_request_abort(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	if (spdk_nvmf_transport_req_abort(req)) {
+		SPDK_ERRLOG("Transport request abortion error\n");
+	}
+
+	return spdk_nvmf_qpair_finish_request(qpair, req);
+}
+
+int
+spdk_nvmf_admin_qpair_abort_aer(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	if (!spdk_nvmf_qpair_is_admin_queue(qpair)) {
+		return 0;
+	}
+
+	ctrlr = qpair->ctrlr;
+	if (ctrlr->aer_req != NULL) {
+		spdk_nvmf_request_abort(ctrlr->aer_req);
+		ctrlr->aer_req = NULL;
+	}
+	return 0;
+}
+
 int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
@@ -62,22 +107,11 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		      rsp->cid, rsp->cdw0, rsp->rsvd1,
 		      *(uint16_t *)&rsp->status);
 
-	TAILQ_REMOVE(&qpair->outstanding, req, link);
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
 	}
 
-	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
-		assert(qpair->state_cb != NULL);
-
-		if (TAILQ_EMPTY(&qpair->outstanding)) {
-			qpair->state_cb(qpair->state_cb_arg, 0);
-		}
-	} else {
-		assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
-	}
-
-	return 0;
+	return spdk_nvmf_qpair_finish_request(qpair, req);
 }
 
 static void
