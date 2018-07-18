@@ -152,11 +152,6 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 	cb_fn(cb_arg, lvol, g_lvolerrno);
 }
 
-void
-spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-}
-
 uint64_t
 spdk_blob_get_num_clusters(struct spdk_blob *b)
 {
@@ -211,19 +206,28 @@ spdk_lvs_load(struct spdk_bs_dev *dev,
 {
 	struct spdk_lvol_store *lvs;
 	int i;
+	int lvserrno = g_lvserrno;
 
-	if (g_lvserrno == 0) {
-		lvs = calloc(1, sizeof(*lvs));
-		SPDK_CU_ASSERT_FATAL(lvs != NULL);
-		TAILQ_INIT(&lvs->lvols);
-		TAILQ_INIT(&lvs->pending_lvols);
-		g_lvol_store = lvs;
-		for (i = 0; i < g_num_lvols; i++) {
-			_lvol_create(lvs);
-		}
+	if (lvserrno != 0) {
+		/* On error blobstore destroys bs_dev itself,
+		 * by puttin back io channels.
+		 * This operation is asynchronous, and completed
+		 * after calling the callback for lvol. */
+		cb_fn(cb_arg, g_lvol_store, lvserrno);
+		dev->destroy(dev);
+		return;
 	}
 
-	cb_fn(cb_arg, g_lvol_store, g_lvserrno);
+	lvs = calloc(1, sizeof(*lvs));
+	SPDK_CU_ASSERT_FATAL(lvs != NULL);
+	TAILQ_INIT(&lvs->lvols);
+	TAILQ_INIT(&lvs->pending_lvols);
+	g_lvol_store = lvs;
+	for (i = 0; i < g_num_lvols; i++) {
+		_lvol_create(lvs);
+	}
+
+	cb_fn(cb_arg, g_lvol_store, lvserrno);
 }
 
 int
@@ -598,6 +602,7 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 void
 spdk_bdev_module_examine_done(struct spdk_bdev_module *module)
 {
+	SPDK_CU_ASSERT_FATAL(g_examine_done != true);
 	g_examine_done = true;
 }
 
@@ -959,13 +964,14 @@ ut_lvol_examine(void)
 	g_lvserrno = -1;
 	lvol_already_opened = false;
 	vbdev_lvs_examine(&g_bdev);
-	CU_ASSERT(g_bs_dev != NULL);
+	CU_ASSERT(g_bs_dev == NULL);
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(g_examine_done == true);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_lvol_pairs));
-	free(g_bs_dev);
 
-	/* Examine unsuccesfully - fail on lvol load */
+	/* Examine succesfully
+	 * - one lvol fails to load
+	 * - lvs is loaded with no lvols present */
 	g_bs_dev = NULL;
 	g_lvserrno = 0;
 	g_lvolerrno = -1;
@@ -981,7 +987,8 @@ ut_lvol_examine(void)
 	CU_ASSERT(!TAILQ_EMPTY(&g_spdk_lvol_pairs));
 	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->lvols));
 	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
-	free(g_bs_dev);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
 
 	/* Examine succesfully */
 	g_lvs = calloc(1, sizeof(*g_lvs));
