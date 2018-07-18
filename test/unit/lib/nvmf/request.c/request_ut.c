@@ -45,6 +45,12 @@ void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 }
 
 int
+spdk_nvmf_transport_req_free(struct spdk_nvmf_request *req)
+{
+	return 0;
+}
+
+int
 spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 {
 	return 0;
