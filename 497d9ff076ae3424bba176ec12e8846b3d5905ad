@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6174c71_c67df019",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-18T21:28:58Z",
+      "side": 1,
+      "message": "Similar comment here to what I\u0027ve been making on other patches. I\u0027m not a fan of creating a function above that is only called from one place (here). I\u0027d rather be able to read the test from top to bottom. Functions are fine for things that are used in multiple places.",
+      "revId": "497d9ff076ae3424bba176ec12e8846b3d5905ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
