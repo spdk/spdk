@@ -825,7 +825,7 @@ if __name__ == "__main__":
     # log
     @call_cmd
     def set_trace_flag(args):
-        rpc.log.set_trace_flag(args.client, args)
+        rpc.log.set_trace_flag(args.client, flag=args.flag)
 
     p = subparsers.add_parser('set_trace_flag', help='set trace flag')
     p.add_argument(
@@ -834,7 +834,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def clear_trace_flag(args):
-        rpc.log.clear_trace_flag(args.client, args)
+        rpc.log.clear_trace_flag(args.client, flag=args.flag)
 
     p = subparsers.add_parser('clear_trace_flag', help='clear trace flag')
     p.add_argument(
@@ -843,14 +843,14 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_trace_flags(args):
-        print_dict(rpc.log.get_trace_flags(args.client, args))
+        print_dict(rpc.log.get_trace_flags(args.client))
 
     p = subparsers.add_parser('get_trace_flags', help='get trace flags')
     p.set_defaults(func=get_trace_flags)
 
     @call_cmd
     def set_log_level(args):
-        rpc.log.set_log_level(args.client, args)
+        rpc.log.set_log_level(args.client, level=args.level)
 
     p = subparsers.add_parser('set_log_level', help='set log level')
     p.add_argument('level', help='log level we want to set. (for example "DEBUG").')
@@ -858,14 +858,14 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_log_level(args):
-        print_dict(rpc.log.get_log_level(args.client, args))
+        print_dict(rpc.log.get_log_level(args.client))
 
     p = subparsers.add_parser('get_log_level', help='get log level')
     p.set_defaults(func=get_log_level)
 
     @call_cmd
     def set_log_print_level(args):
-        rpc.log.set_log_print_level(args.client, args)
+        rpc.log.set_log_print_level(args.client, level=args.level)
 
     p = subparsers.add_parser('set_log_print_level', help='set log print level')
     p.add_argument('level', help='log print level we want to set. (for example "DEBUG").')
@@ -873,7 +873,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_log_print_level(args):
-        print_dict(rpc.log.get_log_print_level(args.client, args))
+        print_dict(rpc.log.get_log_print_level(args.client))
 
     p = subparsers.add_parser('get_log_print_level', help='get log print level')
     p.set_defaults(func=get_log_print_level)
@@ -1111,7 +1111,7 @@ if __name__ == "__main__":
     # net
     @call_cmd
     def add_ip_address(args):
-        rpc.net.add_ip_address(args.client, args)
+        rpc.net.add_ip_address(args.client, ifc_index=args.ifc_index, ip_addr=args.ip_addr)
 
     p = subparsers.add_parser('add_ip_address', help='Add IP address')
     p.add_argument('ifc_index', help='ifc index of the nic device.', type=int)
@@ -1120,7 +1120,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def delete_ip_address(args):
-        rpc.net.delete_ip_address(args.client, args)
+        rpc.net.delete_ip_address(args.client, ifc_index=args.ifc_index, ip_addr=args.ip_addr)
 
     p = subparsers.add_parser('delete_ip_address', help='Delete IP address')
     p.add_argument('ifc_index', help='ifc index of the nic device.', type=int)
@@ -1129,7 +1129,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_interfaces(args):
-        print_dict(rpc.net.get_interfaces(args.client, args))
+        print_dict(rpc.net.get_interfaces(args.client))
 
     p = subparsers.add_parser(
         'get_interfaces', help='Display current interface list')
