@@ -120,6 +120,7 @@ spdk_bdev_part_free_cb(void *io_device)
 int
 spdk_bdev_part_free(struct spdk_bdev_part *part)
 {
+	SPDK_ERRLOG("part = %p\n", part);
 	spdk_io_device_unregister(part, spdk_bdev_part_free_cb);
 
 	/* Return 1 to indicate that this is an asynchronous operation that isn't complete
@@ -335,6 +336,8 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 
 	__sync_fetch_and_add(&base->ref, 1);
 	part->internal.base = base;
+	SPDK_ERRLOG("part = %p\n", part);
+	SPDK_ERRLOG("base = %p\n", base);
 
 	if (!base->claimed) {
 		int rc;

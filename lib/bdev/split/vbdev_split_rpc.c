@@ -122,6 +122,7 @@ spdk_rpc_destruct_split(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
+	SPDK_ERRLOG("\n");
 	rc = spdk_vbdev_split_destruct(req.base_bdev);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
