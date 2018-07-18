@@ -1728,8 +1728,22 @@ spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 	return 0;
 }
 
+int
+spdk_nvmf_ctrlr_free_aer(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_qpair *qpair)
+{
+	if (!spdk_nvmf_qpair_is_admin_queue(qpair)) {
+		return 0;
+	}
+
+	if (ctrlr->aer_req != NULL) {
+		spdk_nvmf_request_free(ctrlr->aer_req);
+		ctrlr->aer_req = NULL;
+	}
+	return 0;
+}
+
 void
-spdk_nvmf_ctrlr_drain_aer_req(struct spdk_nvmf_ctrlr *ctrlr)
+spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	if (!ctrlr->aer_req) {
 		return;
