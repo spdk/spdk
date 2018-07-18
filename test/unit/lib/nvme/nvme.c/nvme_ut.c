@@ -555,7 +555,7 @@ test_nvme_user_copy_cmd_complete(void)
 	 * Mocking this to prevent the calling code from freeing the
 	 * buff as it confuses either valgrind or the static analyzer.
 	 */
-	MOCK_SET_P(spdk_dma_zmalloc, void *, NULL);
+	MOCK_SET_P(spdk_zmalloc, void *, NULL);
 	nvme_user_copy_cmd_complete(&req, &cpl);
 	CU_ASSERT(memcmp(req.user_buffer, &test_data, buff_size) == 0);
 	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
@@ -575,8 +575,8 @@ test_nvme_user_copy_cmd_complete(void)
 	free(req.user_buffer);
 	free(buff);
 
-	/* return spdk_dma_zmalloc/freee to unmocked */
-	MOCK_SET_P(spdk_dma_zmalloc, void *, &ut_spdk_dma_zmalloc);
+	/* return spdk_zmalloc/freee to unmocked */
+	MOCK_SET_P(spdk_zmalloc, void *, &ut_spdk_zmalloc);
 }
 
 static void
@@ -720,15 +720,15 @@ test_nvme_allocate_request_user_copy(void)
 	CU_ASSERT(memcmp(req->payload.contig_or_cb_arg, buffer, payload_size) != 0);
 	spdk_dma_free(req->payload.contig_or_cb_arg);
 
-	/* good buffer and valid payload size but make spdk_dma_zmalloc fail */
-	/* set the mock pointer to NULL for spdk_dma_zmalloc */
-	MOCK_SET_P(spdk_dma_zmalloc, void *, NULL);
+	/* good buffer and valid payload size but make spdk_zmalloc fail */
+	/* set the mock pointer to NULL for spdk_zmalloc */
+	MOCK_SET_P(spdk_zmalloc, void *, NULL);
 	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
 					      cb_arg, host_to_controller);
 	CU_ASSERT(req == NULL);
 	free(buffer);
 	/* restore mock function back to the way it was */
-	MOCK_SET_P(spdk_dma_zmalloc, void *, &ut_spdk_dma_zmalloc);
+	MOCK_SET_P(spdk_zmalloc, void *, &ut_spdk_zmalloc);
 }
 
 static void
