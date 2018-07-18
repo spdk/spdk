@@ -73,7 +73,7 @@ timing_exit "$make_timing_label"
 
 # Check for generated files that are not listed in .gitignore
 timing_enter generated_files_check
-if [ `git status --porcelain | wc -l` -ne 0 ]; then
+if [ `git status --porcelain --ignore-submodules | wc -l` -ne 0 ]; then
 	echo "Generated files missing from .gitignore:"
 	git status --porcelain
 	exit 1

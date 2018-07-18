@@ -192,7 +192,6 @@ bdev_aio_destruct(void *ctx)
 	if (rc < 0) {
 		SPDK_ERRLOG("bdev_aio_close() failed\n");
 	}
-	aio_free_disk(fdisk);
 	return rc;
 }
 
@@ -529,6 +528,7 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 
 	fdisk->disk.fn_table = &aio_fn_table;
 
+	SPDK_ERRLOG("io_device = %p\n", fdisk);
 	spdk_io_device_register(fdisk, bdev_aio_create_cb, bdev_aio_destroy_cb,
 				sizeof(struct bdev_aio_io_channel));
 	rc = spdk_bdev_register(&fdisk->disk);
@@ -546,15 +546,44 @@ error_return:
 	return NULL;
 }
 
+static void
+aio_io_device_unregister_cb(void *io_device)
+{
+	struct file_disk *fdisk = io_device;
+	spdk_delete_aio_complete cb_fn = fdisk->delete_cb_fn;
+	void *cb_arg = fdisk->delete_cb_arg;
+
+	aio_free_disk(fdisk);
+	cb_fn(cb_arg, 0);
+}
+
+static void
+aio_bdev_unregister_cb(void *arg, int bdeverrno)
+{
+	struct file_disk *fdisk = arg;
+
+	if (bdeverrno != 0) {
+		fdisk->delete_cb_fn(fdisk->delete_cb_arg, bdeverrno);
+		return;
+	}
+
+	spdk_io_device_unregister(fdisk, aio_io_device_unregister_cb);
+}
+
 void
 delete_aio_disk(struct spdk_bdev *bdev, spdk_delete_aio_complete cb_fn, void *cb_arg)
 {
+	struct file_disk *fdisk;
+
 	if (!bdev || bdev->module != &aio_if) {
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
 
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	fdisk = bdev->ctxt;
+	fdisk->delete_cb_fn = cb_fn;
+	fdisk->delete_cb_arg = cb_arg;
+	spdk_bdev_unregister(bdev, aio_bdev_unregister_cb, fdisk);
 }
 
 static int
