@@ -404,6 +404,24 @@
     },
     {
       "key": {
+        "uuid": "150baa39_073136f4",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-18T14:45:34Z",
+      "side": 1,
+      "message": "missed that the first two times because shitty Windows has a nearly worthless zoom feature for blind people :)  I see it now, thanks very good\n\nHowever removal isn\u0027t working for me.  Example, I get one up and running and then halt it, back ou t of the dir and do rm-rf fedora26 for example and the nvme disk won\u0027t delete, says its busy.  If I go to another dir that I had created and since rebooted I can delete the nvme disk OK but when I try to install in that dir again vbox complains about FILE_ALREADY_EXISTS on that same file.  Something screwy there, can you delete/recreate OK on Mac or Linux?",
+      "parentUuid": "8c708a08_4aaf4a6e",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6e792689_03c6788a",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 17
