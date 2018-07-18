@@ -186,6 +186,14 @@ void spdk_bdev_config_text(FILE *fp);
 void spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w);
 
 /**
+ * Check if bdev_base_name already used.
+ *
+ * \param bdev_base_name The base name of the block device.
+ * \return true if bdev_base_name is already used to create bdevs or false otherwise.
+ */
+bool is_base_bdev_name_used(const char *bdev_base_name);
+
+/**
  * Get block device by the block device name.
  *
  * \param bdev_name The name of the block device.

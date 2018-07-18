@@ -354,6 +354,28 @@ spdk_bdev_next_leaf(struct spdk_bdev *prev)
 	return bdev;
 }
 
+bool is_base_bdev_name_used(const char *bdev_base_name)
+{
+	struct spdk_bdev_alias *tmp;
+	struct spdk_bdev *bdev = spdk_bdev_first();
+
+	while (bdev != NULL) {
+		if (strncmp(bdev_base_name, bdev->name, strlen(bdev_base_name)) == 0) {
+			return true;
+		}
+
+		TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+			if (strncmp(bdev_base_name, tmp->alias, strlen(bdev_base_name)) == 0) {
+				return true;
+			}
+		}
+
+		bdev = spdk_bdev_next(bdev);
+	}
+
+	return false;
+}
+
 struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {

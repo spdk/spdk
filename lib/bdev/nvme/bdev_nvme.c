@@ -1048,6 +1048,13 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	probe_ctx->trids[0] = *trid;
 	probe_ctx->names[0] = base_name;
 	probe_ctx->hostnqn = hostnqn;
+
+	if (is_base_bdev_name_used(base_name)) {
+		SPDK_ERRLOG("Base bdev name:%s already exists\n", base_name);
+		free(probe_ctx);
+		return -1;
+	}
+
 	if (spdk_nvme_probe(trid, probe_ctx, probe_cb, attach_cb, NULL)) {
 		SPDK_ERRLOG("Failed to probe for new devices\n");
 		free(probe_ctx);
