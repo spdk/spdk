@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "19fc72c8_afcad0d4",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 33
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-18T00:49:32Z",
+      "side": 1,
+      "message": "Same order for the enum defined above. You can refer to patch https://review.gerrithub.io/c/spdk/spdk/+/416672/24/include/spdk/bdev.h where I added the support for the read and write IOPS rate limit. This major patch added the easy scalability to support new rate limits. Same for the other read and write bandwidth rate limits. Few lines of code changes only to make them work.\n\nI can add a comment above to have a clear description that these limits are ordered and corresponding to the rate limits enum defined above.",
+      "parentUuid": "c5635837_5fac116d",
+      "revId": "97e36ec565df6f57903d0301f08ab2dd1981f400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c362bc51_b4a52dd5",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 33
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-17T23:15:15Z",
       "side": 1,
       "message": "For this particular patch, a for loop over each limit type works. However, that won\u0027t continue working as soon as one type of limit doesn\u0027t apply to all I/O types (i.e. a read limit). Instead, I think inside this loop you\u0027ll want to write this as a switch statement on the bdev_io\u0027s type, and then handle each case individually.",
+      "revId": "97e36ec565df6f57903d0301f08ab2dd1981f400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d621ea5d_d0f6c496",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-18T00:49:32Z",
+      "side": 1,
+      "message": "If multiple rate limits are enabled, the least rate limit will take effect. For exmaple, 10000 R/W IOPS and 20000 R only IOPS. Then 10000 R/W IOPS will take effect first so that no more Read I/Os will send. This is below \"for\" loop works to check any rate limit already hit and no more I/O allowed. Are you talking about each rate limit should work independently? If this is preferred, we can discuss and address this in a later patch.",
+      "parentUuid": "c362bc51_b4a52dd5",
       "revId": "97e36ec565df6f57903d0301f08ab2dd1981f400",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
