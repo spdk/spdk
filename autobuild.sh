@@ -76,6 +76,9 @@ timing_enter generated_files_check
 if [ `git status --porcelain | wc -l` -ne 0 ]; then
 	echo "Generated files missing from .gitignore:"
 	git status --porcelain
+	cd dpdk
+	git status --porcelain
+	cd ..
 	exit 1
 fi
 timing_exit generated_files_check
