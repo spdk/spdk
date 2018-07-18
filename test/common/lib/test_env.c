@@ -89,13 +89,13 @@ spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
 	}
 }
 
-int ut_spdk_dma_malloc = (int)MOCK_PASS_THRU;
-void *ut_p_spdk_dma_malloc = &ut_spdk_dma_malloc;
+int ut_spdk_malloc = (int)MOCK_PASS_THRU;
+void *ut_p_spdk_malloc = &ut_spdk_malloc;
 void *
-spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
 {
-	if (ut_p_spdk_dma_malloc &&
-	    ut_spdk_dma_malloc == (int)MOCK_PASS_THRU) {
+	if (ut_p_spdk_malloc &&
+	    ut_spdk_malloc == (int)MOCK_PASS_THRU) {
 		void *buf = NULL;
 		if (posix_memalign(&buf, align, size)) {
 			return NULL;
@@ -105,26 +105,37 @@ spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 		}
 		return buf;
 	} else {
-		return ut_p_spdk_dma_malloc;
+		return ut_p_spdk_malloc;
 	}
 }
 
-int ut_spdk_dma_zmalloc = (int)MOCK_PASS_THRU;
-void *ut_p_spdk_dma_zmalloc = &ut_spdk_dma_zmalloc;
+int ut_spdk_zmalloc = (int)MOCK_PASS_THRU;
+void *ut_p_spdk_zmalloc = &ut_spdk_zmalloc;
 void *
-spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
 {
-	if (ut_p_spdk_dma_zmalloc &&
-	    ut_spdk_dma_zmalloc == (int)MOCK_PASS_THRU) {
-		void *buf = spdk_dma_malloc(size, align, phys_addr);
-
+	if (ut_p_spdk_zmalloc &&
+	    ut_spdk_zmalloc == (int)MOCK_PASS_THRU) {
+		void *buf = spdk_malloc(size, align, phys_addr, -1, 1);
 		if (buf != NULL) {
 			memset(buf, 0, size);
 		}
 		return buf;
 	} else {
-		return ut_p_spdk_dma_zmalloc;
+		return ut_p_spdk_zmalloc;
 	}
+}
+
+void *
+spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
+{
+	return spdk_malloc(size, align, phys_addr, -1, 1);
+}
+
+void *
+spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+{
+	return spdk_zmalloc(size, align, phys_addr, -1, 1);
 }
 
 void *
@@ -145,12 +156,17 @@ spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 	return realloc(buf, size);
 }
 
-void spdk_dma_free(void *buf)
+void spdk_free(void *buf)
 {
-	if (ut_p_spdk_dma_zmalloc &&
-	    ut_spdk_dma_zmalloc == (int)MOCK_PASS_THRU) {
+	if (ut_p_spdk_zmalloc &&
+	    ut_spdk_zmalloc == (int)MOCK_PASS_THRU) {
 		free(buf);
 	}
+}
+
+void spdk_dma_free(void *buf)
+{
+	return spdk_free(buf);
 }
 
 bool ut_fail_vtophys = false;
