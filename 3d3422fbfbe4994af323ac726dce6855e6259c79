@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23f889e6_2136d9e9",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 775,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-18T09:49:45Z",
+      "side": 1,
+      "message": "In this form it\u0027s actually a positioned argument:)\nCould we change this form to flag\u003dargs.flag, so that it\u0027s consistent with other parts of rpc.py where named args are already used?",
+      "range": {
+        "startLine": 775,
+        "startChar": 44,
+        "endLine": 775,
+        "endChar": 53
+      },
+      "revId": "3d3422fbfbe4994af323ac726dce6855e6259c79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53ad20b0_6792f802",
+        "filename": "scripts/rpc/net.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-18T09:49:45Z",
+      "side": 1,
+      "message": "Space after \":\" would be nice",
+      "revId": "3d3422fbfbe4994af323ac726dce6855e6259c79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efce8d75_b8cf8eb6",
+        "filename": "scripts/rpc/net.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-18T09:49:45Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 17,
+        "startChar": 15,
+        "endLine": 17,
+        "endChar": 16
+      },
+      "revId": "3d3422fbfbe4994af323ac726dce6855e6259c79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
