@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e4de4b61_6bcab6a2",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "I\u0027ll fix the typo.",
+      "parentUuid": "88bbb98c_a13ed844",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b443b256_25090fc3",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 17
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "011f4858_5fd8488c",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "OK. I\u0027ve tested this on both Mac  Sierra (10.12) and El Capitan (10.11) I think Jim has tested it on High Sierra (10.13).  So  I think everything works on those platforms.  If Someone can test this on Windows 10, that would be great.",
+      "parentUuid": "b443b256_25090fc3",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ce969533_0af2fc8a",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 17
@@ -47,6 +83,24 @@
       "writtenOn": "2018-07-18T01:08:55Z",
       "side": 1,
       "message": "lines 59..64 should be removed.  this is covered in our development page listed above and we want to avoid duplicating these steps (a) to avoid having to update things in more than one place if/when they change and (b) to avoid inconsistencies that can cause confusion like the suggestion below to put the repo under a \u0027github\u0027 subdir.",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a765cdc7_84660cb4",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "I\u0027ve removed these lines.",
+      "parentUuid": "ce969533_0af2fc8a",
       "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "1cfd0cb2_75cc8e53",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "Removed the $ cd ~/github",
+      "parentUuid": "02520fb3_e846fd22",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3a658af4_0381c99f",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 17
@@ -121,6 +193,24 @@
     },
     {
       "key": {
+        "uuid": "5d828531_8e731f98",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "I\u0027ll change this.",
+      "parentUuid": "ac142e66_acd46ab6",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5de8ce06_5711bc8d",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 17
@@ -132,6 +222,24 @@
       "writtenOn": "2018-07-18T01:08:55Z",
       "side": 1,
       "message": "suggest a \"/\" in front of \"spdk/repo\"\n\nalso, I get this crap all over the place \"/usr/bin/env: ‘bash\\r’: No such file or directory\" and believe its a git setting or some other windows related nonsense.  if you didn\u0027t see any of this ignore me but please assure me that you ran this on a windows installation and didnt run into this running .sh files",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc6c0e5a_4402a160",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "No, I did not run this script on a Windows installation.\n\nAre you seeing this \"/usr/bin/env: bash\" error in git-bash, on your Window\u0027s platform, when you run create_vbox.sh?  or are you seeing it after you\u0027ve run vagrant ssh and you are inside of your VM?",
+      "parentUuid": "5de8ce06_5711bc8d",
       "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -155,6 +263,24 @@
     },
     {
       "key": {
+        "uuid": "954a4bb5_99bacbc7",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "I can remove this from the documentation, but this is what I do in the .githook.  \n\nI think we want to enable --werror because it turns compiler warnings into errors.   If you don\u0027t set --werror, then your code can generate a lot of compile time warning, and you might never see them.",
+      "parentUuid": "d1bcc2b5_33de8258",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e9edb838_601f867a",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 17
@@ -166,6 +292,24 @@
       "writtenOn": "2018-07-18T01:08:55Z",
       "side": 1,
       "message": "typo needs to be fixed, \"pdgdep\" --\u003e \"pkgdep\"",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abe32116_b0b0eedb",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "I\u0027ll fix this.",
+      "parentUuid": "e9edb838_601f867a",
       "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -189,6 +333,24 @@
     },
     {
       "key": {
+        "uuid": "82a2106b_85d65b9d",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "I\u0027ve removed this.",
+      "parentUuid": "e3898411_73b7648a",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7eb57715_0156b0d3",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 17
@@ -200,6 +362,24 @@
       "writtenOn": "2018-07-18T01:08:55Z",
       "side": 1,
       "message": "should we add something at the end about stopping/pausing the VM?",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c708a08_4aaf4a6e",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "If you\u0027ll pay attention.  The following message appears immediately after you successfully run the create_vbox.sh script.\n\n\u003d\u003d\u003e default: Running provisioner: file...\n\n  SUCCESS!\n\n  cd to ubuntu18 and type \"vagrant ssh\" to use.\n  Use vagrant \"suspend\" and vagrant \"resume\" to stop and start.\n  Use vagrant \"destroy\" followed by \"rm -rf ubuntu18\" to destroy all trace of vm.",
+      "parentUuid": "7eb57715_0156b0d3",
       "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -270,6 +450,24 @@
       "side": 1,
       "message": "see my other note on typo is docs, might as well do this now too",
       "parentUuid": "2d30b0db_93a08585",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e8daf60_373f1122",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:23:30Z",
+      "side": 1,
+      "message": "I\u0027ll remove these commented out lines.",
+      "parentUuid": "06e7ffcb_54e803dd",
       "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
