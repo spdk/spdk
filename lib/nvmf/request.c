@@ -46,6 +46,27 @@
 #include "spdk_internal/log.h"
 
 int
+spdk_nvmf_admin_qpair_abort_aer(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_nvme_cpl *rsp = NULL;
+
+	if (!spdk_nvmf_qpair_is_admin_queue(qpair)) {
+		return 0;
+	}
+
+	ctrlr = qpair->ctrlr;
+	if (ctrlr->aer_req != NULL) {
+		rsp = &ctrlr->aer_req->rsp->nvme_cpl;
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_HOST;
+		spdk_nvmf_request_complete(ctrlr->aer_req);
+		ctrlr->aer_req = NULL;
+	}
+	return 0;
+}
+
+int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
