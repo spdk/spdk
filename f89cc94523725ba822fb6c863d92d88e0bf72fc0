@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5036699_9606a48e",
+        "filename": "scripts/rpc/log.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T23:53:26Z",
+      "side": 1,
+      "message": "Returns:\n    Current log level\n\nshould be added here?",
+      "revId": "f89cc94523725ba822fb6c863d92d88e0bf72fc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eae0e323_2df4e359",
+        "filename": "scripts/rpc/log.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-18T23:53:26Z",
+      "side": 1,
+      "message": "Returns: \n    Current log print level\n\nshould be added here?",
+      "revId": "f89cc94523725ba822fb6c863d92d88e0bf72fc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
