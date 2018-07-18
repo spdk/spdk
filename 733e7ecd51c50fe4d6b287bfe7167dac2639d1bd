@@ -46,6 +46,47 @@
       "revId": "733e7ecd51c50fe4d6b287bfe7167dac2639d1bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "baf827f0_c8d8bbb5",
+        "filename": "lib/log/log.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-18T17:32:45Z",
+      "side": 1,
+      "message": "stdinc.h is for system (POSIX) headers. Putting this here, under the #define, seems good to me.",
+      "parentUuid": "5ec92f70_a197cd01",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 22
+      },
+      "revId": "733e7ecd51c50fe4d6b287bfe7167dac2639d1bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "080ba640_de928960",
+        "filename": "lib/log/log.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-18T17:32:45Z",
+      "side": 1,
+      "message": "I think this should be sent to fp, not stderr",
+      "revId": "733e7ecd51c50fe4d6b287bfe7167dac2639d1bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
