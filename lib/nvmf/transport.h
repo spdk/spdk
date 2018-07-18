@@ -115,6 +115,12 @@ struct spdk_nvmf_transport_ops {
 	int (*poll_group_poll)(struct spdk_nvmf_transport_poll_group *group);
 
 	/*
+	 * Free the request without sending a response
+	 * to the originator. Release memory tied to this request.
+	 */
+	int (*req_free)(struct spdk_nvmf_request *req);
+
+	/*
 	 * Signal request completion, which sends a response
 	 * to the originator.
 	 */
@@ -159,6 +165,8 @@ int spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group 
 		struct spdk_nvmf_qpair *qpair);
 
 int spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
+
+int spdk_nvmf_transport_req_free(struct spdk_nvmf_request *req);
 
 int spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 
