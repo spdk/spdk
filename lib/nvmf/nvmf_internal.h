@@ -302,6 +302,7 @@ _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid
 	return subsystem->ns[nsid - 1];
 }
 
+int spdk_nvmf_admin_qpair_abort_aer(struct spdk_nvmf_qpair *qpair);
 static inline bool
 spdk_nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 {
