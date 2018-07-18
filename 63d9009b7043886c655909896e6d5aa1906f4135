@@ -246,6 +246,24 @@
     },
     {
       "key": {
+        "uuid": "ae382a7c_bde63012",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-18T02:51:57Z",
+      "side": 1,
+      "message": "We don\u0027t want / in front of spdk_repo.  This is a relative path.\n\nDo you mean \"./spdk_repo/spdk\" ?\n\nI think I found the \"/usr/bin/env: ‘bash\\r’: problem in create_nvme_img.sh.  If it\u0027s not the bug I fixed in that script, then it could be from the update.sh script.\n\nThese are the only two scripts that use  #!/usr/bin/env bash at the beginning of the script.\n\nOn you Windows platform, from inside of git-bash, what happens if you type: \n\n/usr/bin/env bash\n\n?",
+      "parentUuid": "5de8ce06_5711bc8d",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d1bcc2b5_33de8258",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 17
