@@ -4,8 +4,9 @@ BDEV_JSON_DIR=$(readlink -f $(dirname $0))
 . $BDEV_JSON_DIR/../../json_config/common.sh
 
 function test_subsystems() {
-	run_spdk_tgt
 	rootdir=$(readlink -f $BDEV_JSON_DIR/../../..)
+	objdump -d $rootdir/app/spdk_tgt/spdk_tgt | grep "^0000"
+	run_spdk_tgt
 
 	rpc_py="$spdk_rpc_py"
 	clear_config_py="$spdk_clear_config_py"

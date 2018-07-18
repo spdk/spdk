@@ -2477,6 +2477,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 
 	pthread_mutex_init(&bs->used_clusters_mutex, NULL);
 
+	SPDK_ERRLOG("io_device=%p\n", bs);
 	spdk_io_device_register(bs, _spdk_bs_channel_create, _spdk_bs_channel_destroy,
 				sizeof(struct spdk_bs_channel));
 	rc = spdk_bs_register_md_thread(bs);

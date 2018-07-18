@@ -529,6 +529,7 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 
 	fdisk->disk.fn_table = &aio_fn_table;
 
+	SPDK_ERRLOG("io_device = %p\n", fdisk);
 	spdk_io_device_register(fdisk, bdev_aio_create_cb, bdev_aio_destroy_cb,
 				sizeof(struct bdev_aio_io_channel));
 	rc = spdk_bdev_register(&fdisk->disk);

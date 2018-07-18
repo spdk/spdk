@@ -289,6 +289,7 @@ bdev_null_initialize(void)
 	 * We need to pick some unique address as our "io device" - so just use the
 	 *  address of the global tailq.
 	 */
+	SPDK_ERRLOG("io_device=%p\n", &g_null_bdev_head);
 	spdk_io_device_register(&g_null_bdev_head, null_bdev_create_cb, null_bdev_destroy_cb,
 				sizeof(struct null_io_channel));
 

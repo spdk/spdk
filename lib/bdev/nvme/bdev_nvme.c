@@ -931,6 +931,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_ctrlr->trid = *trid;
 	nvme_ctrlr->name = strdup(name);
 
+	SPDK_ERRLOG("io_device=%p\n", ctrlr);
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
 
