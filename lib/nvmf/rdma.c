@@ -2391,6 +2391,28 @@ spdk_nvmf_rdma_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 }
 
 static int
+spdk_nvmf_rdma_request_abort(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_rdma_request	*rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+	struct spdk_nvmf_rdma_transport	*rtransport = SPDK_CONTAINEROF(req->qpair->transport,
+			struct spdk_nvmf_rdma_transport, transport);
+
+	if (rdma_req->data_from_pool) {
+		/* Put the buffer/s back in the pool */
+		for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
+			spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data.buffers[i]);
+			rdma_req->req.iov[i].iov_base = NULL;
+			rdma_req->data.buffers[i] = NULL;
+		}
+		rdma_req->data_from_pool = false;
+	}
+	rdma_req->req.length = 0;
+	rdma_req->req.iovcnt = 0;
+	rdma_req->req.data = NULL;
+	spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_FREE);
+}
+
+static int
 spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_rdma_transport	*rtransport = SPDK_CONTAINEROF(req->qpair->transport,
@@ -2606,6 +2628,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.poll_group_remove = spdk_nvmf_rdma_poll_group_remove,
 	.poll_group_poll = spdk_nvmf_rdma_poll_group_poll,
 
+	.req_abort = spdk_nvmf_rdma_request_abort,
 	.req_complete = spdk_nvmf_rdma_request_complete,
 
 	.qpair_fini = spdk_nvmf_rdma_close_qpair,
