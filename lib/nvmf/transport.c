@@ -161,6 +161,12 @@ spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group
 }
 
 int
+spdk_nvmf_transport_req_abort(struct spdk_nvmf_request *req)
+{
+	return req->qpair->transport->ops->req_abort(req);
+}
+
+int
 spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 {
 	return req->qpair->transport->ops->req_complete(req);
