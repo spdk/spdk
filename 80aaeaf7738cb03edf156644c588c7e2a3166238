@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d53f518_f2a5d3a4",
+        "filename": "test/iscsi_tgt/calsoft/iscsi.json",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T09:44:04Z",
+      "side": 1,
+      "message": "- allow_duplicated_isid,\n- timeout, nop_in_interval,\n- discovery_auth_group, \n- max_sessions,\n- error_recovery_level\nare different from default.\nRemaining are the same as default and can be removed.\n\nI want to hear your thought. Should we change the contents?",
+      "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8dcb824_2049e4df",
+        "filename": "test/iscsi_tgt/digests/iscsi.json",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T09:44:04Z",
+      "side": 1,
+      "message": "node_base, auth_file, immediate_data, error_recovery_level are as same as default and can be removed.",
+      "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8120ac69_acf7777f",
+        "filename": "test/iscsi_tgt/ext4test/iscsi.json",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T09:44:04Z",
+      "side": 1,
+      "message": "immediate_data, error_recovery_level, and auth_file are as same as default.",
+      "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
