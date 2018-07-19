@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "836cdf64_47a56e73",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-19T09:09:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4c3ba494_aaef0e97",
+      "range": {
+        "startLine": 26,
+        "startChar": 11,
+        "endLine": 26,
+        "endChar": 71
+      },
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8ff9d946_a3514f97",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 3
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "df69ff6d_93a06be1",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-19T09:09:35Z",
+      "side": 1,
+      "message": "To be honest I don\u0027t see a reason for NOT using try-except here:)\n\n\u003e Also I think assert_init() belong to this class not to UINode.\nTrue, as I originally intended to have assert_init() to be used in all ui_command_* methods to do a pre-check before even calling RPC.\n\nI Suggest leaving it in UINode class. Using hasattr/getattr allows using assert_init() in all other UINode-based classes when we need it. If it turns out we don\u0027t then we can always move it here later.",
+      "parentUuid": "8ff9d946_a3514f97",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 37
+      },
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18b88e98_c5681479",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 3
@@ -83,6 +131,24 @@
       "writtenOn": "2018-07-18T23:43:33Z",
       "side": 1,
       "message": "start_subsystem_init should be checked if it is callable in the current state?",
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e157a0a_656a644a",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-19T09:09:35Z",
+      "side": 1,
+      "message": "Calling this in initialized state will cause RPC command to fail and raise an exception about wrong current state.\nSo it is similar to how other ui_commands will behave.",
+      "parentUuid": "18b88e98_c5681479",
       "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -112,6 +178,30 @@
     },
     {
       "key": {
+        "uuid": "555ed370_80307759",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-19T09:09:35Z",
+      "side": 1,
+      "message": "Done.\nAlthough I think we could just drop \"methods\" and leave if/return for better readability.",
+      "parentUuid": "2dc6a5cb_57aa1130",
+      "range": {
+        "startLine": 59,
+        "startChar": 8,
+        "endLine": 61,
+        "endChar": 19
+      },
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "621950bb_71e093b5",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 3
@@ -123,6 +213,24 @@
       "writtenOn": "2018-07-18T23:43:33Z",
       "side": 1,
       "message": "What is the criteria if self.is_init is added? Most method should be checked as well?",
+      "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaaa47f5_64a3becb",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-19T09:09:35Z",
+      "side": 1,
+      "message": "Not really.\nMost methods here are called by ui_command_* methods in ui_node.py, and will return an exception on calling because RPC request will fail. So no additional checks are needed (I did however add assert_init() to all ui_commands in previous patch sets but removed it after Pawels review)\n\n\"get_bdevs\" here is called first by UIRoot object to do a initial refresh and build a \"tree\" structure which you see when using the application.\nWithout checking if UIRoot is initialized get_bdevs would fail at fetching malloc bdevs (as they are first in queue to refresh) and the tree structure would only have bdevs/malloc listed.",
+      "parentUuid": "621950bb_71e093b5",
       "revId": "faf6b5001d09f42f093a25fa1f5444c8aaef2b4c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
