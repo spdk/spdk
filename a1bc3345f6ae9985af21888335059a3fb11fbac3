@@ -1,0 +1,320 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de92548e_8cc7cea0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1620,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "\"/usr/local/etc/spdk/auth.conf\"",
+      "range": {
+        "startLine": 1620,
+        "startChar": 115,
+        "endLine": 1620,
+        "endChar": 119
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4300483_6046b0b3",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1621,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "\"iqn.2016-06.io.spdk\"",
+      "range": {
+        "startLine": 1621,
+        "startChar": 101,
+        "endLine": 1621,
+        "endChar": 105
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b59933cb_dce4b780",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1735,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "This is result, so the column \"Optional\" can be removed.",
+      "range": {
+        "startLine": 1735,
+        "startChar": 28,
+        "endLine": 1735,
+        "endChar": 41
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10fded41_1addc0ad",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1763,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "Will you use IQN?\n\n\"iqn.2016-06.io.spdk:iscsi-host-1\",\n\"iqn.2016-06.io.spdk:iscsi-host-2\"",
+      "range": {
+        "startLine": 1762,
+        "startChar": 0,
+        "endLine": 1763,
+        "endChar": 25
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7096bdb4_1ab9a93f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1768,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "Duplication is not allowed. Hence for example the following?\n\"192.168.2.20\",\n\"192.168.1.0/24\"\n\n/24 means size of prefix and 192.168.1.0/24 is for 192.168.1.*",
+      "range": {
+        "startLine": 1767,
+        "startChar": 0,
+        "endLine": 1768,
+        "endChar": 23
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "940232be_66ec2e21",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1802,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "The above can be applied here too.",
+      "range": {
+        "startLine": 1796,
+        "startChar": 0,
+        "endLine": 1802,
+        "endChar": 21
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1080bd0_37c38442",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1876,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "\"iqn.2016-06.io.spdk:iscsi-host-3\" ?",
+      "range": {
+        "startLine": 1875,
+        "startChar": 0,
+        "endLine": 1876,
+        "endChar": 23
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94da9864_7ee7a715",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1878,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "1 may be appropriate",
+      "range": {
+        "startLine": 1878,
+        "startChar": 11,
+        "endLine": 1878,
+        "endChar": 12
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9468369b_2dd00f5f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1881,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "For example \"192.168.2.21\"?",
+      "range": {
+        "startLine": 1880,
+        "startChar": 0,
+        "endLine": 1881,
+        "endChar": 19
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9561ae61_75a0ca5f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1913,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "Please use the following:\n\nName                        | Type    | Description\n--------------------------- | --------| -----------\nname                        | string  | Target node name (ASCII)\nalias_name                  | string  | Target node alias name (ASCII)\npg_ig_maps                  | array   | Portal_Group_Tag:Initiator_Group_Tag mappings\nluns                        | array   | Array of Bdev names to LUN ID mappings\nqueue_depth                 | number  | Target queue depth\ndisable_chap                | boolean | CHAP authentication should be disabled for this target\nrequire_chap                | boolean | CHAP authentication should be required for this target\nmutual_chap                 | boolean | HAP authentication should be mutual (`true`) or bidirectional (`false`)\nchap_group                  | number  | Authentication group ID for this target node\nheader_digest               | boolean | Header Digest should be required for this target node\ndata_digest                 | boolean | Data Digest should be required for this target node",
+      "range": {
+        "startLine": 1911,
+        "startChar": 0,
+        "endLine": 1913,
+        "endChar": 50
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c88d8d9a_fbb1183e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1930,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "Please use the following\n\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"result\": [\n    {\n      \"name\": \"iqn.2016-06.io.spdk:iscsi-node-0\",\n      \"alias_name\": \"iScsi-node-0-alias\",\n      \"pg_ig_maps\": [\n        {\n          \"ig_tag\": 1,\n          \"pg_tag\": 1\n        },\n        {\n          \"ig_tag\": 2,\n          \"pg_tag\": 2\n        }\n      ],\n      \"luns\": [\n        {\n          \"lun_id\": 0,\n          \"bdev_name\": \"Nvme0n1\"\n        }\n      ],\n      \"queue_depth\": 64,\n      \"disable_chap\": false,\n      \"require_chap\": false,\n      \"mutual_chap\": false,\n      \"chap_group\": 0,\n      \"header_digest\": false,\n      \"data_digest\": false\n    }\n  ]\n}",
+      "range": {
+        "startLine": 1930,
+        "startChar": 0,
+        "endLine": 1930,
+        "endChar": 10
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7a9dd58_18625906",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1985,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "The ordering in the table may be kind to user. And I changed some values to pass.\n\n{\n  \"params\": {\n    \"name\": \"iSCSI-node-0\",\n    \"alias_name\": \"iScsi-node-0-alias\",\n    \"pg_ig_maps\": [\n      {\n        \"ig_tag\": 1,\n        \"pg_tag\": 1\n      },\n      {\n        \"ig_tag\": 2,\n        \"pg_tag\": 2\n      }\n    ],\n    \"luns\": [\n      {\n        \"lun_id\": 0,\n        \"bdev_name\": \"Nvme0n1\"\n      }\n    ],\n    \"queue_depth\": 24\n    \"disable_chap\": false,\n    \"require_chap\": false,\n    \"mutual_chap\": false,\n    \"chap_group\": 0,\n    \"header_digest\": false,\n    \"data_digest\": false\n  },\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"construct_target_node\",\n  \"id\": 1\n}",
+      "range": {
+        "startLine": 1956,
+        "startChar": 0,
+        "endLine": 1985,
+        "endChar": 1
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f52e1c3_08a17b9e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 2300,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "this blank line can be removed.",
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09a91bd6_193bea50",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 2322,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T03:53:44Z",
+      "side": 1,
+      "message": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"result\": true\n}",
+      "range": {
+        "startLine": 2322,
+        "startChar": 0,
+        "endLine": 2322,
+        "endChar": 10
+      },
+      "revId": "a1bc3345f6ae9985af21888335059a3fb11fbac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
