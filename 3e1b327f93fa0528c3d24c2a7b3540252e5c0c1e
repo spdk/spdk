@@ -22,6 +22,30 @@
       "revId": "3e1b327f93fa0528c3d24c2a7b3540252e5c0c1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5080d1d5_69460f60",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-19T14:46:18Z",
+      "side": 1,
+      "message": "Yes. It\u0027s mbytes (megabytes) for RPC call only so that user no need to input a larger value. This is converted inside the RPC operation and pass to the Bdev with the bytes/sec as defined in the header file.\n\nThanks, Gang",
+      "parentUuid": "3a441f19_8848aade",
+      "range": {
+        "startLine": 214,
+        "startChar": 12,
+        "endLine": 214,
+        "endChar": 29
+      },
+      "revId": "3e1b327f93fa0528c3d24c2a7b3540252e5c0c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
