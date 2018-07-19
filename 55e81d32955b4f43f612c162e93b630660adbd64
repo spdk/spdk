@@ -16,6 +16,29 @@
       "revId": "55e81d32955b4f43f612c162e93b630660adbd64",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27c10fd2_bfec6ed8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-07-19T06:59:25Z",
+      "side": 1,
+      "message": "Together with line 391, this looks like making the below check always return 0 (aligned)? Maybe we can remove this line? Same for comment line 479.",
+      "range": {
+        "startLine": 433,
+        "startChar": 2,
+        "endLine": 433,
+        "endChar": 58
+      },
+      "revId": "55e81d32955b4f43f612c162e93b630660adbd64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
