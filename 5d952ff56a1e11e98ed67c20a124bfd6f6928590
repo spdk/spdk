@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71fc1b83_033ec6ca",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-19T02:44:53Z",
+      "side": 1,
+      "message": "Here are the instructions on how to properly remove your VM.  After running \"vagrant destroy\" the \"nvme disk\" is safely deleted and the Virtual Box is shutdown and removed.  This is how you get rid of the \"name disk  won\u0027t delete, and says its busy\" problem.",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 2
+      },
+      "revId": "5d952ff56a1e11e98ed67c20a124bfd6f6928590",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
