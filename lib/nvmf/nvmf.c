@@ -612,11 +612,12 @@ _spdk_nvmf_ctrlr_free_from_qpair(void *ctx)
 {
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair_ctx->ctrlr;
+	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
 
 	spdk_nvmf_ctrlr_destruct(ctrlr);
 
 	if (qpair_ctx->cb_fn) {
-		qpair_ctx->cb_fn(qpair_ctx->ctx);
+		spdk_thread_send_msg(qpair->group->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
 	}
 	free(qpair_ctx);
 }
