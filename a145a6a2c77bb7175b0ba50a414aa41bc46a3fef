@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd0237d0_ff852b1d",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T08:02:19Z",
+      "side": 1,
+      "message": "if req.traddr is NULL, the behavior is officially undefined? if (req.tradd) {} should be added here?\n\nFor spdk_rpc_construct_nvme_bdev, traddr is a required parameter.",
+      "revId": "a145a6a2c77bb7175b0ba50a414aa41bc46a3fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
