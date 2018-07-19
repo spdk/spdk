@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f0d9452_accfb3ea",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-19T01:22:09Z",
+      "side": 1,
+      "message": "I suggest using iscsi_inquiry_task at function iscsi_connect_cb, and call iscsi_readcapacity16_task at inquiry_cb, this will make the scsi scan process more clear, moreover, you can get UNMAP and Maximum unmap blocks supported from this command, then you don\u0027t need your following patch which split the unmap blocks.",
+      "revId": "f394504a417f71d68144adc8388a2e25387561f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
