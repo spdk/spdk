@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c878c165_75b18b77",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-07-19T04:35:15Z",
+      "side": 1,
+      "message": "I don\u0027t see the parameter to hold this argument in the rpc call to set parameters with the command-line args in line 440.",
+      "range": {
+        "startLine": 472,
+        "startChar": 26,
+        "endLine": 472,
+        "endChar": 43
+      },
+      "revId": "2aacaba2e58b57949fbceae0c27706ac419020b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71990039_c58e32ce",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-07-19T04:35:15Z",
+      "side": 1,
+      "message": "You check max_connections_per_session, but set min_connection_per_core?? Is that right?",
+      "range": {
+        "startLine": 80,
+        "startChar": 4,
+        "endLine": 81,
+        "endChar": 69
+      },
+      "revId": "2aacaba2e58b57949fbceae0c27706ac419020b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
