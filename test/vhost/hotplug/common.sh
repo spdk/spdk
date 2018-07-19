@@ -81,7 +81,7 @@ function run_vhost() {
     notice ""
     notice "running SPDK"
     notice ""
-    spdk_vhost_run --conf-path=$BASE_DIR
+    spdk_vhost_run --json-path=$BASE_DIR
     notice ""
 }
 
