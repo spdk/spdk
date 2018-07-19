@@ -16,6 +16,24 @@
       "revId": "1947d7a73b71d30380e21bfadefee2f86b9c8598",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9be2362_45f81fbe",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-19T23:22:35Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nThe answer is No. If it is accessed by single thread, I thin that Jim and Pawel will not pay efforts to introduce a master thread.",
+      "parentUuid": "778ee586_e0ba611d",
+      "revId": "1947d7a73b71d30380e21bfadefee2f86b9c8598",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
