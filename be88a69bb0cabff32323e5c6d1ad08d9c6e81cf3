@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "de4591c6_e70d486c",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 948,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-19T18:47:58Z",
+      "side": 1,
+      "message": "Now while you mention this I totally agree. I forgot this, thanks for pointing this. I will check and fix this.",
+      "parentUuid": "896ee22a_bd538449",
+      "revId": "be88a69bb0cabff32323e5c6d1ad08d9c6e81cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3ec0b800_717854a1",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 20
@@ -47,6 +65,24 @@
       "writtenOn": "2018-07-19T15:58:46Z",
       "side": 1,
       "message": "timeout_us. timeout in microseconds right?",
+      "revId": "be88a69bb0cabff32323e5c6d1ad08d9c6e81cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e59c22d_06ee84e0",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-19T18:47:58Z",
+      "side": 1,
+      "message": "yeah, you are right, I remember I already fixed this but rebase hell void my work... :/",
+      "parentUuid": "dc113224_30ee364a",
       "revId": "be88a69bb0cabff32323e5c6d1ad08d9c6e81cf3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
