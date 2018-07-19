@@ -16,6 +16,24 @@
       "revId": "497d9ff076ae3424bba176ec12e8846b3d5905ad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fa313a4_738cc743",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-19T10:54:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c6174c71_c67df019",
+      "revId": "497d9ff076ae3424bba176ec12e8846b3d5905ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
