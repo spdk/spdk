@@ -22,6 +22,30 @@
       "revId": "a938b5da8decd88523e213ebcb978d40f8945d60",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7b85065_a92aa44e",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-19T15:03:15Z",
+      "side": 1,
+      "message": "Thanks!",
+      "parentUuid": "93ca2565_d275ec1c",
+      "range": {
+        "startLine": 68,
+        "startChar": 48,
+        "endLine": 68,
+        "endChar": 58
+      },
+      "revId": "a938b5da8decd88523e213ebcb978d40f8945d60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
