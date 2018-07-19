@@ -43,8 +43,11 @@ BLOCKDEV_MODULES_DEPS += -libverbs -lrdmacm
 endif
 
 ifeq ($(OS),Linux)
-BLOCKDEV_MODULES_LIST += bdev_aio bdev_virtio virtio
+BLOCKDEV_MODULES_LIST += bdev_aio
 BLOCKDEV_MODULES_DEPS += -laio
+ifeq ($(CONFIG_VIRTIO),y)
+BLOCKDEV_MODULES_LIST += bdev_virtio virtio
+endif
 ifeq ($(CONFIG_ISCSI_INITIATOR),y)
 BLOCKDEV_MODULES_LIST += bdev_iscsi
 # Fedora installs libiscsi to /usr/lib64/iscsi for some reason.
