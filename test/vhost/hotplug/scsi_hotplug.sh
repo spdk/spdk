@@ -7,20 +7,6 @@ if [[ $scsi_hot_remove_test == 1 ]] && [[ $blk_hot_remove_test == 1 ]]; then
     notice "Vhost-scsi and vhost-blk hotremove tests cannot be run together"
 fi
 
-# Add split section into vhost config
-function gen_config() {
-    cp $BASE_DIR/vhost.conf.base $BASE_DIR/vhost.conf.in
-    cat << END_OF_CONFIG >> $BASE_DIR/vhost.conf.in
-[Split]
-  Split Nvme0n1 16
-  Split Nvme1n1 20
-  Split HotInNvme0n1 2
-  Split HotInNvme1n1 2
-  Split HotInNvme2n1 2
-  Split HotInNvme3n1 2
-END_OF_CONFIG
-}
-
 # Run spdk by calling run_vhost from hotplug/common.sh.
 # Then prepare vhost with rpc calls and setup and run 4 VMs.
 function pre_hot_attach_detach_test_case() {
@@ -65,11 +51,17 @@ function clear_vhost_config() {
 }
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
-gen_config
 # Hotremove/hotattach/hotdetach test cases prerequisites
 # 1. Run vhost with 2 NVMe disks.
 run_vhost
-rm $BASE_DIR/vhost.conf.in
+$rpc_py set_bdev_nvme_hotplug --enable
+$rpc_py construct_split_vbdev Nvme0n1 16
+$rpc_py construct_split_vbdev Nvme1n1 20
+$rpc_py construct_split_vbdev HotInNvme0n1 2
+$rpc_py construct_split_vbdev HotInNvme1n1 2
+$rpc_py construct_split_vbdev HotInNvme2n1 2
+$rpc_py construct_split_vbdev HotInNvme3n1 2
+
 if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
     pre_hot_attach_detach_test_case
     $BASE_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
