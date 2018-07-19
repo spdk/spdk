@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0a073837_7d2c1a89",
+        "filename": "test/iscsi_tgt/calsoft/iscsi.json",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-19T15:30:39Z",
+      "side": 1,
+      "message": "Thank You for noticing it, I didn\u0027t checked default values of iscsi options. I\u0027ll change it tomorrow.",
+      "parentUuid": "9d53f518_f2a5d3a4",
+      "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e8dcb824_2049e4df",
         "filename": "test/iscsi_tgt/digests/iscsi.json",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-19T09:44:04Z",
       "side": 1,
       "message": "node_base, auth_file, immediate_data, error_recovery_level are as same as default and can be removed.",
+      "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "029f7052_f9f652ab",
+        "filename": "test/iscsi_tgt/digests/iscsi.json",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-19T15:30:39Z",
+      "side": 1,
+      "message": "I think think that this could be replaced by rpc call then.",
+      "parentUuid": "e8dcb824_2049e4df",
       "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
