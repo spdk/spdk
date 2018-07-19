@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "896ee22a_bd538449",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 948,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-19T15:58:46Z",
+      "side": 1,
+      "message": "I\u0027m not 100% sure how this works. I know that a lot of the code and documentation states that timeouts are disabled if this value is set to zero, but I couldn\u0027t find the check for that anywhere.\nThe check doesn\u0027t exist in this function, or in spdk_nvme_ctrlr_register_timeout_callback, where ctrlr-\u003etimeout_enabled is set to true, and all of the timeout checking functions appear to just check this function.\nAm I missing something, or does this not work the way the docs say it does?\nI know this is existing code, but your comments in the readme file made me think of it.",
+      "revId": "be88a69bb0cabff32323e5c6d1ad08d9c6e81cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ec0b800_717854a1",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-19T15:58:46Z",
+      "side": 1,
+      "message": "Valid values",
+      "revId": "be88a69bb0cabff32323e5c6d1ad08d9c6e81cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc113224_30ee364a",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-19T15:58:46Z",
+      "side": 1,
+      "message": "timeout_us. timeout in microseconds right?",
+      "revId": "be88a69bb0cabff32323e5c6d1ad08d9c6e81cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
