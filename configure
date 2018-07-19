@@ -245,6 +245,17 @@ if [ -z "$CONFIG_ENV" ]; then
 		fi
 		CONFIG_DPDK_DIR="$rootdir"/dpdk/build
 	fi
+else
+	if [ "$CONFIG_VHOST" = "y" ]; then
+		echo "Vhost is only supported when using the default DPDK environment. Disabling it."
+	fi
+	# Always disable vhost, but only print the error message if the user explicitly turned it on.
+	CONFIG_VHOST="n"
+	if [ "$CONFIG_VIRTIO" = "y" ]; then
+		echo "Virtio is only supported when using the default DPDK environment. Disabling it."
+	fi
+	# Always disable virtio, but only print the error message if the user explicitly turned it on.
+	CONFIG_VIRTIO="n"
 fi
 
 if [ "$CONFIG_FIO_PLUGIN" = "y" ]; then
