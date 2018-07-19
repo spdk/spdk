@@ -34,6 +34,24 @@
       "revId": "a145a6a2c77bb7175b0ba50a414aa41bc46a3fef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55cbdab9_f1adaf00",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T13:09:25Z",
+      "side": 1,
+      "message": "What I wanted to say was fprintf(but, \"%s\", NULL) is acceptable?\nIf yes, it\u0027s OK.",
+      "parentUuid": "72e8468a_96d3fbd4",
+      "revId": "a145a6a2c77bb7175b0ba50a414aa41bc46a3fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
