@@ -50,6 +50,57 @@
       "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9534dbd4_f92b1df3",
+        "filename": "test/iscsi_tgt/filesystem/iscsi.json",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T09:48:26Z",
+      "side": 1,
+      "message": "immediate_data, node_base, error_recovery_level, and auth_file are as same as default.",
+      "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33692f4c_0f19a73d",
+        "filename": "test/iscsi_tgt/fio/iscsi.json",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T09:48:26Z",
+      "side": 1,
+      "message": "immediate_data, node_base, error_recovery_level, and auth_file are as same as default.",
+      "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3932596_83ee6fdb",
+        "filename": "test/iscsi_tgt/initiator/iscsi.json",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T09:48:26Z",
+      "side": 1,
+      "message": "immediate_data, node_base, error_recovery_level, and auth_file are as same as default.",
+      "revId": "80aaeaf7738cb03edf156644c588c7e2a3166238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
