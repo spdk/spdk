@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4378246_c3fd8e49",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-19T19:10:30Z",
+      "side": 1,
+      "message": "This is the same as spdk_bdev_get_by_name(bdev_name) !\u003d NULL so no need to to copy-paste this.",
+      "range": {
+        "startLine": 357,
+        "startChar": 0,
+        "endLine": 377,
+        "endChar": 1
+      },
+      "revId": "f775d11416882d1c141e87b9831dec8e984f3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74a4fc0b_432b91e5",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-19T19:10:30Z",
+      "side": 1,
+      "message": "I agree with that this function should fail is base_name is a existing bdev (or existing nvme controller) but I have some doubts how this patch works. I think that there is some pitfall in attach_cb that doesn\u0027t check if nvme controller with base_name exist thant checking base_name here. I think someone need to look this deeper where real issue is. I\u0027ll add to revie Ben to have him look at this.\n\nBTW: I see more places where the SPDK could benefit from global facility service that would guarantee and create unique bdev or base bdev name.",
+      "range": {
+        "startLine": 1052,
+        "startChar": 0,
+        "endLine": 1056,
+        "endChar": 2
+      },
+      "revId": "f775d11416882d1c141e87b9831dec8e984f3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
