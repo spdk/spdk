@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9119eff_de59bd86",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-19T02:14:54Z",
+      "side": 1,
+      "message": "I believe the cleanup for AER requests should also be called in _spdk_nvmf_qpair_deactivate.",
+      "revId": "c2c048d79f9a6d64168289d61154678cafc7c90f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3766daa3_4b0facc6",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-19T02:14:54Z",
+      "side": 1,
+      "message": "This callback makes me confusing, because ABORT is also a NVMe Admin command.",
+      "revId": "c2c048d79f9a6d64168289d61154678cafc7c90f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
