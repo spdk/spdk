@@ -317,6 +317,24 @@
     },
     {
       "key": {
+        "uuid": "df36824a_63c5e716",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-19T02:37:16Z",
+      "side": 1,
+      "message": "OK.  Rather than me putting this back into the README file, I\u0027m going to suggest we add --enable \u003d-werror by default in another patch.",
+      "parentUuid": "b9ae92f3_f1401116",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e9edb838_601f867a",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 17
@@ -434,6 +452,24 @@
       "side": 1,
       "message": "missed that the first two times because shitty Windows has a nearly worthless zoom feature for blind people :)  I see it now, thanks very good\n\nHowever removal isn\u0027t working for me.  Example, I get one up and running and then halt it, back ou t of the dir and do rm-rf fedora26 for example and the nvme disk won\u0027t delete, says its busy.  If I go to another dir that I had created and since rebooted I can delete the nvme disk OK but when I try to install in that dir again vbox complains about FILE_ALREADY_EXISTS on that same file.  Something screwy there, can you delete/recreate OK on Mac or Linux?",
       "parentUuid": "8c708a08_4aaf4a6e",
+      "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "faaf541e_f3a34739",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-07-19T02:37:16Z",
+      "side": 1,
+      "message": "To remove a vm you need to type \"vagrant destroy\" in the \u003cdistribution\u003e directory.",
+      "parentUuid": "150baa39_073136f4",
       "revId": "63d9009b7043886c655909896e6d5aa1906f4135",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
