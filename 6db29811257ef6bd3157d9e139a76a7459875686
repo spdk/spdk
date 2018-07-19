@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e227c01c_af47bc9e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 1921,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T08:49:41Z",
+      "side": 1,
+      "message": "CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)",
+      "range": {
+        "startLine": 1921,
+        "startChar": 40,
+        "endLine": 1921,
+        "endChar": 111
+      },
+      "revId": "6db29811257ef6bd3157d9e139a76a7459875686",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
