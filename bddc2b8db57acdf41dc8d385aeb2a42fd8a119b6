@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "825fe09c_64ee57ef",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 757,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-19T11:22:13Z",
+      "side": 1,
+      "message": "Is this should be an error message?",
+      "range": {
+        "startLine": 757,
+        "startChar": 0,
+        "endLine": 757,
+        "endChar": 48
+      },
+      "revId": "bddc2b8db57acdf41dc8d385aeb2a42fd8a119b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31e8bd2a_f9f0eb9b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-19T11:22:13Z",
+      "side": 1,
+      "message": "Is this should be an error message?",
+      "range": {
+        "startLine": 916,
+        "startChar": 1,
+        "endLine": 916,
+        "endChar": 12
+      },
+      "revId": "bddc2b8db57acdf41dc8d385aeb2a42fd8a119b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c69106e_89f3f10c",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1054,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-19T11:22:13Z",
+      "side": 1,
+      "message": "Is this should be an error message?",
+      "range": {
+        "startLine": 1054,
+        "startChar": 1,
+        "endLine": 1054,
+        "endChar": 12
+      },
+      "revId": "bddc2b8db57acdf41dc8d385aeb2a42fd8a119b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da17b903_64dd46b1",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-07-19T11:22:13Z",
+      "side": 1,
+      "message": "How do I disable hotplug if there is only \"--enabled\" option?",
+      "range": {
+        "startLine": 240,
+        "startChar": 25,
+        "endLine": 240,
+        "endChar": 50
+      },
+      "revId": "bddc2b8db57acdf41dc8d385aeb2a42fd8a119b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
