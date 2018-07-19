@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "990e38e8_1ec8b24b",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-19T10:03:56Z",
+      "side": 1,
+      "message": "We should also check errno status here.",
+      "revId": "add0275cf91149032189579bf2a1607247c5042c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
