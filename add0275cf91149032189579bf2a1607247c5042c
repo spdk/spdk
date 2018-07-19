@@ -16,6 +16,24 @@
       "revId": "add0275cf91149032189579bf2a1607247c5042c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d6b928d_ad37120c",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-19T12:07:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "990e38e8_1ec8b24b",
+      "revId": "add0275cf91149032189579bf2a1607247c5042c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
