@@ -1,0 +1,222 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cfec50a_11d798de",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1622,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "nop_timeout\n\nWe can depend on the previous bug fix.",
+      "range": {
+        "startLine": 1622,
+        "startChar": 0,
+        "endLine": 1622,
+        "endChar": 7
+      },
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3485632c_0c5f3d77",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1623,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "30",
+      "range": {
+        "startLine": 1623,
+        "startChar": 110,
+        "endLine": 1623,
+        "endChar": 112
+      },
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "013938d5_3f1de5d4",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1626,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "bidirectional.\n\nAs long as I investigate, some use one-way/mutual CHAP and other use unidirectional/bidirectional CHAP.\n\nEither one is OK for me but if we use unidirectional in doc, unidirectional should be used here too.",
+      "range": {
+        "startLine": 1626,
+        "startChar": 77,
+        "endLine": 1626,
+        "endChar": 83
+      },
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00bd7ec7_5bdb92f8",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1852,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "this blank line can be removed.",
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54d8d24f_f234a0c9",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1935,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "this is probably my error...",
+      "range": {
+        "startLine": 1935,
+        "startChar": 1,
+        "endLine": 1935,
+        "endChar": 2
+      },
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14111ae4_7694b59b",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1987,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "\"CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)\" may be better as same as above",
+      "range": {
+        "startLine": 1987,
+        "startChar": 51,
+        "endLine": 1987,
+        "endChar": 94
+      },
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d4ce32a_9ad37f8a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 2141,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "this blank line can be removed.",
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34cf2f1f_0fc9dd83",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 2246,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "IP address",
+      "range": {
+        "startLine": 2246,
+        "startChar": 63,
+        "endLine": 2246,
+        "endChar": 65
+      },
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad5f2e7c_9785f3af",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 2334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "Target address (Sorry this is my error)",
+      "range": {
+        "startLine": 2334,
+        "startChar": 40,
+        "endLine": 2334,
+        "endChar": 94
+      },
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8420d5b2_501f9495",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 2379,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-19T23:50:04Z",
+      "side": 1,
+      "message": "\"first free ID\" may be more kind.",
+      "range": {
+        "startLine": 2379,
+        "startChar": 68,
+        "endLine": 2379,
+        "endChar": 78
+      },
+      "revId": "8cd051ff1ef49b8ea17404eb7c62c36ef0925e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
