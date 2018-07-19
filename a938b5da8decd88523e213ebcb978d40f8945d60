@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93ca2565_d275ec1c",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-07-19T03:59:30Z",
+      "side": 1,
+      "message": "typo. Should be privileges",
+      "range": {
+        "startLine": 68,
+        "startChar": 48,
+        "endLine": 68,
+        "endChar": 58
+      },
+      "revId": "a938b5da8decd88523e213ebcb978d40f8945d60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
