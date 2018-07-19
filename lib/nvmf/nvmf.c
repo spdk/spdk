@@ -60,6 +60,7 @@ struct nvmf_qpair_disconnect_ctx {
 	struct spdk_nvmf_qpair *qpair;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	nvmf_qpair_disconnect_cb cb_fn;
+	struct spdk_thread *thread;
 	void *ctx;
 };
 
@@ -616,7 +617,11 @@ _spdk_nvmf_ctrlr_free_from_qpair(void *ctx)
 	spdk_nvmf_ctrlr_destruct(ctrlr);
 
 	if (qpair_ctx->cb_fn) {
-		qpair_ctx->cb_fn(qpair_ctx->ctx);
+		if (qpair_ctx->thread == spdk_get_thread()) {
+			qpair_ctx->cb_fn(qpair_ctx->ctx);
+		} else {
+			spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
+		}
 	}
 	free(qpair_ctx);
 }
@@ -639,7 +644,11 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 
 	if (!ctrlr) {
 		if (qpair_ctx->cb_fn) {
-			qpair_ctx->cb_fn(qpair_ctx->ctx);
+			if (qpair_ctx->thread == spdk_get_thread()) {
+				qpair_ctx->cb_fn(qpair_ctx->ctx);
+			} else {
+				spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
+			}
 		}
 		free(qpair_ctx);
 		return;
@@ -657,7 +666,11 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 		spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx);
 	} else {
 		if (qpair_ctx->cb_fn) {
-			qpair_ctx->cb_fn(qpair_ctx->ctx);
+			if (qpair_ctx->thread == spdk_get_thread()) {
+				qpair_ctx->cb_fn(qpair_ctx->ctx);
+			} else {
+				spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
+			}
 		}
 		free(qpair_ctx);
 	}
@@ -675,7 +688,11 @@ _spdk_nvmf_qpair_deactivate(void *ctx)
 		 * which results in a notification that the connection
 		 * died. */
 		if (qpair_ctx->cb_fn) {
-			qpair_ctx->cb_fn(qpair_ctx->ctx);
+			if (qpair_ctx->thread == spdk_get_thread()) {
+				qpair_ctx->cb_fn(qpair_ctx->ctx);
+			} else {
+				spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
+			}
 		}
 		free(qpair_ctx);
 		return;
@@ -707,6 +724,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 
 	qpair_ctx->qpair = qpair;
 	qpair_ctx->cb_fn = cb_fn;
+	qpair_ctx->thread = qpair->group->thread;
 	qpair_ctx->ctx = ctx;
 
 	if (qpair->group->thread == spdk_get_thread()) {
