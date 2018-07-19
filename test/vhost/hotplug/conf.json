@@ -1,0 +1,50 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "copy",
+      "config": null
+    },
+    {
+      "subsystem": "interface",
+      "config": null
+    },
+    {
+      "subsystem": "net_framework",
+      "config": null
+    },
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "params": {
+            "retry_count": 4,
+            "nvme_adminq_poll_period_us": 100000,
+            "timeout_s": 0,
+            "action_on_timeout": "none"
+          },
+          "method": "set_bdev_nvme_options"
+        }
+      ]
+    },
+    {
+      "subsystem": "nbd",
+      "config": []
+    },
+    {
+      "subsystem": "nvmf",
+      "config": []
+    },
+    {
+      "subsystem": "scsi",
+      "config": null
+    },
+    {
+      "subsystem": "vhost",
+      "config": []
+    },
+    {
+      "subsystem": "iscsi",
+      "config": []
+    }
+  ]
+}
