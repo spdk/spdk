@@ -1,0 +1,158 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41e7f767_d31b285d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-20T15:42:28Z",
+      "side": 1,
+      "message": "I see this is used only in one place. Can we remove it and use SPDK_COUNTOF() to iterate through g_driver_names?",
+      "range": {
+        "startLine": 57,
+        "startChar": 8,
+        "endLine": 57,
+        "endChar": 25
+      },
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49cd1367_ef4d3f7a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-20T15:42:28Z",
+      "side": 1,
+      "message": "I can\u0027t see this used anywhere. Can we remove it?",
+      "range": {
+        "startLine": 69,
+        "startChar": 8,
+        "endLine": 69,
+        "endChar": 26
+      },
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94fbe6de_4687f082",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-20T15:42:28Z",
+      "side": 1,
+      "message": "Do we really want to dequeue that much with each poller tick? This could potentially stall the reactor for some time.",
+      "range": {
+        "startLine": 400,
+        "startChar": 31,
+        "endLine": 400,
+        "endChar": 40
+      },
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6a7cd07_4d648572",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-20T15:42:28Z",
+      "side": 1,
+      "message": "you\u0027re assuming the data is physically contiguous, that\u0027s not always true. nvme_pcie_qpair_build_hw_sgl_request is a good example on how to split physically discontiguous buffers.",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f7371b9_a6aa700f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-20T15:42:28Z",
+      "side": 1,
+      "message": "you don\u0027t need to decrypt if the original READ failed",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6a34226_20cdddbd",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 793,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-20T15:42:28Z",
+      "side": 1,
+      "message": "is that still relevant? If you\u0027re submitting an I/O to a different bdev, it will automatically allocate the buffer. Any bdev module (that doesn\u0027t do pass-through) calls spdk_bdev_io_get_buf() on READs. That buffer is freed after you call spdk_bdev_free_io.",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8825fdb_65824c3f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1301,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-20T15:42:28Z",
+      "side": 1,
+      "message": "missing spdk_io_device_unregister(crypto_node), otherwise we have a memleak.",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffdfe8e8_b7973ccd",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1309,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-20T15:42:28Z",
+      "side": 1,
+      "message": "^",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
