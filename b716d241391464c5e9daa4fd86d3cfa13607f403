@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94984cee_a6e68d35",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 835,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T20:24:42Z",
+      "side": 1,
+      "message": "I don\u0027t think the log message helps much because the program will just crash on line 840. We should do the right thing and handle the error though - probably by returning -ENOMEM.",
+      "revId": "b716d241391464c5e9daa4fd86d3cfa13607f403",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
