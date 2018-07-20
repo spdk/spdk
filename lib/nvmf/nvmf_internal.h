@@ -313,6 +313,12 @@ void spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr);
  */
 void spdk_nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair);
 
+/*
+ * Should be invoked by the transport layer after all of the transport specific qpair resources
+ * have been released.
+ */
+void spdk_nvmf_qpair_destroy_cb(void *ctx);
+
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
