@@ -2488,7 +2488,7 @@ bs_cluster_sz(void)
 
 	/* Initialize a new blob store */
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
-	CU_ASSERT(g_bserrno == -ENOMEM);
+	CU_ASSERT(g_bserrno == -EINVAL);
 	SPDK_CU_ASSERT_FATAL(g_bs == NULL);
 
 	/* Set cluster size to twice the default */

@@ -2423,7 +2423,7 @@ _spdk_bs_opts_verify(struct spdk_bs_opts *opts)
 }
 
 static struct spdk_blob_store *
-_spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
+_spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, int *error)
 {
 	struct spdk_blob_store	*bs;
 	uint64_t dev_size;
@@ -2432,18 +2432,21 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	dev_size = dev->blocklen * dev->blockcnt;
 	if (dev_size < opts->cluster_sz) {
 		/* Device size cannot be smaller than cluster size of blobstore */
-		SPDK_ERRLOG("Device size %" PRIu64 " is smaller than cluster size %" PRIu32 "\n",
-			    dev_size, opts->cluster_sz);
+		SPDK_INFOLOG(SPDK_LOG_BLOB, "Device size %" PRIu64 " is smaller than cluster size %" PRIu32 "\n",
+			     dev_size, opts->cluster_sz);
+		*error = -ENOSPC;
 		return NULL;
 	}
 	if (opts->cluster_sz < SPDK_BS_PAGE_SIZE) {
 		/* Cluster size cannot be smaller than page size */
 		SPDK_ERRLOG("Cluster size %" PRIu32 " is smaller than page size %d\n",
 			    opts->cluster_sz, SPDK_BS_PAGE_SIZE);
+		*error = -EINVAL;
 		return NULL;
 	}
 	bs = calloc(1, sizeof(struct spdk_blob_store));
 	if (!bs) {
+		*error = -ENOMEM;
 		return NULL;
 	}
 
@@ -2464,6 +2467,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	bs->used_clusters = spdk_bit_array_create(bs->total_clusters);
 	if (bs->used_clusters == NULL) {
 		free(bs);
+		*error = -ENOMEM;
 		return NULL;
 	}
 
@@ -2487,6 +2491,8 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 		spdk_bit_array_free(&bs->used_md_pages);
 		spdk_bit_array_free(&bs->used_clusters);
 		free(bs);
+		/* FIXME: this is a lie but don't know how to get a proper error code here */
+		*error = -ENOMEM;
 		return NULL;
 	}
 
@@ -3122,6 +3128,7 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	spdk_bs_sequence_t	*seq;
 	struct spdk_bs_load_ctx *ctx;
 	struct spdk_bs_opts	opts = {};
+	int err = 0;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Loading blobstore from dev %p\n", dev);
 
@@ -3144,10 +3151,10 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
-	bs = _spdk_bs_alloc(dev, &opts);
+	bs = _spdk_bs_alloc(dev, &opts, &err);
 	if (!bs) {
 		dev->destroy(dev);
-		cb_fn(cb_arg, NULL, -ENOMEM);
+		cb_fn(cb_arg, NULL, err);
 		return;
 	}
 
@@ -3405,15 +3412,16 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 	spdk_bs_sequence_t	*seq;
 	struct spdk_bs_dump_ctx *ctx;
 	struct spdk_bs_opts	opts = {};
+	int err;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Dumping blobstore from dev %p\n", dev);
 
 	spdk_bs_opts_init(&opts);
 
-	bs = _spdk_bs_alloc(dev, &opts);
+	bs = _spdk_bs_alloc(dev, &opts, &err);
 	if (!bs) {
 		dev->destroy(dev);
-		cb_fn(cb_arg, -ENOMEM);
+		cb_fn(cb_arg, err);
 		return;
 	}
 
@@ -3525,10 +3533,10 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
-	bs = _spdk_bs_alloc(dev, &opts);
+	bs = _spdk_bs_alloc(dev, &opts, &rc);
 	if (!bs) {
 		dev->destroy(dev);
-		cb_fn(cb_arg, NULL, -ENOMEM);
+		cb_fn(cb_arg, NULL, rc);
 		return;
 	}
 
