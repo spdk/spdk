@@ -145,7 +145,7 @@ if __name__ == "__main__":
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print(rpc.bdev.construct_malloc_bdev(args.client,
-                                             num_blocks=num_blocks,
+                                             num_blocks=int(num_blocks),
                                              block_size=args.block_size,
                                              name=args.name,
                                              uuid=args.uuid))
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
     p.add_argument(
-        'total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
+        'total_size', help='Size of malloc bdev in MB (float > 0)', type=float)
     p.add_argument('block_size', help='Block size for this bdev', type=int)
     p.set_defaults(func=construct_malloc_bdev)
 
