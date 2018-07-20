@@ -265,6 +265,8 @@ struct spdk_nvmf_rdma_qpair {
 	 */
 	struct ibv_qp_init_attr			ibv_init_attr;
 	struct ibv_qp_attr			ibv_attr;
+
+	void					*destroy_cb_ctx;
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -486,6 +488,18 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
+	spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_SQD);
+}
+
+static void
+_spdk_nvmf_rdma_qpair_destroy_cb(void *ctx)
+{
+	spdk_nvmf_qpair_destroy_cb(ctx);
+}
+
+static void
+_spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
+{
 	if (rqpair->poller) {
 		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
 	}
@@ -548,7 +562,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
 		rdma_destroy_id(rqpair->cm_id);
 		rqpair->cm_id = NULL;
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		_spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
 
@@ -569,7 +583,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	if (!rqpair->reqs || !rqpair->recvs || !rqpair->cmds ||
 	    !rqpair->cpls || (rtransport->in_capsule_data_size && !rqpair->bufs)) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		_spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
 
@@ -590,7 +604,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	if (!rqpair->cmds_mr || !rqpair->cpls_mr || (rtransport->in_capsule_data_size &&
 			!rqpair->bufs_mr)) {
 		SPDK_ERRLOG("Unable to register required memory for RDMA queue.\n");
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		_spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Command Array: %p Length: %lx LKey: %x\n",
@@ -637,7 +651,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
-			spdk_nvmf_rdma_qpair_destroy(rqpair);
+			_spdk_nvmf_rdma_qpair_destroy(rqpair);
 			return -1;
 		}
 	}
@@ -2044,16 +2058,19 @@ spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 		return;
 	}
 
-	if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ERROR) {
-		/* Do not start recovery if qp is not in error state. */
-		return;
+	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ERROR) {
+		if (spdk_nvmf_rdma_recover(rqpair) != 0) {
+			SPDK_NOTICELOG("QP#%u (%p): recovery failed, disconnecting...\n",
+				       rqpair->qpair.qid, &rqpair->qpair);
+			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+		}
+	} else if (rqpair->qpair.state == SPDK_NVMF_QPAIR_INACTIVE) {
+		_spdk_nvmf_rdma_qpair_destroy(rqpair);
+		if (rqpair->destroy_cb_ctx != NULL) {
+			_spdk_nvmf_rdma_qpair_destroy_cb(rqpair->destroy_cb_ctx);
+		}
 	}
-
-	if (spdk_nvmf_rdma_recover(rqpair) != 0) {
-		SPDK_NOTICELOG("QP#%u (%p): recovery failed, disconnecting...\n",
-			       rqpair->qpair.qid, &rqpair->qpair);
-		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
-	}
+	return;
 }
 
 static void
@@ -2330,7 +2347,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	rqpair->mgmt_channel = spdk_get_io_channel(rtransport);
 	if (!rqpair->mgmt_channel) {
 		spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		_spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
 
@@ -2341,7 +2358,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	if (rc) {
 		/* Try to reject, but we probably can't */
 		spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		_spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
 
@@ -2451,18 +2468,30 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 }
 
 static void
-spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair, void *cb_ctx)
 {
-	spdk_nvmf_rdma_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
+	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rqpair->destroy_cb_ctx = cb_ctx;
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
 }
 
 static struct spdk_nvmf_rdma_request *
-get_rdma_req_from_wc(struct ibv_wc *wc)
+get_rdma_req_from_wc_safe(struct ibv_wc *wc)
 {
 	struct spdk_nvmf_rdma_request *rdma_req;
 
 	rdma_req = (struct spdk_nvmf_rdma_request *)wc->wr_id;
 	assert(rdma_req != NULL);
+
+	return rdma_req;
+}
+
+static struct spdk_nvmf_rdma_request *
+qet_rdma_req_from_wc(struct ibv_wc *wc)
+{
+	struct spdk_nvmf_rdma_request *rdma_req;
+
+	rdma_req = get_rdma_req_from_wc_safe(wc);
 
 #ifdef DEBUG
 	struct spdk_nvmf_rdma_qpair *rqpair;
@@ -2475,6 +2504,10 @@ get_rdma_req_from_wc(struct ibv_wc *wc)
 	return rdma_req;
 }
 
+/*
+ * There are cases when we will drain and free a qpair before getting completions.
+ * In that case we can't perform the qpair related debug checks.
+ */
 static struct spdk_nvmf_rdma_recv *
 get_rdma_recv_from_wc(struct ibv_wc *wc)
 {
@@ -2534,14 +2567,15 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 		switch (wc[i].opcode) {
 		case IBV_WC_SEND:
-			rdma_req = get_rdma_req_from_wc(&wc[i]);
+			rdma_req = get_rdma_req_from_wc_safe(&wc[i]);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+			/* It is possible that this request was preemptively completed by a qpair drain. In that case ignore it. */
+			if (spdk_nvmf_rdma_req_is_completing(rdma_req)) {
+				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 
-			assert(spdk_nvmf_rdma_req_is_completing(rdma_req));
-			spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
-			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-
-			count++;
+				count++;
+			}
 
 			/* Try to process other queued requests */
 			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
@@ -2556,12 +2590,13 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 
 		case IBV_WC_RDMA_READ:
-			rdma_req = get_rdma_req_from_wc(&wc[i]);
+			rdma_req = get_rdma_req_from_wc_safe(&wc[i]);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
-			assert(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-			spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_READY_TO_EXECUTE);
-			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
+			/* It is possible that this request was preemptively completed by a qpair drain. In that case ignore it. */
+			if (rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER) {
+				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_READY_TO_EXECUTE);
+				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
+			}
 
 			/* Try to process other queued requests */
 			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
