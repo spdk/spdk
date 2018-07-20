@@ -60,7 +60,7 @@ DEFINE_STUB_V(spdk_nvmf_poll_group_destroy,
 	      (struct spdk_nvmf_poll_group *group));
 
 DEFINE_STUB_V(spdk_nvmf_transport_qpair_fini,
-	      (struct spdk_nvmf_qpair *qpair));
+	      (struct spdk_nvmf_qpair *qpair, void *cb_ctx));
 
 DEFINE_STUB(spdk_nvmf_poll_group_add,
 	    int,
