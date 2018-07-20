@@ -832,6 +832,9 @@ spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_io_channel *_channel,
 	int rc;
 
 	req = alloc_fs_request(channel);
+	if (!req) {
+		SPDK_ERRLOG("Failed to allocate req\n");
+	}
 	assert(req != NULL);
 
 	req->args.fs = fs;
@@ -966,6 +969,9 @@ spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", name);
 
 	req = alloc_fs_request(channel);
+	if (!req) {
+		SPDK_ERRLOG("Failed to allocate req\n");
+	}
 	assert(req != NULL);
 
 	args = &req->args;
@@ -1111,6 +1117,9 @@ spdk_fs_open_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel,
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", name);
 
 	req = alloc_fs_request(channel);
+	if (!req) {
+		SPDK_ERRLOG("Failed to allocate req\n");
+	}
 	assert(req != NULL);
 
 	args = &req->args;
@@ -1248,6 +1257,9 @@ spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel
 	int rc;
 
 	req = alloc_fs_request(channel);
+	if (!req) {
+		SPDK_ERRLOG("Failed to allocate req\n");
+	}
 	assert(req != NULL);
 
 	args = &req->args;
@@ -1355,6 +1367,9 @@ spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel
 	int rc;
 
 	req = alloc_fs_request(channel);
+	if (!req) {
+		SPDK_ERRLOG("Failed to allocate req\n");
+	}
 	assert(req != NULL);
 
 	args = &req->args;
@@ -1491,6 +1506,9 @@ spdk_file_truncate(struct spdk_file *file, struct spdk_io_channel *_channel,
 	struct spdk_fs_cb_args *args;
 
 	req = alloc_fs_request(channel);
+	if (!req) {
+		SPDK_ERRLOG("Failed to allocate req\n");
+	}
 	assert(req != NULL);
 
 	args = &req->args;
@@ -1522,6 +1540,7 @@ __read_done(void *ctx, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
+	assert(req != NULL);
 	if (args->op.rw.is_read) {
 		memcpy(args->op.rw.user_buf,
 		       args->op.rw.pin_buf + (args->op.rw.offset & 0xFFF),
@@ -2331,10 +2350,16 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 	}
 
 	sync_req = alloc_fs_request(channel);
+	if (!sync_req) {
+		SPDK_ERRLOG("Failed to allocate req\n");
+	}
 	assert(sync_req != NULL);
 	sync_args = &sync_req->args;
 
 	flush_req = alloc_fs_request(channel);
+	if (!flush_req) {
+		SPDK_ERRLOG("Failed to allocate req\n");
+	}
 	assert(flush_req != NULL);
 	flush_args = &flush_req->args;
 
@@ -2481,6 +2506,9 @@ spdk_file_close(struct spdk_file *file, struct spdk_io_channel *_channel)
 	struct spdk_fs_cb_args *args;
 
 	req = alloc_fs_request(channel);
+	if (!req) {
+		SPDK_ERRLOG("Failed to allocate req\n");
+	}
 	assert(req != NULL);
 
 	args = &req->args;
