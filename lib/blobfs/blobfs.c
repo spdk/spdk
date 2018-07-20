@@ -1522,6 +1522,7 @@ __read_done(void *ctx, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
+	assert(req != NULL);
 	if (args->op.rw.is_read) {
 		memcpy(args->op.rw.user_buf,
 		       args->op.rw.pin_buf + (args->op.rw.offset & 0xFFF),
