@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aeb429fd_5b138b97",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-20T19:51:12Z",
+      "side": 1,
+      "message": "I agree with Pawel",
+      "parentUuid": "e4378246_c3fd8e49",
+      "range": {
+        "startLine": 357,
+        "startChar": 0,
+        "endLine": 377,
+        "endChar": 1
+      },
+      "revId": "f775d11416882d1c141e87b9831dec8e984f3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74a4fc0b_432b91e5",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 1
