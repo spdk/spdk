@@ -621,8 +621,8 @@ _spdk_nvmf_ctrlr_free_from_qpair(void *ctx)
 	free(qpair_ctx);
 }
 
-static void
-_spdk_nvmf_qpair_destroy(void *ctx, int status)
+void
+spdk_nvmf_qpair_destroy_cb(void *ctx)
 {
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
@@ -631,11 +631,6 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	uint32_t count;
 
 	spdk_nvmf_poll_group_remove(qpair->group, qpair);
-
-	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
-	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
-
-	spdk_nvmf_transport_qpair_fini(qpair);
 
 	if (!ctrlr) {
 		if (qpair_ctx->cb_fn) {
@@ -661,6 +656,18 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 		}
 		free(qpair_ctx);
 	}
+}
+
+static void
+_spdk_nvmf_qpair_destroy(void *ctx, int status)
+{
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
+
+	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
+	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
+
+	spdk_nvmf_transport_qpair_fini(qpair, qpair_ctx);
 }
 
 static void
