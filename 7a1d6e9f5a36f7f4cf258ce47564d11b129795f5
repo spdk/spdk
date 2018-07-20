@@ -1,0 +1,147 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8d8e448_59b7e61d",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T14:01:59Z",
+      "side": 1,
+      "message": "Please keep required.",
+      "range": {
+        "startLine": 944,
+        "startChar": 26,
+        "endLine": 944,
+        "endChar": 34
+      },
+      "revId": "7a1d6e9f5a36f7f4cf258ce47564d11b129795f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c35e37e8_d1aaa630",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T14:01:59Z",
+      "side": 1,
+      "message": "this should be removed",
+      "revId": "7a1d6e9f5a36f7f4cf258ce47564d11b129795f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5abecda_fd66b730",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1764,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T14:01:59Z",
+      "side": 1,
+      "message": "this should be named_uint64?",
+      "range": {
+        "startLine": 1764,
+        "startChar": 1,
+        "endLine": 1764,
+        "endChar": 28
+      },
+      "revId": "7a1d6e9f5a36f7f4cf258ce47564d11b129795f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b9f4026_824854f7",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T14:01:59Z",
+      "side": 1,
+      "message": "if \"enable\" is mandatory, this true should be removed.",
+      "range": {
+        "startLine": 118,
+        "startChar": 84,
+        "endLine": 118,
+        "endChar": 88
+      },
+      "revId": "7a1d6e9f5a36f7f4cf258ce47564d11b129795f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92b71249_34106346",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T14:01:59Z",
+      "side": 1,
+      "message": "Sorry, I understand your intention now and default\u003dFalse should be fine.",
+      "range": {
+        "startLine": 239,
+        "startChar": 61,
+        "endLine": 239,
+        "endChar": 65
+      },
+      "revId": "7a1d6e9f5a36f7f4cf258ce47564d11b129795f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba144af7_9869b793",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T14:01:59Z",
+      "side": 1,
+      "message": "Sorry, making the parameter enable mandatory is fine for me now as same as rpc.py.",
+      "revId": "7a1d6e9f5a36f7f4cf258ce47564d11b129795f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4af17aa0_be962992",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T14:01:59Z",
+      "side": 1,
+      "message": "using global as name looks nice idea. Thank you.",
+      "revId": "7a1d6e9f5a36f7f4cf258ce47564d11b129795f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
