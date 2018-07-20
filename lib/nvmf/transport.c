@@ -173,9 +173,9 @@ spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 }
 
 void
-spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair, void *cb_ctx)
 {
-	qpair->transport->ops->qpair_fini(qpair);
+	qpair->transport->ops->qpair_fini(qpair, cb_ctx);
 }
 
 bool
