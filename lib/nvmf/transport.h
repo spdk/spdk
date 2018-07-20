@@ -129,7 +129,7 @@ struct spdk_nvmf_transport_ops {
 	/*
 	 * Deinitialize a connection.
 	 */
-	void (*qpair_fini)(struct spdk_nvmf_qpair *qpair);
+	void (*qpair_fini)(struct spdk_nvmf_qpair *qpair, void *cb_ctx);
 
 	/*
 	 * True if the qpair has no pending IO.
@@ -170,7 +170,7 @@ int spdk_nvmf_transport_req_free(struct spdk_nvmf_request *req);
 
 int spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 
-void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair);
+void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair, void *cb_ctx);
 
 bool spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair);
 
