@@ -16,6 +16,24 @@
       "revId": "878469efc818802e8fb403a00cf503adc6134d0d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cd50751_a82c4b27",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-20T09:23:55Z",
+      "side": 1,
+      "message": "Hi Ben, thanks for your explanation. I will abandon this patch.",
+      "parentUuid": "e3804d44_8d60f12d",
+      "revId": "878469efc818802e8fb403a00cf503adc6134d0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
