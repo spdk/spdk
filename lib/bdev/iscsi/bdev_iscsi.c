@@ -227,7 +227,7 @@ bdev_iscsi_command_cb(struct iscsi_context *context, int status, void *_task, vo
 	struct scsi_task *task = _task;
 	struct bdev_iscsi_io *iscsi_io = _iscsi_io;
 
-	iscsi_io->scsi_status = task->status;
+	iscsi_io->scsi_status = status;
 	iscsi_io->sk = (uint8_t)task->sense.key;
 	iscsi_io->asc = (task->sense.ascq >> 8) & 0xFF;
 	iscsi_io->ascq = task->sense.ascq & 0xFF;
@@ -487,8 +487,8 @@ static void bdev_iscsi_submit_request(struct spdk_io_channel *_ch, struct spdk_b
 	struct bdev_iscsi_io *iscsi_io = (struct bdev_iscsi_io *)bdev_io->driver_ctx;
 	struct bdev_iscsi_lun *lun = (struct bdev_iscsi_lun *)bdev_io->bdev->ctxt;
 
+	iscsi_io->submit_td = submit_td;
 	if (lun->master_td != submit_td) {
-		iscsi_io->submit_td = submit_td;
 		spdk_thread_send_msg(lun->master_td, _bdev_iscsi_submit_request, bdev_io);
 		return;
 	}
