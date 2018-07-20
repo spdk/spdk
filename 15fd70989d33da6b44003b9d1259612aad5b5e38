@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5739c87e_cbe1634e",
+        "filename": "test/spdkcli/spdkcli.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T20:31:04Z",
+      "side": 1,
+      "message": "Isn\u0027t this the same as test/spdkcli/common.sh?",
+      "revId": "15fd70989d33da6b44003b9d1259612aad5b5e38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
