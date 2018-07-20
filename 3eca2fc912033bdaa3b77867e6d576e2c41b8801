@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "133345c9_df199f8b",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-20T02:55:19Z",
+      "side": 1,
+      "message": "I am confused with many_ctx, could we use other name or add some comments",
+      "range": {
+        "startLine": 69,
+        "startChar": 7,
+        "endLine": 69,
+        "endChar": 37
+      },
+      "revId": "3eca2fc912033bdaa3b77867e6d576e2c41b8801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
