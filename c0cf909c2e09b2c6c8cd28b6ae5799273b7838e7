@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2247c29_e30077cd",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-20T06:41:08Z",
+      "side": 1,
+      "message": "Nack. This doesn\u0027t make slightest sense. Attempting to delete the target will segfault now, because those fields can\u0027t be freed twice. This function notifies vhost devices about bdev hotremoval, it does not destroy neither devices nor targets.",
+      "revId": "c0cf909c2e09b2c6c8cd28b6ae5799273b7838e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
