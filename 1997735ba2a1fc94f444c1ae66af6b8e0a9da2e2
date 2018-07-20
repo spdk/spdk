@@ -1,0 +1,192 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85618961_89da1b0e",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "int32, uint32, int64, uint64 may be better ordering than int32, uint32, uint64, int64.",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e8feee5_117251e7",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "same as above.",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0903a870_751cf25c",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1053,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "In bdev_nvme_library_fini(), g_hotplug_poller is checked to be installed before calling spdk_poller_unregister().\n\nWhen the first setup, g_hotplug_poller will be NULL.\n\nI know this works fine but do we have to do the same thing here?",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fda15e1e_fde3d8a7",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1348,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "Is it OK to ignore return value and go forward?",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27c3d009_c00ba8f5",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "Moving this on the spdk_json_number_to_uint64 may be better?",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b86b830_6556c65e",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "should be int64_t ?",
+      "range": {
+        "startLine": 467,
+        "startChar": 1,
+        "endLine": 467,
+        "endChar": 9
+      },
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f30cfbf_0250069b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "Looks fine but I feel a little advanced. How about the following like context_switch_monitor?\n\ndef set_bdev_nvme_hotplug(args):\n    enable \u003d None\n    if args.enable:\n        enable \u003d True\n    if args.disable:\n        enable \u003d False\n    rpc.bdev.set_bdev_nvme_hotplug(args.client, enable\u003denable, period_us\u003dargs.period_us)\n\np.add_argument(\u0027--enable\u0027, action\u003d\u0027store_true\u0027)\np.add_argument(\u0027--disable\u0027, action\u003d\u0027store_true\u0027)",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17a47307_7dbd4c83",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "please add abbreviation \u0027-d\u0027",
+      "range": {
+        "startLine": 239,
+        "startChar": 18,
+        "endLine": 239,
+        "endChar": 19
+      },
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcb28d34_553b3bec",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "please add abbreviation \u0027-e\u0027",
+      "range": {
+        "startLine": 240,
+        "startChar": 18,
+        "endLine": 240,
+        "endChar": 19
+      },
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a4635b3_2e74267a",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-20T02:08:28Z",
+      "side": 1,
+      "message": "If you take my feedback in rpc.py, this may have to be changed like\n\nparams \u003d {}\nif enable is not None:\n    params[\u0027enable\u0027] \u003d enable",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
