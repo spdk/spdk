@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a06e5fd_6df9d9c6",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T17:59:46Z",
+      "side": 1,
+      "message": "Maybe we should name this one spdk_nvmf_ctrlr_abort_aer (because it completes the command as aborted) and the one below spdk_nvmf_ctrlr_free_aer.",
+      "revId": "a127ea18fbac3dc96b8a191e3a7367192babc41c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e83f2a29_c75e00b0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2631,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T17:59:46Z",
+      "side": 1,
+      "message": "req_free?",
+      "revId": "a127ea18fbac3dc96b8a191e3a7367192babc41c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f93f8c4_2e11cde2",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T17:59:46Z",
+      "side": 1,
+      "message": "inline is only a hint, and for static functions the compiler will just do what it thinks is best regardless of this keyword. I think it\u0027s probably better to remove it.",
+      "revId": "a127ea18fbac3dc96b8a191e3a7367192babc41c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
