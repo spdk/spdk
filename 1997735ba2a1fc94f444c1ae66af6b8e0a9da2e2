@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "e0d5318f_3da1f443",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1053,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-20T14:30:50Z",
+      "side": 1,
+      "message": "\u003e I know this works fine but do we have to do the same thing here?\n\nNo, I forgot to remove this NOP check from bdev_nvme_library_fini().\nThanks",
+      "parentUuid": "0903a870_751cf25c",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fda15e1e_fde3d8a7",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 21
