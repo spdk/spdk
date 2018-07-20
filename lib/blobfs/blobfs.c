@@ -832,7 +832,9 @@ spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_io_channel *_channel,
 	int rc;
 
 	req = alloc_fs_request(channel);
-	assert(req != NULL);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
 
 	req->args.fs = fs;
 	req->args.op.stat.name = name;
@@ -966,7 +968,9 @@ spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", name);
 
 	req = alloc_fs_request(channel);
-	assert(req != NULL);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
 
 	args = &req->args;
 	args->fs = fs;
@@ -1111,7 +1115,9 @@ spdk_fs_open_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel,
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", name);
 
 	req = alloc_fs_request(channel);
-	assert(req != NULL);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
 
 	args = &req->args;
 	args->fs = fs;
@@ -1248,7 +1254,9 @@ spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel
 	int rc;
 
 	req = alloc_fs_request(channel);
-	assert(req != NULL);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
 
 	args = &req->args;
 
@@ -1355,7 +1363,9 @@ spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel
 	int rc;
 
 	req = alloc_fs_request(channel);
-	assert(req != NULL);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
 
 	args = &req->args;
 	args->fs = fs;
@@ -1522,6 +1532,7 @@ __read_done(void *ctx, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
+	assert(req != NULL);
 	if (args->op.rw.is_read) {
 		memcpy(args->op.rw.user_buf,
 		       args->op.rw.pin_buf + (args->op.rw.offset & 0xFFF),
@@ -2331,11 +2342,19 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 	}
 
 	sync_req = alloc_fs_request(channel);
-	assert(sync_req != NULL);
+	if (!sync_req) {
+		pthread_spin_unlock(&file->lock);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
 	sync_args = &sync_req->args;
 
 	flush_req = alloc_fs_request(channel);
-	assert(flush_req != NULL);
+	if (!flush_req) {
+		pthread_spin_unlock(&file->lock);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
 	flush_args = &flush_req->args;
 
 	sync_args->file = file;
@@ -2481,7 +2500,9 @@ spdk_file_close(struct spdk_file *file, struct spdk_io_channel *_channel)
 	struct spdk_fs_cb_args *args;
 
 	req = alloc_fs_request(channel);
-	assert(req != NULL);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
 
 	args = &req->args;
 
