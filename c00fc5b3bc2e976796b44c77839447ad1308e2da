@@ -34,6 +34,24 @@
       "revId": "c00fc5b3bc2e976796b44c77839447ad1308e2da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48a676cc_a9d29ee0",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-20T14:41:39Z",
+      "side": 1,
+      "message": "So if I remove this is looks like ASAN complains about a free attempt w/o an alloc so I do need this...\n\n\u003d\u003d48280\u003d\u003dERROR: AddressSanitizer: attempting free on address which was not malloc()-ed: 0x0000006509c0 in thread T0",
+      "parentUuid": "e797bc29_aaebad68",
+      "revId": "c00fc5b3bc2e976796b44c77839447ad1308e2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
