@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42160f14_e6a1a1b3",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T17:32:14Z",
+      "side": 1,
+      "message": "timeout is an int32 in the code, not a uint32. I suspect a uint32_t is the right choice.",
+      "revId": "bb388e30dcd1bdbb5d4fd87a59f4b45d4064b2ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
