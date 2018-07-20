@@ -86,6 +86,7 @@ struct bdev_iscsi_lun {
 	struct spdk_thread		*master_td;
 	struct spdk_poller		*no_master_ch_poller;
 	struct spdk_thread		*no_master_ch_poller_td;
+	bool				unmap_supported;
 	TAILQ_ENTRY(bdev_iscsi_lun)	link;
 };
 
@@ -101,6 +102,7 @@ struct bdev_iscsi_conn_req {
 	struct iscsi_context			*context;
 	spdk_bdev_iscsi_create_cb		create_cb;
 	spdk_bdev_iscsi_create_cb		create_cb_arg;
+	bool					unmap_supported;
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
 };
 
@@ -501,14 +503,17 @@ static void bdev_iscsi_submit_request(struct spdk_io_channel *_ch, struct spdk_b
 static bool
 bdev_iscsi_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+	struct bdev_iscsi_lun *lun = ctx;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
 
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return lun->unmap_supported;
 	default:
 		return false;
 	}
@@ -619,7 +624,7 @@ complete_conn_req(struct bdev_iscsi_conn_req *req, struct spdk_bdev *bdev,
 
 static int
 create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, char *name,
-		 uint64_t num_blocks, uint32_t block_size, struct spdk_bdev **bdev)
+		 uint64_t num_blocks, uint32_t block_size, struct spdk_bdev **bdev, bool unmap_supported)
 {
 	struct bdev_iscsi_lun *lun;
 	int rc;
@@ -642,6 +647,7 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, 
 	lun->bdev.blocklen = block_size;
 	lun->bdev.blockcnt = num_blocks;
 	lun->bdev.ctxt = lun;
+	lun->unmap_supported = unmap_supported;
 
 	lun->bdev.fn_table = &iscsi_fn_table;
 
@@ -687,7 +693,7 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 	}
 
 	status = create_iscsi_lun(req->context, req->url, req->initiator_iqn, req->bdev_name,
-				  readcap16->returned_lba + 1, readcap16->block_length, &bdev);
+				  readcap16->returned_lba + 1, readcap16->block_length, &bdev, req->unmap_supported);
 	if (status) {
 		SPDK_ERRLOG("Unable to create iscsi bdev: %s (%d)\n", spdk_strerror(-status), status);
 	}
@@ -695,6 +701,29 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 ret:
 	scsi_free_scsi_task(task);
 	complete_conn_req(req, bdev, status);
+}
+
+static void
+bdev_iscsi_inquiry_cb(struct iscsi_context *context, int status, void *_task, void *private_data)
+{
+	struct scsi_task *task = _task;
+	struct scsi_inquiry_logical_block_provisioning *lbp_inq = NULL;
+	struct bdev_iscsi_conn_req *req = private_data;
+
+	if (status == SPDK_SCSI_STATUS_GOOD) {
+		lbp_inq = scsi_datain_unmarshall(task);
+		if (lbp_inq != NULL && lbp_inq->lbpu) {
+			req->unmap_supported = true;
+		}
+	}
+
+	task = iscsi_readcapacity16_task(context, 0, iscsi_readcapacity16_cb, req);
+	if (task) {
+		return;
+	}
+
+	SPDK_ERRLOG("iSCSI error: %s\n", iscsi_get_error(req->context));
+	complete_conn_req(req, NULL, status);
 }
 
 static void
@@ -708,7 +737,9 @@ iscsi_connect_cb(struct iscsi_context *iscsi, int status,
 		goto ret;
 	}
 
-	task = iscsi_readcapacity16_task(iscsi, 0, iscsi_readcapacity16_cb, req);
+	task = iscsi_inquiry_task(iscsi, 0, 1,
+				  SCSI_INQUIRY_PAGECODE_LOGICAL_BLOCK_PROVISIONING,
+				  255, bdev_iscsi_inquiry_cb, req);
 	if (task) {
 		return;
 	}
