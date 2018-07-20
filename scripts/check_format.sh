@@ -10,6 +10,10 @@ rc=0
 
 if hash astyle; then
 	echo -n "Checking coding style..."
+	if [ "$(astyle -V)" \< "Artistic Style Version 3" ]
+	then
+		echo -n " Your astyle version is too old. This may cause failure on patch verification performed by CI. Please update astyle to at least 3.0.1 version..."
+	fi
 	rm -f astyle.log
 	touch astyle.log
 	# Exclude rte_vhost code imported from DPDK - we want to keep the original code
