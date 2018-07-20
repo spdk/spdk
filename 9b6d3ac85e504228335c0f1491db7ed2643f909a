@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42389797_45e2bde4",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T17:23:58Z",
+      "side": 1,
+      "message": "once the transport is associated with the target",
+      "revId": "9b6d3ac85e504228335c0f1491db7ed2643f909a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
