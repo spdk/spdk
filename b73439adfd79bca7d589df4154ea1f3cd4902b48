@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3567b507_05c7104f",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T18:01:52Z",
+      "side": 1,
+      "message": "It\u0027s probably better performance to just always call spdk_thread_send_msg here (also simpler). spdk_get_thread() is expensive.",
+      "revId": "b73439adfd79bca7d589df4154ea1f3cd4902b48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
