@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "70fd0429_96e45083",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 1883,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-20T20:09:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "178b2315_23eeba29",
+      "range": {
+        "startLine": 1882,
+        "startChar": 0,
+        "endLine": 1883,
+        "endChar": 27
+      },
+      "revId": "cf5a0e8bb3afb54a88faf2c7418751b4492a0030",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "857671e0_f0ae729a",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 13
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-20T06:56:59Z",
       "side": 1,
       "message": "I think it could be more specific. \"Fill first four out of five clusters...\"",
+      "range": {
+        "startLine": 1934,
+        "startChar": 10,
+        "endLine": 1934,
+        "endChar": 28
+      },
+      "revId": "cf5a0e8bb3afb54a88faf2c7418751b4492a0030",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61b448f6_e8005d4a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 1934,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-20T20:09:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "857671e0_f0ae729a",
       "range": {
         "startLine": 1934,
         "startChar": 10,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "f797796f_003719cf",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 1945,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-20T20:09:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9cad9ccb_a1bdb16e",
+      "range": {
+        "startLine": 1945,
+        "startChar": 10,
+        "endLine": 1945,
+        "endChar": 28
+      },
+      "revId": "cf5a0e8bb3afb54a88faf2c7418751b4492a0030",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0f7ccc9_02c72a31",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 13
@@ -82,6 +154,30 @@
       "writtenOn": "2018-07-20T06:56:59Z",
       "side": 1,
       "message": "\"Overwrite second cluster...\"",
+      "range": {
+        "startLine": 1958,
+        "startChar": 10,
+        "endLine": 1958,
+        "endChar": 28
+      },
+      "revId": "cf5a0e8bb3afb54a88faf2c7418751b4492a0030",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5a04e02_c4b3e6c3",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 1958,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-07-20T20:09:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c0f7ccc9_02c72a31",
       "range": {
         "startLine": 1958,
         "startChar": 10,
