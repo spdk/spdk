@@ -256,15 +256,20 @@ raid_bdev_config_cleanup(void)
 {
 	void       *temp_ptr;
 
-	temp_ptr = realloc(g_spdk_raid_config.raid_bdev_config,
-			   sizeof(struct raid_bdev_config) * (g_spdk_raid_config.total_raid_bdev - 1));
-	if (temp_ptr != NULL) {
-		g_spdk_raid_config.raid_bdev_config = temp_ptr;
-	} else {
-		SPDK_ERRLOG("Config memory allocation failed\n");
-		assert(0);
-	}
 	g_spdk_raid_config.total_raid_bdev--;
+	if (g_spdk_raid_config.total_raid_bdev == 0) {
+		free(g_spdk_raid_config.raid_bdev_config);
+		g_spdk_raid_config.raid_bdev_config = NULL;
+	} else {
+		temp_ptr = realloc(g_spdk_raid_config.raid_bdev_config,
+				   sizeof(struct raid_bdev_config) * (g_spdk_raid_config.total_raid_bdev - 1));
+		if (temp_ptr != NULL) {
+			g_spdk_raid_config.raid_bdev_config = temp_ptr;
+		} else {
+			SPDK_ERRLOG("Config memory allocation failed\n");
+			assert(0);
+		}
+	}
 }
 
 /*
