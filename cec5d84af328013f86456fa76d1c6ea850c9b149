@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "5cf92194_10c1aaba",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-20T16:05:35Z",
+      "side": 1,
+      "message": "yup, thanks.  leftover from earlier design.",
+      "parentUuid": "49cd1367_ef4d3f7a",
+      "range": {
+        "startLine": 69,
+        "startChar": 8,
+        "endLine": 69,
+        "endChar": 26
+      },
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "94fbe6de_4687f082",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 50
@@ -59,6 +83,30 @@
       "writtenOn": "2018-07-20T15:42:28Z",
       "side": 1,
       "message": "Do we really want to dequeue that much with each poller tick? This could potentially stall the reactor for some time.",
+      "range": {
+        "startLine": 400,
+        "startChar": 31,
+        "endLine": 400,
+        "endChar": 40
+      },
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7409c8a2_84524dff",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-20T16:05:35Z",
+      "side": 1,
+      "message": "yeah, we may need to adjust things once we get some time messing with this.  Its not clear what the \u0027flow\u0027 will look like in terms of how many are getting submitted, processed, etc., in comparison with IOs so for now I didn\u0027t want to put limits on these things without data.  Great question though",
+      "parentUuid": "94fbe6de_4687f082",
       "range": {
         "startLine": 400,
         "startChar": 31,
@@ -88,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "365c838b_102a0648",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-20T16:05:35Z",
+      "side": 1,
+      "message": "the new function is a little different but in either case this is on a per IOV basis so it is assured to be contiguous (a single io vector)",
+      "parentUuid": "e6a7cd07_4d648572",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9f7371b9_a6aa700f",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 50
@@ -99,6 +165,24 @@
       "writtenOn": "2018-07-20T15:42:28Z",
       "side": 1,
       "message": "you don\u0027t need to decrypt if the original READ failed",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4c12e1f_2670ac80",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-20T16:05:35Z",
+      "side": 1,
+      "message": "haha, yes very good point, thanks!",
+      "parentUuid": "9f7371b9_a6aa700f",
       "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -122,6 +206,24 @@
     },
     {
       "key": {
+        "uuid": "896617b1_537611e3",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 793,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-20T16:05:35Z",
+      "side": 1,
+      "message": "this is coming up next in my thought process :) Thanks for asking about it again",
+      "parentUuid": "d6a34226_20cdddbd",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a8825fdb_65824c3f",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 50
@@ -133,6 +235,24 @@
       "writtenOn": "2018-07-20T15:42:28Z",
       "side": 1,
       "message": "missing spdk_io_device_unregister(crypto_node), otherwise we have a memleak.",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f28ca284_02020d1d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1301,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-20T16:05:35Z",
+      "side": 1,
+      "message": "didn\u0027t see that, thanks",
+      "parentUuid": "a8825fdb_65824c3f",
       "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -153,6 +273,24 @@
       "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d3ee7ee_70518d0c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1309,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-20T16:05:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ffdfe8e8_b7973ccd",
+      "revId": "cec5d84af328013f86456fa76d1c6ea850c9b149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
