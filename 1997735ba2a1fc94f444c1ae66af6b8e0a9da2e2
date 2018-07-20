@@ -127,6 +127,24 @@
     },
     {
       "key": {
+        "uuid": "3cc4321e_39c915ab",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-20T11:23:33Z",
+      "side": 1,
+      "message": "--enable and --disable can be used at the same time so having two variables here is problematic in a way of deciding which one have a precedence. This why I used \"dest\u003d\u0027enable\u0027\" in add_parse to void this issue.",
+      "parentUuid": "3f30cfbf_0250069b",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17a47307_7dbd4c83",
         "filename": "scripts/rpc.py",
         "patchSetId": 21
@@ -184,6 +202,24 @@
       "writtenOn": "2018-07-20T02:08:28Z",
       "side": 1,
       "message": "If you take my feedback in rpc.py, this may have to be changed like\n\nparams \u003d {}\nif enable is not None:\n    params[\u0027enable\u0027] \u003d enable",
+      "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c341bff_b648f69c",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-20T11:23:33Z",
+      "side": 1,
+      "message": "Ok but I feel that this parameter should be mandatory.",
+      "parentUuid": "1a4635b3_2e74267a",
       "revId": "1997735ba2a1fc94f444c1ae66af6b8e0a9da2e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
