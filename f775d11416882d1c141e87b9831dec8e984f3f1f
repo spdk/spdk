@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "3021ec1a_cc9babbe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T20:05:15Z",
+      "side": 1,
+      "message": "I agree that this is the same as spdk_bdev_get_by_name(bdev_name) !\u003d NULL, but neither this function nor the one that exists are doing the correct check. What you want to know is whether this base name has been used before. The base name might be \"Nvme0\" and the bdevs will have names like \"Nvme0n1\".",
+      "parentUuid": "aeb429fd_5b138b97",
+      "range": {
+        "startLine": 357,
+        "startChar": 0,
+        "endLine": 377,
+        "endChar": 1
+      },
+      "revId": "f775d11416882d1c141e87b9831dec8e984f3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74a4fc0b_432b91e5",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 1
@@ -60,6 +84,30 @@
       "writtenOn": "2018-07-19T19:10:30Z",
       "side": 1,
       "message": "I agree with that this function should fail is base_name is a existing bdev (or existing nvme controller) but I have some doubts how this patch works. I think that there is some pitfall in attach_cb that doesn\u0027t check if nvme controller with base_name exist thant checking base_name here. I think someone need to look this deeper where real issue is. I\u0027ll add to revie Ben to have him look at this.\n\nBTW: I see more places where the SPDK could benefit from global facility service that would guarantee and create unique bdev or base bdev name.",
+      "range": {
+        "startLine": 1052,
+        "startChar": 0,
+        "endLine": 1056,
+        "endChar": 2
+      },
+      "revId": "f775d11416882d1c141e87b9831dec8e984f3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2aa1c435_6265f6e5",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-20T20:05:15Z",
+      "side": 1,
+      "message": "The concept of a \"base\" bdev name is unique to bdev_nvme.c, and that\u0027s what you really want to be checking here. You can determine whether the given base name is unique by iterating over the g_nvme_ctrlrs list in this file.",
+      "parentUuid": "74a4fc0b_432b91e5",
       "range": {
         "startLine": 1052,
         "startChar": 0,
