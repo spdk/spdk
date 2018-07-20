@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "178b2315_23eeba29",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 1883,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-20T06:56:59Z",
+      "side": 1,
+      "message": "Could we check more info here ? Currently it only checks if thin_provision flag was not changed in original lvol_bdev.\n\nOther fields that are affected by decouple:\n- lvol_bdev \"clone\" is set to false\n- lvol_bdev \"base_snapshot\" is not present\n- snapshot_bdev \"clones\" is empty",
+      "range": {
+        "startLine": 1882,
+        "startChar": 0,
+        "endLine": 1883,
+        "endChar": 27
+      },
+      "revId": "cf5a0e8bb3afb54a88faf2c7418751b4492a0030",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "857671e0_f0ae729a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 1934,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-20T06:56:59Z",
+      "side": 1,
+      "message": "I think it could be more specific. \"Fill first four out of five clusters...\"",
+      "range": {
+        "startLine": 1934,
+        "startChar": 10,
+        "endLine": 1934,
+        "endChar": 28
+      },
+      "revId": "cf5a0e8bb3afb54a88faf2c7418751b4492a0030",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cad9ccb_a1bdb16e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 1945,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-20T06:56:59Z",
+      "side": 1,
+      "message": "Same as above \"Fill second and fourth cluster...\"",
+      "range": {
+        "startLine": 1945,
+        "startChar": 10,
+        "endLine": 1945,
+        "endChar": 28
+      },
+      "revId": "cf5a0e8bb3afb54a88faf2c7418751b4492a0030",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0f7ccc9_02c72a31",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 1958,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-20T06:56:59Z",
+      "side": 1,
+      "message": "\"Overwrite second cluster...\"",
+      "range": {
+        "startLine": 1958,
+        "startChar": 10,
+        "endLine": 1958,
+        "endChar": 28
+      },
+      "revId": "cf5a0e8bb3afb54a88faf2c7418751b4492a0030",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
