@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccab3dd1_e584b515",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-20T12:33:02Z",
+      "side": 1,
+      "message": "name \"task\" will be fine for both lbp and rc16 tasks.",
+      "range": {
+        "startLine": 707,
+        "startChar": 19,
+        "endLine": 707,
+        "endChar": 27
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ac8c520_f21aec19",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 718,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-20T12:33:02Z",
+      "side": 1,
+      "message": "isn\u0027t this an error condition?",
+      "range": {
+        "startLine": 718,
+        "startChar": 5,
+        "endLine": 718,
+        "endChar": 20
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9305f8d_b796be98",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-20T12:33:02Z",
+      "side": 1,
+      "message": "Are you sure you can read this page?",
+      "range": {
+        "startLine": 746,
+        "startChar": 6,
+        "endLine": 746,
+        "endChar": 54
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4ade700_5b7722d8",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-20T12:33:02Z",
+      "side": 1,
+      "message": "why 255?",
+      "range": {
+        "startLine": 747,
+        "startChar": 6,
+        "endLine": 747,
+        "endChar": 9
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
