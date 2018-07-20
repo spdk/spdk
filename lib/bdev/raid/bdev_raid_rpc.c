@@ -256,6 +256,12 @@ raid_bdev_config_cleanup(void)
 {
 	void       *temp_ptr;
 
+	/* realloc(g_spdk_raid_config.raid_bdev_config, 0)
+	 * is equivalent to free(g_spdk_raid_config.raid_bdev_config).*/
+	if (g_spdk_raid_config.total_raid_bdev < 2) {
+		g_spdk_raid_config.total_raid_bdev = 0;
+		return;
+	}
 	temp_ptr = realloc(g_spdk_raid_config.raid_bdev_config,
 			   sizeof(struct raid_bdev_config) * (g_spdk_raid_config.total_raid_bdev - 1));
 	if (temp_ptr != NULL) {
