@@ -709,11 +709,17 @@ spdk_bdev_modules_init(void)
 	return rc;
 }
 
+
+static void
+spdk_bdev_init_failed_complete(void *cb_arg)
+{
+	spdk_bdev_init_complete(-1);
+}
+
 static void
 spdk_bdev_init_failed(void *cb_arg)
 {
-	spdk_bdev_init_complete(-1);
-	return;
+	spdk_bdev_finish(spdk_bdev_init_failed_complete, NULL);
 }
 
 void
@@ -820,7 +826,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	rc = spdk_bdev_modules_init();
 	if (rc != 0) {
 		SPDK_ERRLOG("bdev modules init failed\n");
-		spdk_bdev_finish(spdk_bdev_init_failed, NULL);
+		spdk_thread_send_msg(spdk_get_thread(), spdk_bdev_init_failed, NULL);
 		return;
 	}
 
