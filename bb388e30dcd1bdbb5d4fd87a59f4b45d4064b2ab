@@ -16,6 +16,41 @@
       "revId": "bb388e30dcd1bdbb5d4fd87a59f4b45d4064b2ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8822921_e9748682",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-22T23:09:52Z",
+      "side": 1,
+      "message": "Thank you.",
+      "parentUuid": "42160f14_e6a1a1b3",
+      "revId": "bb388e30dcd1bdbb5d4fd87a59f4b45d4064b2ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fea55aca_70333066",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-22T23:09:52Z",
+      "side": 1,
+      "message": "this should be uint32_t",
+      "revId": "bb388e30dcd1bdbb5d4fd87a59f4b45d4064b2ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
