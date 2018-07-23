@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "04819d6e_47a043f9",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-23T10:30:28Z",
+      "side": 1,
+      "message": "Hi Pawel, in my opinion, unmarshalling the return task and getting valid data means this page could be read.\nFor your next question, if return NULL, similar to iscsi_readcapacity16_task, calling function will handle this. Thank you.",
+      "parentUuid": "eb955c99_0695d7d0",
+      "range": {
+        "startLine": 746,
+        "startChar": 6,
+        "endLine": 746,
+        "endChar": 54
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4ade700_5b7722d8",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 2
@@ -226,6 +250,30 @@
       "side": 1,
       "message": "So, maybe check in spec or doc how long this should be.",
       "parentUuid": "31d9a397_79cd49b7",
+      "range": {
+        "startLine": 747,
+        "startChar": 6,
+        "endLine": 747,
+        "endChar": 9
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e21e46a_f0ece4bb",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-23T10:30:28Z",
+      "side": 1,
+      "message": "Hi Pawel, yes, I did. SPC 4 shows that allocation length is 2-byte long. However, I don\u0027t see the necessity to make it that big under current circumstance. 255 can make sure it passes the test. Thank you for reviewing my patch.",
+      "parentUuid": "1c3b4037_4af74d1b",
       "range": {
         "startLine": 747,
         "startChar": 6,
