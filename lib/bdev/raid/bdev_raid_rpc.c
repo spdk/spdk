@@ -301,14 +301,14 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_bdev_config)
 	 */
 	assert(raid_bdev_ctxt->raid_bdev.state == RAID_BDEV_STATE_CONFIGURING);
 	raid_bdev = &raid_bdev_ctxt->raid_bdev;
-	for (uint32_t iter = 0; iter < raid_bdev->num_base_bdevs; iter++) {
+	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		assert(raid_bdev->base_bdev_info != NULL);
-		if (raid_bdev->base_bdev_info[iter].base_bdev) {
+		if (raid_bdev->base_bdev_info[i].base_bdev) {
 			/* Release base bdev related resources */
-			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[iter].base_bdev);
-			spdk_bdev_close(raid_bdev->base_bdev_info[iter].base_bdev_desc);
-			raid_bdev->base_bdev_info[iter].base_bdev_desc = NULL;
-			raid_bdev->base_bdev_info[iter].base_bdev = NULL;
+			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].base_bdev);
+			spdk_bdev_close(raid_bdev->base_bdev_info[i].base_bdev_desc);
+			raid_bdev->base_bdev_info[i].base_bdev_desc = NULL;
+			raid_bdev->base_bdev_info[i].base_bdev = NULL;
 			assert(raid_bdev->num_base_bdevs_discovered);
 			raid_bdev->num_base_bdevs_discovered--;
 		}
@@ -390,9 +390,9 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 	g_spdk_raid_config.raid_bdev_config = temp_ptr;
-	for (size_t iter = 0; iter < g_spdk_raid_config.total_raid_bdev; iter++) {
-		g_spdk_raid_config.raid_bdev_config[iter].raid_bdev_ctxt->raid_bdev.raid_bdev_config =
-			&g_spdk_raid_config.raid_bdev_config[iter];
+	for (size_t i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
+		g_spdk_raid_config.raid_bdev_config[i].raid_bdev_ctxt->raid_bdev.raid_bdev_config =
+			&g_spdk_raid_config.raid_bdev_config[i];
 	}
 	raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev];
 	memset(raid_bdev_config, 0, sizeof(*raid_bdev_config));
@@ -402,13 +402,13 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	raid_bdev_config->raid_level = req.raid_level;
 	g_spdk_raid_config.total_raid_bdev++;
 	raid_bdev_config->base_bdev = base_bdevs;
-	for (size_t iter = 0; iter < raid_bdev_config->num_base_bdevs; iter++) {
-		raid_bdev_config->base_bdev[iter].bdev_name = req.base_bdevs.base_bdevs[iter];
+	for (size_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
+		raid_bdev_config->base_bdev[i].bdev_name = req.base_bdevs.base_bdevs[i];
 	}
 
-	for (size_t iter = 0; iter < raid_bdev_config->num_base_bdevs; iter++) {
+	for (size_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
 		/* Check if base_bdev exists already, if not fail the command */
-		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[iter]);
+		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[i]);
 		if (base_bdev == NULL) {
 			check_and_remove_raid_bdev(&g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev -
 										      1]);
@@ -513,7 +513,7 @@ static void
 raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 {
 	void                     *temp_ptr;
-	uint8_t                  iter;
+	uint8_t                  i;
 	struct raid_bdev_config  *raid_cfg_next;
 	uint8_t                  slot;
 
@@ -528,25 +528,25 @@ raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 	}
 
 	/* Destroy raid bdev config and cleanup */
-	for (uint8_t iter2 = 0; iter2 < raid_cfg->num_base_bdevs; iter2++) {
-		free(raid_cfg->base_bdev[iter2].bdev_name);
+	for (uint8_t j = 0; j < raid_cfg->num_base_bdevs; j++) {
+		free(raid_cfg->base_bdev[j].bdev_name);
 	}
 	free(raid_cfg->base_bdev);
 	free(raid_cfg->name);
 	slot = raid_cfg - g_spdk_raid_config.raid_bdev_config;
 	assert(slot < g_spdk_raid_config.total_raid_bdev);
 	if (slot != g_spdk_raid_config.total_raid_bdev - 1) {
-		iter = slot;
-		while (iter < g_spdk_raid_config.total_raid_bdev - 1) {
-			raid_cfg = &g_spdk_raid_config.raid_bdev_config[iter];
-			raid_cfg_next = &g_spdk_raid_config.raid_bdev_config[iter + 1];
+		i = slot;
+		while (i < g_spdk_raid_config.total_raid_bdev - 1) {
+			raid_cfg = &g_spdk_raid_config.raid_bdev_config[i];
+			raid_cfg_next = &g_spdk_raid_config.raid_bdev_config[i + 1];
 			raid_cfg->base_bdev = raid_cfg_next->base_bdev;
 			raid_cfg->raid_bdev_ctxt = raid_cfg_next->raid_bdev_ctxt;
 			raid_cfg->name = raid_cfg_next->name;
 			raid_cfg->strip_size = raid_cfg_next->strip_size;
 			raid_cfg->num_base_bdevs = raid_cfg_next->num_base_bdevs;
 			raid_cfg->raid_level = raid_cfg_next->raid_level;
-			iter++;
+			i++;
 		}
 	}
 	temp_ptr = realloc(g_spdk_raid_config.raid_bdev_config,
@@ -554,9 +554,9 @@ raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 	if (temp_ptr != NULL) {
 		g_spdk_raid_config.raid_bdev_config = temp_ptr;
 		g_spdk_raid_config.total_raid_bdev--;
-		for (iter = 0; iter < g_spdk_raid_config.total_raid_bdev; iter++) {
-			g_spdk_raid_config.raid_bdev_config[iter].raid_bdev_ctxt->raid_bdev.raid_bdev_config =
-				&g_spdk_raid_config.raid_bdev_config[iter];
+		for (i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
+			g_spdk_raid_config.raid_bdev_config[i].raid_bdev_ctxt->raid_bdev.raid_bdev_config =
+				&g_spdk_raid_config.raid_bdev_config[i];
 		}
 	} else {
 		if (g_spdk_raid_config.total_raid_bdev == 1) {
@@ -596,9 +596,9 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 	}
 
 	/* Find raid bdev config for this raid bdev */
-	for (uint32_t iter = 0; iter < g_spdk_raid_config.total_raid_bdev; iter++) {
-		if (strcmp(g_spdk_raid_config.raid_bdev_config[iter].name, req.name) == 0) {
-			raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[iter];
+	for (uint32_t i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
+		if (strcmp(g_spdk_raid_config.raid_bdev_config[i].name, req.name) == 0) {
+			raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[i];
 			break;
 		}
 	}
@@ -611,8 +611,8 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 	}
 
 	/* Remove all the base bdevs from this raid bdev before destroying the raid bdev */
-	for (uint32_t iter = 0; iter < raid_bdev_config->num_base_bdevs; iter++) {
-		base_bdev = spdk_bdev_get_by_name(raid_bdev_config->base_bdev[iter].bdev_name);
+	for (uint32_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
+		base_bdev = spdk_bdev_get_by_name(raid_bdev_config->base_bdev[i].bdev_name);
 		if (base_bdev != NULL) {
 			raid_bdev_remove_base_bdev(base_bdev);
 		}
