@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "b5dafc77_9755359a",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-23T10:09:34Z",
+      "side": 1,
+      "message": "So you are fixing two unrelated issues here... Commit log is not reflecting what is wrong here so this confused me. Next time pls send two patches.",
+      "parentUuid": "79dc6b1b_7f2a8ac3",
+      "range": {
+        "startLine": 231,
+        "startChar": 25,
+        "endLine": 231,
+        "endChar": 29
+      },
+      "revId": "28f55e8d3dbc1f81042608f9cb292905c0f4c235",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "96db5ca4_c5300711",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 4
