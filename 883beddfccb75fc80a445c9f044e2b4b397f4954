@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "99a37874_1d88615d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2424,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T16:27:30Z",
+      "side": 1,
+      "message": "The pattern we usually follow is that the function returns the error code and the other types of return values are arguments. I know that requires you to change a bit more code, but I think it is worth it.",
+      "revId": "883beddfccb75fc80a445c9f044e2b4b397f4954",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ac8651d_0fbe2f7c",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 2
