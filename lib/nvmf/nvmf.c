@@ -152,33 +152,10 @@ static void
 _spdk_nvmf_tgt_destroy_poll_group_cb(void *ctx, int status)
 {
 	struct spdk_nvmf_poll_group *group = ctx;
-	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
-	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	uint32_t sid, nsid;
+	struct spdk_io_channel *ch;
 
-	if (status != 0) {
-		return;
-	}
-
-	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
-		TAILQ_REMOVE(&group->tgroups, tgroup, link);
-		spdk_nvmf_transport_poll_group_destroy(tgroup);
-	}
-
-	for (sid = 0; sid < group->num_sgroups; sid++) {
-		sgroup = &group->sgroups[sid];
-
-		for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
-			if (sgroup->channels[nsid]) {
-				spdk_put_io_channel(sgroup->channels[nsid]);
-				sgroup->channels[nsid] = NULL;
-			}
-		}
-
-		free(sgroup->channels);
-	}
-
-	free(group->sgroups);
+	ch = spdk_io_channel_from_ctx(group);
+	spdk_put_io_channel(ch);
 }
 
 static void
@@ -205,9 +182,8 @@ _nvmf_tgt_disconnect_next_qpair(void *ctx)
 }
 
 static void
-spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 {
-	struct spdk_nvmf_poll_group *group = ctx_buf;
 	struct spdk_nvmf_qpair *qpair;
 	struct nvmf_qpair_disconnect_many_ctx *ctx;
 	int rc = 0;
@@ -234,6 +210,35 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 		_spdk_nvmf_tgt_destroy_poll_group_cb(group, rc);
 		free(ctx);
 	}
+}
+
+static void
+spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_poll_group *group = ctx_buf;
+	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	uint32_t sid, nsid;
+
+	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
+		TAILQ_REMOVE(&group->tgroups, tgroup, link);
+		spdk_nvmf_transport_poll_group_destroy(tgroup);
+	}
+
+	for (sid = 0; sid < group->num_sgroups; sid++) {
+		sgroup = &group->sgroups[sid];
+
+		for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
+			if (sgroup->channels[nsid]) {
+				spdk_put_io_channel(sgroup->channels[nsid]);
+				sgroup->channels[nsid] = NULL;
+			}
+		}
+
+		free(sgroup->channels);
+	}
+
+	free(group->sgroups);
 }
 
 struct spdk_nvmf_tgt *
@@ -620,10 +625,8 @@ spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 void
 spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 {
-	struct spdk_io_channel *ch;
-
-	ch = spdk_io_channel_from_ctx(group);
-	spdk_put_io_channel(ch);
+	/* This function will put the io_channel associated with this poll group */
+	spdk_nvmf_tgt_destroy_poll_group_qpairs(group);
 }
 
 int
