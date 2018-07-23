@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f49f7718_1a81bb94",
+        "filename": "CONFIG",
+        "patchSetId": 7
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T18:00:26Z",
+      "side": 1,
+      "message": "This will make the default value \"lvl\" - maybe you should make it DEBUG?",
+      "revId": "99753be38fd9f8bb7dd8cbcc26d1961d61c199fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
