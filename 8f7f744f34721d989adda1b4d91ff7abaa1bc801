@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "37331991_30fee2cd",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-23T21:14:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "074c6701_ebd91592",
+      "revId": "8f7f744f34721d989adda1b4d91ff7abaa1bc801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef062210_78db2e68",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-18T02:32:21Z",
       "side": 1,
       "message": "I think accumulated elapsed time is necessary if io_processing_time is added.",
+      "revId": "8f7f744f34721d989adda1b4d91ff7abaa1bc801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fad487d3_76eb62fb",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-23T21:14:58Z",
+      "side": 1,
+      "message": "My assumption was that this value would be used for calculating cpu utilization. The model I had assumed was that a user would take one measurement at the beginning of a benchmark, and another at the end. In between the two measurements they would measure the time and compute the utilization using those values.\nThe reason I didn\u0027t keep track of accumulated elapsed time was I figured that it would tempt people to calculate disk utilization by taking io_time / accumulated_elapsed_time. I figured this would skew results towards 0 since it would keep track of long stretches when the bdev was up, but not actually performing any I/O.\nIs there a need to track long term (creation to deletion) cpu utilization? Or is there another way we would use the two values together?",
+      "parentUuid": "ef062210_78db2e68",
       "revId": "8f7f744f34721d989adda1b4d91ff7abaa1bc801",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7a24f391_09edd7cb",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-23T21:14:58Z",
+      "side": 1,
+      "message": "Thanks, that\u0027s a really good point. I have a colleague who was explaining to me how he wanted to use these stats and it took me a while to wrap my head around them. I will add the comments to clear it up.",
+      "parentUuid": "72b031ea_58f65b0c",
+      "revId": "8f7f744f34721d989adda1b4d91ff7abaa1bc801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fbfea0f_b026d540",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2018-07-23T15:57:46Z",
       "side": 1,
       "message": "would it be possible to (equivalent) to do this:\n\nif (time_differnce\u003e\u003d0)\n  return diff\nelse\n return UINT64_MAX",
+      "revId": "8f7f744f34721d989adda1b4d91ff7abaa1bc801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e36ff335_f3f54699",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-23T21:14:58Z",
+      "side": 1,
+      "message": "Thanks for the reality check on this one. My overflow check is completely unnecessary. In order to actually overflow on any given iteration of this function, my polling period and queue depth would both have to be astronomical. I\u0027m getting rid of that check and just ensuring that my difference will be positive.",
+      "parentUuid": "7fbfea0f_b026d540",
       "revId": "8f7f744f34721d989adda1b4d91ff7abaa1bc801",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
