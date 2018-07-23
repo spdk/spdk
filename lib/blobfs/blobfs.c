@@ -1492,7 +1492,7 @@ __truncate(void *arg)
 				 args->fn.file_op, args->arg);
 }
 
-void
+int
 spdk_file_truncate(struct spdk_file *file, struct spdk_io_channel *_channel,
 		   uint64_t length)
 {
@@ -1501,7 +1501,9 @@ spdk_file_truncate(struct spdk_file *file, struct spdk_io_channel *_channel,
 	struct spdk_fs_cb_args *args;
 
 	req = alloc_fs_request(channel);
-	assert(req != NULL);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
 
 	args = &req->args;
 
@@ -1513,6 +1515,8 @@ spdk_file_truncate(struct spdk_file *file, struct spdk_io_channel *_channel,
 	channel->send_request(__truncate, req);
 	sem_wait(&channel->sem);
 	free_fs_request(req);
+
+	return 0;
 }
 
 static void

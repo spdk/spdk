@@ -180,13 +180,15 @@ cache_write(void)
 	SPDK_CU_ASSERT_FATAL(g_file != NULL);
 
 	length = (4 * 1024 * 1024);
-	spdk_file_truncate(g_file, channel, length);
+	rc = spdk_file_truncate(g_file, channel, length);
+	CU_ASSERT(rc == 0);
 
 	spdk_file_write(g_file, channel, buf, 0, sizeof(buf));
 
 	CU_ASSERT(spdk_file_get_length(g_file) == length);
 
-	spdk_file_truncate(g_file, channel, sizeof(buf));
+	rc = spdk_file_truncate(g_file, channel, sizeof(buf));
+	CU_ASSERT(rc == 0);
 
 	spdk_file_close(g_file, channel);
 	rc = spdk_fs_delete_file(g_fs, channel, "testfile");
@@ -218,7 +220,8 @@ cache_write_null_buffer(void)
 	SPDK_CU_ASSERT_FATAL(g_file != NULL);
 
 	length = 0;
-	spdk_file_truncate(g_file, channel, length);
+	rc = spdk_file_truncate(g_file, channel, length);
+	CU_ASSERT(rc == 0);
 
 	rc = spdk_file_write(g_file, channel, NULL, 0, 0);
 	CU_ASSERT(rc == 0);
