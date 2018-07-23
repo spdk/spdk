@@ -853,6 +853,8 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		goto err;
 	}
 
+	unlink(nbd_path);
+
 	rc = ioctl(nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(bdev));
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", spdk_strerror(errno));
