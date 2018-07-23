@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d348752_7816efa3",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-23T07:06:49Z",
+      "side": 1,
+      "message": "change to: unmap_supported",
+      "range": {
+        "startLine": 89,
+        "startChar": 9,
+        "endLine": 89,
+        "endChar": 22
+      },
+      "revId": "1744ffbdb0be108ff419a668e22ae4235db4ec76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
