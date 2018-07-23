@@ -718,12 +718,13 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 static void
 verify_raid_config_present(const char *name, bool presence)
 {
-	uint32_t i;
+	struct raid_bdev_config *raid_cfg;
 	bool cfg_found;
 
 	cfg_found = false;
-	for (i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
-		if (strcmp(name, g_spdk_raid_config.raid_bdev_config[i].name) == 0) {
+
+	TAILQ_FOREACH(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link) {
+		if (strcmp(name, raid_cfg->name) == 0) {
 			cfg_found = true;
 			break;
 		}
@@ -761,12 +762,11 @@ static void
 verify_raid_config(struct rpc_construct_raid_bdev *r, bool presence)
 {
 	struct raid_bdev_config *raid_cfg = NULL;
-	uint32_t i, j;
+	uint32_t i;
 	int val;
 
-	for (i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
-		if (strcmp(r->name, g_spdk_raid_config.raid_bdev_config[i].name) == 0) {
-			raid_cfg = &g_spdk_raid_config.raid_bdev_config[i];
+	TAILQ_FOREACH(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link) {
+		if (strcmp(r->name, raid_cfg->name) == 0) {
 			if (presence == false) {
 				break;
 			}
@@ -774,8 +774,8 @@ verify_raid_config(struct rpc_construct_raid_bdev *r, bool presence)
 			CU_ASSERT(raid_cfg->strip_size == r->strip_size);
 			CU_ASSERT(raid_cfg->num_base_bdevs == r->base_bdevs.num_base_bdevs);
 			CU_ASSERT(raid_cfg->raid_level == r->raid_level);
-			for (j = 0; j < raid_cfg->num_base_bdevs; j++) {
-				val = strcmp(raid_cfg->base_bdev[j].bdev_name, r->base_bdevs.base_bdevs[j]);
+			for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
+				val = strcmp(raid_cfg->base_bdev[i].bdev_name, r->base_bdevs.base_bdevs[i]);
 				CU_ASSERT(val == 0);
 			}
 			break;
