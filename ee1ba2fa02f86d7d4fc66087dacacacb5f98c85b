@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9c3da312_97142302",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1733,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-23T18:00:42Z",
+      "side": 1,
+      "message": "Thanks, good point.",
+      "parentUuid": "26a36071_2777cd0d",
+      "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "536212ee_4c9dd967",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 10
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "5264a6f2_f84ad0f9",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-23T18:00:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "536212ee_4c9dd967",
+      "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4ab021f4_f8d53b12",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 10
@@ -47,6 +83,24 @@
       "writtenOn": "2018-07-23T16:53:40Z",
       "side": 1,
       "message": "Isn\u0027t req an invalid pointer at this point? You can\u0027t pass it to this function.",
+      "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de7c4106_4cbd8ab5",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-23T18:00:42Z",
+      "side": 1,
+      "message": "Maybe free is actually a misleading name for this function. When you call either transport_request_complete or transport_request_free, you aren\u0027t actually releasing the memory associated with the request object. You are just clearing out some values and freeing internal data buffers. The request is just moved into the new rdma request list since we allocate a fixed number of requests each time we add a new qpair. We don\u0027t actually delete requests until we destroy the qpair.",
+      "parentUuid": "4ab021f4_f8d53b12",
       "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
