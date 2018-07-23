@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c2f58a0e_dcadd519",
+        "filename": "lib/bdev/nvme/bdev_nvme.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-23T12:41:23Z",
+      "side": 1,
+      "message": "Ben could you talk with Jim regarding this as this was his idea? Let me know what the decision is - do we remove it or leave it as it is?",
+      "parentUuid": "df39ab98_d4b29d33",
+      "revId": "a145a6a2c77bb7175b0ba50a414aa41bc46a3fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd0237d0_ff852b1d",
         "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 26
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "If req.traddr is NULL, the behavior of snprintf is undefined. You should put this within an if (req.traddr) check.",
       "parentUuid": "db0bc09d_66f813a0",
+      "revId": "a145a6a2c77bb7175b0ba50a414aa41bc46a3fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "898438c0_0344da0f",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-23T12:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "510ae1e2_290338d2",
       "revId": "a145a6a2c77bb7175b0ba50a414aa41bc46a3fef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
