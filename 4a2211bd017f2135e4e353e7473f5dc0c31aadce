@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11c42850_574189bc",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T16:44:13Z",
+      "side": 1,
+      "message": "Usually we write these out as a descriptive name instead of the field name. You can call it \"Namespace Sharing Capabilities\". Instead of \"Supported\" use \"Multiple Controllers\" and instead of \"Not Supported\" use \"Private\"",
+      "revId": "4a2211bd017f2135e4e353e7473f5dc0c31aadce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
