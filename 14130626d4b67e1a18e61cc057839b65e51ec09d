@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f5fdeb5_6fd62443",
+        "filename": "test/nvmf/nmic/nmic.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-23T15:27:55Z",
+      "side": 1,
+      "message": "This line looks like copy from the shutdown test. You probably don\u0027t need this comment since the subsystem doesn\u0027t actually get created.",
+      "revId": "14130626d4b67e1a18e61cc057839b65e51ec09d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
