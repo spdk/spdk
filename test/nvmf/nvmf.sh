@@ -45,6 +45,8 @@ run_test test/nvmf/host/perf.sh
 run_test test/nvmf/host/aer.sh
 run_test test/nvmf/host/fio.sh
 
+run_test test/nvmf/nmic/nmic.sh
+
 timing_exit host
 trap - SIGINT SIGTERM EXIT
 kill_stub
