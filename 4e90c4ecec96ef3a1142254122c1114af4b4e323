@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "478464a8_aee96a94",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T16:36:43Z",
+      "side": 1,
+      "message": "How do I know which bit in the mask is which group? Can this be specified on the command line and via RPC?\n\nI\u0027m mostly asking because documenting how things works makes it much more obvious just how usable a mechanism really is. We may need to make code changes to improve the behavior here.",
+      "revId": "4e90c4ecec96ef3a1142254122c1114af4b4e323",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
