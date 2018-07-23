@@ -90,7 +90,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 	/*
 	 * Store raid_bdev_ctxt in each channel which is used to get the read only
 	 * raid bdev specific information during io split logic like base bdev
-	 * descriptors, strip size etc
+	 * descriptors, stripe size etc
 	 */
 	ch->raid_bdev_ctxt = SPDK_CONTAINEROF(raid_bdev, struct raid_bdev_ctxt, raid_bdev);
 
@@ -352,9 +352,9 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
  * params:
  * ch - pointer to spdk_io_channel for the raid bdev
  * bdev_io - parent bdev io
- * start_strip - start strip number of this io
- * end_strip - end strip number of this io
- * cur_strip - current strip number of this io to start processing
+ * start_stripe - start stripe number of this io
+ * end_stripe - end stripe number of this io
+ * cur_stripe - current stripe number of this io to start processing
  * buf - pointer to buffer for this io
  * returns:
  * 0 - success
@@ -362,41 +362,41 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
  */
 static int
 raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
-			  uint64_t start_strip, uint64_t end_strip, uint64_t cur_strip, uint8_t *buf)
+			  uint64_t start_stripe, uint64_t end_stripe, uint64_t cur_stripe, uint8_t *buf)
 {
 	struct   raid_bdev_io_channel *raid_bdev_io_channel = spdk_io_channel_get_ctx(ch);
 	struct   raid_bdev_io         *raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct   raid_bdev            *raid_bdev = &raid_bdev_io_channel->raid_bdev_ctxt->raid_bdev;
-	uint64_t                      pd_strip;
-	uint32_t                      offset_in_strip;
+	uint64_t                      pd_stripe;
+	uint32_t                      offset_in_stripe;
 	uint64_t                      pd_lba;
 	uint64_t                      pd_blocks;
 	uint32_t                      pd_idx;
 	int                           ret;
 
-	for (uint64_t strip = cur_strip; strip <= end_strip; strip++) {
+	for (uint64_t stripe = cur_stripe; stripe <= end_stripe; stripe++) {
 		/*
-		 * For each strip of parent bdev io, process for each strip and submit
+		 * For each stripe of parent bdev io, process for each stripe and submit
 		 * child io to bdev layer. Calculate base bdev level start lba, length
 		 * and buffer for this child io
 		 */
-		pd_strip = strip / raid_bdev->num_base_bdevs;
-		pd_idx = strip % raid_bdev->num_base_bdevs;
-		if (strip == start_strip) {
-			offset_in_strip = bdev_io->u.bdev.offset_blocks & (raid_bdev->strip_size - 1);
-			pd_lba = (pd_strip << raid_bdev->strip_size_shift) + offset_in_strip;
-			if (strip == end_strip) {
+		pd_stripe = stripe / raid_bdev->num_base_bdevs;
+		pd_idx = stripe % raid_bdev->num_base_bdevs;
+		if (stripe == start_stripe) {
+			offset_in_stripe = bdev_io->u.bdev.offset_blocks & (raid_bdev->stripe_size - 1);
+			pd_lba = (pd_stripe << raid_bdev->stripe_size_shift) + offset_in_stripe;
+			if (stripe == end_stripe) {
 				pd_blocks = bdev_io->u.bdev.num_blocks;
 			} else {
-				pd_blocks = raid_bdev->strip_size - offset_in_strip;
+				pd_blocks = raid_bdev->stripe_size - offset_in_stripe;
 			}
-		} else if (strip == end_strip) {
-			pd_lba = pd_strip << raid_bdev->strip_size_shift;
+		} else if (stripe == end_stripe) {
+			pd_lba = pd_stripe << raid_bdev->stripe_size_shift;
 			pd_blocks = ((bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) &
-				     (raid_bdev->strip_size - 1)) + 1;
+				     (raid_bdev->stripe_size - 1)) + 1;
 		} else {
-			pd_lba = pd_strip << raid_bdev->strip_size_shift;
-			pd_blocks = raid_bdev->strip_size;
+			pd_lba = pd_stripe << raid_bdev->stripe_size_shift;
+			pd_blocks = raid_bdev->stripe_size;
 		}
 		raid_bdev_io->splits_comp_outstanding++;
 		assert(raid_bdev_io->splits_pending);
@@ -461,17 +461,17 @@ static uint8_t
 get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io;
-	uint64_t            start_strip;
-	uint64_t            end_strip;
-	uint64_t            cur_strip;
+	uint64_t            start_stripe;
+	uint64_t            end_stripe;
+	uint64_t            cur_stripe;
 
 	bdev_io = SPDK_CONTAINEROF(raid_bdev_io, struct spdk_bdev_io, driver_ctx);
-	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-		    raid_bdev->strip_size_shift;
-	cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_bdev_io->splits_pending);
+	start_stripe = bdev_io->u.bdev.offset_blocks >> raid_bdev->stripe_size_shift;
+	end_stripe = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+		     raid_bdev->stripe_size_shift;
+	cur_stripe = start_stripe + ((end_stripe - start_stripe + 1) - raid_bdev_io->splits_pending);
 
-	return (cur_strip % raid_bdev->num_base_bdevs);
+	return (cur_stripe % raid_bdev->num_base_bdevs);
 }
 
 /*
@@ -553,9 +553,9 @@ raid_bdev_waitq_io_process(void *ctx)
 	struct   raid_bdev_io_channel *raid_bdev_io_channel;
 	struct   raid_bdev            *raid_bdev;
 	int                           ret;
-	uint64_t                      start_strip;
-	uint64_t                      end_strip;
-	uint64_t                      cur_strip;
+	uint64_t                      start_stripe;
+	uint64_t                      end_stripe;
+	uint64_t                      cur_stripe;
 
 	bdev_io = SPDK_CONTAINEROF(raid_bdev_io, struct spdk_bdev_io, driver_ctx);
 	/*
@@ -565,11 +565,11 @@ raid_bdev_waitq_io_process(void *ctx)
 	raid_bdev_io_channel = spdk_io_channel_get_ctx(raid_bdev_io->ch);
 	raid_bdev = &raid_bdev_io_channel->raid_bdev_ctxt->raid_bdev;
 	if (raid_bdev->num_base_bdevs > 1) {
-		start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-			    raid_bdev->strip_size_shift;
-		cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_bdev_io->splits_pending);
-		ret = raid_bdev_submit_children(raid_bdev_io->ch, bdev_io, start_strip, end_strip, cur_strip,
+		start_stripe = bdev_io->u.bdev.offset_blocks >> raid_bdev->stripe_size_shift;
+		end_stripe = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+			     raid_bdev->stripe_size_shift;
+		cur_stripe = start_stripe + ((end_stripe - start_stripe + 1) - raid_bdev_io->splits_pending);
+		ret = raid_bdev_submit_children(raid_bdev_io->ch, bdev_io, start_stripe, end_stripe, cur_stripe,
 						raid_bdev_io->buf);
 	} else {
 		ret = raid_bdev_send_passthru(raid_bdev_io->ch, bdev_io);
@@ -597,8 +597,8 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	struct   raid_bdev_io_channel *raid_bdev_io_channel;
 	struct   raid_bdev_io         *raid_bdev_io;
 	struct   raid_bdev            *raid_bdev;
-	uint64_t                      start_strip = 0;
-	uint64_t                      end_strip = 0;
+	uint64_t                      start_stripe = 0;
+	uint64_t                      end_stripe = 0;
 	int                           ret;
 
 	switch (bdev_io->type) {
@@ -616,16 +616,16 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		raid_bdev = &raid_bdev_io_channel->raid_bdev_ctxt->raid_bdev;
 		raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 		if (raid_bdev->num_base_bdevs > 1) {
-			start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-			end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-				    raid_bdev->strip_size_shift;
+			start_stripe = bdev_io->u.bdev.offset_blocks >> raid_bdev->stripe_size_shift;
+			end_stripe = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+				     raid_bdev->stripe_size_shift;
 			/*
 			 * IO parameters used during io split and io completion
 			 */
-			raid_bdev_io->splits_pending = (end_strip - start_strip + 1);
+			raid_bdev_io->splits_pending = (end_stripe - start_stripe + 1);
 			raid_bdev_io->splits_comp_outstanding = 0;
 			raid_bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-			ret = raid_bdev_submit_children(ch, bdev_io, start_strip, end_strip, start_strip,
+			ret = raid_bdev_submit_children(ch, bdev_io, start_stripe, end_stripe, start_stripe,
 							bdev_io->u.bdev.iovs->iov_base);
 		} else {
 			ret = raid_bdev_send_passthru(ch, bdev_io);
@@ -715,7 +715,7 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	/* Dump the raid bdev configuration related information */
 	spdk_json_write_name(w, "raid");
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_uint32(w, "strip_size", raid_bdev->strip_size);
+	spdk_json_write_named_uint32(w, "stripe_size", raid_bdev->stripe_size);
 	spdk_json_write_named_uint32(w, "state", raid_bdev->state);
 	spdk_json_write_named_uint32(w, "raid_level", raid_bdev->raid_level);
 	spdk_json_write_named_uint32(w, "destruct_called", raid_bdev->destruct_called);
@@ -786,14 +786,14 @@ raid_bdev_free(void)
  * Format of config file:
  *   [RAID1]
  *   Name raid1
- *   StripSize 64
+ *   StripeSize 64
  *   NumDevices 2
  *   RaidLevel 0
  *   Devices Nvme0n1 Nvme1n1
  *
  *   [RAID2]
  *   Name raid2
- *   StripSize 64
+ *   StripeSize 64
  *   NumDevices 3
  *   RaidLevel 0
  *   Devices Nvme2n1 Nvme3n1 Nvme4n1
@@ -808,7 +808,7 @@ static int
 raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 {
 	const char *raid_name;
-	int strip_size;
+	int stripe_size;
 	int num_base_bdevs;
 	int raid_level;
 	const char *base_bdev_name;
@@ -821,9 +821,9 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		SPDK_ERRLOG("raid_name %s is null\n", raid_name);
 		return -1;
 	}
-	strip_size = spdk_conf_section_get_intval(conf_section, "StripSize");
-	if (spdk_u32_is_pow2(strip_size) == false) {
-		SPDK_ERRLOG("Invalid strip size %d\n", strip_size);
+	stripe_size = spdk_conf_section_get_intval(conf_section, "StripeSize");
+	if (spdk_u32_is_pow2(stripe_size) == false) {
+		SPDK_ERRLOG("Invalid stripe size %d\n", stripe_size);
 		return -1;
 	}
 	num_base_bdevs = spdk_conf_section_get_intval(conf_section, "NumDevices");
@@ -837,7 +837,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		return -1;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "%s %d %d %d\n", raid_name, strip_size, num_base_bdevs,
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "%s %d %d %d\n", raid_name, stripe_size, num_base_bdevs,
 		      raid_level);
 
 	for (iter = 0; iter < g_spdk_raid_config.total_raid_bdev; iter++) {
@@ -861,7 +861,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		SPDK_ERRLOG("unable to allocate memory\n");
 		return -1;
 	}
-	raid_bdev_config->strip_size = strip_size;
+	raid_bdev_config->stripe_size = stripe_size;
 	raid_bdev_config->num_base_bdevs = num_base_bdevs;
 	raid_bdev_config->raid_level = raid_level;
 	g_spdk_raid_config.total_raid_bdev++;
@@ -1195,7 +1195,7 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 			return -1;
 		}
 		raid_bdev_config->raid_bdev_ctxt = raid_bdev_ctxt;
-		raid_bdev->strip_size = raid_bdev_config->strip_size;
+		raid_bdev->stripe_size = raid_bdev_config->stripe_size;
 		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 		raid_bdev->raid_bdev_config = raid_bdev_config;
 		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
@@ -1256,20 +1256,20 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 		raid_bdev_gen->ctxt = raid_bdev_ctxt;
 		raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
 		raid_bdev_gen->module = &g_raid_if;
-		raid_bdev->strip_size = (raid_bdev->strip_size * 1024) / blocklen;
-		raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
+		raid_bdev->stripe_size = (raid_bdev->stripe_size * 1024) / blocklen;
+		raid_bdev->stripe_size_shift = spdk_u32log2(raid_bdev->stripe_size);
 		raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
 
 		/*
-		 * RAID bdev logic is for striping so take the minimum block count based
+		 * RAID bdev logic is for stripeing so take the minimum block count based
 		 * approach where total block count of raid bdev is the number of base
 		 * bdev times the minimum block count of any base bdev
 		 */
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "min blockcount %lu,  numbasedev %u, strip size shift %u\n",
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "min blockcount %lu,  numbasedev %u, stripe size shift %u\n",
 			      min_blockcnt,
-			      raid_bdev->num_base_bdevs, raid_bdev->strip_size_shift);
-		raid_bdev_gen->blockcnt = ((min_blockcnt >> raid_bdev->strip_size_shift) <<
-					   raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
+			      raid_bdev->num_base_bdevs, raid_bdev->stripe_size_shift);
+		raid_bdev_gen->blockcnt = ((min_blockcnt >> raid_bdev->stripe_size_shift) <<
+					   raid_bdev->stripe_size_shift)  * raid_bdev->num_base_bdevs;
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "io device register %p\n", raid_bdev);
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "blockcnt %lu, blocklen %u\n", raid_bdev_gen->blockcnt,
 			      raid_bdev_gen->blocklen);

@@ -195,8 +195,8 @@ struct rpc_construct_raid_bdev {
 	/* Raid bdev name */
 	char                                 *name;
 
-	/* RAID strip size */
-	uint32_t                             strip_size;
+	/* RAID stripe size */
+	uint32_t                             stripe_size;
 
 	/* RAID raid level */
 	uint8_t                              raid_level;
@@ -238,7 +238,7 @@ decode_base_bdevs(const struct spdk_json_val *val, void *out)
  */
 static const struct spdk_json_object_decoder rpc_construct_raid_bdev_decoders[] = {
 	{"name", offsetof(struct rpc_construct_raid_bdev, name), spdk_json_decode_string},
-	{"strip_size", offsetof(struct rpc_construct_raid_bdev, strip_size), spdk_json_decode_uint32},
+	{"stripe_size", offsetof(struct rpc_construct_raid_bdev, stripe_size), spdk_json_decode_uint32},
 	{"raid_level", offsetof(struct rpc_construct_raid_bdev, raid_level), spdk_json_decode_uint32},
 	{"base_bdevs", offsetof(struct rpc_construct_raid_bdev, base_bdevs), decode_base_bdevs},
 };
@@ -325,7 +325,7 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_bdev_config)
 /*
  * brief:
  * spdk_rpc_construct_raid_bdev function is the RPC for construct_raids. It takes
- * input as raid bdev name, raid level, strip size in KB and list of base bdev names.
+ * input as raid bdev name, raid level, stripe size in KB and list of base bdev names.
  * params:
  * requuest - pointer to json rpc request
  * params - pointer to request parameters
@@ -367,8 +367,8 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_u32_is_pow2(req.strip_size) == false) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "invalid strip size");
+	if (spdk_u32_is_pow2(req.stripe_size) == false) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "invalid stripe size");
 		free_rpc_construct_raid_bdev(&req);
 		return;
 	}
@@ -397,7 +397,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev];
 	memset(raid_bdev_config, 0, sizeof(*raid_bdev_config));
 	raid_bdev_config->name = req.name;
-	raid_bdev_config->strip_size = req.strip_size;
+	raid_bdev_config->stripe_size = req.stripe_size;
 	raid_bdev_config->num_base_bdevs = req.base_bdevs.num_base_bdevs;
 	raid_bdev_config->raid_level = req.raid_level;
 	g_spdk_raid_config.total_raid_bdev++;
@@ -543,7 +543,7 @@ raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 			raid_cfg->base_bdev = raid_cfg_next->base_bdev;
 			raid_cfg->raid_bdev_ctxt = raid_cfg_next->raid_bdev_ctxt;
 			raid_cfg->name = raid_cfg_next->name;
-			raid_cfg->strip_size = raid_cfg_next->strip_size;
+			raid_cfg->stripe_size = raid_cfg_next->stripe_size;
 			raid_cfg->num_base_bdevs = raid_cfg_next->num_base_bdevs;
 			raid_cfg->raid_level = raid_cfg_next->raid_level;
 			iter++;
