@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "089dcac6_5c7e1207",
+        "filename": "dpdk",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T22:37:50Z",
+      "side": 1,
+      "message": "DPDK modification snuck back in",
+      "revId": "0ad4e667d873942bc9f6f3d1e13a6238b7537258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c274538f_6ebf2ca4",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 2002,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T22:37:50Z",
+      "side": 1,
+      "message": "The user of this library needs some function to call to pass it the hook structure above. The implementation of that function should make a call into the RDMA transport, passing along the user\u0027s hook object and storing it for later use.",
+      "revId": "0ad4e667d873942bc9f6f3d1e13a6238b7537258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68a9a5a8_60b8278a",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T22:37:50Z",
+      "side": 1,
+      "message": "Instead of passing the transport type as SPDK_NVME_TRANSPORT_HOOKS, you want to be passing the transport type as SPDK_NVME_TRANSPORT_RDMA. The user wants to pass hooks to the RDMA transport.",
+      "revId": "0ad4e667d873942bc9f6f3d1e13a6238b7537258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "907d24c6_5c70b342",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T22:37:50Z",
+      "side": 1,
+      "message": "The transport types are defined by the NVMe-oF specification (PCIe, RDMA, FC, TCP). Instead of defining a new type of transport for the hook, I think you want to be passing the user\u0027s hook object to the RDMA transport.",
+      "revId": "0ad4e667d873942bc9f6f3d1e13a6238b7537258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
