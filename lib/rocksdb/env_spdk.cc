@@ -207,9 +207,15 @@ public:
 
 	virtual Status Truncate(uint64_t size) override
 	{
-		spdk_file_truncate(mFile, g_sync_args.channel, size);
-		mSize = size;
-		return Status::OK();
+		int rc;
+		rc = spdk_file_truncate(mFile, g_sync_args.channel, size);
+		if (!rc) {
+			mSize = size;
+			return Status::OK();
+		} else {
+			errno = -rc;
+			return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
+		}
 	}
 	virtual Status Close() override
 	{
@@ -246,8 +252,15 @@ public:
 	}
 	virtual Status Allocate(uint64_t offset, uint64_t len) override
 	{
-		spdk_file_truncate(mFile, g_sync_args.channel, offset + len);
-		return Status::OK();
+		int rc;
+
+		rc = spdk_file_truncate(mFile, g_sync_args.channel, offset + len);
+		if (!rc) {
+			return Status::OK();
+		} else {
+			errno = -rc;
+			return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
+		}
 	}
 	virtual Status RangeSync(uint64_t offset, uint64_t nbytes) override
 	{

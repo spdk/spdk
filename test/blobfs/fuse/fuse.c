@@ -143,7 +143,11 @@ spdk_fuse_truncate(const char *path, off_t size, struct fuse_file_info *fi)
 		return -rc;
 	}
 
-	spdk_file_truncate(file, g_channel, size);
+	rc = spdk_file_truncate(file, g_channel, size);
+	if (rc != 0) {
+		return -rc;
+	}
+
 	spdk_file_close(file, g_channel);
 
 	return 0;
