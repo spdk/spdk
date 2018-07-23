@@ -207,9 +207,16 @@ public:
 
 	virtual Status Truncate(uint64_t size) override
 	{
-		spdk_file_truncate(mFile, g_sync_args.channel, size);
-		mSize = size;
-		return Status::OK();
+		int rc;
+		rc = spdk_file_truncate(mFile, g_sync_args.channel, size);
+
+		if(!rc) {
+			mSize = size;
+			return Status::OK();
+		} else {
+			errno = -rc;
+			return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
+		}
 	}
 	virtual Status Close() override
 	{
