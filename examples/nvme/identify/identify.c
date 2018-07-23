@@ -564,6 +564,8 @@ print_namespace(struct spdk_nvme_ns *ns)
 		printf("Metadata Location:           %s\n",
 		       nsdata->dps.md_start ? "First 8 Bytes" : "Last 8 Bytes");
 	}
+	printf("NMIC:                        %s\n",
+	       nsdata->nmic.can_share ? "Supported" : "Not Supported");
 	printf("Size (in LBAs):              %lld (%lldM)\n",
 	       (long long)nsdata->nsze,
 	       (long long)nsdata->nsze / 1024 / 1024);
