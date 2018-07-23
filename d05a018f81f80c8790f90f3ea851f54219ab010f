@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "eb955c99_0695d7d0",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-23T08:46:48Z",
+      "side": 1,
+      "message": "I know that but I\u0027m asking how do you know that you can read THIS page and why you don\u0027t invoke neither bdev_iscsi_inquiry_cb() nor complete_conn_req() in case of task is NULL?",
+      "parentUuid": "b87788aa_23b1e8c9",
+      "range": {
+        "startLine": 746,
+        "startChar": 6,
+        "endLine": 746,
+        "endChar": 54
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4ade700_5b7722d8",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 2
@@ -178,6 +202,30 @@
       "side": 1,
       "message": "Actually, I am not quite sure about this. I see some examples use 255 and some use 64. I just choose 255 to be safe as it is the max length to allocate in the Data-in Buffer. If you have better idea or explanation, I am very willing to know. Thank you.",
       "parentUuid": "c4ade700_5b7722d8",
+      "range": {
+        "startLine": 747,
+        "startChar": 6,
+        "endLine": 747,
+        "endChar": 9
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c3b4037_4af74d1b",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-23T08:46:48Z",
+      "side": 1,
+      "message": "So, maybe check in spec or doc how long this should be.",
+      "parentUuid": "31d9a397_79cd49b7",
       "range": {
         "startLine": 747,
         "startChar": 6,
