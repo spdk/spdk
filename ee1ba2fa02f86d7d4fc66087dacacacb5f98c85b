@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26a36071_2777cd0d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1733,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T16:53:40Z",
+      "side": 1,
+      "message": "The qpair points at the ctrlr, so you don\u0027t need both arguments. It may make the most sense to actually name this spdk_nvmf_qpair_free_aer and have it only take a qpair as a parameter. You could also change spdk_nvmf_ctrlr_abort_aer in a similar way.",
+      "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "536212ee_4c9dd967",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T16:53:40Z",
+      "side": 1,
+      "message": "This error means the code was unable to release the resources, not that it was unable to abort.",
+      "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ab021f4_f8d53b12",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-23T16:53:40Z",
+      "side": 1,
+      "message": "Isn\u0027t req an invalid pointer at this point? You can\u0027t pass it to this function.",
+      "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
