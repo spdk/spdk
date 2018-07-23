@@ -100,17 +100,17 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		SPDK_ERRLOG("Unable to allocate base bdevs io channel\n");
 		return -1;
 	}
-	for (uint32_t iter = 0; iter < ch->raid_bdev_ctxt->raid_bdev.num_base_bdevs; iter++) {
+	for (uint32_t i = 0; i < ch->raid_bdev_ctxt->raid_bdev.num_base_bdevs; i++) {
 		/*
 		 * Get the spdk_io_channel for all the base bdevs. This is used during
 		 * split logic to send the respective child bdev ios to respective base
 		 * bdev io channel.
 		 */
-		ch->base_bdevs_io_channel[iter] = spdk_bdev_get_io_channel(
-				raid_bdev->base_bdev_info[iter].base_bdev_desc);
-		if (!ch->base_bdevs_io_channel[iter]) {
-			for (uint32_t iter1 = 0; iter1 < iter ; iter1++) {
-				spdk_put_io_channel(ch->base_bdevs_io_channel[iter1]);
+		ch->base_bdevs_io_channel[i] = spdk_bdev_get_io_channel(
+						       raid_bdev->base_bdev_info[i].base_bdev_desc);
+		if (!ch->base_bdevs_io_channel[i]) {
+			for (uint32_t j = 0; j < i; j++) {
+				spdk_put_io_channel(ch->base_bdevs_io_channel[j]);
 			}
 			free(ch->base_bdevs_io_channel);
 			SPDK_ERRLOG("Unable to create io channel for base bdev\n");
@@ -142,11 +142,11 @@ raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 	assert(raid_bdev != NULL);
 	assert(ch != NULL);
 	assert(ch->base_bdevs_io_channel);
-	for (uint32_t iter = 0; iter < raid_bdev->num_base_bdevs; iter++) {
+	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/* Free base bdev channels */
-		assert(ch->base_bdevs_io_channel[iter] != NULL);
-		spdk_put_io_channel(ch->base_bdevs_io_channel[iter]);
-		ch->base_bdevs_io_channel[iter] = NULL;
+		assert(ch->base_bdevs_io_channel[i] != NULL);
+		spdk_put_io_channel(ch->base_bdevs_io_channel[i]);
+		ch->base_bdevs_io_channel[i] = NULL;
 	}
 	ch->raid_bdev_ctxt = NULL;
 	free(ch->base_bdevs_io_channel);
@@ -208,17 +208,17 @@ raid_bdev_destruct(void *ctxt)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destruct\n");
 
 	raid_bdev->destruct_called = true;
-	for (uint16_t iter = 0; iter < raid_bdev->num_base_bdevs; iter++) {
+	for (uint16_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/*
 		 * Close all base bdev descriptors for which call has come from below
 		 * layers
 		 */
-		if ((raid_bdev->base_bdev_info[iter].base_bdev_remove_scheduled == true) &&
-		    (raid_bdev->base_bdev_info[iter].base_bdev != NULL)) {
-			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[iter].base_bdev);
-			spdk_bdev_close(raid_bdev->base_bdev_info[iter].base_bdev_desc);
-			raid_bdev->base_bdev_info[iter].base_bdev_desc = NULL;
-			raid_bdev->base_bdev_info[iter].base_bdev = NULL;
+		if ((raid_bdev->base_bdev_info[i].base_bdev_remove_scheduled == true) &&
+		    (raid_bdev->base_bdev_info[i].base_bdev != NULL)) {
+			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].base_bdev);
+			spdk_bdev_close(raid_bdev->base_bdev_info[i].base_bdev_desc);
+			raid_bdev->base_bdev_info[i].base_bdev_desc = NULL;
+			raid_bdev->base_bdev_info[i].base_bdev = NULL;
 			assert(raid_bdev->num_base_bdevs_discovered);
 			raid_bdev->num_base_bdevs_discovered--;
 		}
@@ -723,9 +723,9 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
 	spdk_json_write_name(w, "base_bdevs_list");
 	spdk_json_write_array_begin(w);
-	for (uint16_t iter = 0; iter < raid_bdev->num_base_bdevs; iter++) {
-		if (raid_bdev->base_bdev_info[iter].base_bdev) {
-			spdk_json_write_string(w, raid_bdev->base_bdev_info[iter].base_bdev->name);
+	for (uint16_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		if (raid_bdev->base_bdev_info[i].base_bdev) {
+			spdk_json_write_string(w, raid_bdev->base_bdev_info[i].base_bdev->name);
 		} else {
 			spdk_json_write_null(w);
 		}
@@ -760,9 +760,9 @@ raid_bdev_free(void)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_free\n");
 	for (uint32_t raid_bdev = 0; raid_bdev < g_spdk_raid_config.total_raid_bdev; raid_bdev++) {
 		if (g_spdk_raid_config.raid_bdev_config[raid_bdev].base_bdev) {
-			for (uint32_t iter = 0; iter < g_spdk_raid_config.raid_bdev_config[raid_bdev].num_base_bdevs;
-			     iter++) {
-				free(g_spdk_raid_config.raid_bdev_config[raid_bdev].base_bdev[iter].bdev_name);
+			for (uint32_t i = 0; i < g_spdk_raid_config.raid_bdev_config[raid_bdev].num_base_bdevs;
+			     i++) {
+				free(g_spdk_raid_config.raid_bdev_config[raid_bdev].base_bdev[i].bdev_name);
 			}
 			free(g_spdk_raid_config.raid_bdev_config[raid_bdev].base_bdev);
 			g_spdk_raid_config.raid_bdev_config[raid_bdev].base_bdev = NULL;
@@ -812,7 +812,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	int num_base_bdevs;
 	int raid_level;
 	const char *base_bdev_name;
-	uint32_t iter;
+	uint32_t i;
 	void *temp_ptr;
 	struct raid_bdev_config *raid_bdev_config;
 
@@ -840,8 +840,8 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "%s %d %d %d\n", raid_name, stripe_size, num_base_bdevs,
 		      raid_level);
 
-	for (iter = 0; iter < g_spdk_raid_config.total_raid_bdev; iter++) {
-		if (!strcmp(g_spdk_raid_config.raid_bdev_config[iter].name, raid_name)) {
+	for (i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
+		if (!strcmp(g_spdk_raid_config.raid_bdev_config[i].name, raid_name)) {
 			SPDK_ERRLOG("Duplicate raid bdev name found in config file %s\n", raid_name);
 			return -1;
 		}
@@ -871,20 +871,20 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		return -1;
 	}
 
-	for (iter = 0; true; iter++) {
-		base_bdev_name = spdk_conf_section_get_nmval(conf_section, "Devices", 0, iter);
+	for (i = 0; true; i++) {
+		base_bdev_name = spdk_conf_section_get_nmval(conf_section, "Devices", 0, i);
 		if (base_bdev_name == NULL) {
 			break;
 		}
-		if (iter >= raid_bdev_config->num_base_bdevs) {
+		if (i >= raid_bdev_config->num_base_bdevs) {
 			SPDK_ERRLOG("Number of devices mentioned is more than count\n");
 			return -1;
 		}
-		for (uint32_t iter2 = 0; iter2 < g_spdk_raid_config.total_raid_bdev; iter2++) {
-			for (uint32_t iter3 = 0; iter3 < g_spdk_raid_config.raid_bdev_config[iter2].num_base_bdevs;
-			     iter3++) {
-				if (g_spdk_raid_config.raid_bdev_config[iter2].base_bdev[iter3].bdev_name != NULL) {
-					if (!strcmp(g_spdk_raid_config.raid_bdev_config[iter2].base_bdev[iter3].bdev_name,
+		for (uint32_t j = 0; j < g_spdk_raid_config.total_raid_bdev; j++) {
+			for (uint32_t k = 0; k < g_spdk_raid_config.raid_bdev_config[j].num_base_bdevs;
+			     k++) {
+				if (g_spdk_raid_config.raid_bdev_config[j].base_bdev[k].bdev_name != NULL) {
+					if (!strcmp(g_spdk_raid_config.raid_bdev_config[j].base_bdev[k].bdev_name,
 						    base_bdev_name)) {
 						SPDK_ERRLOG("duplicate base bdev name %s mentioned\n", base_bdev_name);
 						return -1;
@@ -892,10 +892,10 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 				}
 			}
 		}
-		raid_bdev_config->base_bdev[iter].bdev_name = strdup(base_bdev_name);
+		raid_bdev_config->base_bdev[i].bdev_name = strdup(base_bdev_name);
 	}
 
-	if (iter != raid_bdev_config->num_base_bdevs) {
+	if (i != raid_bdev_config->num_base_bdevs) {
 		SPDK_ERRLOG("Number of devices mentioned is less than count\n");
 		return -1;
 	}
@@ -983,17 +983,17 @@ raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **raid_b
 {
 	bool     rv = false;
 
-	for (uint32_t iter1 = 0; iter1 < g_spdk_raid_config.total_raid_bdev && !rv; iter1++) {
-		for (uint32_t iter2 = 0; iter2 < g_spdk_raid_config.raid_bdev_config[iter1].num_base_bdevs;
-		     iter2++) {
+	for (uint32_t i = 0; i < g_spdk_raid_config.total_raid_bdev && !rv; i++) {
+		for (uint32_t j = 0; j < g_spdk_raid_config.raid_bdev_config[i].num_base_bdevs;
+		     j++) {
 			/*
 			 * Check if the base bdev name is part of raid bdev configuration.
 			 * If match is found then return true and the slot information where
 			 * this base bdev should be inserted in raid bdev
 			 */
-			if (!strcmp(bdev_name, g_spdk_raid_config.raid_bdev_config[iter1].base_bdev[iter2].bdev_name)) {
-				*raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[iter1];
-				*base_bdev_slot = iter2;
+			if (!strcmp(bdev_name, g_spdk_raid_config.raid_bdev_config[i].base_bdev[j].bdev_name)) {
+				*raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[i];
+				*base_bdev_slot = j;
 				rv = true;
 				break;
 			}
@@ -1066,15 +1066,15 @@ raid_bdev_remove_base_bdev(void *ctx)
 	struct    raid_bdev       *raid_bdev;
 	struct    raid_bdev       *next_raid_bdev;
 	struct    raid_bdev_ctxt  *raid_bdev_ctxt;
-	uint16_t                  iter;
+	uint16_t                  i;
 	bool                      found = false;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_remove_base_bdev\n");
 
 	/* Find the raid_bdev which has claimed this base_bdev */
 	TAILQ_FOREACH_SAFE(raid_bdev, &g_spdk_raid_bdev_list, link_global_list, next_raid_bdev) {
-		for (iter = 0; iter < raid_bdev->num_base_bdevs; iter++) {
-			if (raid_bdev->base_bdev_info[iter].base_bdev == base_bdev) {
+		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+			if (raid_bdev->base_bdev_info[i].base_bdev == base_bdev) {
 				found = true;
 				break;
 			}
@@ -1090,17 +1090,17 @@ raid_bdev_remove_base_bdev(void *ctx)
 	}
 
 	assert(raid_bdev != NULL);
-	assert(raid_bdev->base_bdev_info[iter].base_bdev);
-	assert(raid_bdev->base_bdev_info[iter].base_bdev_desc);
+	assert(raid_bdev->base_bdev_info[i].base_bdev);
+	assert(raid_bdev->base_bdev_info[i].base_bdev_desc);
 	raid_bdev_ctxt = SPDK_CONTAINEROF(raid_bdev, struct raid_bdev_ctxt, raid_bdev);
-	raid_bdev->base_bdev_info[iter].base_bdev_remove_scheduled = true;
+	raid_bdev->base_bdev_info[i].base_bdev_remove_scheduled = true;
 
-	if (raid_bdev->destruct_called == true && raid_bdev->base_bdev_info[iter].base_bdev != NULL) {
+	if (raid_bdev->destruct_called == true && raid_bdev->base_bdev_info[i].base_bdev != NULL) {
 		/* As raid bdev is already unregistered, so cleanup should be done here itself */
-		spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[iter].base_bdev);
-		spdk_bdev_close(raid_bdev->base_bdev_info[iter].base_bdev_desc);
-		raid_bdev->base_bdev_info[iter].base_bdev_desc = NULL;
-		raid_bdev->base_bdev_info[iter].base_bdev = NULL;
+		spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].base_bdev);
+		spdk_bdev_close(raid_bdev->base_bdev_info[i].base_bdev_desc);
+		raid_bdev->base_bdev_info[i].base_bdev_desc = NULL;
+		raid_bdev->base_bdev_info[i].base_bdev = NULL;
 		assert(raid_bdev->num_base_bdevs_discovered);
 		raid_bdev->num_base_bdevs_discovered--;
 		if (raid_bdev->num_base_bdevs_discovered == 0) {
@@ -1220,14 +1220,14 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 		 */
 		blocklen = raid_bdev->base_bdev_info[0].base_bdev->blocklen;
 		min_blockcnt = raid_bdev->base_bdev_info[0].base_bdev->blockcnt;
-		for (uint32_t iter = 1; iter < raid_bdev->num_base_bdevs; iter++) {
+		for (uint32_t i = 1; i < raid_bdev->num_base_bdevs; i++) {
 			/* Calculate minimum block count from all base bdevs */
-			if (raid_bdev->base_bdev_info[iter].base_bdev->blockcnt < min_blockcnt) {
-				min_blockcnt = raid_bdev->base_bdev_info[iter].base_bdev->blockcnt;
+			if (raid_bdev->base_bdev_info[i].base_bdev->blockcnt < min_blockcnt) {
+				min_blockcnt = raid_bdev->base_bdev_info[i].base_bdev->blockcnt;
 			}
 
 			/* Check blocklen for all base bdevs that it should be same */
-			if (blocklen != raid_bdev->base_bdev_info[iter].base_bdev->blocklen) {
+			if (blocklen != raid_bdev->base_bdev_info[i].base_bdev->blocklen) {
 				/*
 				 * Assumption is that all the base bdevs for any raid bdev should
 				 * have same blocklen
