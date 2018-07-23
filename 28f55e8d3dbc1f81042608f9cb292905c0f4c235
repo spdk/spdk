@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "6b80a9d4_01eda6fa",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-23T10:32:41Z",
+      "side": 1,
+      "message": "Got it. Thank you for your suggestions. Will do next time.",
+      "parentUuid": "b5dafc77_9755359a",
+      "range": {
+        "startLine": 231,
+        "startChar": 25,
+        "endLine": 231,
+        "endChar": 29
+      },
+      "revId": "28f55e8d3dbc1f81042608f9cb292905c0f4c235",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "96db5ca4_c5300711",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 4
