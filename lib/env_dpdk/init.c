@@ -274,8 +274,9 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 
 		for (i = 0; i < opts->num_pci_addr; i++) {
 			spdk_pci_addr_fmt(bdf, 32, &pci_addr[i]);
-			args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s %s",
-					     (opts->pci_blacklist ? "-b" : "-w"), bdf));
+			args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s=%s",
+					     (opts->pci_blacklist ? "--pci-blacklist" : "--pci-whitelist"),
+					     bdf));
 			if (args == NULL) {
 				return -1;
 			}
