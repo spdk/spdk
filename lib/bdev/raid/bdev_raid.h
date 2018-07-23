@@ -185,6 +185,8 @@ struct raid_bdev_config {
 
 	/* raid level */
 	uint8_t                       raid_level;
+
+	TAILQ_ENTRY(raid_bdev_config) link;
 };
 
 /*
@@ -193,7 +195,7 @@ struct raid_bdev_config {
  */
 struct raid_config {
 	/* raid bdev  context from config file */
-	struct raid_bdev_config *raid_bdev_config;
+	TAILQ_HEAD(, raid_bdev_config) raid_bdev_config_head;
 
 	/* total raid bdev  from config file */
 	uint8_t total_raid_bdev;
