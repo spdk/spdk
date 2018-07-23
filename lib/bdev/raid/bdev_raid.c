@@ -42,7 +42,9 @@
 #include "spdk/string.h"
 
 /* raid bdev config as read from config file */
-struct raid_config          g_spdk_raid_config;
+struct raid_config          g_spdk_raid_config = {
+	.raid_bdev_config_head = TAILQ_HEAD_INITIALIZER(g_spdk_raid_config.raid_bdev_config_head),
+};
 
 /*
  * List of raid bdev in configured list, these raid bdevs are registered with
@@ -757,25 +759,22 @@ static const struct spdk_bdev_fn_table g_raid_bdev_fn_table = {
 static void
 raid_bdev_free(void)
 {
+	struct raid_bdev_config *raid_cfg, *tmp;
+	uint32_t i;
+
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_free\n");
-	for (uint32_t raid_bdev = 0; raid_bdev < g_spdk_raid_config.total_raid_bdev; raid_bdev++) {
-		if (g_spdk_raid_config.raid_bdev_config[raid_bdev].base_bdev) {
-			for (uint32_t i = 0; i < g_spdk_raid_config.raid_bdev_config[raid_bdev].num_base_bdevs;
-			     i++) {
-				free(g_spdk_raid_config.raid_bdev_config[raid_bdev].base_bdev[i].bdev_name);
+	TAILQ_FOREACH_SAFE(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link, tmp) {
+		TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
+		g_spdk_raid_config.total_raid_bdev--;
+
+		if (raid_cfg->base_bdev) {
+			for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
+				free(raid_cfg->base_bdev[i].bdev_name);
 			}
-			free(g_spdk_raid_config.raid_bdev_config[raid_bdev].base_bdev);
-			g_spdk_raid_config.raid_bdev_config[raid_bdev].base_bdev = NULL;
+			free(raid_cfg->base_bdev);
 		}
-		free(g_spdk_raid_config.raid_bdev_config[raid_bdev].name);
-	}
-	if (g_spdk_raid_config.raid_bdev_config) {
-		if (g_spdk_raid_config.raid_bdev_config->raid_bdev_ctxt) {
-			g_spdk_raid_config.raid_bdev_config->raid_bdev_ctxt->raid_bdev.raid_bdev_config = NULL;
-		}
-		free(g_spdk_raid_config.raid_bdev_config);
-		g_spdk_raid_config.raid_bdev_config = NULL;
-		g_spdk_raid_config.total_raid_bdev = 0;
+		free(raid_cfg->name);
+		free(raid_cfg);
 	}
 }
 
@@ -812,9 +811,9 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	int num_base_bdevs;
 	int raid_level;
 	const char *base_bdev_name;
-	uint32_t i;
-	void *temp_ptr;
-	struct raid_bdev_config *raid_bdev_config;
+	uint32_t i, j;
+	struct raid_bdev_config *raid_bdev_config, *tmp;
+	int rc = -1;
 
 	raid_name = spdk_conf_section_get_val(conf_section, "Name");
 	if (raid_name == NULL) {
@@ -840,35 +839,36 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "%s %d %d %d\n", raid_name, stripe_size, num_base_bdevs,
 		      raid_level);
 
-	for (i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
-		if (!strcmp(g_spdk_raid_config.raid_bdev_config[i].name, raid_name)) {
+	TAILQ_FOREACH(tmp, &g_spdk_raid_config.raid_bdev_config_head, link) {
+		if (!strcmp(tmp->name, raid_name)) {
 			SPDK_ERRLOG("Duplicate raid bdev name found in config file %s\n", raid_name);
 			return -1;
 		}
 	}
-	temp_ptr = realloc(g_spdk_raid_config.raid_bdev_config,
-			   sizeof(struct raid_bdev_config) * (g_spdk_raid_config.total_raid_bdev + 1));
-	if (temp_ptr == NULL) {
+
+	raid_bdev_config = calloc(1, sizeof(*raid_bdev_config));
+	if (raid_bdev_config == NULL) {
 		SPDK_ERRLOG("unable to allocate memory\n");
-		return -1;
+		return -ENOMEM;
 	}
 
-	g_spdk_raid_config.raid_bdev_config = temp_ptr;
-	raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev];
-	memset(raid_bdev_config, 0, sizeof(*raid_bdev_config));
 	raid_bdev_config->name = strdup(raid_name);
 	if (!raid_bdev_config->name) {
+		free(raid_bdev_config);
 		SPDK_ERRLOG("unable to allocate memory\n");
-		return -1;
+		return -ENOMEM;
 	}
 	raid_bdev_config->stripe_size = stripe_size;
 	raid_bdev_config->num_base_bdevs = num_base_bdevs;
 	raid_bdev_config->raid_level = raid_level;
+	TAILQ_INSERT_TAIL(&g_spdk_raid_config.raid_bdev_config_head, raid_bdev_config, link);
 	g_spdk_raid_config.total_raid_bdev++;
+
 	raid_bdev_config->base_bdev = calloc(num_base_bdevs, sizeof(*raid_bdev_config->base_bdev));
 	if (raid_bdev_config->base_bdev == NULL) {
 		SPDK_ERRLOG("unable to allocate memory\n");
-		return -1;
+		rc = -ENOMEM;
+		goto error;
 	}
 
 	for (i = 0; true; i++) {
@@ -878,28 +878,51 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		}
 		if (i >= raid_bdev_config->num_base_bdevs) {
 			SPDK_ERRLOG("Number of devices mentioned is more than count\n");
-			return -1;
+			rc = -1;
+			goto error;
 		}
-		for (uint32_t j = 0; j < g_spdk_raid_config.total_raid_bdev; j++) {
-			for (uint32_t k = 0; k < g_spdk_raid_config.raid_bdev_config[j].num_base_bdevs;
-			     k++) {
-				if (g_spdk_raid_config.raid_bdev_config[j].base_bdev[k].bdev_name != NULL) {
-					if (!strcmp(g_spdk_raid_config.raid_bdev_config[j].base_bdev[k].bdev_name,
-						    base_bdev_name)) {
-						SPDK_ERRLOG("duplicate base bdev name %s mentioned\n", base_bdev_name);
-						return -1;
+
+		TAILQ_FOREACH(tmp, &g_spdk_raid_config.raid_bdev_config_head, link) {
+			for (j = 0; j < tmp->num_base_bdevs; j++) {
+				if (tmp->base_bdev[j].bdev_name != NULL) {
+					if (!strcmp(tmp->base_bdev[j].bdev_name, base_bdev_name)) {
+						SPDK_ERRLOG("duplicate base bdev name %s mentioned\n",
+							    base_bdev_name);
+						rc = -EEXIST;
+						goto error;
 					}
 				}
 			}
 		}
+
 		raid_bdev_config->base_bdev[i].bdev_name = strdup(base_bdev_name);
+		if (raid_bdev_config->base_bdev[i].bdev_name == NULL) {
+			SPDK_ERRLOG("unable to allocate memory\n");
+			rc = -ENOMEM;
+			goto error;
+		}
 	}
 
 	if (i != raid_bdev_config->num_base_bdevs) {
 		SPDK_ERRLOG("Number of devices mentioned is less than count\n");
-		return -1;
+		rc = -1;
+		goto error;
 	}
+
 	return 0;
+
+error:
+	g_spdk_raid_config.total_raid_bdev--;
+	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_bdev_config, link);
+	if (raid_bdev_config->base_bdev) {
+		for (i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
+			free(raid_bdev_config->base_bdev[i].bdev_name);
+		}
+		free(raid_bdev_config->base_bdev);
+	}
+	free(raid_bdev_config->name);
+	free(raid_bdev_config);
+	return rc;
 }
 
 /*
@@ -981,21 +1004,22 @@ static bool
 raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **raid_bdev_config,
 			 uint32_t *base_bdev_slot)
 {
-	bool     rv = false;
+	bool rv = false;
+	struct raid_bdev_config *raid_cfg;
+	uint32_t i;
 
-	for (uint32_t i = 0; i < g_spdk_raid_config.total_raid_bdev && !rv; i++) {
-		for (uint32_t j = 0; j < g_spdk_raid_config.raid_bdev_config[i].num_base_bdevs;
-		     j++) {
+	TAILQ_FOREACH(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link) {
+		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
 			/*
 			 * Check if the base bdev name is part of raid bdev configuration.
 			 * If match is found then return true and the slot information where
 			 * this base bdev should be inserted in raid bdev
 			 */
-			if (!strcmp(bdev_name, g_spdk_raid_config.raid_bdev_config[i].base_bdev[j].bdev_name)) {
-				*raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[i];
-				*base_bdev_slot = j;
+			if (!strcmp(bdev_name, raid_cfg->base_bdev[i].bdev_name)) {
+				*raid_bdev_config = raid_cfg;
+				*base_bdev_slot = i;
 				rv = true;
-				break;
+				break;;
 			}
 		}
 	}
@@ -1030,7 +1054,6 @@ raid_bdev_init(void)
 {
 	int ret;
 
-	memset(&g_spdk_raid_config, 0, sizeof(g_spdk_raid_config));
 	TAILQ_INIT(&g_spdk_raid_bdev_configured_list);
 	TAILQ_INIT(&g_spdk_raid_bdev_configuring_list);
 	TAILQ_INIT(&g_spdk_raid_bdev_list);
