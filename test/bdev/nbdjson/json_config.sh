@@ -7,9 +7,9 @@ clear_config_py="$spdk_clear_config_py"
 trap 'on_error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 timing_enter nbd_json_config
+modprobe nbd
 run_spdk_tgt
 load_nvme
-modprobe nbd
 
 timing_enter nbd_json_config_create_setup
 $rpc_py construct_malloc_bdev 128 512 --name Malloc0
