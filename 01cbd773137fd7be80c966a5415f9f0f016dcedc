@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d31d0b23_becd7457",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-23T23:29:46Z",
+      "side": 1,
+      "message": "If you\u0027d like other bdev type (like lvol) - let me know",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 48
+      },
+      "revId": "01cbd773137fd7be80c966a5415f9f0f016dcedc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
