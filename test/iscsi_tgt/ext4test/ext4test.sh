@@ -23,7 +23,7 @@ $ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; rm -f $testdir/iscsi.conf; exit 1" SIGINT SIGTERM EXIT
+trap "$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; rm -f $testdir/iscsi.conf; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 echo "iscsi_tgt is listening. Running tests..."
@@ -71,7 +71,8 @@ echo "Error injection test done"
 iscsicleanup
 
 if [ -z "$NO_NVME" ]; then
-$rpc_py construct_target_node Target1 Target1_alias Nvme0n1:0 1:2 64 -d
+$rpc_py construct_split_vbdev 2 -S 1000
+$rpc_py construct_target_node Target1 Target1_alias Nvme0n1p0:0 1:2 64 -d
 fi
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
@@ -117,6 +118,7 @@ trap - SIGINT SIGTERM EXIT
 
 rm -f $testdir/iscsi.conf
 iscsicleanup
+$rpc_py destruct_split_vbdev Name0n1
 $rpc_py delete_error_bdev EE_Malloc0
 killprocess $pid
 report_test_completion "nightly_iscsi_ext4test"
