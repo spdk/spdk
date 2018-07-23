@@ -490,6 +490,8 @@ function part_dev_by_gpt () {
 			dd if=/dev/zero of=$nbd_path bs=4096 count=8 oflag=direct
 		fi
 
+		$rootdir/scripts/rpc.py -s "rpc_server" stop_nbd_disk $nbd_path
+
 		killprocess $nbd_pid
 		rm -f ${conf}.gpt
 	fi
