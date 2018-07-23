@@ -247,29 +247,18 @@ static const struct spdk_json_object_decoder rpc_construct_raid_bdev_decoders[] 
  * brief:
  * raid_bdev_config_cleanup function is used to free memory for one raid_bdev in configuration
  * params:
- * none
+ * raid_bdev_config - pointer to raid_bdev_config structure
  * returns:
  * none
  */
 static void
-raid_bdev_config_cleanup(void)
+raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
 {
-	void       *temp_ptr;
-
+	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
 	g_spdk_raid_config.total_raid_bdev--;
-	if (g_spdk_raid_config.total_raid_bdev == 0) {
-		free(g_spdk_raid_config.raid_bdev_config);
-		g_spdk_raid_config.raid_bdev_config = NULL;
-	} else {
-		temp_ptr = realloc(g_spdk_raid_config.raid_bdev_config,
-				   sizeof(struct raid_bdev_config) * g_spdk_raid_config.total_raid_bdev);
-		if (temp_ptr != NULL) {
-			g_spdk_raid_config.raid_bdev_config = temp_ptr;
-		} else {
-			SPDK_ERRLOG("Config memory allocation failed\n");
-			assert(0);
-		}
-	}
+
+	free(raid_cfg->base_bdev);
+	free(raid_cfg);
 }
 
 /*
@@ -339,7 +328,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_raid_bdev req = {};
 	struct spdk_json_write_ctx     *w;
 	struct raid_bdev_ctxt          *raid_bdev_ctxt;
-	void                           *temp_ptr;
 	struct raid_base_bdev_config   *base_bdevs;
 	struct raid_bdev_config        *raid_bdev_config;
 	struct spdk_bdev               *base_bdev;
@@ -380,26 +368,20 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	/* Insert the new raid bdev config entry */
-	temp_ptr = realloc(g_spdk_raid_config.raid_bdev_config,
-			   sizeof(struct raid_bdev_config) * (g_spdk_raid_config.total_raid_bdev + 1));
-	if (temp_ptr == NULL) {
+	/* Allocate the new raid bdev config entry */
+	raid_bdev_config = calloc(1, sizeof(*raid_bdev_config));
+	if (raid_bdev_config == NULL) {
 		free(base_bdevs);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM));
 		free_rpc_construct_raid_bdev(&req);
 		return;
 	}
-	g_spdk_raid_config.raid_bdev_config = temp_ptr;
-	for (size_t i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
-		g_spdk_raid_config.raid_bdev_config[i].raid_bdev_ctxt->raid_bdev.raid_bdev_config =
-			&g_spdk_raid_config.raid_bdev_config[i];
-	}
-	raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev];
-	memset(raid_bdev_config, 0, sizeof(*raid_bdev_config));
+
 	raid_bdev_config->name = req.name;
 	raid_bdev_config->stripe_size = req.stripe_size;
 	raid_bdev_config->num_base_bdevs = req.base_bdevs.num_base_bdevs;
 	raid_bdev_config->raid_level = req.raid_level;
+	TAILQ_INSERT_TAIL(&g_spdk_raid_config.raid_bdev_config_head, raid_bdev_config, link);
 	g_spdk_raid_config.total_raid_bdev++;
 	raid_bdev_config->base_bdev = base_bdevs;
 	for (size_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
@@ -410,10 +392,8 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		/* Check if base_bdev exists already, if not fail the command */
 		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[i]);
 		if (base_bdev == NULL) {
-			check_and_remove_raid_bdev(&g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev -
-										      1]);
-			raid_bdev_config_cleanup();
-			free(base_bdevs);
+			check_and_remove_raid_bdev(raid_bdev_config);
+			raid_bdev_config_cleanup(raid_bdev_config);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "base bdev not found");
 			free_rpc_construct_raid_bdev(&req);
 			return;
@@ -425,16 +405,15 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		 * by some other module
 		 */
 		if (raid_bdev_add_base_device(base_bdev)) {
-			check_and_remove_raid_bdev(&g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev -
-										      1]);
-			raid_bdev_config_cleanup();
-			free(base_bdevs);
+			check_and_remove_raid_bdev(raid_bdev_config);
+			raid_bdev_config_cleanup(raid_bdev_config);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "base bdev can't be added because of either memory allocation failed or not able to claim");
 			free_rpc_construct_raid_bdev(&req);
 			return;
 		}
 	}
+
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
@@ -512,10 +491,7 @@ raid_bdev_config_destroy_check_raid_bdev_exists(void *arg)
 static void
 raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 {
-	void                     *temp_ptr;
-	uint8_t                  i;
-	struct raid_bdev_config  *raid_cfg_next;
-	uint8_t                  slot;
+	uint8_t i;
 
 	assert(raid_cfg != NULL);
 	if (raid_cfg->raid_bdev_ctxt != NULL) {
@@ -527,46 +503,16 @@ raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 		return;
 	}
 
+	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
+	g_spdk_raid_config.total_raid_bdev--;
+
 	/* Destroy raid bdev config and cleanup */
-	for (uint8_t j = 0; j < raid_cfg->num_base_bdevs; j++) {
-		free(raid_cfg->base_bdev[j].bdev_name);
+	for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
+		free(raid_cfg->base_bdev[i].bdev_name);
 	}
 	free(raid_cfg->base_bdev);
 	free(raid_cfg->name);
-	slot = raid_cfg - g_spdk_raid_config.raid_bdev_config;
-	assert(slot < g_spdk_raid_config.total_raid_bdev);
-	if (slot != g_spdk_raid_config.total_raid_bdev - 1) {
-		i = slot;
-		while (i < g_spdk_raid_config.total_raid_bdev - 1) {
-			raid_cfg = &g_spdk_raid_config.raid_bdev_config[i];
-			raid_cfg_next = &g_spdk_raid_config.raid_bdev_config[i + 1];
-			raid_cfg->base_bdev = raid_cfg_next->base_bdev;
-			raid_cfg->raid_bdev_ctxt = raid_cfg_next->raid_bdev_ctxt;
-			raid_cfg->name = raid_cfg_next->name;
-			raid_cfg->stripe_size = raid_cfg_next->stripe_size;
-			raid_cfg->num_base_bdevs = raid_cfg_next->num_base_bdevs;
-			raid_cfg->raid_level = raid_cfg_next->raid_level;
-			i++;
-		}
-	}
-	temp_ptr = realloc(g_spdk_raid_config.raid_bdev_config,
-			   sizeof(struct raid_bdev_config) * (g_spdk_raid_config.total_raid_bdev - 1));
-	if (temp_ptr != NULL) {
-		g_spdk_raid_config.raid_bdev_config = temp_ptr;
-		g_spdk_raid_config.total_raid_bdev--;
-		for (i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
-			g_spdk_raid_config.raid_bdev_config[i].raid_bdev_ctxt->raid_bdev.raid_bdev_config =
-				&g_spdk_raid_config.raid_bdev_config[i];
-		}
-	} else {
-		if (g_spdk_raid_config.total_raid_bdev == 1) {
-			g_spdk_raid_config.total_raid_bdev--;
-			g_spdk_raid_config.raid_bdev_config = NULL;
-		} else {
-			SPDK_ERRLOG("Config memory allocation failed\n");
-			assert(0);
-		}
-	}
+	free(raid_cfg);
 }
 
 /*
@@ -596,9 +542,8 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 	}
 
 	/* Find raid bdev config for this raid bdev */
-	for (uint32_t i = 0; i < g_spdk_raid_config.total_raid_bdev; i++) {
-		if (strcmp(g_spdk_raid_config.raid_bdev_config[i].name, req.name) == 0) {
-			raid_bdev_config = &g_spdk_raid_config.raid_bdev_config[i];
+	TAILQ_FOREACH(raid_bdev_config, &g_spdk_raid_config.raid_bdev_config_head, link) {
+		if (strcmp(raid_bdev_config->name, req.name) == 0) {
 			break;
 		}
 	}
