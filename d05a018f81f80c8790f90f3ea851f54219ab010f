@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "140f0b2e_75b1995d",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-23T04:25:02Z",
+      "side": 1,
+      "message": "Done. Thanks for reviewing my patch.",
+      "parentUuid": "ccab3dd1_e584b515",
+      "range": {
+        "startLine": 707,
+        "startChar": 19,
+        "endLine": 707,
+        "endChar": 27
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ac8c520_f21aec19",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-20T12:33:02Z",
       "side": 1,
       "message": "isn\u0027t this an error condition?",
+      "range": {
+        "startLine": 718,
+        "startChar": 5,
+        "endLine": 718,
+        "endChar": 20
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bea548d_9d66bf6d",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 718,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-23T04:25:02Z",
+      "side": 1,
+      "message": "Not really. lbp_inq will store the struct info by unmarshall the task.",
+      "parentUuid": "1ac8c520_f21aec19",
       "range": {
         "startLine": 718,
         "startChar": 5,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b87788aa_23b1e8c9",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-23T04:25:02Z",
+      "side": 1,
+      "message": "If this fails, task will be NULL, and it will directly return.",
+      "parentUuid": "d9305f8d_b796be98",
+      "range": {
+        "startLine": 746,
+        "startChar": 6,
+        "endLine": 746,
+        "endChar": 54
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4ade700_5b7722d8",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 2
@@ -82,6 +154,30 @@
       "writtenOn": "2018-07-20T12:33:02Z",
       "side": 1,
       "message": "why 255?",
+      "range": {
+        "startLine": 747,
+        "startChar": 6,
+        "endLine": 747,
+        "endChar": 9
+      },
+      "revId": "d05a018f81f80c8790f90f3ea851f54219ab010f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31d9a397_79cd49b7",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-23T04:25:02Z",
+      "side": 1,
+      "message": "Actually, I am not quite sure about this. I see some examples use 255 and some use 64. I just choose 255 to be safe as it is the max length to allocate in the Data-in Buffer. If you have better idea or explanation, I am very willing to know. Thank you.",
+      "parentUuid": "c4ade700_5b7722d8",
       "range": {
         "startLine": 747,
         "startChar": 6,
