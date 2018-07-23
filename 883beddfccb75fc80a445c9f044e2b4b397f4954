@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ac8651d_0fbe2f7c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2494,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-23T15:54:45Z",
+      "side": 1,
+      "message": "I agree. We would have to report more specific errors from spdk_get_io_channel in order to get more specific error reporting here. Although it looks like a good portion of the errors are memory allocation failures.",
+      "revId": "883beddfccb75fc80a445c9f044e2b4b397f4954",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
