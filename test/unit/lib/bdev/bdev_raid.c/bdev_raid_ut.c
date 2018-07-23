@@ -56,7 +56,7 @@ struct io_output {
 
 /* Different test options, more options to test can be added here */
 uint32_t g_blklen_opts[] = {512, 4096};
-uint32_t g_strip_opts[] = {64, 128, 256, 512, 1024, 2048};
+uint32_t g_stripe_opts[] = {64, 128, 256, 512, 1024, 2048};
 uint32_t g_iosize_opts[] = {256, 512, 1024};
 uint32_t g_max_qd_opts[] = {64, 128, 256, 512, 1024, 2048};
 
@@ -73,7 +73,7 @@ struct bdev g_bdev_list;
 TAILQ_HEAD(waitq, spdk_bdev_io_wait_entry);
 struct waitq g_io_waitq;
 uint32_t g_block_len;
-uint32_t g_strip_size;
+uint32_t g_stripe_size;
 uint32_t g_max_io_size;
 uint32_t g_max_qd;
 uint8_t g_max_base_drives;
@@ -98,13 +98,13 @@ set_test_opts(void)
 	g_max_base_drives = (rand() % MAX_BASE_DRIVES) + 1;
 	g_max_raids = (rand() % MAX_RAIDS) + 1;
 	g_block_len = g_blklen_opts[rand() % SPDK_COUNTOF(g_blklen_opts)];
-	g_strip_size = g_strip_opts[rand() % SPDK_COUNTOF(g_strip_opts)];
+	g_stripe_size = g_stripe_opts[rand() % SPDK_COUNTOF(g_stripe_opts)];
 	g_max_io_size = g_iosize_opts[rand() % SPDK_COUNTOF(g_iosize_opts)];
 	g_max_qd = g_max_qd_opts[rand() % SPDK_COUNTOF(g_max_qd_opts)];
 
 	printf("Test Options, seed = %u\n", seed);
-	printf("blocklen = %u, strip_size = %u, max_io_size = %u, max_qd = %u, g_max_base_drives = %u, g_max_raids = %u\n",
-	       g_block_len, g_strip_size, g_max_io_size, g_max_qd, g_max_base_drives, g_max_raids);
+	printf("blocklen = %u, stripe_size = %u, max_io_size = %u, max_qd = %u, g_max_base_drives = %u, g_max_raids = %u\n",
+	       g_block_len, g_stripe_size, g_max_io_size, g_max_qd, g_max_base_drives, g_max_raids);
 }
 
 /* Set globals before every test run */
@@ -114,10 +114,10 @@ set_globals(void)
 	uint32_t max_splits;
 
 	g_bdev_io_submit_status = 0;
-	if (g_max_io_size < g_strip_size) {
+	if (g_max_io_size < g_stripe_size) {
 		max_splits = 2;
 	} else {
-		max_splits = (g_max_io_size / g_strip_size) + 1;
+		max_splits = (g_max_io_size / g_stripe_size) + 1;
 	}
 	g_io_output = calloc(max_splits, sizeof(struct io_output));
 	SPDK_CU_ASSERT_FATAL(g_io_output != NULL);
@@ -185,10 +185,10 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return 0;
 	}
 
-	if (g_max_io_size < g_strip_size) {
+	if (g_max_io_size < g_stripe_size) {
 		SPDK_CU_ASSERT_FATAL(g_io_output_index < 2);
 	} else {
-		SPDK_CU_ASSERT_FATAL(g_io_output_index < (g_max_io_size / g_strip_size) + 1);
+		SPDK_CU_ASSERT_FATAL(g_io_output_index < (g_max_io_size / g_stripe_size) + 1);
 	}
 	if (g_bdev_io_submit_status == 0) {
 		p->desc = desc;
@@ -273,8 +273,8 @@ spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
 int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val)
 {
 	struct rpc_construct_raid_bdev  *req = rpc_req;
-	if (strcmp(name, "strip_size") == 0) {
-		CU_ASSERT(req->strip_size * 1024 / g_block_len == val);
+	if (strcmp(name, "stripe_size") == 0) {
+		CU_ASSERT(req->stripe_size * 1024 / g_block_len == val);
 	} else if (strcmp(name, "blocklen_shift") == 0) {
 		CU_ASSERT(spdk_u32log2(g_block_len) == val);
 	} else if (strcmp(name, "raid_level") == 0) {
@@ -377,7 +377,7 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return 0;
 	}
 
-	SPDK_CU_ASSERT_FATAL(g_io_output_index <= (g_max_io_size / g_strip_size) + 1);
+	SPDK_CU_ASSERT_FATAL(g_io_output_index <= (g_max_io_size / g_stripe_size) + 1);
 	if (g_bdev_io_submit_status == 0) {
 		p->desc = desc;
 		p->ch = ch;
@@ -448,8 +448,8 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 	struct rpc_construct_raid_bdev  *req = rpc_req;
 
 	if (g_config_level_create) {
-		if (strcmp(key, "StripSize") == 0) {
-			return req->strip_size;
+		if (strcmp(key, "StripeSize") == 0) {
+			return req->stripe_size;
 		} else if (strcmp(key, "NumDevices") == 0) {
 			return req->base_bdevs.num_base_bdevs;
 		} else if (strcmp(key, "RaidLevel") == 0) {
@@ -647,15 +647,15 @@ static void
 verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 	  struct raid_bdev_io_channel *ch_ctx, struct raid_bdev *raid_bdev, uint32_t io_status)
 {
-	uint32_t strip_shift = spdk_u32log2(g_strip_size);
-	uint64_t start_strip = bdev_io->u.bdev.offset_blocks >> strip_shift;
-	uint64_t end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-			     strip_shift;
-	uint32_t splits_reqd = (end_strip - start_strip + 1);
-	uint32_t strip;
-	uint64_t pd_strip;
+	uint32_t stripe_shift = spdk_u32log2(g_stripe_size);
+	uint64_t start_stripe = bdev_io->u.bdev.offset_blocks >> stripe_shift;
+	uint64_t end_stripe = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+			      stripe_shift;
+	uint32_t splits_reqd = (end_stripe - start_stripe + 1);
+	uint32_t stripe;
+	uint64_t pd_stripe;
 	uint64_t pd_idx;
-	uint32_t offset_in_strip;
+	uint32_t offset_in_stripe;
 	uint64_t pd_lba;
 	uint64_t pd_blocks;
 	uint32_t index = 0;
@@ -670,24 +670,24 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 
 	if (raid_bdev->num_base_bdevs > 1) {
 		CU_ASSERT(splits_reqd == g_io_output_index);
-		for (strip = start_strip; strip <= end_strip; strip++, index++) {
-			pd_strip = strip / num_base_drives;
-			pd_idx = strip % num_base_drives;
-			if (strip == start_strip) {
-				offset_in_strip = bdev_io->u.bdev.offset_blocks & (g_strip_size - 1);
-				pd_lba = (pd_strip << strip_shift) + offset_in_strip;
-				if (strip == end_strip) {
+		for (stripe = start_stripe; stripe <= end_stripe; stripe++, index++) {
+			pd_stripe = stripe / num_base_drives;
+			pd_idx = stripe % num_base_drives;
+			if (stripe == start_stripe) {
+				offset_in_stripe = bdev_io->u.bdev.offset_blocks & (g_stripe_size - 1);
+				pd_lba = (pd_stripe << stripe_shift) + offset_in_stripe;
+				if (stripe == end_stripe) {
 					pd_blocks = bdev_io->u.bdev.num_blocks;
 				} else {
-					pd_blocks = g_strip_size - offset_in_strip;
+					pd_blocks = g_stripe_size - offset_in_stripe;
 				}
-			} else if (strip == end_strip) {
-				pd_lba = pd_strip << strip_shift;
+			} else if (stripe == end_stripe) {
+				pd_lba = pd_stripe << stripe_shift;
 				pd_blocks = ((bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) &
-					     (g_strip_size - 1)) + 1;
+					     (g_stripe_size - 1)) + 1;
 			} else {
-				pd_lba = pd_strip << raid_bdev->strip_size_shift;
-				pd_blocks = raid_bdev->strip_size;
+				pd_lba = pd_stripe << raid_bdev->stripe_size_shift;
+				pd_blocks = raid_bdev->stripe_size;
 			}
 			CU_ASSERT(pd_lba == g_io_output[index].offset_blocks);
 			CU_ASSERT(pd_blocks == g_io_output[index].num_blocks);
@@ -764,7 +764,7 @@ verify_raid_config(struct rpc_construct_raid_bdev *r, bool presence)
 				break;
 			}
 			CU_ASSERT(raid_cfg->raid_bdev_ctxt != NULL);
-			CU_ASSERT(raid_cfg->strip_size == r->strip_size);
+			CU_ASSERT(raid_cfg->stripe_size == r->stripe_size);
 			CU_ASSERT(raid_cfg->num_base_bdevs == r->base_bdevs.num_base_bdevs);
 			CU_ASSERT(raid_cfg->raid_level == r->raid_level);
 			for (iter2 = 0; iter2 < raid_cfg->num_base_bdevs; iter2++) {
@@ -802,8 +802,8 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 			}
 			CU_ASSERT(pbdev->raid_bdev_config->raid_bdev_ctxt == pbdev_ctxt);
 			CU_ASSERT(pbdev->base_bdev_info != NULL);
-			CU_ASSERT(pbdev->strip_size == ((r->strip_size * 1024) / g_block_len));
-			CU_ASSERT(pbdev->strip_size_shift == spdk_u32log2(((r->strip_size * 1024) / g_block_len)));
+			CU_ASSERT(pbdev->stripe_size == ((r->stripe_size * 1024) / g_block_len));
+			CU_ASSERT(pbdev->stripe_size_shift == spdk_u32log2(((r->stripe_size * 1024) / g_block_len)));
 			CU_ASSERT(pbdev->blocklen_shift == spdk_u32log2(g_block_len));
 			CU_ASSERT(pbdev->state == raid_state);
 			CU_ASSERT(pbdev->num_base_bdevs == r->base_bdevs.num_base_bdevs);
@@ -823,7 +823,7 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 					min_blockcnt = bdev->blockcnt;
 				}
 			}
-			CU_ASSERT((((min_blockcnt / (r->strip_size * 1024 / g_block_len)) * (r->strip_size * 1024 /
+			CU_ASSERT((((min_blockcnt / (r->stripe_size * 1024 / g_block_len)) * (r->stripe_size * 1024 /
 					g_block_len)) * r->base_bdevs.num_base_bdevs) == pbdev_ctxt->bdev.blockcnt);
 			CU_ASSERT(strcmp(pbdev_ctxt->bdev.product_name, "Pooled Device") == 0);
 			CU_ASSERT(pbdev_ctxt->bdev.write_cache == 0);
@@ -965,7 +965,7 @@ create_test_req(struct rpc_construct_raid_bdev *r, const char *raid_name, uint32
 
 	r->name = strdup(raid_name);
 	SPDK_CU_ASSERT_FATAL(r->name != NULL);
-	r->strip_size = (g_strip_size * g_block_len) / 1024;
+	r->stripe_size = (g_stripe_size * g_block_len) / 1024;
 	r->raid_level = 0;
 	r->base_bdevs.num_base_bdevs = g_max_base_drives;
 	for (iter = 0; iter < g_max_base_drives; iter++, bbdev_idx++) {
@@ -1088,7 +1088,7 @@ test_construct_raid_invalid_args(void)
 	verify_raid_bdev_present("raid1", false);
 
 	create_test_req(&req, "raid1", 0, false);
-	req.strip_size = 1231;
+	req.stripe_size = 1231;
 	g_rpc_err = 0;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 1);
@@ -1319,7 +1319,7 @@ test_write_io(void)
 		io_len = (rand() % g_max_io_size) + 1;
 		bdev_io_initialize(bdev_io, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
 		lba += io_len;
-		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
+		memset(g_io_output, 0, (g_max_io_size / g_stripe_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_bdev_submit_request(ch, bdev_io);
 		verify_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, &pbdev_ctxt->raid_bdev,
@@ -1398,7 +1398,7 @@ test_read_io(void)
 		io_len = (rand() % g_max_io_size) + 1;
 		bdev_io_initialize(bdev_io, lba, io_len, SPDK_BDEV_IO_TYPE_READ);
 		lba += io_len;
-		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
+		memset(g_io_output, 0, (g_max_io_size / g_stripe_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_bdev_submit_request(ch, bdev_io);
 		verify_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, &pbdev_ctxt->raid_bdev,
@@ -1478,7 +1478,7 @@ test_io_failure(void)
 		io_len = (rand() % g_max_io_size) + 1;
 		bdev_io_initialize(bdev_io, lba, io_len, SPDK_BDEV_IO_TYPE_INVALID);
 		lba += io_len;
-		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
+		memset(g_io_output, 0, (g_max_io_size / g_stripe_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_bdev_submit_request(ch, bdev_io);
 		verify_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, &pbdev_ctxt->raid_bdev,
@@ -1496,7 +1496,7 @@ test_io_failure(void)
 		io_len = (rand() % g_max_io_size) + 1;
 		bdev_io_initialize(bdev_io, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
 		lba += io_len;
-		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
+		memset(g_io_output, 0, (g_max_io_size / g_stripe_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_bdev_submit_request(ch, bdev_io);
 		verify_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, &pbdev_ctxt->raid_bdev,
@@ -1806,7 +1806,7 @@ test_multi_raid_with_io(void)
 		iotype = (rand() % 2) ? SPDK_BDEV_IO_TYPE_WRITE : SPDK_BDEV_IO_TYPE_READ;
 		bdev_io_initialize(bdev_io, lba, io_len, iotype);
 		lba += io_len;
-		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
+		memset(g_io_output, 0, (g_max_io_size / g_stripe_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_random = rand() % g_max_raids;
 		ch_random = &ch[raid_random];
@@ -1933,7 +1933,7 @@ test_create_raid_from_config_invalid_params(void)
 	verify_raid_bdev_present("raid1", false);
 
 	create_test_req(&req, "raid1", 0, false);
-	req.strip_size = 1234;
+	req.stripe_size = 1234;
 	CU_ASSERT(raid_bdev_init() != 0);
 	free_test_req(&req);
 	verify_raid_config_present("raid1", false);

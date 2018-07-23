@@ -94,11 +94,11 @@ struct raid_bdev {
 	/* array of base bdev info */
 	struct raid_base_bdev_info  *base_bdev_info;
 
-	/* strip size of raid bdev in blocks */
-	uint32_t                    strip_size;
+	/* stripe size of raid bdev in blocks */
+	uint32_t                    stripe_size;
 
-	/* strip size bit shift for optimized calculation */
-	uint32_t                    strip_size_shift;
+	/* stripe size bit shift for optimized calculation */
+	uint32_t                    stripe_size_shift;
 
 	/* block length bit shift for optimized calculation */
 	uint32_t                    blocklen_shift;
@@ -177,8 +177,8 @@ struct raid_bdev_config {
 
 	char                          *name;
 
-	/* strip size of this raid bdev  in kilo bytes */
-	uint32_t                      strip_size;
+	/* stripe size of this raid bdev  in kilo bytes */
+	uint32_t                      stripe_size;
 
 	/* number of base bdevs */
 	uint8_t                       num_base_bdevs;
