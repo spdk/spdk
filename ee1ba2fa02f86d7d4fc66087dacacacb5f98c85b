@@ -104,6 +104,24 @@
       "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0e39676_0bba82ae",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T17:32:25Z",
+      "side": 1,
+      "message": "In the RDMA transport it is putting the request back in a pool, rather than actually freeing the memory. But there are other transports coming and they may release their resources differently. Further, putting the request back on the free list in the RDMA transport risks race conditions between when that occurs and when the req is accessed again in spdk_nvmf_qpair_finish_request. It\u0027s a very small chance of a problem occurring because the time window is very small, but it\u0027s a subtle race condition nonetheless.",
+      "parentUuid": "de7c4106_4cbd8ab5",
+      "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
