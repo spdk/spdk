@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7f3e4b0_6108cbc0",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-24T07:39:30Z",
+      "side": 1,
+      "message": "I don\u0027t see where dev_ctx_size is used ?",
+      "revId": "097f2efc42734d82c25873dc321d278be5610dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
