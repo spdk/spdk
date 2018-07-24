@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "a070cf40_b35966b8",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-24T08:01:49Z",
+      "side": 1,
+      "message": "Shall we also rename those functions ? you\u0027re returning spdk_scsi_dev here.",
+      "revId": "097f2efc42734d82c25873dc321d278be5610dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7f3e4b0_6108cbc0",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 18
