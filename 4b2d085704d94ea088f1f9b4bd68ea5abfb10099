@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1cee48b_834fa824",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-24T13:35:59Z",
+      "side": 1,
+      "message": "this should be just g_spdk_raid_config.total_raid_bdev.\n\ntotal_raid_bdev is already decremented.",
+      "range": {
+        "startLine": 265,
+        "startChar": 42,
+        "endLine": 265,
+        "endChar": 81
+      },
+      "revId": "4b2d085704d94ea088f1f9b4bd68ea5abfb10099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
