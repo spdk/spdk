@@ -673,6 +673,31 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 	fs_load_done(req, 0);
 }
 
+static void
+spdk_fs_io_device_unregister(struct spdk_filesystem *fs)
+{
+	if (!fs) {
+		return;
+	}
+
+	spdk_io_device_unregister(&fs->md_target, NULL);
+	spdk_io_device_unregister(&fs->sync_target, NULL);
+	spdk_io_device_unregister(&fs->io_target, NULL);
+
+	free(fs);
+}
+
+static void
+spdk_fs_free_io_channels(struct spdk_filesystem *fs)
+{
+	if (!fs) {
+		return;
+	}
+
+	spdk_fs_free_io_channel(fs->md_target.md_io_channel);
+	spdk_fs_free_io_channel(fs->sync_target.sync_io_channel);
+}
+
 void
 spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	     spdk_fs_op_with_handle_complete cb_fn, void *cb_arg)
@@ -692,12 +717,8 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
-		spdk_put_io_channel(fs->md_target.md_io_channel);
-		spdk_io_device_unregister(&fs->md_target, NULL);
-		spdk_put_io_channel(fs->sync_target.sync_io_channel);
-		spdk_io_device_unregister(&fs->sync_target, NULL);
-		spdk_io_device_unregister(&fs->io_target, NULL);
-		free(fs);
+		spdk_fs_free_io_channels(fs);
+		spdk_fs_io_device_unregister(fs);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
@@ -730,11 +751,7 @@ unload_cb(void *ctx, int bserrno)
 	args->fn.fs_op(args->arg, bserrno);
 	free(req);
 
-	spdk_io_device_unregister(&fs->io_target, NULL);
-	spdk_io_device_unregister(&fs->sync_target, NULL);
-	spdk_io_device_unregister(&fs->md_target, NULL);
-
-	free(fs);
+	spdk_fs_io_device_unregister(fs);
 }
 
 void
@@ -758,8 +775,7 @@ spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void *cb_a
 	args->arg = cb_arg;
 	args->fs = fs;
 
-	spdk_fs_free_io_channel(fs->md_target.md_io_channel);
-	spdk_fs_free_io_channel(fs->sync_target.sync_io_channel);
+	spdk_fs_free_io_channels(fs);
 	spdk_bs_unload(fs->bs, unload_cb, req);
 }
 
