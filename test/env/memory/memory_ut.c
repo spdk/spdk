@@ -51,10 +51,6 @@ rte_eal_get_configuration(void)
 }
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
-typedef void (*rte_mem_event_callback_t)(enum rte_mem_event event_type,
-		const void *addr, size_t len, void *arg);
-typedef int (*rte_memseg_contig_walk_t)(const struct rte_memseg_list *msl,
-					const struct rte_memseg *ms, size_t len, void *arg);
 DEFINE_STUB(rte_mem_event_callback_register, int, (const char *name, rte_mem_event_callback_t clb,
 		void *arg), 0);
 DEFINE_STUB(rte_memseg_contig_walk, int, (rte_memseg_contig_walk_t func, void *arg), 0);
