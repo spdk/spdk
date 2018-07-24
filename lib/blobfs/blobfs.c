@@ -75,7 +75,7 @@ spdk_cache_buffer_free(struct cache_buffer *cache_buffer)
 	free(cache_buffer);
 }
 
-#define CACHE_READAHEAD_THRESHOLD	(128 * 1024)
+#define CACHE_READAHEAD_THRESHOLD	CACHE_BUFFER_SIZE
 
 struct spdk_file {
 	struct spdk_filesystem	*fs;
