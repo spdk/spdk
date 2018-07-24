@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a50b30dd_9248ffc5",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-24T01:42:08Z",
+      "side": 1,
+      "message": "It\u0027s better to rename the two functions\u0027 parameters similar like: (struct spdk_nvme_ns *ns, struct spdk_ocssd_geometry_data *geometry_data), print_ocssd_geometry doen\u0027t use ns parameter.",
+      "revId": "77a1d1c7ff7bf3c81b9c7932c388cb5f8fadfd53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
