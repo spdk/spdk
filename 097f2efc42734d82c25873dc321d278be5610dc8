@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "eaec969a_ab11026b",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-24T12:02:09Z",
+      "side": 1,
+      "message": "I guess it\u0027s the struct spdk_scsi_dev that\u0027s misnamed here, but there\u0027s not much we can do about it. We\u0027re returning SCSI target at given index from the provided Vhost SCSI target.",
+      "parentUuid": "a070cf40_b35966b8",
+      "revId": "097f2efc42734d82c25873dc321d278be5610dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7f3e4b0_6108cbc0",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-24T07:39:30Z",
       "side": 1,
       "message": "I don\u0027t see where dev_ctx_size is used ?",
+      "revId": "097f2efc42734d82c25873dc321d278be5610dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "958786b0_6426b17b",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-24T12:02:09Z",
+      "side": 1,
+      "message": "it\u0027s set by each device backend (scsi, blk, nvme) and used in the generic vhost layer:\n\nhttps://review.gerrithub.io/c/spdk/spdk/+/406329/18/lib/vhost/vhost.c#1246",
+      "parentUuid": "f7f3e4b0_6108cbc0",
       "revId": "097f2efc42734d82c25873dc321d278be5610dc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
