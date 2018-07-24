@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3710ab94_68632ec2",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-24T09:24:08Z",
+      "side": 1,
+      "message": "Right, merged them together.",
+      "parentUuid": "20c720aa_f99d5951",
+      "range": {
+        "startLine": 445,
+        "startChar": 0,
+        "endLine": 445,
+        "endChar": 20
+      },
+      "revId": "2db06797ff5780ce15bfa5e264668275d6dcdc38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c15b4787_23a19396",
         "filename": "examples/nvme/identify/identify.c",
         "patchSetId": 2

@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2b994662_2980aefb",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-24T09:24:08Z",
+      "side": 1,
+      "message": "Since currently there is no OCSSD internal header file, let\u0027s leave them here and move them out in the future.",
+      "parentUuid": "e8772b20_6f97206b",
+      "revId": "ac296f9d6d9d69f16194c96d422deb9daf30c0be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7525235f_87179802",
         "filename": "examples/nvme/identify/identify.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-24T08:27:36Z",
       "side": 1,
       "message": "same here, can we define the common MACRO to specification header file?",
+      "revId": "ac296f9d6d9d69f16194c96d422deb9daf30c0be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40435b08_d93f9480",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-24T09:24:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7525235f_87179802",
       "revId": "ac296f9d6d9d69f16194c96d422deb9daf30c0be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
