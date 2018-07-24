@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2759e541_8dae2dd0",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-24T08:12:11Z",
+      "side": 1,
+      "message": "No need return error here, VPD page is not mandatory here, just false the unmap bit if got error. Otherwise looks good to me.",
+      "revId": "e4794973649de77e9192b4c91606053d15f85dd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
