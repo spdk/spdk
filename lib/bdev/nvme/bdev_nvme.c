@@ -219,6 +219,7 @@ bdev_nvme_unregister_cb(void *io_device)
 {
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 
+	SPDK_ERRLOG("ctrlr=%p\n", ctrlr);
 	spdk_nvme_detach(ctrlr);
 }
 
@@ -232,9 +233,13 @@ bdev_nvme_destruct(void *ctx)
 	nvme_ctrlr->ref--;
 	free(nvme_disk->disk.name);
 	memset(nvme_disk, 0, sizeof(*nvme_disk));
+	SPDK_ERRLOG("ref=%d nvme_ctrlr=%p, ctrlr=%p\n",
+		    nvme_ctrlr->ref, nvme_ctrlr, nvme_ctrlr->ctrlr);
+
 	if (nvme_ctrlr->ref == 0) {
 		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		SPDK_ERRLOG("nvme_ctrlr=%p, ctrlr=%p\n", nvme_ctrlr, nvme_ctrlr->ctrlr);
 		spdk_io_device_unregister(nvme_ctrlr->ctrlr, bdev_nvme_unregister_cb);
 		spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller);
 		free(nvme_ctrlr->name);
@@ -511,6 +516,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
 
+	SPDK_ERRLOG("ctrlr=%p ch=%p\n", ctrlr, ch);
 #ifdef SPDK_CONFIG_VTUNE
 	ch->collect_spin_stat = true;
 #else
@@ -532,6 +538,7 @@ bdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_io_channel *ch = ctx_buf;
 
+	SPDK_ERRLOG("ctrlr=%p ch=%p\n", io_device, ch);
 	spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
 	spdk_poller_unregister(&ch->poller);
 }
@@ -712,6 +719,9 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	bdev->nvme_ctrlr = nvme_ctrlr;
 	bdev->ns = ns;
 	nvme_ctrlr->ref++;
+
+	SPDK_ERRLOG("ref=%d, nvme_ctrlr=%p, ctrlr=%p\n",
+		    nvme_ctrlr->ref, nvme_ctrlr, ctrlr);
 
 	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
 	if (!bdev->disk.name) {
@@ -924,6 +934,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		free(nvme_ctrlr);
 		return -ENOMEM;
 	}
+
+	SPDK_ERRLOG("nvme_ctrlr=%p, ctrlr=%p\n", nvme_ctrlr, ctrlr);
 
 	nvme_ctrlr->adminq_timer_poller = NULL;
 	nvme_ctrlr->ctrlr = ctrlr;
