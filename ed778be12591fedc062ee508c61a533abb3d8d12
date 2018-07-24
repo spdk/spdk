@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ea81fb7_91261108",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-24T15:32:30Z",
+      "side": 1,
+      "message": "indentation missing",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 73
+      },
+      "revId": "ed778be12591fedc062ee508c61a533abb3d8d12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
