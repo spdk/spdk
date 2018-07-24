@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e57b69e_9bd1497c",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-24T17:51:02Z",
+      "side": 1,
+      "message": "OK guys, followed your advice and changed to if/else instead of try/except.\nThis way the whole tree does not show up, and this may be kind of a problem when trying to add set_* / get_* commands for appropriate subsystems (because theyre not in the tree)",
+      "range": {
+        "startLine": 22,
+        "startChar": 8,
+        "endLine": 32,
+        "endChar": 26
+      },
+      "revId": "443403d7bfec2a14c2ba00d39e94ad23ffc92c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
