@@ -1,0 +1,225 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a2dbca1_e6147cc2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "bot -\u003e not",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d2cf0d6_8a4ef795",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "availble -\u003e available",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f85bbb3b_25c857bd",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "We generally avoid forward declarations when possible and just re-order the functions in the file.",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99f9f768_119251c5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "These are fairly giant arrays. Do we really need that many? To support a 4MB I/O, for example, only requires 1024.",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e828e1fd_d73ca9a2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "Maybe naming these src and dst would be clearer than mbufs and en_mbufs.",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d45ed7f9_c8d22417",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "Won\u0027t the poller thread and the submission thread be the same thread, if they\u0027re using the same I/O channel?",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b027b4e0_d591453b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "This poller always runs on the same thread as the submission path, which means only a single thread ever accesses the crypto qp_id here. You shouldn\u0027t need the lock.",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d3e456c_47ca3a47",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "This function could probably be broken up into like a \"prepare\" function and a \"submit\" function.",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "083c4340_b91f3b66",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "Stray tab above",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92934f7d_d870f22c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "There is a lot of repeated clean up code for the error case. Maybe break that out into a separate function?",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7742c0c7_135a7862",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "You don\u0027t want to dynamically allocate a data buffer. Instead, pull one from the existing bdev pool.",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45f0b104_75918edd",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "The math isn\u0027t right here for the case where the iov in the bdev_io contains an element that isn\u0027t a block multiple. This never happens in any of our tests today, but certainly could for a user space TCP stack and probably other cases.\n\nThe problem is that the number of mbufs allocated up at the top of this function is only based on the total length divided by the crypto block size, and that assumes each mbuf (except the last) gets filled entirely. However, if the user has an iov element that is 1k, for example, the code on line 605 will use an mbuf for just 1k of data. This can cause this splitting process to use more mbufs than were actually allocated.\n\nI think you have two options. One is to account for this case and handle it, the other is to assert if an iov_len is not a multiple of the crypto len and just fail.",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b5d6572_1ba091c8",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T23:11:11Z",
+      "side": 1,
+      "message": "I\u0027m not understanding this loop. For a given I/O channel, which is associated with a specific bdev, isn\u0027t there only one active crypto PMD?",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
