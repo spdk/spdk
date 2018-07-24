@@ -413,28 +413,10 @@ spdk_bdev_get_by_name(const char *bdev_name)
 void
 spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
-	struct spdk_lvs_req *destruct_req;
-	struct spdk_lvol *iter_lvol, *tmp;
-	bool all_lvols_closed = true;
-
 	lvol->ref_count--;
-
-	TAILQ_FOREACH_SAFE(iter_lvol, &lvol->lvol_store->lvols, link, tmp) {
-		if (iter_lvol->ref_count != 0) {
-			all_lvols_closed = false;
-		}
-	}
 
 	SPDK_CU_ASSERT_FATAL(cb_fn != NULL);
 	cb_fn(cb_arg, 0);
-
-	destruct_req = lvol->lvol_store->destruct_req;
-	if (destruct_req && all_lvols_closed == true) {
-		if (!lvol->lvol_store->destruct) {
-			spdk_lvs_unload(lvol->lvol_store, destruct_req->cb_fn, destruct_req->cb_arg);
-			free(destruct_req);
-		}
-	}
 }
 
 bool
@@ -446,8 +428,6 @@ spdk_lvol_deletable(struct spdk_lvol *lvol)
 void
 spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
-	struct spdk_lvs_req *destruct_req;
-
 	if (lvol->ref_count != 0) {
 		cb_fn(cb_arg, -ENODEV);
 	}
@@ -457,13 +437,6 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	SPDK_CU_ASSERT_FATAL(cb_fn != NULL);
 	cb_fn(cb_arg, 0);
 
-	destruct_req = lvol->lvol_store->destruct_req;
-	if (destruct_req && TAILQ_EMPTY(&lvol->lvol_store->lvols)) {
-		if (lvol->lvol_store->destruct) {
-			spdk_lvs_destroy(lvol->lvol_store, destruct_req->cb_fn, destruct_req->cb_arg);
-			free(destruct_req);
-		}
-	}
 	g_lvol = NULL;
 	free(lvol->unique_id);
 	free(lvol);
