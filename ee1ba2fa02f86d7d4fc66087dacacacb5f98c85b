@@ -122,6 +122,24 @@
       "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51f58549_7c927c29",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-24T21:08:41Z",
+      "side": 1,
+      "message": "thanks. That\u0027s a good point. Done.",
+      "parentUuid": "e0e39676_0bba82ae",
+      "revId": "ee1ba2fa02f86d7d4fc66087dacacacb5f98c85b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
