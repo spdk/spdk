@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffa2b527_c8be9985",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-24T08:00:45Z",
+      "side": 1,
+      "message": "I think we can remove \"_cb\" from function name.",
+      "range": {
+        "startLine": 334,
+        "startChar": 22,
+        "endLine": 334,
+        "endChar": 25
+      },
+      "revId": "f4c25216337d205a17bffb5881f7488a7af3aa8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b36a680b_8f0b6d68",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-24T08:00:45Z",
+      "side": 1,
+      "message": "In case of error we could save lvolerrno and return it through lvs-\u003edestruct_req-\u003ecb_fn in lines 345 and 358.",
+      "range": {
+        "startLine": 340,
+        "startChar": 1,
+        "endLine": 340,
+        "endChar": 22
+      },
+      "revId": "f4c25216337d205a17bffb5881f7488a7af3aa8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55d8b427_60fe1e40",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-24T08:00:45Z",
+      "side": 1,
+      "message": "With current approach we can call spdk_lvs_destroy here instead of in _spdk_lvol_delete_blob_cb function - this way we will simplify our code a lot.",
+      "range": {
+        "startLine": 345,
+        "startChar": 2,
+        "endLine": 345,
+        "endChar": 9
+      },
+      "revId": "f4c25216337d205a17bffb5881f7488a7af3aa8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
