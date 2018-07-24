@@ -16,6 +16,24 @@
       "revId": "6fdd535716d4f48453bf3ce44d86824ef8ff027c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47824bab_5fdc449a",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-07-24T07:20:38Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nWe shouldn\u0027t free the g_spdk_raid_config.raid_bdev_config in this function when g_spdk_raid_config.total_raid_bdev \u003d\u003d 0, because it will be freed after this function.\nSo i exit this function when the g_spdk_raid_config.total_raid_bdev \u003d\u003d 0 to avoid the double free.",
+      "parentUuid": "ec4a8244_499abb3b",
+      "revId": "6fdd535716d4f48453bf3ce44d86824ef8ff027c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
