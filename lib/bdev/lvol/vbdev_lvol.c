@@ -342,6 +342,7 @@ _vbdev_lvs_remove_lvol_cb(void *cb_arg, int lvolerrno)
 	}
 
 	if (TAILQ_EMPTY(&lvs->lvols)) {
+		spdk_lvs_destroy(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 		return;
 	}
 
@@ -360,9 +361,23 @@ _vbdev_lvs_remove_lvol_cb(void *cb_arg, int lvolerrno)
 }
 
 static void
-_vbdev_lvs_unregister_empty_cb(void *cb_arg, int bdeverrno)
+_vbdev_lvs_remove_bdev_unregistered_cb(void *cb_arg, int bdeverrno)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_VBDEV_LVOL, "Lvol unregistered with errno %d\n", bdeverrno);
+	struct lvol_store_bdev *lvs_bdev = cb_arg;
+	struct spdk_lvol_store *lvs = lvs_bdev->lvs;
+	struct spdk_lvol *lvol, *tmp;
+
+	if (bdeverrno != 0) {
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_LVOL, "Lvol unregistered with errno %d\n", bdeverrno);
+	}
+
+	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+		if (lvol->ref_count != 0) {
+			/* An lvol is still open, don't unload whole lvol store. */
+			return;
+		}
+	}
+	spdk_lvs_unload(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 }
 
 static void
@@ -409,20 +424,12 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 			spdk_lvs_unload(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 		}
 	} else {
-		lvs->destruct_req = calloc(1, sizeof(*lvs->destruct_req));
-		if (!lvs->destruct_req) {
-			SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
-			_vbdev_lvs_remove_cb(lvs_bdev, -ENOMEM);
-			return;
-		}
-		lvs->destruct_req->cb_fn = _vbdev_lvs_remove_cb;
-		lvs->destruct_req->cb_arg = lvs_bdev;
 		lvs->destruct = destroy;
 		if (destroy) {
 			_vbdev_lvs_remove_lvol_cb(lvs_bdev, 0);
 		} else {
 			TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
-				spdk_bdev_unregister(lvol->bdev, _vbdev_lvs_unregister_empty_cb, NULL);
+				spdk_bdev_unregister(lvol->bdev, _vbdev_lvs_remove_bdev_unregistered_cb, lvs_bdev);
 			}
 		}
 	}
