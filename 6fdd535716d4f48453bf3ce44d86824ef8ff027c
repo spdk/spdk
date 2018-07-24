@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec4a8244_499abb3b",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-24T06:54:19Z",
+      "side": 1,
+      "message": "Using realloc as free() is not recommended way.\nYou should use free is the size is 0.\n\nHow about the following?\n\ng_spdk_raid_config.total_raid_bdev--;\nif (g_spdk_raid_config.total_raid_bdev \u003d\u003d 0) {\n  free(g_spdk_raid_config.raid_bdev_config);\n  g_spdk_raid_config.raid_bdev_config \u003d NULL;\n} else {\n  temp_ptr \u003d realloc(g_spdk_raid_config.raid_bdev_config,\n    sizeof(struct raid_bdev_config) * g_spdk_raid_config.total_raid_bdev);\n  if (temp_ptr !\u003d NULL) {\n    g_spdk_raid_config.raid_bdev_config \u003d temp_ptr;\n  } else {\n    SPDK_ERRLOG(\"Config memory allocation failed\\n\");\n    assert(0);\n  }\n}",
+      "revId": "6fdd535716d4f48453bf3ce44d86824ef8ff027c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
