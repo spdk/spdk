@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07a728d8_b5ced275",
+        "filename": "test/iscsi_tgt/calsoft/calsoft.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T17:20:25Z",
+      "side": 1,
+      "message": "I don\u0027t think these changes are necessary",
+      "revId": "2e2ac0dfe8d0962a6ea5d4e7817c66a8f96fe896",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
