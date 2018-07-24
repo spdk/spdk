@@ -34,6 +34,24 @@
       "revId": "99753be38fd9f8bb7dd8cbcc26d1961d61c199fe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "753ea08d_6f9175b3",
+        "filename": "CONFIG",
+        "patchSetId": 7
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-24T12:46:10Z",
+      "side": 1,
+      "message": "Also CONFIG_LOG_BACKTRACE is used to produce proper SPDK_LOG_xxx value https://review.gerrithub.io/#/c/spdk/spdk/+/419726/7/mk/spdk.common.mk@196 so if user give wrong value here it will fail compilation.",
+      "parentUuid": "ce99c050_97e3c32a",
+      "revId": "99753be38fd9f8bb7dd8cbcc26d1961d61c199fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
