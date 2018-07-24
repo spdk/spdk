@@ -254,10 +254,18 @@ static const struct spdk_json_object_decoder rpc_construct_raid_bdev_decoders[] 
 static void
 raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
 {
+	uint32_t i;
+
 	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
 	g_spdk_raid_config.total_raid_bdev--;
 
-	free(raid_cfg->base_bdev);
+	if (raid_cfg->base_bdev) {
+		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
+			free(raid_cfg->base_bdev[i].bdev_name);
+		}
+		free(raid_cfg->base_bdev);
+	}
+	free(raid_cfg->name);
 	free(raid_cfg);
 }
 
@@ -377,7 +385,15 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	raid_bdev_config->name = req.name;
+	raid_bdev_config->name = strdup(req.name);
+	if (raid_bdev_config->name == NULL) {
+		free(base_bdevs);
+		free(raid_bdev_config);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM));
+		free_rpc_construct_raid_bdev(&req);
+		return;
+	}
+
 	raid_bdev_config->stripe_size = req.stripe_size;
 	raid_bdev_config->num_base_bdevs = req.base_bdevs.num_base_bdevs;
 	raid_bdev_config->raid_level = req.raid_level;
@@ -385,7 +401,13 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	g_spdk_raid_config.total_raid_bdev++;
 	raid_bdev_config->base_bdev = base_bdevs;
 	for (size_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
-		raid_bdev_config->base_bdev[i].bdev_name = req.base_bdevs.base_bdevs[i];
+		raid_bdev_config->base_bdev[i].bdev_name = strdup(req.base_bdevs.base_bdevs[i]);
+		if (raid_bdev_config->base_bdev[i].bdev_name == NULL) {
+			raid_bdev_config_cleanup(raid_bdev_config);
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM));
+			free_rpc_construct_raid_bdev(&req);
+			return;
+		}
 	}
 
 	for (size_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
