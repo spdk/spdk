@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6101ddcc_a5681c15",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-24T13:41:33Z",
+      "side": 1,
+      "message": "this should be added by separate patch.",
+      "range": {
+        "startLine": 246,
+        "startChar": 5,
+        "endLine": 246,
+        "endChar": 23
+      },
+      "revId": "7ed591ce51f863546ff3f8332fa8b69f7e3fcc3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ede0593_bc4e405c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-24T13:41:33Z",
+      "side": 1,
+      "message": "this is not merged yet.",
+      "range": {
+        "startLine": 259,
+        "startChar": 0,
+        "endLine": 259,
+        "endChar": 29
+      },
+      "revId": "7ed591ce51f863546ff3f8332fa8b69f7e3fcc3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dfb75af_123222d0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-24T13:41:33Z",
+      "side": 1,
+      "message": "this RPC is not related with iSCSi and still under the review. Will you post this by different patch?",
+      "range": {
+        "startLine": 944,
+        "startChar": 0,
+        "endLine": 944,
+        "endChar": 55
+      },
+      "revId": "7ed591ce51f863546ff3f8332fa8b69f7e3fcc3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61060682_8a6a5e0a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 1677,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-24T13:41:33Z",
+      "side": 1,
+      "message": "this is not related with iSCSI. Will you post this by separate patch?",
+      "range": {
+        "startLine": 1677,
+        "startChar": 3,
+        "endLine": 1677,
+        "endChar": 21
+      },
+      "revId": "7ed591ce51f863546ff3f8332fa8b69f7e3fcc3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
