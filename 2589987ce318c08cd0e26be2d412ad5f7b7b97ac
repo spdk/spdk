@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ceb2d174_adcd5b2c",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-24T16:54:40Z",
+      "side": 1,
+      "message": "I think it would make more sense to incorporate this function into the one above, and only call get_feature on SPDK_OCSSD_FEAT_MEDIA_FEEDBACK if the device is an OCSSD. That way all of the get features commands overlap and it\u0027s more efficient.",
+      "revId": "2589987ce318c08cd0e26be2d412ad5f7b7b97ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
