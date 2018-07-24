@@ -68,6 +68,30 @@
       "revId": "f4c25216337d205a17bffb5881f7488a7af3aa8b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abf4744a_ea6b3d66",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-07-24T08:06:05Z",
+      "side": 1,
+      "message": "And it that case we could probably remove destruct_req - this would require a some changes in functions arguments.",
+      "parentUuid": "55d8b427_60fe1e40",
+      "range": {
+        "startLine": 345,
+        "startChar": 2,
+        "endLine": 345,
+        "endChar": 9
+      },
+      "revId": "f4c25216337d205a17bffb5881f7488a7af3aa8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
