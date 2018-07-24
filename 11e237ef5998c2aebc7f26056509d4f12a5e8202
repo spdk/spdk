@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ef0e44a_00114de2",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-24T05:37:48Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI have question. Dose the DPDK change the usage? I remember that for old DPDK version, it works.",
+      "revId": "11e237ef5998c2aebc7f26056509d4f12a5e8202",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
