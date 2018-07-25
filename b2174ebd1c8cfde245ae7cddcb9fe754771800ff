@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cc4a63d_a41aa599",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-25T04:27:12Z",
+      "side": 1,
+      "message": "How about add the check here ? if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr) \u0026\u0026 features_to_get[i] \u003d\u003d SPDK_OCSSD_FEAT_MEDIA_FEEDBACK) { continue;}, actually I think you can just send the feature command to backend, anyway there will have a response.",
+      "revId": "b2174ebd1c8cfde245ae7cddcb9fe754771800ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
