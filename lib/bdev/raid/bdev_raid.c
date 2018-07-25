@@ -875,6 +875,46 @@ raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
 
 /*
  * brief:
+ * raid_bdev_config_add_base_bdev function add base bdev to raid bdev config.
+ *
+ * params:
+ * raid_cfg - pointer to raid bdev configuration
+ * base_bdev_name - name of base bdev
+ * slot - Position to add base bdev
+ */
+int
+raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg, const char *base_bdev_name,
+			       uint32_t slot)
+{
+	uint32_t i;
+	struct raid_bdev_config *tmp;
+
+	if (slot >= raid_cfg->num_base_bdevs) {
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(tmp, &g_spdk_raid_config.raid_bdev_config_head, link) {
+		for (i = 0; i < tmp->num_base_bdevs; i++) {
+			if (tmp->base_bdev[i].bdev_name != NULL) {
+				if (!strcmp(tmp->base_bdev[i].bdev_name, base_bdev_name)) {
+					SPDK_ERRLOG("duplicate base bdev name %s mentioned\n",
+						    base_bdev_name);
+					return -EEXIST;
+				}
+			}
+		}
+	}
+
+	raid_cfg->base_bdev[slot].bdev_name = strdup(base_bdev_name);
+	if (raid_cfg->base_bdev[slot].bdev_name == NULL) {
+		SPDK_ERRLOG("unable to allocate memory\n");
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+/*
+ * brief:
  * raid_bdev_parse_raid is used to parse the raid bdev from config file based on
  * pre-defined raid bdev format in config file.
  * Format of config file:
@@ -903,11 +943,10 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 {
 	const char *raid_name;
 	int strip_size;
-	int num_base_bdevs;
+	int i, num_base_bdevs;
 	int raid_level;
 	const char *base_bdev_name;
-	uint32_t i, j;
-	struct raid_bdev_config *raid_bdev_config, *tmp;
+	struct raid_bdev_config *raid_bdev_config;
 	int rc;
 
 	raid_name = spdk_conf_section_get_val(conf_section, "Name");
@@ -946,30 +985,17 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		if (base_bdev_name == NULL) {
 			break;
 		}
-		if (i >= raid_bdev_config->num_base_bdevs) {
+		if (i >= num_base_bdevs) {
 			raid_bdev_config_cleanup(raid_bdev_config);
 			SPDK_ERRLOG("Number of devices mentioned is more than count\n");
 			return -1;
 		}
 
-		TAILQ_FOREACH(tmp, &g_spdk_raid_config.raid_bdev_config_head, link) {
-			for (j = 0; j < tmp->num_base_bdevs; j++) {
-				if (tmp->base_bdev[j].bdev_name != NULL) {
-					if (!strcmp(tmp->base_bdev[j].bdev_name, base_bdev_name)) {
-						raid_bdev_config_cleanup(raid_bdev_config);
-						SPDK_ERRLOG("duplicate base bdev name %s mentioned\n",
-							    base_bdev_name);
-						return -EEXIST;
-					}
-				}
-			}
-		}
-
-		raid_bdev_config->base_bdev[i].bdev_name = strdup(base_bdev_name);
-		if (raid_bdev_config->base_bdev[i].bdev_name == NULL) {
+		rc = raid_bdev_config_add_base_bdev(raid_bdev_config, base_bdev_name, i);
+		if (rc != 0) {
 			raid_bdev_config_cleanup(raid_bdev_config);
-			SPDK_ERRLOG("unable to allocate memory\n");
-			return -ENOMEM;
+			SPDK_ERRLOG("Failed to add base bdev to raid bdev config\n");
+			return rc;
 		}
 	}
 
