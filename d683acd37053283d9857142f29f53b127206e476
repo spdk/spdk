@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44d8e8ca_994bcc12",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T16:07:01Z",
+      "side": 1,
+      "message": "could this use the common function that I mentioned in review of earlier patch in this series?",
+      "revId": "d683acd37053283d9857142f29f53b127206e476",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
