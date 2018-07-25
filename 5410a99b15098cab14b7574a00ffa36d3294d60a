@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32abe689_f3b62d11",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T19:04:54Z",
+      "side": 1,
+      "message": "Hi Xiaodong,\n\nWhy is this include needed?  I don\u0027t see anything in this header file that requires it.\n\n-Jim",
+      "revId": "5410a99b15098cab14b7574a00ffa36d3294d60a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "724e7d29_f74cb690",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T19:04:54Z",
+      "side": 1,
+      "message": "probably spdk/nvme_ocssd.h should be included here instead",
+      "revId": "5410a99b15098cab14b7574a00ffa36d3294d60a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
