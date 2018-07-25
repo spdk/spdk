@@ -1608,6 +1608,13 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 	__get_page_parameters(file, offset, length, &start_page, &page_size, &num_pages);
 	pin_buf_length = num_pages * page_size;
 	args->op.rw.pin_buf = spdk_dma_malloc(pin_buf_length, 4096, NULL);
+	if (args->op.rw.pin_buf == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "Failed to allocate buf for: file=%s offset=%jx length=%jx\n",
+			      file->name, offset, length);
+		free_fs_request(req);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
 
 	args->op.rw.start_page = start_page;
 	args->op.rw.num_pages = num_pages;
