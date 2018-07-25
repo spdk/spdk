@@ -14,7 +14,7 @@ timing_enter autopackage
 
 $MAKE clean
 
-if [ `git status --porcelain | wc -l` -ne 0 ]; then
+if [ `git status --porcelain --ignore-submodules | wc -l` -ne 0 ]; then
 	echo make clean left the following files:
 	git status --porcelain
 	exit 1
