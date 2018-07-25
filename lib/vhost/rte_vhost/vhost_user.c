@@ -250,6 +250,7 @@ vhost_user_set_vring_num(struct virtio_net *dev,
 	return 0;
 }
 
+#undef RTE_LIBRTE_VHOST_NUMA
 /*
  * Reallocate virtio_dev and vhost_virtqueue data structure to make them on the
  * same numa node as the memory of vring descriptor.
@@ -584,6 +585,7 @@ vhost_setup_mem_table(struct virtio_net *dev)
 {
 	struct VhostUserMemory memory = dev->mem_table;
 	struct rte_vhost_mem_region *reg;
+	struct vhost_virtqueue	*vq;
 	void *mmap_addr;
 	uint64_t mmap_size;
 	uint64_t mmap_offset;
@@ -595,6 +597,17 @@ vhost_setup_mem_table(struct virtio_net *dev)
 		free_mem_region(dev);
 		rte_free(dev->mem);
 		dev->mem = NULL;
+	}
+
+	for (i = 0; i < dev->nr_vring; i++) {
+		vq = dev->virtqueue[i];
+		/* Those addresses won't be valid anymore in host address space.
+		 * after setting ne mem table. Initiator need to resend these
+		 * addresses.
+		 */
+		vq->desc = NULL;
+		vq->avail = NULL;
+		vq->used = NULL;
 	}
 
 	dev->nr_guest_pages = 0;
