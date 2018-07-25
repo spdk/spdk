@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9d2e603_8527b552",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1732,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T19:33:25Z",
+      "side": 1,
+      "message": "should this function be void?  it always returns 0, and the caller doesn\u0027t check the return value any\u0010ways",
+      "revId": "1f4fdbc1c0edfc1a2efeba93cc715d99aadc59e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2728d7b1_385cff93",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T19:33:25Z",
+      "side": 1,
+      "message": "This isn\u0027t clear (at least to me).  This says \"The reason we abort\" - but this function doesn\u0027t abort I thought - it just frees the request?",
+      "revId": "1f4fdbc1c0edfc1a2efeba93cc715d99aadc59e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7318b76f_93c70b22",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T19:33:25Z",
+      "side": 1,
+      "message": "this function can be probably return void since it always returns 0 - it makes the calling code easier to read (i.e. I don\u0027t have to come up to this function to see how it could fail)",
+      "revId": "1f4fdbc1c0edfc1a2efeba93cc715d99aadc59e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
