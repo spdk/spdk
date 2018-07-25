@@ -1555,6 +1555,10 @@ __do_blob_read(void *ctx, int fserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
+	if (fserrno) {
+		__rw_done(req, fserrno);
+		return;
+	}
 	spdk_blob_io_read(args->file->blob, args->op.rw.channel,
 			  args->op.rw.pin_buf,
 			  args->op.rw.start_page, args->op.rw.num_pages,
