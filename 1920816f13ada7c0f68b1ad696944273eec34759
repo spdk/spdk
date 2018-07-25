@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "61e1b560_6a82d1de",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7a2dbca1_e6147cc2",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d2cf0d6_8a4ef795",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 53
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-24T23:11:11Z",
       "side": 1,
       "message": "availble -\u003e available",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4783849_e7cc95e4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2d2cf0d6_8a4ef795",
       "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0ced7409_e233e0f8",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "OK, I\u0027ll save this for last :)",
+      "parentUuid": "f85bbb3b_25c857bd",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99f9f768_119251c5",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 53
@@ -64,6 +118,24 @@
       "writtenOn": "2018-07-24T23:11:11Z",
       "side": 1,
       "message": "These are fairly giant arrays. Do we really need that many? To support a 4MB I/O, for example, only requires 1024.",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc76ec09_fdbca8b0",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "So there\u0027s been some discussion on this already long ago. One 4MB would require 8192 of these assuming a 512 block size or, as you say, 1024 for 4K block. I was going with worst case and running bdevperf. We can queue up quite a few of these IOs in the PMD - 2047 I believe but then we have have more coming in behind that.  I had a TODO in there at one point to go back in and validate these giant numbers with the final version but, again, this came from empirical testing with bdevperf and what I thought was a reasonable test script.",
+      "parentUuid": "99f9f768_119251c5",
       "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "21f9575a_58f6b2d0",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "Most definitely!",
+      "parentUuid": "e828e1fd_d73ca9a2",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d45ed7f9_c8d22417",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 53
@@ -98,6 +188,24 @@
       "writtenOn": "2018-07-24T23:11:11Z",
       "side": 1,
       "message": "Won\u0027t the poller thread and the submission thread be the same thread, if they\u0027re using the same I/O channel?",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "166604c5_35561dc0",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "I wasn\u0027t positive but yes I theorized the same. At the time I had it working in all test cases so rather than pull it, I kept it in for review hoping to get a comment exactly like this one :) . Thanks, I\u0027ll pull it",
+      "parentUuid": "d45ed7f9_c8d22417",
       "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "101fafab_b342d3ba",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b027b4e0_d591453b",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d3e456c_47ca3a47",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 53
@@ -132,6 +258,24 @@
       "writtenOn": "2018-07-24T23:11:11Z",
       "side": 1,
       "message": "This function could probably be broken up into like a \"prepare\" function and a \"submit\" function.",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e2151b3_99067032",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "Maybe, I\u0027d prefer to leave it alone for this first rev.  I think the refactored function is nowhere near as complicated as before.  I can always bust it up if you thinks its super important",
+      "parentUuid": "8d3e456c_47ca3a47",
       "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "ed3d38e3_6179082a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "083c4340_b91f3b66",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92934f7d_d870f22c",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 53
@@ -166,6 +328,24 @@
       "writtenOn": "2018-07-24T23:11:11Z",
       "side": 1,
       "message": "There is a lot of repeated clean up code for the error case. Maybe break that out into a separate function?",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "319e787f_0a159485",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "yeah, good suggestion.  I\u0027ll look into it",
+      "parentUuid": "92934f7d_d870f22c",
       "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "ce9c4eda_b7385211",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "yes, someone mentioned that before.  I had spaced it out.  Will do - thanks",
+      "parentUuid": "7742c0c7_135a7862",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "45f0b104_75918edd",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 53
@@ -206,6 +404,24 @@
     },
     {
       "key": {
+        "uuid": "69fddbd3_b7da8d8b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "I didn\u0027t plan for elements that aren\u0027t multiples of block sizes, that\u0027s why the math wouldn\u0027t work :) I thought about it though but didn\u0027t believe it was possible.\n\nI like the assert for now.  Will add, thanks",
+      "parentUuid": "45f0b104_75918edd",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1b5d6572_1ba091c8",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 53
@@ -217,6 +433,24 @@
       "writtenOn": "2018-07-24T23:11:11Z",
       "side": 1,
       "message": "I\u0027m not understanding this loop. For a given I/O channel, which is associated with a specific bdev, isn\u0027t there only one active crypto PMD?",
+      "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37c28365_0e7bb0c8",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-25T13:46:30Z",
+      "side": 1,
+      "message": "Not actually. Let me take some time to add a comment here to explain or maybe explain on IRC or something and then come up with a good comment. Basically the goal below is to find \"a\" PMD for this vbdev as there will be like 32 QATs PMDs with one card.  There will only be one AESNI instance shared by everyone.  But with QAT we want to round robin them. Then when we find one we pick the qpair based on lcore",
+      "parentUuid": "1b5d6572_1ba091c8",
       "revId": "1920816f13ada7c0f68b1ad696944273eec34759",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
