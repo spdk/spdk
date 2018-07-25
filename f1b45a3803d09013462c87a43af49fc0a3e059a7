@@ -46,6 +46,47 @@
       "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "486c12e7_f56f3db0",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T23:00:54Z",
+      "side": 1,
+      "message": "Yeah - I like this idea.  And I think using UINT64_MAX is best and avoid -1.",
+      "parentUuid": "ff453039_1702d197",
+      "range": {
+        "startLine": 555,
+        "startChar": 1,
+        "endLine": 555,
+        "endChar": 8
+      },
+      "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80fef236_b255caf6",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T23:00:54Z",
+      "side": 1,
+      "message": "what if user wants to disable all rate limiting?  I think the user would set all values to 0 - would this error message be printed in that case?",
+      "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
