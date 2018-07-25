@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9903353e_c2c15a3e",
+        "filename": "lib/vhost/rte_vhost/rte_vhost.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T22:40:30Z",
+      "side": 1,
+      "message": "maybe just vhost_nvme_set_bar?  since this sets both addr and size\n\nor vhost_nvme_set_bar_mr, which more closely matches the name of your new vhost msg",
+      "revId": "81bc788fad5872396ef9a8eac4ebd3dee49b7159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89ca644f_f49340c3",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T22:40:30Z",
+      "side": 1,
+      "message": "Not sure I follow this part of the logic - can you explain this further?",
+      "revId": "81bc788fad5872396ef9a8eac4ebd3dee49b7159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
