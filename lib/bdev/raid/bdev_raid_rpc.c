@@ -245,32 +245,6 @@ static const struct spdk_json_object_decoder rpc_construct_raid_bdev_decoders[] 
 
 /*
  * brief:
- * raid_bdev_config_cleanup function is used to free memory for one raid_bdev in configuration
- * params:
- * raid_bdev_config - pointer to raid_bdev_config structure
- * returns:
- * none
- */
-static void
-raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
-{
-	uint32_t i;
-
-	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
-	g_spdk_raid_config.total_raid_bdev--;
-
-	if (raid_cfg->base_bdev) {
-		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-			free(raid_cfg->base_bdev[i].bdev_name);
-		}
-		free(raid_cfg->base_bdev);
-	}
-	free(raid_cfg->name);
-	free(raid_cfg);
-}
-
-/*
- * brief:
  * check_and_remove_raid_bdev function free base bdev descriptors, unclaim the base
  * bdevs and free the raid. This function is used to cleanup when raid is not
  * able to successfully create during constructing the raid via RPC
@@ -514,8 +488,6 @@ raid_bdev_config_destroy_check_raid_bdev_exists(void *arg)
 static void
 raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 {
-	uint8_t i;
-
 	assert(raid_cfg != NULL);
 	if (raid_cfg->raid_bdev_ctxt != NULL) {
 		/*
@@ -526,16 +498,7 @@ raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 		return;
 	}
 
-	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
-	g_spdk_raid_config.total_raid_bdev--;
-
-	/* Destroy raid bdev config and cleanup */
-	for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-		free(raid_cfg->base_bdev[i].bdev_name);
-	}
-	free(raid_cfg->base_bdev);
-	free(raid_cfg->name);
-	free(raid_cfg);
+	raid_bdev_config_cleanup(raid_cfg);
 }
 
 /*
