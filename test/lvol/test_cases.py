@@ -165,7 +165,8 @@ class TestCases(object):
         self.app_path = app_path
         self.lvs_name = "lvs_test"
         self.lbd_name = "lbd_test"
-        self.vhost_config_path = path.join(path.dirname(sys.argv[0]), 'vhost.conf')
+        self.gen_nvme_path = path.join(path.dirname(sys.argv[0]), '/../../scripts/gen_nvme.sh')
+#         self.vhost_config_path = path.join(path.dirname(sys.argv[0]), 'vhost.conf')
 
     def _gen_lvs_uuid(self):
         return str(uuid4())
@@ -218,6 +219,10 @@ class TestCases(object):
         return 0
 
     def _start_vhost(self, vhost_path, config_path, pid_path):
+        base_path = path.dirname(path.realpath(sys.argv[0]))
+        gen_nvme_path = path.join(base_path, "../../scripts/gen_nvme.sh")
+        nvme=subprocess.check_output("{PATH} --json".format(PATH=gen_nvme_path), shell=True)
+        print (nvme)
         subprocess.call("{app} -c {config} -f "
                         "{pid} &".format(app=vhost_path,
                                          config=config_path,
@@ -254,18 +259,20 @@ class TestCases(object):
             pid = int(vhost_pid.readline())
             if not pid:
                 return 1
+        self.rpc.load_subsystem_config(gen_nvme_path --json)
         return 0
 
     def _find_traddress_for_nvme(self, nvme_name):
-        with open(self.vhost_config_path) as file:
-            for line in file:
-                if nvme_name in line and "TransportID" in line:
-                    for word in line.split(" "):
-                        if word.startswith("traddr"):
-                            return word.split(":", 1)[1].replace("\"", "")
-
-        print("INFO: Traddr not found for Nvme {nvme}".format(nvme=nvme_name))
-        return -1
+        base_path = path.dirname(path.realpath(sys.argv[0]))
+        gen_nvme_path = path.join(base_path, "../../scripts/gen_nvme.sh")
+        traddr = subprocess.check_output(
+            """{PATH} --json | jq -r '.config[].params | select(.name=="{NAME}").traddr'""".format(NAME=nvme_name, PATH=gen_nvme_path),
+             shell=True).strip()
+        if traddr is None:
+            print("INFO: Traddr not found for Nvme {nvme}".format(nvme=nvme_name))
+            return -1
+        else: 
+            return traddr
 
     # positive tests
     @case_message
@@ -631,6 +638,7 @@ class TestCases(object):
                                                   self.cluster_size)
         if self.c.destroy_lvol_store(self.lvs_name) != 0:
             fail_count += 1
+        print ("aaaa")
         traddr = self._find_traddress_for_nvme("Nvme0")
         if traddr != -1:
             self.c.delete_bdev("Nvme0n1")
