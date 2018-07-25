@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "012699f2_bae68ef4",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T21:10:08Z",
+      "side": 1,
+      "message": "suggest using CHUNKINFO - \"CHK\" usually infers \"check\" not \"chunk\"\n\nI think you can just do NUM_CHUNKINFO_ENTRIES and CHUNKINFO_SLBA to reduce the size of the name",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "871b5d64_b5672515",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T21:10:08Z",
+      "side": 1,
+      "message": "macros should be all caps - U64_MASK and U64_LEFT_MASK_GEN",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "408e6c72_9ad78045",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T21:10:08Z",
+      "side": 1,
+      "message": "should we simplify this, and just do 4KB worth of chunk infos?\n\nEach chunk info is 32 bytes which is 128 chunk infos.  So just read the first 4KB page and print out all of those chunk infos.\n\nAll of the logic to read multiple pages isn\u0027t being used at all so I don\u0027t think we should add the complexity until it is needed.\n\nAlso - we shouldn\u0027t exit if it can\u0027t do the log page - it should just print an error message - that\u0027s consistent with other code in this file.",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a9d7e36_d803822d",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T21:10:08Z",
+      "side": 1,
+      "message": "I\u0027d suggest removing the space between \u0026 and (chk_info[i].cs) - that makes it more clear that you are getting the address of this value, not doing a bitwise AND operation.\n\nSame with next line.\n\nOr maybe just print out each field separately?  i.e. cs.free, cs.closed, cs.open, cs.offline, ct.seq_write, ct.rnd_write, ct.size_deviate.  That would keep users from having to look up the values in the spec to decode them.",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d206725_a3438ded",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T21:10:08Z",
+      "side": 1,
+      "message": "first function uses chunkinfo but second function uses chunk_info (with underscore)",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
