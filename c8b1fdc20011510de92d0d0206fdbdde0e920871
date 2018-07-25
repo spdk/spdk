@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d553ff2_5924b6ba",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T19:21:56Z",
+      "side": 1,
+      "message": "this needs to specify --json\n\nthis is a nightly test so build system didn\u0027t catch it",
+      "revId": "c8b1fdc20011510de92d0d0206fdbdde0e920871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
