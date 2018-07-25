@@ -22,6 +22,30 @@
       "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff453039_1702d197",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-25T22:23:51Z",
+      "side": 1,
+      "message": "Or even better: just embed here the limits array directly\n\nint64_t limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES]\n\nand in decoders just put\n\n  offsetof(struct rpc_set_bdev_qos_limit, limits[SPDK_BDEV_QOS_NUM_RATE_XXXX]),",
+      "parentUuid": "6c03dfda_eb2e9a0f",
+      "range": {
+        "startLine": 555,
+        "startChar": 1,
+        "endLine": 555,
+        "endChar": 8
+      },
+      "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
