@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfbc0edf_e203a73e",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1255,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T18:55:50Z",
+      "side": 1,
+      "message": "This should be (result \u0026 0x2 \u003e\u003e 1) - otherwise when vector high ecc status is set, it will show 2 instead of 1.",
+      "revId": "03b8992e70784ef723d5c1ef9f2aa50782dd100c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
