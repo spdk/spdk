@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c03dfda_eb2e9a0f",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-25T22:17:22Z",
+      "side": 1,
+      "message": "No need to make these \u0027char *\u0027 and parse it by hand. Change to uint64_t then line 605 change to\n\n  ... req \u003d {NULL, UINT64_MAX, UINT64_MAX};\n\nThis will give you a way to change line 624 (just compare against UINT64_MAX). Or you can go for int64_t here and\n\n  ... req \u003d {NULL, -1, -1};\n\nBut don\u0027t use strings here.",
+      "range": {
+        "startLine": 555,
+        "startChar": 1,
+        "endLine": 555,
+        "endChar": 8
+      },
+      "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
