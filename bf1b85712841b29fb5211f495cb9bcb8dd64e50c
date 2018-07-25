@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "93655574_463274b3",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-25T08:08:22Z",
+      "side": 1,
+      "message": "good optimization.",
+      "parentUuid": "a82caecc_15f40c27",
+      "revId": "bf1b85712841b29fb5211f495cb9bcb8dd64e50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed4c2296_db1a6db8",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 9
