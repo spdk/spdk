@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d69c0f82_936cf685",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T16:04:39Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nMaybe these lines here can be made into a common function?  They mostly duplicate lines 767-777 added above.\n\nThen you could even just call this common function inline and return -1 immediately, rather than using the goto.\n\n-Jim",
+      "revId": "fcc73d3031d0a78336f10657f8fe6cd23736db24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
