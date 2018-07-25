@@ -353,11 +353,11 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	for (size_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
-		raid_bdev_config->base_bdev[i].bdev_name = strdup(req.base_bdevs.base_bdevs[i]);
-		if (raid_bdev_config->base_bdev[i].bdev_name == NULL) {
+	for (size_t i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
+		rc = raid_bdev_config_add_base_bdev(raid_bdev_config, req.base_bdevs.base_bdevs[i], i);
+		if (rc != 0) {
 			raid_bdev_config_cleanup(raid_bdev_config);
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM));
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
 			free_rpc_construct_raid_bdev(&req);
 			return;
 		}
