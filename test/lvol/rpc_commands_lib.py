@@ -225,3 +225,13 @@ class Commands_Rpc(object):
         print("INFO: RPC COMMAND inflate_lvol_bdev")
         output, rc = self.rpc.inflate_lvol_bdev(clone_name)
         return rc
+    
+    def load_subsystem_config(self, gen_nvme):
+        print("INFO: RPC COMMAND load_subsystem_config")
+        output, rc = self.rpc.load_subsystem_config("-f", gen_nvme)
+        return rc
+    
+    def start_subsystem_init(self):
+        print("INFO: RPC COMMAND start_subsystem_init")
+        output, rc = self.rpc.start_subsystem_init()
+        return rc

@@ -105,16 +105,14 @@ source $TEST_DIR/test/common/autotest_common.sh
 function vhost_start()
 {
     modprobe nbd
-    touch $BASE_DIR/vhost.conf
     # Use Split to make a bdev using just the first 1/4
     #  of the NVMe namespace
-    echo "[Split]" >> $BASE_DIR/vhost.conf
-    echo "  Split Nvme0n1 4" >> $BASE_DIR/vhost.conf
-    $TEST_DIR/scripts/gen_nvme.sh >> $BASE_DIR/vhost.conf
-    $TEST_DIR/app/vhost/vhost -c $BASE_DIR/vhost.conf &
+    $TEST_DIR/app/vhost/vhost &
     vhost_pid=$!
     echo $vhost_pid > $BASE_DIR/vhost.pid
     waitforlisten $vhost_pid
+    python $TEST_DIR/scripts/rpc.py load_subsystem_config -f $BASE_DIR/conf.json
+    python $TEST_DIR/scripts/rpc.py get_bdevs 
 }
 
 ###  Function stops vhost app
@@ -125,7 +123,7 @@ function vhost_kill()
         sleep 1
     fi
     rm $BASE_DIR/vhost.pid || true
-    rm $BASE_DIR/vhost.conf || true
+    rm -f $BASE_DIR/gen_nvme.json
     rmmod nbd || true
 }
 
