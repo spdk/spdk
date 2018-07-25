@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed4c2296_db1a6db8",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 715,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-25T04:19:19Z",
+      "side": 1,
+      "message": "May change this label to done or ret",
+      "range": {
+        "startLine": 715,
+        "startChar": 7,
+        "endLine": 715,
+        "endChar": 12
+      },
+      "revId": "bf1b85712841b29fb5211f495cb9bcb8dd64e50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
