@@ -50,10 +50,10 @@
 #define BLOBFS_TRACE_RW(file, str, args...) \
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS_RW, "file=%s " str, file->name, ##args)
 
-#define BLOBFS_CACHE_SIZE (4ULL * 1024 * 1024 * 1024)
-#define SPDK_BLOBFS_OPTS_CLUSTER_SZ (1024 * 1024)
+#define BLOBFS_DEFAULT_CACHE_SIZE (4ULL * 1024 * 1024 * 1024)
+#define SPDK_BLOBFS_DEFAULT_OPTS_CLUSTER_SZ (1024 * 1024)
 
-static uint64_t g_fs_cache_size = BLOBFS_CACHE_SIZE;
+static uint64_t g_fs_cache_size = BLOBFS_DEFAULT_CACHE_SIZE;
 static struct spdk_mempool *g_cache_pool;
 static TAILQ_HEAD(, spdk_file) g_caches;
 static int g_fs_count = 0;
@@ -205,7 +205,7 @@ static void cache_free_buffers(struct spdk_file *file);
 void
 spdk_fs_opts_init(struct spdk_blobfs_opts *opts)
 {
-	opts->cluster_sz = SPDK_BLOBFS_OPTS_CLUSTER_SZ;
+	opts->cluster_sz = SPDK_BLOBFS_DEFAULT_OPTS_CLUSTER_SZ;
 }
 
 static void
