@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd57eebb_c9d91493",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-25T17:02:21Z",
+      "side": 1,
+      "message": "Since you need to address my comment below anyway, I think a clearer name here might be nvmf_poll_group_remove_subsystem_ctx - it\u0027s the context used during the poll group\u0027s remove subsystem operation.",
+      "revId": "b4f9c49dd2323e3be78a0cc59e353ec7aa24ac2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73c14ec8_7352f163",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 943,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-25T17:02:21Z",
+      "side": 1,
+      "message": "You\u0027ll need to set the sgroup state to INACTIVE up front, to block in new qpairs from being added to the poll group.",
+      "revId": "b4f9c49dd2323e3be78a0cc59e353ec7aa24ac2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
