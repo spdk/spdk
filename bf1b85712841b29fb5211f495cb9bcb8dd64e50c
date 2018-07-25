@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "a82caecc_15f40c27",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-25T07:08:29Z",
+      "side": 1,
+      "message": "req-\u003eunmap_supported is false by default because req is allocated by calloc().\n\nHence I think we don\u0027t have to use goto here and following may be enough.\n\n  if (status \u003d\u003d SPDK_SCSI_STATUS_GOOD) {\n    lbp_inq \u003d scsi_datain_unmarshall(task);\n    if (lbp_inq !\u003d NULL \u0026\u0026 lbp_inq-\u003elbpu) {\n      req-\u003eunmap_supported \u003d true;\n    }\n  }",
+      "revId": "bf1b85712841b29fb5211f495cb9bcb8dd64e50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed4c2296_db1a6db8",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 9
