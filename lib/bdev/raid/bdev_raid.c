@@ -749,6 +749,32 @@ static const struct spdk_bdev_fn_table g_raid_bdev_fn_table = {
 
 /*
  * brief:
+ * raid_bdev_config_cleanup function is used to free memory for one raid_bdev in configuration
+ * params:
+ * raid_bdev_config - pointer to raid_bdev_config structure
+ * returns:
+ * none
+ */
+void
+raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
+{
+	uint32_t i;
+
+	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
+	g_spdk_raid_config.total_raid_bdev--;
+
+	if (raid_cfg->base_bdev) {
+		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
+			free(raid_cfg->base_bdev[i].bdev_name);
+		}
+		free(raid_cfg->base_bdev);
+	}
+	free(raid_cfg->name);
+	free(raid_cfg);
+}
+
+/*
+ * brief:
  * raid_bdev_free is the raid bdev function table function pointer. This is
  * called on bdev free path
  * params:
@@ -760,21 +786,10 @@ static void
 raid_bdev_free(void)
 {
 	struct raid_bdev_config *raid_cfg, *tmp;
-	uint32_t i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_free\n");
 	TAILQ_FOREACH_SAFE(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link, tmp) {
-		TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
-		g_spdk_raid_config.total_raid_bdev--;
-
-		if (raid_cfg->base_bdev) {
-			for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-				free(raid_cfg->base_bdev[i].bdev_name);
-			}
-			free(raid_cfg->base_bdev);
-		}
-		free(raid_cfg->name);
-		free(raid_cfg);
+		raid_bdev_config_cleanup(raid_cfg);
 	}
 }
 
@@ -813,7 +828,6 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	const char *base_bdev_name;
 	uint32_t i, j;
 	struct raid_bdev_config *raid_bdev_config, *tmp;
-	int rc = -1;
 
 	raid_name = spdk_conf_section_get_val(conf_section, "Name");
 	if (raid_name == NULL) {
@@ -866,9 +880,9 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 
 	raid_bdev_config->base_bdev = calloc(num_base_bdevs, sizeof(*raid_bdev_config->base_bdev));
 	if (raid_bdev_config->base_bdev == NULL) {
+		raid_bdev_config_cleanup(raid_bdev_config);
 		SPDK_ERRLOG("unable to allocate memory\n");
-		rc = -ENOMEM;
-		goto error;
+		return -ENOMEM;
 	}
 
 	for (i = 0; true; i++) {
@@ -877,19 +891,19 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 			break;
 		}
 		if (i >= raid_bdev_config->num_base_bdevs) {
+			raid_bdev_config_cleanup(raid_bdev_config);
 			SPDK_ERRLOG("Number of devices mentioned is more than count\n");
-			rc = -1;
-			goto error;
+			return -1;
 		}
 
 		TAILQ_FOREACH(tmp, &g_spdk_raid_config.raid_bdev_config_head, link) {
 			for (j = 0; j < tmp->num_base_bdevs; j++) {
 				if (tmp->base_bdev[j].bdev_name != NULL) {
 					if (!strcmp(tmp->base_bdev[j].bdev_name, base_bdev_name)) {
+						raid_bdev_config_cleanup(raid_bdev_config);
 						SPDK_ERRLOG("duplicate base bdev name %s mentioned\n",
 							    base_bdev_name);
-						rc = -EEXIST;
-						goto error;
+						return -EEXIST;
 					}
 				}
 			}
@@ -897,32 +911,19 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 
 		raid_bdev_config->base_bdev[i].bdev_name = strdup(base_bdev_name);
 		if (raid_bdev_config->base_bdev[i].bdev_name == NULL) {
+			raid_bdev_config_cleanup(raid_bdev_config);
 			SPDK_ERRLOG("unable to allocate memory\n");
-			rc = -ENOMEM;
-			goto error;
+			return -ENOMEM;
 		}
 	}
 
 	if (i != raid_bdev_config->num_base_bdevs) {
+		raid_bdev_config_cleanup(raid_bdev_config);
 		SPDK_ERRLOG("Number of devices mentioned is less than count\n");
-		rc = -1;
-		goto error;
+		return -1;
 	}
 
 	return 0;
-
-error:
-	g_spdk_raid_config.total_raid_bdev--;
-	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_bdev_config, link);
-	if (raid_bdev_config->base_bdev) {
-		for (i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
-			free(raid_bdev_config->base_bdev[i].bdev_name);
-		}
-		free(raid_bdev_config->base_bdev);
-	}
-	free(raid_bdev_config->name);
-	free(raid_bdev_config);
-	return rc;
 }
 
 /*
