@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "2d944222_6562721a",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-25T08:24:28Z",
+      "side": 1,
+      "message": "Done. Thanks for your suggestions.",
+      "parentUuid": "a82caecc_15f40c27",
+      "revId": "bf1b85712841b29fb5211f495cb9bcb8dd64e50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed4c2296_db1a6db8",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 9
@@ -48,6 +66,30 @@
       "writtenOn": "2018-07-25T04:19:19Z",
       "side": 1,
       "message": "May change this label to done or ret",
+      "range": {
+        "startLine": 715,
+        "startChar": 7,
+        "endLine": 715,
+        "endChar": 12
+      },
+      "revId": "bf1b85712841b29fb5211f495cb9bcb8dd64e50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb4c0743_c3f6b180",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 715,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-07-25T08:24:28Z",
+      "side": 1,
+      "message": "Thank you for reviewing my patch. But I think we will go with Shuhei\u0027s comment.",
+      "parentUuid": "ed4c2296_db1a6db8",
       "range": {
         "startLine": 715,
         "startChar": 7,
