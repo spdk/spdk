@@ -818,6 +818,62 @@ raid_bdev_free(void)
 }
 
 /*
+ * brief
+ * raid_bdev_config_add function adds config for newly created raid bdev.
+ *
+ * params:
+ * raid_name - name for raid bdev.
+ * strip_size - strip size in KB
+ * num_base_bdevs - number of base bdevs.
+ * raid_level - raid level, only raid level 0 is supported.
+ * _raid_bdev_config - Pointer to newly added configuration
+ */
+int
+raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
+		     int raid_level, struct raid_bdev_config **_raid_bdev_config)
+{
+	struct raid_bdev_config *raid_cfg;
+
+	TAILQ_FOREACH(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link) {
+		if (!strcmp(raid_cfg->name, raid_name)) {
+			SPDK_ERRLOG("Duplicate raid bdev name found in config file %s\n",
+				    raid_name);
+			return -EEXIST;
+		}
+	}
+
+	raid_cfg = calloc(1, sizeof(*raid_cfg));
+	if (raid_cfg == NULL) {
+		SPDK_ERRLOG("unable to allocate memory\n");
+		return -ENOMEM;
+	}
+
+	raid_cfg->name = strdup(raid_name);
+	if (!raid_cfg->name) {
+		free(raid_cfg);
+		SPDK_ERRLOG("unable to allocate memory\n");
+		return -ENOMEM;
+	}
+	raid_cfg->strip_size = strip_size;
+	raid_cfg->num_base_bdevs = num_base_bdevs;
+	raid_cfg->raid_level = raid_level;
+
+	raid_cfg->base_bdev = calloc(num_base_bdevs, sizeof(*raid_cfg->base_bdev));
+	if (raid_cfg->base_bdev == NULL) {
+		free(raid_cfg->name);
+		free(raid_cfg);
+		SPDK_ERRLOG("unable to allocate memory\n");
+		return -ENOMEM;
+	}
+
+	TAILQ_INSERT_TAIL(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
+	g_spdk_raid_config.total_raid_bdev++;
+
+	*_raid_bdev_config = raid_cfg;
+	return 0;
+}
+
+/*
  * brief:
  * raid_bdev_parse_raid is used to parse the raid bdev from config file based on
  * pre-defined raid bdev format in config file.
@@ -852,6 +908,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	const char *base_bdev_name;
 	uint32_t i, j;
 	struct raid_bdev_config *raid_bdev_config, *tmp;
+	int rc;
 
 	raid_name = spdk_conf_section_get_val(conf_section, "Name");
 	if (raid_name == NULL) {
@@ -877,36 +934,11 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "%s %d %d %d\n", raid_name, strip_size, num_base_bdevs,
 		      raid_level);
 
-	TAILQ_FOREACH(tmp, &g_spdk_raid_config.raid_bdev_config_head, link) {
-		if (!strcmp(tmp->name, raid_name)) {
-			SPDK_ERRLOG("Duplicate raid bdev name found in config file %s\n", raid_name);
-			return -1;
-		}
-	}
-
-	raid_bdev_config = calloc(1, sizeof(*raid_bdev_config));
-	if (raid_bdev_config == NULL) {
-		SPDK_ERRLOG("unable to allocate memory\n");
-		return -ENOMEM;
-	}
-
-	raid_bdev_config->name = strdup(raid_name);
-	if (!raid_bdev_config->name) {
-		free(raid_bdev_config);
-		SPDK_ERRLOG("unable to allocate memory\n");
-		return -ENOMEM;
-	}
-	raid_bdev_config->strip_size = strip_size;
-	raid_bdev_config->num_base_bdevs = num_base_bdevs;
-	raid_bdev_config->raid_level = raid_level;
-	TAILQ_INSERT_TAIL(&g_spdk_raid_config.raid_bdev_config_head, raid_bdev_config, link);
-	g_spdk_raid_config.total_raid_bdev++;
-
-	raid_bdev_config->base_bdev = calloc(num_base_bdevs, sizeof(*raid_bdev_config->base_bdev));
-	if (raid_bdev_config->base_bdev == NULL) {
-		raid_bdev_config_cleanup(raid_bdev_config);
-		SPDK_ERRLOG("unable to allocate memory\n");
-		return -ENOMEM;
+	rc = raid_bdev_config_add(raid_name, strip_size, num_base_bdevs, raid_level,
+				  &raid_bdev_config);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to add raid bdev config\n");
+		return rc;
 	}
 
 	for (i = 0; true; i++) {
