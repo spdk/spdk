@@ -228,6 +228,8 @@ extern struct raid_config                   g_spdk_raid_config;
 
 void raid_bdev_remove_base_bdev(void *ctx);
 int raid_bdev_add_base_device(struct spdk_bdev *bdev);
+int raid_bdev_config_add(const char *raid_name, int stripe_size, int num_base_bdevs,
+			 int raid_level, struct raid_bdev_config **_raid_bdev_config);
 void raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg);
 
 #endif // SPDK_BDEV_RAID_INTERNAL_H
