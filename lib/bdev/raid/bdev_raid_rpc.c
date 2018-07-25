@@ -310,9 +310,9 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_raid_bdev req = {};
 	struct spdk_json_write_ctx     *w;
 	struct raid_bdev_ctxt          *raid_bdev_ctxt;
-	struct raid_base_bdev_config   *base_bdevs;
 	struct raid_bdev_config        *raid_bdev_config;
 	struct spdk_bdev               *base_bdev;
+	int			       rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_raid_bdev_decoders,
 				    SPDK_COUNTOF(rpc_construct_raid_bdev_decoders),
@@ -343,37 +343,14 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	base_bdevs = calloc(req.base_bdevs.num_base_bdevs, sizeof(struct raid_base_bdev_config));
-	if (base_bdevs == NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM));
+	rc = raid_bdev_config_add(req.name, req.stripe_size, req.base_bdevs.num_base_bdevs, req.raid_level,
+				  &raid_bdev_config);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
 		free_rpc_construct_raid_bdev(&req);
 		return;
 	}
 
-	/* Allocate the new raid bdev config entry */
-	raid_bdev_config = calloc(1, sizeof(*raid_bdev_config));
-	if (raid_bdev_config == NULL) {
-		free(base_bdevs);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM));
-		free_rpc_construct_raid_bdev(&req);
-		return;
-	}
-
-	raid_bdev_config->name = strdup(req.name);
-	if (raid_bdev_config->name == NULL) {
-		free(base_bdevs);
-		free(raid_bdev_config);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM));
-		free_rpc_construct_raid_bdev(&req);
-		return;
-	}
-
-	raid_bdev_config->stripe_size = req.stripe_size;
-	raid_bdev_config->num_base_bdevs = req.base_bdevs.num_base_bdevs;
-	raid_bdev_config->raid_level = req.raid_level;
-	TAILQ_INSERT_TAIL(&g_spdk_raid_config.raid_bdev_config_head, raid_bdev_config, link);
-	g_spdk_raid_config.total_raid_bdev++;
-	raid_bdev_config->base_bdev = base_bdevs;
 	for (size_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
 		raid_bdev_config->base_bdev[i].bdev_name = strdup(req.base_bdevs.base_bdevs[i]);
 		if (raid_bdev_config->base_bdev[i].bdev_name == NULL) {
