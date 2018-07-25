@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "202b1013_0db84db3",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1081,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T22:34:23Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nDo you think it would be OK if we just used period_us \u003d\u003d 0 to mean the default?  Usually a period of 0 means poll as often as possible, but I think for hotplug polling, that\u0027s not something you really want to do (and you can just select period_us \u003d 1 which is close enough).\n\nThen we don\u0027t need any of the int64 stuff and can just use uint64 across the board.\n\n-Jim",
+      "revId": "b325260ce0af186879f391e7c623c2bd10678ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8870978_215b4c74",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T22:34:23Z",
+      "side": 1,
+      "message": "then here if the value is \u003c\u003d 0, still set it to the default\n\nshould we still have the max value - both for config file and RPC?",
+      "revId": "b325260ce0af186879f391e7c623c2bd10678ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1fb544cf_6c113e80",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 24
@@ -42,6 +76,23 @@
         "endLine": 1764,
         "endChar": 74
       },
+      "revId": "b325260ce0af186879f391e7c623c2bd10678ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77618dab_a2c35cdd",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T22:34:23Z",
+      "side": 1,
+      "message": "Just curious - why change this from \"startup\" to \"global\"?\n\nWe explicitly use SPDK_RPC_STARTUP to define RPC methods that can be called before subsystems have started.  I kind of like using \"startup\" here for that reason.\n\nIt\u0027s not really clear to me exactly what \"global\" is supposed to mean.",
       "revId": "b325260ce0af186879f391e7c623c2bd10678ad0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
