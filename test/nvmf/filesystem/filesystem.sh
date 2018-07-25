@@ -87,6 +87,4 @@ for incapsule in 0 4096; do
 	killprocess $nvmfpid
 done
 
-rm -f /tmp/nvmf.conf
-
 timing_exit fs_test
