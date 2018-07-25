@@ -749,6 +749,32 @@ static const struct spdk_bdev_fn_table g_raid_bdev_fn_table = {
 
 /*
  * brief:
+ * raid_bdev_config_cleanup function is used to free memory for one raid_bdev in configuration
+ * params:
+ * raid_bdev_config - pointer to raid_bdev_config structure
+ * returns:
+ * none
+ */
+void
+raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
+{
+	uint32_t i;
+
+	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
+	g_spdk_raid_config.total_raid_bdev--;
+
+	if (raid_cfg->base_bdev) {
+		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
+			free(raid_cfg->base_bdev[i].bdev_name);
+		}
+		free(raid_cfg->base_bdev);
+	}
+	free(raid_cfg->name);
+	free(raid_cfg);
+}
+
+/*
+ * brief:
  * raid_bdev_free is the raid bdev function table function pointer. This is
  * called on bdev free path
  * params:
@@ -760,21 +786,10 @@ static void
 raid_bdev_free(void)
 {
 	struct raid_bdev_config *raid_cfg, *tmp;
-	uint32_t i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_free\n");
 	TAILQ_FOREACH_SAFE(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link, tmp) {
-		TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
-		g_spdk_raid_config.total_raid_bdev--;
-
-		if (raid_cfg->base_bdev) {
-			for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-				free(raid_cfg->base_bdev[i].bdev_name);
-			}
-			free(raid_cfg->base_bdev);
-		}
-		free(raid_cfg->name);
-		free(raid_cfg);
+		raid_bdev_config_cleanup(raid_cfg);
 	}
 }
 
@@ -912,16 +927,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	return 0;
 
 error:
-	g_spdk_raid_config.total_raid_bdev--;
-	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_bdev_config, link);
-	if (raid_bdev_config->base_bdev) {
-		for (i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
-			free(raid_bdev_config->base_bdev[i].bdev_name);
-		}
-		free(raid_bdev_config->base_bdev);
-	}
-	free(raid_bdev_config->name);
-	free(raid_bdev_config);
+	raid_bdev_config_cleanup(raid_bdev_config);
 	return rc;
 }
 
