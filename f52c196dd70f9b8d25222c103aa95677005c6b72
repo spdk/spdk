@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57c5fc53_28b312c7",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-25T07:49:24Z",
+      "side": 1,
+      "message": "this may not be must. because SPDK application exits.",
+      "range": {
+        "startLine": 26,
+        "startChar": 6,
+        "endLine": 26,
+        "endChar": 50
+      },
+      "revId": "f52c196dd70f9b8d25222c103aa95677005c6b72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "299900f1_7b026001",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-25T07:49:24Z",
+      "side": 1,
+      "message": "this may not be must.",
+      "revId": "f52c196dd70f9b8d25222c103aa95677005c6b72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
