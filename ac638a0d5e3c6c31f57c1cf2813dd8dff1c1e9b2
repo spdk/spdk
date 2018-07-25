@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86db260c_3d57aff7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1678,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T18:44:47Z",
+      "side": 1,
+      "message": "Rename current_io_time to io_time?  I think the \"current\" could be misleading (and might lead someone to ask why the weighted one isn\u0027t named current_weighted_io_time).",
+      "revId": "ac638a0d5e3c6c31f57c1cf2813dd8dff1c1e9b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35754298_59b6e23e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1700,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T18:44:47Z",
+      "side": 1,
+      "message": "Can you just do this here (when measured_queue_depth \u003e 0)\n\nbdev-\u003einternal.weighted_io_time +\u003d bdev-\u003einternal.period * bdev-\u003einternal.measured_queue_depth;\n\nThen I think you can just remove prev_io_time and simplify the rest of the code.",
+      "revId": "ac638a0d5e3c6c31f57c1cf2813dd8dff1c1e9b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffec22e7_ee6f6372",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-25T18:44:47Z",
+      "side": 1,
+      "message": "I think you can just remove \"processing\" from these.  Then it\u0027s consistent with the C API and the data member variables.  The RPC documentation can add further color on exactly what these mean.",
+      "revId": "ac638a0d5e3c6c31f57c1cf2813dd8dff1c1e9b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
