@@ -22,6 +22,30 @@
       "revId": "6bcbc3b7bcb3b0f29a6451e4e4d393817851ba6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88a65f0b_8f16375b",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-26T12:19:04Z",
+      "side": 1,
+      "message": "Hi Shuhei, thanks for reviewing! There\u0027s actually a naming convention here ut_\u003cname of function\u003e used for mocking so that the MOCK_SET and MOCK_GET functions can be used by passing the name of the function.  The mock library can\u0027t always be used to define functions because it\u0027s only for basic mocking and setting return codes, as is the case here but by using the same global var naming scheme we can use the macros I just mentioned.",
+      "parentUuid": "005fb385_9cf822a7",
+      "range": {
+        "startLine": 206,
+        "startChar": 5,
+        "endLine": 206,
+        "endChar": 24
+      },
+      "revId": "6bcbc3b7bcb3b0f29a6451e4e4d393817851ba6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
