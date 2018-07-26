@@ -103,6 +103,25 @@ struct bdev_iscsi_conn_req {
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
 };
 
+static void
+complete_conn_req(struct bdev_iscsi_conn_req *req, struct spdk_bdev *bdev,
+		  int status)
+{
+	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
+	req->create_cb(req->create_cb_arg, bdev, status);
+	if (status) {
+		/* if the request failed and no iscsi lun was
+		 * created then we could not hand over this
+		 * memory and have to free it manually now.
+		 */
+		iscsi_destroy_context(req->context);
+		free(req->initiator_iqn);
+		free(req->bdev_name);
+		free(req->url);
+	}
+	free(req);
+}
+
 static int
 bdev_iscsi_get_ctx_size(void)
 {
@@ -133,8 +152,7 @@ bdev_iscsi_finish(void)
 
 	while (!TAILQ_EMPTY(&g_iscsi_conn_req)) {
 		req = TAILQ_FIRST(&g_iscsi_conn_req);
-		TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
-		free(req);
+		complete_conn_req(req, NULL, -EINTR);
 	}
 
 	if (g_conn_poller) {
@@ -567,25 +585,6 @@ static const struct spdk_bdev_fn_table iscsi_fn_table = {
 	.dump_info_json		= bdev_iscsi_dump_info_json,
 	.write_config_json	= bdev_iscsi_write_config_json,
 };
-
-static void
-complete_conn_req(struct bdev_iscsi_conn_req *req, struct spdk_bdev *bdev,
-		  int status)
-{
-	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
-	req->create_cb(req->create_cb_arg, bdev, status);
-	if (status) {
-		/* if the request failed and no iscsi lun was
-		 * created then we could not hand over this
-		 * memory and have to free it manually now.
-		 */
-		iscsi_destroy_context(req->context);
-		free(req->initiator_iqn);
-		free(req->bdev_name);
-		free(req->url);
-	}
-	free(req);
-}
 
 static int
 create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, char *name,
