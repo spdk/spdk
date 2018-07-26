@@ -230,7 +230,6 @@ Example response:
     "set_iscsi_options",
     "set_bdev_options",
     "set_bdev_qos_limit_iops",
-    "delete_bdev",
     "get_bdevs_config",
     "get_bdevs",
     "get_bdevs_iostat",
@@ -583,39 +582,6 @@ Example response:
       "num_write_ops": 0
     }
   ]
-}
-~~~
-
-## delete_bdev {#rpc_delete_bdev}
-
-Unregister a block device.
-
-### Parameters
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-name                    | Required | string      | Block device name
-
-### Example
-
-Example request:
-~~~
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "delete_bdev",
-  "params": {
-    "name": "Malloc0"
-  }
-}
-~~~
-
-Example response:
-~~~
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
 }
 ~~~
 

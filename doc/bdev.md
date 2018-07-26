@@ -66,14 +66,6 @@ Example response
 }
 ~~~
 
-## delete_bdev {#bdev_ug_delete_bdev}
-
-To remove previously created bdev user can use `delete_bdev` RPC command.
-Bdev can be deleted at any time and this will be fully handled by any upper
-layers. As an argument user should provide bdev name. This RPC command
-should be used only for debugging purpose. To remove a particular bdev please
-use the delete command specific to its bdev module.
-
 # Malloc bdev {#bdev_config_malloc}
 
 Malloc bdevs are ramdisks. Because of its nature they are volatile. They are created from hugepage memory given to SPDK
