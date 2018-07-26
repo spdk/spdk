@@ -898,6 +898,7 @@ _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 
 	subsystem->ns[nsid - 1] = NULL;
 
+	spdk_bdev_module_release_bdev(ns->bdev);
 	spdk_bdev_close(ns->desc);
 	free(ns);
 
@@ -970,6 +971,11 @@ spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
 	/* All current fields are set to 0 by default. */
 	memset(opts, 0, opts_size);
 }
+
+/* Dummy bdev module used to to claim bdevs. */
+static struct spdk_bdev_module ns_bdev_module = {
+	.name	= "NVMe-oF Target",
+};
 
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
@@ -1057,6 +1063,11 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
+		free(ns);
+		return 0;
+	}
+	rc = spdk_bdev_module_claim_bdev(bdev, ns->desc, &ns_bdev_module);
+	if (rc != 0) {
 		free(ns);
 		return 0;
 	}
