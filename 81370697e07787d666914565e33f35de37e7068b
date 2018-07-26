@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "979ae1ed_c93aa8aa",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-26T22:37:31Z",
+      "side": 1,
+      "message": "I think the code is more composable and flexible if instead these functions take a callback and an argument, rather than a channel iterator. It\u0027s a little more annoying to implement, and there will be one extra layer of functions in the code that is iterating each channel, but it keeps the iteration separate from the code that modifies the poll group.",
+      "revId": "81370697e07787d666914565e33f35de37e7068b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
