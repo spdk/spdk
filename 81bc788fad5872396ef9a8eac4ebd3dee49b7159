@@ -33,6 +33,24 @@
       "revId": "81bc788fad5872396ef9a8eac4ebd3dee49b7159",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0000fd44_7476837f",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-26T00:28:16Z",
+      "side": 1,
+      "message": "SQ/CQ doorbells start from BAR0 0x1000, we only need to get the doorbell from BAR0 space fro I/O processing.",
+      "parentUuid": "89ca644f_f49340c3",
+      "revId": "81bc788fad5872396ef9a8eac4ebd3dee49b7159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
