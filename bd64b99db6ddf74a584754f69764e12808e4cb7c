@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c88969cf_7ccca66b",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 930,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-26T00:59:18Z",
+      "side": 1,
+      "message": "I change the code to remove goto and inline raid_bdev_config_cleanup.",
+      "range": {
+        "startLine": 930,
+        "startChar": 1,
+        "endLine": 930,
+        "endChar": 25
+      },
+      "revId": "bd64b99db6ddf74a584754f69764e12808e4cb7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
