@@ -60,7 +60,6 @@ struct bdev_iscsi_lun;
 #define DEFAULT_INITIATOR_NAME "iqn.2016-06.io.spdk:init"
 
 static int bdev_iscsi_initialize(void);
-static TAILQ_HEAD(, bdev_iscsi_lun) g_iscsi_lun_head = TAILQ_HEAD_INITIALIZER(g_iscsi_lun_head);
 static TAILQ_HEAD(, bdev_iscsi_conn_req) g_iscsi_conn_req = TAILQ_HEAD_INITIALIZER(
 			g_iscsi_conn_req);
 static struct spdk_poller *g_conn_poller = NULL;
@@ -86,7 +85,6 @@ struct bdev_iscsi_lun {
 	struct spdk_poller		*no_master_ch_poller;
 	struct spdk_thread		*no_master_ch_poller_td;
 	bool				unmap_supported;
-	TAILQ_ENTRY(bdev_iscsi_lun)	link;
 };
 
 struct bdev_iscsi_io_channel {
@@ -123,7 +121,6 @@ static void iscsi_free_lun(struct bdev_iscsi_lun *lun)
 static void
 bdev_iscsi_lun_cleanup(struct bdev_iscsi_lun *lun)
 {
-	TAILQ_REMOVE(&g_iscsi_lun_head, lun, link);
 	iscsi_destroy_context(lun->context);
 	iscsi_free_lun(lun);
 }
@@ -620,7 +617,6 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, 
 	lun->no_master_ch_poller = spdk_poller_register(bdev_iscsi_no_master_ch_poll, lun,
 				   BDEV_ISCSI_NO_MASTER_CH_POLL_US);
 
-	TAILQ_INSERT_TAIL(&g_iscsi_lun_head, lun, link);
 	*bdev = &lun->bdev;
 	return 0;
 
