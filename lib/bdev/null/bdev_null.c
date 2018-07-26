@@ -66,6 +66,7 @@ static struct spdk_bdev_module null_if = {
 	.module_init = bdev_null_initialize,
 	.module_fini = bdev_null_finish,
 	.config_text = bdev_null_get_spdk_running_config,
+	.async_fini = true,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&null_if)
@@ -351,13 +352,16 @@ end:
 }
 
 static void
+_bdev_null_finish_cb(void *arg)
+{
+	spdk_dma_free(g_null_read_buf);
+	spdk_bdev_module_finish_done();
+}
+
+static void
 bdev_null_finish(void)
 {
-	struct null_bdev *bdev, *tmp;
-
-	TAILQ_FOREACH_SAFE(bdev, &g_null_bdev_head, tailq, tmp) {
-		spdk_bdev_unregister(&bdev->bdev, NULL, NULL);
-	}
+	spdk_io_device_unregister(&g_null_bdev_head, _bdev_null_finish_cb);
 }
 
 static void
