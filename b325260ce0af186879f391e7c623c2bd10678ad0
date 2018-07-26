@@ -96,6 +96,24 @@
       "revId": "b325260ce0af186879f391e7c623c2bd10678ad0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc1c8c27_c9cbc3e4",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T10:34:58Z",
+      "side": 1,
+      "message": "Because set_bdev_nvme_hotplug is not an startup command so this list is not containing only startup commands anymore.",
+      "parentUuid": "77618dab_a2c35cdd",
+      "revId": "b325260ce0af186879f391e7c623c2bd10678ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
