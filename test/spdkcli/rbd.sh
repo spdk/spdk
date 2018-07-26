@@ -2,6 +2,7 @@
 set -xe
 
 MATCH_FILE="spdkcli_rbd.test"
+SPDKCLI_BRANCH="/bdevs/rbd"
 testdir=$(readlink -f $(dirname $0))
 . $testdir/common.sh
 
