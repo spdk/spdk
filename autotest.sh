@@ -151,6 +151,7 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter vhost_json_config
 	run_test ./test/vhost/json_config/json_config.sh
 	timing_exit vhost_json_config
+	run_test ./test/config_converter/test_converter.sh
 
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		timing_enter integrity_blk
@@ -224,6 +225,7 @@ if [ $SPDK_TEST_PMDK -eq 1 ]; then
 	run_test ./test/pmem/pmem.sh -x
 	run_test ./test/pmem/json_config/json_config.sh
 	run_test ./test/spdkcli/pmem.sh
+	run_test ./test/config_converter/test_converter.sh
 fi
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
