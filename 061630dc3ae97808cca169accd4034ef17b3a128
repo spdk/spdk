@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "787fbcba_7e1f7e9c",
+        "filename": "autotest.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-26T22:06:23Z",
+      "side": 1,
+      "message": "Doesn\u0027t feel good for me.\nvhost initiator tests are already take quite long and adding another full test with starting vhost and VMs in my opinion will make it too long for per-patch testing.\n\nCan we perhaps run this test once as per-patch to confirm all is OK but merge as nightly? Would need other opinions on that. Jim, Darek?",
+      "range": {
+        "startLine": 209,
+        "startChar": 0,
+        "endLine": 209,
+        "endChar": 45
+      },
+      "revId": "061630dc3ae97808cca169accd4034ef17b3a128",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "757fa9ee_e4ccf6f3",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-26T22:06:23Z",
+      "side": 1,
+      "message": "I think all these steps should be done before \"run_fio\" on line 205 as a \"set up\" let\u0027s say, and here just run FIO plugin.",
+      "range": {
+        "startLine": 209,
+        "startChar": 1,
+        "endLine": 217,
+        "endChar": 5
+      },
+      "revId": "061630dc3ae97808cca169accd4034ef17b3a128",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcaecbc0_50d8469b",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-26T22:06:23Z",
+      "side": 1,
+      "message": "Path way too long. Can we shorten that?",
+      "range": {
+        "startLine": 218,
+        "startChar": 1,
+        "endLine": 218,
+        "endChar": 92
+      },
+      "revId": "061630dc3ae97808cca169accd4034ef17b3a128",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b3970f4_dc26d0ca",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-26T22:06:23Z",
+      "side": 1,
+      "message": "use tabs",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 16
+      },
+      "revId": "061630dc3ae97808cca169accd4034ef17b3a128",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
