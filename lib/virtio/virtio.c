@@ -548,11 +548,11 @@ virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt
 
 	vq->req_end = prev_head;
 	vq->vq_desc_head_idx = new_head;
+	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - iovcnt);
 	if (vq->vq_desc_head_idx == VQ_RING_DESC_CHAIN_END) {
 		assert(vq->vq_free_cnt == 0);
 		vq->vq_desc_tail_idx = VQ_RING_DESC_CHAIN_END;
 	}
-	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - iovcnt);
 }
 
 #define DESC_PER_CACHELINE (RTE_CACHE_LINE_SIZE / sizeof(struct vring_desc))
