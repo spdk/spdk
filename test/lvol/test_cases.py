@@ -638,7 +638,7 @@ class TestCases(object):
             fail_count += 1
         traddr = self._find_traddress_for_nvme("Nvme0")
         if traddr != -1:
-            self.c.delete_bdev("Nvme0n1")
+            self.c.delete_nvme_controller("Nvme0")
             self.c.construct_nvme_bdev("Nvme0", "PCIe", traddr)
             # wait 1 second to allow time for lvolstore tasting
             sleep(1)
@@ -1507,7 +1507,7 @@ class TestCases(object):
         traddr = self._find_traddress_for_nvme("Nvme0")
         if traddr != -1:
             # delete NVMe bdev
-            self.c.delete_bdev("Nvme0n1")
+            self.c.delete_nvme_controller("Nvme0")
             # add NVMe bdev
             self.c.construct_nvme_bdev("Nvme0", "PCIe", traddr)
             # wait 1 second to allow time for lvolstore tasting
