@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "21b49117_9ff194b7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 27
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-26T15:33:01Z",
+      "side": 1,
+      "message": "I think this line is a little confusing as written. I know we don\u0027t typically include hard coded values in the docs, but since you already have the max value coded, maybe take out the reset part and indicate that the period will default to 1000000 us. Jim may have different opinions about that though.",
+      "revId": "48b6228a987285abc02d94d80494e34e51e7a5a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
