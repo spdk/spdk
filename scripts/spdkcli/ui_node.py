@@ -62,16 +62,6 @@ class UIBdevs(UINode):
         UIVirtioBlkBdev(self)
         UIVirtioScsiBdev(self)
 
-    def ui_command_delete(self, name):
-        """
-        Deletes bdev from configuration.
-
-        Arguments:
-        name - Is a unique identifier of the bdev to be deleted - UUID number or name alias.
-        """
-        self.get_root().delete_bdev(name=name)
-        self.refresh()
-
 
 class UILvolStores(UINode):
     def __init__(self, parent):
@@ -132,21 +122,6 @@ class UIBdev(UINode):
         self._children = set([])
         for bdev in self.get_root().get_bdevs(self.name):
             UIBdevObj(bdev, self)
-
-    def ui_command_delete(self, name):
-        """
-        Deletes bdev from configuration.
-
-        Arguments:
-        name - Is a unique identifier of the bdev to be deleted - UUID number or name alias.
-        """
-        try:
-            self.get_root().delete_bdev(name=name)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-
-        self.get_root().refresh()
-        self.refresh()
 
     def ui_command_get_bdev_iostat(self, name=None):
         try:
