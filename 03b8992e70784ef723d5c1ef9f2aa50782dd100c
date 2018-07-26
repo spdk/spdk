@@ -16,6 +16,24 @@
       "revId": "03b8992e70784ef723d5c1ef9f2aa50782dd100c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad94b23b_9e8fa090",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1255,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-26T11:33:13Z",
+      "side": 1,
+      "message": "yes, that\u0027s right.\nThank you for this notice, Jim",
+      "parentUuid": "bfbc0edf_e203a73e",
+      "revId": "03b8992e70784ef723d5c1ef9f2aa50782dd100c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
