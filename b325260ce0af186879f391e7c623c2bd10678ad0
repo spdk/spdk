@@ -180,6 +180,24 @@
       "revId": "b325260ce0af186879f391e7c623c2bd10678ad0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b7bd09f_f2e484fc",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-26T18:06:29Z",
+      "side": 1,
+      "message": "OK - sounds good.",
+      "parentUuid": "cc1c8c27_c9cbc3e4",
+      "revId": "b325260ce0af186879f391e7c623c2bd10678ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

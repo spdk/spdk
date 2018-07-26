@@ -16,6 +16,23 @@
       "revId": "48b6228a987285abc02d94d80494e34e51e7a5a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01e5ea40_fae90357",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-26T18:06:29Z",
+      "side": 1,
+      "message": "Set 0 to reset to default.",
+      "revId": "48b6228a987285abc02d94d80494e34e51e7a5a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
