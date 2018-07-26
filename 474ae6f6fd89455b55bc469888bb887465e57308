@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c326202f_cc5d9f66",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 971,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-26T22:55:11Z",
+      "side": 1,
+      "message": "We need to be filling out at least the name here. It doesn\u0027t happen today, but at some point we may want to print out some information about which module has a claim on the bdev and we\u0027d certainly access the name while printing.\n\nYou may also want to expand the comment to say that only bdev modules can claim bdevs, so you\u0027re making a dummy one.",
+      "revId": "474ae6f6fd89455b55bc469888bb887465e57308",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
