@@ -217,6 +217,7 @@ if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 	run_test ./test/vhost/initiator/blockdev.sh
 	run_test ./test/vhost/initiator/json_config.sh
 	run_test ./test/spdkcli/virtio.sh
+	run_test ./test/config_converter/test_converter.sh
 	report_test_completion "vhost_initiator"
 fi
 
