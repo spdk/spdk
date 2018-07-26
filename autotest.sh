@@ -102,6 +102,10 @@ if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 	fi
 fi
 
+if [ $SPDK_TEST_JSON -eq 1 ]; then
+	run_test suite test/config_converter/test_converter.sh
+fi
+
 if [ $SPDK_TEST_EVENT -eq 1 ]; then
 	run_test suite test/event/event.sh
 fi
