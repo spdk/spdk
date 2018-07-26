@@ -1,0 +1,343 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0555db57_52ad3537",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "why include if you don\u0027t implement RPC?",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 21
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa86c595_41f3a1f3",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "You don\u0027t need dimention if it is explicitly initilized.",
+      "range": {
+        "startLine": 64,
+        "startChar": 27,
+        "endLine": 64,
+        "endChar": 44
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "475e7c25_a662964e",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "static const?",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 5
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9474242b_cf4b1ae6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "Those settings introduce significant memory footprint. I think those should be configurable via config file and RPC.",
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d1fc00b_301c2e6f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "NUM_SESSIONS ?",
+      "range": {
+        "startLine": 80,
+        "startChar": 20,
+        "endLine": 80,
+        "endChar": 24
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7dc92b53_b3a7feba",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be some kind of offsetof()?",
+      "range": {
+        "startLine": 89,
+        "startChar": 29,
+        "endLine": 90,
+        "endChar": 37
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0b9664e_6b6741bc",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "This can be moved at the end of this file so most of above forward declarations won\u0027t be needed.",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 37
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01e3935a_c0a14e29",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "static?",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 150,
+        "endChar": 81
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e8747ae_61b5cc43",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "else ? some comment?",
+      "range": {
+        "startLine": 361,
+        "startChar": 1,
+        "endLine": 361,
+        "endChar": 2
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40be5a56_3edebf68",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "quite unused? can you change this function (sed \u0027s/crypto_ch-\u003ecrypto_ops[crypto_index]-\u003e/op-\u003e/g\u0027)",
+      "range": {
+        "startLine": 600,
+        "startChar": 2,
+        "endLine": 600,
+        "endChar": 4
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01d5cb61_1aeebdf5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 702,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "I don\u0027t think this should be blocking. If there is no space you should put this operation on wait queue so you can pick it up later.",
+      "range": {
+        "startLine": 683,
+        "startChar": 0,
+        "endLine": 702,
+        "endChar": 32
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d588b089_bfd0ff21",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "Just free thought - is the unmap in SPDK not weaker than BLKSECDISCARD ?",
+      "range": {
+        "startLine": 797,
+        "startChar": 7,
+        "endLine": 797,
+        "endChar": 29
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c85a9cb_e9362f70",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "you don\u0027t support it explicitly so no need to put this case here.",
+      "range": {
+        "startLine": 812,
+        "startChar": 1,
+        "endLine": 812,
+        "endChar": 37
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e194fbe_3158719e",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 1302,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "I know I already pointed this in the past but it just look terrible to see these copy-paste all over this file. It would be much more readable and smaller if you would implement common fail label and just use \u0027goto\u0027 there or implement and use destructors for crypto nodes.\n\nYou will also need vbdev_crypto constructors and destructors for RPC.",
+      "range": {
+        "startLine": 1297,
+        "startChar": 0,
+        "endLine": 1302,
+        "endChar": 21
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f83b6186_749377f1",
+        "filename": "test/bdev/bdev.conf.in",
+        "patchSetId": 57
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T21:09:15Z",
+      "side": 1,
+      "message": "Can\u0027t see RPC methods. Will add them?",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 56
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
