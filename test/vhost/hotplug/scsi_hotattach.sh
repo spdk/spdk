@@ -94,6 +94,7 @@ function cleanup_after_tests() {
     $rpc_py remove_vhost_scsi_target naa.Nvme0n1p0.0 1
     $rpc_py remove_vhost_scsi_target naa.Nvme0n1p1.0 0
     $rpc_py remove_vhost_scsi_target naa.Nvme0n1p2.1 0
+    $rpc_py delete_nvme_controller Nvme0
 }
 
 hotattach_tc1

@@ -42,7 +42,7 @@ function scsi_hotremove_tc1() {
     traddr=""
     get_traddr "Nvme0"
     # 1. Run the command to hot remove NVMe disk.
-    delete_nvme "Nvme0n1"
+    delete_nvme "Nvme0"
     # 2. If vhost had crashed then tests would stop running
     sleep 1
     add_nvme "HotInNvme0" "$traddr"
@@ -73,7 +73,7 @@ function scsi_hotremove_tc2() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove NVMe disk.
-    delete_nvme "HotInNvme0n1"
+    delete_nvme "HotInNvme0"
 
     # 5. Check that fio job run on hot-remove device stopped on VM.
     #    Expected: Fio should return error message and return code != 0.
@@ -116,7 +116,7 @@ function scsi_hotremove_tc3() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove NVMe disk.
-    delete_nvme "HotInNvme1n1"
+    delete_nvme "HotInNvme1"
     # 5. Check that fio job run on hot-remove device stopped on first VM.
     #    Expected: Fio should return error message and return code != 0.
     wait_for_finish $last_pid || retcode=$?
@@ -167,7 +167,7 @@ function scsi_hotremove_tc4() {
     # 5. Run the command to hot remove NVMe disk.
     traddr=""
     get_traddr "Nvme0"
-    delete_nvme "HotInNvme2n1"
+    delete_nvme "HotInNvme2"
     # 6. Check that fio job run on hot-removed devices stopped.
     #    Expected: Fio should return error message and return code != 0.
     local retcode_vm0=0

@@ -90,5 +90,8 @@ notice "Shutting down virtual machine..."
 vm_shutdown_all
 
 clean_lvol_cfg
+
+$rpc_py delete_nvme_controller Nvme0
+
 notice "Shutting down SPDK vhost app..."
 spdk_vhost_kill

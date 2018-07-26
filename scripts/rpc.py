@@ -243,6 +243,16 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_nvme_bdev)
 
     @call_cmd
+    def delete_nvme_controller(args):
+        rpc.bdev.delete_nvme_controller(args.client,
+                                        name=args.name)
+
+    p = subparsers.add_parser('delete_nvme_controller',
+                              help='Delete a NVMe controller using controller name')
+    p.add_argument('name', help="Name of the controller")
+    p.set_defaults(func=delete_nvme_controller)
+
+    @call_cmd
     def construct_rbd_bdev(args):
         print(rpc.bdev.construct_rbd_bdev(args.client,
                                           name=args.name,
