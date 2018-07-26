@@ -771,6 +771,24 @@ nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
+static struct nvme_ctrlr *
+nvme_ctrlr_get_by_name(const char *name)
+{
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	if (name == NULL) {
+		return NULL;
+	}
+
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (strcmp(name, nvme_ctrlr->name) == 0) {
+			return nvme_ctrlr;
+		}
+	}
+
+	return NULL;
+}
+
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
@@ -1087,6 +1105,25 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	*count = j;
 
 	free(probe_ctx);
+	return 0;
+}
+
+int
+spdk_bdev_nvme_delete(const char *name)
+{
+	struct nvme_ctrlr *nvme_ctrlr = NULL;
+
+	if (name == NULL) {
+		return -EINVAL;
+	}
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name(name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("Failed to find NVMe controller\n");
+		return -ENODEV;
+	}
+
+	remove_cb(NULL, nvme_ctrlr->ctrlr);
 	return 0;
 }
 
