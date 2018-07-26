@@ -2258,12 +2258,16 @@ __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t len
 	struct cache_buffer *buf;
 	int rc;
 
-	buf = spdk_tree_find_filled_buffer(file->tree, offset);
+	buf = spdk_tree_find_buffer(file->tree, offset);
 	if (buf == NULL) {
 		pthread_spin_unlock(&file->lock);
 		rc = __send_rw_from_file(file, sem, payload, offset, length, true);
 		pthread_spin_lock(&file->lock);
 		return rc;
+	} else {
+		/* check whether the buf is in process*/
+		while (buf->in_progress);
+		assert(buf->bytes_filled > 0);
 	}
 
 	if ((offset + length) > (buf->offset + buf->bytes_filled)) {
