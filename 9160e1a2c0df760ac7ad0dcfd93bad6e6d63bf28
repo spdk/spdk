@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ab9d3f0_5680d1b6",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T12:51:46Z",
+      "side": 1,
+      "message": "shouldn\u0027t be optional",
+      "range": {
+        "startLine": 174,
+        "startChar": 75,
+        "endLine": 174,
+        "endChar": 79
+      },
+      "revId": "9160e1a2c0df760ac7ad0dcfd93bad6e6d63bf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6e8d90a_eba8acab",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 30
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T12:51:46Z",
+      "side": 1,
+      "message": "shouldn\u0027t be optional",
+      "range": {
+        "startLine": 180,
+        "startChar": 39,
+        "endLine": 180,
+        "endChar": 44
+      },
+      "revId": "9160e1a2c0df760ac7ad0dcfd93bad6e6d63bf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "898768d7_d4e3858c",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 30
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T12:51:46Z",
+      "side": 1,
+      "message": "shouldn\u0027t be optional",
+      "range": {
+        "startLine": 189,
+        "startChar": 0,
+        "endLine": 190,
+        "endChar": 29
+      },
+      "revId": "9160e1a2c0df760ac7ad0dcfd93bad6e6d63bf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41c3189b_39e55922",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-07-26T12:51:46Z",
+      "side": 1,
+      "message": "indent missing",
+      "revId": "9160e1a2c0df760ac7ad0dcfd93bad6e6d63bf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
