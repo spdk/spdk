@@ -101,6 +101,11 @@ class UIRoot(UINode):
         return response
 
     @verbose
+    def destroy_lvol_bdev(self, **kwargs):
+        response = rpc.lvol.destroy_lvol_bdev(self.client, **kwargs)
+        return response
+
+    @verbose
     def create_nvme_bdev(self, **kwargs):
         response = rpc.bdev.construct_nvme_bdev(self.client, **kwargs)
         return response
@@ -151,8 +156,18 @@ class UIRoot(UINode):
         return response
 
     @verbose
+    def delete_pmem_bdev(self, **kwargs):
+        response = rpc.bdev.delete_pmem_bdev(self.client, **kwargs)
+        return response
+
+    @verbose
     def create_rbd_bdev(self, **kwargs):
         response = rpc.bdev.construct_rbd_bdev(self.client, **kwargs)
+        return response
+
+    @verbose
+    def delete_rbd_bdev(self, **kwargs):
+        response = rpc.bdev.delete_rbd_bdev(self.client, **kwargs)
         return response
 
     @verbose

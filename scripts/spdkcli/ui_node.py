@@ -273,6 +273,20 @@ class UIAIOBdev(UIBdev):
         self.get_root().refresh()
         self.refresh()
 
+    def ui_command_delete(self, name):
+        """
+        Deletes aio bdev from configuration.
+
+        Arguments:
+        name - Is a unique identifier of the aio bdev to be deleted - UUID number or name alias.
+        """
+        try:
+            self.get_root().delete_aio_bdev(name=name)
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
+        self.get_root().refresh()
+        self.refresh()
+
 
 class UILvolBdev(UIBdev):
     def __init__(self, parent):
@@ -310,6 +324,20 @@ class UILvolBdev(UIBdev):
         except JSONRPCException as e:
             self.shell.log.error(e.message)
 
+        self.get_root().refresh()
+        self.refresh()
+
+    def ui_command_delete(self, name):
+        """
+        Deletes lvol bdev from configuration.
+
+        Arguments:
+        name - Is a unique identifier of the lvol bdev to be deleted - UUID number or name alias.
+        """
+        try:
+            self.get_root().destroy_lvol_bdev(name=name)
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
         self.get_root().refresh()
         self.refresh()
 
@@ -368,6 +396,20 @@ class UINullBdev(UIBdev):
         self.get_root().refresh()
         self.refresh()
 
+    def ui_command_delete(self, name):
+        """
+        Deletes null bdev from configuration.
+
+        Arguments:
+        name - Is a unique identifier of the null bdev to be deleted - UUID number or name alias.
+        """
+        try:
+            self.get_root().delete_null_bdev(name=name)
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
+        self.get_root().refresh()
+        self.refresh()
+
 
 class UIErrorBdev(UIBdev):
     def __init__(self, parent):
@@ -386,6 +428,20 @@ class UIErrorBdev(UIBdev):
         except JSONRPCException as e:
             self.shell.log.error(e.message)
 
+        self.get_root().refresh()
+        self.refresh()
+
+    def ui_command_delete(self, name):
+        """
+        Deletes error bdev from configuration.
+
+        Arguments:
+        name - Is a unique identifier of the error bdev to be deleted - UUID number or name alias.
+        """
+        try:
+            self.get_root().delete_error_bdev(name=name)
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
         self.get_root().refresh()
         self.refresh()
 
@@ -435,6 +491,20 @@ class UIPmemBdev(UIBdev):
         self.get_root().refresh()
         self.refresh()
 
+    def ui_command_delete(self, name):
+        """
+        Deletes pmem bdev from configuration.
+
+        Arguments:
+        name - Is a unique identifier of the pmem bdev to be deleted - UUID number or name alias.
+        """
+        try:
+            self.get_root().delete_pmem_bdev(name=name)
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
+        self.get_root().refresh()
+        self.refresh()
+
 
 class UIRbdBdev(UIBdev):
     def __init__(self, parent):
@@ -452,6 +522,20 @@ class UIRbdBdev(UIBdev):
         except JSONRPCException as e:
             self.shell.log.error(e.message)
 
+        self.get_root().refresh()
+        self.refresh()
+
+    def ui_command_delete(self, name):
+        """
+        Deletes rbd bdev from configuration.
+
+        Arguments:
+        name - Is a unique identifier of the rbd bdev to be deleted - UUID number or name alias.
+        """
+        try:
+            self.get_root().delete_rbd_bdev(name=name)
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
         self.get_root().refresh()
         self.refresh()
 
