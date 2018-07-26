@@ -34,10 +34,19 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
+#include "spdk_internal/mock.h"
 
 #include "nvmf/subsystem.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
+
+DEFINE_STUB(spdk_bdev_module_claim_bdev,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+	     struct spdk_bdev_module *module), 0);
+
+DEFINE_STUB_V(spdk_bdev_module_release_bdev,
+	      (struct spdk_bdev *bdev));
 
 static void
 _subsystem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
