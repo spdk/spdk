@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81a145fb_ce8e7a4f",
+        "filename": "test/nvmf/nmic/nmic.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-07-26T22:48:06Z",
+      "side": 1,
+      "message": "Do we need to exit the error checking option?\nIf we leave -e enabled then theres no need to manually check  result in lines 41-49",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 6
+      },
+      "revId": "70a466514e53765fb7327ac993933ff4925c0135",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
