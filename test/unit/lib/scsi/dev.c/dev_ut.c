@@ -558,6 +558,8 @@ dev_add_lun_bdev_not_found(void)
 	rc = spdk_scsi_dev_add_lun(&dev, "malloc2", -1, NULL, NULL);
 
 	CU_ASSERT_NOT_EQUAL(rc, 0);
+
+	spdk_scsi_dev_destruct(&dev);
 }
 
 static void
@@ -575,6 +577,12 @@ dev_add_lun_no_free_lun_id(void)
 	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", -1, NULL, NULL);
 
 	CU_ASSERT_NOT_EQUAL(rc, 0);
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		dev.lun[i] = NULL;
+	}
+
+	spdk_scsi_dev_destruct(&dev);
 }
 
 static void

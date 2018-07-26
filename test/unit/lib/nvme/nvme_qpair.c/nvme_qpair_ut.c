@@ -362,7 +362,7 @@ test_nvme_qpair_add_cmd_error_injection(void)
 	/* Remove cmd error injection */
 	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ);
 
-	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&qpair.err_cmd_head));
 
 	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair,
 			SPDK_NVME_OPC_COMPARE, true, 0, 5,

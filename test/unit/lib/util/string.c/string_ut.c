@@ -142,7 +142,7 @@ test_parse_capacity(void)
 	char str[128];
 	uint64_t cap;
 	int rc;
-	bool has_prefix;
+	bool has_prefix = true;
 
 	rc = spdk_parse_capacity("472", &cap, &has_prefix);
 	CU_ASSERT(rc == 0);

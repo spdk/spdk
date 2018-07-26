@@ -44,6 +44,10 @@ struct spdk_scsi_globals g_spdk_scsi;
 
 static uint64_t g_test_bdev_num_blocks;
 
+/* Mock out spdk_bdev_desc to silence scan-build warnings */
+struct spdk_bdev_desc {
+};
+
 TAILQ_HEAD(, spdk_bdev_io) g_bdev_io_queue;
 int g_scsi_cb_called = 0;
 
@@ -833,6 +837,7 @@ static void
 _xfer_test(bool bdev_io_pool_full)
 {
 	struct spdk_bdev bdev;
+	struct spdk_bdev_desc desc;
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_task task;
 	uint8_t cdb[16];
@@ -840,6 +845,7 @@ _xfer_test(bool bdev_io_pool_full)
 	int rc;
 
 	lun.bdev = &bdev;
+	lun.bdev_desc = &desc;
 
 	/* Test block device size of 512 MiB */
 	g_test_bdev_num_blocks = 512 * 1024 * 1024;
