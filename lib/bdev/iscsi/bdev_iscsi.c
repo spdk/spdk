@@ -166,7 +166,6 @@ static struct spdk_bdev_module g_iscsi_bdev_module = {
 	.module_fini	= bdev_iscsi_finish,
 	.get_ctx_size	= bdev_iscsi_get_ctx_size,
 	.async_init	= true,
-	.async_fini	= true,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&g_iscsi_bdev_module);
