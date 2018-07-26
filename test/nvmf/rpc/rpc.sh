@@ -78,7 +78,6 @@ do
 	for bdev in $bdevs; do
 		let j=j+1
 		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$j '' '' -s SPDK00000000000001
-		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j $bdev -n 10
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j $bdev -n 5
 		$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode$j
 		nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode$j -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
@@ -93,7 +92,6 @@ do
 	j=0
 	for bdev in $bdevs; do
 		let j=j+1
-		$rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode$j 10
 		$rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode$j 5
 	done
 
