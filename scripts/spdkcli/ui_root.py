@@ -101,8 +101,18 @@ class UIRoot(UINode):
         return response
 
     @verbose
+    def destroy_lvol_bdev(self, **kwargs):
+        response = rpc.lvol.destroy_lvol_bdev(self.client, **kwargs)
+        return response
+
+    @verbose
     def create_nvme_bdev(self, **kwargs):
         response = rpc.bdev.construct_nvme_bdev(self.client, **kwargs)
+        return response
+
+    @verbose
+    def delete_nvme_bdev(self, **kwargs):
+        response = rpc.bdev.delete_nvme_bdev(self.client, **kwargs)
         return response
 
     @verbose
@@ -155,8 +165,18 @@ class UIRoot(UINode):
         return response
 
     @verbose
+    def delete_pmem_bdev(self, **kwargs):
+        response = rpc.bdev.delete_pmem_bdev(self.client, **kwargs)
+        return response
+
+    @verbose
     def create_rbd_bdev(self, **kwargs):
         response = rpc.bdev.construct_rbd_bdev(self.client, **kwargs)
+        return response
+
+    @verbose
+    def delete_rbd_bdev(self, **kwargs):
+        response = rpc.bdev.delete_rbd_bdev(self.client, **kwargs)
         return response
 
     @verbose
@@ -165,8 +185,8 @@ class UIRoot(UINode):
         return self.print_array(response)
 
     @verbose
-    def remove_virtio_scsi_bdev(self, **kwargs):
-        response = rpc.vhost.remove_virtio_scsi_bdev(self.client, **kwargs)
+    def remove_virtio_bdev(self, **kwargs):
+        response = rpc.vhost.remove_virtio_bdev(self.client, **kwargs)
         return response
 
     def get_virtio_scsi_devs(self):
