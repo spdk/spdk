@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b00c7680_b9728441",
+        "filename": "lib/virtio/virtio_user/vhost_user.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-26T22:40:16Z",
+      "side": 1,
+      "message": "EBUSY, unlike EAGAIN, can\u0027t be technically returned from recv. I wanted to have a way to differentiate between those. Practically, we will never receive either of those errnos since recv should block until it\u0027s done.\n\nI really don\u0027t know why this code doesn\u0027t handle EINTR.",
+      "parentUuid": "39f034ca_af57da9a",
+      "range": {
+        "startLine": 132,
+        "startChar": 11,
+        "endLine": 132,
+        "endChar": 16
+      },
+      "revId": "ffe850d4e44be370b0114e255697805c4d156b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c79da76a_3a2b1737",
         "filename": "lib/virtio/virtio_user/vhost_user.c",
         "patchSetId": 2
@@ -59,6 +83,30 @@
       "writtenOn": "2018-07-26T22:13:08Z",
       "side": 1,
       "message": "EBADMSG or ENOMSG will be more descriptive when translated to strerror.",
+      "range": {
+        "startLine": 457,
+        "startChar": 11,
+        "endLine": 457,
+        "endChar": 14
+      },
+      "revId": "ffe850d4e44be370b0114e255697805c4d156b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4eac8259_87ab32da",
+        "filename": "lib/virtio/virtio_user/vhost_user.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-26T22:40:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "88ef58fc_315757dc",
       "range": {
         "startLine": 457,
         "startChar": 11,
