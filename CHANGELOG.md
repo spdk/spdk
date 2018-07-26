@@ -50,6 +50,10 @@ Default config file pathnames have been removed from iscsi_tgt, nvmf_tgt
 and vhost.  Config file pathnames may now only be specified using the
 -c command line option.
 
+### config converter
+
+Script that allow to convert old config file into new json config file.
+
 ## v18.07:
 
 ### bdev
