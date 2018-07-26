@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f8b12a0a_28b2c985",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-26T14:19:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e89c02d6_6b2132c1",
+      "range": {
+        "startLine": 255,
+        "startChar": 10,
+        "endLine": 255,
+        "endChar": 16
+      },
+      "revId": "f2dada2c45c818a164a5dd602d9cb9fe62face8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31263f8a_0bf60e20",
         "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
         "patchSetId": 27
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-26T13:21:04Z",
       "side": 1,
       "message": "-\u003e rc \u003d\u003d -ENODEV || rc \u003d\u003d -ENOTBLK\n\nIf there will be other error it is and failure condition.",
+      "range": {
+        "startLine": 292,
+        "startChar": 5,
+        "endLine": 292,
+        "endChar": 12
+      },
+      "revId": "f2dada2c45c818a164a5dd602d9cb9fe62face8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ee07453_9b91eed2",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-26T14:19:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "31263f8a_0bf60e20",
       "range": {
         "startLine": 292,
         "startChar": 5,
