@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1204bb38_412b3bd2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-26T23:11:17Z",
+      "side": 1,
+      "message": "yeah I guess it makes sense to remove until adding RPC, thanks",
+      "parentUuid": "0555db57_52ad3537",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 21
+      },
+      "revId": "4ddc1f9facbf8e77409d18dcacc9bf16e3308c8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa86c595_41f3a1f3",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 57
