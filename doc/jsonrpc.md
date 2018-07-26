@@ -943,18 +943,13 @@ Example response:
 
 ## delete_nvme_controller {#rpc_delete_nvme_controller}
 
-Delete NVMe controller. To delete NVMe controller user may use its name or transport ID.
+Delete NVMe controller.
 
 ### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-name                    | Optional | string      | Controller name
-trtype                  | Optional | string      | NVMe-oF target trtype: rdma or pcie
-traddr                  | Optional | string      | NVMe-oF target address: an ip address or BDF
-adrfam                  | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6, ib, fc or intra_host
-trsvcid                 | Optional | string      | NVMe-oF target trsvcid
-subnqn                  | Optional | string      | NVMe-oF target subnqn
+name                    | Required | string      | Controller name
 
 ### Example
 
@@ -964,33 +959,6 @@ Example requests:
 {
   "params": {
     "name": "Nvme0"
-  },
-  "jsonrpc": "2.0",
-  "method": "delete_nvme_controller",
-  "id": 1
-}
-~~~
-
-~~~
-{
-  "params": {
-    "trtype": "pcie",
-    "traddr": "0000:01:00.0"
-  },
-  "jsonrpc": "2.0",
-  "method": "delete_nvme_controller",
-  "id": 1
-}
-~~~
-
-~~~
-{
-  "params": {
-    "trtype": "rdma",
-    "traddr": "192.168.0.13",
-    "adrfam": "ipv4",
-    "trsvcid": "4420",
-    "subnqn": "nqn.2018-07.io.spdk:cnode1"
   },
   "jsonrpc": "2.0",
   "method": "delete_nvme_controller",
