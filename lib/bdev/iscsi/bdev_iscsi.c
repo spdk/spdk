@@ -64,7 +64,6 @@ static TAILQ_HEAD(, bdev_iscsi_lun) g_iscsi_lun_head = TAILQ_HEAD_INITIALIZER(g_
 static TAILQ_HEAD(, bdev_iscsi_conn_req) g_iscsi_conn_req = TAILQ_HEAD_INITIALIZER(
 			g_iscsi_conn_req);
 static struct spdk_poller *g_conn_poller = NULL;
-static bool g_finish_in_process = false;
 
 struct bdev_iscsi_io {
 	struct spdk_thread *submit_td;
@@ -112,23 +111,6 @@ bdev_iscsi_get_ctx_size(void)
 	return sizeof(struct bdev_iscsi_io);
 }
 
-static void
-bdev_iscsi_finish_done(void)
-{
-	struct bdev_iscsi_conn_req *req;
-
-	while (!TAILQ_EMPTY(&g_iscsi_conn_req)) {
-		req = TAILQ_FIRST(&g_iscsi_conn_req);
-		TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
-		free(req);
-	}
-
-	if (g_conn_poller) {
-		spdk_poller_unregister(&g_conn_poller);
-	}
-
-}
-
 static void iscsi_free_lun(struct bdev_iscsi_lun *lun)
 {
 	assert(lun != NULL);
@@ -144,46 +126,21 @@ bdev_iscsi_lun_cleanup(struct bdev_iscsi_lun *lun)
 	TAILQ_REMOVE(&g_iscsi_lun_head, lun, link);
 	iscsi_destroy_context(lun->context);
 	iscsi_free_lun(lun);
-	if (TAILQ_EMPTY(&g_iscsi_lun_head) && g_finish_in_process) {
-		bdev_iscsi_finish_done();
-		spdk_bdev_module_finish_done();
-	}
-}
-
-static void
-iscsi_logout_cb(struct iscsi_context *iscsi, int status,
-		void *command_data, void *private_data)
-{
-	struct bdev_iscsi_lun *lun = private_data;
-
-	if (status != SPDK_SCSI_STATUS_GOOD) {
-		SPDK_ERRLOG("Failed to logout from lun=%p\n", lun);
-	}
-
-	bdev_iscsi_lun_cleanup(lun);
 }
 
 static void
 bdev_iscsi_finish(void)
 {
-	struct bdev_iscsi_lun *lun, *tmp;
+	struct bdev_iscsi_conn_req *req;
 
-	/*
-	 * Set this flag so that bdev_iscsi_lun_cleanup knows it needs to mark
-	 *  the module finish as done when the TAILQ is not empty.
-	 */
-	g_finish_in_process = true;
-
-	if (TAILQ_EMPTY(&g_iscsi_lun_head)) {
-		bdev_iscsi_finish_done();
-		spdk_bdev_module_finish_done();
-		return;
+	while (!TAILQ_EMPTY(&g_iscsi_conn_req)) {
+		req = TAILQ_FIRST(&g_iscsi_conn_req);
+		TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
+		free(req);
 	}
 
-	TAILQ_FOREACH_SAFE(lun, &g_iscsi_lun_head, link, tmp) {
-		if (iscsi_logout_async(lun->context, iscsi_logout_cb, lun) != 0) {
-			bdev_iscsi_lun_cleanup(lun);
-		}
+	if (g_conn_poller) {
+		spdk_poller_unregister(&g_conn_poller);
 	}
 }
 
@@ -193,7 +150,6 @@ static struct spdk_bdev_module g_iscsi_bdev_module = {
 	.module_fini	= bdev_iscsi_finish,
 	.get_ctx_size	= bdev_iscsi_get_ctx_size,
 	.async_init	= true,
-	.async_fini	= true,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&g_iscsi_bdev_module);
