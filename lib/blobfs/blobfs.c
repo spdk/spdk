@@ -2243,6 +2243,12 @@ check_readahead(struct spdk_file *file, uint64_t offset)
 	args->file = file;
 	args->op.readahead.offset = offset;
 	args->op.readahead.cache_buffer = cache_insert_buffer(file, offset);
+	if (!args->op.readahead.cache_buffer) {
+		BLOBFS_TRACE(file, "Cannot allocate buf for offset=%jx\n", offset);
+		free(args);
+		return;
+	}
+
 	args->op.readahead.cache_buffer->in_progress = true;
 	if (file->length < (offset + CACHE_BUFFER_SIZE)) {
 		args->op.readahead.length = file->length & (CACHE_BUFFER_SIZE - 1);
