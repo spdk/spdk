@@ -3053,6 +3053,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint32_t	crc;
+	int		rc;
 	static const char zeros[SPDK_BLOBSTORE_TYPE_LENGTH];
 
 	if (ctx->super->version > SPDK_BS_VERSION ||
@@ -3085,22 +3086,27 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
-	if (ctx->super->size == 0) {
-		/* Update number of blocks for blobstore */
-		ctx->bs->total_clusters = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen / ctx->bs->cluster_sz;
-	} else if (ctx->super->size > ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen) {
+	if (ctx->super->size > ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen) {
 		SPDK_NOTICELOG("Size mismatch, dev size: %lu, blobstore size: %lu\n",
 			       ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen, ctx->super->size);
 		_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
 		return;
-	} else {
-		ctx->bs->total_clusters = ctx->super->size / ctx->bs->cluster_sz;
+	}
+
+	if (ctx->super->size == 0) {
+		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
 	}
 
 	/* Parse the super block */
 	ctx->bs->clean = 1;
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
+	ctx->bs->total_clusters = ctx->super->size / ctx->super->cluster_size;
 	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
+	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);
+	if (rc < 0) {
+		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		return;
+	}
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
 	ctx->bs->total_data_clusters = ctx->bs->total_clusters - divide_round_up(
