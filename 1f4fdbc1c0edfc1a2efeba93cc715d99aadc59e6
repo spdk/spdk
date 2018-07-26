@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c391687e_d2fc293e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1732,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-26T19:43:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9d2e603_8527b552",
+      "revId": "1f4fdbc1c0edfc1a2efeba93cc715d99aadc59e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2728d7b1_385cff93",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 13
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "1498b934_ae84697c",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-26T19:43:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2728d7b1_385cff93",
+      "revId": "1f4fdbc1c0edfc1a2efeba93cc715d99aadc59e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7318b76f_93c70b22",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 13
@@ -47,6 +83,24 @@
       "writtenOn": "2018-07-25T19:33:25Z",
       "side": 1,
       "message": "this function can be probably return void since it always returns 0 - it makes the calling code easier to read (i.e. I don\u0027t have to come up to this function to see how it could fail)",
+      "revId": "1f4fdbc1c0edfc1a2efeba93cc715d99aadc59e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0a0b370_e07257b3",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-26T19:43:40Z",
+      "side": 1,
+      "message": "Thanks, that\u0027s a good point.",
+      "parentUuid": "7318b76f_93c70b22",
       "revId": "1f4fdbc1c0edfc1a2efeba93cc715d99aadc59e6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
