@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b2faddcd_cb89b013",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-26T12:41:04Z",
+      "side": 1,
+      "message": "Applied them. These changes looks clearer and simpler.",
+      "parentUuid": "012699f2_bae68ef4",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "871b5d64_b5672515",
         "filename": "examples/nvme/identify/identify.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-25T21:10:08Z",
       "side": 1,
       "message": "macros should be all caps - U64_MASK and U64_LEFT_MASK_GEN",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12aa72cf_94389114",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-26T12:41:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "871b5d64_b5672515",
       "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "839e8d6a_427a53b2",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-26T12:41:04Z",
+      "side": 1,
+      "message": "Done\nSimplified them.",
+      "parentUuid": "408e6c72_9ad78045",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a9d7e36_d803822d",
         "filename": "examples/nvme/identify/identify.c",
         "patchSetId": 5
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "e393274c_62d01c7f",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-26T12:41:04Z",
+      "side": 1,
+      "message": "Yes, these spaces would be misunderstood.\nPrint out meaning of each field.\n\nOh, these spaces are added by scripts/check_format.sh...",
+      "parentUuid": "2a9d7e36_d803822d",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d206725_a3438ded",
         "filename": "examples/nvme/identify/identify.c",
         "patchSetId": 5
@@ -81,6 +153,24 @@
       "writtenOn": "2018-07-25T21:10:08Z",
       "side": 1,
       "message": "first function uses chunkinfo but second function uses chunk_info (with underscore)",
+      "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09fedee3_a8bf4b81",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-07-26T12:41:04Z",
+      "side": 1,
+      "message": "Good catch.\nNow following the style chunk_info(with underscore)",
+      "parentUuid": "1d206725_a3438ded",
       "revId": "f0dad5da02387ce084585d61829e19fcc0a133f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
