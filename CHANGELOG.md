@@ -58,6 +58,13 @@ surprises for users who may have DPDK_DIR defined for other reasons.
 Users should just use the "configure" script to specify the DPDK
 location before building SPDK.
 
+A Python script has been added to enable conversion of old INI config file
+to new JSON-RPC config file format. This script can be found at
+scripts/config_converter.py. Example how this script can be used:
+~~~{.sh}
+cat old_format.ini | scripts/config_converter.py > new_json_format.json
+~~~
+
 ## v18.07:
 
 ### bdev
