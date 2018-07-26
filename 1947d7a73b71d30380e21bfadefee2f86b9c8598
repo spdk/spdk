@@ -34,6 +34,24 @@
       "revId": "1947d7a73b71d30380e21bfadefee2f86b9c8598",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb7bb7be_61dc8bb2",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-26T22:39:27Z",
+      "side": 1,
+      "message": "This is needed for odd cases like a split or lvolstore on top of an iSCSI lun.  In that case, the iscsi bdev could be accessed from multiple threads.  But we cannot issue commands to libiscsi for one lun from multiple threads, nor poll it from multiple threads.  So we have this master thread.\n\nSo ch_count keeps track of whether we already have an open channel or not.  The thread of the first channel created becomes the master and we start the poller there.  We stop the poller when the last channel is destroyed.\n\nBut now that I\u0027m looking at this further, I don\u0027t the code is working as intended.  Consider the following sequence:\n\nThread A allocates a channel\nThread B allocates a channel\nThread A frees its channel\n\nNow when thread B submits an IO, it\u0027s going to refer to the master_ch which has been freed.\n\nSo I think this patch should be abandoned, and a separate patch to fix what I\u0027ve described here.\n\n1) master_ch is not needed\n2) ch-\u003elun is not needed\n3) bdev_iscsi_poll should take the LUN as a parameter, not a channel\n\nI think that\u0027s literally all that\u0027s needed to fix this problem.",
+      "parentUuid": "a9be2362_45f81fbe",
+      "revId": "1947d7a73b71d30380e21bfadefee2f86b9c8598",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
