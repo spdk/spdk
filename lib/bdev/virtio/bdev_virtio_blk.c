@@ -229,6 +229,7 @@ virtio_blk_dev_unregister_cb(void *io_device)
 
 	virtio_dev_stop(vdev);
 	virtio_dev_destruct(vdev);
+	spdk_bdev_destruct_done(&bvdev->bdev, 0);
 	free(bvdev);
 }
 
@@ -238,7 +239,7 @@ bdev_virtio_disk_destruct(void *ctx)
 	struct virtio_blk_dev *bvdev = ctx;
 
 	spdk_io_device_unregister(bvdev, virtio_blk_dev_unregister_cb);
-	return 0;
+	return 1;
 }
 
 int
