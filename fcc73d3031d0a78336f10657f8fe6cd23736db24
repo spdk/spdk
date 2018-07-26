@@ -16,6 +16,24 @@
       "revId": "fcc73d3031d0a78336f10657f8fe6cd23736db24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "402f8952_d0eb10c5",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-26T00:50:51Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nYour suggestion is very reasonable.\n\nBut the next patch https://review.gerrithub.io/#/c/spdk/spdk/+/420325/ \"bdev/raid: Free all strings allocated by JSON decoder on all paths in RPC\" was pretty hard for me.\n\nHence is it OK to remove goto in the patch after the next?",
+      "parentUuid": "d69c0f82_936cf685",
+      "revId": "fcc73d3031d0a78336f10657f8fe6cd23736db24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
