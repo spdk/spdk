@@ -50,6 +50,14 @@ Default config file pathnames have been removed from iscsi_tgt, nvmf_tgt
 and vhost.  Config file pathnames may now only be specified using the
 -c command line option.
 
+### config converter
+
+A Python script has been added to enable conversion of old INI config file
+to new JSON-RPC config file format. This script can be found at
+scripts/config_converter.py. There are two parameters for this script:
+path to config file with INI format and path where file
+with a new JSON-RPC config should be saved.
+
 ## v18.07:
 
 ### bdev
