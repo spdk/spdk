@@ -34,11 +34,20 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
+#include "spdk_internal/mock.h"
 
 #include "nvmf/ctrlr_discovery.c"
 #include "nvmf/subsystem.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
+
+DEFINE_STUB(spdk_bdev_module_claim_bdev,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+	     struct spdk_bdev_module *module), 0);
+
+DEFINE_STUB_V(spdk_bdev_module_release_bdev,
+	      (struct spdk_bdev *bdev));
 
 uint32_t
 spdk_env_get_current_core(void)
