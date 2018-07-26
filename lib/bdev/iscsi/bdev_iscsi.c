@@ -573,6 +573,16 @@ complete_conn_req(struct bdev_iscsi_conn_req *req, struct spdk_bdev *bdev,
 {
 	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
 	req->create_cb(req->create_cb_arg, bdev, status);
+	if (status) {
+		/* if the request failed and no iscsi lun was
+		 * created then we could not hand over this
+		 * memory and have to free it manually now.
+		 */
+		iscsi_destroy_context(req->context);
+		free(req->initiator_iqn);
+		free(req->bdev_name);
+		free(req->url);
+	}
 	free(req);
 }
 
@@ -610,7 +620,9 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, 
 	rc = spdk_bdev_register(&lun->bdev);
 	if (rc) {
 		spdk_io_device_unregister(lun, NULL);
-		goto error_return;
+		pthread_mutex_destroy(&lun->mutex);
+		free(lun);
+		return rc;
 	}
 
 	lun->no_master_ch_poller_td = spdk_get_thread();
@@ -619,10 +631,6 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, 
 
 	*bdev = &lun->bdev;
 	return 0;
-
-error_return:
-	iscsi_free_lun(lun);
-	return rc;
 }
 
 static void
