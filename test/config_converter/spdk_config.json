@@ -1,0 +1,481 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "copy",
+      "config": null
+    },
+    {
+      "subsystem": "interface",
+      "config": null
+    },
+    {
+      "subsystem": "net_framework",
+      "config": null
+    },
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "params": {
+            "bdev_io_pool_size": 65536,
+            "bdev_io_cache_size": 256
+          },
+          "method": "set_bdev_options"
+        },
+        {
+          "params": {
+            "base_bdev": "Nvme0n1",
+            "split_size_mb": 0,
+            "split_count": 8
+          },
+          "method": "construct_split_vbdev"
+        },
+        {
+          "params": {
+            "retry_count": 4,
+            "timeout_us": 0,
+            "nvme_adminq_poll_period_us": 100000,
+            "action_on_timeout": "none"
+          },
+          "method": "set_bdev_nvme_options"
+        },
+        {
+          "params": {
+            "trtype": "PCIe",
+            "name": "Nvme0",
+            "traddr": "0000:00:04.0"
+          },
+          "method": "construct_nvme_bdev"
+        },
+        {
+          "params": {
+            "enable": true,
+            "period_us": 10000000
+          },
+          "method": "set_bdev_nvme_hotplug"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768,
+            "name": "Malloc0"
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768,
+            "name": "Malloc1"
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768,
+            "name": "Malloc2"
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768,
+            "name": "Malloc3"
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768,
+            "name": "Malloc4"
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768,
+            "name": "Malloc5"
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768,
+            "name": "Malloc6"
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768,
+            "name": "Malloc7"
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 2048,
+            "name": "AIO0",
+            "filename": "/tmp/sample_aio0"
+          },
+          "method": "construct_aio_bdev"
+        },
+        {
+          "params": {
+            "block_size": 2048,
+            "name": "AIO1",
+            "filename": "/tmp/sample_aio1"
+          },
+          "method": "construct_aio_bdev"
+        },
+        {
+          "params": {
+            "block_size": 2048,
+            "name": "AIO2",
+            "filename": "/tmp/sample_aio2"
+          },
+          "method": "construct_aio_bdev"
+        },
+        {
+          "params": {
+            "block_size": 2048,
+            "name": "AIO3",
+            "filename": "/tmp/sample_aio1"
+          },
+          "method": "construct_aio_bdev"
+        },
+        {
+          "params": {
+            "block_size": 2048,
+            "name": "AIO4",
+            "filename": "/tmp/sample_aio2"
+          },
+          "method": "construct_aio_bdev"
+        },
+        {
+          "params": {
+            "name": "Pmem0",
+            "pmem_file": "/tmp/sample_pmem"
+          },
+          "method": "construct_pmem_bdev"
+        }
+      ]
+    },
+    {
+      "subsystem": "scsi",
+      "config": null
+    },
+    {
+      "subsystem": "nvmf",
+      "config": [
+        {
+          "params": {
+            "acceptor_poll_rate": 10000
+          },
+          "method": "set_nvmf_target_config"
+        },
+        {
+          "params": {
+            "in_capsule_data_size": 4096,
+            "io_unit_size": 131072,
+            "max_qpairs_per_ctrlr": 4,
+            "max_queue_depth": 128,
+            "max_io_size": 131072,
+            "max_subsystems": 1024
+          },
+          "method": "set_nvmf_target_options"
+        },
+        {
+          "params": {
+            "max_namespaces": 20,
+            "listen_addresses": [
+              {
+                "trtype": "RDMA",
+                "adrfam": "IPv4",
+                "trsvcid": "4420",
+                "traddr": "10.0.2.15"
+              }
+            ],
+            "hosts": [
+              "nqn.2016-06.io.spdk:init"
+            ],
+            "namespaces": [
+              {
+                "bdev_name": "Nvme0n1p5",
+                "nsid": 1
+              },
+              {
+                "bdev_name": "Nvme0n1p6",
+                "nsid": 2
+              }
+            ],
+            "allow_any_host": false,
+            "serial_number": "SPDK00000000000001",
+            "nqn": "nqn.2016-06.io.spdk:cnode1"
+          },
+          "method": "construct_nvmf_subsystem"
+        },
+        {
+          "params": {
+            "listen_addresses": [
+              {
+                "trtype": "RDMA",
+                "adrfam": "IPv4",
+                "trsvcid": "4421",
+                "traddr": "10.0.2.15"
+              }
+            ],
+            "hosts": [
+              "nqn.2016-06.io.spdk:init"
+            ],
+            "namespaces": [
+              {
+                "bdev_name": "Malloc1",
+                "nsid": 1
+              },
+              {
+                "bdev_name": "Malloc2",
+                "nsid": 2
+              },
+              {
+                "bdev_name": "AIO0",
+                "nsid": 3
+              },
+              {
+                "bdev_name": "AIO1",
+                "nsid": 4
+              }
+            ],
+            "allow_any_host": false,
+            "serial_number": "SPDK00000000000002",
+            "nqn": "nqn.2016-06.io.spdk:cnode2"
+          },
+          "method": "construct_nvmf_subsystem"
+        }
+      ]
+    },
+    {
+      "subsystem": "nbd",
+      "config": []
+    },
+    {
+      "subsystem": "vhost",
+      "config": [
+        {
+          "params": {
+            "cpumask": "1",
+            "ctrlr": "naa.vhost.0"
+          },
+          "method": "construct_vhost_scsi_controller"
+        },
+        {
+          "params": {
+            "scsi_target_num": 0,
+            "bdev_name": "Malloc4",
+            "ctrlr": "naa.vhost.0"
+          },
+          "method": "add_vhost_scsi_lun"
+        },
+        {
+          "params": {
+            "scsi_target_num": 1,
+            "bdev_name": "AIO3",
+            "ctrlr": "naa.vhost.0"
+          },
+          "method": "add_vhost_scsi_lun"
+        },
+        {
+          "params": {
+            "scsi_target_num": 2,
+            "bdev_name": "Nvme0n1p2",
+            "ctrlr": "naa.vhost.0"
+          },
+          "method": "add_vhost_scsi_lun"
+        },
+        {
+          "params": {
+            "cpumask": "1",
+            "ctrlr": "naa.vhost.1"
+          },
+          "method": "construct_vhost_scsi_controller"
+        },
+        {
+          "params": {
+            "scsi_target_num": 0,
+            "bdev_name": "AIO4",
+            "ctrlr": "naa.vhost.1"
+          },
+          "method": "add_vhost_scsi_lun"
+        },
+        {
+          "params": {
+            "dev_name": "Malloc6",
+            "readonly": true,
+            "ctrlr": "vhost.1",
+            "cpumask": "1"
+          },
+          "method": "construct_vhost_blk_controller"
+        },
+        {
+          "params": {
+            "dev_name": "Malloc5",
+            "readonly": false,
+            "ctrlr": "naa.vhost.2",
+            "cpumask": "1"
+          },
+          "method": "construct_vhost_blk_controller"
+        },
+        {
+          "params": {
+            "cpumask": "1",
+            "io_queues": 2,
+            "ctrlr": "naa.vhost.3"
+          },
+          "method": "construct_vhost_nvme_controller"
+        },
+        {
+          "params": {
+            "bdev_name": "Nvme0n1p0",
+            "ctrlr": "naa.vhost.3"
+          },
+          "method": "add_vhost_nvme_ns"
+        },
+        {
+          "params": {
+            "bdev_name": "Nvme0n1p1",
+            "ctrlr": "naa.vhost.3"
+          },
+          "method": "add_vhost_nvme_ns"
+        }
+      ]
+    },
+    {
+      "subsystem": "iscsi",
+      "config": [
+        {
+          "params": {
+            "allow_duplicated_isid": true,
+            "default_time2retain": 20,
+            "mutual_chap": false,
+            "require_chap": false,
+            "immediate_data": true,
+            "node_base": "iqn.2016-06.io.spdk",
+            "nop_in_interval": 10,
+            "max_connections_per_session": 2,
+            "first_burst_length": 8192,
+            "max_queue_depth": 64,
+            "nop_timeout": 30,
+            "chap_group": 1,
+            "max_sessions": 16,
+            "error_recovery_level": 0,
+            "disable_chap": false,
+            "auth_file": "/usr/local/etc/spdk/auth.conf",
+            "min_connections_per_core": 4,
+            "default_time2wait": 2
+          },
+          "method": "set_iscsi_options"
+        },
+        {
+          "params": {
+            "portals": [
+              {
+                "cpumask": "0x1",
+                "host": "127.0.0.1",
+                "port": "4000"
+              },
+              {
+                "cpumask": "0x1",
+                "host": "127.0.0.1",
+                "port": "4001"
+              }
+            ],
+            "tag": 1
+          },
+          "method": "add_portal_group"
+        },
+        {
+          "params": {
+            "initiators": [
+              "ANY"
+            ],
+            "tag": 1,
+            "netmasks": [
+              "127.0.0.1/32"
+            ]
+          },
+          "method": "add_initiator_group"
+        },
+        {
+          "params": {
+            "luns": [
+              {
+                "lun_id": 0,
+                "bdev_name": "Malloc0"
+              },
+              {
+                "lun_id": 1,
+                "bdev_name": "AIO2"
+              },
+              {
+                "lun_id": 2,
+                "bdev_name": "AIO3"
+              },
+              {
+                "lun_id": 3,
+                "bdev_name": "AIO4"
+              }
+            ],
+            "mutual_chap": false,
+            "name": "iqn.2016-06.io.spdk:disk1",
+            "alias_name": "Data Disk1",
+            "require_chap": false,
+            "chap_group": 1,
+            "pg_ig_maps": [
+              {
+                "ig_tag": 1,
+                "pg_tag": 1
+              }
+            ],
+            "data_digest": false,
+            "disable_chap": false,
+            "header_digest": false,
+            "queue_depth": 64
+          },
+          "method": "construct_target_node"
+        },
+        {
+          "params": {
+            "luns": [
+              {
+                "lun_id": 0,
+                "bdev_name": "Nvme0n1p3"
+              }
+            ],
+            "mutual_chap": false,
+            "name": "iqn.2016-06.io.spdk:disk2",
+            "alias_name": "Data Disk2",
+            "require_chap": false,
+            "chap_group": 1,
+            "pg_ig_maps": [
+              {
+                "ig_tag": 1,
+                "pg_tag": 1
+              }
+            ],
+            "data_digest": false,
+            "disable_chap": false,
+            "header_digest": false,
+            "queue_depth": 32
+          },
+          "method": "construct_target_node"
+        }
+      ]
+    }
+  ]
+}

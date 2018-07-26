@@ -79,6 +79,13 @@ is no need to use syntax like "python ./scripts/rpc.py". All executable
 scripts must contain proper shebang pointing to the right interpreter.
 Scripts without shebang musn't be executable.
 
+A Python script has been added to enable conversion of old INI config file
+to new JSON-RPC config file format. This script can be found at
+scripts/config_converter.py. Example how this script can be used:
+~~~{.sh}
+cat old_format.ini | scripts/config_converter.py > new_json_format.json
+~~~
+
 ## v18.07:
 
 ### bdev
