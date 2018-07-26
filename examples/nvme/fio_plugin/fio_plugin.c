@@ -820,14 +820,11 @@ static void spdk_fio_cleanup(struct thread_data *td)
 
 	free(fio_thread);
 
-	if (pthread_cancel(g_ctrlr_thread_id) == 0) {
-		pthread_join(g_ctrlr_thread_id, NULL);
-	}
-
 	pthread_mutex_lock(&mutex);
 	td_count--;
 	if (td_count == 0) {
 		struct spdk_fio_ctrlr	*fio_ctrlr, *fio_ctrlr_tmp;
+
 		fio_ctrlr = ctrlr_g;
 		while (fio_ctrlr != NULL) {
 			spdk_nvme_detach(fio_ctrlr->ctrlr);
@@ -835,8 +832,14 @@ static void spdk_fio_cleanup(struct thread_data *td)
 			free(fio_ctrlr);
 			fio_ctrlr = fio_ctrlr_tmp;
 		}
+		ctrlr_g = NULL;
 	}
 	pthread_mutex_unlock(&mutex);
+	if (!ctrlr_g) {
+		if (pthread_cancel(g_ctrlr_thread_id) == 0) {
+			pthread_join(g_ctrlr_thread_id, NULL);
+		}
+	}
 }
 
 /* This function enables addition of SPDK parameters to the fio config
