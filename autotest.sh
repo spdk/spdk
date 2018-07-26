@@ -130,6 +130,7 @@ timing_exit lib
 if [ $SPDK_TEST_ISCSI -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
 	run_test suite ./test/iscsi_tgt/iscsijson/json_config.sh
+	run_test suite ./test/config_converter/iscsi_test_converter.sh
 fi
 
 if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
@@ -140,6 +141,7 @@ fi
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	run_test suite ./test/nvmf/nvmf.sh
 	run_test suite ./test/nvmf/nvmfjson/json_config.sh
+	run_test suite ./test/config_converter/nvmf_test_converter.sh
 fi
 
 if [ $SPDK_TEST_VHOST -eq 1 ]; then
@@ -217,6 +219,7 @@ if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 	run_test suite ./test/vhost/initiator/blockdev.sh
 	run_test suite ./test/vhost/initiator/json_config.sh
 	run_test suite ./test/spdkcli/virtio.sh
+	run_test suite ./test/config_converter/test_converter.sh
 	report_test_completion "vhost_initiator"
 fi
 
@@ -224,6 +227,7 @@ if [ $SPDK_TEST_PMDK -eq 1 ]; then
 	run_test suite ./test/pmem/pmem.sh -x
 	run_test suite ./test/pmem/json_config/json_config.sh
 	run_test suite ./test/spdkcli/pmem.sh
+	run_test suite ./test/config_converter/pmem_test_converter.sh
 fi
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
