@@ -404,16 +404,6 @@ def get_bdevs_iostat(client, name=None):
     return client.call('get_bdevs_iostat', params)
 
 
-def delete_bdev(client, bdev_name):
-    """Remove a bdev from the system.
-
-    Args:
-        bdev_name: name of bdev to delete
-    """
-    params = {'name': bdev_name}
-    return client.call('delete_bdev', params)
-
-
 def bdev_inject_error(client, name, io_type, error_type, num=1):
     """Inject an error via an error bdev.
 
