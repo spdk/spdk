@@ -128,21 +128,20 @@ bdev_iscsi_get_ctx_size(void)
 	return sizeof(struct bdev_iscsi_io);
 }
 
-static void iscsi_free_lun(struct bdev_iscsi_lun *lun)
+static void
+_iscsi_free_lun(void *arg)
 {
+	struct bdev_iscsi_lun *lun = arg;
+
 	assert(lun != NULL);
+	iscsi_destroy_context(lun->context);
 	pthread_mutex_destroy(&lun->mutex);
 	free(lun->bdev.name);
 	free(lun->url);
 	free(lun->initiator_iqn);
 	free(lun);
-}
 
-static void
-bdev_iscsi_lun_cleanup(struct bdev_iscsi_lun *lun)
-{
-	iscsi_destroy_context(lun->context);
-	iscsi_free_lun(lun);
+	spdk_bdev_destruct_done(&lun->bdev, 0);
 }
 
 static void
@@ -270,8 +269,7 @@ bdev_iscsi_destruct_cb(void *ctx)
 	struct bdev_iscsi_lun *lun = ctx;
 
 	spdk_poller_unregister(&lun->no_master_ch_poller);
-	spdk_bdev_destruct_done(&lun->bdev, 0);
-	bdev_iscsi_lun_cleanup(lun);
+	spdk_io_device_unregister(lun, _iscsi_free_lun);
 }
 
 static int
