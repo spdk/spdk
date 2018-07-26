@@ -112,6 +112,7 @@ bdev_iscsi_get_ctx_size(void)
 static void iscsi_free_lun(struct bdev_iscsi_lun *lun)
 {
 	assert(lun != NULL);
+	pthread_mutex_destroy(&lun->mutex);
 	free(lun->bdev.name);
 	free(lun->url);
 	free(lun->initiator_iqn);
