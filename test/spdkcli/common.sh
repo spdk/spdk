@@ -9,7 +9,7 @@ spdkcli_job="python3 $SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job.py"
 function on_error_exit() {
 	set +e
 	killprocess $spdk_tgt_pid
-	rm -f $testdir/${MATCH_FILE} $testdir/spdkcli_details_vhost.test /tmp/sample_aio
+	rm -f $testdir/${MATCH_FILE} $testdir/match_files/spdkcli_details_vhost.test /tmp/sample_aio
 	print_backtrace
 	exit 1
 }
@@ -21,7 +21,7 @@ function run_spdk_tgt() {
 }
 
 function check_match() {
-	python3 $SPDKCLI_BUILD_DIR/scripts/spdkcli.py ll > $testdir/${MATCH_FILE}
-	$SPDKCLI_BUILD_DIR/test/app/match/match -v $testdir/${MATCH_FILE}.match
-	rm -f $testdir/${MATCH_FILE}
+	python3 $SPDKCLI_BUILD_DIR/scripts/spdkcli.py ll $SPDKCLI_BRANCH > $testdir/match_files/${MATCH_FILE}
+	$SPDKCLI_BUILD_DIR/test/app/match/match -v $testdir/match_files/${MATCH_FILE}.match
+	rm -f $testdir/match_files/${MATCH_FILE}
 }
