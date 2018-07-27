@@ -2219,6 +2219,59 @@ bs_load(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
+}
+
+static void
+bs_size_cluster_size(uint32_t cluster_size)
+{
+	struct spdk_bs_dev *dev;
+	spdk_blob_id blobid;
+	struct spdk_blob *blob;
+	struct spdk_bs_super_block *super_block;
+	struct spdk_bs_opts opts;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	if (cluster_size != 0) {
+		opts.cluster_sz = cluster_size;
+	}
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Create a blob */
+	spdk_bs_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Resize the blob */
+	spdk_blob_resize(blob, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+
+	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
+	CU_ASSERT(super_block->clean == 1);
 
 	/* Load should fail: bdev size < saved size */
 	dev = init_dev();
@@ -2241,9 +2294,7 @@ bs_load(void)
 	CU_ASSERT(g_bserrno == 0);
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 
-
 	/* Test compatibility mode */
-
 	dev = init_dev();
 	super_block->size = 0;
 	super_block->crc = _spdk_blob_md_page_calc_crc(super_block);
@@ -2267,7 +2318,16 @@ bs_load(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(super_block->clean == 1);
 	g_bs = NULL;
+}
 
+static void
+bs_size(void)
+{
+	/* Test with default cluster size */
+	bs_size_cluster_size(0);
+
+	/* Test with 4MiB cluster size */
+	bs_size_cluster_size(4194304);
 }
 
 static void
@@ -4915,6 +4975,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_iter", blob_iter) == NULL ||
 		CU_add_test(suite, "blob_xattr", blob_xattr) == NULL ||
 		CU_add_test(suite, "bs_load", bs_load) == NULL ||
+		CU_add_test(suite, "bs_size", bs_size) == NULL ||
 		CU_add_test(suite, "bs_unload", bs_unload) == NULL ||
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
 		CU_add_test(suite, "bs_usable_clusters", bs_usable_clusters) == NULL ||
