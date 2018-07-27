@@ -111,12 +111,14 @@ class Commands_Rpc(object):
         output = self.rpc.construct_malloc_bdev(total_size, block_size)[0]
         return output.rstrip('\n')
 
-    def construct_lvol_store(self, base_name, lvs_name, cluster_size):
+    def construct_lvol_store(self, base_name, lvs_name, cluster_size=None):
         print("INFO: RPC COMMAND construct_lvol_store")
-        output = self.rpc.construct_lvol_store(
-            base_name,
-            lvs_name,
-            "-c {cluster_sz}".format(cluster_sz=cluster_size))[0]
+        if cluster_size:
+            output = self.rpc.construct_lvol_store(base_name,
+                                                   lvs_name,
+                                                   "-c {cluster_sz}".format(cluster_sz=cluster_size))[0]
+        else:
+            output = self.rpc.construct_lvol_store(base_name, lvs_name)[0]
         return output.rstrip('\n')
 
     def construct_lvol_bdev(self, uuid, lbd_name, size, thin=False):
