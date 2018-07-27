@@ -69,6 +69,23 @@
       "revId": "097f2efc42734d82c25873dc321d278be5610dc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bcd4ae9_8eab6d60",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-27T01:19:52Z",
+      "side": 1,
+      "message": "vhost-blk/scsi has an vdev structure inside, why here using a pointer instead ?",
+      "revId": "097f2efc42734d82c25873dc321d278be5610dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
