@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe82a49a_e33e6c44",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-27T23:18:56Z",
+      "side": 1,
+      "message": "this can be removed",
+      "revId": "648df80db315484993264ca77b188830e5c47dbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "804090f6_86c19892",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1694,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-27T23:18:56Z",
+      "side": 1,
+      "message": "this can be removed",
+      "revId": "648df80db315484993264ca77b188830e5c47dbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
