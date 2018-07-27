@@ -79,6 +79,11 @@ if echo -e "#include <libunwind.h>\nint main(int argc, char *argv[]) {return 0;}
 	config_params+=' --enable-log-bt=ERROR'
 fi
 
+# RAID is marked experimental and not built by default currently, since it does not
+#  support iov (meaning vhost will not work).  But enable it in the build here, to make
+#  sure it gets built and run against a limited set of use cases for now.
+config_params+=' --with-raid'
+
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
 # On Linux systems, override the default HUGEMEM in scripts/setup.sh to
