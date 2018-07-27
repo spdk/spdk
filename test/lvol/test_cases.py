@@ -158,11 +158,11 @@ def case_message(func):
 
 class TestCases(object):
 
-    def __init__(self, rpc_py, total_size, block_size, cluster_size, base_dir_path, app_path):
+    def __init__(self, rpc_py, total_size, block_size, base_dir_path, app_path):
         self.c = Commands_Rpc(rpc_py)
         self.total_size = total_size
         self.block_size = block_size
-        self.cluster_size = cluster_size
+        self.cluster_size = None
         self.path = base_dir_path
         self.app_path = app_path
         self.lvs_name = "lvs_test"
@@ -287,8 +287,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         self.c.destroy_lvol_store(uuid_store)
@@ -302,8 +301,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
 
@@ -323,8 +321,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         size = self.get_lvol_bdev_split_size(4)
@@ -351,8 +348,7 @@ class TestCases(object):
                                                  self.block_size)
 
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
 
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
@@ -376,11 +372,9 @@ class TestCases(object):
                                                    self.block_size)
 
         uuid_store_1 = self.c.construct_lvol_store(base_name_1,
-                                                   self.lvs_name + "1",
-                                                   self.cluster_size)
+                                                   self.lvs_name + "1")
         uuid_store_2 = self.c.construct_lvol_store(base_name_2,
-                                                   self.lvs_name + "2",
-                                                   self.cluster_size)
+                                                   self.lvs_name + "2")
         fail_count = self.c.check_get_lvol_stores(base_name_1, uuid_store_1,
                                                   self.cluster_size)
         fail_count = self.c.check_get_lvol_stores(base_name_2, uuid_store_2,
@@ -418,8 +412,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs_size = self.get_lvs_size()
@@ -440,12 +433,10 @@ class TestCases(object):
 
     @case_message
     def test_case102(self):
-        size = int((self.total_size / 2) - 1)
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         size = self.get_lvs_size()
@@ -469,8 +460,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         # size is equal to one quarter of size malloc bdev
@@ -511,8 +501,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs_size = self.get_lvs_size()
@@ -534,8 +523,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         self.c.destroy_lvol_store(uuid_store)
@@ -549,8 +537,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         fail_count += self.c.destroy_lvol_store(self.lvs_name)
@@ -564,8 +551,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs_size = self.get_lvs_size()
@@ -587,8 +573,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         size = self.get_lvol_bdev_split_size(4)
@@ -610,8 +595,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         size = self.get_lvol_bdev_split_size(4)
@@ -620,7 +604,7 @@ class TestCases(object):
                                                size)
         fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
 
-        sz = size + 1
+        sz = size + 4
         self.c.resize_lvol_bdev(uuid_bdev, sz)
         fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
         sz = size * 2
@@ -629,7 +613,7 @@ class TestCases(object):
         sz = size * 3
         self.c.resize_lvol_bdev(uuid_bdev, sz)
         fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
-        sz = (size * 4) - 1
+        sz = (size * 4) - 4
         self.c.resize_lvol_bdev(uuid_bdev, sz)
         fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
         sz = 0
@@ -647,8 +631,7 @@ class TestCases(object):
         base_path = path.dirname(sys.argv[0])
         base_name = "Nvme0n1p0"
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         if self.c.destroy_lvol_store(self.lvs_name) != 0:
@@ -679,8 +662,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
 
@@ -718,13 +700,11 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         if self.c.construct_lvol_store(base_name,
-                                       self.lvs_name,
-                                       self.cluster_size) == 0:
+                                       self.lvs_name) == 0:
             fail_count += 1
         self.c.destroy_lvol_store(uuid_store)
         self.c.delete_malloc_bdev(base_name)
@@ -738,14 +718,12 @@ class TestCases(object):
         base_name_2 = self.c.construct_malloc_bdev(self.total_size,
                                                    self.block_size)
         uuid_store_1 = self.c.construct_lvol_store(base_name_1,
-                                                   self.lvs_name,
-                                                   self.cluster_size)
+                                                   self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name_1,
                                                    uuid_store_1,
                                                    self.cluster_size)
         if self.c.construct_lvol_store(base_name_2,
-                                       self.lvs_name,
-                                       self.cluster_size) == 0:
+                                       self.lvs_name) == 0:
             fail_count += 1
 
         fail_count += self.c.destroy_lvol_store(uuid_store_1)
@@ -800,8 +778,7 @@ class TestCases(object):
                                                  self.block_size)
         # Construct_lvol_store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         # Check correct uuid values in response get_lvol_stores command
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
@@ -879,8 +856,7 @@ class TestCases(object):
                                                  self.block_size)
         # create lvol store on mamloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
@@ -941,6 +917,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
         # destroy malloc bdev
+        fail_count += self.c.delete_malloc_bdev(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
@@ -959,8 +936,7 @@ class TestCases(object):
                                                  self.block_size)
         # construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
@@ -999,6 +975,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
         # destroy malloc bdev
+        fail_count += self.c.delete_malloc_bdev(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
@@ -1017,8 +994,7 @@ class TestCases(object):
                                                  self.block_size)
         # construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
@@ -1041,6 +1017,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
         # destroy malloc bdev
+        fail_count += self.c.delete_malloc_bdev(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - verification ends with success
@@ -1091,8 +1068,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         # construct lvol store on malloc bdev
-        uuid_store = self.c.construct_lvol_store(base_name, self.lvs_name,
-                                                 self.cluster_size)
+        uuid_store = self.c.construct_lvol_store(base_name, self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
@@ -1145,6 +1121,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
         # destroy malloc bdev
+        fail_count += self.c.delete_malloc_bdev(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
@@ -1162,8 +1139,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         # construct lvol store on malloc bdev
-        uuid_store = self.c.construct_lvol_store(base_name, self.lvs_name,
-                                                 self.cluster_size)
+        uuid_store = self.c.construct_lvol_store(base_name, self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
@@ -1203,6 +1179,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
         # destroy malloc bdev
+        fail_count += self.c.delete_malloc_bdev(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
@@ -1232,8 +1209,7 @@ class TestCases(object):
         # create lvol store, create 5 bdevs
         # save info of all lvs and lvol bdevs
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name,
                                                    uuid_store,
                                                    self.cluster_size)
@@ -1306,8 +1282,7 @@ class TestCases(object):
         # Create lvol store on NVMe bdev, create ten lvol bdevs on lvol store and
         # verify all configuration call results
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name,
                                                    uuid_store,
                                                    self.cluster_size)
@@ -1335,8 +1310,7 @@ class TestCases(object):
         base_name = "Nvme0n1p0"
         # construct lvol store on NVMe bdev
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         traddr = self._find_traddress_for_nvme("Nvme0")
@@ -1373,8 +1347,7 @@ class TestCases(object):
                                                  self.block_size)
         # Construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
 
@@ -1428,8 +1401,7 @@ class TestCases(object):
                                                  self.block_size)
         # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         size = self.get_lvol_bdev_split_size(6)
@@ -1504,8 +1476,7 @@ class TestCases(object):
                                                  self.block_size)
         # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         # Create thin provisioned lvol bdev with size equal to 50% of lvs space
@@ -1560,8 +1531,7 @@ class TestCases(object):
                                                  self.block_size)
         # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         # Create thick provisioned lvol bdev
@@ -1608,8 +1578,7 @@ class TestCases(object):
                                                  self.block_size)
         # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         lvs = self.c.get_lvol_stores()
@@ -1672,8 +1641,7 @@ class TestCases(object):
                                                  self.block_size)
         # Create lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         size = self.get_lvol_bdev_split_size(6)
@@ -1746,8 +1714,7 @@ class TestCases(object):
                                                  self.block_size)
         # Create lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         size = self.get_lvol_bdev_split_size(6)
@@ -1837,8 +1804,7 @@ class TestCases(object):
 
         # Create lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         size = self.get_lvol_bdev_split_size(4)
@@ -1929,8 +1895,7 @@ class TestCases(object):
 
         # Create lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         size = self.get_lvol_bdev_split_size(4)
@@ -2007,8 +1972,7 @@ class TestCases(object):
 
         # Create lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         lvs = self.c.get_lvol_stores()
@@ -2109,8 +2073,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         lvs_uuid = self.c.construct_lvol_store(base_name,
-                                               self.lvs_name,
-                                               self.cluster_size)
+                                               self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_name,
                                                    lvs_uuid,
                                                    self.cluster_size,
@@ -2198,15 +2161,13 @@ class TestCases(object):
 
         # Create lvol store on each malloc bdev
         lvs_uuid_1 = self.c.construct_lvol_store(base_bdev_1,
-                                                 lvs_name_1,
-                                                 self.cluster_size)
+                                                 lvs_name_1)
         fail_count += self.c.check_get_lvol_stores(base_bdev_1,
                                                    lvs_uuid_1,
                                                    self.cluster_size,
                                                    lvs_name_1)
         lvs_uuid_2 = self.c.construct_lvol_store(base_bdev_2,
-                                                 lvs_name_2,
-                                                 self.cluster_size)
+                                                 lvs_name_2)
         fail_count += self.c.check_get_lvol_stores(base_bdev_2,
                                                    lvs_uuid_2,
                                                    self.cluster_size,
@@ -2279,8 +2240,7 @@ class TestCases(object):
         base_bdev = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         lvs_uuid = self.c.construct_lvol_store(base_bdev,
-                                               self.lvs_name,
-                                               self.cluster_size)
+                                               self.lvs_name)
         fail_count += self.c.check_get_lvol_stores(base_bdev,
                                                    lvs_uuid,
                                                    self.cluster_size,
@@ -2317,8 +2277,7 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+                                                 self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
 
