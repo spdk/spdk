@@ -79,18 +79,17 @@ timing_enter nvmf_setup
 rdma_device_init
 timing_exit nvmf_setup
 
-#####################
-# Unit Tests
-#####################
-
-if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
-	timing_enter unittest
-	run_test ./test/unit/unittest.sh
-	report_test_completion "unittest"
-	timing_exit unittest
-fi
-
 timing_enter lib
+
+set +e
+find / -name hugepage_data
+ls -l /run/dpdk
+ulimit -a
+find /sys/fs/cgroup/memory/ -type f | xargs tail -n +1
+sestatus
+df -h
+set -e
+false
 
 if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 	run_test test/bdev/blockdev.sh
@@ -102,133 +101,7 @@ if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 	fi
 fi
 
-if [ $SPDK_TEST_EVENT -eq 1 ]; then
-	run_test test/event/event.sh
-fi
-
-if [ $SPDK_TEST_NVME -eq 1 ]; then
-	run_test test/nvme/nvme.sh
-	if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
-		run_test test/nvme/spdk_nvme_cli.sh
-	fi
-	# Only test hotplug without ASAN enabled. Since if it is
-	# enabled, it catches SEGV earlier than our handler which
-	# breaks the hotplug logic
-	if [ $SPDK_RUN_ASAN -eq 0 ]; then
-		run_test test/nvme/hotplug.sh intel
-	fi
-fi
-
-run_test test/env/env.sh
-
-if [ $SPDK_TEST_IOAT -eq 1 ]; then
-	run_test test/ioat/ioat.sh
-fi
-
 timing_exit lib
-
-if [ $SPDK_TEST_ISCSI -eq 1 ]; then
-	run_test ./test/iscsi_tgt/iscsi_tgt.sh posix
-	run_test ./test/iscsi_tgt/iscsijson/json_config.sh
-fi
-
-if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-	run_test ./test/blobfs/rocksdb/rocksdb.sh
-	run_test ./test/blobstore/blobstore.sh
-fi
-
-if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	run_test ./test/nvmf/nvmf.sh
-	run_test ./test/nvmf/nvmfjson/json_config.sh
-fi
-
-if [ $SPDK_TEST_VHOST -eq 1 ]; then
-	timing_enter vhost
-	timing_enter negative
-	run_test ./test/vhost/spdk_vhost.sh --negative
-	timing_exit negative
-
-	timing_enter vhost_json_config
-	run_test ./test/vhost/json_config/json_config.sh
-	timing_exit vhost_json_config
-
-	if [ $RUN_NIGHTLY -eq 1 ]; then
-		timing_enter integrity_blk
-		run_test ./test/vhost/spdk_vhost.sh --integrity-blk
-		timing_exit integrity_blk
-
-		timing_enter integrity
-		run_test ./test/vhost/spdk_vhost.sh --integrity
-		timing_exit integrity
-
-		timing_enter fs_integrity_scsi
-		run_test ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
-		timing_exit fs_integrity_scsi
-
-		timing_enter fs_integrity_blk
-		run_test ./test/vhost/spdk_vhost.sh --fs-integrity-blk
-		timing_exit fs_integrity_blk
-
-		timing_enter integrity_lvol_scsi_nightly
-		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
-		timing_exit integrity_lvol_scsi_nightly
-
-		timing_enter integrity_lvol_blk_nightly
-		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
-		timing_exit integrity_lvol_blk_nightly
-
-		timing_enter vhost_migration
-		run_test ./test/vhost/spdk_vhost.sh --migration
-		timing_exit vhost_migration
-
-		# timing_enter readonly
-		# run_test ./test/vhost/spdk_vhost.sh --readonly
-		# timing_exit readonly
-	fi
-
-	timing_enter integrity_lvol_scsi
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
-	timing_exit integrity_lvol_scsi
-
-	timing_enter integrity_lvol_blk
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
-	timing_exit integrity_lvol_blk
-
-	timing_enter spdk_cli
-	run_test ./test/spdkcli/vhost.sh
-	timing_exit spdk_cli
-
-	timing_exit vhost
-fi
-
-if [ $SPDK_TEST_LVOL -eq 1 ]; then
-	timing_enter lvol
-	test_cases="1,50,51,52,53,100,101,102,150,200,201,250,251,252,253,254,255,"
-	test_cases+="300,301,450,451,452,550,551,552,553,"
-	test_cases+="600,601,650,651,652,654,655,"
-	test_cases+="700,701,750,751,752,753,754,755,756,757,758,759,"
-	test_cases+="800,801,802,803,804,10000"
-	run_test ./test/lvol/lvol.sh --test-cases=$test_cases
-	report_test_completion "lvol"
-	timing_exit lvol
-fi
-
-if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
-	run_test ./test/vhost/initiator/blockdev.sh
-	run_test ./test/vhost/initiator/json_config.sh
-	report_test_completion "vhost_initiator"
-fi
-
-if [ $SPDK_TEST_PMDK -eq 1 ]; then
-	run_test ./test/pmem/pmem.sh -x
-	run_test ./test/pmem/json_config/json_config.sh
-	run_test ./test/spdkcli/pmem.sh
-fi
-
-if [ $SPDK_TEST_RBD -eq 1 ]; then
-	run_test ./test/bdev/bdevjson/rbd_json_config.sh
-	run_test ./test/spdkcli/rbd.sh
-fi
 
 timing_enter cleanup
 autotest_cleanup
@@ -243,11 +116,6 @@ trap - SIGINT SIGTERM EXIT
 process_core
 
 if hash lcov; then
-	# generate coverage data and combine with baseline
-	$LCOV -q -c -d $src -t "$(hostname)" -o cov_test.info
-	$LCOV -q -a cov_base.info -a cov_test.info -o $out/cov_total.info
-	$LCOV -q -r $out/cov_total.info '*/dpdk/*' -o $out/cov_total.info
-	$LCOV -q -r $out/cov_total.info '/usr/*' -o $out/cov_total.info
 	git clean -f "*.gcda"
 	rm -f cov_base.info cov_test.info OLD_STDOUT OLD_STDERR
 fi
