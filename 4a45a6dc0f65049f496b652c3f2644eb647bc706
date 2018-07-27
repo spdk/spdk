@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57851124_07a6279d",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-27T08:31:37Z",
+      "side": 1,
+      "message": "tab was changed to spaces by the tool?",
+      "revId": "4a45a6dc0f65049f496b652c3f2644eb647bc706",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
