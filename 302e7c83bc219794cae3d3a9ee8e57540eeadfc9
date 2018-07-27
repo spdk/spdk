@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67c9140b_9643f11f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-27T19:28:27Z",
+      "side": 1,
+      "message": "This structure is named \"vbdev_pmd\" or \"vbdev polled mode driver\" - but it doesn\u0027t represent the driver. This represents one crypto device. There can be many crypto devices per polled mode driver (just like there are many NVMe devices per NVMe driver).",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33772578_1b5e3d57",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-27T19:28:27Z",
+      "side": 1,
+      "message": "If I\u0027m understanding this correctly, there can be multiple crypto devices of each type, each of which may support multiple queue pairs. It\u0027s basically like NVMe devices in that sense. However, since the crypto operations are generally stateless, the user doesn\u0027t really care which crypto device they use, so you just multiply the number of devices times the queues per device to get a total number.\n\nFor the software devices, how are they exposed here? Is there one device with lots of queue pairs? Many devices each with one queue pair?\n\nFor QAT I assume there are 8-16 devices each with 1 queue pair. Is that right?\n\nThere is NUMA locality to consider, but I think we can ignore that for this first round.",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55d669e4_11d716cb",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-27T19:28:27Z",
+      "side": 1,
+      "message": "The name \"crypto_node\" is confusing because it isn\u0027t the name of a data structure. Calling this \"crypto_bdev\" would be clearer.",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cae8bf27_d7ee0b0f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-27T19:28:27Z",
+      "side": 1,
+      "message": "I\u0027ve been staring at this function for a long time and I\u0027m not confident that I understand what is going on here. I think running the following test is going to make some things much more apparent:\n\nRun the bdev fio plugin with cpumask set to include lots of cores and at least 1 job per core. Each job should be doing random writes (rw\u003drandwrite) with data verification (verify\u003d1) enabled at high queue depth (iodepth\u003d256). Run this for an hour maybe.\n\nIf that passes, then I need to spend more time looking at what this is doing. I asked a question above about how the software crypto is exposed (multiple devices or one device) that would clear some things up for me too.",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
