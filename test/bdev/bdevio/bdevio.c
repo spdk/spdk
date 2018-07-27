@@ -1,7 +1,6 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
