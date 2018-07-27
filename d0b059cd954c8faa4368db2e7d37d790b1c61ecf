@@ -16,6 +16,24 @@
       "revId": "d0b059cd954c8faa4368db2e7d37d790b1c61ecf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84494d4e_3940815c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2225,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-27T16:57:16Z",
+      "side": 1,
+      "message": "Yes this failed exactly with the assert the your patch was fixing.\n\nSure, I\u0027ll move this UT back bs_load and add one that does what you\u0027ve described.",
+      "parentUuid": "dbd5207b_94e377d0",
+      "revId": "d0b059cd954c8faa4368db2e7d37d790b1c61ecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
