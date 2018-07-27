@@ -118,6 +118,11 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	struct nvmf_tgt_poll_group *pg;
 	uint32_t core;
 
+	if (g_tgt_state != NVMF_TGT_RUNNING) {
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		return;
+	}
+
 	core = g_tgt_core;
 	g_tgt_core = spdk_env_get_next_core(core);
 	if (g_tgt_core == UINT32_MAX) {

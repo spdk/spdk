@@ -753,11 +753,20 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 		return -ENOMEM;
 	}
 
+	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */
+	if (qpair->state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
+		free(qpair_ctx);
+		spdk_nvmf_transport_qpair_fini(qpair);
+		if (cb_fn) {
+			cb_fn(ctx);
+		}
+		return 0;
+	}
+
 	qpair_ctx->qpair = qpair;
 	qpair_ctx->cb_fn = cb_fn;
 	qpair_ctx->thread = qpair->group->thread;
 	qpair_ctx->ctx = ctx;
-
 	if (qpair->group->thread == spdk_get_thread()) {
 		_spdk_nvmf_qpair_deactivate(qpair_ctx);
 	} else {
