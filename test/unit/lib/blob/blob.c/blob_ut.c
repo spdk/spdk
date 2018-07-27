@@ -2271,6 +2271,59 @@ bs_load(void)
 }
 
 static void
+bs_load_custom_cluster_size(void)
+{
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_super_block *super_block;
+	struct spdk_bs_opts opts;
+	uint32_t custom_cluster_size = 4194304; /* 4MiB */
+	uint32_t cluster_sz;
+	uint64_t total_clusters;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	opts.cluster_sz = custom_cluster_size;
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	cluster_sz = g_bs->cluster_sz;
+	total_clusters = g_bs->total_clusters;
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+
+	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
+	CU_ASSERT(super_block->clean == 1);
+
+	/* Load an existing blob store */
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	/* Compare cluster size and number to one after initialization */
+	CU_ASSERT(cluster_sz == g_bs->cluster_sz);
+	CU_ASSERT(total_clusters == g_bs->total_clusters);
+
+	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
+	CU_ASSERT(super_block->clean == 1);
+	CU_ASSERT(super_block->size == dev->blockcnt * dev->blocklen);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(super_block->clean == 1);
+	g_bs = NULL;
+}
+
+static void
 bs_type(void)
 {
 	struct spdk_bs_dev *dev;
@@ -4915,6 +4968,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_iter", blob_iter) == NULL ||
 		CU_add_test(suite, "blob_xattr", blob_xattr) == NULL ||
 		CU_add_test(suite, "bs_load", bs_load) == NULL ||
+		CU_add_test(suite, "bs_load_custom_cluster_size", bs_load_custom_cluster_size) == NULL ||
 		CU_add_test(suite, "bs_unload", bs_unload) == NULL ||
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
 		CU_add_test(suite, "bs_usable_clusters", bs_usable_clusters) == NULL ||
