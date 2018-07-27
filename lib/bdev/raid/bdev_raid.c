@@ -581,10 +581,61 @@ raid_bdev_waitq_io_process(void *ctx)
 
 /*
  * brief:
+ * _raid_bdev_submit_rw_request function is the submit_request function for
+ * read/write requests
+ * params:
+ * ch - pointer to raid bdev io channel
+ * bdev_io - pointer to parent bdev_io on raid bdev device
+ * returns:
+ * none
+ */
+static void
+_raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct raid_bdev_io_channel	*raid_bdev_io_channel;
+	struct raid_bdev_io		*raid_bdev_io;
+	struct raid_bdev		*raid_bdev;
+	uint64_t			start_strip = 0;
+	uint64_t			end_strip = 0;
+	int				ret;
+
+	if (bdev_io->u.bdev.iovcnt != 1) {
+		SPDK_ERRLOG("iov vector count is not 1\n");
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	/*
+	 * IO parameters used during io split and io completion
+	 */
+	raid_bdev_io_channel = spdk_io_channel_get_ctx(ch);
+	raid_bdev = &raid_bdev_io_channel->raid_bdev_ctxt->raid_bdev;
+	raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	if (raid_bdev->num_base_bdevs > 1) {
+		start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
+		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+			    raid_bdev->strip_size_shift;
+		/*
+		 * IO parameters used during io split and io completion
+		 */
+		raid_bdev_io->splits_pending = (end_strip - start_strip + 1);
+		raid_bdev_io->splits_comp_outstanding = 0;
+		raid_bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		ret = raid_bdev_submit_children(ch, bdev_io, start_strip, end_strip, start_strip,
+						bdev_io->u.bdev.iovs->iov_base);
+	} else {
+		ret = raid_bdev_send_passthru(ch, bdev_io);
+	}
+	if (ret != 0) {
+		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_bdev_io, ret);
+	}
+}
+
+/*
+ * brief:
  * raid_bdev_submit_request function is the submit_request function pointer of
  * raid bdev function table. This is used to submit the io on raid_bdev to below
- * layers. If iowaitq is not empty, it will queue the parent bdev_io to the end
- * of the queue.
+ * layers.
  * params:
  * ch - pointer to raid bdev io channel
  * bdev_io - pointer to parent bdev_io on raid bdev device
@@ -594,45 +645,10 @@ raid_bdev_waitq_io_process(void *ctx)
 static void
 raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct   raid_bdev_io_channel *raid_bdev_io_channel;
-	struct   raid_bdev_io         *raid_bdev_io;
-	struct   raid_bdev            *raid_bdev;
-	uint64_t                      start_strip = 0;
-	uint64_t                      end_strip = 0;
-	int                           ret;
-
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		if (bdev_io->u.bdev.iovcnt != 1) {
-			SPDK_ERRLOG("iov vector count is not 1\n");
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-			break;
-		}
-		/*
-		 * IO parameters used during io split and io completion
-		 */
-		raid_bdev_io_channel = spdk_io_channel_get_ctx(ch);
-		raid_bdev = &raid_bdev_io_channel->raid_bdev_ctxt->raid_bdev;
-		raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-		if (raid_bdev->num_base_bdevs > 1) {
-			start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-			end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-				    raid_bdev->strip_size_shift;
-			/*
-			 * IO parameters used during io split and io completion
-			 */
-			raid_bdev_io->splits_pending = (end_strip - start_strip + 1);
-			raid_bdev_io->splits_comp_outstanding = 0;
-			raid_bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-			ret = raid_bdev_submit_children(ch, bdev_io, start_strip, end_strip, start_strip,
-							bdev_io->u.bdev.iovs->iov_base);
-		} else {
-			ret = raid_bdev_send_passthru(ch, bdev_io);
-		}
-		if (ret != 0) {
-			raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_bdev_io, ret);
-		}
+		_raid_bdev_submit_rw_request(ch, bdev_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
