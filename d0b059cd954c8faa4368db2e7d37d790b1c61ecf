@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbd5207b_94e377d0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2225,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-27T16:23:44Z",
+      "side": 1,
+      "message": "Hi Tomek,\n\nDoes this test fail if run without my patch?\n\nI guess I would like to see a test that initialized the blobstore with non-default cluster size, save the number of clusters and cluster size (from the spdk_blob_store object itself); then unload and reload the blobstore and check the numbers again.\n\nIt\u0027s not clear that this test is doing that.  It checks the size but I don\u0027t think that\u0027s where the bug was.\n\n-Jim",
+      "revId": "d0b059cd954c8faa4368db2e7d37d790b1c61ecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
