@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3787d16c_8dc30017",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-27T12:54:42Z",
+      "side": 1,
+      "message": "This shouldn\u0027t depend on the size of cluster directly. Instead please use total_data_clusters or free_clusters (depending on scenario).\nIt happens through out the whole file. For reference please see cases like test_case551. This could be a patch before this one, since it does not depend on cluster_size var removal.",
+      "range": {
+        "startLine": 299,
+        "startChar": 47,
+        "endLine": 299,
+        "endChar": 66
+      },
+      "revId": "2c35d48298b5e9607a9ff7ece3008ab387087ede",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76d49d51_0dcd7b2b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1216,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-27T12:54:42Z",
+      "side": 1,
+      "message": "Since cluster_size is now optional (using lvol default), lets remove it from all current tests.\nNext patch will have tests for specific non-default cluster sizes.",
+      "range": {
+        "startLine": 1216,
+        "startChar": 0,
+        "endLine": 1216,
+        "endChar": 69
+      },
+      "revId": "2c35d48298b5e9607a9ff7ece3008ab387087ede",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d00bcb6a_2a81030d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1495,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-27T12:54:42Z",
+      "side": 1,
+      "message": "Why is \"*4\" needed ? free_clusters*cluster_size results in number of bytes that are the size of lvol store. Then dividing by MEGABYTE, results in size of lvol store in megabytes. This is needed for construct_lvol_bdev, where argument \u0027size\u0027 is done in megabytes.",
+      "range": {
+        "startLine": 1495,
+        "startChar": 80,
+        "endLine": 1495,
+        "endChar": 92
+      },
+      "revId": "2c35d48298b5e9607a9ff7ece3008ab387087ede",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93d933c6_4bb05a3e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1495,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-27T12:54:42Z",
+      "side": 1,
+      "message": "As noted in line 299, this (or total_data_clusters) is best way to define size for construct_lvol_bdev(). How about turning it into separate function ?",
+      "range": {
+        "startLine": 1495,
+        "startChar": 8,
+        "endLine": 1495,
+        "endChar": 93
+      },
+      "revId": "2c35d48298b5e9607a9ff7ece3008ab387087ede",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
