@@ -31,14 +31,17 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += blobfs bdev blob ioat nvme
+DIRS-$(CONFIG_FIO_PLUGIN) = fio_plugin
 
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
+	@:
+
 clean: $(DIRS-y)
+	@:
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
