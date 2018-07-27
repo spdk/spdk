@@ -647,6 +647,14 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
+		if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
+			spdk_bdev_io_get_buf(bdev_io, _raid_bdev_submit_rw_request,
+					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		} else {
+			/* Just call it directly if iov_base is already populated. */
+			_raid_bdev_submit_rw_request(ch, bdev_io);
+		}
+		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		_raid_bdev_submit_rw_request(ch, bdev_io);
 		break;

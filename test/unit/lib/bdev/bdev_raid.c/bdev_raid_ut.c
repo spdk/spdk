@@ -165,6 +165,13 @@ reset_globals(void)
 	rpc_req_size = 0;
 }
 
+void
+spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb,
+		     uint64_t len)
+{
+	CU_ASSERT(false);
+}
+
 /* Store the IO completion status in global variable to verify by various tests */
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
