@@ -2027,7 +2027,7 @@ spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 	SPDK_NOTICELOG("IBV QP#%u drained\n", rqpair->qpair.qid);
 
 	if (spdk_nvmf_qpair_is_admin_queue(&rqpair->qpair)) {
-		spdk_nvmf_ctrlr_drain_aer_req(rqpair->qpair.ctrlr);
+		spdk_nvmf_ctrlr_abort_aer(rqpair->qpair.ctrlr);
 	}
 
 	spdk_nvmf_rdma_drain_pending_reqs(rqpair);
