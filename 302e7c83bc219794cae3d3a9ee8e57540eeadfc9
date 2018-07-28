@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a0ac961c_16ea87ae",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 59
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-07-28T13:22:04Z",
+      "side": 1,
+      "message": "Should I just remove this from the change entirely until next relase?",
+      "parentUuid": "f0be52b7_7942a6c6",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67c9140b_9643f11f",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 59
