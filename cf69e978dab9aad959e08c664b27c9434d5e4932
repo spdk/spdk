@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d2dd602_7cacf501",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-30T21:05:22Z",
+      "side": 1,
+      "message": "Now that the functions are in order from top to bottom, some additional simplifications are more obvious. If you take my suggestion on line 231, then this function would only be called from line 208. This function is only two lines of code, so you may as well just embed it on line 208 instead.",
+      "revId": "cf69e978dab9aad959e08c664b27c9434d5e4932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4d84ba9_3c9fd642",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-30T21:05:22Z",
+      "side": 1,
+      "message": "I think you can replace the code below with a call to _nvmf_tgt_disconnect_next_qpair.",
+      "revId": "cf69e978dab9aad959e08c664b27c9434d5e4932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
