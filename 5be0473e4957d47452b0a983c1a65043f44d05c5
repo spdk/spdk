@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c64bba43_74e6efa3",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-30T16:44:28Z",
+      "side": 1,
+      "message": "A comment here that says this dereferences the poll group, and if the ref count drops to 0 spdk_nvmf_tgt_destroy_poll_group will be called would be helpful to a lot of people I\u0027m sure.",
+      "revId": "5be0473e4957d47452b0a983c1a65043f44d05c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9523b412_e353643d",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-30T16:44:28Z",
+      "side": 1,
+      "message": "This function makes the most sense to be placed above _spdk_nvmf_tgt_destroy_poll_group_cb (then the code reads from top to bottom).",
+      "revId": "5be0473e4957d47452b0a983c1a65043f44d05c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
