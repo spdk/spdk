@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "ba963ed7_8ecb6876",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-30T16:09:31Z",
+      "side": 1,
+      "message": "Thanks guys, good point.",
+      "parentUuid": "cf9b4179_1b516b32",
+      "range": {
+        "startLine": 888,
+        "startChar": 31,
+        "endLine": 888,
+        "endChar": 32
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5af55c3e_d2fbd8c5",
         "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
         "patchSetId": 29
@@ -60,6 +84,30 @@
       "writtenOn": "2018-07-30T02:32:51Z",
       "side": 1,
       "message": "remove the return",
+      "range": {
+        "startLine": 178,
+        "startChar": 1,
+        "endLine": 179,
+        "endChar": 1
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da2a8e71_ccf67512",
+        "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-30T16:09:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5af55c3e_d2fbd8c5",
       "range": {
         "startLine": 178,
         "startChar": 1,
@@ -95,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "947e8cef_5288d5bf",
+        "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-30T16:09:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd2f64b2_fe61f172",
+      "range": {
+        "startLine": 185,
+        "startChar": 1,
+        "endLine": 186,
+        "endChar": 8
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9772e9db_91b113fa",
         "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
         "patchSetId": 29
@@ -106,6 +178,30 @@
       "writtenOn": "2018-07-30T02:32:51Z",
       "side": 1,
       "message": "remove the return",
+      "range": {
+        "startLine": 194,
+        "startChar": 1,
+        "endLine": 194,
+        "endChar": 8
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48ab8c8d_33a7bba0",
+        "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-30T16:09:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9772e9db_91b113fa",
       "range": {
         "startLine": 194,
         "startChar": 1,
@@ -141,6 +237,30 @@
     },
     {
       "key": {
+        "uuid": "9af5f96e_7bf93350",
+        "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-30T16:09:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5ab518dd_00c98090",
+      "range": {
+        "startLine": 202,
+        "startChar": 0,
+        "endLine": 202,
+        "endChar": 8
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b01116d_1e19f64c",
         "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
         "patchSetId": 29
@@ -152,6 +272,30 @@
       "writtenOn": "2018-07-30T02:32:51Z",
       "side": 1,
       "message": "For void function, we may skip return. and same with the following functions.",
+      "range": {
+        "startLine": 134,
+        "startChar": 1,
+        "endLine": 134,
+        "endChar": 8
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7730bff6_876ae48d",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-30T16:09:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b01116d_1e19f64c",
       "range": {
         "startLine": 134,
         "startChar": 1,
