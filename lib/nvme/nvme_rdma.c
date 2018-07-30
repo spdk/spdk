@@ -1105,7 +1105,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 
 	rc = nvme_ctrlr_construct(&rctrlr->ctrlr);
 	if (rc != 0) {
-		nvme_ctrlr_destruct(&rctrlr->ctrlr);
+		free(rctrlr);
 		return NULL;
 	}
 
@@ -1113,6 +1113,8 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 			       SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES, 0, SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES);
 	if (!rctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
+		free(rctrlr);
+		nvme_ctrlr_destruct_finish(&rctrlr->ctrlr);
 		return NULL;
 	}
 
