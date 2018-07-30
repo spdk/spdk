@@ -276,9 +276,9 @@ class TestCases(object):
         lvs = self.c.get_lvol_stores()
         return int(int(lvs[0][u'free_clusters'] * lvs[0]['cluster_size']) / MEGABYTE)
 
-    def get_lvol_bdev_split_size(self, split_num):
-        lvs = self.c.get_lvol_stores()
-        return int(int(lvs[0][u'free_clusters'] / split_num) * lvs[0]['cluster_size'] / MEGABYTE)
+    def get_lvol_bdev_split_size(self, split_num, lvs_name = "lvs_test"):
+        lvs = self.c.get_lvol_stores(lvs_name)[0]
+        return int(int(lvs[u'free_clusters'] / split_num) * lvs['cluster_size'] / MEGABYTE)
 
     def get_lvs_cluster_size(self):
         lvs = self.c.get_lvol_stores()
@@ -2358,21 +2358,22 @@ class TestCases(object):
                                                    lvs_name_2)
 
         # Create 4 lvol bdevs on top of each lvol store
-        bdev_size = self.get_lvol_bdev_split_size(4)
+        bdev_size_1 = self.get_lvol_bdev_split_size(4, lvs_name_1)
+        bdev_size_2 = self.get_lvol_bdev_split_size(4, lvs_name_2)
         for name, alias in zip(bdev_names_1, bdev_aliases_1):
             uuid = self.c.construct_lvol_bdev(lvs_uuid_1,
                                               name,
-                                              bdev_size)
+                                              bdev_size_1)
             fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size,
+                                                         bdev_size_1,
                                                          alias)
             bdev_uuids_1.append(uuid)
         for name, alias in zip(bdev_names_2, bdev_aliases_2):
             uuid = self.c.construct_lvol_bdev(lvs_uuid_2,
                                               name,
-                                              bdev_size)
+                                              bdev_size_2)
             fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size,
+                                                         bdev_size_2,
                                                          alias)
             bdev_uuids_2.append(uuid)
 
@@ -2392,12 +2393,12 @@ class TestCases(object):
 
         for name, alias, uuid in zip(bdev_names_1, bdev_aliases_1, bdev_uuids_1):
             fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size,
+                                                         bdev_size_1,
                                                          alias)
 
         for name, alias, uuid in zip(bdev_names_2, bdev_aliases_2, bdev_uuids_2):
             fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size,
+                                                         bdev_size_2,
                                                          alias)
 
         # Clean configuration
