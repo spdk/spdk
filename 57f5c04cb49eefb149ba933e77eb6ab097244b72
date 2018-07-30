@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a07feb19_0171d5c8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-30T21:49:11Z",
+      "side": 1,
+      "message": "There should be a newline after the first line of the commit message.  This ensures only this first line shows up in the git short long (i.e. git log --oneline).\n\nhttps://chris.beams.io/posts/git-commit/ includes this and some other good pointers.",
+      "revId": "57f5c04cb49eefb149ba933e77eb6ab097244b72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1be3d76_3c8cc77f",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-30T21:49:11Z",
+      "side": 1,
+      "message": "I\u0027m guessing this is just a test patch and not intended to actually get pushed upstream - but obviously these conflict markers shouldn\u0027t be in the patch.",
+      "revId": "57f5c04cb49eefb149ba933e77eb6ab097244b72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fdf897d_0fbaadc3",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-30T21:49:11Z",
+      "side": 1,
+      "message": "Did you find real issues when running check_format.sh on your system?  The test pool won\u0027t allow any patch to get committed if they fail the check_format.sh script.",
+      "revId": "57f5c04cb49eefb149ba933e77eb6ab097244b72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
