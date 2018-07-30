@@ -243,6 +243,7 @@ raid_bdev_destruct(void *ctxt)
 		TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
 		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
 		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+		spdk_io_device_unregister(raid_bdev, NULL);
 	}
 
 	if (raid_bdev->num_base_bdevs_discovered == 0) {
