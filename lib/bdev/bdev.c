@@ -77,6 +77,8 @@ enum spdk_bdev_qos_type {
 
 static const char *qos_type_str[SPDK_BDEV_QOS_NUM_TYPES] = {"Limit_IOPS", "Limit_BWPS"};
 
+TAILQ_HEAD(spdk_bdev_list, spdk_bdev);
+
 struct spdk_bdev_mgr {
 	struct spdk_mempool *bdev_io_pool;
 
@@ -87,7 +89,7 @@ struct spdk_bdev_mgr {
 
 	TAILQ_HEAD(, spdk_bdev_module) bdev_modules;
 
-	TAILQ_HEAD(, spdk_bdev) bdevs;
+	struct spdk_bdev_list bdevs;
 
 	bool init_complete;
 	bool module_init_complete;
@@ -916,17 +918,17 @@ _spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	}
 
 	/*
-	 * Unregister the first bdev in the list.
-	 *
-	 * spdk_bdev_unregister() will handle the case where the bdev has open descriptors by
-	 *  calling the remove_cb of the descriptors first.
-	 *
-	 * Once this bdev and all of its open descriptors have been cleaned up, this function
-	 *  will be called again via the unregister completion callback to continue the cleanup
-	 *  process with the next bdev.
+	 * Unregister the last bdev in the list.  The last bdev in the list should be a bdev
+	 * that has no bdevs that depend on it.
 	 */
-	bdev = TAILQ_FIRST(&g_bdev_mgr.bdevs);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Unregistering bdev '%s'\n", bdev->name);
+	bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
+	SPDK_ERRLOG("Unregistering bdev '%s'\n", bdev->name);
+	if (bdev->internal.claim_module != NULL) {
+		SPDK_ERRLOG("  claimed still by module %s\n", bdev->internal.claim_module->name);
+	}
+	if (!TAILQ_EMPTY(&bdev->internal.open_descs)) {
+		SPDK_ERRLOG("  still has open descriptors\n");
+	}
 	spdk_bdev_unregister(bdev, _spdk_bdev_finish_unregister_bdevs_iter, bdev);
 }
 
@@ -2849,7 +2851,7 @@ spdk_bdev_start(struct spdk_bdev *bdev)
 	struct spdk_bdev_module *module;
 	uint32_t action;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Inserting bdev %s into list\n", bdev->name);
+	SPDK_ERRLOG("Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
 
 	/* Examine configuration before initializing I/O */
