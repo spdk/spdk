@@ -52,6 +52,24 @@
       "revId": "8dce0d43b62e7869be4a61c9f42cf29a8b41e43f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "644fb78e_1acd4d28",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-30T08:18:38Z",
+      "side": 1,
+      "message": "I don\u0027t get your point, can you elaborate?. The bdev layer takes care of waiting for all descriptors to be closed before calling module_finis, so this patch is 100% safe - unless I\u0027m missing something, of course.",
+      "parentUuid": "c52415f4_50ae1875",
+      "revId": "8dce0d43b62e7869be4a61c9f42cf29a8b41e43f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
