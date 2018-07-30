@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e441839c_850926da",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-30T02:23:20Z",
+      "side": 1,
+      "message": "For this change, could we adjust it into to a proper location, I found that this is only remove the location(or change the name). If we can put into the proper location, we can have less changes for the code.",
+      "range": {
+        "startLine": 215,
+        "startChar": 0,
+        "endLine": 242,
+        "endChar": 1
+      },
+      "revId": "a2fe3478304aa8d324d320dd5829249701d878df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
