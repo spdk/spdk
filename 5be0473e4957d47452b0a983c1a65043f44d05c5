@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6b2cd15f_3e33292a",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-30T22:43:20Z",
+      "side": 1,
+      "message": "Thanks, good call.",
+      "parentUuid": "c64bba43_74e6efa3",
+      "revId": "5be0473e4957d47452b0a983c1a65043f44d05c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9523b412_e353643d",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-30T16:44:28Z",
       "side": 1,
       "message": "This function makes the most sense to be placed above _spdk_nvmf_tgt_destroy_poll_group_cb (then the code reads from top to bottom).",
+      "revId": "5be0473e4957d47452b0a983c1a65043f44d05c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e5cba6c_57ab7e32",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-30T22:43:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9523b412_e353643d",
       "revId": "5be0473e4957d47452b0a983c1a65043f44d05c5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "08af44fc_ca16b7a8",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-30T22:43:20Z",
+      "side": 1,
+      "message": "Ben also posted a comment about the conceptual placing of this function which I have applied. I think it makes the diff meet in the middle (at least with git\u0027s diffing strategy) and contributes to the readability of the code.",
+      "parentUuid": "9b590667_2da1a824",
+      "revId": "a2fe3478304aa8d324d320dd5829249701d878df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e441839c_850926da",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 11
