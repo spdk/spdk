@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28a93c76_a8c3b3e5",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-30T05:59:28Z",
+      "side": 1,
+      "message": "I think the correct way should un-register the block device first, and at the callback of un-register you can call spdk_io_device_unregister, the method you wrote here didn\u0027t close the block device.",
+      "revId": "8dce0d43b62e7869be4a61c9f42cf29a8b41e43f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
