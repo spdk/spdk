@@ -16,6 +16,24 @@
       "revId": "32cc0199d116b9f7b96f379583cad86b107bd95f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9207796_5f9a8908",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-30T23:32:18Z",
+      "side": 0,
+      "message": "Hi Kunal,\n\nraid_bdev_exit in which calls raid_bdev_free will be called after all bdevs are unregistered. I think removing this is safe.",
+      "parentUuid": "cc2cb831_1b08e66b",
+      "revId": "32cc0199d116b9f7b96f379583cad86b107bd95f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
