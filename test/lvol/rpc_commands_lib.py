@@ -66,6 +66,7 @@ class Commands_Rpc(object):
         json_value = self.get_lvol_stores()
         if json_value:
             for i in range(len(json_value)):
+                print(json_value[i])
                 json_uuid = json_value[i]['uuid']
                 json_cluster = json_value[i]['cluster_size']
                 json_base_name = json_value[i]['base_bdev']
