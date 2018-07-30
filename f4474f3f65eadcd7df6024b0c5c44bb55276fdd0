@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a302958_cf9a89cf",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-30T05:45:33Z",
+      "side": 1,
+      "message": "Can you use nvme_ctrlr_destruct instead of the two lines ?",
+      "range": {
+        "startLine": 1116,
+        "startChar": 3,
+        "endLine": 1116,
+        "endChar": 4
+      },
+      "revId": "f4474f3f65eadcd7df6024b0c5c44bb55276fdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
