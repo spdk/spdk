@@ -272,8 +272,8 @@ struct spdk_nvmf_fabric_prop_get_cmd {
 	uint8_t		fctype;
 	uint8_t		reserved2[35];
 	struct {
-		uint8_t size		: 2;
-		uint8_t reserved	: 6;
+		uint8_t size		: 3;
+		uint8_t reserved	: 5;
 	} attrib;
 	uint8_t		reserved3[3];
 	uint32_t	ofst;
@@ -304,8 +304,8 @@ struct spdk_nvmf_fabric_prop_set_cmd {
 	uint8_t		fctype;
 	uint8_t		reserved1[35];
 	struct {
-		uint8_t size		: 2;
-		uint8_t reserved	: 6;
+		uint8_t size		: 3;
+		uint8_t reserved	: 5;
 	} attrib;
 	uint8_t		reserved2[3];
 	uint32_t	ofst;
