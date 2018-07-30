@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9b590667_2da1a824",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-30T15:36:13Z",
+      "side": 1,
+      "message": "see Ziye\u0027s comment below:\n\nif you spdk_nvmf_tgt_destroy_poll_group() definition here, it should significantly reduce the size of the patch",
+      "revId": "a2fe3478304aa8d324d320dd5829249701d878df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e441839c_850926da",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 11
