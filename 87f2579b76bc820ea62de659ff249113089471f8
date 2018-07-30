@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cf9b4179_1b516b32",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-30T05:06:07Z",
+      "side": 1,
+      "message": "Agreed, the variable doesn\u0027t need here.",
+      "parentUuid": "5b1a85a3_2d7adfbe",
+      "range": {
+        "startLine": 888,
+        "startChar": 31,
+        "endLine": 888,
+        "endChar": 32
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5af55c3e_d2fbd8c5",
         "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
         "patchSetId": 29
