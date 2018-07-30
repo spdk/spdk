@@ -70,6 +70,24 @@
       "revId": "8dce0d43b62e7869be4a61c9f42cf29a8b41e43f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "339d9cef_47edec19",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-30T08:37:15Z",
+      "side": 1,
+      "message": "I saw the code, at least when entering module_fini callback, it\u0027s safe to do this.",
+      "parentUuid": "644fb78e_1acd4d28",
+      "revId": "8dce0d43b62e7869be4a61c9f42cf29a8b41e43f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
