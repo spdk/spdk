@@ -22,6 +22,30 @@
       "revId": "f4474f3f65eadcd7df6024b0c5c44bb55276fdd0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ac5d376_36da0259",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-07-30T07:24:00Z",
+      "side": 1,
+      "message": "Hi Changpeng,\nI have tried to use the nvme_ctrlr_destruct function to release the rctrlr, but failed. \nThe rctrlr-\u003ectrlr.adminq is NULL in this case, So it will core dump when release the rctrlr without adminq in nvme_ctrlr_destruct function.\nShould i change the nvme_ctrlr_destruct function to instead of this method?",
+      "parentUuid": "9a302958_cf9a89cf",
+      "range": {
+        "startLine": 1116,
+        "startChar": 3,
+        "endLine": 1116,
+        "endChar": 4
+      },
+      "revId": "f4474f3f65eadcd7df6024b0c5c44bb55276fdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
