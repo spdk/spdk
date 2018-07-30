@@ -124,12 +124,12 @@ function vhost_kill()
     rmmod nbd || true
 }
 
-trap "vhost_kill; rm -f $BASE_DIR/aio_bdev_0; exit 1" SIGINT SIGTERM EXIT
+trap "vhost_kill; rm -f $BASE_DIR/aio_bdev_0 $BASE_DIR/aio_bdev_1; exit 1" SIGINT SIGTERM EXIT
 
-truncate -s 400M $BASE_DIR/aio_bdev_0
+truncate -s 400M $BASE_DIR/aio_bdev_0 $BASE_DIR/aio_bdev_1
 vhost_start
 $BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $BASE_DIR $TEST_DIR/app/vhost "${test_cases[@]}"
 
 vhost_kill
-rm -rf $BASE_DIR/aio_bdev_0
+rm -rf $BASE_DIR/aio_bdev_0 $BASE_DIR/aio_bdev_1
 trap - SIGINT SIGTERM EXIT
