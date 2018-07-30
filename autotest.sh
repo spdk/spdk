@@ -63,6 +63,7 @@ if [ $(uname -s) = Linux ]; then
 	devs=`lsblk -l -o NAME | grep nvme | grep -v p` || true
 	for dev in $devs; do
 		parted -s /dev/$dev mklabel msdos
+		dd if=/dev/zero of=/dev/$dev bs=1M count=16 direct=1
 	done
 
 	# Load RAM disk driver if available
