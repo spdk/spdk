@@ -6,14 +6,14 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
 delete_tmp_files() {
-	rm -f $testdir/iscsi.conf
+	rm -f $testdir/iscsi_tmp.json
 	rm -f ./local-job0-0-verify.state
 }
 
 function running_config() {
 	# generate a config file from the running iscsi_tgt
 	#  running_config.sh will leave the file at /tmp/iscsi.conf
-	$testdir/running_config.sh $pid
+	$rpc_py save_config -f $testdir/iscsi_tmp.json
 	sleep 1
 
 	# now start iscsi_tgt again using the generated config file
@@ -24,11 +24,12 @@ function running_config() {
 
 	timing_enter start_iscsi_tgt2
 
-	$ISCSI_APP -c /tmp/iscsi.conf &
+	$ISCSI_APP -w &
 	pid=$!
 	echo "Process pid: $pid"
 	trap "iscsicleanup; killprocess $pid; delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
 	waitforlisten $pid
+	$rpc_py load_config -f $testdir/iscsi.json
 	echo "iscsi_tgt is listening. Running tests..."
 
 	timing_exit start_iscsi_tgt2
@@ -49,8 +50,6 @@ fi
 
 timing_enter fio
 
-cp $testdir/iscsi.conf.in $testdir/iscsi.conf
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
@@ -59,13 +58,14 @@ fio_py="python $rootdir/scripts/fio.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -c $testdir/iscsi.conf &
+$ISCSI_APP -w &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; rm -f $testdir/iscsi.conf; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+$rpc_py load_config -f $testdir/iscsi.json
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
