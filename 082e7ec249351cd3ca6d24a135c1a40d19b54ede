@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d687572d_5203c464",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-30T16:40:13Z",
+      "side": 1,
+      "message": "This function pointer is hard coded, so you don\u0027t actually need it. Just call the function directly instead.",
+      "revId": "082e7ec249351cd3ca6d24a135c1a40d19b54ede",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
