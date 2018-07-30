@@ -1116,6 +1116,9 @@ class TestCases(object):
         and check if we can read from this device and it returns zeroes.
         """
         # create malloc bdev
+        print("total_size={total_size}".format(total_size=self.total_size));
+        print("block_size={block_size}".format(block_size=self.block_size));
+
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         # construct lvol store on malloc bdev
@@ -1123,12 +1126,14 @@ class TestCases(object):
                                                  self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
+        print("cluster_size={cluster_size}".format(cluster_size=self.cluster_size));
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
         free_clusters_start = int(lvs['free_clusters'])
         lbd_name0 = self.lbd_name + str("0")
         lbd_name1 = self.lbd_name + str("1")
         # calculate bdev size in megabytes
         bdev_size = self.get_lvs_size()
+        print("bdev_size={bdev_size}".format(bdev_size=bdev_size));
         # create thick provisioned lvol bvdev with size equal to lvol store
         bdev_name0 = self.c.construct_lvol_bdev(uuid_store, lbd_name0,
                                                 bdev_size, thin=False)
