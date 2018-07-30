@@ -92,6 +92,12 @@ now deprecated and will be removed in a future release.
 Change the return type of spdk_file_truncate from void to int. The purpose is to catch
 the `NOMEM` error condition.
 
+### DPDK 18.05
+
+SPDK has been updated to support DPDK 18.05 although the dynamic memory allocation,
+a latest dpdk feature, proved to be yet unreliable and SPDK held back on using it until
+DPDK 18.08. The legacy memory allocation model is enforced for now.
+
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
 ### vhost
