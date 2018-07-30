@@ -2675,8 +2675,8 @@ Example request:
     "allow_any_host": false,
     "serial_number": "abcdef",
     "namespaces": [
-      {"nsid": 1, "name": "Malloc2"},
-      {"nsid": 2, "name": "Nvme0n1"}
+      {"nsid": 1, "bdev_name": "Malloc2"},
+      {"nsid": 2, "bdev_name": "Nvme0n1"}
     ]
   }
 }
