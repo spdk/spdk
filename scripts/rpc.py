@@ -222,7 +222,7 @@ if __name__ == "__main__":
     def set_bdev_nvme_options(args):
         rpc.bdev.set_bdev_nvme_options(args.client,
                                        action_on_timeout=args.action_on_timeout,
-                                       timeout_s=args.timeout_s,
+                                       timeout_us=args.timeout_us,
                                        retry_count=args.retry_count,
                                        nvme_adminq_poll_period_us=args.nvme_adminq_poll_period_us)
 
