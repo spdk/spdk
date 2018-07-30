@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da369f7e_778587e3",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-30T08:59:07Z",
+      "side": 1,
+      "message": "Line 1108 also need to replace nvme_ctrlr_destruct with free(rctrl)",
+      "revId": "2aeb91a132d580d5e572df18741c6ce392e88e2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
