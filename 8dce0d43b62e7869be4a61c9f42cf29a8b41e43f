@@ -34,6 +34,24 @@
       "revId": "8dce0d43b62e7869be4a61c9f42cf29a8b41e43f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c52415f4_50ae1875",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-30T06:57:03Z",
+      "side": 1,
+      "message": "I know, it really depends on the caller such as iSCSI/vhost target will call spdk_bdev_close so that it call trigger spdk_bdev_unregister before module destruct, what I mean here we should have the same criteria about the module destruct.",
+      "parentUuid": "170fbe1e_b841d3c1",
+      "revId": "8dce0d43b62e7869be4a61c9f42cf29a8b41e43f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
