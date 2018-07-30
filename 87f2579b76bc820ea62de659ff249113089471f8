@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b1a85a3_2d7adfbe",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-30T02:32:51Z",
+      "side": 1,
+      "message": "Could we change this name is to make it more meaningful, e.g., cpl_fn?",
+      "range": {
+        "startLine": 888,
+        "startChar": 31,
+        "endLine": 888,
+        "endChar": 32
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5af55c3e_d2fbd8c5",
+        "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-30T02:32:51Z",
+      "side": 1,
+      "message": "remove the return",
+      "range": {
+        "startLine": 178,
+        "startChar": 1,
+        "endLine": 179,
+        "endChar": 1
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd2f64b2_fe61f172",
+        "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-30T02:32:51Z",
+      "side": 1,
+      "message": "remove the return",
+      "range": {
+        "startLine": 185,
+        "startChar": 1,
+        "endLine": 186,
+        "endChar": 8
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9772e9db_91b113fa",
+        "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-30T02:32:51Z",
+      "side": 1,
+      "message": "remove the return",
+      "range": {
+        "startLine": 194,
+        "startChar": 1,
+        "endLine": 194,
+        "endChar": 8
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ab518dd_00c98090",
+        "filename": "test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-30T02:32:51Z",
+      "side": 1,
+      "message": "remove the return",
+      "range": {
+        "startLine": 202,
+        "startChar": 0,
+        "endLine": 202,
+        "endChar": 8
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b01116d_1e19f64c",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-07-30T02:32:51Z",
+      "side": 1,
+      "message": "For void function, we may skip return. and same with the following functions.",
+      "range": {
+        "startLine": 134,
+        "startChar": 1,
+        "endLine": 134,
+        "endChar": 8
+      },
+      "revId": "87f2579b76bc820ea62de659ff249113089471f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
