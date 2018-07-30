@@ -59,10 +59,11 @@ if [ $(uname -s) = Linux ]; then
 	# Let the kernel discover any filesystems or partitions
 	sleep 10
 
-	# Delete all partitions on NVMe devices
+	# Delete all partitions on NVMe devices and clear the first 16MB of data
 	devs=`lsblk -l -o NAME | grep nvme | grep -v p` || true
 	for dev in $devs; do
 		parted -s /dev/$dev mklabel msdos
+		dd if=/dev/zero of=/dev/$dev bs=1M count=16 oflag=direct
 	done
 
 	# Load RAM disk driver if available
