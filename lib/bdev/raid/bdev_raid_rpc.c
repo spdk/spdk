@@ -367,8 +367,17 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		/* Check if base_bdev exists already, if not fail the command */
 		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[i]);
 		if (base_bdev == NULL) {
+			<<< <<< < HEAD
 			check_and_remove_raid_bdev(raid_bdev_config);
 			raid_bdev_config_cleanup(raid_bdev_config);
+			== == == =
+				check_and_remove_raid_bdev(&g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev -
+							   1]);
+			raid_bdev_config_cleanup();
+			free(base_bdevs);
+			>>> >>> > 0c0f245... incorrect code style detected and
+			corrected by scripts / check_format.sh in lib / bdev / raid / bdev_raid_rpc.c and
+			lib / nvmf / rdma.c
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "base bdev not found");
 			free_rpc_construct_raid_bdev(&req);
 			return;
@@ -380,8 +389,17 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		 * by some other module
 		 */
 		if (raid_bdev_add_base_device(base_bdev)) {
+			<<< <<< < HEAD
 			check_and_remove_raid_bdev(raid_bdev_config);
 			raid_bdev_config_cleanup(raid_bdev_config);
+			== == == =
+				check_and_remove_raid_bdev(&g_spdk_raid_config.raid_bdev_config[g_spdk_raid_config.total_raid_bdev -
+							   1]);
+			raid_bdev_config_cleanup();
+			free(base_bdevs);
+			>>> >>> > 0c0f245... incorrect code style detected and
+			corrected by scripts / check_format.sh in lib / bdev / raid / bdev_raid_rpc.c and
+			lib / nvmf / rdma.c
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "base bdev can't be added because of either memory allocation failed or not able to claim");
 			free_rpc_construct_raid_bdev(&req);
