@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc2cb831_1b08e66b",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-07-30T17:56:54Z",
+      "side": 0,
+      "message": "I don\u0027t know if removing this is valid. This was the case when various base bdevs got removed but above layers (like lvol) has not yet closed the descriptor. Now spdk bdev subsystem has called raid_bdev_free before hand. If this is not possible, then removing this code isfine",
+      "revId": "32cc0199d116b9f7b96f379583cad86b107bd95f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
