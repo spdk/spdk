@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "291cbab2_7f7ec4b1",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-30T16:39:01Z",
+      "side": 1,
+      "message": "this free call should be inside _nvmf_poll_group_remove_subsystem_cb.",
+      "revId": "06dc3c5b14e4520e7b4f2440bc0939b6c5dd34df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1ecaa8c_8ad5e0d9",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-30T16:39:01Z",
+      "side": 1,
+      "message": "You don\u0027t need to store a pointer to this function - it\u0027s hard coded. Just call the function where you would have used this function pointer.",
+      "revId": "06dc3c5b14e4520e7b4f2440bc0939b6c5dd34df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58f66b8a_5639f192",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-30T16:39:01Z",
+      "side": 1,
+      "message": "We usually name functions as noun_verb - so this would be subsystem_state_change_continue.",
+      "revId": "06dc3c5b14e4520e7b4f2440bc0939b6c5dd34df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
