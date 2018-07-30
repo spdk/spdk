@@ -16,6 +16,24 @@
       "revId": "8dce0d43b62e7869be4a61c9f42cf29a8b41e43f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "170fbe1e_b841d3c1",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-30T06:44:26Z",
+      "side": 1,
+      "message": "But this is a module finish. All bdevs must be already unregistered at this point. Please see spdk_bdev_module_finish_done",
+      "parentUuid": "28a93c76_a8c3b3e5",
+      "revId": "8dce0d43b62e7869be4a61c9f42cf29a8b41e43f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
