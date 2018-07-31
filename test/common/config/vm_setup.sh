@@ -248,7 +248,7 @@ fi
 
 if echo $CONF | grep -q qemu; then
     # Qemu is used in the vhost tests.
-    SPDK_QEMU_BRANCH=spdk-2.12-pre
+    SPDK_QEMU_BRANCH=spdk-2.12
     mkdir -p qemu
     cd qemu
     if [ ! -d "$SPDK_QEMU_BRANCH" ]; then
