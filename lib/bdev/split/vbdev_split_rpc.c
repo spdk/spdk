@@ -57,7 +57,6 @@ spdk_rpc_construct_split_vbdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_split req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *base_bdev;
-	size_t i;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_split_decoders,
@@ -85,8 +84,19 @@ spdk_rpc_construct_split_vbdev(struct spdk_jsonrpc_request *request,
 
 	base_bdev = spdk_bdev_get_by_name(req.base_bdev);
 	if (base_bdev != NULL) {
-		for (i = 0; i < base_bdev->vbdevs_cnt; i++) {
-			spdk_json_write_string(w, spdk_bdev_get_name(base_bdev->vbdevs[i]));
+		struct spdk_bdev_part_base *split_base;
+		struct bdev_part_tailq *split_base_tailq;
+		struct spdk_bdev_part *split_part;
+		struct spdk_bdev *split_bdev;
+
+		split_base = spdk_vbdev_split_get_part_base(base_bdev);
+
+		assert(split_base != NULL);
+
+		split_base_tailq = spdk_bdev_part_base_get_tailq(split_base);
+		TAILQ_FOREACH(split_part, split_base_tailq, tailq) {
+			split_bdev = spdk_bdev_part_get_bdev(split_part);
+			spdk_json_write_string(w, spdk_bdev_get_name(split_bdev));
 		}
 	}
 

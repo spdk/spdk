@@ -56,4 +56,13 @@ int create_vbdev_split(const char *base_bdev_name, unsigned split_count, uint64_
  */
 int spdk_vbdev_split_destruct(const char *base_bdev_name);
 
+/**
+ * Get the spdk_bdev_part_base associated with the given split base_bdev.
+ *
+ * \param base_bdev Bdev to get the part_base from
+ * \return pointer to the associated spdk_bdev_part_base
+ * \return NULL if the base_bdev is not being split by the split module
+ */
+struct spdk_bdev_part_base *spdk_vbdev_split_get_part_base(struct spdk_bdev *base_bdev);
+
 #endif // SPDK_VBDEV_SPLIT_H

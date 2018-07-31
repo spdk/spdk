@@ -485,4 +485,18 @@ spdk_vbdev_split_destruct(const char *base_bdev_name)
 	return 0;
 }
 
+struct spdk_bdev_part_base *
+spdk_vbdev_split_get_part_base(struct spdk_bdev *bdev)
+{
+	struct spdk_vbdev_split_config *cfg;
+
+	cfg = vbdev_split_config_find_by_base_name(spdk_bdev_get_name(bdev));
+
+	if (cfg == NULL) {
+		return NULL;
+	}
+
+	return cfg->split_base;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("vbdev_split", SPDK_LOG_VBDEV_SPLIT)
