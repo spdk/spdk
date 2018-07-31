@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4fa05a09_f9c4017c",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-31T20:56:23Z",
+      "side": 1,
+      "message": "Please add \";\"",
+      "range": {
+        "startLine": 127,
+        "startChar": 65,
+        "endLine": 127,
+        "endChar": 69
+      },
+      "revId": "70d7c5cef919b98680dd10ea899da35cee85966c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ac4bb97_1a527de3",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 1615,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-31T20:56:23Z",
+      "side": 1,
+      "message": "Not deleting aio bdevs might affect further tests that uses those types of bdevs. I think we might want to skip this check here and make sure we go through delete_aio_bdev below.",
+      "range": {
+        "startLine": 1614,
+        "startChar": 0,
+        "endLine": 1615,
+        "endChar": 29
+      },
+      "revId": "70d7c5cef919b98680dd10ea899da35cee85966c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
