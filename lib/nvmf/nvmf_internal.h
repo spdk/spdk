@@ -209,8 +209,6 @@ struct spdk_nvmf_ctrlr {
 
 	struct spdk_nvmf_qpair *admin_qpair;
 
-	/* Mutex to protect the qpair mask */
-	pthread_mutex_t		mtx;
 	struct spdk_bit_array	*qpair_mask;
 
 	struct spdk_nvmf_request *aer_req;
