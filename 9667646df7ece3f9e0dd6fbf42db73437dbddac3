@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "580cd07c_f4fb2b2c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-31T05:12:25Z",
+      "side": 1,
+      "message": "I believe it\u0027s safe to call free(qpair_ctx) after cpl_fn callback, then you don\u0027t need extra stack variables to store them.",
+      "revId": "9667646df7ece3f9e0dd6fbf42db73437dbddac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
