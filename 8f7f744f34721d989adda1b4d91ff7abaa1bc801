@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "d4639529_04a9e400",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-31T13:07:52Z",
+      "side": 1,
+      "message": "Managing elapsed time outside is more flexible. I assumed periodical fine-granural sampling like iostat or sar but your idea works for this case too. Thank you.",
+      "parentUuid": "fad487d3_76eb62fb",
+      "revId": "8f7f744f34721d989adda1b4d91ff7abaa1bc801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72b031ea_58f65b0c",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 4
