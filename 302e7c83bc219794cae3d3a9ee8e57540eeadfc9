@@ -137,6 +137,24 @@
       "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "425ecd48_2d7fb776",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 59
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-07-31T17:52:40Z",
+      "side": 1,
+      "message": "I totally get why that was selected.   I\u0027d just *prefer* that we keep a greater line of separation.   As I\u0027m eager to work on packaging the SPDK, I\u0027m scrutinizing such elements regarding the build, and especially those that may even tangentially affect how we build with alternate env\u0027s.",
+      "parentUuid": "00302fe6_1a3bfc4c",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
