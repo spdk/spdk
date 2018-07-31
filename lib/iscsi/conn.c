@@ -360,14 +360,15 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
-	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task;
+	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task, *primary;
 
 	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
 		TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
-		if (pdu->task) {
-			spdk_iscsi_task_put(pdu->task);
-		}
-		spdk_put_pdu(pdu);
+		/* Due to the network issue,  spdk_iscsi_conn_free_pdu in
+		  * spdk_iscsi_conn_flush_pdus_internal will not be executed. So for the datain task,
+		  * we should free the primary task if this is a last subtask of the primary
+		  */
+		spdk_iscsi_conn_free_pdu(conn, pdu);
 	}
 
 	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, tmp_pdu) {
