@@ -209,14 +209,14 @@ raid_bdev_destruct(void *ctxt)
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destruct\n");
 
+	assert(raid_bdev->state == RAID_BDEV_STATE_ONLINE);
 	raid_bdev->destruct_called = true;
 	for (uint16_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/*
 		 * Close all base bdev descriptors for which call has come from below
 		 * layers
 		 */
-		if ((raid_bdev->base_bdev_info[i].base_bdev_remove_scheduled == true) &&
-		    (raid_bdev->base_bdev_info[i].base_bdev != NULL)) {
+		if (raid_bdev->base_bdev_info[i].base_bdev != NULL) {
 			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].base_bdev);
 			spdk_bdev_close(raid_bdev->base_bdev_info[i].base_bdev_desc);
 			raid_bdev->base_bdev_info[i].base_bdev_desc = NULL;
@@ -226,12 +226,11 @@ raid_bdev_destruct(void *ctxt)
 		}
 	}
 
-	if (raid_bdev->num_base_bdevs_discovered == 0) {
-		/* Free raid_bdev when there no base bdevs left */
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev base bdevs is 0, going to free all in destruct\n");
-		raid_bdev_cleanup(raid_bdev_ctxt);
-	}
-
+	assert(raid_bdev->num_base_bdevs_discovered == 0);
+	TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
+	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+	raid_bdev_cleanup(raid_bdev_ctxt);
 	return 0;
 }
 
