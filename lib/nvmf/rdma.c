@@ -343,35 +343,36 @@ static const char *str_ibv_qp_state[] = {
 
 static enum ibv_qp_state
 spdk_nvmf_rdma_get_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
-	return rqpair->ibv_attr.qp_state;
-}
-
-static int
-spdk_nvmf_rdma_update_ibv_qp(struct spdk_nvmf_rdma_qpair *rqpair)
-{
 	int rc;
+
 	/* All the attributes needed for recovery */
 	static int spdk_nvmf_ibv_attr_mask =
-		IBV_QP_STATE |
-		IBV_QP_PKEY_INDEX |
-		IBV_QP_PORT |
-		IBV_QP_ACCESS_FLAGS |
-		IBV_QP_AV |
-		IBV_QP_PATH_MTU |
-		IBV_QP_DEST_QPN |
-		IBV_QP_RQ_PSN |
-		IBV_QP_MAX_DEST_RD_ATOMIC |
-		IBV_QP_MIN_RNR_TIMER |
-		IBV_QP_SQ_PSN |
-		IBV_QP_TIMEOUT |
-		IBV_QP_RETRY_CNT |
-		IBV_QP_RNR_RETRY |
-		IBV_QP_MAX_QP_RD_ATOMIC;
+	IBV_QP_STATE |
+	IBV_QP_PKEY_INDEX |
+	IBV_QP_PORT |
+	IBV_QP_ACCESS_FLAGS |
+	IBV_QP_AV |
+	IBV_QP_PATH_MTU |
+	IBV_QP_DEST_QPN |
+	IBV_QP_RQ_PSN |
+	IBV_QP_MAX_DEST_RD_ATOMIC |
+	IBV_QP_MIN_RNR_TIMER |
+	IBV_QP_SQ_PSN |
+	IBV_QP_TIMEOUT |
+	IBV_QP_RETRY_CNT |
+	IBV_QP_RNR_RETRY |
+	IBV_QP_MAX_QP_RD_ATOMIC;
 
 	rc = ibv_query_qp(rqpair->cm_id->qp, &rqpair->ibv_attr,
 			  spdk_nvmf_ibv_attr_mask, &rqpair->ibv_init_attr);
-	assert(!rc);
-	return rc;
+
+	if (rc)
+	{
+		SPDK_ERRLOG("Failed to get updated RDMA queue pair state!\n");
+		assert(false);
+	}
+
+	return rqpair->ibv_attr.qp_state;
 }
 
 static int
@@ -430,12 +431,7 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 			    rqpair->qpair.qid, str_ibv_qp_state[new_state], errno, strerror(errno));
 		return rc;
 	}
-	rc = spdk_nvmf_rdma_update_ibv_qp(rqpair);
 
-	if (rc) {
-		SPDK_ERRLOG("QP#%d: failed to update attributes\n", rqpair->qpair.qid);
-		return rc;
-	}
 	state = spdk_nvmf_rdma_get_ibv_state(rqpair);
 
 	if (state != new_state) {
@@ -678,7 +674,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		TAILQ_INSERT_TAIL(&rqpair->state_queue[rdma_req->state], rdma_req, state_link);
 		rqpair->state_cntr[rdma_req->state]++;
 	}
-	spdk_nvmf_rdma_update_ibv_qp(rqpair);
+
+	spdk_nvmf_rdma_get_ibv_state(rqpair);
 
 	return 0;
 }
@@ -1947,7 +1944,6 @@ spdk_nvmf_rdma_recover(struct spdk_nvmf_rdma_qpair *rqpair)
 	recovered = 0;
 
 	while (!recovered) {
-		state = spdk_nvmf_rdma_get_ibv_state(rqpair);
 		switch (state) {
 		case IBV_QPS_ERR:
 			next_state = IBV_QPS_RESET;
@@ -1977,6 +1973,8 @@ spdk_nvmf_rdma_recover(struct spdk_nvmf_rdma_qpair *rqpair)
 		if (spdk_nvmf_rdma_set_ibv_state(rqpair, next_state)) {
 			goto error;
 		}
+
+		state = next_state;
 	}
 	rqpair->qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 	spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qpair_process_pending, rqpair);
@@ -2119,17 +2117,14 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
 		rqpair = spdk_nvmf_rqpair_from_qp(event.element.qp);
-		spdk_nvmf_rdma_update_ibv_qp(rqpair);
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
 		break;
 	case IBV_EVENT_SQ_DRAINED:
 		rqpair = spdk_nvmf_rqpair_from_qp(event.element.qp);
-		spdk_nvmf_rdma_update_ibv_qp(rqpair);
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_sq_drained, rqpair);
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
 		rqpair = spdk_nvmf_rqpair_from_qp(event.element.qp);
-		spdk_nvmf_rdma_update_ibv_qp(rqpair);
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_last_wqe, rqpair);
 		break;
 	case IBV_EVENT_CQ_ERR:
