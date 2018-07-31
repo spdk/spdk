@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bea99f4f_3c4b0bc5",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-07-31T14:07:51Z",
+      "side": 1,
+      "message": "this could also use a check. i fixed submitted a separate patch to it.",
+      "range": {
+        "startLine": 951,
+        "startChar": 20,
+        "endLine": 951,
+        "endChar": 33
+      },
+      "revId": "9d813b7ab617e373d6f0a31f645d749f000374e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
