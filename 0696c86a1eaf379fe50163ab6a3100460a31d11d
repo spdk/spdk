@@ -16,6 +16,24 @@
       "revId": "0696c86a1eaf379fe50163ab6a3100460a31d11d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b376dde9_2580f3c5",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-07-31T00:22:00Z",
+      "side": 1,
+      "message": "Good catch, need extra line nvme_ctrlr_destruct_finish(\u0026rctrlr-\u003ectrlr) here to release the mutex.",
+      "parentUuid": "bc63d8ce_b6497d10",
+      "revId": "0696c86a1eaf379fe50163ab6a3100460a31d11d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
