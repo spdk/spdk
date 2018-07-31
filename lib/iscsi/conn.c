@@ -379,10 +379,12 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 	}
 
 	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
-		TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
-		pdu = iscsi_task->pdu;
-		spdk_iscsi_task_put(iscsi_task);
-		spdk_put_pdu(pdu);
+		while (TAILQ_EMPTY(&iscsi_task->subtask_list) && !iscsi_task->is_queued) {
+			TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
+			pdu = iscsi_task->pdu;
+			spdk_iscsi_task_put(iscsi_task);
+			spdk_put_pdu(pdu);
+		}
 	}
 
 	if (conn->pending_task_cnt) {
@@ -819,6 +821,7 @@ spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 
+	task->is_queued = false;
 	spdk_iscsi_task_mgmt_response(task->conn, task);
 	spdk_iscsi_task_put(task);
 }
@@ -888,6 +891,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 
 	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task, 0);
 
+	task->is_queued = false;
 	primary = spdk_iscsi_task_get_primary(task);
 
 	if (spdk_iscsi_task_is_read(primary)) {
