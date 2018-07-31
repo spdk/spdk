@@ -88,7 +88,7 @@ main(int argc, char **argv)
 	opts.shutdown_cb = bdev_svc_shutdown;
 	opts.max_delay_us = 1000 * 1000;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "",
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
 				      bdev_svc_parse_arg, bdev_svc_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
