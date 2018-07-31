@@ -100,7 +100,7 @@ spdk_mkfs_run(void *arg1, void *arg2)
 static void
 mkfs_usage(void)
 {
-	printf(" -C cluster size\n");
+	printf(" -C <size>                 cluster size\n");
 }
 
 static void
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
 
 	spdk_fs_set_cache_size(512);
 	g_bdev_name = argv[2];
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "C:",
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "C:", NULL,
 				      mkfs_parse_arg, mkfs_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
