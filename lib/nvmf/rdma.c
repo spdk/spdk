@@ -2001,37 +2001,29 @@ spdk_nvmf_rdma_drain_state_queue(struct spdk_nvmf_rdma_qpair *rqpair,
 	}
 }
 
-static void spdk_nvmf_rdma_drain_rw_reqs(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_COMPLETING);
-}
-
-static void spdk_nvmf_rdma_drain_pending_reqs(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	struct spdk_nvmf_rdma_request *rdma_req, *req_tmp;
-
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING);
-	/* First wipe the requests waiting for buffer from the global list */
-	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[RDMA_REQUEST_STATE_NEED_BUFFER], link, req_tmp) {
-		TAILQ_REMOVE(&rqpair->ch->pending_data_buf_queue, rdma_req, link);
-	}
-	/* Then drain the requests through the rdma queue */
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_NEED_BUFFER);
-}
-
 static void
 spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 {
+	struct spdk_nvmf_rdma_request *rdma_req, *req_tmp;
+
 	SPDK_NOTICELOG("IBV QP#%u drained\n", rqpair->qpair.qid);
 
 	if (spdk_nvmf_qpair_is_admin_queue(&rqpair->qpair)) {
 		spdk_nvmf_ctrlr_abort_aer(rqpair->qpair.ctrlr);
 	}
 
-	spdk_nvmf_rdma_drain_pending_reqs(rqpair);
-	spdk_nvmf_rdma_drain_rw_reqs(rqpair);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING);
+
+	/* First wipe the requests waiting for buffer from the global list */
+	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[RDMA_REQUEST_STATE_NEED_BUFFER], link, req_tmp) {
+		TAILQ_REMOVE(&rqpair->ch->pending_data_buf_queue, rdma_req, link);
+	}
+	/* Then drain the requests through the rdma queue */
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_NEED_BUFFER);
+
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_COMPLETING);
 
 	if (!spdk_nvmf_rdma_qpair_is_idle(&rqpair->qpair)) {
 		/* There must be outstanding requests down to media.
