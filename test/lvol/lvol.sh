@@ -107,13 +107,7 @@ source $TEST_DIR/test/common/autotest_common.sh
 function vhost_start()
 {
     modprobe nbd
-    touch $BASE_DIR/vhost.conf
-    # Use Split to make a bdev using just the first 1/4
-    #  of the NVMe namespace
-    echo "[Split]" >> $BASE_DIR/vhost.conf
-    echo "  Split Nvme0n1 4" >> $BASE_DIR/vhost.conf
-    $TEST_DIR/scripts/gen_nvme.sh >> $BASE_DIR/vhost.conf
-    $TEST_DIR/app/vhost/vhost -c $BASE_DIR/vhost.conf &
+    $TEST_DIR/app/vhost/vhost &
     vhost_pid=$!
     echo $vhost_pid > $BASE_DIR/vhost.pid
     waitforlisten $vhost_pid
@@ -127,14 +121,15 @@ function vhost_kill()
         sleep 1
     fi
     rm $BASE_DIR/vhost.pid || true
-    rm $BASE_DIR/vhost.conf || true
     rmmod nbd || true
 }
 
-trap "vhost_kill; exit 1" SIGINT SIGTERM EXIT
+trap "vhost_kill; rm -f $BASE_DIR/aio_bdev_0; exit 1" SIGINT SIGTERM EXIT
 
+dd if=/dev/zero of=$BASE_DIR/aio_bdev_0 bs=1024 count=409600
 vhost_start
 $BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $BASE_DIR $TEST_DIR/app/vhost "${test_cases[@]}"
 
 vhost_kill
+rm -rf $BASE_DIR/aio_bdev_0
 trap - SIGINT SIGTERM EXIT
