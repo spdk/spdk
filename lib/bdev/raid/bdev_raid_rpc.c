@@ -53,19 +53,17 @@ SPDK_LOG_REGISTER_COMPONENT("raidrpc", SPDK_LOG_RAID_RPC)
  * name - raid bdev name
  * returns:
  * NULL - raid bdev not present
- * non NULL - raid bdev present, returns raid_bdev_ctxt
+ * non NULL - raid bdev present, returns raid_bdev
  */
-static struct raid_bdev_ctxt *
+static struct raid_bdev *
 check_raid_bdev_present(char *raid_bdev_name)
 {
 	struct raid_bdev       *raid_bdev;
-	struct raid_bdev_ctxt  *raid_bdev_ctxt;
 
 	TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_list, link_global_list) {
-		raid_bdev_ctxt = SPDK_CONTAINEROF(raid_bdev, struct raid_bdev_ctxt, raid_bdev);
-		if (strcmp(raid_bdev_ctxt->bdev.name, raid_bdev_name) == 0) {
+		if (strcmp(raid_bdev->bdev.name, raid_bdev_name) == 0) {
 			/* raid bdev found */
-			return raid_bdev_ctxt;
+			return raid_bdev;
 		}
 	}
 
@@ -123,7 +121,6 @@ spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_
 	struct rpc_get_raid_bdevs   req = {};
 	struct spdk_json_write_ctx  *w;
 	struct raid_bdev            *raid_bdev;
-	struct raid_bdev_ctxt       *raid_bdev_ctxt;
 
 	if (spdk_json_decode_object(params, rpc_get_raid_bdevs_decoders,
 				    SPDK_COUNTOF(rpc_get_raid_bdevs_decoders),
@@ -153,23 +150,19 @@ spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_
 	/* Get raid bdev list based on the category requested */
 	if (strcmp(req.category, "all") == 0) {
 		TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_list, link_global_list) {
-			raid_bdev_ctxt = SPDK_CONTAINEROF(raid_bdev, struct raid_bdev_ctxt, raid_bdev);
-			spdk_json_write_string(w, raid_bdev_ctxt->bdev.name);
+			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	} else if (strcmp(req.category, "online") == 0) {
 		TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_configured_list, link_specific_list) {
-			raid_bdev_ctxt = SPDK_CONTAINEROF(raid_bdev, struct raid_bdev_ctxt, raid_bdev);
-			spdk_json_write_string(w, raid_bdev_ctxt->bdev.name);
+			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	} else if (strcmp(req.category, "configuring") == 0) {
 		TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_configuring_list, link_specific_list) {
-			raid_bdev_ctxt = SPDK_CONTAINEROF(raid_bdev, struct raid_bdev_ctxt, raid_bdev);
-			spdk_json_write_string(w, raid_bdev_ctxt->bdev.name);
+			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	} else {
 		TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_offline_list, link_specific_list) {
-			raid_bdev_ctxt = SPDK_CONTAINEROF(raid_bdev, struct raid_bdev_ctxt, raid_bdev);
-			spdk_json_write_string(w, raid_bdev_ctxt->bdev.name);
+			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	}
 	spdk_json_write_array_end(w);
@@ -253,17 +246,16 @@ static const struct spdk_json_object_decoder rpc_construct_raid_bdev_decoders[] 
  * raid_bdev_config - pointer to raid_bdev_config structure
  * returns:
  * NULL - raid not present
- * non NULL - raid present, returns raid_bdev_ctxt
+ * non NULL - raid present, returns raid_bdev
  */
 static void
 check_and_remove_raid_bdev(struct raid_bdev_config *raid_bdev_config)
 {
 	struct raid_bdev       *raid_bdev;
-	struct raid_bdev_ctxt  *raid_bdev_ctxt;
 
 	/* Get the raid structured allocated if exists */
-	raid_bdev_ctxt = raid_bdev_config->raid_bdev_ctxt;
-	if (raid_bdev_ctxt == NULL) {
+	raid_bdev = raid_bdev_config->raid_bdev;
+	if (raid_bdev == NULL) {
 		return;
 	}
 
@@ -271,8 +263,7 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_bdev_config)
 	 * raid should be in configuring state as this function is used to cleanup
 	 * the raid during unsuccessful construction of raid
 	 */
-	assert(raid_bdev_ctxt->raid_bdev.state == RAID_BDEV_STATE_CONFIGURING);
-	raid_bdev = &raid_bdev_ctxt->raid_bdev;
+	assert(raid_bdev->state == RAID_BDEV_STATE_CONFIGURING);
 	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		assert(raid_bdev->base_bdev_info != NULL);
 		if (raid_bdev->base_bdev_info[i].base_bdev) {
@@ -290,8 +281,8 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_bdev_config)
 	TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
 	TAILQ_REMOVE(&g_spdk_raid_bdev_list, raid_bdev, link_global_list);
 	free(raid_bdev->base_bdev_info);
-	free(raid_bdev_ctxt);
-	raid_bdev_config->raid_bdev_ctxt = NULL;
+	free(raid_bdev);
+	raid_bdev_config->raid_bdev = NULL;
 }
 
 /*
@@ -310,8 +301,8 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_raid_bdev req = {};
 	struct spdk_json_write_ctx     *w;
-	struct raid_bdev_ctxt          *raid_bdev_ctxt;
 	struct raid_bdev_config        *raid_bdev_config;
+	struct raid_bdev               *raid_bdev;
 	struct spdk_bdev               *base_bdev;
 	int			       rc;
 
@@ -324,8 +315,8 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	/* Fail the command if raid bdev is already present */
-	raid_bdev_ctxt = check_raid_bdev_present(req.name);
-	if (raid_bdev_ctxt != NULL) {
+	raid_bdev = check_raid_bdev_present(req.name);
+	if (raid_bdev != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "raid bdev already present");
 		free_rpc_construct_raid_bdev(&req);
@@ -446,7 +437,7 @@ raid_bdev_config_destroy_check_raid_bdev_exists(void *arg)
 	struct raid_bdev_config  *raid_cfg = arg;
 
 	assert(raid_cfg != NULL);
-	if (raid_cfg->raid_bdev_ctxt != NULL) {
+	if (raid_cfg->raid_bdev != NULL) {
 		/* If raid bdev still exists, schedule event and come back later */
 		spdk_thread_send_msg(spdk_get_thread(), raid_bdev_config_destroy_check_raid_bdev_exists, raid_cfg);
 		return;
@@ -468,7 +459,7 @@ static void
 raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 {
 	assert(raid_cfg != NULL);
-	if (raid_cfg->raid_bdev_ctxt != NULL) {
+	if (raid_cfg->raid_bdev != NULL) {
 		/*
 		 * If raid bdev exists for this config, wait for raid bdev to get
 		 * destroyed and come back later
