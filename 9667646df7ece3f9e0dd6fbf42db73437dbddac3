@@ -16,6 +16,23 @@
       "revId": "9667646df7ece3f9e0dd6fbf42db73437dbddac3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c2f328b_e5bf5062",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-31T06:47:53Z",
+      "side": 1,
+      "message": "rc should be set to -ENOMEM here?",
+      "revId": "9667646df7ece3f9e0dd6fbf42db73437dbddac3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
