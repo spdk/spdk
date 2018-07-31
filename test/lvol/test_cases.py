@@ -222,10 +222,9 @@ class TestCases(object):
                 return 1
         return 0
 
-    def _start_vhost(self, vhost_path, config_path, pid_path):
-        subprocess.call("{app} -c {config} -f "
+    def _start_vhost(self, vhost_path, pid_path):
+        subprocess.call("{app} -f "
                         "{pid} &".format(app=vhost_path,
-                                         config=config_path,
                                          pid=pid_path), shell=True)
         for timeo in range(10):
             if timeo == 9:
@@ -260,17 +259,6 @@ class TestCases(object):
             if not pid:
                 return 1
         return 0
-
-    def _find_traddress_for_nvme(self, nvme_name):
-        with open(self.vhost_config_path) as file:
-            for line in file:
-                if nvme_name in line and "TransportID" in line:
-                    for word in line.split(" "):
-                        if word.startswith("traddr"):
-                            return word.split(":", 1)[1].replace("\"", "")
-
-        print("INFO: Traddr not found for Nvme {nvme}".format(nvme=nvme_name))
-        return -1
 
     def get_lvs_size(self, lvs_name="lvs_test"):
         lvs = self.c.get_lvol_stores(lvs_name)[0]
@@ -632,25 +620,26 @@ class TestCases(object):
     @case_message
     def test_case255(self):
         base_path = path.dirname(sys.argv[0])
-        base_name = "Nvme0n1p0"
+        base_name = "aio_bdev0"
+        aio_bdev0 = path.join(base_path, "aio_bdev_0")
+        self.c.construct_aio_bdev(aio_bdev0, base_name, 1024)
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         if self.c.destroy_lvol_store(self.lvs_name) != 0:
             fail_count += 1
-        traddr = self._find_traddress_for_nvme("Nvme0")
-        if traddr != -1:
-            self.c.delete_nvme_controller("Nvme0")
-            self.c.construct_nvme_bdev("Nvme0", "PCIe", traddr)
-            # wait 1 second to allow time for lvolstore tasting
-            sleep(1)
-        else:
-            fail_count += 1
+
+        self.c.delete_aio_bdev(base_name)
+        self.c.construct_aio_bdev(aio_bdev0, base_name, 1024)
+        # wait 1 second to allow time for lvolstore tasting
+        sleep(1)
+
         ret_value = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                  self.cluster_size)
         if ret_value == 0:
             fail_count += 1
+        self.c.delete_aio_bdev(base_name)
         return fail_count
 
     @case_message
@@ -1375,20 +1364,21 @@ class TestCases(object):
         tasting_positive
 
         Positive test for tasting a multi lvol bdev configuration.
-        Create a lvol store with some lvol bdevs on NVMe drive and restart vhost app.
+        Create a lvol store with some lvol bdevs on aio bdev and restart vhost app.
         After restarting configuration should be automatically loaded and should be exactly
         the same as before restarting.
         Check that running configuration can be modified after restarting and tasting.
         """
         fail_count = 0
         uuid_bdevs = []
-        base_name = "Nvme0n1p0"
+        base_name = "aio_bdev0"
 
         base_path = path.dirname(sys.argv[0])
         vhost_path = path.join(self.app_path, 'vhost')
-        config_path = path.join(base_path, 'vhost.conf')
         pid_path = path.join(base_path, 'vhost.pid')
+        aio_bdev0 = path.join(base_path, 'aio_bdev_0')
 
+        self.c.construct_aio_bdev(aio_bdev0, base_name, 1024)
         # Create initial configuration on running vhost instance
         # create lvol store, create 5 bdevs
         # save info of all lvs and lvol bdevs
@@ -1398,8 +1388,7 @@ class TestCases(object):
                                                    uuid_store,
                                                    self.cluster_size)
 
-        # size = approx 2% of total NVMe disk size
-        size = self.get_lvs_divided_size(50)
+        size = self.get_lvs_divided_size(10)
 
         for i in range(5):
             uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
@@ -1415,10 +1404,11 @@ class TestCases(object):
         # Shut down vhost instance and restart with new instance
         fail_count += self._stop_vhost(pid_path)
         remove(pid_path)
-        if self._start_vhost(vhost_path, config_path, pid_path) != 0:
+        if self._start_vhost(vhost_path, pid_path) != 0:
             fail_count += 1
             return fail_count
 
+        self.c.construct_aio_bdev(aio_bdev0, base_name, 1024)
         # Check if configuration was properly loaded after tasting
         # get all info all lvs and lvol bdevs, compare with previous info
         new_bdevs = sorted(self.c.get_lvol_bdevs(), key=lambda x: x["name"])
@@ -1443,6 +1433,7 @@ class TestCases(object):
                 pprint.pprint([o, n])
 
         if fail_count != 0:
+            self.c.delete_aio_bdev(aio_bdev0)
             return fail_count
 
         # Try modifying loaded configuration
@@ -1463,7 +1454,7 @@ class TestCases(object):
 
         uuid_bdevs = []
 
-        # Create lvol store on NVMe bdev, create ten lvol bdevs on lvol store and
+        # Create lvol store on aio bdev, create ten lvol bdevs on lvol store and
         # verify all configuration call results
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name)
@@ -1482,6 +1473,8 @@ class TestCases(object):
         if self.c.destroy_lvol_store(uuid_store) != 0:
             fail_count += 1
 
+        self.c.delete_aio_bdev(base_name)
+
         return fail_count
 
     @case_message
@@ -1491,29 +1484,30 @@ class TestCases(object):
 
         Positive test for tasting lvol store.
         """
-        base_name = "Nvme0n1p0"
-        # construct lvol store on NVMe bdev
+        base_path = path.dirname(sys.argv[0])
+        aio_bdev0 = path.join(base_path, 'aio_bdev_0')
+        base_name = "aio_bdev0"
+
+        self.c.construct_aio_bdev(aio_bdev0, base_name, 1024)
+        # construct lvol store on aio bdev
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
-        traddr = self._find_traddress_for_nvme("Nvme0")
-        if traddr != -1:
-            # delete NVMe bdev
-            self.c.delete_nvme_controller("Nvme0")
-            # add NVMe bdev
-            self.c.construct_nvme_bdev("Nvme0", "PCIe", traddr)
-            # wait 1 second to allow time for lvolstore tasting
-            sleep(1)
-        else:
-            fail_count += 1
+
+        self.c.delete_aio_bdev(base_name)
+        self.c.construct_aio_bdev(aio_bdev0, base_name, 1024)
+        # wait 1 second to allow time for lvolstore tasting
+        sleep(1)
         # check if lvol store still exists in vhost configuration
         if self.c.check_get_lvol_stores(base_name, uuid_store,
                                         self.cluster_size) != 0:
             fail_count += 1
-        # destroy lvol store from NVMe bdev
+        # destroy lvol store from aio bdev
         if self.c.destroy_lvol_store(uuid_store) != 0:
             fail_count += 1
+
+        self.c.delete_aio_bdev(base_name)
         return fail_count
 
     @case_message
