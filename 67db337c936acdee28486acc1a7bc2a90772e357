@@ -16,6 +16,29 @@
       "revId": "67db337c936acdee28486acc1a7bc2a90772e357",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5af2bf68_3fdb3e51",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-31T23:08:04Z",
+      "side": 1,
+      "message": "This looks being moved to the line 55.",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 139,
+        "endChar": 28
+      },
+      "revId": "67db337c936acdee28486acc1a7bc2a90772e357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
