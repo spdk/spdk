@@ -866,20 +866,16 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-static int
-spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
+
+static void
+_nvmf_ctrlr_set_features_number_of_queues(void *ctx)
 {
+	struct spdk_nvmf_request *req = ctx;
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint32_t count;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n",
-		      req->cmd->nvme_cmd.cdw11);
-
-	pthread_mutex_lock(&ctrlr->mtx);
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
-	pthread_mutex_unlock(&ctrlr->mtx);
-
 	/* verify that the contoller is ready to process commands */
 	if (count > 1) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Queue pairs already active!\n");
@@ -892,7 +888,21 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 		rsp->cdw0 = ctrlr->feat.number_of_queues.raw;
 	}
 
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	spdk_thread_send_msg(req->qpair->group->thread, _spdk_nvmf_request_complete, req);
+
+}
+
+static int
+spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n",
+		      req->cmd->nvme_cmd.cdw11);
+
+	spdk_thread_send_msg(ctrlr->subsys->thread->thread, _nvmf_ctrlr_set_features_number_of_queues,
+			     req);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
 static int

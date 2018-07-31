@@ -65,6 +65,7 @@ struct nvmf_qpair_disconnect_ctx {
 	nvmf_qpair_disconnect_cb cb_fn;
 	struct spdk_thread *thread;
 	void *ctx;
+	uint16_t qid;
 };
 
 /*
@@ -627,8 +628,13 @@ _spdk_nvmf_ctrlr_free_from_qpair(void *ctx)
 {
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair_ctx->ctrlr;
+	uint32_t count;
 
-	spdk_nvmf_ctrlr_destruct(ctrlr);
+	spdk_bit_array_clear(ctrlr->qpair_mask, qpair_ctx->qid);
+	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
+	if (count == 0) {
+		spdk_nvmf_ctrlr_destruct(ctrlr);
+	}
 
 	if (qpair_ctx->cb_fn) {
 		spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
@@ -642,13 +648,12 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-	uint16_t qid = qpair->qid;
-	uint32_t count;
 
 	spdk_nvmf_poll_group_remove(qpair->group, qpair);
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
+	qpair_ctx->qid = qpair->qid;
 
 	spdk_nvmf_transport_qpair_fini(qpair);
 
@@ -660,22 +665,9 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 		return;
 	}
 
-	pthread_mutex_lock(&ctrlr->mtx);
-	spdk_bit_array_clear(ctrlr->qpair_mask, qid);
-	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
-	pthread_mutex_unlock(&ctrlr->mtx);
+	qpair_ctx->ctrlr = ctrlr;
+	spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx);
 
-	if (count == 0) {
-		/* If this was the last queue pair on the controller, also send a message
-		 * to the subsystem to remove the controller. */
-		qpair_ctx->ctrlr = ctrlr;
-		spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx);
-	} else {
-		if (qpair_ctx->cb_fn) {
-			spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
-		}
-		free(qpair_ctx);
-	}
 }
 
 static void
