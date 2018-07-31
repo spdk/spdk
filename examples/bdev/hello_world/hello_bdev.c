@@ -60,7 +60,7 @@ struct hello_context_t {
 static void
 hello_bdev_usage(void)
 {
-	printf(" -b bdev name\n");
+	printf(" -b <bdev>                 name of the bdev to use\n");
 }
 
 /*
@@ -233,7 +233,7 @@ main(int argc, char **argv)
 	 * If none of the parameters are provide the application will use the
 	 * default parameters(-c bdev.conf -b Malloc0).
 	 */
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "b:", hello_bdev_parse_arg,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "b:", NULL, hello_bdev_parse_arg,
 				      hello_bdev_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
