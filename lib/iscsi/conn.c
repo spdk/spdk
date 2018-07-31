@@ -364,10 +364,7 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 
 	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
 		TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
-		if (pdu->task) {
-			spdk_iscsi_task_put(pdu->task);
-		}
-		spdk_put_pdu(pdu);
+		spdk_iscsi_conn_free_pdu(conn, pdu);
 	}
 
 	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, tmp_pdu) {
@@ -380,9 +377,7 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 
 	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
 		TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
-		pdu = iscsi_task->pdu;
 		spdk_iscsi_task_put(iscsi_task);
-		spdk_put_pdu(pdu);
 	}
 
 	if (conn->pending_task_cnt) {
