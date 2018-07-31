@@ -2816,6 +2816,7 @@ static void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn,
 {
 	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->id, task->scsi.length,
 			  (uintptr_t)task, (uintptr_t)task->pdu);
+	task->is_queued = true;
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
 }
 
@@ -2909,6 +2910,7 @@ static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 
 static int
 spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+
 {
 	struct spdk_iscsi_task	*task;
 	struct spdk_scsi_dev	*dev;
