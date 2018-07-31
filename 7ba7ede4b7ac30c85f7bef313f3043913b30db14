@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9afd356a_0033d714",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-07-31T16:19:31Z",
+      "side": 1,
+      "message": "This is a double free. nvme_rdma_ctrlr_destruct frees rctrlr.",
+      "revId": "7ba7ede4b7ac30c85f7bef313f3043913b30db14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
