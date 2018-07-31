@@ -41,6 +41,8 @@
 #include "spdk/json.h"
 #include "spdk/string.h"
 
+static bool g_shutdown_started = false;
+
 /* raid bdev config as read from config file */
 struct raid_config          g_spdk_raid_config = {
 	.raid_bdev_config_head = TAILQ_HEAD_INITIALIZER(g_spdk_raid_config.raid_bdev_config_head),
@@ -65,6 +67,7 @@ struct spdk_raid_offline_tailq          g_spdk_raid_bdev_offline_list;
 static void   raid_bdev_examine(struct spdk_bdev *bdev);
 static int    raid_bdev_init(void);
 static void   raid_bdev_waitq_io_process(void *ctx);
+static void   raid_bdev_deconfigure(struct raid_bdev *raid_bdev);
 
 
 /*
@@ -227,16 +230,24 @@ raid_bdev_destruct(void *ctxt)
 	for (uint16_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/*
 		 * Close all base bdev descriptors for which call has come from below
-		 * layers
+		 * layers.  Also close the descriptors if we have started shutdown.
 		 */
-		if ((raid_bdev->base_bdev_info[i].base_bdev_remove_scheduled == true) &&
-		    (raid_bdev->base_bdev_info[i].base_bdev != NULL)) {
+		if (g_shutdown_started ||
+		    ((raid_bdev->base_bdev_info[i].base_bdev_remove_scheduled == true) &&
+		     (raid_bdev->base_bdev_info[i].base_bdev != NULL))) {
 			raid_bdev_free_base_bdev_resource(raid_bdev, i);
 		}
 	}
 
+	if (g_shutdown_started) {
+		TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
+		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+		spdk_io_device_unregister(raid_bdev, NULL);
+	}
+
 	if (raid_bdev->num_base_bdevs_discovered == 0) {
-		/* Free raid_bdev when there no base bdevs left */
+		/* Free raid_bdev when there are no base bdevs left */
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev base bdevs is 0, going to free all in destruct\n");
 		raid_bdev_cleanup(raid_bdev);
 	}
@@ -1044,6 +1055,22 @@ raid_bdev_parse_config(void)
 
 /*
  * brief:
+ * raid_bdev_fini_start is called when bdev layer is starting the
+ * shutdown process
+ * params:
+ * none
+ * returns:
+ * none
+ */
+static void
+raid_bdev_fini_start(void)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_fini_start\n");
+	g_shutdown_started = true;
+}
+
+/*
+ * brief:
  * raid_bdev_exit is called on raid bdev module exit time by bdev layer
  * params:
  * none
@@ -1117,6 +1144,7 @@ raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **raid_b
 static struct spdk_bdev_module g_raid_if = {
 	.name = "raid",
 	.module_init = raid_bdev_init,
+	.fini_start = raid_bdev_fini_start,
 	.module_fini = raid_bdev_exit,
 	.get_ctx_size = raid_bdev_get_ctx_size,
 	.examine_config = raid_bdev_examine,
