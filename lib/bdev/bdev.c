@@ -2884,94 +2884,6 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	return rc;
 }
 
-static void
-spdk_vbdev_remove_base_bdevs(struct spdk_bdev *vbdev)
-{
-	struct spdk_bdev **bdevs;
-	struct spdk_bdev *base;
-	size_t i, j, k;
-	bool found;
-
-	/* Iterate over base bdevs to remove vbdev from them. */
-	for (i = 0; i < vbdev->internal.base_bdevs_cnt; i++) {
-		found = false;
-		base = vbdev->internal.base_bdevs[i];
-
-		for (j = 0; j < base->vbdevs_cnt; j++) {
-			if (base->vbdevs[j] != vbdev) {
-				continue;
-			}
-
-			for (k = j; k + 1 < base->vbdevs_cnt; k++) {
-				base->vbdevs[k] = base->vbdevs[k + 1];
-			}
-
-			base->vbdevs_cnt--;
-			if (base->vbdevs_cnt > 0) {
-				bdevs = realloc(base->vbdevs, base->vbdevs_cnt * sizeof(bdevs[0]));
-				/* It would be odd if shrinking memory block fail. */
-				assert(bdevs);
-				base->vbdevs = bdevs;
-			} else {
-				free(base->vbdevs);
-				base->vbdevs = NULL;
-			}
-
-			found = true;
-			break;
-		}
-
-		if (!found) {
-			SPDK_WARNLOG("Bdev '%s' is not base bdev of '%s'.\n", base->name, vbdev->name);
-		}
-	}
-
-	free(vbdev->internal.base_bdevs);
-	vbdev->internal.base_bdevs = NULL;
-	vbdev->internal.base_bdevs_cnt = 0;
-}
-
-static int
-spdk_vbdev_set_base_bdevs(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, size_t cnt)
-{
-	struct spdk_bdev **vbdevs;
-	struct spdk_bdev *base;
-	size_t i;
-
-	/* Adding base bdevs isn't supported (yet?). */
-	assert(vbdev->internal.base_bdevs_cnt == 0);
-
-	vbdev->internal.base_bdevs = malloc(cnt * sizeof(vbdev->internal.base_bdevs[0]));
-	if (!vbdev->internal.base_bdevs) {
-		SPDK_ERRLOG("%s - realloc() failed\n", vbdev->name);
-		return -ENOMEM;
-	}
-
-	memcpy(vbdev->internal.base_bdevs, base_bdevs, cnt * sizeof(vbdev->internal.base_bdevs[0]));
-	vbdev->internal.base_bdevs_cnt = cnt;
-
-	/* Iterate over base bdevs to add this vbdev to them. */
-	for (i = 0; i < cnt; i++) {
-		base = vbdev->internal.base_bdevs[i];
-
-		assert(base != NULL);
-		assert(base->internal.claim_module != NULL);
-
-		vbdevs = realloc(base->vbdevs, (base->vbdevs_cnt + 1) * sizeof(vbdevs[0]));
-		if (!vbdevs) {
-			SPDK_ERRLOG("%s - realloc() failed\n", base->name);
-			spdk_vbdev_remove_base_bdevs(vbdev);
-			return -ENOMEM;
-		}
-
-		vbdevs[base->vbdevs_cnt] = vbdev;
-		base->vbdevs = vbdevs;
-		base->vbdevs_cnt++;
-	}
-
-	return 0;
-}
-
 int
 spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
 {
@@ -2982,20 +2894,8 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 		return rc;
 	}
 
-	if (base_bdev_count == 0) {
-		spdk_bdev_start(vbdev);
-		return 0;
-	}
-
-	rc = spdk_vbdev_set_base_bdevs(vbdev, base_bdevs, base_bdev_count);
-	if (rc) {
-		spdk_bdev_fini(vbdev);
-		return rc;
-	}
-
 	spdk_bdev_start(vbdev);
 	return 0;
-
 }
 
 void
@@ -3033,8 +2933,6 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 
 	pthread_mutex_lock(&bdev->internal.mutex);
-
-	spdk_vbdev_remove_base_bdevs(bdev);
 
 	bdev->internal.status = SPDK_BDEV_STATUS_REMOVING;
 	bdev->internal.unregister_cb = cb_fn;
