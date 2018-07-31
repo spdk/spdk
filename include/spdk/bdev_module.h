@@ -271,10 +271,6 @@ struct spdk_bdev {
 	/** function table for all LUN ops */
 	const struct spdk_bdev_fn_table *fn_table;
 
-	/** The array of virtual block devices built on top of this block device. */
-	struct spdk_bdev **vbdevs;
-	size_t vbdevs_cnt;
-
 	/** Fields that are used internally by the bdev subsystem.  Bdev modules
 	 *  must not read or write to these fields.
 	 */
@@ -290,10 +286,6 @@ struct spdk_bdev {
 
 		/** The bdev status */
 		enum spdk_bdev_status status;
-
-		/** The array of block devices that this block device is built on top of (if any). */
-		struct spdk_bdev **base_bdevs;
-		size_t base_bdevs_cnt;
 
 		/**
 		 * Pointer to the module that has claimed this bdev for purposes of creating virtual

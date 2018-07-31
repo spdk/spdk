@@ -195,45 +195,6 @@ vbdev_ut_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&vbdev_ut_if);
 }
 
-static bool
-is_vbdev(struct spdk_bdev *base, struct spdk_bdev *vbdev)
-{
-	size_t i;
-	int found = 0;
-
-	for (i = 0; i < base->vbdevs_cnt; i++) {
-		found += base->vbdevs[i] == vbdev;
-	}
-
-	CU_ASSERT(found <= 1);
-	return !!found;
-}
-
-static bool
-is_base_bdev(struct spdk_bdev *base, struct spdk_bdev *vbdev)
-{
-	size_t i;
-	int found = 0;
-
-	for (i = 0; i < vbdev->internal.base_bdevs_cnt; i++) {
-		found += vbdev->internal.base_bdevs[i] == base;
-	}
-
-	CU_ASSERT(found <= 1);
-	return !!found;
-}
-
-static bool
-check_base_and_vbdev(struct spdk_bdev *base, struct spdk_bdev *vbdev)
-{
-	bool _is_vbdev = is_vbdev(base, vbdev);
-	bool _is_base = is_base_bdev(base, vbdev);
-
-	CU_ASSERT(_is_vbdev == _is_base);
-
-	return _is_base && _is_vbdev;
-}
-
 static struct spdk_bdev *
 allocate_bdev(char *name)
 {
@@ -250,8 +211,6 @@ allocate_bdev(char *name)
 
 	rc = spdk_bdev_register(bdev);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(bdev->internal.base_bdevs_cnt == 0);
-	CU_ASSERT(bdev->vbdevs_cnt == 0);
 
 	return bdev;
 }
@@ -278,14 +237,6 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 
 	rc = spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(bdev->internal.base_bdevs_cnt > 0);
-	CU_ASSERT(bdev->vbdevs_cnt == 0);
-
-	CU_ASSERT(check_base_and_vbdev(base1, bdev) == true);
-
-	if (base2) {
-		CU_ASSERT(check_base_and_vbdev(base2, bdev) == true);
-	}
 
 	return bdev;
 }
@@ -301,7 +252,6 @@ free_bdev(struct spdk_bdev *bdev)
 static void
 free_vbdev(struct spdk_bdev *bdev)
 {
-	CU_ASSERT(bdev->internal.base_bdevs_cnt != 0);
 	spdk_bdev_unregister(bdev, NULL, NULL);
 	memset(bdev, 0xFF, sizeof(*bdev));
 	free(bdev);
@@ -403,31 +353,6 @@ open_write_test(void)
 	bdev[7] = allocate_vbdev("bdev7", bdev[2], bdev[3]);
 
 	bdev[8] = allocate_vbdev("bdev8", bdev[4], bdev[5]);
-
-	/* Check tree */
-	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[4]) == true);
-	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[5]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[6]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[7]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[8]) == false);
-
-	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[4]) == true);
-	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[5]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[6]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[7]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[8]) == false);
-
-	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[4]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[5]) == true);
-	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[6]) == true);
-	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[7]) == true);
-	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[8]) == false);
-
-	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[4]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[5]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[6]) == false);
-	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[7]) == true);
-	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[8]) == false);
 
 	/* Open bdev0 read-only.  This should succeed. */
 	rc = spdk_bdev_open(bdev[0], false, NULL, NULL, &desc[0]);

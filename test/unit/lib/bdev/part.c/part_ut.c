@@ -119,12 +119,6 @@ part_test(void)
 
 	spdk_bdev_part_base_hotremove(&bdev_base, &tailq);
 
-	/*
-	 * The base device was removed - ensure that the partition vbdevs were
-	 *  removed from the base's vbdev list.
-	 */
-	CU_ASSERT(bdev_base.vbdevs_cnt == 0);
-
 	spdk_bdev_part_base_free(base);
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
 }
