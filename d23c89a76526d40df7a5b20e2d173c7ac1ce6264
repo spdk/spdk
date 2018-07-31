@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78e56d19_2c2cbe77",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-07-31T08:01:07Z",
+      "side": 1,
+      "message": "should be opposite ordering.\nnvme_ctrl_destruct_finish(\u0026rctrlr-\u003ectrlr) and then free(rctrlr);\n\nOr\n\nnvme_rdma_ctrlr_destruct() will be better because ctrlr.adminq is ensured to be NULL here.",
+      "range": {
+        "startLine": 1116,
+        "startChar": 0,
+        "endLine": 1117,
+        "endChar": 45
+      },
+      "revId": "d23c89a76526d40df7a5b20e2d173c7ac1ce6264",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
