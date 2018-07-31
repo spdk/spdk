@@ -78,10 +78,14 @@ struct raid_base_bdev_info {
 };
 
 /*
- * raid_bdev contains the information related to any raid bdev either configured or
- * in configuring list
+ * raid_bdev is the single entity structure which contains SPDK block device
+ * and the information related to any raid bdev either configured or
+ * in configuring list. io device is created on this.
  */
 struct raid_bdev {
+	/* raid bdev device, this will get registered in bdev layer */
+	struct spdk_bdev            bdev;
+
 	/* link of raid bdev to link it to configured, configuring or offline list */
 	TAILQ_ENTRY(raid_bdev)      link_specific_list;
 
@@ -117,18 +121,6 @@ struct raid_bdev {
 
 	/* Set to true if destruct is called for this raid bdev */
 	bool                        destruct_called;
-};
-
-/*
- * raid_bdev_ctxt is the single entity structure for entire bdev which is
- * allocated for any raid bdev
- */
-struct raid_bdev_ctxt {
-	/* raid bdev device, this will get registered in bdev layer */
-	struct spdk_bdev         bdev;
-
-	/* raid_bdev object, io device will be created on this */
-	struct raid_bdev         raid_bdev;
 };
 
 /*
@@ -173,7 +165,7 @@ struct raid_bdev_config {
 	struct raid_base_bdev_config  *base_bdev;
 
 	/* Points to already created raid bdev  */
-	struct raid_bdev_ctxt         *raid_bdev_ctxt;
+	struct raid_bdev              *raid_bdev;
 
 	char                          *name;
 
@@ -210,7 +202,7 @@ struct raid_bdev_io_channel {
 	struct spdk_io_channel      **base_bdevs_io_channel;
 
 	/* raid bdev  context pointer */
-	struct raid_bdev_ctxt       *raid_bdev_ctxt;
+	struct raid_bdev            *raid_bdev;
 };
 
 /* TAIL heads for various raid bdev lists */
