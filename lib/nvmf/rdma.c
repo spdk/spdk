@@ -1927,34 +1927,29 @@ spdk_nvmf_rdma_drain_state_queue(struct spdk_nvmf_rdma_qpair *rqpair,
 }
 
 static void
-spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
+spdk_nvmf_rdma_qpair_recover(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	int recovered;
 	enum ibv_qp_state state, next_state;
+	int recovered;
 	struct spdk_nvmf_rdma_transport *rtransport;
-
-	SPDK_NOTICELOG("IBV QP#%u drained\n", rqpair->qpair.qid);
 
 	if (!spdk_nvmf_rdma_qpair_is_idle(&rqpair->qpair)) {
 		/* There must be outstanding requests down to media.
 		 * If so, wait till they're complete.
 		 */
 		assert(!TAILQ_EMPTY(&rqpair->qpair.outstanding));
-		SPDK_DEBUGLOG(SPDK_LOG_RDMA,
-			      "QP#%u (%p): wait for outstanding requests...\n",
-			      rqpair->qpair.qid, &rqpair->qpair);
 		return;
 	}
 
 	state = spdk_nvmf_rdma_update_ibv_state(rqpair);
 	next_state = state;
 
-	SPDK_NOTICELOG("IBV QP#%u is in state: %s\n",
+	SPDK_NOTICELOG("RDMA qpair %u is in state: %s\n",
 		       rqpair->qpair.qid,
 		       str_ibv_qp_state[state]);
 
 	if (!(state == IBV_QPS_ERR || state == IBV_QPS_RESET)) {
-		SPDK_ERRLOG("Can't recover IBV qp#%u from the state: %s\n",
+		SPDK_ERRLOG("Can't recover RDMA qpair %u from the state: %s\n",
 			    rqpair->qpair.qid,
 			    str_ibv_qp_state[state]);
 		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
@@ -1962,7 +1957,6 @@ spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	recovered = 0;
-
 	while (!recovered) {
 		switch (state) {
 		case IBV_QPS_ERR:
@@ -1981,7 +1975,7 @@ spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 			recovered = 1;
 			break;
 		default:
-			SPDK_ERRLOG("IBV qp#%u unexpected state for recovery: %u\n",
+			SPDK_ERRLOG("RDMA qpair %u unexpected state for recovery: %u\n",
 				    rqpair->qpair.qid, state);
 			goto error;
 		}
@@ -1998,12 +1992,15 @@ spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
-				      struct spdk_nvmf_rdma_transport, transport);
+				      struct spdk_nvmf_rdma_transport,
+				      transport);
+
 	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
 
 	return;
 error:
-	SPDK_ERRLOG("IBV qp#%u recovery failed\n", rqpair->qpair.qid);
+	SPDK_NOTICELOG("RDMA qpair %u: recovery failed, disconnecting...\n",
+		       rqpair->qpair.qid);
 	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 }
 
@@ -2032,7 +2029,7 @@ _spdk_nvmf_rdma_qp_error(void *arg)
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_COMPLETING);
 
-	spdk_nvmf_rdma_qp_drained(rqpair);
+	spdk_nvmf_rdma_qpair_recover(rqpair);
 }
 
 static void
@@ -2373,11 +2370,8 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 
 	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE && rqpair->ibv_attr.qp_state == IBV_QPS_ERR) {
 		/* If the NVMe-oF layer thinks the connection is active, but the RDMA layer thinks
-		 * the connection is dead, check if this is the final I/O to complete and perform
-		 * error recovery. */
-		if (spdk_nvmf_rdma_qpair_is_idle(&rqpair->qpair)) {
-			spdk_nvmf_rdma_qp_drained(rqpair);
-		}
+		 * the connection is dead, perform error recovery. */
+		spdk_nvmf_rdma_qpair_recover(rqpair);
 	}
 
 	return 0;
