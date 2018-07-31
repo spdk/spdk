@@ -86,6 +86,9 @@ extern "C" {
 #include <sys/user.h>
 #include <sys/wait.h>
 
+/* GNU extension */
+#include <getopt.h>
+
 #ifdef __cplusplus
 }
 #endif

@@ -44,6 +44,7 @@
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
+#define SPDK_APP_MAX_CMDLINE_OPTIONS		64
 
 #define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		-1
 #define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	-1
@@ -71,6 +72,49 @@ spdk_app_get_shm_id(void)
 {
 	return g_spdk_app.shm_id;
 }
+
+/* append one empty option to indicate the end of the array */
+static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
+#define CONFIG_FILE_OPT_IDX	'c'
+	{"config",			required_argument,	NULL, CONFIG_FILE_OPT_IDX},
+#define DISABLE_COREDUMP_OPT_IDX 'd'
+	{"disable-coredump",		no_argument,		NULL, DISABLE_COREDUMP_OPT_IDX},
+#define TPOINT_GROUP_MASK_OPT_IDX 'e'
+	{"tpoint-group-mask",		required_argument,	NULL, TPOINT_GROUP_MASK_OPT_IDX},
+#define SINGLE_FILE_SEGMENTS_OPT_IDX 'g'
+	{"single-file-segments",	no_argument,		NULL, SINGLE_FILE_SEGMENTS_OPT_IDX},
+#define HELP_OPT_IDX		'h'
+	{"help",			no_argument,		NULL, HELP_OPT_IDX},
+#define SHM_ID_OPT_IDX		'i'
+	{"shm-id",			required_argument,	NULL, SHM_ID_OPT_IDX},
+#define CPUMASK_OPT_IDX		'm'
+	{"cpumask",			required_argument,	NULL, CPUMASK_OPT_IDX},
+#define MEM_CHANNELS_OPT_IDX	'n'
+	{"mem-channels",		required_argument,	NULL, MEM_CHANNELS_OPT_IDX},
+#define MASTER_CORE_OPT_IDX	'p'
+	{"master-core",			required_argument,	NULL, MASTER_CORE_OPT_IDX},
+#define SILENCE_NOTICELOG_OPT_IDX 'q'
+	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
+#define RPC_SOCKET_OPT_IDX	'r'
+	{"rpc-socket",			required_argument,	NULL, RPC_SOCKET_OPT_IDX},
+#define MEM_SIZE_OPT_IDX	's'
+	{"mem-size",			required_argument,	NULL, MEM_SIZE_OPT_IDX},
+#define NO_PCI_OPT_IDX		'u'
+	{"no-pci",			no_argument,		NULL, NO_PCI_OPT_IDX},
+#define WAIT_FOR_RPC_OPT_IDX	'w'
+	{"wait-for-rpc",		no_argument,		NULL, WAIT_FOR_RPC_OPT_IDX},
+#define PCI_BLACKLIST_OPT_IDX	'B'
+	{"pci-blacklist",		required_argument,	NULL, PCI_BLACKLIST_OPT_IDX},
+#define TRACEFLAG_OPT_IDX	'L'
+	{"traceflag",			required_argument,	NULL, TRACEFLAG_OPT_IDX},
+#define HUGE_UNLINK_OPT_IDX	'R'
+	{"huge-unlink",			no_argument,		NULL, HUGE_UNLINK_OPT_IDX},
+#define PCI_WHITELIST_OPT_IDX	'W'
+	{"pci-whitelist",		required_argument,	NULL, PCI_WHITELIST_OPT_IDX},
+	{NULL,				no_argument,		NULL, 0}
+};
+
+static char g_cmdline_short_opts[2 * SPDK_APP_MAX_CMDLINE_OPTIONS + 1];
 
 /* Global section */
 #define GLOBAL_CONFIG_TMPL \
@@ -626,28 +670,32 @@ usage(void (*app_usage)(void))
 {
 	printf("%s [options]\n", g_executable_name);
 	printf("options:\n");
-	printf(" -c config  config file (default %s)\n", g_default_opts.config_file);
-	printf(" -d         disable coredump file enabling\n");
-	printf(" -e mask    tracepoint group mask for spdk trace buffers (default 0x0)\n");
-	printf(" -g         force creating just one hugetlbfs file\n");
-	printf(" -h         show this usage\n");
-	printf(" -i shared memory ID (optional)\n");
-	printf(" -m mask    core mask for DPDK\n");
-	printf(" -n channel number of memory channels used for DPDK\n");
-	printf(" -p core    master (primary) core for DPDK\n");
-	printf(" -q         disable notice level logging to stderr\n");
-	printf(" -r         RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
-	printf(" -s size    memory size in MB for DPDK (default: ");
+	printf(" -c, --config <config>     config file (default %s)\n", g_default_opts.config_file);
+	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
+	printf(" -e, --tpoint-group-mask <mask>\n");
+	printf("                           tracepoint group mask for spdk trace buffers (default 0x0)\n");
+	printf(" -g, --single-file-segments\n");
+	printf("                           force creating just one hugetlbfs file\n");
+	printf(" -h, --help                show this usage\n");
+	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
+	printf(" -m, --cpumask <mask>      core mask for DPDK\n");
+	printf(" -n, --mem-channels <num>  channel number of memory channels used for DPDK\n");
+	printf(" -p, --master-core <id>    master (primary) core for DPDK\n");
+	printf(" -q, --silence-noticelog   disable notice level logging to stderr\n");
+	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
+	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: ");
 	if (g_default_opts.mem_size > 0) {
 		printf("%dMB)\n", g_default_opts.mem_size);
 	} else {
 		printf("all hugepage memory)\n");
 	}
-	printf(" -u         disable PCI access.\n");
-	printf(" -w         wait for RPCs to initialize subsystems\n");
-	printf(" -B addr    pci addr to blacklist\n");
-	printf(" -R         unlink huge files after initialization\n");
-	printf(" -W addr    pci addr to whitelist (-B and -W cannot be used at the same time)\n");
+	printf(" -u, --no-pci              disable PCI access\n");
+	printf(" -w, --wait-for-rpc        wait for RPCs to initialize subsystems\n");
+	printf(" -B, --pci-blacklist <bdf>\n");
+	printf("                           pci addr to blacklist (can be used more than once)\n");
+	printf(" -R, --huge-unlink         unlink huge files after initialization\n");
+	printf(" -W, --pci-whitelist <bdf>\n");
+	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
 	spdk_tracelog_usage(stdout, "-L");
 	if (app_usage) {
 		app_usage();
@@ -656,12 +704,11 @@ usage(void (*app_usage)(void))
 
 spdk_app_parse_args_rvals_t
 spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
-		    const char *app_getopt_str, void (*app_parse)(int ch, char *arg),
+		    const char *app_getopt_str, struct option *app_long_opts,
+		    void (*app_parse)(int ch, char *arg),
 		    void (*app_usage)(void))
 {
-	int ch, rc;
-	char *getopt_str;
-	spdk_app_parse_args_rvals_t rval = SPDK_APP_PARSE_ARGS_SUCCESS;
+	int ch, rc, opt_idx, global_long_opts_len, app_long_opts_len;
 
 	memcpy(&g_default_opts, opts, sizeof(g_default_opts));
 
@@ -669,64 +716,83 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		opts->config_file = NULL;
 	}
 
-	getopt_str = spdk_sprintf_alloc("%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
-	if (getopt_str == NULL) {
-		fprintf(stderr, "Could not allocate getopt_str in %s()\n", __func__);
-		rval = SPDK_APP_PARSE_ARGS_FAIL;
-		goto parse_early_fail;
+	if (app_long_opts == NULL) {
+		app_long_opts_len = 0;
+	} else {
+		for (app_long_opts_len = 0;
+		     app_long_opts[app_long_opts_len].name != NULL;
+		     app_long_opts_len++);
 	}
+
+	for (global_long_opts_len = 0;
+	     g_cmdline_options[global_long_opts_len].name != NULL;
+	     global_long_opts_len++);
+
+	if (app_long_opts_len + global_long_opts_len > SPDK_APP_MAX_CMDLINE_OPTIONS) {
+		fprintf(stderr, "Too many parseable command line options in %s()."
+			" (got %d, max %d)\n", __func__,
+			app_long_opts_len + global_long_opts_len,
+			SPDK_APP_MAX_CMDLINE_OPTIONS);
+		return SPDK_APP_PARSE_ARGS_FAIL;
+	}
+
+	if (app_long_opts) {
+		memcpy(&g_cmdline_options[global_long_opts_len], app_long_opts,
+		       app_long_opts_len * sizeof(*app_long_opts));
+	}
+
+
+	snprintf(g_cmdline_short_opts, sizeof(g_cmdline_short_opts),
+		 "%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
 
 	g_executable_name = argv[0];
 
-	while ((ch = getopt(argc, argv, getopt_str)) != -1) {
+	while ((ch = getopt_long(argc, argv, g_cmdline_short_opts,
+				 g_cmdline_options, &opt_idx)) != -1) {
 		switch (ch) {
-		case 'c':
+		case CONFIG_FILE_OPT_IDX:
 			opts->config_file = optarg;
 			break;
-		case 'd':
+		case DISABLE_COREDUMP_OPT_IDX:
 			opts->enable_coredump = false;
 			break;
-		case 'e':
+		case TPOINT_GROUP_MASK_OPT_IDX:
 			opts->tpoint_group_mask = optarg;
 			break;
-		case 'g':
+		case SINGLE_FILE_SEGMENTS_OPT_IDX:
 			opts->hugepage_single_segments = true;
 			break;
-		case 'h':
+		case HELP_OPT_IDX:
 			usage(app_usage);
-			rval = SPDK_APP_PARSE_ARGS_HELP;
-			goto parse_done;
-		case 'i':
+			return SPDK_APP_PARSE_ARGS_HELP;
+		case SHM_ID_OPT_IDX:
 			if (optarg == NULL) {
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 			opts->shm_id = atoi(optarg);
 			break;
-		case 'm':
+		case CPUMASK_OPT_IDX:
 			opts->reactor_mask = optarg;
 			break;
-		case 'n':
+		case MEM_CHANNELS_OPT_IDX:
 			if (optarg == NULL) {
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 			opts->mem_channel = atoi(optarg);
 			break;
-		case 'p':
+		case MASTER_CORE_OPT_IDX:
 			if (optarg == NULL) {
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 			opts->master_core = atoi(optarg);
 			break;
-		case 'q':
+		case SILENCE_NOTICELOG_OPT_IDX:
 			opts->print_level = SPDK_LOG_WARN;
 			break;
-		case 'r':
+		case RPC_SOCKET_OPT_IDX:
 			opts->rpc_addr = optarg;
 			break;
-		case 's': {
+		case MEM_SIZE_OPT_IDX: {
 			uint64_t mem_size_mb;
 			bool mem_size_has_prefix;
 
@@ -734,8 +800,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (rc != 0) {
 				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
 				usage(app_usage);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 
 			if (mem_size_has_prefix) {
@@ -748,70 +813,63 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (mem_size_mb > INT_MAX) {
 				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
 				usage(app_usage);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 
 			opts->mem_size = (int) mem_size_mb;
 			break;
 		}
-		case 'u':
+		case NO_PCI_OPT_IDX:
 			opts->no_pci = true;
 			break;
-		case 'w':
+		case WAIT_FOR_RPC_OPT_IDX:
 			opts->delay_subsystem_init = true;
 			break;
-		case 'B':
+		case PCI_BLACKLIST_OPT_IDX:
 			if (opts->pci_whitelist) {
 				free(opts->pci_whitelist);
 				fprintf(stderr, "-B and -W cannot be used at the same time\n");
 				usage(app_usage);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 
 			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_blacklist, optarg);
 			if (rc != 0) {
 				free(opts->pci_blacklist);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 			break;
-		case 'L':
+		case TRACEFLAG_OPT_IDX:
 #ifndef DEBUG
 			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -L flag\n",
 				argv[0]);
 			usage(app_usage);
-			rval = SPDK_APP_PARSE_ARGS_FAIL;
-			goto parse_done;
+			return SPDK_APP_PARSE_ARGS_FAIL;
 #else
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
 				usage(app_usage);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 			opts->print_level = SPDK_LOG_DEBUG;
 			break;
 #endif
-		case 'R':
+		case HUGE_UNLINK_OPT_IDX:
 			opts->unlink_hugepage = true;
 			break;
-		case 'W':
+		case PCI_WHITELIST_OPT_IDX:
 			if (opts->pci_blacklist) {
 				free(opts->pci_blacklist);
 				fprintf(stderr, "-B and -W cannot be used at the same time\n");
 				usage(app_usage);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 
 			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_whitelist, optarg);
 			if (rc != 0) {
 				free(opts->pci_whitelist);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 			break;
 		case '?':
@@ -821,8 +879,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			 * getopt() will return a '?' indicating failure.
 			 */
 			usage(app_usage);
-			rval = SPDK_APP_PARSE_ARGS_FAIL;
-			goto parse_done;
+			return SPDK_APP_PARSE_ARGS_FAIL;
 		default:
 			app_parse(ch, optarg);
 		}
@@ -835,11 +892,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			"- Please be careful one options might overwrite others.\n");
 	}
 
-parse_done:
-	free(getopt_str);
-
-parse_early_fail:
-	return rval;
+	return SPDK_APP_PARSE_ARGS_SUCCESS;
 }
 
 void

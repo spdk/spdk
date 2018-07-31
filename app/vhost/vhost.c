@@ -56,8 +56,8 @@ vhost_app_opts_init(struct spdk_app_opts *opts)
 static void
 vhost_usage(void)
 {
-	printf(" -f pidfile save pid to file under given path\n");
-	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
+	printf(" -f <path>                 save pid to file under given path\n");
+	printf(" -S <path>                 directory where to create vhost sockets (default: pwd)\n");
 }
 
 static void
@@ -101,7 +101,7 @@ main(int argc, char *argv[])
 
 	vhost_app_opts_init(&opts);
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:",
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:", NULL,
 				      vhost_parse_arg, vhost_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);

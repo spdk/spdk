@@ -54,9 +54,9 @@ static const char g_spdk_tgt_get_opts_string[] = "f:" SPDK_VHOST_OPTS;
 static void
 spdk_tgt_usage(void)
 {
-	printf(" -f pidfile save pid to file under given path\n");
+	printf(" -f <file>                 pidfile save pid to file under given path\n");
 #ifdef SPDK_CONFIG_VHOST
-	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
+	printf(" -S <path>                 directory where to create vhost sockets (default: pwd)\n");
 #endif
 }
 
@@ -113,7 +113,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts);
 	opts.name = "spdk_tgt";
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, g_spdk_tgt_get_opts_string,
-				      spdk_tgt_parse_arg, spdk_tgt_usage)) !=
+				      NULL, spdk_tgt_parse_arg, spdk_tgt_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
 	}

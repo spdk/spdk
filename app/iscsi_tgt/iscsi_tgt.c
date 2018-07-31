@@ -59,7 +59,7 @@ spdk_sigusr1(int signo __attribute__((__unused__)))
 static void
 iscsi_usage(void)
 {
-	printf(" -b         run iscsi target background, the default is foreground\n");
+	printf(" -b                        run iscsi target background, the default is foreground\n");
 }
 
 static void
@@ -93,7 +93,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts);
 	opts.config_file = SPDK_ISCSI_DEFAULT_CONFIG;
 	opts.name = "iscsi";
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "b",
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "b", NULL,
 				      iscsi_parse_arg, iscsi_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
