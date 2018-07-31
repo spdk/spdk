@@ -102,6 +102,23 @@
       "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "652b0cfc_a8806b91",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 59
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-07-31T15:43:26Z",
+      "side": 1,
+      "message": "In here, you\u0027re adding this new library from the Intel IPsec submodule to the DPDK_LIB var, thus conflating the use of DPDK_LIB.   Previously, DPDK_LIB was limited to only objects from the DPDK submodule.   In spite of the existing complexity, I\u0027d propose you extend this mk file further so as to avoid the inclusion of the Intel library in DPDK_LIB.  This would mean adding some new vars like IPSEC_ABS_DIR, IPSEC_LIB_LIST and IPSEC_LIB, and then rolling them into the ENV_LINKER_ARGS which undoubtedly will result in some trial and error to get right, esp. if you run into any circular dependencies, but it would preserve (IMHO) the original, semantic meaning behind DPDK_LIB.",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
