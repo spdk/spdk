@@ -154,11 +154,6 @@ class Commands_Rpc(object):
         output, rc = self.rpc.delete_malloc_bdev(base_name)
         return rc
 
-    def delete_nvme_controller(self, controller_name):
-        print("INFO: RPC COMMAND delete_nvme_controller")
-        output, rc = self.rpc.delete_nvme_controller(controller_name)
-        return rc
-
     def destroy_lvol_bdev(self, bdev_name):
         print("INFO: RPC COMMAND destroy_lvol_bdev")
         output, rc = self.rpc.destroy_lvol_bdev(bdev_name)
@@ -204,10 +199,6 @@ class Commands_Rpc(object):
 
         return None
 
-    def construct_nvme_bdev(self, nvme_name, trtype, traddr):
-        print("INFO: Add NVMe bdev {nvme}".format(nvme=nvme_name))
-        self.rpc.construct_nvme_bdev("-b", nvme_name, "-t", trtype, "-a", traddr)
-
     def rename_lvol_store(self, old_name, new_name):
         print("INFO: Renaming lvol store from {old} to {new}".format(old=old_name, new=new_name))
         output, rc = self.rpc.rename_lvol_store(old_name, new_name)
@@ -236,4 +227,14 @@ class Commands_Rpc(object):
     def decouple_parent_lvol_bdev(self, clone_name):
         print("INFO: RPC COMMAND decouple_parent_lvol_bdev")
         output, rc = self.rpc.decouple_parent_lvol_bdev(clone_name)
+        return rc
+
+    def construct_aio_bdev(self, aio_path, aio_name, aio_bs=""):
+        print("INFO: RPC COMMAND construct_aio_bdev")
+        output, rc = self.rpc.construct_aio_bdev(aio_path, aio_name, aio_bs)
+        return rc
+
+    def delete_aio_bdev(self, aio_name):
+        print("INFO: RPC COMMAND delete_aio_bdev")
+        output, rc = self.rpc.delete_aio_bdev(aio_name)
         return rc
