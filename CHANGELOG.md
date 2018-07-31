@@ -2,60 +2,119 @@
 
 ## v18.07: (Upcoming Release)
 
+### bdev
+
+A new public header file bdev_module.h has been introduced to facilitate the
+development of new bdev modules. This header includes an interface for the
+spdk_bdev_part and spdk_bdev_part_base objects to enable the creation of
+multiple virtual bdevs on top of a single base bdev and should act as the
+primary API for module authors.
+
+spdk_bdev_get_opts() and spdk_bdev_set_opts() were added to set bdev-wide
+options.
+
+A mechanism for handling out of memory condition errors (ENOMEM) returned from
+I/O submission requests at the bdev layer has been added. See
+spdk_bdev_queue_io_wait().
+
+The spdk_bdev_get_io_stat() function now returns cumulative totals instead of
+resetting on each call. This allows multiple callers to query I/O statistics
+without conflicting with each other. Existing users will need to adjust their
+code to record the previous I/O statistics to calculate the delta between calls.
+
+I/O queue depth tracking and samples options have been added. See
+spdk_bdev_get_qd(), spdk_bdev_get_qd_sampling_period(), and
+spdk_bdev_set_qd_sampling_period().
+
 ### RAID module
 A new bdev module called "raid" has been added as experimental module which
-aggregates underlying nvme bdevs and expose a single raid bdev to upper bdev
-layers. Over this LVS/LVOL can be created as per use-cases and they can be
-exposed to NVMe-oF subsystems. Please note that vhost will not work with RAID
-module as RAID module does not support multipe IOV Vectors yet.
+aggregates underlying NVMe bdevs and exposes a single raid bdev. Please note
+that vhost will not work with this module because it does not yet have support
+for multi-element io vectors.
 
 ### Log
 
-The debug log component flag has been renamed from `-t` to `-L` to prevent confusion
-with tracepoints and to allow the option to be added to tools that already use `-t`
-to mean something else.
+The debug log component flag available on several SPDK applications has been
+renamed from `-t` to `-L` to prevent confusion with tracepoints and to allow the
+option to be added to tools that already use `-t` to mean something else.
+
+### Blobstore
+
+A new function, spdk_bs_dump(), has been added that dumps all of the contents of
+a blobstore to a file pointer. This includes the metadata and is very useful for
+debugging.
+
+Two new operations have been added for thin-provisioned blobs.
+spdk_bs_inflate_blob() will allocate clusters for all thinly provisioned regions
+of the blob and populate them with the correct data by reading from the backing
+blob(s). spdk_bs_blob_decouple_parent() works similarly, but will only allocate
+clusters that correspond to data in the blob's immediate parent. Clusters
+allocated to grandparents or that aren't allocated at all will remain
+thin-provisioned.
+
+### BlobFS
+
+Changed the return type of spdk_file_truncate() from void to int to allow the
+propagation of `ENOMEM` errors.
 
 ### NVMe Driver
 
-New API function spdk_nvme_qpair_add_cmd_error_injection() and
-spdk_nvme_qpair_remove_cmd_error_injection() have been added for NVMe error emulation,
-users can set specified command with specified error status for error emulation.
+The new API functions spdk_nvme_qpair_add_cmd_error_injection() and
+spdk_nvme_qpair_remove_cmd_error_injection() have been added for NVMe error
+emulation. Users can set a specified command to fail with a particular error
+status.
 
-Change the name `timeout_sec` parameter to `timeout_us` in API function
-spdk_nvme_ctrlr_register_timeout_callback, and also change the type from uint32_t to
-uint64_t. This will give users more fine-grained control over the timeout period for
-calling callback functions.
+Changed the name `timeout_sec` parameter to `timeout_us` in
+spdk_nvme_ctrlr_register_timeout_callback(), and also changed the type from
+uint32_t to uint64_t. This will give users more fine-grained control over the
+timeout period.
+
+Basic support for Open Channel SSDs was added. See nvme_ocssd.h
+
+### NVMe Over Fabrics
+
+The spdk_nvmf_tgt_destroy() function is now asynchronous and takes a callback
+as a parameter.
+
+spdk_nvmf_qpair_disconnect() was added to allow the user to disconnect qpairs.
+
+spdk_nvmf_subsystem_get_max_namespaces() was added to query the maximum allowed
+number of namespaces for a given subsystem.
 
 ### Build System
 
-The build system now generates a combined shared library (libspdk.so) that may be used
-in place of the individual static libraries (libspdk_*.a).
-The combined library includes all components of SPDK and is intended to make linking
-against SPDK easier.
-The static libraries are also still provided for users that prefer to link only the
-minimal set of components required.
+The build system now generates a combined shared library (libspdk.so) that may
+be used in place of the individual static libraries (libspdk_*.a). The combined
+library includes all components of SPDK and is intended to make linking against
+SPDK easier. The static libraries are also still provided for users that prefer
+to link only the minimal set of components required.
 
-A new configure option was added `--with-crypto` that, when set, will build the crypto
-vbdev as well as its dependencies.
+### git pre-commit and pre-push hooks
+
+The pre-commit hook will run `scripts/check_format.sh` and verify there are no
+formating errors before allowing `git commit` to run. The pre-push hook runs
+`make CONFIG_WERROR=y` with and without `CONFIG_DEBUG=y` using both the gcc and
+clang compiler before allowing `git push` to run. Following each DEBUG build
+`test/unit/unittest.sh` is run and verified. Results are recorded in the
+`make.log` file.
+
+To enable type: 'git config core.hooksPath .githooks'. To override after
+configuration use the `git --no-verify` flag.
 
 ### RPC
 
 The `start_nbd_disk` RPC method now returns the path to the kernel NBD device node
 rather than always returning `true`.
 
-### Bdev
+### DPDK 18.05
 
-The spdk_bdev_get_io_stat() function now returns cumulative totals instead of resetting
-on each call. This allows multiple callers to query I/O statistics without conflicting
-with each other. Existing users will need to adjust their code to record the previous
-I/O statistics to calculate the delta between calls.
+The DPDK submodule has been rebased on the DPDK 18.05 release.  DPDK 18.05 supports
+dynamic memory allocation, but due to some issues found after the DPDK 18.05 release,
+that support is not enabled for SPDK 18.07.  Therefore, SPDK 18.07 will continue to use
+the legacy memory allocation model.  The plan is to enable dynamic memory allocation
+after the DPDK 18.08 release which should fix these issues.
 
-A new public header file bdev_module.h has been introduced to facilitate the development
-of new bdev modules. This header includes an interface for the spdk_bdev_part and
-spdk_bdev_part_base objects to enable the creation of multiple virtual bdevs on top of a
-single base bdev.
-
-### Env
+### Environment Abstraction Layer and Event Framework
 
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
 the memory region.  This can be used by environment implementations to validate the
@@ -65,21 +124,8 @@ The I/O Channel implementation has been moved to its own library - lib/thread. T
 public API that was previously in spdk/io_channel.h is now in spdk/thread.h The
 file spdk/io_channel.h remains and includes spdk/thread.h.
 
-### NVMe Over Fabrics
-
-The spdk_nvmf_tgt_destroy() function is now asynchronous and takes a callback
-as a parameter.
-
-### git pre-commit and pre-push hooks
-
-The pre-commit hook will run `scripts/check_format.sh` and verify there are no formating
-errors before allowing `git commit` to run. The pre-push hook runs `make CONFIG_WERROR=y`
-with and without `CONFIG_DEBUG=y` using both the gcc and clang compiler before allowing
-`git push` to run.  Following each DEBUG build `test/unit/unittest.sh` is run and verified.
-Results are recorded in the `make.log` file.
-
-To enable type: 'git config core.hooksPath .githooks'. To override after configuration use
-the `git --no-verify` flag.
+spdk_reactor_get_tsc_stats was added to return interesting statistics for each
+reactor.
 
 ### IOAT
 
@@ -91,14 +137,6 @@ now deprecated and will be removed in a future release.
 
 Change the return type of spdk_file_truncate from void to int. The purpose is to catch
 the `NOMEM` error condition.
-
-### DPDK 18.05
-
-The DPDK submodule has been rebased on the DPDK 18.05 release.  DPDK 18.05 supports
-dynamic memory allocation, but due to some issues found after the DPDK 18.05 release,
-that support is not enabled for SPDK 18.07.  Therefore, SPDK 18.07 will continue to use
-the legacy memory allocation model.  The plan is to enable dynamic memory allocation
-after the DPDK 18.08 release which should fix these issues.
 
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
