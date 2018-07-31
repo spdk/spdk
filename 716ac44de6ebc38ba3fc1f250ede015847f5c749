@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e152fb60_405385ee",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-31T20:48:33Z",
+      "side": 1,
+      "message": "\";\" is missing here before exit. Please fix it.",
+      "range": {
+        "startLine": 127,
+        "startChar": 44,
+        "endLine": 127,
+        "endChar": 47
+      },
+      "revId": "716ac44de6ebc38ba3fc1f250ede015847f5c749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef4b37d2_d48107e2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1408,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-07-31T20:48:33Z",
+      "side": 1,
+      "message": "AIO device that can be deleted and created in runtime (triggering tasting). It might be worth exploring, later on removing restart of the application itself or using it just in some test cases for tasting. I\u0027m fine with keeping it here right now.",
+      "range": {
+        "startLine": 1403,
+        "startChar": 0,
+        "endLine": 1408,
+        "endChar": 29
+      },
+      "revId": "716ac44de6ebc38ba3fc1f250ede015847f5c749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
