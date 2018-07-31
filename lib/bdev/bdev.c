@@ -2226,6 +2226,15 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return 0;
 }
 
+static void
+_spdk_bdev_io_stat_add(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
+{
+	total->bytes_read += add->bytes_read;
+	total->num_read_ops += add->num_read_ops;
+	total->bytes_written += add->bytes_written;
+	total->num_write_ops += add->num_write_ops;
+}
+
 void
 spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		      struct spdk_bdev_io_stat *stat)
@@ -2253,11 +2262,7 @@ _spdk_bdev_get_each_channel_stat(struct spdk_io_channel_iter *i)
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
-	bdev_iostat_ctx->stat->bytes_read += channel->stat.bytes_read;
-	bdev_iostat_ctx->stat->num_read_ops += channel->stat.num_read_ops;
-	bdev_iostat_ctx->stat->bytes_written += channel->stat.bytes_written;
-	bdev_iostat_ctx->stat->num_write_ops += channel->stat.num_write_ops;
-
+	_spdk_bdev_io_stat_add(bdev_iostat_ctx->stat, &channel->stat);
 	spdk_for_each_channel_continue(i, 0);
 }
 
