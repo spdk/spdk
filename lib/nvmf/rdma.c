@@ -2046,49 +2046,21 @@ spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 }
 
 static void
-_spdk_nvmf_rdma_sq_drained(void *cb_arg)
-{
-	spdk_nvmf_rdma_qp_drained(cb_arg);
-}
-
-static void
-_spdk_nvmf_rdma_qp_last_wqe(void *cb_arg)
-{
-	struct spdk_nvmf_rdma_qpair *rqpair = cb_arg;
-
-	if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ERROR) {
-		SPDK_ERRLOG("QP#%u is not in ERROR state, dropping LAST_WQE event...\n",
-			    rqpair->qpair.qid);
-		return;
-	}
-	spdk_nvmf_rdma_qp_drained(rqpair);
-}
-
-static void
 _spdk_nvmf_rdma_qp_error(void *arg)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = arg;
 
 	rqpair->qpair.state = SPDK_NVMF_QPAIR_ERROR;
 
-	if (spdk_nvmf_rdma_qpair_is_idle(&rqpair->qpair)) {
-		/* There are no outstanding requests */
-		spdk_nvmf_rdma_qp_drained(rqpair);
-	}
-}
-
-static struct spdk_nvmf_rdma_qpair *
-spdk_nvmf_rqpair_from_qp(struct ibv_qp *qp)
-{
-	return qp->qp_context;
+	spdk_nvmf_rdma_qp_drained(rqpair);
 }
 
 static void
 spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 {
-	int rc;
+	int				rc;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
-	struct ibv_async_event event;
+	struct ibv_async_event		event;
 
 	rc = ibv_get_async_event(device->context, &event);
 
@@ -2101,19 +2073,14 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	SPDK_NOTICELOG("Async event: %s\n",
 		       ibv_event_type_str(event.event_type));
 
+	rqpair = event.element.qp->qp_context;
+
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
-		rqpair = spdk_nvmf_rqpair_from_qp(event.element.qp);
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
 		break;
 	case IBV_EVENT_SQ_DRAINED:
-		rqpair = spdk_nvmf_rqpair_from_qp(event.element.qp);
-		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_sq_drained, rqpair);
-		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
-		rqpair = spdk_nvmf_rqpair_from_qp(event.element.qp);
-		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_last_wqe, rqpair);
-		break;
 	case IBV_EVENT_CQ_ERR:
 	case IBV_EVENT_QP_REQ_ERR:
 	case IBV_EVENT_QP_ACCESS_ERR:
