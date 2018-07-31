@@ -237,3 +237,13 @@ class Commands_Rpc(object):
         print("INFO: RPC COMMAND decouple_parent_lvol_bdev")
         output, rc = self.rpc.decouple_parent_lvol_bdev(clone_name)
         return rc
+
+    def construct_aio_bdev(self, aio_path, aio_name, aio_cz):
+        print("INFO: RPC COMMAND construct_aio_bdev")
+        output, rc = self.rpc.construct_aio_bdev(aio_path, aio_name, aio_cz)
+        return rc
+
+    def delete_aio_bdev(self, aio_name):
+        print("INFO: RPC COMMAND delete_aio_bdev")
+        output, rc = self.rpc.delete_aio_bdev(aio_name)
+        return rc
