@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72f38a74_8311960c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-07-31T22:50:09Z",
+      "side": 1,
+      "message": "This is awesome!",
+      "revId": "67db337c936acdee28486acc1a7bc2a90772e357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
