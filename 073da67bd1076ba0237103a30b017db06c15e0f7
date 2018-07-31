@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "892fa732_7611c5e7",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-07-31T22:24:20Z",
+      "side": 1,
+      "message": "I think we should just have a single function - get_lvs_size(self, lvs_name\u003d\"lvs_test\").\n\nI think get_lvol_bdev_split_size() is a bit confusing - I thought this had to do with the split module (since that\u0027s where we\u0027ve had some issues) but really this just divides the size by the split_num parameter.\n\nIt really would just be easier for the caller to do:\n\nbdev_size_1 \u003d self.get_lvs_size(lvs_name_1) / 4;",
+      "revId": "073da67bd1076ba0237103a30b017db06c15e0f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
