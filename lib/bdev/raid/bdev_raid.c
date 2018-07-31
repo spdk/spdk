@@ -41,6 +41,8 @@
 #include "spdk/json.h"
 #include "spdk/string.h"
 
+static bool g_fini_start = false;
+
 /* raid bdev config as read from config file */
 struct raid_config          g_spdk_raid_config = {
 	.raid_bdev_config_head = TAILQ_HEAD_INITIALIZER(g_spdk_raid_config.raid_bdev_config_head),
@@ -216,9 +218,10 @@ raid_bdev_destruct(void *ctxt)
 
 		/*
 		 * Close all base bdev descriptors for which call has come from below
-		 * layers
+		 * layers.  Also close the descriptors if we have started shutdown.
 		 */
-		if ((info->base_bdev_remove_scheduled == true) && (info->base_bdev != NULL)) {
+		if (g_fini_start ||
+		    ((info->base_bdev_remove_scheduled == true) && (info->base_bdev != NULL))) {
 			spdk_bdev_module_release_bdev(info->base_bdev);
 			spdk_bdev_close(info->base_bdev_desc);
 			info->base_bdev_desc = NULL;
@@ -229,8 +232,24 @@ raid_bdev_destruct(void *ctxt)
 	}
 
 	if (raid_bdev->num_base_bdevs_discovered == 0) {
-		/* Free raid_bdev when there no base bdevs left */
+		/* Free raid_bdev when there are no base bdevs left */
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev base bdevs is 0, going to free all in destruct\n");
+
+		/* We may have released all of the descriptors on an ONLINE or CONFIGURING volume if
+		 * we are in the application shutdown phase.  So change the state to OFFLINE and move
+		 * it to the offline_list TAILQ before calling raid_bdev_cleanup().
+		 */
+		if (raid_bdev->state == RAID_BDEV_STATE_ONLINE) {
+			TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
+			raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+			TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+		} else if (raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
+			TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
+			raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+			TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+		} else {
+			assert(raid_bdev->state == RAID_BDEV_STATE_OFFLINE);
+		}
 		raid_bdev_cleanup(raid_bdev_ctxt);
 	}
 
@@ -1017,6 +1036,22 @@ raid_bdev_parse_config(void)
 
 /*
  * brief:
+ * raid_bdev_fini_start is called when bdev layer is starting the
+ * shutdown process
+ * params:
+ * none
+ * returns:
+ * none
+ */
+static void
+raid_bdev_fini_start(void)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_fini_start\n");
+	g_fini_start = true;
+}
+
+/*
+ * brief:
  * raid_bdev_exit is called on raid bdev module exit time by bdev layer
  * params:
  * none
@@ -1090,6 +1125,7 @@ raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **raid_b
 static struct spdk_bdev_module g_raid_if = {
 	.name = "raid",
 	.module_init = raid_bdev_init,
+	.fini_start = raid_bdev_fini_start,
 	.module_fini = raid_bdev_exit,
 	.get_ctx_size = raid_bdev_get_ctx_size,
 	.examine_config = raid_bdev_examine,
