@@ -148,11 +148,8 @@ raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 		/* Free base bdev channels */
 		assert(ch->base_bdevs_io_channel[i] != NULL);
 		spdk_put_io_channel(ch->base_bdevs_io_channel[i]);
-		ch->base_bdevs_io_channel[i] = NULL;
 	}
-	ch->raid_bdev = NULL;
 	free(ch->base_bdevs_io_channel);
-	ch->base_bdevs_io_channel = NULL;
 }
 
 /*
@@ -180,10 +177,8 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 	TAILQ_REMOVE(&g_spdk_raid_bdev_list, raid_bdev, link_global_list);
 	assert(raid_bdev->bdev.name);
 	free(raid_bdev->bdev.name);
-	raid_bdev->bdev.name = NULL;
 	assert(raid_bdev->base_bdev_info);
 	free(raid_bdev->base_bdev_info);
-	raid_bdev->base_bdev_info = NULL;
 	if (raid_bdev->raid_bdev_config) {
 		raid_bdev->raid_bdev_config->raid_bdev = NULL;
 	}
