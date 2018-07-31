@@ -598,8 +598,8 @@ fgets_line(FILE *fp)
 	return NULL;
 }
 
-int
-spdk_conf_read(struct spdk_conf *cp, const char *file)
+static int
+_spdk_conf_read(struct spdk_conf *cp, int fd)
 {
 	FILE *fp;
 	char *lp, *p;
@@ -607,20 +607,9 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 	int line;
 	int n, n2;
 
-	if (file == NULL || file[0] == '\0') {
-		return -1;
-	}
-
-	fp = fopen(file, "r");
+	fp = fdopen(fd, "r");
 	if (fp == NULL) {
-		SPDK_ERRLOG("open error: %s\n", file);
-		return -1;
-	}
-
-	cp->file = strdup(file);
-	if (cp->file == NULL) {
-		SPDK_ERRLOG("cannot duplicate %s to cp->file\n", file);
-		fclose(fp);
+		SPDK_ERRLOG("fdopen error: %d\n", fd);
 		return -1;
 	}
 
@@ -651,7 +640,6 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 				free(lp2);
 				free(lp);
 				SPDK_ERRLOG("malloc failed at line %d of %s\n", line, cp->file);
-				fclose(fp);
 				return -1;
 			}
 
@@ -673,8 +661,75 @@ next_line:
 		free(lp);
 	}
 
-	fclose(fp);
 	return 0;
+}
+
+int
+spdk_conf_read(struct spdk_conf *cp, const char *file)
+{
+	int fd;
+	int rc;
+
+	if (file == NULL || file[0] == '\0') {
+		return -1;
+	}
+
+	cp->file = strdup(file);
+	if (cp->file == NULL) {
+		SPDK_ERRLOG("cannot duplicate %s to cp->file\n", file);
+		return -1;
+	}
+
+	fd = open(file, O_RDONLY);
+	if (fd < 0) {
+		SPDK_ERRLOG("open error: %s\n", file);
+		return -1;
+	}
+
+	rc = _spdk_conf_read(cp, fd);
+
+	close(fd);
+	return rc;
+}
+
+int
+spdk_conf_read_with_lock(struct spdk_conf *cp, const char *file)
+{
+	int fd;
+	int rc, _rc;
+
+	if (file == NULL || file[0] == '\0') {
+		return -1;
+	}
+
+	cp->file = strdup(file);
+	if (cp->file == NULL) {
+		SPDK_ERRLOG("cannot duplicate %s to cp->file\n", file);
+		return -1;
+	}
+
+	fd = open(file, O_RDONLY);
+	if (fd < 0) {
+		SPDK_ERRLOG("open error: %s\n", file);
+		return -1;
+	}
+
+	rc = flock(fd, LOCK_EX);
+	if (rc != 0) {
+		SPDK_ERRLOG("flock(LOCK_EX) failed: %s\n", file);
+		close(fd);
+		return -1;
+	}
+
+	rc = _spdk_conf_read(cp, fd);
+
+	_rc = flock(fd, LOCK_UN);
+	if (_rc != 0) {
+		SPDK_ERRLOG("flock(LOCK_UN) failed: %s\n", file);
+	}
+
+	close(fd);
+	return rc;
 }
 
 void
