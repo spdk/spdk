@@ -360,12 +360,22 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
-	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task;
+	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task, *primary;
 
 	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
 		TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
 		if (pdu->task) {
+			primary = spdk_iscsi_task_get_primary(pdu->task);
+			/* Due to the network issue,  spdk_iscsi_conn_free_pdu in
+			  * spdk_iscsi_conn_flush_pdus_internal will not be executed. So for the datain task,
+			  * we should free the primary task if this is a last subtask of the primary
+			  */
+			if ((primary != pdu->task) && (primary->scsi.ref == 2)) {
+				spdk_iscsi_task_put(primary);
+			}
 			spdk_iscsi_task_put(pdu->task);
+
+
 		}
 		spdk_put_pdu(pdu);
 	}
@@ -379,10 +389,12 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 	}
 
 	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
-		TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
-		pdu = iscsi_task->pdu;
-		spdk_iscsi_task_put(iscsi_task);
-		spdk_put_pdu(pdu);
+		if (TAILQ_EMPTY(&iscsi_task->subtask_list) && !iscsi_task->is_queued) {
+			TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
+			pdu = iscsi_task->pdu;
+			spdk_iscsi_task_put(iscsi_task);
+			spdk_put_pdu(pdu);
+		}
 	}
 
 	if (conn->pending_task_cnt) {
@@ -819,6 +831,7 @@ spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 
+	task->is_queued = false;
 	spdk_iscsi_task_mgmt_response(task->conn, task);
 	spdk_iscsi_task_put(task);
 }
@@ -888,6 +901,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 
 	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task, 0);
 
+	task->is_queued = false;
 	primary = spdk_iscsi_task_get_primary(task);
 
 	if (spdk_iscsi_task_is_read(primary)) {
