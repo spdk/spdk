@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ca463a6b_b8d37a57",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-01T09:51:24Z",
+      "side": 1,
+      "message": "Yeah, it could be either a device failure or we might have offered some features that depend on other, not offered features. The latter is more likely, ack.",
+      "parentUuid": "d61f18a6_195532dc",
+      "revId": "cc489ff5bc17c07bc0ab72996d8803516402a5c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f81bd59_bff0d1d7",
         "filename": "lib/virtio/virtio_user.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-01T08:18:31Z",
       "side": 1,
       "message": "return ret ?",
+      "revId": "cc489ff5bc17c07bc0ab72996d8803516402a5c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0dec96d_b6fc2f83",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-01T09:51:24Z",
+      "side": 1,
+      "message": "Ack, thanks",
+      "parentUuid": "5f81bd59_bff0d1d7",
       "revId": "cc489ff5bc17c07bc0ab72996d8803516402a5c9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
