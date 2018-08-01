@@ -138,6 +138,9 @@ void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
 				    struct spdk_iscsi_init_grp *initiator_group);
 int spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 				const char *bdev_name, int lun_id);
+int spdk_iscsi_tgt_node_set_auth(struct spdk_iscsi_tgt_node *target,
+				 bool no_auth, bool req_auth, bool req_auth_mutual,
+				 int32_t auth_group);
 void spdk_iscsi_tgt_nodes_config_text(FILE *fp);
 void spdk_iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w);
 void spdk_iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w);

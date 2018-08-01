@@ -1332,6 +1332,26 @@ spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 	return 0;
 }
 
+int
+spdk_iscsi_tgt_node_set_auth(struct spdk_iscsi_tgt_node *target,
+			     bool no_auth, bool req_auth, bool req_auth_mutual,
+			     int32_t auth_group)
+{
+	if (!spdk_iscsi_check_auth_params(no_auth, req_auth, req_auth_mutual,
+					  auth_group)) {
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&target->mutex);
+	target->no_auth = no_auth;
+	target->req_auth = req_auth;
+	target->req_auth_mutual = req_auth_mutual;
+	target->auth_group = auth_group;
+	pthread_mutex_unlock(&target->mutex);
+
+	return 0;
+}
+
 static const char *target_nodes_section = \
 		"\n"
 		"# Users should change the TargetNode section(s) below to match the\n"
