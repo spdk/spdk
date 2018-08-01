@@ -16,6 +16,24 @@
       "revId": "32821ba6339ec57ba90b0c5a5a982321a03038a2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32fc3d8b_48d27eaa",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T16:18:03Z",
+      "side": 1,
+      "message": "Hi Kunal,\n\nThis function raid_bdev_destruct is for when the RAID module is destructed - not a member disk.  I would think that when the RAID module is destructed, we should automatically release and close all of the member disks?  If the RAID module is destructed, why would we keep the member disks claimed and open?  It\u0027s possible the user wants to use those member disks for some other purpose.\n\nThanks,\n\n-Jim",
+      "parentUuid": "811b671e_2fcfa83b",
+      "revId": "32821ba6339ec57ba90b0c5a5a982321a03038a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
