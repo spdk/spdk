@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ad7e0bb_b5e60a37",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-01T18:10:06Z",
+      "side": 1,
+      "message": "Add an assert here that verifies the assumption that this is always called from the controller thread.\n\nassert(ctrlr-\u003eadmin_qpair-\u003egroup-\u003ethread \u003d\u003d spdk_get_thread())",
+      "revId": "803823315a7c64df6a28ca0fc9f15db08186c8be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68c9fcf9_99b139cb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-01T18:10:06Z",
+      "side": 1,
+      "message": "This is an admin command, which means it is already being handled on the admin/controller thread. You don\u0027t need to pass a message here at all. It was only taking the lock before because other threads could access ctrlr-\u003eqpair_mask.\n\nAlso, you\u0027re sending a message here to the subsystem\u0027s thread, not the controllers, which isn\u0027t right.",
+      "revId": "803823315a7c64df6a28ca0fc9f15db08186c8be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
