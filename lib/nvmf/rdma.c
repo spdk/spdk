@@ -265,6 +265,8 @@ struct spdk_nvmf_rdma_qpair {
 	 */
 	struct ibv_qp_init_attr			ibv_init_attr;
 	struct ibv_qp_attr			ibv_attr;
+
+	bool					destroyed_qpair_waited;
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -274,8 +276,11 @@ struct spdk_nvmf_rdma_poller {
 	struct ibv_cq				*cq;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
+	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	disconnected_qpairs;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_poller)	link;
+
+	struct spdk_poller			*disconnect_poller;
 };
 
 struct spdk_nvmf_rdma_poll_group {
@@ -518,6 +523,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	free(rqpair->reqs);
 	free(rqpair->recvs);
 	free(rqpair);
+
 }
 
 static int
@@ -2157,6 +2163,22 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
 	entry->tsas.rdma.rdma_cms = SPDK_NVMF_RDMA_CMS_RDMA_CM;
 }
 
+static int
+spdk_nvmf_rdma_disconnected_qpair_poller(void *ctx)
+{
+	struct spdk_nvmf_rdma_poller *poller = ctx;
+	struct spdk_nvmf_rdma_qpair *qpair, *tmp;
+
+	TAILQ_FOREACH_SAFE(qpair, &poller->disconnected_qpairs, link, tmp) {
+		if (qpair->destroyed_qpair_waited) {
+			TAILQ_REMOVE(&poller->disconnected_qpairs, qpair, link);
+			spdk_nvmf_rdma_qpair_destroy(qpair);
+		} else {
+			qpair->destroyed_qpair_waited = true;
+		}
+	}
+}
+
 static struct spdk_nvmf_transport_poll_group *
 spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 {
@@ -2196,6 +2218,8 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 
 		poller->device = device;
 		poller->group = rgroup;
+		poller->disconnect_poller = spdk_poller_register(spdk_nvmf_rdma_disconnected_qpair_poller, poller,
+					    500000);
 
 		TAILQ_INIT(&poller->qpairs);
 
@@ -2220,6 +2244,7 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_rdma_poller		*poller, *tmp;
+	struct spdk_nvmf_rdma_qpair		*qpair, tmp;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 
@@ -2229,11 +2254,14 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
 		TAILQ_REMOVE(&rgroup->pollers, poller, link);
-
+		spdk_poller_unregister(poller->disconnect_poller);
+		TAILQ_FOREACH_SAFE(qpair, &poller->disconnected_qpairs, link, tmp) {
+			TAILQ_REMOVE(&poller->disconnected_qpairs, qpair, link);
+			spdk_nvmf_rdma_qpair_destroy(qpair);
+		}
 		if (poller->cq) {
 			ibv_destroy_cq(poller->cq);
 		}
-
 		free(poller);
 	}
 
@@ -2560,20 +2588,18 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 }
 
 static void
-spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair, void *ctx)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	struct spdk_nvmf_rdma_transport *rtransport;
-	/*
-	 * By setting the qpair to error and polling once, we will hopefully flush all completions before actually freeing the resources.
-	 */
+
 	spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
 	if (rqpair->poller) {
-		rtransport = SPDK_CONTAINEROF(rqpair->poller->group->group.transport,
-					      struct spdk_nvmf_rdma_transport, transport);
-		spdk_nvmf_rdma_poller_poll(rtransport, rqpair->poller);
+		rqpair->qpair_destroy_ctx = ctx;
+		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
+		TAILQ_INSERT_HEAD(&rqpair->poller->disconnected_qpairs, rqpair, link);
+	} else {
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
 	}
-	spdk_nvmf_rdma_qpair_destroy(rqpair);
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
