@@ -1036,6 +1036,75 @@ invalid:
 }
 SPDK_RPC_REGISTER("target_node_add_lun", spdk_rpc_target_node_add_lun, SPDK_RPC_RUNTIME)
 
+struct rpc_target_auth {
+	char *name;
+	bool no_auth;
+	bool req_auth;
+	bool req_auth_mutual;
+	int32_t auth_group;
+};
+
+static void
+free_rpc_target_auth(struct rpc_target_auth *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_target_auth_decoders[] = {
+	{"name", offsetof(struct rpc_target_auth, name), spdk_json_decode_string},
+	{"no_auth", offsetof(struct rpc_target_auth, no_auth), spdk_json_decode_bool, true},
+	{"req_auth", offsetof(struct rpc_target_auth, req_auth), spdk_json_decode_bool, true},
+	{"req_auth_mutual", offsetof(struct rpc_target_auth, req_auth_mutual), spdk_json_decode_bool, true},
+	{"auth_group", offsetof(struct rpc_target_auth, auth_group), spdk_json_decode_int32, true},
+};
+
+static void
+spdk_rpc_set_iscsi_target_node_auth(struct spdk_jsonrpc_request *request,
+				    const struct spdk_json_val *params)
+{
+	struct rpc_target_auth req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_iscsi_tgt_node *target;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_target_auth_decoders,
+				    SPDK_COUNTOF(rpc_target_auth_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		return;
+	}
+
+	target = spdk_iscsi_find_tgt_node(req.name);
+	if (target == NULL) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Could not find target %s", req.name);
+		free_rpc_target_auth(&req);
+		return;
+	}
+
+	rc = spdk_iscsi_tgt_node_set_auth(target, req.no_auth, req.req_auth,
+					  req.req_auth_mutual, req.auth_group);
+	if (rc < 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid combination of CHAP params");
+		free_rpc_target_auth(&req);
+		return;
+	}
+
+	free_rpc_target_auth(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("set_iscsi_target_node_auth", spdk_rpc_set_iscsi_target_node_auth,
+		  SPDK_RPC_RUNTIME)
+
 static void
 spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
