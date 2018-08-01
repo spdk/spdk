@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e1639aa2_8b1d4176",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-01T21:56:16Z",
+      "side": 1,
+      "message": "The issue is that rc isn\u0027t used in a release build. It\u0027s not like there is any real recourse if this fails (hence the assert), so I just made it return the last known value instead. I can look at strategies to deal with failures here.",
+      "parentUuid": "0024dc7e_ed8af60b",
+      "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40e3a639_1445e3ec",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "8f94a486_5be6d0a2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-01T21:56:16Z",
+      "side": 1,
+      "message": "I did this on purpose for readability, but I can do it in a different patch",
+      "parentUuid": "40e3a639_1445e3ec",
+      "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e246aae5_976268c1",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -47,6 +83,24 @@
       "writtenOn": "2018-08-01T21:45:55Z",
       "side": 1,
       "message": "is this an unrelated bug fix?",
+      "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b0b464d_171b672e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1970,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-01T21:56:16Z",
+      "side": 1,
+      "message": "This is the replacement for line 1946. Because spdk_nvmf_rdma_set_ibv_state just succeeded, we know that the current state is \"next_state\" so we don\u0027t need to read it again.",
+      "parentUuid": "e246aae5_976268c1",
       "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
