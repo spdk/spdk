@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "adc61c8e_9098b4a4",
+        "filename": "lib/conf/conf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-01T05:18:41Z",
+      "side": 1,
+      "message": "I see many duplicated code, could we combine them? If an option can be provide in spdk_conf_read, we may just need 1 function instead of a new function with lock.",
+      "range": {
+        "startLine": 696,
+        "startChar": 0,
+        "endLine": 696,
+        "endChar": 25
+      },
+      "revId": "b2e8afbb9cc0fbc2265404e7f925325f35e1a42a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
