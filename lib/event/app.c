@@ -294,7 +294,7 @@ spdk_app_setup_conf(const char *config_file)
 	config = spdk_conf_allocate();
 	assert(config != NULL);
 	if (config_file) {
-		rc = spdk_conf_read(config, config_file);
+		rc = spdk_conf_read(config, config_file, false);
 		if (rc != 0) {
 			SPDK_ERRLOG("Could not read config file %s\n", config_file);
 			goto error;
