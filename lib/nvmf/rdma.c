@@ -1918,11 +1918,44 @@ _spdk_nvmf_rdma_qpair_process_pending(void *arg)
 	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
 }
 
-static int
-spdk_nvmf_rdma_recover(struct spdk_nvmf_rdma_qpair *rqpair)
+static void
+spdk_nvmf_rdma_drain_state_queue(struct spdk_nvmf_rdma_qpair *rqpair,
+				 enum spdk_nvmf_rdma_request_state state)
+{
+	struct spdk_nvmf_rdma_request *rdma_req, *req_tmp;
+	struct spdk_nvmf_rdma_transport *rtransport;
+
+	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[state], state_link, req_tmp) {
+		rtransport = SPDK_CONTAINEROF(rdma_req->req.qpair->transport,
+					      struct spdk_nvmf_rdma_transport, transport);
+		spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+		spdk_nvmf_rdma_request_process(rtransport, rdma_req);
+	}
+}
+
+static void
+spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	int recovered;
 	enum ibv_qp_state state, next_state;
+
+	SPDK_NOTICELOG("IBV QP#%u drained\n", rqpair->qpair.qid);
+
+	if (!spdk_nvmf_rdma_qpair_is_idle(&rqpair->qpair)) {
+		/* There must be outstanding requests down to media.
+		 * If so, wait till they're complete.
+		 */
+		assert(!TAILQ_EMPTY(&rqpair->qpair.outstanding));
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA,
+			      "QP#%u (%p): wait for outstanding requests...\n",
+			      rqpair->qpair.qid, &rqpair->qpair);
+		return;
+	}
+
+	if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ERROR) {
+		/* Do not start recovery if qp is not in error state. */
+		return;
+	}
 
 	state = spdk_nvmf_rdma_get_ibv_state(rqpair);
 	next_state = state;
@@ -1935,7 +1968,8 @@ spdk_nvmf_rdma_recover(struct spdk_nvmf_rdma_qpair *rqpair)
 		SPDK_ERRLOG("Can't recover IBV qp#%u from the state: %s\n",
 			    rqpair->qpair.qid,
 			    str_ibv_qp_state[state]);
-		return -1;
+		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+		return;
 	}
 
 	rqpair->qpair.state = SPDK_NVMF_QPAIR_INACTIVE;
@@ -1977,56 +2011,13 @@ spdk_nvmf_rdma_recover(struct spdk_nvmf_rdma_qpair *rqpair)
 	rqpair->qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 	spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qpair_process_pending, rqpair);
 
-	return 0;
+	return;
 error:
 	SPDK_ERRLOG("IBV qp#%u recovery failed\n", rqpair->qpair.qid);
 	/* Put NVMf qpair back into error state so recovery
 	   will trigger disconnect */
 	rqpair->qpair.state = SPDK_NVMF_QPAIR_ERROR;
-	return -1;
-}
-
-static void
-spdk_nvmf_rdma_drain_state_queue(struct spdk_nvmf_rdma_qpair *rqpair,
-				 enum spdk_nvmf_rdma_request_state state)
-{
-	struct spdk_nvmf_rdma_request *rdma_req, *req_tmp;
-	struct spdk_nvmf_rdma_transport *rtransport;
-
-	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[state], state_link, req_tmp) {
-		rtransport = SPDK_CONTAINEROF(rdma_req->req.qpair->transport,
-					      struct spdk_nvmf_rdma_transport, transport);
-		spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
-		spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-	}
-}
-
-static void
-spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	SPDK_NOTICELOG("IBV QP#%u drained\n", rqpair->qpair.qid);
-
-	if (!spdk_nvmf_rdma_qpair_is_idle(&rqpair->qpair)) {
-		/* There must be outstanding requests down to media.
-		 * If so, wait till they're complete.
-		 */
-		assert(!TAILQ_EMPTY(&rqpair->qpair.outstanding));
-		SPDK_DEBUGLOG(SPDK_LOG_RDMA,
-			      "QP#%u (%p): wait for outstanding requests...\n",
-			      rqpair->qpair.qid, &rqpair->qpair);
-		return;
-	}
-
-	if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ERROR) {
-		/* Do not start recovery if qp is not in error state. */
-		return;
-	}
-
-	if (spdk_nvmf_rdma_recover(rqpair) != 0) {
-		SPDK_NOTICELOG("QP#%u (%p): recovery failed, disconnecting...\n",
-			       rqpair->qpair.qid, &rqpair->qpair);
-		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
-	}
+	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 }
 
 static void
