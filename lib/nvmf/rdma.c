@@ -1902,22 +1902,6 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 	}
 }
 
-/* The recovery completion event handler to be executed in the rqpair
- * poll group thread. It kicks off processing of the requests that are
- * waiting for the rqpair is back online.
- */
-static void
-_spdk_nvmf_rdma_qpair_process_pending(void *arg)
-{
-	struct spdk_nvmf_rdma_qpair *rqpair;
-	struct spdk_nvmf_rdma_transport *rtransport;
-
-	rqpair = arg;
-	rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
-				      struct spdk_nvmf_rdma_transport, transport);
-	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
-}
-
 static void
 spdk_nvmf_rdma_drain_state_queue(struct spdk_nvmf_rdma_qpair *rqpair,
 				 enum spdk_nvmf_rdma_request_state state)
@@ -1938,6 +1922,7 @@ spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	int recovered;
 	enum ibv_qp_state state, next_state;
+	struct spdk_nvmf_rdma_transport *rtransport;
 
 	SPDK_NOTICELOG("IBV QP#%u drained\n", rqpair->qpair.qid);
 
@@ -2009,7 +1994,10 @@ spdk_nvmf_rdma_qp_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 		state = next_state;
 	}
 	rqpair->qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
-	spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qpair_process_pending, rqpair);
+
+	rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
+				      struct spdk_nvmf_rdma_transport, transport);
+	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
 
 	return;
 error:
