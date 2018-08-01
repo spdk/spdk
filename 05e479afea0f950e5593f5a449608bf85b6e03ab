@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a97a741_07255e1e",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-01T17:47:24Z",
+      "side": 1,
+      "message": "What if there are other listeners still present that need the transport? This will make them stop working.",
+      "revId": "05e479afea0f950e5593f5a449608bf85b6e03ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
