@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "8e9f92b8_723902a1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T22:38:46Z",
+      "side": 1,
+      "message": "What if you did:\n\nif (rc) {\n  SPDK_ERRLOG(\"blah\\n\");\n  assert(false);\n}",
+      "parentUuid": "e1639aa2_8b1d4176",
+      "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40e3a639_1445e3ec",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -72,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "cf3d5a80_fd00f55f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T22:38:46Z",
+      "side": 1,
+      "message": "yeah - i just think in general we always ask people to not modify whitespace in parts of the code that aren\u0027t affected by the patch",
+      "parentUuid": "8f94a486_5be6d0a2",
+      "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e246aae5_976268c1",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -101,6 +137,24 @@
       "side": 1,
       "message": "This is the replacement for line 1946. Because spdk_nvmf_rdma_set_ibv_state just succeeded, we know that the current state is \"next_state\" so we don\u0027t need to read it again.",
       "parentUuid": "e246aae5_976268c1",
+      "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d68736f_6828ac4c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1970,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T22:38:46Z",
+      "side": 1,
+      "message": "ah - got it - thanks",
+      "parentUuid": "7b0b464d_171b672e",
       "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
