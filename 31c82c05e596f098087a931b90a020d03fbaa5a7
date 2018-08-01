@@ -33,6 +33,24 @@
       "revId": "31c82c05e596f098087a931b90a020d03fbaa5a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07551699_4ff1b6e9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2118,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-01T22:45:42Z",
+      "side": 0,
+      "message": "Yes - the first time that the values updated here get used is in spdk_nvmf_rdma_recover. Since now the function to get the state also reads in the state, these now do nothing.",
+      "parentUuid": "c1e36f1d_ff4537e0",
+      "revId": "31c82c05e596f098087a931b90a020d03fbaa5a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
