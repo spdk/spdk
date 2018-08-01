@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8213776f_81eeffd9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2897,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-01T03:01:54Z",
+      "side": 1,
+      "message": "Without the base_bdev_count change, it looks like have different opertions. Refer to spdk_bdev_part_construct(), previously, it will not start the vbdev, and now it will always start no matter the value of base_bdev_count. Shall we still keep the base_bdev_count check here?",
+      "range": {
+        "startLine": 2897,
+        "startChar": 1,
+        "endLine": 2897,
+        "endChar": 24
+      },
+      "revId": "cff0c5c9a04aacabab65a9e3c575fa5316df45d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
