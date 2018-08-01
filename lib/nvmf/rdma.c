@@ -449,17 +449,21 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 	return 0;
 }
 
-static void spdk_nvmf_rdma_request_set_state(struct spdk_nvmf_rdma_request *rdma_req,
-		enum spdk_nvmf_rdma_request_state	state)
+static void
+spdk_nvmf_rdma_request_set_state(struct spdk_nvmf_rdma_request *rdma_req,
+				 enum spdk_nvmf_rdma_request_state state)
 {
 	struct spdk_nvmf_qpair		*qpair;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
 
 	qpair = rdma_req->req.qpair;
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
 	TAILQ_REMOVE(&rqpair->state_queue[rdma_req->state], rdma_req, state_link);
 	rqpair->state_cntr[rdma_req->state]--;
+
 	rdma_req->state = state;
+
 	TAILQ_INSERT_TAIL(&rqpair->state_queue[rdma_req->state], rdma_req, state_link);
 	rqpair->state_cntr[rdma_req->state]++;
 }
