@@ -229,6 +229,8 @@ struct spdk_nvmf_rdma_qpair {
 
 	/* Number of requests in each state */
 	uint32_t				state_cntr[RDMA_REQUEST_NUM_STATES];
+	
+	int                                     max_sge;
 
 	/* Array of size "max_queue_depth" containing RDMA requests. */
 	struct spdk_nvmf_rdma_request		*reqs;
@@ -544,7 +546,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair->ibv_init_attr.cap.max_send_wr	= rqpair->max_queue_depth *
 			2; /* SEND, READ, and WRITE operations */
 	rqpair->ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
-	rqpair->ibv_init_attr.cap.max_send_sge	= SPDK_NVMF_MAX_SGL_ENTRIES;
+	rqpair->ibv_init_attr.cap.max_send_sge	= rqpair->max_sge;
 	rqpair->ibv_init_attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
 	rc = rdma_create_qp(rqpair->cm_id, NULL, &rqpair->ibv_init_attr);
@@ -902,6 +904,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	rqpair->max_rw_depth = max_rw_depth;
 	rqpair->cm_id = event->id;
 	rqpair->qpair.transport = transport;
+	rqpair->max_sge = spdk_min(port->device->attr.max_sge, SPDK_NVMF_MAX_SGL_ENTRIES);
 	TAILQ_INIT(&rqpair->incoming_queue);
 	event->id->context = &rqpair->qpair;
 
