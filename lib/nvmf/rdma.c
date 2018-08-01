@@ -2334,7 +2334,6 @@ spdk_nvmf_rdma_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 	TAILQ_FOREACH_SAFE(rq, &poller->qpairs, link, trq) {
 		if (rq == rqpair) {
 			TAILQ_REMOVE(&poller->qpairs, rqpair, link);
-			rqpair->poller = NULL;
 			break;
 		}
 	}
@@ -2402,12 +2401,6 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 		break;
 	}
 	return 0;
-}
-
-static void
-spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
-{
-	spdk_nvmf_rdma_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
 }
 
 static struct spdk_nvmf_rdma_request *
@@ -2564,6 +2557,23 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	}
 
 	return count;
+}
+
+static void
+spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	struct spdk_nvmf_rdma_transport *rtransport;
+	/*
+	 * By setting the qpair to error and polling once, we will hopefully flush all completions before actually freeing the resources.
+	 */
+	spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
+	if (rqpair->poller) {
+		rtransport = SPDK_CONTAINEROF(rqpair->poller->group->group.transport,
+					      struct spdk_nvmf_rdma_transport, transport);
+		spdk_nvmf_rdma_poller_poll(rtransport, rqpair->poller);
+	}
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
