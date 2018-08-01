@@ -324,6 +324,8 @@ struct spdk_bdev {
 		/** weighted time performing I/O. Equal to measured_queue_depth * period */
 		uint64_t weighted_io_time;
 
+		/** accumulated I/O statistics for previously deleted channels of this bdev */
+		struct spdk_bdev_io_stat stat;
 	} internal;
 };
 
