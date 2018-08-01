@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "4dc36b07_ed842cfe",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-01T07:08:53Z",
+      "side": 1,
+      "message": "I think I have changed like this before. The problem here is that in the QoS 0 (zero) has specific meaning to disable the related QoS limit. And this is also the default value if user does not explicitly set the limit (these parameters are optional). So that even if we initialized it to \"-1\" here, after the decoded, it will become 0 (if my previous testing is correct). Then it has no better way to tell whether it is to disable or just an optional parameter. That\u0027s why I picked the string, as 0 is also a valid string. While NULL is for the optional default value (if not specifying this parameter explicitly.)\n\nI can double check this again. Thanks for the suggestions.",
+      "parentUuid": "6c03dfda_eb2e9a0f",
+      "range": {
+        "startLine": 555,
+        "startChar": 1,
+        "endLine": 555,
+        "endChar": 8
+      },
+      "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80fef236_b255caf6",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 39
@@ -84,6 +108,24 @@
       "writtenOn": "2018-07-25T23:00:54Z",
       "side": 1,
       "message": "what if user wants to disable all rate limiting?  I think the user would set all values to 0 - would this error message be printed in that case?",
+      "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a7bfab6_1d5b01d4",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-01T07:08:53Z",
+      "side": 1,
+      "message": "No. That\u0027s why I picked the string. 0 is also the valid string (char) here. If using uint64_t type, then it\u0027s no good way to tell the disable (0) or the optional input (default value of 0). My previous version is using uint64_t type.",
+      "parentUuid": "80fef236_b255caf6",
       "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
