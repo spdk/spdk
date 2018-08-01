@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "811b671e_2fcfa83b",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-08-01T05:14:22Z",
+      "side": 1,
+      "message": "James, raid bdev layer does not know if the drive getting removed is because of hotplug or shutdown. Raid bdev handles both scenarios (shutdow and hotplug) in similar way without distinguishing with the help of \"remove_scheuled\" parameter. So when first drive gets removed, raid bdev gets unregistered from bdev subsystem but raid module still maintains raid bdev and underlying base bdevs which are still present. This is because when removed drive appears again in hotplug, raid bdev should come online automatically, so in destruct we don\u0027t remove all base bdevs and we only remove those for which base drive is actually removed. It can be in shutdown or hotplug we have same handling as of now (\"remove_scheudled\" paramter is handling this).\n\nIf we remove all base drives in one shot on destruct call (assume in hotplug when only one base drive is removed and raid bdev is getting unregistered from bdev subsystem, bdev subsystem calls destruct), then hotplug behavior will break here. My hotplug patch is based on this only. Please let me know if you think otherwise.",
+      "revId": "32821ba6339ec57ba90b0c5a5a982321a03038a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
