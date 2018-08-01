@@ -755,6 +755,26 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	return 0;
 }
 
+int
+spdk_iscsi_set_discovery_auth(bool no_discovery_auth, bool req_discovery_auth,
+			      bool req_discovery_auth_mutual, int32_t discovery_auth_group)
+{
+	if (!spdk_iscsi_check_chap_params(no_discovery_auth, req_discovery_auth,
+					  req_discovery_auth_mutual, discovery_auth_group)) {
+		SPDK_ERRLOG("CHAP params in opts are illegal combination\n");
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	g_spdk_iscsi.no_discovery_auth = no_discovery_auth;
+	g_spdk_iscsi.req_discovery_auth = req_discovery_auth;
+	g_spdk_iscsi.req_discovery_auth_mutual = req_discovery_auth_mutual;
+	g_spdk_iscsi.discovery_auth_group = discovery_auth_group;
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+	return 0;
+}
+
 static int
 spdk_iscsi_initialize_global_params(void)
 {
