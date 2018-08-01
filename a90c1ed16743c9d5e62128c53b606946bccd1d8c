@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1442b3a7_bf0a01af",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-01T23:29:07Z",
+      "side": 1,
+      "message": "astyle is doing this bracket style (and the one on line 345)",
+      "revId": "a90c1ed16743c9d5e62128c53b606946bccd1d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
