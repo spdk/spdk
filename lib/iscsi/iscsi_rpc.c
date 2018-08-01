@@ -1124,3 +1124,65 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_iscsi_global_params", spdk_rpc_get_iscsi_global_params, SPDK_RPC_RUNTIME)
+
+struct rpc_discovery_auth {
+	char *authfile;
+	bool no_discovery_auth;
+	bool req_discovery_auth;
+	bool req_discovery_auth_mutual;
+	int32_t discovery_auth_group;
+};
+
+static void
+free_rpc_discovery_auth(struct rpc_discovery_auth *req)
+{
+	free(req->authfile);
+}
+
+static const struct spdk_json_object_decoder rpc_discovery_auth_decoders[] = {
+	{"auth_file", offsetof(struct rpc_discovery_auth, authfile), spdk_json_decode_string, true},
+	{"no_discovery_auth", offsetof(struct rpc_discovery_auth, no_discovery_auth), spdk_json_decode_bool, true},
+	{"req_discovery_auth", offsetof(struct rpc_discovery_auth, req_discovery_auth), spdk_json_decode_bool, true},
+	{"req_discovery_auth_mutual", offsetof(struct rpc_discovery_auth, req_discovery_auth_mutual), spdk_json_decode_bool, true},
+	{"discovery_auth_group", offsetof(struct rpc_discovery_auth, discovery_auth_group), spdk_json_decode_int32, true},
+};
+
+static void
+spdk_rpc_set_iscsi_discovery_auth(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct rpc_discovery_auth req = {};
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_discovery_auth_decoders,
+				    SPDK_COUNTOF(rpc_discovery_auth_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	rc = spdk_iscsi_set_discovery_auth(req.authfile, req.no_discovery_auth,
+					   req.req_discovery_auth, req.req_discovery_auth_mutual,
+					   req.discovery_auth_group);
+	if (rc < 0) {
+		SPDK_ERRLOG("set discovery auth failed\n");
+		goto invalid;
+	}
+
+	free_rpc_discovery_auth(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	free_rpc_discovery_auth(&req);
+}
+SPDK_RPC_REGISTER("set_iscsi_discovery_auth", spdk_rpc_set_iscsi_discovery_auth, SPDK_RPC_RUNTIME)
