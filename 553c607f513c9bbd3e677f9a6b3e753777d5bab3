@@ -22,6 +22,30 @@
       "revId": "553c607f513c9bbd3e677f9a6b3e753777d5bab3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fc6ed3b_09f86c18",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-08-01T13:47:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d007b036_4b87e754",
+      "range": {
+        "startLine": 179,
+        "startChar": 10,
+        "endLine": 179,
+        "endChar": 18
+      },
+      "revId": "553c607f513c9bbd3e677f9a6b3e753777d5bab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
