@@ -959,7 +959,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 				sizeof(struct nvme_io_channel));
 
 	if (nvme_ctrlr_create_bdevs(nvme_ctrlr) != 0) {
-		spdk_io_device_unregister(ctrlr, NULL);
+		spdk_io_device_unregister(ctrlr, bdev_nvme_unregister_cb);
 		free(nvme_ctrlr->bdevs);
 		free(nvme_ctrlr->name);
 		free(nvme_ctrlr);
