@@ -31,8 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/file.h>
-
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"

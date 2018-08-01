@@ -170,7 +170,7 @@ config_file_fail_cases(void)
 
 	config = spdk_conf_allocate();
 
-	rc = spdk_conf_read(config, config_file);
+	rc = spdk_conf_read(config, config_file, false);
 	CU_ASSERT(rc == 0);
 
 	section_index = 0;
