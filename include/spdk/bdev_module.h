@@ -318,6 +318,8 @@ struct spdk_bdev {
 		/** queue depth as calculated the last time the telemetry poller checked. */
 		uint64_t measured_queue_depth;
 
+		/** accumulated I/O statistics for previously deleted channels of this bdev */
+		struct spdk_bdev_io_stat stat;
 	} internal;
 };
 
