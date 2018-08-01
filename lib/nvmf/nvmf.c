@@ -505,6 +505,8 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 
 	rc = spdk_nvmf_transport_listen(transport, trid);
 	if (rc < 0) {
+		TAILQ_REMOVE(&tgt->transports, transport, link);
+		spdk_nvmf_transport_destroy(transport);
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
 		cb_fn(cb_arg, rc);
 		return;
