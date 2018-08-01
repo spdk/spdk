@@ -1499,6 +1499,11 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Destroying channel %p for bdev %s on thread %p\n", ch, ch->bdev->name,
 		      spdk_get_thread());
 
+	/* This channel is going away, so add its statistics into the bdev so that they don't get lost. */
+	pthread_mutex_lock(&ch->bdev->internal.mutex);
+	_spdk_bdev_io_stat_add(&ch->bdev->internal.stat, &ch->stat);
+	pthread_mutex_unlock(&ch->bdev->internal.mutex);
+
 	mgmt_ch = shared_resource->mgmt_ch;
 
 	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
@@ -2305,6 +2310,12 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 	bdev_iostat_ctx->cb = cb;
 	bdev_iostat_ctx->cb_arg = cb_arg;
 
+	/* Start with the statistics from previously deleted channels. */
+	pthread_mutex_lock(&bdev->internal.mutex);
+	_spdk_bdev_io_stat_add(bdev_iostat_ctx->stat, &bdev->internal.stat);
+	pthread_mutex_unlock(&bdev->internal.mutex);
+
+	/* Then iterate and add the statistics from each existing channel. */
 	spdk_for_each_channel(__bdev_to_io_dev(bdev),
 			      _spdk_bdev_get_each_channel_stat,
 			      bdev_iostat_ctx,
