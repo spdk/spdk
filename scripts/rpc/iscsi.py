@@ -215,6 +215,40 @@ def target_node_add_lun(client, name, bdev_name, lun_id=None):
     return client.call('target_node_add_lun', params)
 
 
+def set_iscsi_target_node_auth(
+        client,
+        name,
+        auth_group=None,
+        no_auth=None,
+        req_auth=None,
+        req_auth_mutual=None):
+    """Set CHAP authentication for the target node.
+
+    Args:
+        name: Target node name (ASCII)
+        auth_group: Authentication group ID for this target node
+        no_auth: CHAP authentication should be disabled for this target node
+        req_auth: CHAP authentication should be required for this target node
+        req_auth_mutual: CHAP authentication should be mutual/bidirectional
+
+    Returns:
+        True or False
+    """
+    params = {
+        'name': name,
+    }
+
+    if auth_group:
+        params['auth_group'] = auth_group
+    if no_auth:
+        params['no_auth'] = no_auth
+    if req_auth:
+        params['req_auth'] = req_auth
+    if req_auth_mutual:
+        params['req_auth_mutual'] = req_auth_mutual
+    return client.call('set_iscsi_target_node_auth', params)
+
+
 def delete_pg_ig_maps(client, pg_ig_maps, name):
     """Delete PG-IG maps from the target node.
 
