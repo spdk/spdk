@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1fd9c91_62266f25",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T20:31:42Z",
+      "side": 1,
+      "message": "we need to close the descriptor if the claim fails",
+      "revId": "cf6c1e11d7e2dee97cbe2cccf5aaa5fcd3916984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f346decc_de385177",
+        "filename": "test/nvmf/filesystem/filesystem.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T20:31:42Z",
+      "side": 1,
+      "message": "are these changes related?",
+      "revId": "cf6c1e11d7e2dee97cbe2cccf5aaa5fcd3916984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ffeef26_6bc4a724",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T20:31:42Z",
+      "side": 1,
+      "message": "are these changes related?",
+      "revId": "cf6c1e11d7e2dee97cbe2cccf5aaa5fcd3916984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
