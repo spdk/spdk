@@ -704,7 +704,7 @@ spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authfile,
 		SPDK_ERRLOG("allocate config fail\n");
 		return -1;
 	}
-	rc = spdk_conf_read(config, authfile);
+	rc = spdk_conf_read(config, authfile, true);
 	if (rc < 0) {
 		SPDK_ERRLOG("auth conf error\n");
 		spdk_conf_free(config);
