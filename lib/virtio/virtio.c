@@ -266,6 +266,9 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_FEATURES_OK);
 	if (!(virtio_dev_get_status(dev) & VIRTIO_CONFIG_S_FEATURES_OK)) {
 		SPDK_ERRLOG("failed to set FEATURES_OK status!\n");
+		/* either the device failed, or we offered some features that
+		 * depend on other, not offered features.
+		 */
 		return -EINVAL;
 	}
 
