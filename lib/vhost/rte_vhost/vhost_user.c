@@ -364,11 +364,10 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 	struct vhost_virtqueue *vq;
 	uint64_t len;
 
-	if (dev->has_new_mem_table) {
+	if (dev->has_new_mem_table && !(dev->flags & VIRTIO_DEV_RUNNING)) {
 		vhost_setup_mem_table(dev);
 		dev->has_new_mem_table = 0;
 	}
-
 
 	if (dev->mem == NULL)
 		return -1;
