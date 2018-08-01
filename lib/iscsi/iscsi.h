@@ -364,6 +364,9 @@ struct spdk_iscsi_opts *spdk_iscsi_opts_alloc(void);
 void spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts);
 struct spdk_iscsi_opts *spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src);
 void spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w);
+int spdk_iscsi_set_discovery_auth(const char *authfile, bool no_discovery_auth,
+				  bool req_discovery_auth, bool req_discovery_auth_mutual,
+				  int32_t discovery_auth_group);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
