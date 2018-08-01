@@ -22,6 +22,30 @@
       "revId": "cff0c5c9a04aacabab65a9e3c575fa5316df45d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7185b3c_7095c2bb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2897,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T16:08:31Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nI\u0027m not sure I understand.\n\nIf we remove the spdk_vbdev_set_base_bdevs call, then the code looks like this:\n\nif (base_bdev_count \u003d\u003d 0) {\n  spdk_bdev_start(vbdev);\n  return 0;\n}\n\nspdk_bdev_start(vbdev)\nreturn 0;\n\nSo the base_bdev_count() check is meaningless - we do the same thing in all cases - call spdk_bdev_start() and then return 0.\n\nI also don\u0027t see where previously spdk_bdev_part_construct() would not start the vbdev - the only way it cannot start the bdev is if spdk_bdev_init or spdk_vbdev_set_base_bdevs fails.  The former is still true with this patch, the latter is being removed.\n\nThanks,\n\n-Jim",
+      "parentUuid": "8213776f_81eeffd9",
+      "range": {
+        "startLine": 2897,
+        "startChar": 1,
+        "endLine": 2897,
+        "endChar": 24
+      },
+      "revId": "cff0c5c9a04aacabab65a9e3c575fa5316df45d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
