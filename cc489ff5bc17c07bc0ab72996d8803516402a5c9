@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d61f18a6_195532dc",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-01T08:18:31Z",
+      "side": 1,
+      "message": "EINVAL maybe better ?",
+      "revId": "cc489ff5bc17c07bc0ab72996d8803516402a5c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f81bd59_bff0d1d7",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-01T08:18:31Z",
+      "side": 1,
+      "message": "return ret ?",
+      "revId": "cc489ff5bc17c07bc0ab72996d8803516402a5c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
