@@ -16,6 +16,24 @@
       "revId": "073da67bd1076ba0237103a30b017db06c15e0f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c50f99d_17c3d6ef",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-08-01T10:01:14Z",
+      "side": 1,
+      "message": "Actually this function divide free_clusters by split_num and gets an integer. If we divide self.get_lvs_size by split_num we could get too big value of split size, it depends of lvol store cluster size. But I agree, naming it get_lvol_bdev_split_size might be some confusing.",
+      "parentUuid": "892fa732_7611c5e7",
+      "revId": "073da67bd1076ba0237103a30b017db06c15e0f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
