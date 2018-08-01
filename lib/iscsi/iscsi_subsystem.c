@@ -466,7 +466,7 @@ spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src)
 	dst->nopininterval = src->nopininterval;
 	dst->no_discovery_auth = src->no_discovery_auth;
 	dst->req_discovery_auth = src->req_discovery_auth;
-	dst->req_discovery_auth_mutual = src->req_discovery_auth;
+	dst->req_discovery_auth_mutual = src->req_discovery_auth_mutual;
 	dst->discovery_auth_group = src->discovery_auth_group;
 	dst->min_connections_per_core = src->min_connections_per_core;
 
@@ -745,7 +745,7 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.nopininterval = opts->nopininterval;
 	g_spdk_iscsi.no_discovery_auth = opts->no_discovery_auth;
 	g_spdk_iscsi.req_discovery_auth = opts->req_discovery_auth;
-	g_spdk_iscsi.req_discovery_auth_mutual = opts->req_discovery_auth;
+	g_spdk_iscsi.req_discovery_auth_mutual = opts->req_discovery_auth_mutual;
 	g_spdk_iscsi.discovery_auth_group = opts->discovery_auth_group;
 
 	spdk_iscsi_conn_set_min_per_core(opts->min_connections_per_core);
