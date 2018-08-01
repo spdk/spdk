@@ -2007,10 +2007,15 @@ error:
 static void
 _spdk_nvmf_rdma_qp_error(void *arg)
 {
-	struct spdk_nvmf_rdma_qpair *rqpair = arg;
-	struct spdk_nvmf_rdma_request *rdma_req, *req_tmp;
+	struct spdk_nvmf_rdma_qpair	*rqpair = arg;
+	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
+	enum ibv_qp_state		state;
 
-	spdk_nvmf_rdma_update_ibv_state(rqpair);
+	state = spdk_nvmf_rdma_update_ibv_state(rqpair);
+	if (state != IBV_QPS_ERR) {
+		/* Error was already recovered */
+		return;
+	}
 
 	if (spdk_nvmf_qpair_is_admin_queue(&rqpair->qpair)) {
 		spdk_nvmf_ctrlr_abort_aer(rqpair->qpair.ctrlr);
@@ -2038,6 +2043,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	int				rc;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct ibv_async_event		event;
+	enum ibv_qp_state		state;
 
 	rc = ibv_get_async_event(device->context, &event);
 
@@ -2060,7 +2066,19 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
 		break;
-	case IBV_EVENT_SQ_DRAINED:
+	case IBV_EVENT_SQ_DRAINED: {
+		/* This event occurs frequently in both error and non-error states.
+		 * Check if the qpair is in an error state before sending a message.
+		 * Note that we're not on the correct thread to access the qpair, but
+		 * the operations that the below calls make all happen to be thread
+		 * safe. */
+		state = spdk_nvmf_rdma_update_ibv_state(rqpair);
+		if (state == IBV_QPS_ERR) {
+			spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
+		}
+		break;
+
+	}
 	case IBV_EVENT_CQ_ERR:
 	case IBV_EVENT_QP_REQ_ERR:
 	case IBV_EVENT_QP_ACCESS_ERR:
