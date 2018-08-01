@@ -1332,6 +1332,28 @@ spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 	return 0;
 }
 
+int
+spdk_iscsi_tgt_node_set_auth(struct spdk_iscsi_tgt_node *target,
+			     bool disable_chap, bool require_chap,
+			     bool mutual_chap, int32_t chap_group)
+{
+	if (!spdk_iscsi_check_chap_params(disable_chap, require_chap,
+					  mutual_chap, chap_group)) {
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&target->mutex);
+
+	target->disable_chap = disable_chap;
+	target->require_chap = require_chap;
+	target->mutual_chap = mutual_chap;
+	target->chap_group = chap_group;
+
+	pthread_mutex_unlock(&target->mutex);
+
+	return 0;
+}
+
 static const char *target_nodes_section = \
 		"\n"
 		"# Users should change the TargetNode section(s) below to match the\n"

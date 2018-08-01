@@ -626,6 +626,28 @@ if __name__ == "__main__":
     p.set_defaults(func=target_node_add_lun)
 
     @call_cmd
+    def target_node_set_auth(args):
+        rpc.iscsi.target_node_set_auth(
+            args.client,
+            name=args.name,
+            chap_group=args.chap_group,
+            disable_chap=args.disable_chap,
+            require_chap=args.require_chap,
+            mutual_chap=args.mutual_chap)
+
+    p = subparsers.add_parser('target_node_set_auth', help='Set CHAP authentication for the target')
+    p.add_argument('name', help='Target node name (ASCII)')
+    p.add_argument('-g', '--chap-group', help="""Authentication group ID for this target node.
+    *** Authentication group must be precreated ***""", type=int, default=0)
+    p.add_argument('-d', '--disable-chap', help="""CHAP authentication should be disabled for this target node.
+    *** Mutually exclusive with --require-chap ***""", action='store_true')
+    p.add_argument('-r', '--require-chap', help="""CHAP authentication should be required for this target node.
+    *** Mutually exclusive with --disable-chap ***""", action='store_true')
+    p.add_argument(
+        '-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.', action='store_true')
+    p.set_defaults(func=target_node_set_auth)
+
+    @call_cmd
     def add_pg_ig_maps(args):
         pg_ig_maps = []
         for u in args.pg_ig_mappings.strip().split(" "):
