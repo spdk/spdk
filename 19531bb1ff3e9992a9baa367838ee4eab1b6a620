@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0024dc7e_ed8af60b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T21:45:55Z",
+      "side": 1,
+      "message": "this is also removing the assert - should we at least mention that in the commit message?\n\nis it OK to ignore an -ENOMEM return value though (looks like that\u0027s the only errno this can return)?  it seems keeping the assert would be a good idea - or at least print an error message",
+      "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40e3a639_1445e3ec",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T21:45:55Z",
+      "side": 1,
+      "message": "unrelated whitespace changes\n\n(I\u0027m ok with the function signature changes - but these here should be removed)",
+      "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e246aae5_976268c1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1970,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T21:45:55Z",
+      "side": 1,
+      "message": "is this an unrelated bug fix?",
+      "revId": "19531bb1ff3e9992a9baa367838ee4eab1b6a620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

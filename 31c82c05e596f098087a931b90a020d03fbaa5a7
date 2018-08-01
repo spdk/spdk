@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93b34632_aff7a8c3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1946,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T21:45:55Z",
+      "side": 0,
+      "message": "i\u0027m assuming we can remove this because we already do it in line 1922?",
+      "revId": "31c82c05e596f098087a931b90a020d03fbaa5a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1e36f1d_ff4537e0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2118,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-01T21:45:55Z",
+      "side": 0,
+      "message": "are these changes unrelated?  the commit message doesn\u0027t really refer to removing calls to update_ibv_qp - only combining its functionality into get_ibv_state",
+      "revId": "31c82c05e596f098087a931b90a020d03fbaa5a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
