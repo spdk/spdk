@@ -675,8 +675,6 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rqpair->state_cntr[rdma_req->state]++;
 	}
 
-	spdk_nvmf_rdma_get_ibv_state(rqpair);
-
 	return 0;
 }
 
@@ -2302,6 +2300,8 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
+
+	spdk_nvmf_rdma_get_ibv_state(rqpair);
 
 	return 0;
 }
