@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7508012_b9079f88",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 1528,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-08-01T12:27:30Z",
+      "side": 1,
+      "message": "Use MEGABYTE variable to define cluster size",
+      "range": {
+        "startLine": 1527,
+        "startChar": 26,
+        "endLine": 1528,
+        "endChar": 35
+      },
+      "revId": "58b0d11ec03d1a2165cb3e5e82effa611088e8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
