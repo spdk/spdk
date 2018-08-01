@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ceb8842a_336ed32f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-08-01T12:57:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "51e754fe_d06bba7a",
+      "revId": "038981dc107912da41a5761a9450f5cfaea9ce04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64bf0840_866348c7",
         "filename": "test/lvol/lvol.sh",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2018-08-01T12:18:39Z",
       "side": 1,
       "message": "Flag -f should be enough",
+      "range": {
+        "startLine": 127,
+        "startChar": 18,
+        "endLine": 127,
+        "endChar": 24
+      },
+      "revId": "038981dc107912da41a5761a9450f5cfaea9ce04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a5de61d_697c2d4b",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-08-01T12:57:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64bf0840_866348c7",
       "range": {
         "startLine": 127,
         "startChar": 18,
