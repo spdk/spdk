@@ -262,7 +262,7 @@ spdk_fio_init_env(struct thread_data *td)
 		return -1;
 	}
 
-	rc = spdk_conf_read(config, eo->conf);
+	rc = spdk_conf_read(config, eo->conf, false);
 	if (rc != 0) {
 		SPDK_ERRLOG("Invalid configuration file format\n");
 		spdk_conf_free(config);

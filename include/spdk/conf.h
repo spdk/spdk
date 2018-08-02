@@ -69,10 +69,11 @@ void spdk_conf_free(struct spdk_conf *cp);
  *
  * \param cp Configuration struct used for the initialization of SPDK app.
  * \param file File to read that is created by user to configure SPDK app.
+ * \param lock If true, File lock is held during reading the configuration file.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_conf_read(struct spdk_conf *cp, const char *file);
+int spdk_conf_read(struct spdk_conf *cp, const char *file, bool lock);
 
 /**
  * Find the specified section of the configuration.
