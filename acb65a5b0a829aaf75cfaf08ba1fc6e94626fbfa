@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7fc3231_4e431a92",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2543,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-02T03:02:51Z",
+      "side": 1,
+      "message": "I think I understand what we need to do here now. The generic code guarantees that the nvmf queue pair is already in the inactive state and all known I/O have been completed, but \"completed\" from the generic layer only means that a request has reached the EXECUTED state. That request could still be actively sending a completion when this gets called. Before killing the connection, we need to wait until all of the active requests have cycled through the state machine (i.e. number of requests in free state is equal to the queue depth).\n\nDuring this time new requests may come in, but since the generic code has set the qpair to inactive, they\u0027ll all get thrown away correctly.\n\nThe best way to implement this is to first check if there are any active RDMA requests first (check if number of requests in free state is equal to queue depth). If there aren\u0027t, just free the qpair. If there are, set a flag in the rqpair that indicates the queue is destroyed and return. Then, in spdk_nvmf_rdma_qpair_process_pending check for this flag. If the flag is set and there are no outstanding RDMA commands, release the qpair resources.",
+      "revId": "acb65a5b0a829aaf75cfaf08ba1fc6e94626fbfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
