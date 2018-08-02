@@ -55,7 +55,7 @@ endif
 
 SPDK_LIB_LIST = event_bdev event_copy
 SPDK_LIB_LIST += blobfs bdev copy event util conf trace \
-		log jsonrpc json rpc thread
+		log jsonrpc json rpc sock thread
 
 AM_LINK += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
 AM_LINK += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)

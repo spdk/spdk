@@ -175,6 +175,8 @@ else
 fi
 
 if [ ! -d "${DEPENDENCY_DIR}/nvme-cli" ]; then
+	# comments: nvme-cli is a staitic version, we will only enable nvme-tcp if there is no such directory
+	config_params+=' --with-nvme-tcp'
 	export SPDK_TEST_NVME_CLI=0
 fi
 
