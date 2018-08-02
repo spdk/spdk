@@ -165,6 +165,7 @@ void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair);
 
 bool spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair);
 
+extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 
 #endif /* SPDK_NVMF_TRANSPORT_H */

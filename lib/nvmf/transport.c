@@ -42,6 +42,7 @@
 #include "spdk/util.h"
 
 static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
+	&spdk_nvmf_transport_tcp,
 #ifdef SPDK_CONFIG_RDMA
 	&spdk_nvmf_transport_rdma,
 #endif
