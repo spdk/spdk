@@ -42,7 +42,7 @@ C_SRCS := fuse.c
 
 SPDK_LIB_LIST = event_bdev event_copy
 SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event thread util conf trace \
-		log jsonrpc json rpc
+		log jsonrpc json rpc sock
 
 LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
