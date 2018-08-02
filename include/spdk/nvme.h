@@ -190,6 +190,11 @@ enum spdk_nvme_transport_type {
 	 * Fibre Channel (FC) Transport
 	 */
 	SPDK_NVME_TRANSPORT_FC = SPDK_NVMF_TRTYPE_FC,
+
+	/**
+	 * TCP Transport
+	 */
+	SPDK_NVME_TRANSPORT_TCP = SPDK_NVMF_TRTYPE_TCP,
 };
 
 /**
