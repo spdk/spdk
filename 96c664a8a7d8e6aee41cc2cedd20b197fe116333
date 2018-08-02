@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "712ae59c_ae5607e9",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-02T04:13:23Z",
+      "side": 1,
+      "message": "can we merge the to variables into one.",
+      "range": {
+        "startLine": 1040,
+        "startChar": 1,
+        "endLine": 1041,
+        "endChar": 19
+      },
+      "revId": "96c664a8a7d8e6aee41cc2cedd20b197fe116333",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3436efd_32772f95",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1044,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-02T04:13:23Z",
+      "side": 1,
+      "message": "add a blank line",
+      "range": {
+        "startLine": 1043,
+        "startChar": 1,
+        "endLine": 1044,
+        "endChar": 2
+      },
+      "revId": "96c664a8a7d8e6aee41cc2cedd20b197fe116333",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
