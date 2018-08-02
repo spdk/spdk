@@ -95,7 +95,7 @@ struct spdk_bdev_mgr {
 
 	void *zero_buffer;
 
-	TAILQ_HEAD(, spdk_bdev_module) bdev_modules;
+	TAILQ_HEAD(bdev_module_list, spdk_bdev_module) bdev_modules;
 
 	struct spdk_bdev_list bdevs;
 
@@ -688,6 +688,9 @@ spdk_bdev_module_examine_done(struct spdk_bdev_module *module)
 	spdk_bdev_module_action_done(module);
 }
 
+/** The last initialized bdev module */
+static struct spdk_bdev_module *g_resume_bdev_module = NULL;
+
 static int
 spdk_bdev_modules_init(void)
 {
@@ -695,14 +698,15 @@ spdk_bdev_modules_init(void)
 	int rc = 0;
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
+		g_resume_bdev_module = module;
 		rc = module->module_init();
 		if (rc != 0) {
-			break;
+			return rc;
 		}
 	}
 
-	g_bdev_mgr.module_init_complete = true;
-	return rc;
+	g_resume_bdev_module = NULL;
+	return 0;
 }
 
 
@@ -821,6 +825,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 				"bdev_mgr");
 
 	rc = spdk_bdev_modules_init();
+	g_bdev_mgr.module_init_complete = true;
 	if (rc != 0) {
 		SPDK_ERRLOG("bdev modules init failed\n");
 		spdk_thread_send_msg(spdk_get_thread(), spdk_bdev_init_failed, NULL);
@@ -865,8 +870,6 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 	g_fini_cb_arg = NULL;
 }
 
-static struct spdk_bdev_module *g_resume_bdev_module = NULL;
-
 static void
 spdk_bdev_module_finish_iter(void *arg)
 {
@@ -874,9 +877,10 @@ spdk_bdev_module_finish_iter(void *arg)
 
 	/* Start iterating from the last touched module */
 	if (!g_resume_bdev_module) {
-		bdev_module = TAILQ_FIRST(&g_bdev_mgr.bdev_modules);
+		bdev_module = TAILQ_LAST(&g_bdev_mgr.bdev_modules, bdev_module_list);
 	} else {
-		bdev_module = TAILQ_NEXT(g_resume_bdev_module, internal.tailq);
+		bdev_module = TAILQ_PREV(g_resume_bdev_module, bdev_module_list,
+					 internal.tailq);
 	}
 
 	while (bdev_module) {
@@ -897,7 +901,8 @@ spdk_bdev_module_finish_iter(void *arg)
 			return;
 		}
 
-		bdev_module = TAILQ_NEXT(bdev_module, internal.tailq);
+		bdev_module = TAILQ_PREV(bdev_module, bdev_module_list,
+					 internal.tailq);
 	}
 
 	g_resume_bdev_module = NULL;
