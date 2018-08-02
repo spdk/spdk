@@ -635,27 +635,6 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	return rc;
 }
 
-int
-spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
-			    struct spdk_nvmf_qpair *qpair)
-{
-	int rc = -1;
-	struct spdk_nvmf_transport_poll_group *tgroup;
-
-	TAILQ_REMOVE(&group->qpairs, qpair, link);
-
-	qpair->group = NULL;
-
-	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
-		if (tgroup->transport == qpair->transport) {
-			rc = spdk_nvmf_transport_poll_group_remove(tgroup, qpair);
-			break;
-		}
-	}
-
-	return rc;
-}
-
 static
 void _nvmf_ctrlr_destruct(void *ctx)
 {
@@ -698,7 +677,9 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 		/* store the thread of admin_qpair and use it later */
 		thread = ctrlr->admin_qpair->group->thread;
 	}
-	spdk_nvmf_poll_group_remove(qpair->group, qpair);
+
+	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
+	qpair->group = NULL;
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;

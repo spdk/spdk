@@ -104,12 +104,6 @@ struct spdk_nvmf_transport_ops {
 			      struct spdk_nvmf_qpair *qpair);
 
 	/**
-	 * Remove a qpair from a poll group
-	 */
-	int (*poll_group_remove)(struct spdk_nvmf_transport_poll_group *group,
-				 struct spdk_nvmf_qpair *qpair);
-
-	/**
 	 * Poll the group to process I/O
 	 */
 	int (*poll_group_poll)(struct spdk_nvmf_transport_poll_group *group);
@@ -160,9 +154,6 @@ void spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_grou
 
 int spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 				       struct spdk_nvmf_qpair *qpair);
-
-int spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
-		struct spdk_nvmf_qpair *qpair);
 
 int spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
 
