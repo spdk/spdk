@@ -2635,6 +2635,44 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	return count;
 }
 
+static int
+spdk_nvmf_rdma_qpair_get_src_trid(struct spdk_nvmf_qpair *qpair,
+				  struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+	struct sockaddr *saddr;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	trid->trtype = SPDK_NVME_TRANSPORT_RDMA;
+
+	saddr = rdma_get_peer_addr(rqpair->cm_id);
+	switch (saddr->sa_family) {
+	case AF_INET: {
+		struct sockaddr_in *saddr_in = (struct sockaddr_in *)saddr;
+
+		trid->adrfam = SPDK_NVMF_ADRFAM_IPV4;
+		inet_ntop(AF_INET, &saddr_in->sin_addr,
+			  trid->traddr, sizeof(trid->traddr));
+		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", saddr_in->sin_port);
+		break;
+	}
+	case AF_INET6: {
+		struct sockaddr_in6 *saddr_in = (struct sockaddr_in6 *)saddr;
+		trid->adrfam = SPDK_NVMF_ADRFAM_IPV6;
+		inet_ntop(AF_INET6, &saddr_in->sin6_addr,
+			  trid->traddr, sizeof(trid->traddr));
+		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", saddr_in->sin6_port);
+		break;
+	}
+	default:
+		return -1;
+
+	}
+
+	return 0;
+}
+
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.type = SPDK_NVME_TRANSPORT_RDMA,
 	.create = spdk_nvmf_rdma_create,
@@ -2656,6 +2694,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 
 	.qpair_fini = spdk_nvmf_rdma_close_qpair,
 	.qpair_is_idle = spdk_nvmf_rdma_qpair_is_idle,
+	.qpair_get_src_trid = spdk_nvmf_rdma_qpair_get_src_trid,
 
 };
 
