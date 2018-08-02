@@ -639,6 +639,15 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	if (register_controllers() != 0) {
+		return 1;
+	}
+
+	if (!g_controllers) {
+		printf("No NVMe controller found, %s exiting\n", argv[0]);
+		return 0;
+	}
+
 	task_pool = spdk_mempool_create("task_pool", TASK_POOL_NUM,
 					sizeof(struct reset_task),
 					64, SPDK_ENV_SOCKET_ID_ANY);
@@ -650,10 +659,6 @@ int main(int argc, char **argv)
 	g_tsc_rate = spdk_get_ticks_hz();
 
 	if (register_workers() != 0) {
-		return 1;
-	}
-
-	if (register_controllers() != 0) {
 		return 1;
 	}
 

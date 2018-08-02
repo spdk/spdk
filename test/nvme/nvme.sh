@@ -98,7 +98,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	#timing_exit aer
 
 	timing_enter reset
-	$testdir/reset/reset -q 64 -w write -s 4096 -t 2
+	$testdir/reset/reset -q 64 -w write -s 4096 -t 2 -i 0
 	report_test_completion "nightly_nvme_reset"
 	timing_exit reset
 fi
