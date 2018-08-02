@@ -265,6 +265,8 @@ struct spdk_nvmf_rdma_qpair {
 	 */
 	struct ibv_qp_init_attr			ibv_init_attr;
 	struct ibv_qp_attr			ibv_attr;
+
+	bool					qpair_disconnected;
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -486,6 +488,11 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
+	if (spdk_nvmf_rdma_cur_queue_depth(rqpair)) {
+		rqpair->qpair_disconnected = true;
+		return;
+	}
+
 	if (rqpair->poller) {
 		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
 	}
@@ -1889,6 +1896,11 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 		}
 	}
 
+	if (rqpair->qpair_disconnected) {
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		return;
+	}
+
 	/* Do not process newly received commands if qp is in ERROR state,
 	 * wait till the recovery is complete.
 	 */
@@ -2368,7 +2380,9 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
-	spdk_nvmf_rdma_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
+	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
 }
 
 static struct spdk_nvmf_rdma_request *
