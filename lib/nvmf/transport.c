@@ -148,13 +148,6 @@ spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 }
 
 int
-spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
-				      struct spdk_nvmf_qpair *qpair)
-{
-	return group->transport->ops->poll_group_remove(group, qpair);
-}
-
-int
 spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	return group->transport->ops->poll_group_poll(group);

@@ -180,17 +180,6 @@ void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
 int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 			     struct spdk_nvmf_qpair *qpair);
 
-/**
- * Remove the given qpair from the poll group.
- *
- * \param group The group to delete qpair from.
- * \param qpair The qpair to remove.
- *
- * \return 0 on success, -1 on failure.
- */
-int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
-				struct spdk_nvmf_qpair *qpair);
-
 typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
 
 /**
