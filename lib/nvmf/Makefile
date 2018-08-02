@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
 	 subsystem.c nvmf.c \
-	 request.c transport.c
+	 request.c transport.c tcp.c
 
 C_SRCS-$(CONFIG_RDMA) += rdma.c
 LIBNAME = nvmf
