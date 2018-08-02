@@ -1,6 +1,6 @@
 # Changelog
 
-## v18.07: (Upcoming Release)
+## v18.07:
 
 ### bdev
 
