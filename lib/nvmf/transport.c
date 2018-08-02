@@ -42,6 +42,7 @@
 #include "spdk/util.h"
 
 static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
+	&spdk_nvmf_transport_tcp,
 #ifdef SPDK_CONFIG_RDMA
 	&spdk_nvmf_transport_rdma,
 #endif
@@ -229,4 +230,14 @@ spdk_nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 		struct spdk_nvme_transport_id *trid)
 {
 	return qpair->transport->ops->qpair_get_listen_trid(qpair, trid);
+}
+
+int
+spdk_nvmf_transport_qpair_set_sqsize(struct spdk_nvmf_qpair *qpair)
+{
+	if (qpair->transport->ops->qpair_set_sqsize) {
+		return qpair->transport->ops->qpair_set_sqsize(qpair);
+	}
+
+	return 0;
 }

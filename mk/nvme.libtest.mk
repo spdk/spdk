@@ -39,7 +39,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 C_SRCS = $(APP:%=%.c)
 
-SPDK_LIB_LIST = nvme thread util log
+SPDK_LIB_LIST = nvme thread util log sock
 
 LIBS += $(SOCK_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
