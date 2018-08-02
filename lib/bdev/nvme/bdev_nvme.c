@@ -1364,7 +1364,7 @@ bdev_nvme_library_init(void)
 			}
 
 			rc = create_ctrlr(ctrlr, probe_ctx->names[i], &probe_ctx->trids[i]);
-			if (!rc) {
+			if (rc) {
 				goto end;
 			}
 		} else {
