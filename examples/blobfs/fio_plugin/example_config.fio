@@ -1,0 +1,16 @@
+[global]
+ioengine=spdk_blobfs
+spdk_conf=./examples/blobfs/fio_plugin/bdev.conf.in
+thread=1
+group_reporting=1
+direct=1
+verify=0
+time_based=1
+ramp_time=0
+runtime=10
+iodepth=1
+rw=write
+bs=4k
+
+[test]
+numjobs=1
