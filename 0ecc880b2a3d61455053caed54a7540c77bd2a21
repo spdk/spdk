@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7bc57865_ccf6ec9e",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-08-02T15:01:10Z",
+      "side": 1,
+      "message": "In this case, spdk_bdev_register() creates IO device on spdk_bdev object along with raid bdev module. Since now after embedding the address of raid_bdev_gen and raid_bdev is same, will it cause any issue?",
+      "revId": "0ecc880b2a3d61455053caed54a7540c77bd2a21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
