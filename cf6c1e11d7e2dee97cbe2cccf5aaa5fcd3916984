@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "996a0a55_918bd304",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-02T00:57:58Z",
+      "side": 1,
+      "message": "Right, will add it.",
+      "parentUuid": "a1fd9c91_62266f25",
+      "revId": "cf6c1e11d7e2dee97cbe2cccf5aaa5fcd3916984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f346decc_de385177",
         "filename": "test/nvmf/filesystem/filesystem.sh",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-01T20:31:42Z",
       "side": 1,
       "message": "are these changes related?",
+      "revId": "cf6c1e11d7e2dee97cbe2cccf5aaa5fcd3916984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc4effb9_699dab24",
+        "filename": "test/nvmf/filesystem/filesystem.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-02T00:57:58Z",
+      "side": 1,
+      "message": "Yes, it will add Malloc0 twice when constructing new subsystem.",
+      "parentUuid": "f346decc_de385177",
       "revId": "cf6c1e11d7e2dee97cbe2cccf5aaa5fcd3916984",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
