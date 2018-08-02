@@ -206,21 +206,23 @@ raid_bdev_destruct(void *ctxt)
 {
 	struct raid_bdev_ctxt *raid_bdev_ctxt = ctxt;
 	struct raid_bdev      *raid_bdev = &raid_bdev_ctxt->raid_bdev;
+	struct raid_base_bdev_info *info;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destruct\n");
 
 	raid_bdev->destruct_called = true;
 	for (uint16_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		info = &raid_bdev->base_bdev_info[i];
+
 		/*
 		 * Close all base bdev descriptors for which call has come from below
 		 * layers
 		 */
-		if ((raid_bdev->base_bdev_info[i].base_bdev_remove_scheduled == true) &&
-		    (raid_bdev->base_bdev_info[i].base_bdev != NULL)) {
-			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].base_bdev);
-			spdk_bdev_close(raid_bdev->base_bdev_info[i].base_bdev_desc);
-			raid_bdev->base_bdev_info[i].base_bdev_desc = NULL;
-			raid_bdev->base_bdev_info[i].base_bdev = NULL;
+		if ((info->base_bdev_remove_scheduled == true) && (info->base_bdev != NULL)) {
+			spdk_bdev_module_release_bdev(info->base_bdev);
+			spdk_bdev_close(info->base_bdev_desc);
+			info->base_bdev_desc = NULL;
+			info->base_bdev = NULL;
 			assert(raid_bdev->num_base_bdevs_discovered);
 			raid_bdev->num_base_bdevs_discovered--;
 		}
