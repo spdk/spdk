@@ -1,0 +1,2 @@
+# [Nvme] section will get appended here by scripts/gen_nvme.sh.
+#   TransportID "trtype:PCIe traddr:0000:82:00.0" Nvme0
