@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a492d14a_741726a8",
+        "filename": "test/nvme/reset/reset.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-02T18:07:34Z",
+      "side": 1,
+      "message": "I think this should return 1.  It should be an error to run the reset tool with no NVMe controllers, since it is a test app.  I think it is OK to make that change as part of this patch.",
+      "revId": "9c5dc0d805b17d70bc17806889360ce4a7c279cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
