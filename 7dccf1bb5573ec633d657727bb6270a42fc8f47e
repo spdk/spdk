@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47952fdc_bc170c57",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-02T09:14:27Z",
+      "side": 1,
+      "message": "this comment should be just under the above warning message?",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 44
+      },
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e12b74b_f2560a56",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-02T09:14:27Z",
+      "side": 1,
+      "message": "I understand the purpose of this is as follows. Please correct me if I\u0027m wrong.\n\nget_virtio_scsi_devs, get_vhost_ctrls, and get_lvol_stores are called implicitly at every refresh. To avoid RPC error for them, if condition is inserted in them.",
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
