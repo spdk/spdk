@@ -84,7 +84,6 @@ static const char *vhost_message_str[VHOST_USER_MAX] = {
 	[VHOST_USER_NVME_SET_CQ_CALL] = "VHOST_USER_NVME_SET_CQ_CALL",
 	[VHOST_USER_NVME_GET_CAP] = "VHOST_USER_NVME_GET_CAP",
 	[VHOST_USER_NVME_START_STOP] = "VHOST_USER_NVME_START_STOP",
-	[VHOST_USER_NVME_IO_CMD] = "VHOST_USER_NVME_IO_CMD",
 	[VHOST_USER_NVME_SET_BAR_MR] = "VHOST_USER_NVME_SET_BAR_MR"
 };
 
@@ -1087,14 +1086,6 @@ vhost_user_check_and_alloc_queue_pair(struct virtio_net *dev, VhostUserMsg *msg)
 }
 
 static int
-vhost_user_nvme_io_request_passthrough(struct virtio_net *dev,
-				       uint16_t qid, uint16_t tail_head,
-				       bool is_submission_queue)
-{
-	return -1;
-}
-
-static int
 vhost_user_nvme_admin_passthrough(struct virtio_net *dev,
 				  void *cmd, void *cqe, void *buf)
 {
@@ -1221,8 +1212,6 @@ vhost_user_msg_handler(int vid, int fd)
 	uint8_t cqe[16];
 	uint8_t cmd[64];
 	uint8_t buf[4096];
-	uint16_t qid, tail_head;
-	bool is_submission_queue;
 
 	dev = get_device(vid);
 	if (dev == NULL)
@@ -1326,12 +1315,6 @@ vhost_user_msg_handler(int vid, int fd)
 				dev->notify_ops->destroy_device(dev->vid);
 			}
 		}
-		break;
-	case VHOST_USER_NVME_IO_CMD:
-		qid = msg.payload.nvme_io.qid;
-		tail_head = msg.payload.nvme_io.tail_head;
-		is_submission_queue = (msg.payload.nvme_io.queue_type == VHOST_USER_NVME_SUBMISSION_QUEUE) ? true : false;
-		vhost_user_nvme_io_request_passthrough(dev, qid, tail_head, is_submission_queue);
 		break;
 	case VHOST_USER_NVME_SET_BAR_MR:
 		ret = vhost_user_nvme_set_bar_mr(dev, &msg);
