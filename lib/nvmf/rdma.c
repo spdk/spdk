@@ -486,10 +486,6 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	if (rqpair->poller) {
-		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
-	}
-
 	if (rqpair->cmds_mr) {
 		ibv_dereg_mr(rqpair->cmds_mr);
 	}
@@ -2005,21 +2001,9 @@ error:
 }
 
 static void
-_spdk_nvmf_rdma_qp_error(void *arg)
+_spdk_nvmf_rdma_qp_cleanup_all_states(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	struct spdk_nvmf_rdma_qpair	*rqpair = arg;
 	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
-	enum ibv_qp_state		state;
-
-	state = spdk_nvmf_rdma_get_ibv_state(rqpair);
-	if (state != IBV_QPS_ERR) {
-		/* Error was already recovered */
-		return;
-	}
-
-	if (spdk_nvmf_qpair_is_admin_queue(&rqpair->qpair)) {
-		spdk_nvmf_ctrlr_abort_aer(rqpair->qpair.ctrlr);
-	}
 
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING);
 
@@ -2033,7 +2017,24 @@ _spdk_nvmf_rdma_qp_error(void *arg)
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_COMPLETING);
+}
 
+static void
+_spdk_nvmf_rdma_qp_error(void *arg)
+{
+	struct spdk_nvmf_rdma_qpair	*rqpair = arg;
+	enum ibv_qp_state		state;
+
+	state = spdk_nvmf_rdma_get_ibv_state(rqpair);
+	if (state != IBV_QPS_ERR) {
+		/* Error was already recovered */
+		return;
+	}
+
+	if (spdk_nvmf_qpair_is_admin_queue(&rqpair->qpair)) {
+		spdk_nvmf_ctrlr_abort_aer(rqpair->qpair.ctrlr);
+	}
+	_spdk_nvmf_rdma_qp_cleanup_all_states(rqpair);
 	spdk_nvmf_rdma_qpair_recover(rqpair);
 }
 
@@ -2216,6 +2217,7 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_rdma_poller		*poller, *tmp;
+	struct spdk_nvmf_rdma_qpair		*qpair, *tmp_qpair;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 
@@ -2228,6 +2230,11 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 		if (poller->cq) {
 			ibv_destroy_cq(poller->cq);
+		}
+		TAILQ_FOREACH_SAFE(qpair, &poller->qpairs, link, tmp_qpair) {
+			TAILQ_REMOVE(&poller->qpairs, qpair, link);
+			_spdk_nvmf_rdma_qp_cleanup_all_states(qpair);
+			spdk_nvmf_rdma_qpair_destroy(qpair);
 		}
 
 		free(poller);
