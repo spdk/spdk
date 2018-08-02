@@ -488,6 +488,10 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
+	if (rqpair->poller) {
+		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
+	}
+
 	if (rqpair->cmds_mr) {
 		ibv_dereg_mr(rqpair->cmds_mr);
 	}
@@ -2243,7 +2247,6 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 			ibv_destroy_cq(poller->cq);
 		}
 		TAILQ_FOREACH_SAFE(qpair, &poller->qpairs, link, tmp_qpair) {
-			TAILQ_REMOVE(&poller->qpairs, qpair, link);
 			_spdk_nvmf_rdma_qp_cleanup_all_states(qpair);
 			spdk_nvmf_rdma_qpair_destroy(qpair);
 		}
@@ -2347,8 +2350,6 @@ spdk_nvmf_rdma_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 
 	TAILQ_FOREACH_SAFE(rq, &poller->qpairs, link, trq) {
 		if (rq == rqpair) {
-			TAILQ_REMOVE(&poller->qpairs, rqpair, link);
-			rqpair->poller = NULL;
 			break;
 		}
 	}
