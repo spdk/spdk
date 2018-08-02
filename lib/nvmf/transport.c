@@ -46,6 +46,7 @@ static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
 #ifdef SPDK_CONFIG_RDMA
 	&spdk_nvmf_transport_rdma,
 #endif
+	&spdk_nvmf_transport_tcp,
 };
 
 #define NUM_TRANSPORTS (SPDK_COUNTOF(g_transport_ops))
@@ -233,4 +234,14 @@ spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
 
 	ops->opts_init(opts);
 	return true;
+}
+
+int
+spdk_nvmf_transport_qpair_set_sqsize(struct spdk_nvmf_qpair *qpair)
+{
+	if (qpair->transport->ops->qpair_set_sqsize) {
+		return qpair->transport->ops->qpair_set_sqsize(qpair);
+	}
+
+	return 0;
 }
