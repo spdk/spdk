@@ -50,6 +50,24 @@
       "revId": "a90c1ed16743c9d5e62128c53b606946bccd1d8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "211c36b2_cb4f0e3d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1977,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-02T16:26:01Z",
+      "side": 1,
+      "message": "I\u0027m wrong actually - spdk_nvmf_rdma_set_ibv_state will correctly update it.",
+      "parentUuid": "ec814505_38da5592",
+      "revId": "a90c1ed16743c9d5e62128c53b606946bccd1d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
