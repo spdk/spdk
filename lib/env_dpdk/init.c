@@ -109,7 +109,7 @@ spdk_env_unlink_shared_files(void)
 {
 	char buffer[PATH_MAX];
 
-	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_config", getpid());
+	snprintf(buffer, PATH_MAX, "%s/.spdk_pid%d_config", eal_get_runtime_dir(), getpid());
 	if (unlink(buffer)) {
 		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
 	}
