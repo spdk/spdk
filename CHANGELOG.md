@@ -2,6 +2,18 @@
 
 ## v19.01: (Upcoming Release)
 
+### nvme
+
+Add a new TCP/IP transport(located in lib/nvme/nvme_tcp.c) in nvme driver. With
+this new transport, it can be used to connect the NVMe-oF target with the
+same TCP/IP support.
+
+### nvmf
+
+Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
+the SPDK NVMe-oF target can have a new transport, and can serve the NVMe-oF
+protocol via TCP/IP from the host.
+
 ## v18.10:
 
 ### nvme
