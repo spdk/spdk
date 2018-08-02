@@ -62,6 +62,7 @@ SPDK_LIB_LIST += net
 SPDK_LIB_LIST += nvmf
 SPDK_LIB_LIST += rpc
 SPDK_LIB_LIST += scsi
+SPDK_LIB_LIST += sock
 SPDK_LIB_LIST += thread
 SPDK_LIB_LIST += trace
 SPDK_LIB_LIST += util
