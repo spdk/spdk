@@ -905,6 +905,9 @@ struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 
 DECLARE_TRANSPORT(transport) /* generic transport dispatch functions */
 DECLARE_TRANSPORT(pcie)
+#ifdef SPDK_CONFIG_NVME_TCP
+DECLARE_TRANSPORT(tcp)
+#endif
 #ifdef  SPDK_CONFIG_RDMA
 DECLARE_TRANSPORT(rdma)
 #endif
