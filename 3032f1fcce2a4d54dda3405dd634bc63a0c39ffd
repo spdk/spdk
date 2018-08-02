@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf3342db_bf488a67",
+        "filename": "test/nvme/reset/reset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-08-02T08:35:17Z",
+      "side": 1,
+      "message": "\"opts.shm_id \u003d 0;\", need here?",
+      "range": {
+        "startLine": 636,
+        "startChar": 1,
+        "endLine": 636,
+        "endChar": 5
+      },
+      "revId": "3032f1fcce2a4d54dda3405dd634bc63a0c39ffd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
