@@ -91,6 +91,9 @@ if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 	config_params+=' --with-crypto'
 fi
 
+# Enable nvme-tcp here by default
+config_params+=' --with-nvme-tcp'
+
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
 # On Linux systems, override the default HUGEMEM in scripts/setup.sh to
