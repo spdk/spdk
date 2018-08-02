@@ -109,12 +109,12 @@ spdk_env_unlink_shared_files(void)
 {
 	char buffer[PATH_MAX];
 
+#if RTE_VERSION < RTE_VERSION_NUM(18, 05, 0, 0)
 	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_config", getpid());
 	if (unlink(buffer)) {
 		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
 	}
 
-#if RTE_VERSION < RTE_VERSION_NUM(18, 05, 0, 0)
 	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_hugepage_info", getpid());
 	if (unlink(buffer)) {
 		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
