@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "58e3c111_aff6511b",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-02T09:51:49Z",
+      "side": 1,
+      "message": "Found the problem, in the python comparison, change from:\n[if rw_ios_per_sec:]\nto:\n[if rw_ios_per_sec \u003e\u003d 0:]\n\nTo get a valid number (\u003e\u003d0) or to compare with False (0 is also false)",
+      "parentUuid": "4dc36b07_ed842cfe",
+      "range": {
+        "startLine": 555,
+        "startChar": 1,
+        "endLine": 555,
+        "endChar": 8
+      },
+      "revId": "f1b45a3803d09013462c87a43af49fc0a3e059a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80fef236_b255caf6",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 39
