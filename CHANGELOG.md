@@ -12,6 +12,16 @@ spdk_nvme_ns_get_extended_sector_size() was added.  This function includes
 the metadata size per sector (if any).  spdk_nvme_ns_get_sector_size() still
 returns only the data size per sector, not including metadata.
 
+Add a new TCP/IP transport(located in lib/nvme/nvme_tcp.c) in nvme driver. With
+this new transport, it can be used to connect the NVMe-oF target with the
+same TCP/IP support.
+
+### nvmf
+
+Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
+the SPDK NVMe-oF target can have a new transport, and can serve the NVMe-oF
+protocol via TCP/IP from the host.
+
 ### Build System
 
 New `configure` options, `--with-shared` and `--without-shared`
