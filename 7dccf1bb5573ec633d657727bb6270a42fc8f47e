@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "7b6ed52a_0b68112e",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-02T09:32:47Z",
+      "side": 1,
+      "message": "What I wanted to say was that \n\neven if self.is_init is True, the following constructors are executed.\n\nIf self.is_init is True, state is uninitialized but If self.is_init is False, state is initialized?\n\nThe state you say is for what?",
+      "parentUuid": "6c1eabc7_bd7f487d",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 44
+      },
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e12b74b_f2560a56",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 9
@@ -78,6 +102,24 @@
       "side": 1,
       "message": "Thats correct.\nIf I didn\u0027t add \"if self.is_init\" then get_* RPC calls would fail and throw an exception. As a result it\u0027d be impossible to create a basic tree structure displayed in the app main menu.",
       "parentUuid": "2e12b74b_f2560a56",
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c445b06_d49374b4",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-02T09:32:47Z",
+      "side": 1,
+      "message": "Thank you for adding more helpful explanation.",
+      "parentUuid": "ab23c65e_d5e17c77",
       "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
