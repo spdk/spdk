@@ -178,5 +178,6 @@ int spdk_nvmf_transport_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 		struct spdk_nvme_transport_id *trid);
 
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
+extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
 
 #endif /* SPDK_NVMF_TRANSPORT_H */
