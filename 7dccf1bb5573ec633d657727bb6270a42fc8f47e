@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "45c195ea_2e2300ff",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-02T11:38:43Z",
+      "side": 1,
+      "message": "Constructors for UIBdevs, UILvolStores, etc. will be run regardless of self.is_init value.\nSo actually there is no need for \"else/pass\" here. I just left it so I could fit this comment there.\n\nself.is_init\u003dTrue - spdk subsystems are initialized\nself.is_init\u003dFalse - spdk subsystems not initialized, rpc commands availability reduced.",
+      "parentUuid": "7b6ed52a_0b68112e",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 44
+      },
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e12b74b_f2560a56",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 9
