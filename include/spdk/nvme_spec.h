@@ -392,6 +392,7 @@ enum spdk_nvme_sgl_descriptor_type {
 enum spdk_nvme_sgl_descriptor_subtype {
 	SPDK_NVME_SGL_SUBTYPE_ADDRESS		= 0x0,
 	SPDK_NVME_SGL_SUBTYPE_OFFSET		= 0x1,
+	SPDK_NVME_SGL_SUBTYPE_TRANSPORT		= 0xa,
 };
 
 struct __attribute__((packed)) spdk_nvme_sgl_descriptor {
