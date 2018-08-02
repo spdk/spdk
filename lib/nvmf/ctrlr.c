@@ -404,6 +404,12 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	qpair->sq_head_max = cmd->sqsize;
 	qpair->qid = cmd->qid;
 
+	if (spdk_nvmf_transport_qpair_set_sqsize(qpair)) {
+		SPDK_ERRLOG("Can not create SQSIZE %u for qpair=%p\n", cmd->sqsize, qpair);
+		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	if (cmd->qid == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect Admin Queue for controller ID 0x%x\n", data->cntlid);
 
