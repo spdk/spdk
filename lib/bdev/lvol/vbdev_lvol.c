@@ -534,7 +534,6 @@ _vbdev_lvol_unregister_cb(void *ctx, int lvolerrno)
 	struct spdk_bdev *bdev = ctx;
 
 	spdk_bdev_destruct_done(bdev, lvolerrno);
-	free(bdev->name);
 	free(bdev);
 }
 
@@ -922,12 +921,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 
-	bdev->name = strdup(lvol->unique_id);
-	if (!bdev->name) {
-		SPDK_ERRLOG("Cannot alloc memory for bdev name\n");
-		free(bdev);
-		return NULL;
-	}
+	bdev->name = lvol->unique_id;
 	bdev->product_name = "Logical Volume";
 	bdev->blocklen = spdk_bs_get_page_size(lvol->lvol_store->blobstore);
 	total_size = spdk_blob_get_num_clusters(lvol->blob) *
@@ -943,7 +937,6 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 
 	rc = spdk_vbdev_register(bdev, &lvs_bdev->bdev, 1);
 	if (rc) {
-		free(bdev->name);
 		free(bdev);
 		return NULL;
 	}
@@ -951,7 +944,6 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	alias = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
 	if (alias == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for alias\n");
-		free(bdev->name);
 		free(bdev);
 		return NULL;
 	}
@@ -959,7 +951,6 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	rc = spdk_bdev_alias_add(bdev, alias);
 	if (rc != 0) {
 		SPDK_ERRLOG("Cannot add alias to lvol bdev\n");
-		free(bdev->name);
 		free(bdev);
 		free(alias);
 		return NULL;
