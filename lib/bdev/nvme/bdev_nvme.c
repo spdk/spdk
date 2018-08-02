@@ -716,6 +716,8 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 
 	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
 	if (!bdev->disk.name) {
+		nvme_ctrlr->ref--;
+		memset(bdev, 0, sizeof(*bdev));
 		return -ENOMEM;
 	}
 	bdev->disk.product_name = "NVMe disk";
@@ -740,6 +742,7 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	rc = spdk_bdev_register(&bdev->disk);
 	if (rc) {
 		free(bdev->disk.name);
+		nvme_ctrlr->ref--;
 		memset(bdev, 0, sizeof(*bdev));
 		return rc;
 	}
