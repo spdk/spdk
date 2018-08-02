@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d781c637_658cdd83",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-02T11:28:39Z",
+      "side": 1,
+      "message": "I forgot to remove this when I rebased on the latest one.",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 139,
+        "endChar": 28
+      },
+      "revId": "f50118ba2da7e588cd52477a26aed932537d1ded",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
