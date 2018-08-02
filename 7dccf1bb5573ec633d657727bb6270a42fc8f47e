@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6c1eabc7_bd7f487d",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-02T09:21:22Z",
+      "side": 1,
+      "message": "I think it is in correct place as it applies to \"else/pass\".",
+      "parentUuid": "47952fdc_bc170c57",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 44
+      },
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e12b74b_f2560a56",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 9
@@ -36,6 +60,24 @@
       "writtenOn": "2018-08-02T09:14:27Z",
       "side": 1,
       "message": "I understand the purpose of this is as follows. Please correct me if I\u0027m wrong.\n\nget_virtio_scsi_devs, get_vhost_ctrls, and get_lvol_stores are called implicitly at every refresh. To avoid RPC error for them, if condition is inserted in them.",
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab23c65e_d5e17c77",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-02T09:21:22Z",
+      "side": 1,
+      "message": "Thats correct.\nIf I didn\u0027t add \"if self.is_init\" then get_* RPC calls would fail and throw an exception. As a result it\u0027d be impossible to create a basic tree structure displayed in the app main menu.",
+      "parentUuid": "2e12b74b_f2560a56",
       "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
