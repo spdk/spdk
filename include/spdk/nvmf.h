@@ -207,6 +207,18 @@ int spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconn
 			       void *ctx);
 
 /**
+ * Get the remote transport ID for this queue pair.
+ *
+ * \param qpair The NVMe-oF qpair
+ * \param trid Output parameter that will contain the transport id.
+ *
+ * \return 0 for success.
+ * \return -EINVAL if the qpair is not connected.
+ */
+int spdk_nvmf_qpair_get_src_trid(struct spdk_nvmf_qpair *qpair,
+				 struct spdk_nvme_transport_id *trid);
+
+/**
  * Create an NVMe-oF subsystem.
  *
  * Subsystems are in one of three states: Inactive, Active, Paused. This
