@@ -2329,8 +2329,6 @@ spdk_nvmf_rdma_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 
 	TAILQ_FOREACH_SAFE(rq, &poller->qpairs, link, trq) {
 		if (rq == rqpair) {
-			TAILQ_REMOVE(&poller->qpairs, rqpair, link);
-			rqpair->poller = NULL;
 			break;
 		}
 	}
