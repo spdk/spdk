@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dfe7981_ca378d7c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-02T02:48:19Z",
+      "side": 1,
+      "message": "This needs to check for both the nvmf qpair state to be !\u003d ACTIVE and for the RDMA qpair to be !\u003d IBV_QPS_ERR.",
+      "revId": "4c14b068d67884e0df2f71c64fe310fa17edd589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e36d1f5b_2000b961",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1921,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-02T02:48:19Z",
+      "side": 1,
+      "message": "order swapped unnecessarily",
+      "revId": "4c14b068d67884e0df2f71c64fe310fa17edd589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04df96a0_f63ea6f2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1982,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-02T02:48:19Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "4c14b068d67884e0df2f71c64fe310fa17edd589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d56a1ca3_b9082839",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2346,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-02T02:48:19Z",
+      "side": 1,
+      "message": "This actually needs to check both the nvmf state and the rdma qp state.",
+      "revId": "4c14b068d67884e0df2f71c64fe310fa17edd589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
