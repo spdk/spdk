@@ -932,12 +932,20 @@ _spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 void
 spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 {
+	struct spdk_bdev_module *m;
+
 	assert(cb_fn != NULL);
 
 	g_fini_thread = spdk_get_thread();
 
 	g_fini_cb_fn = cb_fn;
 	g_fini_cb_arg = cb_arg;
+
+	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, internal.tailq) {
+		if (m->fini_start) {
+			m->fini_start();
+		}
+	}
 
 	_spdk_bdev_finish_unregister_bdevs_iter(NULL, 0);
 }
