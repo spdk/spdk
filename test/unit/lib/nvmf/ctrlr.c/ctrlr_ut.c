@@ -128,6 +128,11 @@ DEFINE_STUB(spdk_nvmf_request_free,
 	    (struct spdk_nvmf_request *req),
 	    -1);
 
+DEFINE_STUB(spdk_nvmf_transport_qpair_set_sqsize,
+	    int,
+	    (struct spdk_nvmf_qpair *qpair),
+	    0);
+
 static void
 ctrlr_ut_pass_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
