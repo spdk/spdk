@@ -634,9 +634,19 @@ int main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "reset";
 	opts.core_mask = "0x1";
+	opts.shm_id = 0;
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		return 1;
+	}
+
+	if (register_controllers() != 0) {
+		return 1;
+	}
+
+	if (!g_controllers) {
+		printf("No NVMe controller found, %s exiting\n", argv[0]);
+		return 0;
 	}
 
 	task_pool = spdk_mempool_create("task_pool", TASK_POOL_NUM,
@@ -650,10 +660,6 @@ int main(int argc, char **argv)
 	g_tsc_rate = spdk_get_ticks_hz();
 
 	if (register_workers() != 0) {
-		return 1;
-	}
-
-	if (register_controllers() != 0) {
 		return 1;
 	}
 
