@@ -599,20 +599,22 @@ fgets_line(FILE *fp)
 }
 
 int
-spdk_conf_read(struct spdk_conf *cp, const char *file)
+spdk_conf_read(struct spdk_conf *cp, const char *file, bool lock)
 {
+	int fd;
 	FILE *fp;
 	char *lp, *p;
 	char *lp2, *q;
 	int line;
 	int n, n2;
+	int rc, _rc;
 
 	if (file == NULL || file[0] == '\0') {
 		return -1;
 	}
 
-	fp = fopen(file, "r");
-	if (fp == NULL) {
+	fd = open(file, O_RDONLY);
+	if (fd < 0) {
 		SPDK_ERRLOG("open error: %s\n", file);
 		return -1;
 	}
@@ -620,10 +622,33 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 	cp->file = strdup(file);
 	if (cp->file == NULL) {
 		SPDK_ERRLOG("cannot duplicate %s to cp->file\n", file);
-		fclose(fp);
+		close(fd);
 		return -1;
 	}
 
+	if (lock) {
+		_rc = flock(fd, LOCK_EX);
+		if (_rc != 0) {
+			SPDK_ERRLOG("creating exclusive file lock failed\n");
+			close(fd);
+			return -1;
+		}
+	}
+
+	fp = fdopen(fd, "r");
+	if (fp == NULL) {
+		SPDK_ERRLOG("fdopen error: %d\n", fd);
+		if (lock) {
+			_rc = flock(fd, LOCK_UN);
+			if (_rc != 0) {
+				SPDK_ERRLOG("releasing exlusive file lock failed\n");
+			}
+		}
+		close(fd);
+		return -1;
+	}
+
+	rc = 0;
 	line = 1;
 	while ((lp = fgets_line(fp)) != NULL) {
 		/* skip spaces */
@@ -651,8 +676,8 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 				free(lp2);
 				free(lp);
 				SPDK_ERRLOG("malloc failed at line %d of %s\n", line, cp->file);
-				fclose(fp);
-				return -1;
+				rc = -1;
+				goto end;
 			}
 
 			memcpy(q, p, n);
@@ -673,8 +698,16 @@ next_line:
 		free(lp);
 	}
 
+end:
+	if (lock) {
+		_rc = flock(fd, LOCK_UN);
+		if (_rc != 0) {
+			SPDK_ERRLOG("releasing exclusive lock failed\n");
+		}
+	}
+
 	fclose(fp);
-	return 0;
+	return rc;
 }
 
 void
