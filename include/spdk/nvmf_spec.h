@@ -130,6 +130,9 @@ enum spdk_nvmf_trtype {
 	/** Fibre Channel */
 	SPDK_NVMF_TRTYPE_FC		= 0x2,
 
+	/** TCP */
+	SPDK_NVMF_TRTYPE_TCP		= 0x3,
+
 	/** Intra-host transport (loopback) */
 	SPDK_NVMF_TRTYPE_INTRA_HOST	= 0xfe,
 };
@@ -355,12 +358,51 @@ struct spdk_nvmf_rdma_transport_specific_address_subtype {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_rdma_transport_specific_address_subtype) == 256,
 		   "Incorrect size");
 
+
+/** TCP Secure Socket Type */
+enum spdk_nvme_tcp_secure_socket_type {
+	/** No security */
+	SPDK_NVME_TCP_SECURITY_NONE			= 0,
+
+	/** TLS (Secure Sockets) */
+	SPDK_NVME_TCP_SECURITY_TLS			= 1,
+};
+
+/**
+ * TCP cipher suite
+ */
+// TODO: check the order of the fields - the description doesn't match the layout in the diagram
+struct spdk_nvme_tcp_cipher_suite {
+	/** Cipher suite */
+	uint8_t cipher_suite;
+
+	/** Registry category */
+	uint8_t registry_category;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_cipher_suite) == 2, "Incorrect size");
+
+/** TCP transport-specific address subtype */
+struct spdk_nvme_tcp_transport_specific_address_subtype {
+	/** Security type (\ref spdk_nvme_tcp_secure_socket_type) */
+	uint8_t		tcp_secsoc;
+
+	/** TCP Cipher List count */
+	uint8_t		tcp_clist;
+
+	struct spdk_nvme_tcp_cipher_suite tcp_cipher[127];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_transport_specific_address_subtype) == 256,
+		   "Incorrect size");
+
 /** Transport-specific address subtype */
 union spdk_nvmf_transport_specific_address_subtype {
 	uint8_t raw[256];
 
 	/** RDMA */
 	struct spdk_nvmf_rdma_transport_specific_address_subtype rdma;
+
+	/** TCP */
+	struct spdk_nvme_tcp_transport_specific_address_subtype tcp;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvmf_transport_specific_address_subtype) == 256,
 		   "Incorrect size");
@@ -465,6 +507,260 @@ enum spdk_nvmf_rdma_transport_error {
 	SPDK_NVMF_RDMA_ERROR_NO_RESOURCES			= 0x6,
 	SPDK_NVMF_RDMA_ERROR_INVALID_IRD			= 0x7,
 	SPDK_NVMF_RDMA_ERROR_INVALID_ORD			= 0x8,
+};
+
+/* TCP transport specific definitions below */
+
+/** Common NVMe/TCP PDU header */
+struct spdk_nvme_tcp_common_pdu_hdr {
+	/** PDU type (\ref spdk_nvme_tcp_pdu_type) */
+	uint8_t				pdu_type;
+
+	/** pdu_type-specific flags */
+	uint8_t				flags;
+
+	/** Length of PDU header (not including the Header Digest) */
+	uint8_t				hlen;
+
+	/** PDU Data Offset from the start of the PDU */
+	uint8_t				pdo;
+
+	/** Total number of bytes in PDU, including pdu_hdr */
+	uint32_t			plen;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_common_pdu_hdr) == 8, "Incorrect size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_common_pdu_hdr, pdu_type) == 0,
+		   "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_common_pdu_hdr, flags) == 1, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_common_pdu_hdr, hlen) == 2, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_common_pdu_hdr, pdo) == 3, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_common_pdu_hdr, plen) == 4, "Incorrect offset");
+
+/** NVMe/TCP PDU type */
+enum spdk_nvme_tcp_pdu_type {
+	/** Initialize Connection Request (ICReq) */
+	SPDK_NVME_TCP_PDU_TYPE_IC_REQ			= 0x00,
+
+	/** Initialize Connection Response (ICResp) */
+	SPDK_NVME_TCP_PDU_TYPE_IC_RESP			= 0x01,
+
+	/** Terminate Connection Request (TermReq) */
+	SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ		= 0x02,
+
+	/** Terminate Connection Response (TermResp) */
+	SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ		= 0x03,
+
+	/** Command Capsule (CapsuleCmd) */
+	SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD		= 0x04,
+
+	/** Response Capsule (CapsuleRsp) */
+	SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP		= 0x05,
+
+	/** Host To Controller Data (H2CData) */
+	SPDK_NVME_TCP_PDU_TYPE_H2C_DATA			= 0x06,
+
+	/** Controller To Host Data (C2HData) */
+	SPDK_NVME_TCP_PDU_TYPE_C2H_DATA			= 0x07,
+
+	/** Ready to Transfer (R2T) */
+	SPDK_NVME_TCP_PDU_TYPE_R2T			= 0x9,
+};
+
+#define SPDK_NVME_TCP_CH_FLAGS_HDGSTF		(1u << 0)
+#define SPDK_NVME_TCP_CH_FLAGS_DDGSTF		(1u << 1)
+
+
+/**
+ * ICReq
+ *
+ * common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ
+ */
+struct spdk_nvme_tcp_ic_req {
+	struct spdk_nvme_tcp_common_pdu_hdr	common;
+	uint16_t				pfv;
+	/** Specifies the data alignment for all PDUs transferred from the controller to the host that contain data */
+	uint8_t					hpda;
+	union {
+		uint8_t				raw;
+		struct {
+			uint8_t			hdgst_enable : 1;
+			uint8_t			ddgst_enable : 1;
+			uint8_t			reserved : 6;
+		} bits;
+	} dgst;
+	uint32_t				maxr2t;
+	uint8_t					reserved16[112];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_ic_req) == 128, "Incorrect size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_ic_req, pfv) == 8, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_ic_req, hpda) == 10, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_ic_req, maxr2t) == 12, "Incorrect offset");
+
+#define SPDK_NVME_TCP_C2HDOFF_MULT	8u
+#define SPDK_NVME_TCP_C2HDOFF_MAX	15u
+
+/**
+ * ICResp
+ *
+ * common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP
+ */
+struct spdk_nvme_tcp_ic_resp {
+	struct spdk_nvme_tcp_common_pdu_hdr	common;
+	uint16_t				pfv;
+	/** Specifies the data alignment for all PDUs transferred from the host to the controller that contain data */
+	uint8_t					cpda;
+	union {
+		uint8_t				raw;
+		struct {
+			uint8_t			hdgst_enable : 1;
+			uint8_t			ddgst_enable : 1;
+			uint8_t			reserved : 6;
+		} bits;
+	} dgst;
+	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
+	uint32_t				maxh2cdata;
+	uint8_t					reserved16[112];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_ic_resp) == 128, "Incorrect size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_ic_resp, pfv) == 8, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_ic_resp, cpda) == 10, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_ic_resp, maxh2cdata) == 12, "Incorrect offset");
+
+enum spdk_nvme_tcp_init_conn_sts {
+	SPDK_NVME_TCP_INIT_CONN_STS_SUCCESS			= 0x00,
+	SPDK_NVME_TCP_INIT_CONN_STS_INVALID_DGST		= 0x01,
+	SPDK_NVME_TCP_INIT_CONN_STS_INVALID_LENGTH		= 0x02,
+	SPDK_NVME_TCP_INIT_CONN_STS_INVALID_RECFMT		= 0x03, // TODO: RECFMT is now PFV
+	SPDK_NVME_TCP_INIT_CONN_STS_INVALID_C2HDOFF		= 0x04,
+};
+
+#define SPDK_NVME_TCP_H2CDOFF_MULT	8u
+#define SPDK_NVME_TCP_H2CDOFF_MAX	15u
+
+/**
+ * TermReq
+ *
+ * common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_TERM_REQ
+ */
+struct spdk_nvme_tcp_term_req_hdr {
+	struct spdk_nvme_tcp_common_pdu_hdr	common;
+	uint16_t				fes;
+	uint8_t					fei[4];
+	uint8_t					reserved14[10];
+};
+
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_term_req_hdr) == 24, "Incorrect size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_term_req_hdr, fes) == 8, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_term_req_hdr, fei) == 10, "Incorrect offset");
+
+enum spdk_nvme_tcp_term_req_fes {
+	SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD				= 0x01,
+	SPDK_NVME_TCP_TERM_REQ_FES_INVALID_PDU_SEQUENCE				= 0x02,
+	SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HDGST				= 0x03,
+	SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_TRANSFER_OUT_OF_RANGE		= 0x04,
+	SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_TRANSFER_LIMIT_EXCEEDED		= 0x05,
+	SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PRAMATER		= 0x06,
+};
+
+/**
+ * CapsuleCmd
+ *
+ * common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD
+ */
+struct spdk_nvme_tcp_cmd {
+	struct spdk_nvme_tcp_common_pdu_hdr	common;
+	struct spdk_nvme_cmd			ccsqe;
+	/**< icdoff hdgest padding + in-capsule data + ddgst (if enabled) */
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_cmd) == 72, "Incorrect size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_cmd, ccsqe) == 8, "Incorrect offset");
+
+/**
+ * CapsuleResp
+ *
+ * common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP
+ */
+struct spdk_nvme_tcp_rsp {
+	struct spdk_nvme_tcp_common_pdu_hdr	common;
+	struct spdk_nvme_cpl			rccqe;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_rsp) == 24, "incorrect size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_rsp, rccqe) == 8, "Incorrect offset");
+
+/**
+ * R2T
+ *
+ * common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_R2T
+ */
+struct spdk_nvme_tcp_r2t_hdr {
+	struct spdk_nvme_tcp_common_pdu_hdr	common;
+	uint16_t				cccid;
+	uint16_t				ttag;
+	uint32_t				r2to;
+	uint32_t				r2tl;
+	uint8_t					reserved20[4];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_r2t_hdr) == 24, "Incorrect size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_r2t_hdr, cccid) == 8, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_r2t_hdr, ttag) == 10, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_r2t_hdr, r2to) == 12, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_r2t_hdr, r2tl) == 16, "Incorrect offset");
+
+/**
+ * H2CData
+ *
+ * hdr.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_DATA
+ */
+struct spdk_nvme_tcp_h2c_data_hdr {
+	struct spdk_nvme_tcp_common_pdu_hdr	common;
+	uint16_t				cccid;
+	uint16_t				ttag;
+	uint32_t				datao;
+	uint32_t				datal;
+	uint8_t					reserved20[4];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_h2c_data_hdr) == 24, "Incorrect size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_h2c_data_hdr, cccid) == 8, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_h2c_data_hdr, ttag) == 10, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_h2c_data_hdr, datao) == 12, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_h2c_data_hdr, datal) == 16, "Incorrect offset");
+
+#define SPDK_NVME_TCP_H2C_DATA_FLAGS_LAST_PDU	(1u << 2)
+#define SPDK_NVME_TCP_H2C_DATA_FLAGS_SUCCESS	(1u << 3)
+
+
+#define SPDK_NVME_TCP_H2C_DATA_PDO_MULT		8u
+
+/**
+ * C2HData
+ *
+ * hdr.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_DATA
+ */
+struct spdk_nvme_tcp_c2h_data_hdr {
+	struct spdk_nvme_tcp_common_pdu_hdr	common;
+	uint16_t				cccid;
+	uint8_t					reserved10[2];
+	uint32_t				datao;
+	uint32_t				datal;
+	uint8_t					reserved20[4];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_c2h_data_hdr) == 24, "Incorrect size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_c2h_data_hdr, cccid) == 8, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_c2h_data_hdr, datao) == 12, "Incorrect offset");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_c2h_data_hdr, datal) == 16, "Incorrect offset");
+
+#define SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU	(1u << 2)
+#define SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS	(1u << 3)
+
+#define SPDK_NVME_TCP_C2H_DATA_PDO_MULT		8u
+
+enum spdk_nvme_tcp_status {
+	SPDK_NVME_TCP_STATUS_HEADER_DIGEST_ERROR			= 0x61,
+	SPDK_NVME_TCP_STATUS_DATA_DIGEST_ERROR				= 0x62,
+	SPDK_NVME_TCP_STATUS_INVALID_TRANSPORT_HEADER_FIELD		= 0x63,
+	SPDK_NVME_TCP_STATUS_HOST_PDU_DIGEST_ERROR			= 0x72,
+	SPDK_NVME_TCP_STATUS_HOST_PDU_DATA_DIGEST_ERROR			= 0x73,
+	SPDK_NVME_TCP_STATUS_HOST_INVALID_TRANSPORT_HEADER_FIELD	= 0x74,
 };
 
 #pragma pack(pop)
