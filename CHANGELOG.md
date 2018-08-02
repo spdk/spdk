@@ -2,6 +2,11 @@
 
 ## v18.10: (Upcoming Release)
 
+### conf
+
+Add a parameter lock to spdk_conf_read() to read the CHAP secret file secury during
+run time by exclusive file lock.
+
 ## v18.07:
 
 ### bdev
