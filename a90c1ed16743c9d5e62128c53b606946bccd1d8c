@@ -16,6 +16,23 @@
       "revId": "a90c1ed16743c9d5e62128c53b606946bccd1d8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec814505_38da5592",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1977,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-02T02:38:17Z",
+      "side": 1,
+      "message": "When this exits, rqpair-\u003eibv_attr.qp_state needs to be updated.",
+      "revId": "a90c1ed16743c9d5e62128c53b606946bccd1d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
