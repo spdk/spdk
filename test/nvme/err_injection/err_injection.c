@@ -220,6 +220,7 @@ int main(int argc, char **argv)
 	opts.name = "err_injection";
 	opts.core_mask = "0x1";
 	opts.mem_size = 64;
+	opts.shm_id = 0;
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		return 1;
@@ -234,6 +235,11 @@ int main(int argc, char **argv)
 
 	if (failed) {
 		goto exit;
+	}
+
+	if (!num_devs) {
+		printf("No NVMe controller found, %s exiting\n", argv[0]);
+		return 1;
 	}
 
 	foreach_dev(dev) {
