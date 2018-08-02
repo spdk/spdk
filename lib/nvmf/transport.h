@@ -135,6 +135,18 @@ struct spdk_nvmf_transport_ops {
 	 * True if the qpair has no pending IO.
 	 */
 	bool (*qpair_is_idle)(struct spdk_nvmf_qpair *qpair);
+
+	/*
+	 * Get the remote transport ID for the queue pair
+	 */
+	int (*qpair_get_src_trid)(struct spdk_nvmf_qpair *qpair,
+				  struct spdk_nvme_transport_id *trid);
+
+	/*
+	* Initialize g_nvmf_hooks
+	*/
+	void (*init_hooks)(struct spdk_nvmf_qpair *qpair,
+			   void *hook_ctx);
 };
 
 struct spdk_nvmf_transport *spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
@@ -174,6 +186,12 @@ void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair);
 
 bool spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair);
 
+int spdk_nvmf_transport_qpair_get_src_trid(struct spdk_nvmf_qpair *qpair,
+		struct spdk_nvme_transport_id *trid);
+
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
+
+void spdk_nvmf_transport_init_hooks(struct spdk_nvmf_qpair *qpair,
+				    void *hook_ctx);
 
 #endif /* SPDK_NVMF_TRANSPORT_H */
