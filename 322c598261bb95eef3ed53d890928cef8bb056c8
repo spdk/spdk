@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91198fd4_fa61bfed",
+        "filename": "include/spdk/version.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-02T17:37:24Z",
+      "side": 1,
+      "message": "We\u0027ve traditionally used -pre (leading dash).",
+      "revId": "322c598261bb95eef3ed53d890928cef8bb056c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
