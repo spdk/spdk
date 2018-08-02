@@ -245,6 +245,9 @@ function process_core() {
 	ret=0
 	for core in $(find . -type f \( -name 'core*' -o -name '*.core' \)); do
 		exe=$(eu-readelf -n "$core" | grep psargs | sed "s/.*psargs: \([^ \'\" ]*\).*/\1/")
+		if [[ ! -f "$exe" ]]; then
+			exe=$(eu-readelf -n "$core" | grep -oP -m1 "$exe.+")
+		fi
 		echo "exe for $core is $exe"
 		if [[ ! -z "$exe" ]]; then
 			if hash gdb; then
