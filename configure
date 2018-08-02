@@ -51,6 +51,8 @@ function usage()
 	echo "                           No path required."
 	echo " rdma                      [disabled]"
 	echo "                           No path required."
+	echo " nvme-tcp                  [disabled]"
+	echo "                           No path required."
 	echo " shared                    Required to build spdk shared libraries."
 	echo "                           No path required."
 	echo " iscsi-initiator           [disabled]"
@@ -157,6 +159,12 @@ for i in "$@"; do
 		--without-rdma)
 			CONFIG_RDMA=n
 			;;
+		--with-nvme-tcp)
+                        CONFIG_NVME_TCP=y
+                        ;;
+                --without-nvme-tcp)
+                        CONFIG_NVME_TCP=n
+                        ;;
 		--with-shared)
 			CONFIG_SHARED=y
 			;;
@@ -420,6 +428,9 @@ if [ -n "$CONFIG_FIO_PLUGIN" ]; then
 fi
 if [ -n "$FIO_SOURCE_DIR" ]; then
 	echo "FIO_SOURCE_DIR?=$FIO_SOURCE_DIR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_NVME_TCP" ]; then
+        echo "CONFIG_NVME_TCP?=$CONFIG_NVME_TCP" >> CONFIG.local
 fi
 if [ -n "$CONFIG_RDMA" ]; then
 	echo "CONFIG_RDMA?=$CONFIG_RDMA" >> CONFIG.local

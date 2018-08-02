@@ -41,5 +41,6 @@ C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
 	 request.c transport.c
 
 C_SRCS-$(CONFIG_RDMA) += rdma.c
+C_SRCS-$(CONFIG_NVME_TCP) += tcp.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
