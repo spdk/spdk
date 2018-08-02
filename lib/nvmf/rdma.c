@@ -265,6 +265,8 @@ struct spdk_nvmf_rdma_qpair {
 	 */
 	struct ibv_qp_init_attr			ibv_init_attr;
 	struct ibv_qp_attr			ibv_attr;
+
+	bool					qpair_disconnected;
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -1892,6 +1894,13 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 		return;
 	}
 
+	if (rqpair->qpair_disconnected) {
+		if (rqpair->state_cntr[RDMA_REQUEST_STATE_FREE] == rqpair->max_queue_depth) {
+			spdk_nvmf_rdma_qpair_destroy(rqpair);
+		}
+		return;
+	}
+
 	/* The lowest priority is processing newly received commands */
 	TAILQ_FOREACH_SAFE(rdma_recv, &rqpair->incoming_queue, link, recv_tmp) {
 		if (TAILQ_EMPTY(&rqpair->state_queue[RDMA_REQUEST_STATE_FREE])) {
@@ -2405,7 +2414,12 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
-	spdk_nvmf_rdma_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
+	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	if (rqpair->state_cntr[RDMA_REQUEST_STATE_FREE] == rqpair->max_queue_depth) {
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
+	} else {
+		rqpair->qpair_disconnected = true;
+	}
 }
 
 static struct spdk_nvmf_rdma_request *
