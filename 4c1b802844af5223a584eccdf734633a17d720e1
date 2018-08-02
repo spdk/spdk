@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4f2db23_7d810bf3",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-02T15:25:32Z",
+      "side": 1,
+      "message": "We should return 1 here so that the enclosing script recognizes it as a failure and exits. Otherwise it will silently pass.",
+      "revId": "4c1b802844af5223a584eccdf734633a17d720e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
