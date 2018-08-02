@@ -16,6 +16,24 @@
       "revId": "4c1b802844af5223a584eccdf734633a17d720e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a59a5343_a5656964",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-02T18:03:04Z",
+      "side": 1,
+      "message": "Agreed.",
+      "parentUuid": "a4f2db23_7d810bf3",
+      "revId": "4c1b802844af5223a584eccdf734633a17d720e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
