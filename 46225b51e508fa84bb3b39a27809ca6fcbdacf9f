@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ed77bbf_8067403a",
+        "filename": "include/spdk/conf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-02T04:06:52Z",
+      "side": 1,
+      "message": "Only one comment, add a comment in CHANGLOG.md to log the spck_conf_read API change.",
+      "range": {
+        "startLine": 76,
+        "startChar": 4,
+        "endLine": 76,
+        "endChar": 18
+      },
+      "revId": "46225b51e508fa84bb3b39a27809ca6fcbdacf9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
