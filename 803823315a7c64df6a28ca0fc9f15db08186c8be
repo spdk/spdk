@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3c68b267_b76ad4ba",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-02T01:38:45Z",
+      "side": 1,
+      "message": "Actually, this code is executed by the admin_qpair. But we can add it.",
+      "parentUuid": "0ad7e0bb_b5e60a37",
+      "revId": "803823315a7c64df6a28ca0fc9f15db08186c8be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68c9fcf9_99b139cb",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 7
