@@ -2302,48 +2302,6 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 }
 
 static int
-spdk_nvmf_rdma_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
-				 struct spdk_nvmf_qpair *qpair)
-{
-	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	struct spdk_nvmf_rdma_qpair		*rqpair;
-	struct spdk_nvmf_rdma_device		*device;
-	struct spdk_nvmf_rdma_poller		*poller;
-	struct spdk_nvmf_rdma_qpair		*rq, *trq;
-
-	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
-	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
-	device = rqpair->port->device;
-
-	TAILQ_FOREACH(poller, &rgroup->pollers, link) {
-		if (poller->device == device) {
-			break;
-		}
-	}
-
-	if (!poller) {
-		SPDK_ERRLOG("No poller found for device.\n");
-		return -1;
-	}
-
-	TAILQ_FOREACH_SAFE(rq, &poller->qpairs, link, trq) {
-		if (rq == rqpair) {
-			TAILQ_REMOVE(&poller->qpairs, rqpair, link);
-			rqpair->poller = NULL;
-			break;
-		}
-	}
-
-	if (rq == NULL) {
-		SPDK_ERRLOG("RDMA qpair cannot be removed from group (not in group).\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
 spdk_nvmf_rdma_request_free(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_rdma_request	*rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
@@ -2571,7 +2529,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.poll_group_create = spdk_nvmf_rdma_poll_group_create,
 	.poll_group_destroy = spdk_nvmf_rdma_poll_group_destroy,
 	.poll_group_add = spdk_nvmf_rdma_poll_group_add,
-	.poll_group_remove = spdk_nvmf_rdma_poll_group_remove,
 	.poll_group_poll = spdk_nvmf_rdma_poll_group_poll,
 
 	.req_free = spdk_nvmf_rdma_request_free,

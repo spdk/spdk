@@ -67,11 +67,6 @@ DEFINE_STUB(spdk_nvmf_poll_group_add,
 	    (struct spdk_nvmf_poll_group *group, struct spdk_nvmf_qpair *qpair),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_poll_group_remove,
-	    int,
-	    (struct spdk_nvmf_poll_group *group, struct spdk_nvmf_qpair *qpair),
-	    0);
-
 DEFINE_STUB(spdk_nvmf_subsystem_get_sn,
 	    const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem),
