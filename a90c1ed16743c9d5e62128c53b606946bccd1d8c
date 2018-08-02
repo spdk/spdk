@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "5bfb3218_2a3137d4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-02T05:58:26Z",
+      "side": 1,
+      "message": "I think we can just remove assert here, because the QP recovery will only affect one subsystem, maybe there are other subsystems still valid.",
+      "revId": "a90c1ed16743c9d5e62128c53b606946bccd1d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec814505_38da5592",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 5
