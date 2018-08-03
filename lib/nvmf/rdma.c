@@ -1113,6 +1113,13 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			return -1;
 		}
 
+		if (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
+			rdma_req->rsp.wr.imm_data = (__be32)sgl->keyed.key;
+		} else {
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND;
+		}
+
 		/* fill request length and populate iovs */
 		rdma_req->req.length = sgl->keyed.length;
 
