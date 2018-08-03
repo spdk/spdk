@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4df565a_d03e0feb",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-03T00:57:59Z",
+      "side": 1,
+      "message": "eal_get_runtime_dir is only valid since 18.05, so you should use #if RTE_VERSION \u003c RTE_VERSION_NUM(18, 05, 0, 0) macro here.",
+      "revId": "285269953162b96e62165b2be45aeedbc9123c3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
