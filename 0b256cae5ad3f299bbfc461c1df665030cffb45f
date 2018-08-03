@@ -22,6 +22,30 @@
       "revId": "0b256cae5ad3f299bbfc461c1df665030cffb45f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8075a833_c0ca1222",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-03T09:26:35Z",
+      "side": 1,
+      "message": "Done. Aren\u0027t you supposed to be out of office today?:P",
+      "parentUuid": "4c453ba9_4101d7a5",
+      "range": {
+        "startLine": 9,
+        "startChar": 27,
+        "endLine": 9,
+        "endChar": 32
+      },
+      "revId": "0b256cae5ad3f299bbfc461c1df665030cffb45f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
