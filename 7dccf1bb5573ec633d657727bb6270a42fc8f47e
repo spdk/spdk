@@ -144,6 +144,30 @@
     },
     {
       "key": {
+        "uuid": "aec5600c_eae7dd9f",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-03T06:45:15Z",
+      "side": 1,
+      "message": "tbd in separate commit",
+      "parentUuid": "54317a8f_390b70d5",
+      "range": {
+        "startLine": 84,
+        "startChar": 8,
+        "endLine": 84,
+        "endChar": 18
+      },
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e12b74b_f2560a56",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 9
@@ -208,6 +232,30 @@
       "writtenOn": "2018-08-02T14:04:53Z",
       "side": 1,
       "message": "Do you mean get_lvol_stores?",
+      "range": {
+        "startLine": 270,
+        "startChar": 13,
+        "endLine": 270,
+        "endChar": 22
+      },
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "880eff98_b49c4b97",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-03T06:45:15Z",
+      "side": 1,
+      "message": "tbd in separate commit",
+      "parentUuid": "38aced6c_260f03c9",
       "range": {
         "startLine": 270,
         "startChar": 13,
