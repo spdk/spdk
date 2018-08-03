@@ -1500,6 +1500,46 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		}
 		device->context = contexts[i];
 		rc = ibv_query_device(device->context, &device->attr);
+		SPDK_ERRLOG("New Device\n");
+		SPDK_ERRLOG("node gui %lu\n", device->attr.node_guid);
+		SPDK_ERRLOG("sys_image_guid %lu\n", device->attr.sys_image_guid);
+		SPDK_ERRLOG("max_mr_size %lu\n", device->attr.max_mr_size);
+		SPDK_ERRLOG("page_size_cap %lu\n", device->attr.page_size_cap);
+		SPDK_ERRLOG("vendor_id %u\n", device->attr.vendor_id);
+		SPDK_ERRLOG("vendor_part_id %u\n", device->attr.vendor_part_id);
+		SPDK_ERRLOG("hw_ver %u\n", device->attr.hw_ver);
+		SPDK_ERRLOG("max_qp %d\n", device->attr.max_qp);
+		SPDK_ERRLOG("max_qp_wr %d\n", device->attr.max_qp_wr);
+		SPDK_ERRLOG("device_cap_flags %x\n", device->attr.device_cap_flags);
+		SPDK_ERRLOG("max_sge %d\n", device->attr.max_sge);
+		SPDK_ERRLOG("max_sge_rd %d\n", device->attr.max_sge_rd);
+		SPDK_ERRLOG("max_cq %d\n", device->attr.max_cq);
+		SPDK_ERRLOG("max_cqe %d\n", device->attr.max_cqe);
+		SPDK_ERRLOG("max_mr %d\n", device->attr.max_mr);
+		SPDK_ERRLOG("max_pd %d\n", device->attr.max_pd);
+		SPDK_ERRLOG("max_qp_rd_atom %d\n", device->attr.max_qp_rd_atom);
+		SPDK_ERRLOG("max_ee_rd_atom %d\n", device->attr.max_ee_rd_atom);
+		SPDK_ERRLOG("max_res_rd_atom %d\n", device->attr.max_res_rd_atom);
+		SPDK_ERRLOG("max_qp_init_rd_atom %d\n", device->attr.max_qp_init_rd_atom);
+		SPDK_ERRLOG("max_ee_init_rd_atom %d\n", device->attr.max_ee_init_rd_atom);
+		SPDK_ERRLOG("max_ee %d\n", device->attr.max_ee);
+		SPDK_ERRLOG("max_mw %d\n", device->attr.max_mw);
+		SPDK_ERRLOG("max_raw_ipv6_qp %d\n", device->attr.max_raw_ipv6_qp);
+		SPDK_ERRLOG("max_raw_ethy_qp %d\n", device->attr.max_raw_ethy_qp);
+		SPDK_ERRLOG("max_mcast_grp %d\n", device->attr.max_mcast_grp);
+		SPDK_ERRLOG("max_mcast_qp_attach %d\n", device->attr.max_mcast_qp_attach);
+		SPDK_ERRLOG("max_total_mcast_qp_attach %d\n", device->attr.max_total_mcast_qp_attach);
+		SPDK_ERRLOG("max_ah %d\n", device->attr.max_ah);
+		SPDK_ERRLOG("max_fmr %d\n", device->attr.max_fmr);
+		SPDK_ERRLOG("max_map_per_fmr %d\n", device->attr.max_map_per_fmr);
+		SPDK_ERRLOG("max_srq %d\n", device->attr.max_srq);
+		SPDK_ERRLOG("max_srq_wr %d\n", device->attr.max_srq_wr);
+		SPDK_ERRLOG("max_srq_sge %d\n", device->attr.max_srq_sge);
+		SPDK_ERRLOG("max_pkeys %d\n", device->attr.max_pkeys);
+		SPDK_ERRLOG("local_ca_ack_delay %d\n", device->attr.local_ca_ack_delay);
+		SPDK_ERRLOG("phys_port_cnt %d\n", device->attr.phys_port_cnt);
+		SPDK_ERRLOG("atomic_cap %d\n", device->attr.atomic_cap);
+
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
 			free(device);
