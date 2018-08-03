@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "176da026_6c254ac3",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1367,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-03T09:23:29Z",
+      "side": 1,
+      "message": "aio bdev?",
+      "range": {
+        "startLine": 1367,
+        "startChar": 52,
+        "endLine": 1367,
+        "endChar": 62
+      },
+      "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8007eec_fac4f52e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-03T09:23:29Z",
+      "side": 1,
+      "message": "delete_aio_bdev here?",
+      "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0ddb637_9c2360ef",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1411,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-03T09:23:29Z",
+      "side": 1,
+      "message": "is this double construct_aio_bdev ? (the line 1381?)",
+      "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5cc2eae_c6449bf7",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1457,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-03T09:23:29Z",
+      "side": 1,
+      "message": "aio bdev",
+      "range": {
+        "startLine": 1457,
+        "startChar": 31,
+        "endLine": 1457,
+        "endChar": 40
+      },
+      "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a77a3018_3705dec4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1492,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-03T09:23:29Z",
+      "side": 1,
+      "message": "aio bdev",
+      "range": {
+        "startLine": 1492,
+        "startChar": 34,
+        "endLine": 1492,
+        "endChar": 43
+      },
+      "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "244ed7e5_90c6c7ad",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1506,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-03T09:23:29Z",
+      "side": 1,
+      "message": "aio bdev",
+      "range": {
+        "startLine": 1506,
+        "startChar": 34,
+        "endLine": 1506,
+        "endChar": 43
+      },
+      "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
