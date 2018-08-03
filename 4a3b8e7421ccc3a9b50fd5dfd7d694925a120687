@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e6026df_f5646ebc",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T23:18:37Z",
+      "side": 1,
+      "message": "securely",
+      "revId": "4a3b8e7421ccc3a9b50fd5dfd7d694925a120687",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0a1aef0_dd008951",
+        "filename": "lib/conf/conf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T23:18:37Z",
+      "side": 1,
+      "message": "I\u0027m not sure - should this be LOCK_EX | LOCK_NB?  man page indicates flock() \"may block if an incompatible lock is held by another process\".  LOCK_NB (NB \u003d non-blocking) would cause it to return immediately with EWOULDBLOCK in that case.",
+      "revId": "4a3b8e7421ccc3a9b50fd5dfd7d694925a120687",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
