@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b3405eb_7a853b8b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T16:51:58Z",
+      "side": 1,
+      "message": "Is this true?  I know that for vhost, we can have 2 iovs for a single 4KB block\n\nI don\u0027t think this is the cause of the corruption you\u0027re seeing, but we should dig into this further.  Once you get your bdevperf tests passing, let\u0027s get vhost testing on this too.  If vhost works, iSCSI and NVMe-oF should be fine.",
+      "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f3363c5_638fb1d3",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T16:51:58Z",
+      "side": 1,
+      "message": "I don\u0027t think this needs to be 4KB (0x1000) aligned.  64 bytes should be fine.  (Adding extra unneeded alignment will waste some amount of memory in the allocators.)\n\ncan you also add a check here to make sure that these allocations never span a 2MB boundary?  (if they do then this would cause a data corruption as this function is currently written)",
+      "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08e80c7b_f052aeca",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T16:51:58Z",
+      "side": 1,
+      "message": "anything",
+      "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bee0f8ed_18d374b2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T16:51:58Z",
+      "side": 1,
+      "message": "I think we should break this up into separate functions.  Then just specify different callback functions for different operations (read, write, etc.)\n\nNot critical now but would be a good cleanup in a later patch.",
+      "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
