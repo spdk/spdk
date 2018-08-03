@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2bfaaa3a_a6fbca2c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-03T16:08:05Z",
+      "side": 1,
+      "message": "can you explain the changes to 852 and 854 real quick?",
+      "revId": "cfe28a8f7d98bf1b66e6566d944fe67190e90c0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
