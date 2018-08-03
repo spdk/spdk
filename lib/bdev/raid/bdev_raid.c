@@ -1242,6 +1242,133 @@ raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, struct spdk_bdev
 
 /*
  * brief:
+ * If raid bdev config is complete, then only register the raid bdev to
+ * bdev layer and remove this raid bdev from configuring list and
+ * insert the raid bdev to configured list
+ * params:
+ * raid_bdev - pointer to raid bdev
+ * returns:
+ * 0 - success
+ * non zero - failure
+ */
+static int
+raid_bdev_configure(struct raid_bdev *raid_bdev)
+{
+	uint32_t		blocklen;
+	uint64_t		min_blockcnt;
+	struct spdk_bdev	*raid_bdev_gen;
+
+	blocklen = raid_bdev->base_bdev_info[0].base_bdev->blocklen;
+	min_blockcnt = raid_bdev->base_bdev_info[0].base_bdev->blockcnt;
+	for (uint32_t i = 1; i < raid_bdev->num_base_bdevs; i++) {
+		/* Calculate minimum block count from all base bdevs */
+		if (raid_bdev->base_bdev_info[i].base_bdev->blockcnt < min_blockcnt) {
+			min_blockcnt = raid_bdev->base_bdev_info[i].base_bdev->blockcnt;
+		}
+
+		/* Check blocklen for all base bdevs that it should be same */
+		if (blocklen != raid_bdev->base_bdev_info[i].base_bdev->blocklen) {
+			/*
+			 * Assumption is that all the base bdevs for any raid bdev should
+			 * have same blocklen
+			 */
+			SPDK_ERRLOG("Blocklen of various bdevs not matching\n");
+			raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+			TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
+			TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+			return -1;
+		}
+	}
+
+	raid_bdev_gen = &raid_bdev->bdev;
+	raid_bdev_gen->name = strdup(raid_bdev->raid_bdev_config->name);
+	if (!raid_bdev_gen->name) {
+		SPDK_ERRLOG("Unable to allocate name for raid\n");
+		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
+		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+		return -1;
+	}
+	raid_bdev_gen->product_name = "Pooled Device";
+	raid_bdev_gen->write_cache = 0;
+	raid_bdev_gen->blocklen = blocklen;
+	raid_bdev_gen->optimal_io_boundary = 0;
+	raid_bdev_gen->ctxt = raid_bdev;
+	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
+	raid_bdev_gen->module = &g_raid_if;
+	raid_bdev->strip_size = (raid_bdev->strip_size * 1024) / blocklen;
+	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
+	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
+
+	/*
+	 * RAID bdev logic is for striping so take the minimum block count based
+	 * approach where total block count of raid bdev is the number of base
+	 * bdev times the minimum block count of any base bdev
+	 */
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "min blockcount %lu,  numbasedev %u, strip size shift %u\n",
+		      min_blockcnt,
+		      raid_bdev->num_base_bdevs, raid_bdev->strip_size_shift);
+	raid_bdev_gen->blockcnt = ((min_blockcnt >> raid_bdev->strip_size_shift) <<
+				   raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "io device register %p\n", raid_bdev);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "blockcnt %lu, blocklen %u\n", raid_bdev_gen->blockcnt,
+		      raid_bdev_gen->blocklen);
+	if (raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
+		raid_bdev->state = RAID_BDEV_STATE_ONLINE;
+		spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
+					sizeof(struct raid_bdev_io_channel));
+		if (spdk_bdev_register(raid_bdev_gen)) {
+			/*
+			 * If failed to register raid bdev to bdev layer, make raid bdev offline
+			 * and add to offline list
+			 */
+			SPDK_ERRLOG("Unable to register pooled bdev\n");
+			spdk_io_device_unregister(raid_bdev, NULL);
+			raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+			TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
+			TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+			return -1;
+		}
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev generic %p\n", raid_bdev_gen);
+		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
+		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev is created with name %s, raid_bdev %p\n",
+			      raid_bdev_gen->name, raid_bdev);
+	}
+
+	return 0;
+}
+
+/*
+ * brief:
+ * If raid bdev is online and registered, change the bdev state to
+ * configuring and unregister this raid device. Queue this raid device
+ * in configuring list
+ * params:
+ * raid_bdev - pointer to raid bdev
+ * returns:
+ * none
+ */
+static void
+raid_bdev_deconfigure(struct raid_bdev *raid_bdev)
+{
+	if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
+		return;
+	}
+
+	assert(raid_bdev->num_base_bdevs == raid_bdev->num_base_bdevs_discovered);
+	TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
+	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+	assert(raid_bdev->num_base_bdevs_discovered);
+	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev state chaning from online to offline\n");
+
+	spdk_io_device_unregister(raid_bdev, NULL);
+	spdk_bdev_unregister(&raid_bdev->bdev, NULL, NULL);
+}
+
+/*
+ * brief:
  * raid_bdev_remove_base_bdev function is called by below layers when base_bdev
  * is removed. This function checks if this base bdev is part of any raid bdev
  * or not. If yes, it takes necessary action on that particular raid bdev.
@@ -1294,21 +1421,7 @@ raid_bdev_remove_base_bdev(void *ctx)
 		}
 	}
 
-	if (raid_bdev->state == RAID_BDEV_STATE_ONLINE) {
-		/*
-		 * If raid bdev is online and registered, change the bdev state to
-		 * configuring and unregister this raid device. Queue this raid device
-		 * in configuring list
-		 */
-		assert(raid_bdev->num_base_bdevs == raid_bdev->num_base_bdevs_discovered);
-		TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
-		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-		assert(raid_bdev->num_base_bdevs_discovered);
-		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev state chaning from online to offline\n");
-		spdk_io_device_unregister(raid_bdev, NULL);
-		spdk_bdev_unregister(&raid_bdev->bdev, NULL, NULL);
-	}
+	raid_bdev_deconfigure(raid_bdev);
 }
 
 /*
@@ -1325,14 +1438,11 @@ raid_bdev_remove_base_bdev(void *ctx)
 int
 raid_bdev_add_base_device(struct spdk_bdev *bdev)
 {
-	struct    raid_bdev_config  *raid_bdev_config = NULL;
-	struct    raid_bdev         *raid_bdev;
-	struct    spdk_bdev         *raid_bdev_gen;
-	uint32_t                    blocklen;
-	uint64_t                    min_blockcnt;
-	uint32_t                    base_bdev_slot;
-	bool                        can_claim;
-	int                         rc;
+	struct raid_bdev_config	*raid_bdev_config = NULL;
+	struct raid_bdev	*raid_bdev;
+	uint32_t		base_bdev_slot;
+	bool			can_claim;
+	int			rc;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_examine %p\n", bdev);
 
@@ -1364,85 +1474,10 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
 
 	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs) {
-		/* If raid bdev config is complete, then only register the raid bdev to
-		 * bdev layer and remove this raid bdev from configuring list and
-		 * insert the raid bdev to configured list
-		 */
-		blocklen = raid_bdev->base_bdev_info[0].base_bdev->blocklen;
-		min_blockcnt = raid_bdev->base_bdev_info[0].base_bdev->blockcnt;
-		for (uint32_t i = 1; i < raid_bdev->num_base_bdevs; i++) {
-			/* Calculate minimum block count from all base bdevs */
-			if (raid_bdev->base_bdev_info[i].base_bdev->blockcnt < min_blockcnt) {
-				min_blockcnt = raid_bdev->base_bdev_info[i].base_bdev->blockcnt;
-			}
-
-			/* Check blocklen for all base bdevs that it should be same */
-			if (blocklen != raid_bdev->base_bdev_info[i].base_bdev->blocklen) {
-				/*
-				 * Assumption is that all the base bdevs for any raid bdev should
-				 * have same blocklen
-				 */
-				SPDK_ERRLOG("Blocklen of various bdevs not matching\n");
-				raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-				TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-				TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
-				return -1;
-			}
-		}
-		raid_bdev_gen = &raid_bdev->bdev;
-		raid_bdev_gen->name = strdup(raid_bdev_config->name);
-		if (!raid_bdev_gen->name) {
-			SPDK_ERRLOG("Unable to allocate name for raid\n");
-			raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-			TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-			TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+		rc = raid_bdev_configure(raid_bdev);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to configure raid bdev\n");
 			return -1;
-		}
-		raid_bdev_gen->product_name = "Pooled Device";
-		raid_bdev_gen->write_cache = 0;
-		raid_bdev_gen->blocklen = blocklen;
-		raid_bdev_gen->optimal_io_boundary = 0;
-		raid_bdev_gen->ctxt = raid_bdev;
-		raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
-		raid_bdev_gen->module = &g_raid_if;
-		raid_bdev->strip_size = (raid_bdev->strip_size * 1024) / blocklen;
-		raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
-		raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
-
-		/*
-		 * RAID bdev logic is for striping so take the minimum block count based
-		 * approach where total block count of raid bdev is the number of base
-		 * bdev times the minimum block count of any base bdev
-		 */
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "min blockcount %lu,  numbasedev %u, strip size shift %u\n",
-			      min_blockcnt,
-			      raid_bdev->num_base_bdevs, raid_bdev->strip_size_shift);
-		raid_bdev_gen->blockcnt = ((min_blockcnt >> raid_bdev->strip_size_shift) <<
-					   raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "io device register %p\n", raid_bdev);
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "blockcnt %lu, blocklen %u\n", raid_bdev_gen->blockcnt,
-			      raid_bdev_gen->blocklen);
-		if (raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
-			raid_bdev->state = RAID_BDEV_STATE_ONLINE;
-			spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
-						sizeof(struct raid_bdev_io_channel));
-			if (spdk_bdev_register(raid_bdev_gen)) {
-				/*
-				 * If failed to register raid bdev to bdev layer, make raid bdev offline
-				 * and add to offline list
-				 */
-				SPDK_ERRLOG("Unable to register pooled bdev\n");
-				spdk_io_device_unregister(raid_bdev, NULL);
-				raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-				TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-				TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
-				return -1;
-			}
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev generic %p\n", raid_bdev_gen);
-			TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-			TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev is created with name %s, raid_bdev %p\n",
-				      raid_bdev_gen->name, raid_bdev);
 		}
 	}
 
