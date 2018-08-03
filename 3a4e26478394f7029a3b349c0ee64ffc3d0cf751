@@ -16,6 +16,24 @@
       "revId": "3a4e26478394f7029a3b349c0ee64ffc3d0cf751",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1896dd98_15f8390c",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1483,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-03T09:09:04Z",
+      "side": 1,
+      "message": "Yes but offline state is explicitly specified.\nBut transition to offline should be addressed as you say first.\nSo I added a patch to consolidate all paths to go to offline state to highlight offline state.\n\nThese patch series is for refactoring and Kunal\u0027s input will be helpful. We can wait for Kunal\u0027s review.\n\nThank you for putting important point on the board.",
+      "parentUuid": "eca4776e_a028e9f6",
+      "revId": "3a4e26478394f7029a3b349c0ee64ffc3d0cf751",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
