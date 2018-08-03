@@ -16,6 +16,24 @@
       "revId": "cfe28a8f7d98bf1b66e6566d944fe67190e90c0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7844ef7_b967f643",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T19:53:36Z",
+      "side": 1,
+      "message": "This is the ordering change that Darek mentioned in the commit message.  This will iterate through the modules in reverse order.\n\nI\u0027m still not sure why we need to reverse the order but I know Darek has a good reason.  :)",
+      "parentUuid": "2bfaaa3a_a6fbca2c",
+      "revId": "cfe28a8f7d98bf1b66e6566d944fe67190e90c0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
