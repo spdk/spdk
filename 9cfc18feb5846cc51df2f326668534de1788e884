@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08b7be38_75f1d3e4",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T20:03:49Z",
+      "side": 1,
+      "message": "declarations should go at the top of its code block",
+      "revId": "9cfc18feb5846cc51df2f326668534de1788e884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4dad91c_a9984a94",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1208,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T20:03:49Z",
+      "side": 1,
+      "message": "/* */ comments",
+      "revId": "9cfc18feb5846cc51df2f326668534de1788e884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d582ab1_f742fae1",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1213,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-03T20:03:49Z",
+      "side": 1,
+      "message": "Is this to account for whitespace between \"ns:\" and the namespace index?\n\nIf so, I don\u0027t think we really need that.  Looking at spdk_nvme_transport_id_parse(), we don\u0027t support it there either.  Removing it would make it consistent with the rest of trid parsing.\n\nThen you could also just inline \"\\t\\n\".",
+      "revId": "9cfc18feb5846cc51df2f326668534de1788e884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
