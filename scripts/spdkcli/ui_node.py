@@ -62,16 +62,6 @@ class UIBdevs(UINode):
         UIVirtioBlkBdev(self)
         UIVirtioScsiBdev(self)
 
-    def ui_command_delete(self, name):
-        """
-        Deletes bdev from configuration.
-
-        Arguments:
-        name - Is a unique identifier of the bdev to be deleted - UUID number or name alias.
-        """
-        self.get_root().delete_bdev(name=name)
-        self.refresh()
-
 
 class UILvolStores(UINode):
     def __init__(self, parent):
@@ -133,66 +123,12 @@ class UIBdev(UINode):
         for bdev in self.get_root().get_bdevs(self.name):
             UIBdevObj(bdev, self)
 
-    def ui_command_delete(self, name):
-        """
-        Deletes bdev from configuration.
-
-        Arguments:
-        name - Is a unique identifier of the bdev to be deleted - UUID number or name alias.
-        """
-        try:
-            self.get_root().delete_bdev(name=name)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-
-        self.get_root().refresh()
-        self.refresh()
-
     def ui_command_get_bdev_iostat(self, name=None):
         try:
             ret = self.get_root().get_bdevs_iostat(name=name)
             self.shell.log.info(json.dumps(ret, indent=2))
         except JSONRPCException as e:
             self.shell.log.error(e.message)
-
-    def ui_command_split_bdev(self, base_bdev, split_count, split_size_mb=None):
-        """
-        Construct split block devices from a base bdev.
-
-        Arguments:
-        base_bdev - Name of bdev to split
-        split_count -  Number of split bdevs to create
-        split_size_mb- Size of each split volume in MiB (optional)
-        """
-
-        split_count = self.ui_eval_param(split_count, "number", None)
-        split_size_mb = self.ui_eval_param(split_size_mb, "number", None)
-
-        try:
-            ret_name = self.get_root().split_bdev(base_bdev=base_bdev,
-                                                  split_count=split_count,
-                                                  split_size_mb=split_size_mb)
-            self.shell.log.info(ret_name)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-
-        self.parent.refresh()
-        self.refresh()
-
-    def ui_command_destruct_split_bdev(self, base_bdev):
-        """Destroy split block devices associated with base bdev.
-
-        Args:
-            base_bdev: name of previously split bdev
-        """
-
-        try:
-            self.get_root().destruct_split_bdev(base_bdev=base_bdev)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-
-        self.parent.refresh()
-        self.refresh()
 
     def summary(self):
         return "Bdevs: %d" % len(self.children), None
@@ -463,6 +399,45 @@ class UIErrorBdev(UIBdev):
 class UISplitBdev(UIBdev):
     def __init__(self, parent):
         UIBdev.__init__(self, "split_disk", parent)
+
+    def ui_command_split_bdev(self, base_bdev, split_count, split_size_mb=None):
+        """
+        Construct split block devices from a base bdev.
+
+        Arguments:
+        base_bdev - Name of bdev to split
+        split_count -  Number of split bdevs to create
+        split_size_mb- Size of each split volume in MiB (optional)
+        """
+
+        split_count = self.ui_eval_param(split_count, "number", None)
+        split_size_mb = self.ui_eval_param(split_size_mb, "number", None)
+
+        try:
+            ret_name = self.get_root().split_bdev(base_bdev=base_bdev,
+                                                  split_count=split_count,
+                                                  split_size_mb=split_size_mb)
+            self.shell.log.info(ret_name)
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
+
+        self.parent.refresh()
+        self.refresh()
+
+    def ui_command_destruct_split_bdev(self, base_bdev):
+        """Destroy split block devices associated with base bdev.
+
+        Args:
+            base_bdev: name of previously split bdev
+        """
+
+        try:
+            self.get_root().destruct_split_bdev(base_bdev=base_bdev)
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
+
+        self.parent.refresh()
+        self.refresh()
 
 
 class UIPmemBdev(UIBdev):
