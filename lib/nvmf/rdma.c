@@ -47,6 +47,7 @@
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
+#include "spdk/endian.h"
 
 #include "spdk_internal/log.h"
 
@@ -1010,6 +1011,7 @@ spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
 				break;
 			default:
 				xfer = SPDK_NVME_DATA_NONE;
+				rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 			}
 		}
 	}
@@ -1029,11 +1031,13 @@ spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
 	case SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK:
 		if (sgl->unkeyed.length == 0) {
 			xfer = SPDK_NVME_DATA_NONE;
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 		}
 		break;
 	case SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK:
 		if (sgl->keyed.length == 0) {
 			xfer = SPDK_NVME_DATA_NONE;
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 		}
 		break;
 	}
@@ -1109,8 +1113,16 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		if (sgl->keyed.length > rtransport->max_io_size) {
 			SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
 				    sgl->keyed.length, rtransport->max_io_size);
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
+		}
+
+		if (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
+			to_be32(&rdma_req->rsp.wr.imm_data, sgl->keyed.key);
+		} else {
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 		}
 
 		/* fill request length and populate iovs */
@@ -1139,6 +1151,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		uint64_t offset = sgl->address;
 		uint32_t max_len = rtransport->in_capsule_data_size;
 
+		rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 			      offset, sgl->unkeyed.length);
 
@@ -1170,6 +1183,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 
 	SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
 		    sgl->generic.type, sgl->generic.subtype);
+	rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 	rsp->status.sc = SPDK_NVME_SC_SGL_DESCRIPTOR_TYPE_INVALID;
 	return -1;
 }
