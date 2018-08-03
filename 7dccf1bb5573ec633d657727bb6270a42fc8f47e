@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "bc016d62_8bc91e68",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-03T00:00:55Z",
+      "side": 1,
+      "message": "Thank you. I could understand well.",
+      "parentUuid": "45c195ea_2e2300ff",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 44
+      },
+      "revId": "7dccf1bb5573ec633d657727bb6270a42fc8f47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54317a8f_390b70d5",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 9
