@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db4a4517_a85ec879",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-03T15:41:24Z",
+      "side": 1,
+      "message": "curious, why the dma_malloc? There\u0027s no DMA to this buffer in UT",
+      "revId": "4aa4721c869062ffc41d90369b3ed6c59168312d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "484ea2f6_3598b312",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-03T15:41:24Z",
+      "side": 1,
+      "message": "is this buff freed in th code under test?",
+      "revId": "4aa4721c869062ffc41d90369b3ed6c59168312d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f33d9f0_28d9b65b",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-03T15:41:24Z",
+      "side": 1,
+      "message": "where was it mocked?",
+      "revId": "4aa4721c869062ffc41d90369b3ed6c59168312d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
