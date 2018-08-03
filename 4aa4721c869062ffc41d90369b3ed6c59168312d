@@ -19,6 +19,42 @@
     },
     {
       "key": {
+        "uuid": "c7d243f6_9fdeae24",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-03T17:39:43Z",
+      "side": 1,
+      "message": "The function under test - nvme_user_copy_cmd_complete - is going to call spdk_dma_free on this buffer. That function should only be called on memory allocated by spdk_dma_malloc and family. Of course, in this test they\u0027re both mocked up to just do malloc and free under the hood so this change isn\u0027t actually doing anything. However, if we changed the way spdk_dma_malloc and spdk_dma_free are mocked in the future, this change makes this test future-proof.",
+      "parentUuid": "db4a4517_a85ec879",
+      "revId": "4aa4721c869062ffc41d90369b3ed6c59168312d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d33d4d7_dbf18d86",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-03T17:39:43Z",
+      "side": 1,
+      "message": "The function under test - nvme_user_copy_cmd_complete - is going to call spdk_dma_free on this buffer. That function should only be called on memory allocated by spdk_dma_malloc and family. Of course, in this test they\u0027re both mocked up to just do malloc and free under the hood so this change isn\u0027t actually doing anything. \n\nHowever, if we changed the way spdk_dma_malloc and spdk_dma_free are mocked in the future, this change makes this test future-proof. I could definitely see us adding future checks to spdk_dma_free to verify that it is only called on buffers that were allocated by spdk_dma_malloc to catch bugs.",
+      "parentUuid": "db4a4517_a85ec879",
+      "revId": "4aa4721c869062ffc41d90369b3ed6c59168312d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "484ea2f6_3598b312",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 10
@@ -36,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "8899ab57_90e22a95",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-03T17:39:43Z",
+      "side": 1,
+      "message": "Yes - the primary purpose of nvme_user_copy_cmd_complete is to call spdk_dma_free on this buffer.",
+      "parentUuid": "484ea2f6_3598b312",
+      "revId": "4aa4721c869062ffc41d90369b3ed6c59168312d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1f33d9f0_28d9b65b",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 10
@@ -47,6 +101,24 @@
       "writtenOn": "2018-08-03T15:41:24Z",
       "side": 1,
       "message": "where was it mocked?",
+      "revId": "4aa4721c869062ffc41d90369b3ed6c59168312d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d7c708a_a092cecb",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-03T17:39:43Z",
+      "side": 1,
+      "message": "You\u0027re right - I need to remove this line.",
+      "parentUuid": "1f33d9f0_28d9b65b",
       "revId": "4aa4721c869062ffc41d90369b3ed6c59168312d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
