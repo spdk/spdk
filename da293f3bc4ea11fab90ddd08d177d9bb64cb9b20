@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ef34e11_2f8162bb",
+        "filename": "test/vhost/fiotest/bdev.conf.in",
+        "patchSetId": 14
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-03T09:24:28Z",
+      "side": 1,
+      "message": "ini conf files deprecated.\nPlease use JSON config file.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 10
+      },
+      "revId": "da293f3bc4ea11fab90ddd08d177d9bb64cb9b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
