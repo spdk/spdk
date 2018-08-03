@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eca4776e_a028e9f6",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1483,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-03T08:44:33Z",
+      "side": 1,
+      "message": "Side question: shouldn\u0027t we delete the raid_bdev here? Otherwise it has to be deleted manually.",
+      "revId": "3a4e26478394f7029a3b349c0ee64ffc3d0cf751",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
