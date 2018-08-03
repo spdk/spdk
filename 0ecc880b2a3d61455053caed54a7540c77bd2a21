@@ -16,6 +16,24 @@
       "revId": "0ecc880b2a3d61455053caed54a7540c77bd2a21",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4aac0bc_236c0e81",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-03T01:00:45Z",
+      "side": 1,
+      "message": "Hi Kunal,\n\nThank you so much.\n\nYou are correct and next spdk_io_device_register() in spdk_bdev_register() will fail if raid_bdev_gen and raid_bdev are the same.\n\nLocating raid_bdev as the top structure will be better and I\u0027ll rework this patch.",
+      "parentUuid": "7bc57865_ccf6ec9e",
+      "revId": "0ecc880b2a3d61455053caed54a7540c77bd2a21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
