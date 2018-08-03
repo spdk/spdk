@@ -47,6 +47,7 @@
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
+#include "spdk/endian.h"
 
 #include "spdk_internal/log.h"
 
@@ -993,6 +994,7 @@ spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
 	struct spdk_nvme_cmd *cmd = &rdma_req->req.cmd->nvme_cmd;
 	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
 
+	rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 	/* Figure out data transfer direction */
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		xfer = spdk_nvme_opc_get_data_transfer(rdma_req->req.cmd->nvmf_cmd.fctype);
@@ -1111,6 +1113,11 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 				    sgl->keyed.length, rtransport->max_io_size);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
+		}
+
+		if (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
+			rdma_req->rsp.wr.imm_data = sgl->keyed.key;
 		}
 
 		/* fill request length and populate iovs */
