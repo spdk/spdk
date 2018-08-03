@@ -47,6 +47,20 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+struct spdk_iscsi_chap_secret {
+	char	*user;
+	char	*secret;
+	char	*muser;
+	char	*msecret;
+	TAILQ_ENTRY(spdk_iscsi_chap_secret)	tailq;
+};
+
+struct spdk_iscsi_chap_group {
+	int32_t	tag;
+	TAILQ_HEAD(, spdk_iscsi_chap_secret)	secret_head;
+	TAILQ_ENTRY(spdk_iscsi_chap_group)	tailq;
+};
+
 struct spdk_iscsi_opts *g_spdk_iscsi_opts = NULL;
 
 static spdk_iscsi_init_cb g_init_cb_fn = NULL;
@@ -755,6 +769,315 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	return 0;
 }
 
+<<<<<<< HEAD
+=======
+static struct spdk_iscsi_chap_secret *
+spdk_iscsi_chap_group_find_secret_by_user(struct spdk_iscsi_chap_group *group,
+					  const char *user)
+{
+	struct spdk_iscsi_chap_secret *_secret;
+
+	TAILQ_FOREACH(_secret, &group->secret_head, tailq) {
+		if (strcmp(_secret->user, user) == 0) {
+			return _secret;
+		}
+	}
+
+	return NULL;
+}
+
+static int
+spdk_iscsi_chap_group_add_secret(struct spdk_iscsi_chap_group *group,
+				 const char *user, const char *secret,
+				 const char *muser, const char *msecret)
+{
+	struct spdk_iscsi_chap_secret *_secret;
+
+	_secret = spdk_iscsi_chap_group_find_secret_by_user(group, user);
+	if (_secret != NULL) {
+		SPDK_ERRLOG("chap secret is duplicated\n");
+		return -EEXIST;
+	}
+
+	if (user == NULL || secret == NULL) {
+		SPDK_ERRLOG("user and secret must be specified\n");
+		return -EINVAL;
+	}
+
+	if (muser != NULL && msecret == NULL) {
+		SPDK_ERRLOG("msecret must be specified with muser\n");
+		return -EINVAL;
+	}
+
+	_secret = calloc(1, sizeof(*_secret));
+	if (_secret == NULL) {
+		SPDK_ERRLOG("calloc() failed for chap secret\n");
+		return -ENOMEM;
+	}
+
+	_secret->user = strdup(user);
+	_secret->secret = strdup(secret);
+
+	if (_secret->user == NULL || _secret->secret == NULL) {
+		goto nomem;
+	}
+
+	if (muser != NULL) {
+		_secret->muser = strdup(muser);
+		_secret->msecret = strdup(msecret);
+
+		if (_secret->muser == NULL || _secret->msecret == NULL) {
+			goto nomem;
+		}
+	}
+
+	TAILQ_INSERT_TAIL(&group->secret_head, _secret, tailq);
+	return 0;
+
+nomem:
+	SPDK_ERRLOG("calloc() failed for chap secret\n");
+	free(_secret->user);
+	free(_secret->secret);
+	free(_secret->muser);
+	free(_secret->msecret);
+	free(_secret);
+
+	return -ENOMEM;
+}
+
+static struct spdk_iscsi_chap_group *
+spdk_iscsi_find_chap_group_by_tag(int32_t tag)
+{
+	struct spdk_iscsi_chap_group *group;
+
+	TAILQ_FOREACH(group, &g_spdk_iscsi.chap_group_head, tailq) {
+		if (group->tag == tag) {
+			return group;
+		}
+	}
+
+	return NULL;
+}
+
+static int
+spdk_iscsi_add_chap_group(int32_t tag, struct spdk_iscsi_chap_group **_group)
+{
+	struct spdk_iscsi_chap_group *group;
+
+	group = spdk_iscsi_find_chap_group_by_tag(tag);
+	if (group != NULL) {
+		SPDK_ERRLOG("chap group already exists\n");
+		return -EEXIST;
+	}
+
+	group = calloc(1, sizeof(*group));
+	if (group == NULL) {
+		SPDK_ERRLOG("calloc() failed for chap group\n");
+		return -ENOMEM;
+	}
+
+	TAILQ_INIT(&group->secret_head);
+	group->tag = tag;
+
+	TAILQ_INSERT_TAIL(&g_spdk_iscsi.chap_group_head, group, tailq);
+
+	*_group = group;
+	return 0;
+}
+
+static void
+spdk_iscsi_delete_chap_group(struct spdk_iscsi_chap_group *group)
+{
+	struct spdk_iscsi_chap_secret *_secret, *tmp;
+
+	TAILQ_REMOVE(&g_spdk_iscsi.chap_group_head, group, tailq);
+
+	TAILQ_FOREACH_SAFE(_secret, &group->secret_head, tailq, tmp) {
+		TAILQ_REMOVE(&group->secret_head, _secret, tailq);
+		free(_secret->user);
+		free(_secret->secret);
+		free(_secret->muser);
+		free(_secret->msecret);
+		free(_secret);
+	}
+}
+
+static void
+spdk_iscsi_delete_chap_groups(void)
+{
+	struct spdk_iscsi_chap_group *group, *tmp;
+
+	TAILQ_FOREACH_SAFE(group, &g_spdk_iscsi.chap_group_head, tailq, tmp) {
+		spdk_iscsi_delete_chap_group(group);
+	}
+}
+
+static int
+spdk_iscsi_parse_auth_group(struct spdk_conf_section *sp)
+{
+	int rc;
+	int i;
+	int tag;
+	const char *val, *user, *secret, *muser, *msecret;
+	struct spdk_iscsi_chap_group *group = NULL;
+
+	val = spdk_conf_section_get_val(sp, "Comment");
+	if (val != NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
+	}
+
+	tag = spdk_conf_section_get_num(sp);
+
+	rc = spdk_iscsi_add_chap_group(tag, &group);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to add chap group\n");
+		return rc;
+	}
+
+	for (i = 0; ; i++) {
+		val = spdk_conf_section_get_nval(sp, "Auth", i);
+		if (val == NULL) {
+			break;
+		}
+
+		user = spdk_conf_section_get_nmval(sp, "Auth", i, 0);
+		secret = spdk_conf_section_get_nmval(sp, "Auth", i, 1);
+		muser = spdk_conf_section_get_nmval(sp, "Auth", i, 2);
+		msecret = spdk_conf_section_get_nmval(sp, "Auth", i, 3);
+
+		rc = spdk_iscsi_chap_group_add_secret(group, user, secret, muser, msecret);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to add chap secret\n");
+			spdk_iscsi_delete_chap_group(group);
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+static int
+spdk_iscsi_parse_auth_info(void)
+{
+	struct spdk_conf *config;
+	struct spdk_conf_section *sp;
+	int rc;
+
+	config = spdk_conf_allocate();
+	if (!config) {
+		SPDK_ERRLOG("Failed to allocate config file\n");
+		return -1;
+	}
+
+	rc = spdk_conf_read(config, g_spdk_iscsi.authfile);
+	if (rc != 0) {
+		SPDK_INFOLOG(SPDK_LOG_ISCSI, "Failed to load auth file\n");
+		spdk_conf_free(config);
+		return -1;
+	}
+
+	sp = spdk_conf_first_section(NULL);
+	while (sp != NULL) {
+		if (spdk_conf_section_match_prefix(sp, "AuthGroup")) {
+			if (spdk_conf_section_get_num(sp) == 0) {
+				SPDK_ERRLOG("Group 0 is invalid\n");
+				spdk_iscsi_delete_chap_groups();
+				spdk_conf_free(config);
+				return -1;
+			}
+
+			rc = spdk_iscsi_parse_auth_group(sp);
+			if (rc != 0) {
+				SPDK_ERRLOG("parse_auth_group() failed\n");
+				spdk_iscsi_delete_chap_groups();
+				spdk_conf_free(config);
+				return -1;
+			}
+		}
+		sp = spdk_conf_next_section(sp);
+	}
+
+	spdk_conf_free(config);
+	return 0;
+}
+
+int
+spdk_iscsi_chap_get_auth_info(struct iscsi_chap_auth *auth, const char *authuser,
+			      int ag_tag)
+{
+	struct spdk_iscsi_chap_group *group;
+	struct spdk_iscsi_chap_secret *_secret;
+
+	if (auth->user != NULL) {
+		free(auth->user);
+		free(auth->secret);
+		free(auth->muser);
+		free(auth->msecret);
+		auth->user = auth->secret = NULL;
+		auth->muser = auth->msecret = NULL;
+	}
+
+	group = spdk_iscsi_find_chap_group_by_tag(ag_tag);
+	if (group == NULL) {
+		return -1;
+	}
+
+	_secret = spdk_iscsi_chap_group_find_secret_by_user(group, authuser);
+	if (_secret == NULL) {
+		return -1;
+	}
+
+	auth->user = strdup(_secret->user);
+	auth->secret = strdup(_secret->secret);
+
+	if (auth->user == NULL || auth->secret == NULL) {
+		goto nomem;
+	}
+
+	if (auth->muser != NULL) {
+		auth->muser = strdup(_secret->muser);
+		auth->msecret = strdup(_secret->msecret);
+
+		if (auth->muser == NULL || auth->msecret == NULL) {
+			goto nomem;
+		}
+	}
+
+	return 0;
+
+nomem:
+	free(auth->user);
+	free(auth->secret);
+	free(auth->muser);
+	free(auth->msecret);
+	auth->user = auth->secret = NULL;
+	auth->muser = auth->msecret = NULL;
+
+	return -1;
+}
+
+
+int
+spdk_iscsi_set_discovery_auth(bool no_discovery_auth, bool req_discovery_auth,
+			      bool req_discovery_auth_mutual, int32_t discovery_auth_group)
+{
+	if (!spdk_iscsi_check_chap_params(no_discovery_auth, req_discovery_auth,
+					  req_discovery_auth_mutual, discovery_auth_group)) {
+		SPDK_ERRLOG("CHAP params in opts are illegal combination\n");
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	g_spdk_iscsi.no_discovery_auth = no_discovery_auth;
+	g_spdk_iscsi.req_discovery_auth = req_discovery_auth;
+	g_spdk_iscsi.req_discovery_auth_mutual = req_discovery_auth_mutual;
+	g_spdk_iscsi.discovery_auth_group = discovery_auth_group;
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+	return 0;
+}
+
+>>>>>>> c4f477c... iscsi: Load CHAP secrets from file only at startup and then use in-memory secrets
 static int
 spdk_iscsi_initialize_global_params(void)
 {
@@ -898,6 +1221,14 @@ spdk_iscsi_parse_configuration(void *ctx)
 	rc = spdk_iscsi_parse_tgt_nodes();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_parse_tgt_nodes() failed\n");
+		goto end;
+	}
+
+	if (access(g_spdk_iscsi.authfile, F_OK) == 0) {
+		rc = spdk_iscsi_parse_auth_info();
+		if (rc < 0) {
+			SPDK_ERRLOG("spdk_iscsi_parse_auth_info() failed\n");
+		}
 	}
 
 end:
@@ -986,6 +1317,7 @@ spdk_iscsi_fini_done(void *arg)
 	spdk_iscsi_shutdown_tgt_nodes();
 	spdk_iscsi_init_grps_destroy();
 	spdk_iscsi_portal_grps_destroy();
+	spdk_iscsi_delete_chap_groups();
 	free(g_spdk_iscsi.authfile);
 	free(g_spdk_iscsi.nodebase);
 	free(g_spdk_iscsi.poll_group);

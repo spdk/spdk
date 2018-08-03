@@ -145,6 +145,8 @@
 
 #define ISCSI_AHS_LEN 60
 
+struct spdk_iscsi_chap_group;
+
 struct spdk_mobj {
 	struct spdk_mempool *mp;
 	void *buf;
@@ -294,6 +296,7 @@ struct spdk_iscsi_globals {
 	TAILQ_HEAD(, spdk_iscsi_portal_grp)	pg_head;
 	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
 	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
+	TAILQ_HEAD(, spdk_iscsi_chap_group)	chap_group_head;
 
 	int32_t timeout;
 	int32_t nopininterval;
@@ -364,6 +367,13 @@ struct spdk_iscsi_opts *spdk_iscsi_opts_alloc(void);
 void spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts);
 struct spdk_iscsi_opts *spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src);
 void spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w);
+<<<<<<< HEAD
+=======
+int spdk_iscsi_set_discovery_auth(bool no_discovery_auth, bool req_discovery_auth,
+				  bool req_discovery_auth_mutual, int32_t discovery_auth_group);
+int spdk_iscsi_chap_get_auth_info(struct iscsi_chap_auth *auth, const char *authuser,
+				  int ag_tag);
+>>>>>>> c4f477c... iscsi: Load CHAP secrets from file only at startup and then use in-memory secrets
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
