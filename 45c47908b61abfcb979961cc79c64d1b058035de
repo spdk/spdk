@@ -22,6 +22,30 @@
       "revId": "45c47908b61abfcb979961cc79c64d1b058035de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b33ba31c_80d3146f",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-03T06:51:56Z",
+      "side": 1,
+      "message": "I think test/common/vm_setup.sh is more appropriate as elfutils is not needed to build spdk, but rather to run tests.\nAdded in separate commit https://review.gerrithub.io/#/c/spdk/spdk/+/421189/",
+      "parentUuid": "4978c08e_19bdc16b",
+      "range": {
+        "startLine": 249,
+        "startChar": 9,
+        "endLine": 249,
+        "endChar": 19
+      },
+      "revId": "45c47908b61abfcb979961cc79c64d1b058035de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
