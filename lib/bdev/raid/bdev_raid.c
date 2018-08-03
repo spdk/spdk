@@ -1138,6 +1138,47 @@ raid_bdev_init(void)
 
 /*
  * brief:
+ * raid_bdev_create allocates raid bdev based on passed configuration
+ * params:
+ * raid_cfg - configuration of raid bdev
+ * _raid_bdev - pointer to created raid bdev
+ * returns:
+ * 0 - success
+ * non zero - failure
+ */
+static int
+raid_bdev_create(struct raid_bdev_config *raid_cfg, struct raid_bdev **_raid_bdev)
+{
+	struct raid_bdev *raid_bdev;
+
+	raid_bdev = calloc(1, sizeof(*raid_bdev));
+	if (!raid_bdev) {
+		SPDK_ERRLOG("Unable to allocate memory for raid bdev\n");
+		return -ENOMEM;
+	}
+
+	raid_bdev->num_base_bdevs = raid_cfg->num_base_bdevs;
+	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
+					   sizeof(struct raid_base_bdev_info));
+	if (!raid_bdev->base_bdev_info) {
+		SPDK_ERRLOG("Unable able to allocate base bdev info\n");
+		free(raid_bdev);
+		return -ENOMEM;
+	}
+
+	raid_bdev->strip_size = raid_cfg->strip_size;
+	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
+	raid_bdev->raid_bdev_config = raid_cfg;
+	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
+	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_list, raid_bdev, link_global_list);
+
+	*_raid_bdev = raid_bdev;
+
+	return 0;
+}
+
+/*
+ * brief:
  * free resource of base bdev for raid bdev
  * params:
  * raid_bdev - pointer to raid bdev
@@ -1255,6 +1296,7 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 	uint64_t                    min_blockcnt;
 	uint32_t                    base_bdev_slot;
 	bool                        can_claim;
+	int                         rc;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_examine %p\n", bdev);
 
@@ -1280,32 +1322,16 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_config->raid_bdev %p\n",
 		      raid_bdev_config->raid_bdev);
 
-	if (!raid_bdev_config->raid_bdev) {
-		/* Allocate raid_bdev entity if it is not already allocated */
-		raid_bdev = calloc(1, sizeof(*raid_bdev));
-		if (!raid_bdev) {
-			SPDK_ERRLOG("Unable to allocate memory for raid bdev for bdev '%s'\n", bdev->name);
-			spdk_bdev_module_release_bdev(bdev);
-			spdk_bdev_close(desc);
-			return -1;
-		}
-		raid_bdev->num_base_bdevs = raid_bdev_config->num_base_bdevs;
-		raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs, sizeof(struct raid_base_bdev_info));
-		if (!raid_bdev->base_bdev_info) {
-			SPDK_ERRLOG("Unable able to allocate base bdev info\n");
-			free(raid_bdev);
+	raid_bdev = raid_bdev_config->raid_bdev;
+	if (!raid_bdev) {
+		rc = raid_bdev_create(raid_bdev_config, &raid_bdev);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to create raid bdev for bdev '%s'\n", bdev->name);
 			spdk_bdev_module_release_bdev(bdev);
 			spdk_bdev_close(desc);
 			return -1;
 		}
 		raid_bdev_config->raid_bdev = raid_bdev;
-		raid_bdev->strip_size = raid_bdev_config->strip_size;
-		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
-		raid_bdev->raid_bdev_config = raid_bdev_config;
-		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_list, raid_bdev, link_global_list);
-	} else {
-		raid_bdev = raid_bdev_config->raid_bdev;
 	}
 
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
