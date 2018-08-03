@@ -565,6 +565,8 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_object_begin(w, "nvme");
 
+	spdk_json_write_named_string(w, "ctrlr_name", nvme_ctrlr->name);
+
 	if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		spdk_json_write_named_string(w, "pci_address", nvme_ctrlr->trid.traddr);
 	}
