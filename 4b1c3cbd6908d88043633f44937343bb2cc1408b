@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2697a5ec_c16339b9",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-08-03T03:30:17Z",
+      "side": 1,
+      "message": "Do we need to take care of spdk_io_device_unregister() call also on the raid_bdev (this is not raid_bdev_ctxt-\u003ebdev, it is on raid_bdev_ctxt-\u003eraid_bdev)?\n\nEarlier we were taking care of this when first underlying device was removed and before making call to spdk_bdev_unregister(), so before destruct spdk_io_device_unregister() was called.[please see line 1243 for reference]",
+      "revId": "4b1c3cbd6908d88043633f44937343bb2cc1408b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
