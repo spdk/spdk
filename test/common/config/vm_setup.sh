@@ -124,6 +124,7 @@ if $INSTALL; then
     sudo dnf install -y glib2-devel
     sudo dnf install -y pixman-devel
     sudo dnf install -y astyle-devel
+    sudo dnf install -y elfutils
     sudo dnf install -y elfutils-libelf-devel
     sudo dnf install -y flex
     sudo dnf install -y bison
