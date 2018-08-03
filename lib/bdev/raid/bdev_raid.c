@@ -89,13 +89,6 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 	assert(raid_bdev != NULL);
 	assert(raid_bdev->state == RAID_BDEV_STATE_ONLINE);
 
-	/*
-	 * Store raid_bdev in each channel which is used to get the read only
-	 * raid bdev specific information during io split logic like base bdev
-	 * descriptors, strip size etc
-	 */
-	ch->raid_bdev = raid_bdev;
-
 	ch->base_bdevs_io_channel = calloc(raid_bdev->num_base_bdevs,
 					   sizeof(struct spdk_io_channel *));
 	if (!ch->base_bdevs_io_channel) {
@@ -150,7 +143,6 @@ raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 		spdk_put_io_channel(ch->base_bdevs_io_channel[i]);
 		ch->base_bdevs_io_channel[i] = NULL;
 	}
-	ch->raid_bdev = NULL;
 	free(ch->base_bdevs_io_channel);
 	ch->base_bdevs_io_channel = NULL;
 }
@@ -298,7 +290,7 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	int                           ret;
 
 	raid_bdev_io_channel = spdk_io_channel_get_ctx(ch);
-	raid_bdev = raid_bdev_io_channel->raid_bdev;
+	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
@@ -365,7 +357,7 @@ raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 {
 	struct   raid_bdev_io_channel *raid_bdev_io_channel = spdk_io_channel_get_ctx(ch);
 	struct   raid_bdev_io         *raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	struct   raid_bdev            *raid_bdev = raid_bdev_io_channel->raid_bdev;
+	struct   raid_bdev            *raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	uint64_t                      pd_strip;
 	uint32_t                      offset_in_strip;
 	uint64_t                      pd_lba;
@@ -549,7 +541,6 @@ raid_bdev_waitq_io_process(void *ctx)
 {
 	struct   raid_bdev_io         *raid_bdev_io = ctx;
 	struct   spdk_bdev_io         *bdev_io;
-	struct   raid_bdev_io_channel *raid_bdev_io_channel;
 	struct   raid_bdev            *raid_bdev;
 	int                           ret;
 	uint64_t                      start_strip;
@@ -561,8 +552,7 @@ raid_bdev_waitq_io_process(void *ctx)
 	 * Try to submit childs of parent bdev io. If failed due to resource
 	 * crunch then break the loop and don't try to process other queued IOs.
 	 */
-	raid_bdev_io_channel = spdk_io_channel_get_ctx(raid_bdev_io->ch);
-	raid_bdev = raid_bdev_io_channel->raid_bdev;
+	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	if (raid_bdev->num_base_bdevs > 1) {
 		start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
 		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
@@ -591,7 +581,6 @@ raid_bdev_waitq_io_process(void *ctx)
 static void
 _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct raid_bdev_io_channel	*raid_bdev_io_channel;
 	struct raid_bdev_io		*raid_bdev_io;
 	struct raid_bdev		*raid_bdev;
 	uint64_t			start_strip = 0;
@@ -607,8 +596,7 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 	/*
 	 * IO parameters used during io split and io completion
 	 */
-	raid_bdev_io_channel = spdk_io_channel_get_ctx(ch);
-	raid_bdev = raid_bdev_io_channel->raid_bdev;
+	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	if (raid_bdev->num_base_bdevs > 1) {
 		start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
