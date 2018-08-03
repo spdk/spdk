@@ -1273,10 +1273,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 			 * have same blocklen
 			 */
 			SPDK_ERRLOG("Blocklen of various bdevs not matching\n");
-			raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-			TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-			TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
-			return -1;
+			goto offline;
 		}
 	}
 
@@ -1284,10 +1281,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	raid_bdev_gen->name = strdup(raid_bdev->raid_bdev_config->name);
 	if (!raid_bdev_gen->name) {
 		SPDK_ERRLOG("Unable to allocate name for raid\n");
-		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
-		return -1;
+		goto offline;
 	}
 	raid_bdev_gen->product_name = "Pooled Device";
 	raid_bdev_gen->write_cache = 0;
@@ -1324,10 +1318,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 			 */
 			SPDK_ERRLOG("Unable to register pooled bdev\n");
 			spdk_io_device_unregister(raid_bdev, NULL);
-			raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-			TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-			TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
-			return -1;
+			goto offline;
 		}
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev generic %p\n", raid_bdev_gen);
 		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
@@ -1337,6 +1328,12 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	}
 
 	return 0;
+
+offline:
+	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
+	TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
+	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+	return -1;
 }
 
 /*
