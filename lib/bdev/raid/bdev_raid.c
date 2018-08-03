@@ -184,6 +184,32 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 
 /*
  * brief:
+ * free resource of base bdev for raid bdev
+ * params:
+ * raid_bdev - pointer to raid bdev
+ * base_bdev_slot - position to base bdev in raid bdev
+ * returns:
+ * 0 - success
+ * non zero - failure
+ */
+static void
+raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev, uint32_t base_bdev_slot)
+{
+	struct raid_base_bdev_info *info;
+
+	info = &raid_bdev->base_bdev_info[base_bdev_slot];
+
+	spdk_bdev_module_release_bdev(info->base_bdev);
+	spdk_bdev_close(info->base_bdev_desc);
+	info->base_bdev_desc = NULL;
+	info->base_bdev = NULL;
+
+	assert(raid_bdev->num_base_bdevs_discovered);
+	raid_bdev->num_base_bdevs_discovered--;
+}
+
+/*
+ * brief:
  * raid_bdev_destruct is the destruct function table pointer for raid bdev
  * params:
  * ctxt - pointer to raid_bdev
@@ -206,12 +232,7 @@ raid_bdev_destruct(void *ctxt)
 		 */
 		if ((raid_bdev->base_bdev_info[i].base_bdev_remove_scheduled == true) &&
 		    (raid_bdev->base_bdev_info[i].base_bdev != NULL)) {
-			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].base_bdev);
-			spdk_bdev_close(raid_bdev->base_bdev_info[i].base_bdev_desc);
-			raid_bdev->base_bdev_info[i].base_bdev_desc = NULL;
-			raid_bdev->base_bdev_info[i].base_bdev = NULL;
-			assert(raid_bdev->num_base_bdevs_discovered);
-			raid_bdev->num_base_bdevs_discovered--;
+			raid_bdev_free_base_bdev_resource(raid_bdev, i);
 		}
 	}
 
@@ -1184,12 +1205,7 @@ raid_bdev_remove_base_bdev(void *ctx)
 
 	if (raid_bdev->destruct_called == true && raid_bdev->base_bdev_info[i].base_bdev != NULL) {
 		/* As raid bdev is already unregistered, so cleanup should be done here itself */
-		spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].base_bdev);
-		spdk_bdev_close(raid_bdev->base_bdev_info[i].base_bdev_desc);
-		raid_bdev->base_bdev_info[i].base_bdev_desc = NULL;
-		raid_bdev->base_bdev_info[i].base_bdev = NULL;
-		assert(raid_bdev->num_base_bdevs_discovered);
-		raid_bdev->num_base_bdevs_discovered--;
+		raid_bdev_free_base_bdev_resource(raid_bdev, i);
 		if (raid_bdev->num_base_bdevs_discovered == 0) {
 			/* Since there is no base bdev for this raid, so free the raid device */
 			raid_bdev_cleanup(raid_bdev);
