@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4219c026_244f62e7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-06T05:52:48Z",
+      "side": 1,
+      "message": "segmentation fault?",
+      "range": {
+        "startLine": 10,
+        "startChar": 36,
+        "endLine": 10,
+        "endChar": 43
+      },
+      "revId": "1e3d8a0e9da10a5952a576dac90c851df9f9c9df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ceb667cf_3f023406",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-06T05:52:48Z",
+      "side": 1,
+      "message": "I understand the primary task is queued in conn-\u003equeued_datain_tasks until all subtasks are issued.\n\nThis patch doesn\u0027t wait until all subtasks are issued.\n\nIn spdk_iscsi_conn_handle_queued_datain_tasks(), the primary task is dequeued from conn-\u003equeued_datain_tasks and replied error even if all subtasks are not issued yet, when LUN is hot removed.\n\nDo we have to reply error in this patch too?",
+      "revId": "1e3d8a0e9da10a5952a576dac90c851df9f9c9df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94cb9885_a1911673",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-06T05:52:48Z",
+      "side": 1,
+      "message": "Why the flag is_queued and while loop is necessary? The following simple if condition is enough?\n\nTAILQ_FOREACH_SAFE(iscsi_task, \u0026conn-\u003equeued_datain_tasks, link, tmp_iscsi_task) {\n  if (TAILQ_EMPTY(\u0026iscsi_task-\u003esubtask_list)) {\n    TAILQ_REMOVE(\u0026conn-\u003equeued_datain_tasks, iscsi_tasks, link);\n    pdu \u003d iscsi_task-\u003epdu;\n    spdk_iscsi_task_put(iscsi_task);\n    spdk_put_pdu(pdu);\n  }\n}",
+      "revId": "1e3d8a0e9da10a5952a576dac90c851df9f9c9df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
