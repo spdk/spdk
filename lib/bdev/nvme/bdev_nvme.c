@@ -1208,7 +1208,7 @@ bdev_nvme_library_init(void)
 	struct spdk_conf_section *sp;
 	const char *val;
 	int rc = 0;
-	int64_t intval;
+	int64_t intval = 0;
 	size_t i;
 	struct nvme_probe_ctx *probe_ctx = NULL;
 	int retry_count;
@@ -1251,25 +1251,7 @@ bdev_nvme_library_init(void)
 		} else if (intval < 0) {
 			intval = 0;
 		}
-	} else {
-		/* Check old name for backward compatibility */
-		intval = spdk_conf_section_get_intval(sp, "Timeout");
-		if (intval < 0) {
-			intval = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue");
-			if (intval < 0) {
-				intval = 0;
-			} else {
-				intval *= 1000000ULL;
-				SPDK_WARNLOG("NvmeTimeoutValue (in seconds) was renamed to TimeoutUsec (in microseconds)\n");
-				SPDK_WARNLOG("Please update your configuration file\n");
-			}
-		} else {
-			intval *= 1000000ULL;
-			SPDK_WARNLOG("Timeout (in seconds) was renamed to TimeoutUsec (in microseconds)\n");
-			SPDK_WARNLOG("Please update your configuration file\n");
-		}
 	}
-
 
 	g_opts.timeout_us = intval;
 
