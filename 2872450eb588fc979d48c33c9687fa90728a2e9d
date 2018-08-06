@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74864e92_ef40ad75",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-06T19:46:00Z",
+      "side": 1,
+      "message": "This function seems really confusing to me. I think it\u0027d be clearer to delete it and then in the tests below call get_lvs_size and divide by the number of bdevs you want to create right there. That makes it more obvious that you\u0027re just trying to figure out what size each lvol would need to be in order to fill up the lvol store with a given number of lvols.",
+      "revId": "2872450eb588fc979d48c33c9687fa90728a2e9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
