@@ -792,6 +792,19 @@ int spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 void
 spdk_nvmf_tgt_transport_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
 
+/**
+ * \brief Set the global hooks for the RDMA transport, if necessary.
+ *
+ * This call is optional and must be performed prior to probing for
+ * any devices. By default, the RDMA transport will use the ibverbs
+ * library to create protection domains and register memory. This
+ * is a mechanism to subvert that and use an existing registration.
+ *
+ * \param qpair NVMe-oF target qpair
+ * \param hooks for initializing global hooks
+ */
+void spdk_nvmf_init_hooks(struct spdk_nvmf_qpair *qpair, struct spdk_nvme_rdma_hooks *hooks);
+
 #ifdef __cplusplus
 }
 #endif
