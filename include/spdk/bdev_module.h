@@ -416,6 +416,25 @@ struct spdk_bdev_io {
 			/* meta data buffer size to transfer */
 			size_t md_len;
 		} nvme_passthru;
+		struct {
+			/* The data buffer to transfer */
+			void *buf;
+
+			/* The meta data buffer to transfer */
+			void *md_buf;
+
+			/* The lba_list where data buffer to write */
+			uint64_t *dst_lba_list;
+
+			/* The lba_list where data buffer to get in vector-copy cmd */
+			uint64_t *src_lba_list;
+
+			/* The number of lba to transfer */
+			uint32_t num_lbas;
+
+			/* The io flags to apply during io operation */
+			uint32_t io_flags;
+		} oc_vector;
 	} u;
 
 	/** It may be used by modules to put the bdev_io into its own list. */
