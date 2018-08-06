@@ -1985,6 +1985,55 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
 		uint8_t opc);
 
+struct ibv_context;
+struct ibv_pd;
+struct ibv_mr;
+
+/**
+ * Global hook functions
+ */
+
+struct spdk_nvme_hooks {
+	/**
+	 * Opaque user context passed to all hook functions.
+	 */
+	void *hook_ctx;
+
+	/**
+	 * \brief Initializing controller's hook context.
+	 *
+	 * \param trid the transport id of this nvme ctrlr
+	 * \return hook_ctx of the nvme ctrlr
+	 */
+	void *(*get_hook_ctx)(const struct spdk_nvme_transport_id *trid);
+
+	/**
+	 * \brief Get a InfiniBand Verbs protection domain when connecting to an RDMA NVMe-oF target.
+	 *
+	 * \param hookctx nvme ctrlr hook_ctx
+	 * \param verbs ib verbs
+	 * \param trid the transport id of this nvme ctrlr
+	 * \return pd of the nvme ctrlr
+	 */
+	struct ibv_pd *(* get_ibv_pd)(void *hookctx, struct ibv_context *verbs,
+				      const struct spdk_nvme_transport_id *trid);
+
+	/**
+	 * \brief Get an InfiniBand Verbs memory region for a buffer.
+	 *
+	 * \param hookctx nvme ctrlr hook_ctx
+	 * \param buf getting rkey for this buf
+	 * \param size size of buf
+	 * \return remote key for this buf
+	 */
+	uint64_t (* get_rkey)(void *hookctx, void *buf, size_t size);
+};
+
+/** Initialize controller's hooks
+ *
+ * \param hooks for initializing global hooks
+ */
+void spdk_nvme_init_hooks(struct spdk_nvme_hooks *hooks);
 
 #ifdef __cplusplus
 }

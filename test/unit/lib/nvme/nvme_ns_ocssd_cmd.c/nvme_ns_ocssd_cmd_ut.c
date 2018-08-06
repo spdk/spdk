@@ -622,6 +622,11 @@ test_nvme_ocssd_ns_cmd_vector_copy(void)
 	cleanup_after_test(&qpair);
 }
 
+void
+nvme_transport_init_hooks(enum spdk_nvme_transport_type trtype, struct spdk_nvme_hooks *hooks)
+{
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
