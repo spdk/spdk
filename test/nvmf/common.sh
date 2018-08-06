@@ -31,17 +31,21 @@ function load_ib_rdma_modules()
 
 function detect_soft_roce_nics()
 {
-	if hash rxe_cfg; then
-		rxe_cfg start
-		rdma_nics=$(get_rdma_if_list)
-		all_nics=$(ip -o link | awk '{print $2}' | cut -d":" -f1)
-		non_rdma_nics=$(echo -e "$rdma_nics\n$all_nics" | sort | uniq -u)
-		for nic in $non_rdma_nics; do
-			if [[ -d /sys/class/net/${nic}/bridge ]]; then
-				continue
-			fi
-			rxe_cfg add $nic || true
-		done
+	nvmf_nic_bdfs=`lspci | grep Ethernet | grep Mellanox | awk -F ' ' '{print "0000:"$1}'`
+	if [ -z "$nvmf_nic_bdfs" ]; then
+
+		if hash rxe_cfg; then
+			rxe_cfg start
+			rdma_nics=$(get_rdma_if_list)
+			all_nics=$(ip -o link | awk '{print $2}' | cut -d":" -f1)
+			non_rdma_nics=$(echo -e "$rdma_nics\n$all_nics" | sort | uniq -u)
+			for nic in $non_rdma_nics; do
+				if [[ -d /sys/class/net/${nic}/bridge ]]; then
+					continue
+				fi
+				rxe_cfg add $nic || true
+			done
+		fi
 	fi
 }
 
