@@ -153,6 +153,17 @@ struct spdk_nvmf_transport_ops {
 	 */
 	int (*qpair_get_listen_trid)(struct spdk_nvmf_qpair *qpair,
 				     struct spdk_nvme_transport_id *trid);
+
+	/*
+	 * Get the remote transport ID for the queue pair
+	 */
+	int (*qpair_get_src_trid)(struct spdk_nvmf_qpair *qpair,
+				  struct spdk_nvme_transport_id *trid);
+
+	/*
+	 * Initialize g_nvmf_hooks
+	 */
+	void (*init_hooks)(struct spdk_nvmf_qpair *qpair, struct spdk_nvme_rdma_hooks *hooks);
 };
 
 
@@ -194,6 +205,12 @@ int spdk_nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 
 bool spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
 				   struct spdk_nvmf_transport_opts *opts);
+
+int spdk_nvmf_transport_qpair_get_src_trid(struct spdk_nvmf_qpair *qpair,
+		struct spdk_nvme_transport_id *trid);
+
+void spdk_nvmf_transport_init_hooks(struct spdk_nvmf_qpair *qpair,
+				    struct spdk_nvme_rdma_hooks *hooks);
 
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 

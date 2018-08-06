@@ -234,3 +234,16 @@ spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
 	ops->opts_init(opts);
 	return true;
 }
+
+int
+spdk_nvmf_transport_qpair_get_src_trid(struct spdk_nvmf_qpair *qpair,
+				       struct spdk_nvme_transport_id *trid)
+{
+	return qpair->transport->ops->qpair_get_src_trid(qpair, trid);
+}
+
+void
+spdk_nvmf_transport_init_hooks(struct spdk_nvmf_qpair *qpair, struct spdk_nvme_rdma_hooks *hook_ctx)
+{
+	qpair->transport->ops->init_hooks(qpair, hook_ctx);
+}
