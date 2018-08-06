@@ -217,3 +217,9 @@ nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t
 {
 	NVME_TRANSPORT_CALL(qpair->trtype, qpair_process_completions, (qpair, max_completions));
 }
+
+void
+nvme_transport_init_hooks(enum spdk_nvme_transport_type trtype, void *hook_ctx)
+{
+	nvme_rdma_init_hooks(trtype, hook_ctx);
+}
