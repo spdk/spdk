@@ -1069,6 +1069,11 @@ test_trid_adrfam_str(void)
 	CU_ASSERT(strcmp(s, "FC") == 0);
 }
 
+void
+nvme_transport_init_hooks(enum spdk_nvme_transport_type trtype, void *hook_ctx)
+{
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;

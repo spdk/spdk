@@ -384,22 +384,22 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 	static int attr_mask_rc[] = {
 		[IBV_QPS_RESET] = IBV_QP_STATE,
 		[IBV_QPS_INIT] = (IBV_QP_STATE |
-				  IBV_QP_PKEY_INDEX |
-				  IBV_QP_PORT |
-				  IBV_QP_ACCESS_FLAGS),
+		IBV_QP_PKEY_INDEX |
+		IBV_QP_PORT |
+		IBV_QP_ACCESS_FLAGS),
 		[IBV_QPS_RTR] = (IBV_QP_STATE |
-				 IBV_QP_AV |
-				 IBV_QP_PATH_MTU |
-				 IBV_QP_DEST_QPN |
-				 IBV_QP_RQ_PSN |
-				 IBV_QP_MAX_DEST_RD_ATOMIC |
-				 IBV_QP_MIN_RNR_TIMER),
+		IBV_QP_AV |
+		IBV_QP_PATH_MTU |
+		IBV_QP_DEST_QPN |
+		IBV_QP_RQ_PSN |
+		IBV_QP_MAX_DEST_RD_ATOMIC |
+		IBV_QP_MIN_RNR_TIMER),
 		[IBV_QPS_RTS] = (IBV_QP_STATE |
-				 IBV_QP_SQ_PSN |
-				 IBV_QP_TIMEOUT |
-				 IBV_QP_RETRY_CNT |
-				 IBV_QP_RNR_RETRY |
-				 IBV_QP_MAX_QP_RD_ATOMIC),
+		IBV_QP_SQ_PSN |
+		IBV_QP_TIMEOUT |
+		IBV_QP_RETRY_CNT |
+		IBV_QP_RNR_RETRY |
+		IBV_QP_MAX_QP_RD_ATOMIC),
 		[IBV_QPS_SQD] = IBV_QP_STATE,
 		[IBV_QPS_SQE] = IBV_QP_STATE,
 		[IBV_QPS_ERR] = IBV_QP_STATE,
