@@ -63,6 +63,8 @@ NVME RDMA qpair Resouce Defaults
 #define NVME_RDMA_DEFAULT_TX_SGE		2
 #define NVME_RDMA_DEFAULT_RX_SGE		1
 
+struct spdk_nvme_hooks *g_nvme_hooks;
+
 /* Mapping from virtual address to ibv_mr pointer for a protection domain */
 struct spdk_nvme_rdma_mr_map {
 	struct ibv_pd				*pd;
@@ -74,6 +76,7 @@ struct spdk_nvme_rdma_mr_map {
 /* NVMe RDMA transport extensions for spdk_nvme_ctrlr */
 struct nvme_rdma_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
+	struct spdk_nvme_hooks                 *ctrlr_hooks;
 };
 
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
@@ -700,6 +703,13 @@ nvme_rdma_unregister_mem(struct nvme_rdma_qpair *rqpair)
 	pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
 }
 
+static void
+nvme_rdma_init_ctrlr_hooks(struct spdk_nvme_hooks *hooks, struct spdk_nvme_transport_id *trid)
+{
+	hooks = g_nvme_hooks;
+	hooks->get_hook_ctx(hooks->hook_ctx, trid);
+}
+
 static int
 nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 {
@@ -709,6 +719,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
 	int family;
+	struct nvme_rdma_ctrlr *rctrlr;
 
 	rqpair->cm_channel = rdma_create_event_channel();
 	if (rqpair->cm_channel == NULL) {
@@ -717,6 +728,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	ctrlr = rqpair->qpair.ctrlr;
+	rctrlr = nvme_rdma_ctrlr(ctrlr);
 
 	switch (ctrlr->trid.adrfam) {
 	case SPDK_NVMF_ADRFAM_IPV4:
@@ -806,6 +818,8 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
 	}
+
+	nvme_rdma_init_ctrlr_hooks(rctrlr->ctrlr_hooks, &ctrlr->trid);
 
 	return 0;
 }
@@ -1411,4 +1425,10 @@ int
 nvme_rdma_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
 {
 	return 0;
+}
+
+void
+nvme_rdma_init_hooks(enum spdk_nvme_transport_type trtype, void *hooks)
+{
+	g_nvme_hooks = (struct spdk_nvme_hooks *) hooks;
 }

@@ -622,6 +622,11 @@ test_nvme_ocssd_ns_cmd_vector_copy(void)
 	cleanup_after_test(&qpair);
 }
 
+void
+nvme_transport_init_hooks(enum spdk_nvme_transport_type trtype, void *hook_ctx)
+{
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -671,3 +676,4 @@ int main(int argc, char **argv)
 	CU_cleanup_registry();
 	return num_failures;
 }
+
