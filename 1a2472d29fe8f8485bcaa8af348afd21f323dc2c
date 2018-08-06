@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "702b1521_c214e31b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1367,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-08-06T11:33:40Z",
+      "side": 1,
+      "message": "thank you for picking this up",
+      "parentUuid": "176da026_6c254ac3",
+      "range": {
+        "startLine": 1367,
+        "startChar": 52,
+        "endLine": 1367,
+        "endChar": 62
+      },
+      "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d8007eec_fac4f52e",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 3
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "18821148_9f3c6b6b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-08-06T11:33:40Z",
+      "side": 1,
+      "message": "aio bdev is deleted with stop of the vhost app but the file used for creating this bdev is persistent",
+      "parentUuid": "d8007eec_fac4f52e",
+      "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0ddb637_9c2360ef",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 3
@@ -53,6 +95,24 @@
       "writtenOn": "2018-08-03T09:23:29Z",
       "side": 1,
       "message": "is this double construct_aio_bdev ? (the line 1381?)",
+      "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "011e1b12_9bc93c54",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1411,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-08-06T11:33:40Z",
+      "side": 1,
+      "message": "It must be created again after vhost restart, using the same file",
+      "parentUuid": "e0ddb637_9c2360ef",
       "revId": "1a2472d29fe8f8485bcaa8af348afd21f323dc2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
