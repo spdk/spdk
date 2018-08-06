@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c3016b5_55f90ba2",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-06T21:32:20Z",
+      "side": 1,
+      "message": "I think this might cause a check_format.sh error with DPDK \u003c 18.05 (the extra space before the /var/run string).",
+      "revId": "198470991802bbbbf36b2c70b801e97b520757df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32432ed8_d9371819",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-06T21:32:20Z",
+      "side": 1,
+      "message": "newline was removed",
+      "revId": "198470991802bbbbf36b2c70b801e97b520757df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
