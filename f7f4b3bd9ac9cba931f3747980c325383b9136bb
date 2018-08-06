@@ -16,6 +16,24 @@
       "revId": "f7f4b3bd9ac9cba931f3747980c325383b9136bb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b84ae15f_e19e2bc9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-06T18:05:12Z",
+      "side": 1,
+      "message": "This function does return the state and in several other places it is used. However, the actual state isn\u0027t used everywhere (e.g. here), so sometimes the return value is ignored. In an earlier patch I combined spdk_nvmf_rdma_update_ibv_state with spdk_nvmf_rdma_get_ibv_state (the update would actually update, the get would return a cached value). I did this because you never actually need a function to just get the cached value - you always update first. Is renaming this to update (given that some places still need to use the return value) clearer? I can change it if so.",
+      "parentUuid": "f5886d2b_c3e872e5",
+      "revId": "f7f4b3bd9ac9cba931f3747980c325383b9136bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
