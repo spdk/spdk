@@ -40,6 +40,7 @@
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/assert.h"
+#include "spdk/bdev.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
 #include "spdk/thread.h"
@@ -153,6 +154,7 @@ struct spdk_nvmf_request {
 	union nvmf_c2h_msg		*rsp;
 	struct iovec			iov[SPDK_NVMF_MAX_SGL_ENTRIES];
 	uint32_t			iovcnt;
+	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
