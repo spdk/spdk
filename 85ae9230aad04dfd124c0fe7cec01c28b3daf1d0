@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49e07308_9274bd67",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-06T23:51:04Z",
+      "side": 1,
+      "message": "NVMe \u003d\u003e aio",
+      "revId": "85ae9230aad04dfd124c0fe7cec01c28b3daf1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e306191e_2c4446c9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 1560,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-06T23:51:04Z",
+      "side": 1,
+      "message": "2% \u003d\u003e 20%\nNVMe \u003d\u003e aio",
+      "revId": "85ae9230aad04dfd124c0fe7cec01c28b3daf1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
