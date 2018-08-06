@@ -16,6 +16,24 @@
       "revId": "285269953162b96e62165b2be45aeedbc9123c3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0594594_b11f51e1",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-06T20:50:09Z",
+      "side": 1,
+      "message": "Thanks! I didn\u0027t notice this before.",
+      "parentUuid": "d4df565a_d03e0feb",
+      "revId": "285269953162b96e62165b2be45aeedbc9123c3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
