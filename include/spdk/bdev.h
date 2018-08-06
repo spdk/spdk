@@ -42,6 +42,7 @@
 
 #include "spdk/scsi_spec.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/nvme_ocssd_spec.h"
 #include "spdk/json.h"
 #include "spdk/queue.h"
 
@@ -102,6 +103,12 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_NVME_IO,
 	SPDK_BDEV_IO_TYPE_NVME_IO_MD,
 	SPDK_BDEV_IO_TYPE_WRITE_ZEROES,
+
+	SPDK_BDEV_IO_TYPE_OCSSD_ERASEV,
+	SPDK_BDEV_IO_TYPE_OCSSD_WRITEV,
+	SPDK_BDEV_IO_TYPE_OCSSD_READV,
+	SPDK_BDEV_IO_TYPE_OCSSD_COPYV,
+
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -944,6 +951,118 @@ int spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *bdev_desc,
 				  const struct spdk_nvme_cmd *cmd,
 				  void *buf, size_t nbytes, void *md_buf, size_t md_len,
 				  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a vector write command to the OCSSD bdev.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param bdev_desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param buf Data buffer to written from.
+ * \param md_buf Metadata buffer to written from.
+ * \param lba_list Pointer of the block list.
+ * \param num_lbas The number of blocks to transfer.
+ * \param io_flags Set flags, defined by the kinds of related spec.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_ocssd_writev_with_md(struct spdk_bdev_desc *bdev_desc, struct spdk_io_channel *ch,
+				   void *buf,
+				   void *md_buf,
+				   uint64_t *lba_list,
+				   uint32_t num_lbas,
+				   uint32_t io_flags,
+				   spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a vector read command to the OCSSD bdev.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param bdev_desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param buf Data buffer to read into
+ * \param md_buf Metadata buffer to read into.
+ * \param lba_list Pointer of the block list.
+ * \param num_lbas The number of blocks to transfer.
+ * \param io_flags Set flags, defined by the kinds of related spec.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_ocssd_readv_with_md(struct spdk_bdev_desc *bdev_desc, struct spdk_io_channel *ch,
+				  void *buf,
+				  void *md_buf,
+				  uint64_t *lba_list,
+				  uint32_t num_lbas,
+				  uint32_t io_flags,
+				  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a vector erase command to the OCSSD bdev.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param bdev_desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param chunkinfo An array of chunk information, or NULL.
+ * \param lba_list Pointer of the block list.
+ * \param num_lbas The number of blocks to transfer.
+ * \param io_flags Set flags, defined by the kinds of related spec.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_ocssd_erasev(struct spdk_bdev_desc *bdev_desc, struct spdk_io_channel *ch,
+			   struct spdk_ocssd_chunk_information_entry *chunkinfo,
+			   uint64_t *lba_list,
+			   uint32_t num_lbas,
+			   uint32_t io_flags,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a vector copy command to the OCSSD bdev.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param bdev_desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param dst_lba_list Pointer of the destination block list.
+ * \param src_lba_list Pointer of the source block list.
+ * \param num_lbas The number of blocks to transfer.
+ * \param io_flags Set flags, defined by the kinds of related spec.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_ocssd_copyv(struct spdk_bdev_desc *bdev_desc, struct spdk_io_channel *ch,
+			  uint64_t *dst_lba_list,
+			  uint64_t *src_lba_list,
+			  uint32_t num_lbas,
+			  uint32_t io_flags,
+			  spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Free an I/O request. This should only be called after the completion callback
