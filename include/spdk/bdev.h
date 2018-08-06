@@ -102,6 +102,12 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_NVME_IO,
 	SPDK_BDEV_IO_TYPE_NVME_IO_MD,
 	SPDK_BDEV_IO_TYPE_WRITE_ZEROES,
+
+	SPDK_BDEV_IO_TYPE_VERASE,
+	SPDK_BDEV_IO_TYPE_VWRITE,
+	SPDK_BDEV_IO_TYPE_VREAD,
+	SPDK_BDEV_IO_TYPE_VCOPY,
+
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -955,6 +961,36 @@ int spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *bdev_desc,
 				  const struct spdk_nvme_cmd *cmd,
 				  void *buf, size_t nbytes, void *md_buf, size_t md_len,
 				  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/*
+ * bdev vector io API for open-channel
+ */
+int spdk_bdev_vwrite_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			     void *buffer,
+			     void *metadata,
+			     uint64_t *lba_list,
+			     uint32_t num_lbas,
+			     uint32_t io_flags,
+			     spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_vread_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			    void *buffer,
+			    void *metadata,
+			    uint64_t *lba_list,
+			    uint32_t num_lbas,
+			    uint32_t io_flags,
+			    spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_verase(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		     void *chunkinfo,
+		     uint64_t *lba_list,
+		     uint32_t num_lbas,
+		     uint32_t io_flags,
+		     spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_vcopy(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		    uint64_t *dst_lba_list,
+		    uint64_t *src_lba_list,
+		    uint32_t num_lbas,
+		    uint32_t io_flags,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Free an I/O request. This should only be called after the completion callback

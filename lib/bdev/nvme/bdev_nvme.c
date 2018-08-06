@@ -131,6 +131,8 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_chan
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
 
+static int nvme_ctrlr_create_ocssd_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
+
 static int
 bdev_nvme_get_ctx_size(void)
 {
@@ -895,7 +897,11 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev = &nvme_ctrlr->bdevs[i];
 		if (!bdev->active && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			SPDK_NOTICELOG("NSID %u to be added\n", nsid);
-			nvme_ctrlr_create_bdev(nvme_ctrlr, nsid);
+			if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_ctrlr->ctrlr)) {
+				nvme_ctrlr_create_ocssd_bdev(nvme_ctrlr, nsid);
+			} else {
+				nvme_ctrlr_create_bdev(nvme_ctrlr, nsid);
+			}
 		}
 
 		if (bdev->active && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
@@ -1418,7 +1424,11 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_ctrlr->ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(nvme_ctrlr->ctrlr, nsid)) {
-		rc = nvme_ctrlr_create_bdev(nvme_ctrlr, nsid);
+		if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_ctrlr->ctrlr)) {
+			rc = nvme_ctrlr_create_ocssd_bdev(nvme_ctrlr, nsid);
+		} else {
+			rc = nvme_ctrlr_create_bdev(nvme_ctrlr, nsid);
+		}
 		if (rc == 0) {
 			bdev_created++;
 		}
@@ -1826,5 +1836,396 @@ spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
 
 	return SPDK_CONTAINEROF(bdev, struct nvme_bdev, disk)->nvme_ctrlr->ctrlr;
 }
+
+static bool
+bdev_ocssd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
+{
+	struct nvme_bdev *nbdev = ctx;
+	const struct spdk_nvme_ctrlr_data *cdata;
+
+	//TODO: remove ocssd unsupported io types
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+
+	case SPDK_BDEV_IO_TYPE_VERASE:
+	case SPDK_BDEV_IO_TYPE_VWRITE:
+	case SPDK_BDEV_IO_TYPE_VREAD:
+	case SPDK_BDEV_IO_TYPE_VCOPY:
+		return true;
+
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		return spdk_nvme_ns_get_md_size(nbdev->ns) ? true : false;
+
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		cdata = spdk_nvme_ctrlr_get_data(nbdev->nvme_ctrlr->ctrlr);
+		return cdata->oncs.dsm;
+
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		cdata = spdk_nvme_ctrlr_get_data(nbdev->nvme_ctrlr->ctrlr);
+		/*
+		 * If an NVMe controller guarantees reading unallocated blocks returns zero,
+		 * we can implement WRITE_ZEROES as an NVMe deallocate command.
+		 */
+		if (cdata->oncs.dsm &&
+		    spdk_nvme_ns_get_dealloc_logical_block_read_value(nbdev->ns) == SPDK_NVME_DEALLOC_READ_00) {
+			return true;
+		}
+		/*
+		 * The NVMe controller write_zeroes function is currently not used by our driver.
+		 * If a user submits an arbitrarily large write_zeroes request to the controller, the request will fail.
+		 * Until this is resolved, we only claim support for write_zeroes if deallocated blocks return 0's when read.
+		 */
+		return false;
+
+	default:
+		return false;
+	}
+}
+
+static int
+bdev_ocssd_vwrite_with_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+			  struct nvme_bdev_io *bio,
+			  void *buffer, void *metadata,
+			  uint64_t *lba_list, uint32_t num_lbas, uint32_t io_flags)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "write %lu sectors to lba_list %#lx\n",
+		      num_lbas, num_lbas == 1 ? (uint64_t)lba_list : lba_list[0]);
+
+	rc = spdk_nvme_ocssd_ns_cmd_vector_write_with_md(nbdev->ns,
+			nvme_ch->qpair,
+			buffer, metadata,
+			lba_list, num_lbas,
+			bdev_nvme_queued_done, bio,
+			io_flags);
+
+	return rc;
+}
+
+static int
+bdev_ocssd_vread_with_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+			 struct nvme_bdev_io *bio,
+			 void *buffer, void *metadata,
+			 uint64_t *lba_list, uint32_t num_lbas, uint32_t io_flags)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "write %lu blocks to lba_list %#lx\n",
+		      num_lbas, num_lbas == 1 ? (uint64_t)lba_list : lba_list[0]);
+
+	rc = spdk_nvme_ocssd_ns_cmd_vector_read_with_md(nbdev->ns,
+			nvme_ch->qpair,
+			buffer, metadata,
+			lba_list, num_lbas,
+			bdev_nvme_queued_done, bio,
+			io_flags);
+
+	return rc;
+}
+
+static int
+bdev_ocssd_verase(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+		  struct nvme_bdev_io *bio,
+		  void *chunkinfo,
+		  uint64_t *lba_list, uint32_t num_lbas)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "erase %lu blocks first at lba_list %#lx\n",
+		      num_lbas, num_lbas == 1 ? (uint64_t)lba_list : lba_list[0]);
+
+	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nbdev->ns,
+			nvme_ch->qpair,
+			lba_list, num_lbas,
+			chunkinfo,
+			bdev_nvme_queued_done, bio);
+
+	return rc;
+}
+
+static int
+bdev_ocssd_vcopy(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+		 struct nvme_bdev_io *bio,
+		 uint64_t *dst_lba_list, uint64_t *src_lba_list,
+		 uint32_t num_lbas, uint32_t io_flags)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "copy %lu blocks from lba_list %#lx to lba_list %#lx\n",
+		      num_lbas, src_lba_list[0], dst_lba_list[0]);
+
+	rc = spdk_nvme_ocssd_ns_cmd_vector_copy(nbdev->ns,
+						nvme_ch->qpair,
+						dst_lba_list, src_lba_list, num_lbas,
+						bdev_nvme_queued_done, bio,
+						io_flags);
+
+	return rc;
+}
+
+
+static void
+bdev_ocssd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	int ret;
+
+	ret = bdev_ocssd_vread_with_md((struct nvme_bdev *)bdev_io->bdev->ctxt,
+				       ch,
+				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
+				       bdev_io->u.oc_vector.buffer,
+				       bdev_io->u.oc_vector.metadata,
+				       bdev_io->u.oc_vector.dst_lba_list,
+				       bdev_io->u.oc_vector.num_lbas,
+				       bdev_io->u.oc_vector.io_flags);
+
+	if (spdk_likely(ret == 0)) {
+		return;
+	} else if (ret == -ENOMEM) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+	} else {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static int
+_bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	if (nvme_ch->qpair == NULL) {
+		/* The device is currently resetting */
+		return -1;
+	}
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_VREAD:
+		spdk_bdev_io_get_buf(bdev_io, bdev_ocssd_get_buf_cb,
+				     bdev_io->u.oc_vector.num_lbas * bdev_io->bdev->blocklen);
+		return 0;
+
+	case SPDK_BDEV_IO_TYPE_VERASE:
+		return bdev_ocssd_verase((struct nvme_bdev *)bdev_io->bdev->ctxt,
+					 ch,
+					 (struct nvme_bdev_io *)bdev_io->driver_ctx,
+					 bdev_io->u.oc_vector.metadata,
+					 bdev_io->u.oc_vector.dst_lba_list,
+					 bdev_io->u.oc_vector.num_lbas);
+
+	case SPDK_BDEV_IO_TYPE_VCOPY:
+		return bdev_ocssd_vcopy((struct nvme_bdev *)bdev_io->bdev->ctxt,
+					ch,
+					(struct nvme_bdev_io *)bdev_io->driver_ctx,
+					bdev_io->u.oc_vector.dst_lba_list,
+					bdev_io->u.oc_vector.src_lba_list,
+					bdev_io->u.oc_vector.num_lbas,
+					bdev_io->u.oc_vector.io_flags);
+
+	case SPDK_BDEV_IO_TYPE_VWRITE:
+		return bdev_ocssd_vwrite_with_md((struct nvme_bdev *)bdev_io->bdev->ctxt,
+						 ch,
+						 (struct nvme_bdev_io *)bdev_io->driver_ctx,
+						 bdev_io->u.oc_vector.buffer,
+						 bdev_io->u.oc_vector.metadata,
+						 bdev_io->u.oc_vector.dst_lba_list,
+						 bdev_io->u.oc_vector.num_lbas,
+						 bdev_io->u.oc_vector.io_flags);
+
+	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		return 0;
+
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		return bdev_nvme_writev((struct nvme_bdev *)bdev_io->bdev->ctxt,
+					ch,
+					(struct nvme_bdev_io *)bdev_io->driver_ctx,
+					bdev_io->u.bdev.iovs,
+					bdev_io->u.bdev.iovcnt,
+					bdev_io->u.bdev.num_blocks,
+					bdev_io->u.bdev.offset_blocks);
+
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
+				       ch,
+				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
+				       bdev_io->u.bdev.offset_blocks,
+				       bdev_io->u.bdev.num_blocks);
+
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
+				       ch,
+				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
+				       bdev_io->u.bdev.offset_blocks,
+				       bdev_io->u.bdev.num_blocks);
+
+	case SPDK_BDEV_IO_TYPE_RESET:
+		return bdev_nvme_reset((struct nvme_bdev *)bdev_io->bdev->ctxt,
+				       (struct nvme_bdev_io *)bdev_io->driver_ctx);
+
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		return bdev_nvme_flush((struct nvme_bdev *)bdev_io->bdev->ctxt,
+				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
+				       bdev_io->u.bdev.offset_blocks,
+				       bdev_io->u.bdev.num_blocks);
+
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+		return bdev_nvme_admin_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,
+						ch,
+						(struct nvme_bdev_io *)bdev_io->driver_ctx,
+						&bdev_io->u.nvme_passthru.cmd,
+						bdev_io->u.nvme_passthru.buf,
+						bdev_io->u.nvme_passthru.nbytes);
+
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+		return bdev_nvme_io_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,
+					     ch,
+					     (struct nvme_bdev_io *)bdev_io->driver_ctx,
+					     &bdev_io->u.nvme_passthru.cmd,
+					     bdev_io->u.nvme_passthru.buf,
+					     bdev_io->u.nvme_passthru.nbytes);
+
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		return bdev_nvme_io_passthru_md((struct nvme_bdev *)bdev_io->bdev->ctxt,
+						ch,
+						(struct nvme_bdev_io *)bdev_io->driver_ctx,
+						&bdev_io->u.nvme_passthru.cmd,
+						bdev_io->u.nvme_passthru.buf,
+						bdev_io->u.nvme_passthru.nbytes,
+						bdev_io->u.nvme_passthru.md_buf,
+						bdev_io->u.nvme_passthru.md_len);
+
+	default:
+		return -EINVAL;
+	}
+	return 0;
+}
+
+static void
+bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	int rc = _bdev_ocssd_submit_request(ch, bdev_io);
+
+	if (spdk_unlikely(rc != 0)) {
+		if (rc == -ENOMEM) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+}
+
+static const struct spdk_bdev_fn_table ocssdlib_fn_table = {
+	.destruct		= bdev_nvme_destruct,
+	.submit_request		= bdev_ocssd_submit_request,
+	.io_type_supported	= bdev_ocssd_io_type_supported,
+	.get_io_channel		= bdev_nvme_get_io_channel,
+	//TODO: dump-info can be enhanced on geo
+	.dump_info_json		= bdev_nvme_dump_info_json,
+	.write_config_json	= bdev_nvme_write_config_json,
+	.get_spin_time		= bdev_nvme_get_spin_time,
+};
+
+//static void
+//get_ocssd_geometry_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+//{
+//	int *outstanding_commands = (int *)cb_arg;
+//
+//	if (spdk_nvme_cpl_is_error(cpl)) {
+//		printf("get ocssd geometry failed\n");
+//	}
+//	*outstanding_commands--;
+//}
+//
+//static int
+//get_ocssd_geometry(struct spdk_nvme_ns *ns, struct spdk_ocssd_geometry_data *geometry_data)
+//{
+//	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
+//	int nsid = spdk_nvme_ns_get_id(ns);
+//	int outstanding_commands = 0;
+//
+//	if (spdk_nvme_ocssd_ctrlr_cmd_geometry(ctrlr, nsid, geometry_data,
+//					       sizeof(*geometry_data), get_ocssd_geometry_completion, 7outstanding_commands)) {
+//		printf("Get OpenChannel SSD geometry failed\n");
+//		return -1;
+//	} else {
+//		outstanding_commands++;
+//	}
+//
+//	while (outstanding_commands) {
+//		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+//	}
+//
+//	return 0;
+//}
+
+
+static int
+nvme_ctrlr_create_ocssd_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
+{
+	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
+	struct nvme_bdev	*bdev;
+	struct spdk_nvme_ns	*ns;
+	const struct spdk_uuid	*uuid;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	int			rc;
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	if (!ns) {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Invalid NS %d\n", nsid);
+		return -EINVAL;
+	}
+
+	bdev = &nvme_ctrlr->bdevs[nsid - 1];
+	bdev->id = nsid;
+
+	bdev->nvme_ctrlr = nvme_ctrlr;
+	bdev->ns = ns;
+	nvme_ctrlr->ref++;
+
+	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
+	if (!bdev->disk.name) {
+		return -ENOMEM;
+	}
+	bdev->disk.product_name = "OCSSD disk";
+
+	bdev->disk.write_cache = 0;
+	if (cdata->vwc.present) {
+		/* Enable if the Volatile Write Cache exists */
+		bdev->disk.write_cache = 1;
+	}
+	bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
+	bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
+	bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
+
+	uuid = spdk_nvme_ns_get_uuid(ns);
+	if (uuid != NULL) {
+		bdev->disk.uuid = *uuid;
+	}
+
+	bdev->disk.ctxt = bdev;
+	bdev->disk.fn_table = &ocssdlib_fn_table;
+	bdev->disk.module = &nvme_if;
+	rc = spdk_bdev_register(&bdev->disk);
+	if (rc) {
+		free(bdev->disk.name);
+		memset(bdev, 0, sizeof(*bdev));
+		return rc;
+	}
+	bdev->active = true;
+
+	return 0;
+}
+
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_nvme", SPDK_LOG_BDEV_NVME)
