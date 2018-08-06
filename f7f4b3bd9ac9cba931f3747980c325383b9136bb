@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5886d2b_c3e872e5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-06T15:00:25Z",
+      "side": 1,
+      "message": "Should we rename this function to something like spdk_nvmf_rdma_update_ibv_state?\n\nI guess usually when I see a \"get\" function, I\u0027d expect it to return a value and then use it somewhere in the calling function.\n\nI know this is really orthogonal to this patch, but I think I\u0027d rather change it now before we start using it in more places in this patch.",
+      "revId": "f7f4b3bd9ac9cba931f3747980c325383b9136bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
