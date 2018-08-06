@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1fe3c5b_d8a210ce",
+        "filename": "autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-06T19:42:06Z",
+      "side": 1,
+      "message": "Thanks for the information on lsblk with OCSSD.\n\nI\u0027m not sure about tying this to SPDK_TEST_OCSSD though.  It means if user has OCSSD and \"regular\" NVMe SSDs in their system, and specifies SPDK_TEST_OCSSD, then parted will not run on the regular NVMe SSDs.\n\nI think you\u0027ll need to run this lnvm tool to see if the SSD is OCSSD or not.  If it is not, then run parted on it.",
+      "revId": "7db4da356a6d23db301090de834e0c111ffc19b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
