@@ -46,6 +46,30 @@
       "revId": "cff0c5c9a04aacabab65a9e3c575fa5316df45d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51a779e8_aa7ca93d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2897,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-06T02:42:25Z",
+      "side": 1,
+      "message": "Got it. Previously as comparing this change at line 2986 where actually it also has line 2996 for the start operation. So that this bdev_count check is not used. Do we consider to remove this parameter and also for the relative callers() at this same patch or another new patch? Thanks, Gang",
+      "parentUuid": "a7185b3c_7095c2bb",
+      "range": {
+        "startLine": 2897,
+        "startChar": 1,
+        "endLine": 2897,
+        "endChar": 24
+      },
+      "revId": "cff0c5c9a04aacabab65a9e3c575fa5316df45d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
