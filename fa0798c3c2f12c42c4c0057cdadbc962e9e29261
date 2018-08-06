@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b964c2b_5a1d1388",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-06T18:17:55Z",
+      "side": 1,
+      "message": "You no longer need endian.h",
+      "revId": "fa0798c3c2f12c42c4c0057cdadbc962e9e29261",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "420b7967_91029347",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-06T18:17:55Z",
+      "side": 1,
+      "message": "To be safe, you should set rdma_req-\u003ersp.wr.imm_data to 0 here.",
+      "revId": "fa0798c3c2f12c42c4c0057cdadbc962e9e29261",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0b6e10a_5b47fa2f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1119,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-06T18:17:55Z",
+      "side": 1,
+      "message": "Can you use the \"invalidate_rkey\" name here instead? We\u0027ll deal with versioning #defines later. The patch will just fail on the Ubuntu systems for now.",
+      "revId": "fa0798c3c2f12c42c4c0057cdadbc962e9e29261",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
