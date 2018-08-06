@@ -1965,6 +1965,42 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
 		uint8_t opc);
 
+struct ibv_context;
+struct ibv_pd;
+struct ibv_mr;
+
+/**
+ * Global hook functions
+ */
+
+struct spdk_nvme_hooks {
+	/**
+	* Opaque user context passed to all hook functions.
+	*/
+	void *hook_ctx;
+
+	/**
+	* Initializing controller's hook context.
+	*/
+	void (*get_hook_ctx)(void *hook_ctx, const struct spdk_nvme_transport_id *trid);
+
+	/**
+	* Get a InfiniBand Verbs protection domain when connecting to an RDMA NVMe-oF target.
+	*/
+	struct ibv_pd *(* get_ibv_pd)(void *hook_ctx, struct ibv_context *verbs,
+				      const struct spdk_nvme_transport_id *trid);
+
+	/**
+	* Get an InfiniBand Verbs memory region for a buffer.
+	*/
+	uint64_t (* get_rkey)(void *hook_ctx, void *buf, size_t size);
+};
+
+/** Initialize controller's hooks
+ *
+ * \param src_addr of the controller
+ */
+void spdk_nvme_init_hooks(void *hook_ctx);
 
 #ifdef __cplusplus
 }

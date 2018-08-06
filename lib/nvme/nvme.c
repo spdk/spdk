@@ -853,4 +853,10 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 	return 0;
 }
 
+void
+spdk_nvme_init_hooks(void *hook_ctx)
+{
+	return nvme_transport_init_hooks(SPDK_NVME_TRANSPORT_RDMA, hook_ctx);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)

@@ -2132,3 +2132,9 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 	return num_completions;
 }
+
+void
+nvme_pcie_init_hooks(enum spdk_nvme_transport_type trtype, void *hooks)
+{
+}
+
