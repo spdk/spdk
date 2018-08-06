@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b81c9ef7_e43699dc",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-06T03:58:52Z",
+      "side": 1,
+      "message": "Oh, Sorry for this typo",
+      "parentUuid": "19fb241a_4bd4f205",
+      "revId": "0048f148eb7734bce1e9da81dba8e5ab2487e72f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "098b7667_0140b61e",
         "filename": "autotest.sh",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-25T19:01:19Z",
       "side": 1,
       "message": "what does the lsblk output look like with an ocssd?\n\ni guess i thought that for ocssd, the namespaces are not reported as block devices, and that pblk would create the block device instead?\n\nmaybe this check is fine, but i\u0027d like to see what the lsblk output looks like first to see if there\u0027s a better way to avoid running parted on ocssd devices",
+      "revId": "0048f148eb7734bce1e9da81dba8e5ab2487e72f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1ece5aa_7dc4295b",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-06T03:58:52Z",
+      "side": 1,
+      "message": "Hi, Jim\nThere output are based on my test env which were running with kernel 4.16.0-rc2, and its lightnvm driver/pblk module. Just look through current Linux kernel code tree, the newest implementation of lightnvm and pblk are basically not unchanged too much.\n\nWhile nvme driver is probing OCSSD device and allocating NS for it, lightnvm driver will register and record this device for future usage(like pblk and nvme-lnvm serial commands). After the OCSSD device is probed and attached, it looks like a general NVMe device from lsblk view. But Read/Write IO directly sending to it will get IO error.\n# lsblk\nNAME     MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT\nnvme0n1  259:0    0  7.9G  0 disk\n\nHere are the operations of pblk for you to take a glance.\n# nvme list\nNode             SN                   Model                                    Namespace Usage                      Format           FW Rev\n---------------- -------------------- ---------------------------------------- --------- -------------------------- ---------------- --------\n/dev/nvme0n1     foo                  QEMU NVMe OCSSD Ctrl                     1           8.46  GB /   8.46  GB      4 KiB + 16 B   2.0\n\n// get OCSSD device list\n# nvme lnvm list\nNumber of devices: 1\nDevice          Block manager   Version\nnvme0n1         gennvm          (1,0,0)\n\n// build one pblk device on top of OCSSD device\n# nvme lnvm create -d nvme0n1 --lun-begin\u003d0 --lun-end\u003d3 -n mydevice -t pblk\n\n# lsblk\nNAME     MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT\nnvme0n1  259:0    0  7.9G  0 disk\nmydevice 259:2    0    7G  0 disk",
+      "parentUuid": "098b7667_0140b61e",
       "revId": "0048f148eb7734bce1e9da81dba8e5ab2487e72f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "eb9aea8c_9a7b1df3",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-06T03:58:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "06fbd667_141f3760",
+      "revId": "0048f148eb7734bce1e9da81dba8e5ab2487e72f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "44291bbb_7301b004",
         "filename": "autotest.sh",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2018-07-25T19:01:19Z",
       "side": 1,
       "message": "unrelated whitespace change",
+      "revId": "0048f148eb7734bce1e9da81dba8e5ab2487e72f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15520fe5_a45dfd0a",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-06T03:58:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "44291bbb_7301b004",
       "revId": "0048f148eb7734bce1e9da81dba8e5ab2487e72f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
