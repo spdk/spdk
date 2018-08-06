@@ -38,6 +38,7 @@
 
 #include "spdk/queue.h"
 #include "spdk/nvme.h"
+#include "spdk/nvme_ocssd.h"
 #include "spdk/bdev_module.h"
 
 #define NVME_MAX_CONTROLLERS 1024
