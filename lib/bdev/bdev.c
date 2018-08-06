@@ -2646,6 +2646,154 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	return 0;
 }
 
+int spdk_bdev_vwrite_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			     void *buffer,
+			     void *metadata,
+			     uint64_t *lba_list,
+			     uint32_t num_lbas,
+			     uint32_t io_flags,
+			     spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!desc->write) {
+		/*
+		 * Do not try to parse the NVMe command - we could maybe use bits in the opcode
+		 *  to easily determine if the command is a read or write, but for now just
+		 *  do not allow io_passthru with a read-only descriptor.
+		 */
+		return -EBADF;
+	}
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_VWRITE;
+	bdev_io->u.oc_vector.buffer = buffer;
+	bdev_io->u.oc_vector.metadata = metadata;
+	bdev_io->u.oc_vector.dst_lba_list = lba_list;
+	bdev_io->u.oc_vector.num_lbas = num_lbas;
+	bdev_io->u.oc_vector.io_flags = io_flags;
+
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int spdk_bdev_vread_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			    void *buffer,
+			    void *metadata,
+			    uint64_t *lba_list,
+			    uint32_t num_lbas,
+			    uint32_t io_flags,
+			    spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_VREAD;
+	bdev_io->u.oc_vector.buffer = buffer;
+	bdev_io->u.oc_vector.metadata = metadata;
+	bdev_io->u.oc_vector.dst_lba_list = lba_list;
+	bdev_io->u.oc_vector.num_lbas = num_lbas;
+	bdev_io->u.oc_vector.io_flags = io_flags;
+
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int spdk_bdev_verase(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		     void *chunkinfo,
+		     uint64_t *lba_list,
+		     uint32_t num_lbas,
+		     uint32_t io_flags,
+		     spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!desc->write) {
+		/*
+		 * Do not try to parse the NVMe command - we could maybe use bits in the opcode
+		 *  to easily determine if the command is a read or write, but for now just
+		 *  do not allow io_passthru with a read-only descriptor.
+		 */
+		return -EBADF;
+	}
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_VWRITE;
+	bdev_io->u.oc_vector.metadata = chunkinfo;
+	bdev_io->u.oc_vector.dst_lba_list = lba_list;
+	bdev_io->u.oc_vector.num_lbas = num_lbas;
+	bdev_io->u.oc_vector.io_flags = io_flags;
+
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int spdk_bdev_vcopy(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		    uint64_t *dst_lba_list,
+		    uint64_t *src_lba_list,
+		    uint32_t num_lbas,
+		    uint32_t io_flags,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!desc->write) {
+		/*
+		 * Do not try to parse the NVMe command - we could maybe use bits in the opcode
+		 *  to easily determine if the command is a read or write, but for now just
+		 *  do not allow io_passthru with a read-only descriptor.
+		 */
+		return -EBADF;
+	}
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_VWRITE;
+	bdev_io->u.oc_vector.dst_lba_list = dst_lba_list;
+	bdev_io->u.oc_vector.src_lba_list = src_lba_list;
+	bdev_io->u.oc_vector.num_lbas = num_lbas;
+	bdev_io->u.oc_vector.io_flags = io_flags;
+
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+
 int
 spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			struct spdk_bdev_io_wait_entry *entry)
