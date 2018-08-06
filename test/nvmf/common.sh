@@ -31,23 +31,24 @@ function load_ib_rdma_modules()
 
 function detect_soft_roce_nics()
 {
-	if hash rxe_cfg; then
-		rxe_cfg start
-		rdma_nics=$(get_rdma_if_list)
-		all_nics=$(ip -o link | awk '{print $2}' | cut -d":" -f1)
-		non_rdma_nics=$(echo -e "$rdma_nics\n$all_nics" | sort | uniq -u)
-		for nic in $non_rdma_nics; do
-			if [[ -d /sys/class/net/${nic}/bridge ]]; then
-				continue
-			fi
-			rxe_cfg add $nic || true
-		done
-	fi
+		if hash rxe_cfg; then
+			rxe_cfg start
+			rdma_nics=$(get_rdma_if_list)
+			all_nics=$(ip -o link | awk '{print $2}' | cut -d":" -f1)
+			non_rdma_nics=$(echo -e "$rdma_nics\n$all_nics" | sort | uniq -u)
+			for nic in $non_rdma_nics; do
+				if [[ -d /sys/class/net/${nic}/bridge ]]; then
+					continue
+				fi
+				rxe_cfg add $nic || true
+			done
+		fi
 }
 
 function detect_mellanox_nics()
 {
 	if ! hash lspci; then
+		echo "No NICs"
 		return 0
 	fi
 
@@ -57,6 +58,7 @@ function detect_mellanox_nics()
 	mlx_en_driver="mlx4_en"
 
 	if [ -z "$nvmf_nic_bdfs" ]; then
+		echo "No NICs"
 		return 0
 	fi
 
@@ -85,8 +87,10 @@ function detect_mellanox_nics()
 
 function detect_rdma_nics()
 {
-	detect_mellanox_nics
-	detect_soft_roce_nics
+	nics=$(detect_mellanox_nics)
+	if [ "$nics" == "No NICs" ]; then
+		detect_soft_roce_nics
+	fi
 }
 
 function allocate_nic_ips()
