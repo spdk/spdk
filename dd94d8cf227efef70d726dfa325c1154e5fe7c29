@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b8947de_2852112f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 921,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-06T03:07:40Z",
+      "side": 1,
+      "message": "Can we add an assert here for this situation? It looks like depending on how we registered the bdev (although we now call INSERT_TAIL(). What if some later changes call it INSERT_HEAD()? Will it break the expectation here?",
+      "range": {
+        "startLine": 920,
+        "startChar": 43,
+        "endLine": 921,
+        "endChar": 40
+      },
+      "revId": "dd94d8cf227efef70d726dfa325c1154e5fe7c29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
