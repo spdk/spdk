@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47761f5e_aeb48b83",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-06T21:35:51Z",
+      "side": 1,
+      "message": "Having no Mellanox NICs doesn\u0027t strictly mean you have no physical NICs. There are other vendors and this should work for those too. I think instead you could make detect_mellanox_nics return an error if it doesn\u0027t find any, and then in detect_rdma_nics only run this function if detect_mellanox_nics doesn\u0027t succeed.",
+      "revId": "1d0aa65cc0c6651099023c7a16a7cd7e3ca5c07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
