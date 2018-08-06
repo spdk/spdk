@@ -120,27 +120,15 @@ spdk_env_unlink_shared_files(void)
 		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
 	}
 #else
-	DIR *dir;
-	struct dirent *d;
-
-	dir = opendir(eal_get_runtime_dir());
-	if (!dir) {
-		fprintf(stderr, "Failed to open DPDK runtime dir: %s (%d)\n", eal_get_runtime_dir(), errno);
-		return;
+	snprintf(buffer, PATH_MAX, "%s/.spdk_pid%d_config", eal_get_runtime_dir(), getpid());
+	if (unlink(buffer)) {
+		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
 	}
 
-	while ((d = readdir(dir)) != NULL) {
-		if (d->d_type != DT_REG) {
-			continue;
-		}
-
-		snprintf(buffer, PATH_MAX, "%s/%s", eal_get_runtime_dir(), d->d_name);
-		if (unlink(buffer)) {
-			fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
-		}
+	snprintf(buffer, PATH_MAX, "%s/.spdk_pid%d_hugepage_info", eal_get_runtime_dir(), getpid());
+	if (unlink(buffer)) {
+		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
 	}
-
-	closedir(dir);
 #endif
 }
 
