@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57663060_f960df8d",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-06T21:48:50Z",
+      "side": 1,
+      "message": "In this case, the third parameter is the block size.\n\nI see all of the tests pass 1024 which is really very non-standard.  Block sizes are almost always either 512 or 4096.  I think it would be better for the lvol tests to not specify the block sizes at all (it is an optional parameter).  So just remove the aio_cz parameter (is \"cz\" an abbreviation for the Polish word for \"size\" or was this just a typo?)\n\nOf course I have no idea why we show 8192 in the example in doc/bdev.md - we should change that too.  :)",
+      "revId": "617ee573757cf3759eefda370f5b3cfee0605740",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
