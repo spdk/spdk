@@ -992,6 +992,9 @@ spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
 	struct spdk_nvme_cmd *cmd = &rdma_req->req.cmd->nvme_cmd;
 	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
 
+	rdma_req->rsp.wr.opcode = IBV_WR_SEND;
+	rdma_req->rsp.wr.invalidate_rkey = 0;
+
 	/* Figure out data transfer direction */
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		xfer = spdk_nvme_opc_get_data_transfer(rdma_req->req.cmd->nvmf_cmd.fctype);
@@ -1110,6 +1113,11 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 				    sgl->keyed.length, rtransport->max_io_size);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
+		}
+
+		if (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
+			rdma_req->rsp.wr.invalidate_rkey = sgl->keyed.key;
 		}
 
 		/* fill request length and populate iovs */
@@ -1498,6 +1506,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 			break;
 
 		}
+
 		/* set up device context async ev fd as NON_BLOCKING */
 		flag = fcntl(device->context->async_fd, F_GETFL);
 		rc = fcntl(device->context->async_fd, F_SETFL, flag | O_NONBLOCK);
