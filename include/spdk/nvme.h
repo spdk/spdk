@@ -2035,6 +2035,57 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
 		uint8_t opc);
 
+struct ibv_context;
+struct ibv_pd;
+struct ibv_mr;
+
+/**
+ * RDMA Transport Hooks
+ */
+struct spdk_nvme_hooks {
+	/**
+	 * \brief Get a transport id specific context to be passed to
+	 *  the other hooks.
+	 *
+	 * \param trid the transport id
+	 *
+	 * \return ctx to be passed to the other hooks
+	 */
+	void *(*get_ctx)(const struct spdk_nvme_transport_id *trid);
+
+	/**
+	 * \brief Get an InfiniBand Verbs protection domain.
+	 *
+	 * \param ctx Context returned from get_hook_ctx.
+	 * \param verbs Infiniband verbs context
+	 *
+	 * \return pd of the nvme ctrlr
+	 */
+	struct ibv_pd *(*get_ibv_pd)(void *ctx, struct ibv_context *verbs);
+
+	/**
+	 * \brief Get an InfiniBand Verbs memory region for a buffer.
+	 *
+	 * \param ctx Context returned from get_hook_ctx.
+	 * \param buf Memory buffer for which an rkey should be returned.
+	 * \param size size of buf
+	 *
+	 * \return Infiniband remote key (rkey) for this buf
+	 */
+	uint64_t (*get_rkey)(void *ctx, void *buf, size_t size);
+};
+
+/**
+ * \brief Set the global hooks for the RDMA transport, if necessary.
+ *
+ * This call is optional and must be performed prior to probing for
+ * any devices. By default, the RDMA transport will use the ibverbs
+ * library to create protection domains and register memory. This
+ * is a mechanism to subvert that and use an existing registration.
+ *
+ * \param hooks for initializing global hooks
+ */
+void spdk_nvme_init_hooks(struct spdk_nvme_hooks *hooks);
 
 #ifdef __cplusplus
 }

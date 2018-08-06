@@ -43,6 +43,9 @@ DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
 	    (struct spdk_nvme_qpair *qpair,
 	     uint32_t max_completions), 0);
 
+DEFINE_STUB_V(nvme_transport_init_hooks,
+	      (enum spdk_nvme_transport_type trtype, struct spdk_nvme_hooks *hooks));
+
 static struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
