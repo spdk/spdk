@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1ed51c6_466d766a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-06T19:38:22Z",
+      "side": 1,
+      "message": "I think it\u0027d be simpler if you defined a structure like:\n\nstruct spdk_bdev_qos_limit {\n    uint64_t rate;\n    uint32_t min_per_timeslice;\n    uint32_t max_per_timeslice;\n    uint64_t submitted_this_timeslice;\n};\n\nAnd then you just made an array of those structures of size SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES.",
+      "revId": "ed47a4ba79dd8fe316dbab4c32a0ab14de58e10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f03b813_f648b24e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 984,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-06T19:38:22Z",
+      "side": 1,
+      "message": "This function is just limit \u003d\u003d SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT, right? You can probably just write that everywhere instead.",
+      "revId": "ed47a4ba79dd8fe316dbab4c32a0ab14de58e10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ad0dff4_3cb76981",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1064,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-06T19:38:22Z",
+      "side": 1,
+      "message": "If one type of I/O gets throttled, does that mean we should throttle all other I/O queued behind it? The answer becomes a lot less clear when there are read-only and write-only limits. Even for this patch, what about flushes, unmaps, and passthru?",
+      "revId": "ed47a4ba79dd8fe316dbab4c32a0ab14de58e10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
