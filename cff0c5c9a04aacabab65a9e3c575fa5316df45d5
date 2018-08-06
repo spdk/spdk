@@ -70,6 +70,30 @@
       "revId": "cff0c5c9a04aacabab65a9e3c575fa5316df45d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "380ceb95_09b7482e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2897,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-06T19:34:24Z",
+      "side": 1,
+      "message": "Yes - I think we will remove spdk_vbdev_register(), but in a separate patch (since it would change all virtual bdev modules).",
+      "parentUuid": "51a779e8_aa7ca93d",
+      "range": {
+        "startLine": 2897,
+        "startChar": 1,
+        "endLine": 2897,
+        "endChar": 24
+      },
+      "revId": "cff0c5c9a04aacabab65a9e3c575fa5316df45d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
