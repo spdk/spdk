@@ -63,6 +63,8 @@ NVME RDMA qpair Resource Defaults
 #define NVME_RDMA_DEFAULT_TX_SGE		2
 #define NVME_RDMA_DEFAULT_RX_SGE		1
 
+struct spdk_nvme_rdma_hooks *g_nvme_hooks = NULL;
+
 /* Mapping from virtual address to ibv_mr pointer for a protection domain */
 struct spdk_nvme_rdma_mr_map {
 	struct ibv_pd				*pd;
@@ -74,6 +76,10 @@ struct spdk_nvme_rdma_mr_map {
 /* NVMe RDMA transport extensions for spdk_nvme_ctrlr */
 struct nvme_rdma_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
+
+	struct spdk_nvme_rdma_hooks		hooks;
+	void					*hook_ctx;
+	struct ibv_pd				*pd;
 };
 
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
@@ -233,11 +239,19 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 {
 	int			rc;
 	struct ibv_qp_init_attr	attr;
+	struct nvme_rdma_ctrlr *rctrlr;
 
 	rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, rqpair->num_entries * 2, rqpair, NULL, 0);
 	if (!rqpair->cq) {
 		SPDK_ERRLOG("Unable to create completion queue: errno %d: %s\n", errno, spdk_strerror(errno));
 		return -1;
+	}
+
+	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
+	if (rctrlr->hooks.get_ibv_pd) {
+		rctrlr->pd = rctrlr->hooks.get_ibv_pd(rctrlr->hook_ctx, rqpair->cm_id->verbs);
+	} else {
+		rctrlr->pd = NULL;
 	}
 
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
@@ -249,11 +263,12 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	attr.cap.max_send_sge	= NVME_RDMA_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVME_RDMA_DEFAULT_RX_SGE;
 
-	rc = rdma_create_qp(rqpair->cm_id, NULL, &attr);
+	rc = rdma_create_qp(rqpair->cm_id, rctrlr->pd, &attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
 		return -1;
 	}
+	rctrlr->pd = rqpair->cm_id->qp->pd;
 
 	rqpair->cm_id->context = &rqpair->qpair;
 
@@ -600,29 +615,38 @@ nvme_rdma_mr_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 			enum spdk_mem_map_notify_action action,
 			void *vaddr, size_t size)
 {
-	struct ibv_pd *pd = cb_ctx;
+	struct nvme_rdma_ctrlr *rctrlr = cb_ctx;
+	struct ibv_pd *pd;
 	struct ibv_mr *mr;
 	int rc;
 
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
-		mr = ibv_reg_mr(pd, vaddr, size,
-				IBV_ACCESS_LOCAL_WRITE |
-				IBV_ACCESS_REMOTE_READ |
-				IBV_ACCESS_REMOTE_WRITE);
-		if (mr == NULL) {
-			SPDK_ERRLOG("ibv_reg_mr() failed\n");
-			return -EFAULT;
+		if (!rctrlr->hooks.get_rkey) {
+			pd = rctrlr->pd;
+			mr = ibv_reg_mr(pd, vaddr, size,
+					IBV_ACCESS_LOCAL_WRITE |
+					IBV_ACCESS_REMOTE_READ |
+					IBV_ACCESS_REMOTE_WRITE);
+			if (mr == NULL) {
+				SPDK_ERRLOG("ibv_reg_mr() failed\n");
+				return -EFAULT;
+			} else {
+				rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
+			}
 		} else {
-			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
+			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size,
+							  rctrlr->hooks.get_rkey(rctrlr->hook_ctx, vaddr, size));
 		}
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
-		rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
-		if (mr) {
-			ibv_dereg_mr(mr);
+		if (!rctrlr->hooks.get_rkey) {
+			mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
+			if (mr) {
+				ibv_dereg_mr(mr);
+			}
 		}
+		rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
 		break;
 	default:
 		SPDK_UNREACHABLE();
@@ -662,7 +686,8 @@ nvme_rdma_register_mem(struct nvme_rdma_qpair *rqpair)
 
 	mr_map->ref = 1;
 	mr_map->pd = pd;
-	mr_map->map = spdk_mem_map_alloc((uint64_t)NULL, &nvme_rdma_map_ops, pd);
+	mr_map->map = spdk_mem_map_alloc((uint64_t)NULL, &nvme_rdma_map_ops,
+					 nvme_rdma_ctrlr(rqpair->qpair.ctrlr));
 	if (mr_map->map == NULL) {
 		SPDK_ERRLOG("spdk_mem_map_alloc() failed\n");
 		free(mr_map);
@@ -890,9 +915,21 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
 	requested_size = req->payload_size;
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload,
-			&requested_size);
-	if (mr == NULL || requested_size < req->payload_size) {
+	if (!nvme_rdma_ctrlr(rqpair->qpair.ctrlr)->hooks.get_rkey) {
+
+		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload,
+				&requested_size);
+		if (mr == NULL) {
+			return -1;
+		}
+		req->cmd.dptr.sgl1.keyed.key = mr->rkey;
+	} else {
+		req->cmd.dptr.sgl1.keyed.key = spdk_mem_map_translate(rqpair->mr_map->map,
+					       (uint64_t)payload,
+					       &requested_size);
+	}
+
+	if (requested_size < req->payload_size) {
 		return -1;
 	}
 
@@ -901,7 +938,6 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
 	req->cmd.dptr.sgl1.keyed.length = req->payload_size;
-	req->cmd.dptr.sgl1.keyed.key = mr->rkey;
 	req->cmd.dptr.sgl1.address = (uint64_t)payload;
 
 	return 0;
@@ -938,9 +974,21 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 		return -1;
 	}
 	requested_size = req->payload_size;
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
-			&requested_size);
-	if (mr == NULL || requested_size < req->payload_size) {
+	if (!nvme_rdma_ctrlr(rqpair->qpair.ctrlr)->hooks.get_rkey) {
+		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map,
+				(uint64_t)virt_addr,
+				&requested_size);
+		if (mr == NULL) {
+			return -1;
+		}
+		req->cmd.dptr.sgl1.keyed.key = mr->rkey;
+	} else {
+		req->cmd.dptr.sgl1.keyed.key = spdk_mem_map_translate(rqpair->mr_map->map,
+					       (uint64_t)virt_addr,
+					       &requested_size);
+	}
+
+	if (requested_size < req->payload_size) {
 		return -1;
 	}
 
@@ -949,7 +997,6 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
 	req->cmd.dptr.sgl1.keyed.length = req->payload_size;
-	req->cmd.dptr.sgl1.keyed.key = mr->rkey;
 	req->cmd.dptr.sgl1.address = (uint64_t)virt_addr;
 
 	return 0;
@@ -1270,6 +1317,11 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 
 	nvme_ctrlr_init_cap(&rctrlr->ctrlr, &cap, &vs);
 
+	if (g_nvme_hooks) {
+		rctrlr->hooks = *g_nvme_hooks;
+		rctrlr->hook_ctx = rctrlr->hooks.get_ctx(&rctrlr->ctrlr.trid);
+	}
+
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "successfully initialized the nvmf ctrlr\n");
 	return &rctrlr->ctrlr;
 }
@@ -1544,4 +1596,10 @@ int
 nvme_rdma_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
 {
 	return 0;
+}
+
+void
+spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
+{
+	g_nvme_hooks = hooks;
 }
