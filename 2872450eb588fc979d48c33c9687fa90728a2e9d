@@ -16,6 +16,24 @@
       "revId": "2872450eb588fc979d48c33c9687fa90728a2e9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86268246_d9ad07b1",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-06T21:40:25Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nI just explained this to Ben since I made the exact same comment on the last revision and now I understand based on your explanation.\n\nBen said he\u0027s OK with this but could you add a comment with your explanation?  If Ben and I both missed this then there\u0027s a good chance others will in the future too.\n\nThanks,\n\n-Jim",
+      "parentUuid": "74864e92_ef40ad75",
+      "revId": "2872450eb588fc979d48c33c9687fa90728a2e9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
