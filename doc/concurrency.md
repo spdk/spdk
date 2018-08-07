@@ -64,9 +64,9 @@ SPDK provides several layers of message passing infrastructure. The most
 fundamental libraries in SPDK, for instance, don't do any message passing on
 their own and instead enumerate rules about when functions may be called in
 their documentation (e.g. @ref nvme). Most libraries, however, depend on SPDK's
-[io_channel](http://www.spdk.io/doc/io__channel_8h.html) infrastructure,
-located in `libspdk_thread.a`. The io_channel infrastructure is an abstraction
-around a basic message passing framework and defines a few key abstractions.
+[thread](http://www.spdk.io/doc/thread_8h.html)
+abstraction, located in `libspdk_thread.a`. The thread abstraction provides a
+basic message passing framework and defines a few key primitives.
 
 First, spdk_thread is an abstraction for a thread of execution and
 spdk_poller is an abstraction for a function that should be
@@ -97,7 +97,7 @@ chose. In today's code spdk_io_device is any pointer, whose uniqueness is
 predicated only on its memory address, and spdk_io_channel is the per-thread
 context associated with a particular spdk_io_device.
 
-The io_channel infrastructure provides functions to send a message to any other
+The threading abstraction provides functions to send a message to any other
 thread, to send a message to all threads one by one, and to send a message to
 all threads for which there is an io_channel for a given io_device.
 
