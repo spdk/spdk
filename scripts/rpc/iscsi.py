@@ -145,6 +145,42 @@ def delete_chap_group(client, tag):
     return client.call('delete_chap_group', params)
 
 
+def chap_group_add_secret(client, tag, user, secret, muser=None, msecret=None):
+    """Add a secret to a CHAP group.
+
+    Args:
+        tag: CHAP group tag (unique, integer > 0)
+        user: User name for one-way CHAP authentication
+        secret: Secret for one-way CHAP authentication
+        muser: User name for mutual CHAP authentication (optional)
+        msecret: Secret for mutual CHAP authentication (optional)
+
+    Returns:
+        True or False
+    """
+    params = {'tag': tag, 'user': user, 'secret': secret}
+
+    if muser:
+        params['muser'] = muser
+    if msecret:
+        params['msecret'] = msecret
+    return client.call('chap_group_add_secret', params)
+
+
+def chap_group_delete_secret(client, tag, user):
+    """Delete a secret from a CHAP group.
+
+    Args:
+        tag: CHAP group tag (unique, integer > 0)
+        user: User name for one-way CHAP authentication
+
+    Returns:
+        True or False
+    """
+    params = {'tag': tag, 'user': user}
+    return client.call('chap_group_delete_secret', params)
+
+
 def get_portal_groups(client):
     """Display current portal group configuration.
 

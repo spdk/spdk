@@ -573,6 +573,33 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=delete_chap_group)
 
     @call_cmd
+    def chap_group_add_secret(args):
+        rpc.iscsi.chap_group_add_secret(
+            args.client,
+            tag=args.tag,
+            user=args.user,
+            secret=args.secret,
+            muser=args.muser,
+            msecret=args.msecret)
+
+    p = subparsers.add_parser('chap_group_add_secret', help='Add a secret to a CHAP group.')
+    p.add_argument('tag', help='CHAP group tag', type=int)
+    p.add_argument('-u', '--user', help='User name for one-way CHAP authentication', required=True)
+    p.add_argument('-s', '--secret', help='Secret for one-way CHAP authentication', required=True)
+    p.add_argument('-m', '--muser', help='User name for mutual CHAP authentication')
+    p.add_argument('-r', '--msecret', help='Secret for mutual CHAP authentication')
+    p.set_defaults(func=chap_group_add_secret)
+
+    @call_cmd
+    def chap_group_delete_secret(args):
+        rpc.iscsi.chap_group_delete_secret(args.client, tag=args.tag, user=args.user)
+
+    p = subparsers.add_parser('chap_group_delete_secret', help='Delete a secret from a CHAP group.')
+    p.add_argument('tag', help='CHAP group tag', type=int)
+    p.add_argument('-u', '--user', help='User name for one-way CHAP authentication', required=True)
+    p.set_defaults(func=chap_group_delete_secret)
+
+    @call_cmd
     def get_portal_groups(args):
         print_dict(rpc.iscsi.get_portal_groups(args.client))
 
