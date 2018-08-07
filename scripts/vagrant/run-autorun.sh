@@ -106,10 +106,10 @@ case "$METHOD" in
 			echo "${SPDK_SOURCE_PATH} does not exist!"
 			exit 1
 		fi
-                if [ ! -d "${SPDK_SOURCE_PATH}/.git" ]; then
-                        echo "${SPDK_SOURCE_PATH} is not a git repository"
-                        exit 1
-                fi
+		if [ ! -d "${SPDK_SOURCE_PATH}/.git" ]; then
+			echo "${SPDK_SOURCE_PATH} is not a git repository"
+			exit 1
+		fi
 
 		GIT_REPO_SRC_DIR=$($READLINK -f "${SPDK_SOURCE_PATH}" | tr -t '/' ' ' | awk '{print $NF}')
 
@@ -118,14 +118,14 @@ case "$METHOD" in
 			exit 1
 		fi
 
-                pushd "${SPDK_SOURCE_PATH}"
-                GIT_REPO_SRC=$(git rev-parse --show-toplevel)
+		pushd "${SPDK_SOURCE_PATH}"
+		GIT_REPO_SRC=$(git rev-parse --show-toplevel)
 		GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-                popd
+		popd
 
 		if [ "${SPDK_AUTOTEST_LOCAL_PATH}" = "${SPDK_SOURCE_PATH}" ]; then
 			SPDK_AUTOTEST_LOCAL_PATH=$($READLINK -f ${SPDK_AUTOTEST_LOCAL_PATH}/..)
-                        echo "Set SPDK_AUTOTEST_LOCAL_PATH to ${SPDK_AUTOTEST_LOCAL_PATH}"
+			echo "Set SPDK_AUTOTEST_LOCAL_PATH to ${SPDK_AUTOTEST_LOCAL_PATH}"
 		fi
 
 		if [ -d "${SPDK_AUTOTEST_LOCAL_PATH}/${GIT_BRANCH}" ]; then
@@ -165,7 +165,7 @@ fi
 # I'd like to keep these files under source control
 #
 if [[ -e "${AUTOTEST_DRIVER_PATH}/autorun-spdk.conf" ]]; then
-        conf="${AUTOTEST_DRIVER_PATH}/autorun-spdk.conf"
+	conf="${AUTOTEST_DRIVER_PATH}/autorun-spdk.conf"
 fi
 if [[ -e ~/autorun-spdk.conf ]]; then
 	conf=~/autorun-spdk.conf

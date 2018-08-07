@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 if [ ! "$USER" = "root" ]; then
-        echo
-        echo Error: must be run as root!
-        echo
-        exit 1
+	echo
+	echo Error: must be run as root!
+	echo
+	exit 1
 fi
 
 set -e
