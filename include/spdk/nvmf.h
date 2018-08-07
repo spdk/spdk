@@ -667,6 +667,16 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
  */
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
 
+/**
+ * Initialize controller's hooks
+ *
+ * \param use the given qpair to initialize g_nvmf_hooks
+ * \param hook_ctx to initialize g_nvmf_hooks
+ */
+#ifdef  SPDK_CONFIG_RDMA
+void spdk_nvmf_init_hooks(struct spdk_nvmf_qpair *qpair, void *hook_ctx);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
