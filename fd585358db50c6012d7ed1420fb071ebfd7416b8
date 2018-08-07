@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2558310_7192b405",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:17:35Z",
+      "side": 1,
+      "message": "Do we need arbitrary len here? libiscsi seam to have MAX_STRING_SIZE deffined for many of those login/user fields.",
+      "range": {
+        "startLine": 808,
+        "startChar": 1,
+        "endLine": 808,
+        "endChar": 30
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64b5d3ec_c106a649",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:17:35Z",
+      "side": 1,
+      "message": "-ENOMEM",
+      "range": {
+        "startLine": 946,
+        "startChar": 9,
+        "endLine": 946,
+        "endChar": 11
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b27da073_67bda7b2",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:17:35Z",
+      "side": 1,
+      "message": "rc?",
+      "range": {
+        "startLine": 953,
+        "startChar": 9,
+        "endLine": 953,
+        "endChar": 11
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e209c65_4091be00",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 963,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:17:35Z",
+      "side": 1,
+      "message": "-EINVAL?",
+      "range": {
+        "startLine": 963,
+        "startChar": 11,
+        "endLine": 963,
+        "endChar": 13
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cfba4b7_33f81682",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 971,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:17:35Z",
+      "side": 1,
+      "message": "rc?",
+      "range": {
+        "startLine": 971,
+        "startChar": 11,
+        "endLine": 971,
+        "endChar": 13
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d7ae226_a42f3b1a",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:17:35Z",
+      "side": 1,
+      "message": "-ENOENT",
+      "range": {
+        "startLine": 1018,
+        "startChar": 9,
+        "endLine": 1018,
+        "endChar": 11
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0778810_6189b874",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:17:35Z",
+      "side": 1,
+      "message": "-ENOMEM",
+      "range": {
+        "startLine": 1047,
+        "startChar": 7,
+        "endLine": 1047,
+        "endChar": 10
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4c21dc2_6d095036",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:17:35Z",
+      "side": 1,
+      "message": "R_OK?",
+      "range": {
+        "startLine": 1195,
+        "startChar": 35,
+        "endLine": 1195,
+        "endChar": 39
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21beb348_e583587f",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:17:35Z",
+      "side": 1,
+      "message": "What if authfile doesn\u0027t exist? Isn\u0027t this an error?",
+      "range": {
+        "startLine": 1195,
+        "startChar": 1,
+        "endLine": 1195,
+        "endChar": 48
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
