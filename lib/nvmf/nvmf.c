@@ -1101,3 +1101,8 @@ fini:
 		cb_fn(cb_arg, rc);
 	}
 }
+
+void spdk_nvmf_init_hooks(struct spdk_nvmf_qpair *qpair, void *hook_ctx)
+{
+	spdk_nvmf_transport_init_hooks(qpair, hook_ctx);
+}

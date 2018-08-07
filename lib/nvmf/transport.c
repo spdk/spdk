@@ -183,3 +183,19 @@ spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
 {
 	return qpair->transport->ops->qpair_is_idle(qpair);
 }
+<<<<<<< HEAD
+=======
+
+int
+spdk_nvmf_transport_qpair_get_src_trid(struct spdk_nvmf_qpair *qpair,
+				       struct spdk_nvme_transport_id *trid)
+{
+	return qpair->transport->ops->qpair_get_src_trid(qpair, trid);
+}
+
+void
+spdk_nvmf_transport_init_hooks(struct spdk_nvmf_qpair *qpair, void *hook_ctx)
+{
+	qpair->transport->ops->init_hooks(qpair, hook_ctx);
+}
+>>>>>>> de5a477... nvmf: init hooks
