@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "586a010b_8be34f1d",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-07T08:26:14Z",
+      "side": 1,
+      "message": "After this, shall we go to handle the polled event?",
+      "range": {
+        "startLine": 245,
+        "startChar": 0,
+        "endLine": 251,
+        "endChar": 2
+      },
+      "revId": "8549faad16d07196da420db4e8dae7fbd2736ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
