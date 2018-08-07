@@ -98,9 +98,9 @@ case "$SPDK_VAGRANT_DISTRO" in
 	fedora27)
 		export SPDK_VAGRANT_DISTRO
 	;;
-        freebsd11)
-                export SPDK_VAGRANT_DISTRO
-        ;;
+	freebsd11)
+		export SPDK_VAGRANT_DISTRO
+	;;
 	*)
 		echo "  Invalid argument \"${SPDK_VAGRANT_DISTRO}\""
 		echo "  Try: \"$0 -h\"" >&2
