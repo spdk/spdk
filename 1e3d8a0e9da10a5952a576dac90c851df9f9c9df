@@ -56,6 +56,24 @@
       "revId": "1e3d8a0e9da10a5952a576dac90c851df9f9c9df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "059a7875_33dc0372",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-07T03:40:56Z",
+      "side": 1,
+      "message": "I do not think so, this is used to judge the primary task. To make primary task is not executed by the scsi layer, if it is queued in scsi layer, we should wait for the primary task return instead of directly deleting it.",
+      "parentUuid": "94cb9885_a1911673",
+      "revId": "1e3d8a0e9da10a5952a576dac90c851df9f9c9df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
