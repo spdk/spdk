@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7c570aa_6734016d",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-07T16:38:27Z",
+      "side": 0,
+      "message": "Hi John, Please see Karol\u0027s change here https://review.gerrithub.io/c/spdk/spdk/+/421496. The package should be gdisk, but I transposed it wrong. We use gdisk in the Ceph tests.",
+      "revId": "2b3abb2a339cfb1033108808ffa7577b860cca09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
