@@ -16,6 +16,24 @@
       "revId": "617ee573757cf3759eefda370f5b3cfee0605740",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "edd3d5d8_8645e355",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-08-07T13:05:26Z",
+      "side": 1,
+      "message": "Of course this parameter should be named aio_bs, I have no idea how i get aio_cz ;) but if we crate aio bdev from a file, we need to specify its block size (construct_aio_bdev doesn\u0027t have default block size, it can be detected if we put a device for it). I\u0027ll change block size to be more default ;)",
+      "parentUuid": "57663060_f960df8d",
+      "revId": "617ee573757cf3759eefda370f5b3cfee0605740",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
