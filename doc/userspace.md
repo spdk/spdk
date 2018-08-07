@@ -34,15 +34,15 @@ which is a critical piece of hardware for ensuring memory safety in user space
 drivers. See @ref memory for full details.
 
 Once the device is unbound from the operating system kernel, the operating
-system can't use it anymore. For example, if you unbind an NVMe device on
-Linux, the devices corresponding to it such as /dev/nvme0n1 will disappear. It
-further means that filesystems mounted on the device will also be removed and
-kernel filesystems can no longer interact with the device. In fact, the entire
-kernel block storage stack is no longer involved. Instead, SPDK provides
-re-imagined implementations of most of the layers in a typical operating
-system storage stack all as C libraries that can be directly embedded into
-your application. This includes a @ref bdev primarily, but also block
-allocators and filesystem-like components such as @ref blob and @ref blobfs.
+system can't use it anymore. For example, if you unbind an NVMe device on Linux,
+the devices corresponding to it such as /dev/nvme0n1 will disappear. It further
+means that filesystems mounted on the device will also be removed and kernel
+filesystems can no longer interact with the device. In fact, the entire kernel
+block storage stack is no longer involved. Instead, SPDK provides re-imagined
+implementations of most of the layers in a typical operating system storage
+stack all as C libraries that can be directly embedded into your application.
+This includes a [block device abstraction layer](@ref bdev) primarily, but
+also [block allocators](@ref blob) and [filesystem-like components](@ref blobfs).
 
 User space drivers utilize features in uio or vfio to map the
 [PCI BAR](https://en.wikipedia.org/wiki/PCI_configuration_space) for the device
