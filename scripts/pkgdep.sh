@@ -14,7 +14,7 @@ if [ -s /etc/redhat-release ]; then
 		sg3_utils libiscsi-devel
 	yum install -y --allowerasing openssl-devel
 	# Additional (optional) dependencies for showing backtrace in logs
-	yum install libunwind-devel
+	yum install -y libunwind-devel
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for DPDK
