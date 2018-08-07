@@ -37,6 +37,8 @@
 #include "spdk/stdinc.h"
 
 #include <libaio.h>
+#include <sys/epoll.h>
+#include <sys/eventfd.h>
 
 #include "spdk/queue.h"
 #include "spdk/bdev.h"
@@ -53,6 +55,9 @@ struct bdev_aio_io_channel {
 	io_context_t		io_ctx;
 	struct spdk_poller	*poller;
 	uint64_t		io_inflight;
+	int			efd;
+	int			epfd;
+	struct epoll_event	epevent;
 };
 
 typedef void (*spdk_delete_aio_complete)(void *cb_arg, int bdeverrno);

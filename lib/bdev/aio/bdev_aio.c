@@ -124,6 +124,7 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	io_prep_preadv(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
+	io_set_eventfd(iocb, aio_ch->efd);
 
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "read %d iovs size %lu to off: %#lx\n",
 		      iovcnt, nbytes, offset);
@@ -154,6 +155,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	io_prep_pwritev(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = len;
+	io_set_eventfd(iocb, aio_ch->efd);
 
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "write %d iovs size %lu from off: %#lx\n",
 		      iovcnt, len, offset);
@@ -198,8 +200,32 @@ bdev_aio_destruct(void *ctx)
 static int
 bdev_aio_initialize_io_channel(struct bdev_aio_io_channel *ch)
 {
+	ch->efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (ch->efd == -1) {
+		SPDK_ERRLOG("cannot create efd\n");
+		return -1;
+	}
 	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
+		close(ch->efd);
 		SPDK_ERRLOG("async I/O context setup failure\n");
+		return -1;
+	}
+
+	ch->epfd = epoll_create1(0);
+	if (ch->epfd == -1) {
+		close(ch->efd);
+		io_destroy(ch->io_ctx);
+		SPDK_ERRLOG("cannot create efd\n");
+		return -1;
+	}
+
+	ch->epevent.events = EPOLLIN | EPOLLET;
+	ch->epevent.data.ptr = NULL;
+	if (epoll_ctl(ch->epfd, EPOLL_CTL_ADD, ch->efd, &ch->epevent)) {
+		close(ch->epfd);
+		close(ch->efd);
+		io_destroy(ch->io_ctx);
+		SPDK_ERRLOG("epoll_ctl error\n");
 		return -1;
 	}
 
@@ -210,11 +236,19 @@ static int
 bdev_aio_poll(void *arg)
 {
 	struct bdev_aio_io_channel *ch = arg;
-	int nr, i;
+	int nr, i, rc;
 	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
 	struct timespec timeout;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
+
+	rc = epoll_wait(ch->epfd, &ch->epevent, 1, 0);
+	if (rc == -1) {
+		SPDK_ERRLOG("epoll_wait error(%d): %s on ch=%p\n", errno, spdk_strerror(errno), ch);
+		return -1;
+	} else if (rc == 0) {
+		return 0;
+	}
 
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
@@ -378,6 +412,8 @@ bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_io_channel *io_channel = ctx_buf;
 
+	close(io_channel->epfd);
+	close(io_channel->efd);
 	io_destroy(io_channel->io_ctx);
 	spdk_poller_unregister(&io_channel->poller);
 }
