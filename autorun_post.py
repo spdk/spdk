@@ -6,6 +6,30 @@ import argparse
 import os
 import glob
 import re
+import pandas as pd
+
+
+def highest_value(inp):
+    ret_value = False
+    for x in inp:
+        if x:
+            return True
+    else:
+        return False
+
+
+def generateTestCompletionTables(output_dir, completion_table):
+    data_table = pd.DataFrame(completion_table, columns=["Agent", "Test", "With Asan", "With UBsan"])
+    data_table.to_html(os.path.join(output_dir, 'completions_table.html'))
+
+    pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Test"])
+    pivot_by_agent.to_html(os.path.join(output_dir, 'completions_table_by_agent.html'))
+    pivot_by_test = pd.pivot_table(data_table, index=["Test", "Agent"])
+    pivot_by_test.to_html(os.path.join(output_dir, 'completions_table_by_test.html'))
+    pivot_by_asan = pd.pivot_table(data_table, index=["Test"], values="With Asan", aggfunc=highest_value)
+    pivot_by_asan.to_html(os.path.join(output_dir, 'completions_table_by_asan.html'))
+    pivot_by_ubsan = pd.pivot_table(data_table, index=["Test"], values="With UBsan", aggfunc=highest_value)
+    pivot_by_ubsan.to_html(os.path.join(output_dir, 'completions_table_by_ubsan.html'))
 
 
 def generateCoverageReport(output_dir, repo_dir):
@@ -71,6 +95,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
     test_list = {}
     test_with_asan = {}
     test_with_ubsan = {}
+    test_completion_table = []
     asan_enabled = False
     ubsan_enabled = False
     test_unit_with_valgrind = False
@@ -83,11 +108,13 @@ def aggregateCompletedTests(output_dir, repo_dir):
     if len(testFiles) == 0:
         print("Unable to perform test completion aggregator. No input files.")
         return 0
-    for item in testFiles:
-        with open(item, 'r') as raw_test_list:
-            for line in raw_test_list:
-                test_list[line.strip()] = (False, False, False)
+    item = testFiles[0]
+    with open(item, 'r') as raw_test_list:
+        for line in raw_test_list:
+            test_list[line.strip()] = (False, False, False)
+            test_completion_table.append(["None", line.strip(), False, False])
     for item in completionFiles:
+        agent_name = os.path.split(os.path.split(item)[0])[1]
         with open(item, 'r') as completion_list:
             completions = completion_list.read()
 
@@ -103,9 +130,15 @@ def aggregateCompletedTests(output_dir, repo_dir):
 
             if "valgrind" in completions and "unittest" in completions:
                 test_unit_with_valgrind = True
+                test_completion_table.append([agent_name, "valgrind", asan_enabled, ubsan_enabled])
             for line in completions.split('\n'):
                 try:
                     test_list[line.strip()] = (True, asan_enabled | test_list[line.strip()][1], ubsan_enabled | test_list[line.strip()][1])
+                    test_completion_table.append([agent_name, line.strip(), asan_enabled, ubsan_enabled])
+                    try:
+                        test_completion_table.remove(["None", line.strip(), False, False])
+                    except ValueError:
+                        continue
                 except KeyError:
                     continue
 
@@ -134,6 +167,8 @@ def aggregateCompletedTests(output_dir, repo_dir):
 
     with open(testSummary, 'r') as fh:
         print(fh.read())
+
+    generateTestCompletionTables(output_dir, test_completion_table)
 
 
 def main(output_dir, repo_dir):
