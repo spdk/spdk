@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c16eaf4f_678a2e4e",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 882,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-07T09:36:35Z",
+      "side": 1,
+      "message": "Log to display the error and meanwhile, the subsystem will not enter the active state.",
+      "range": {
+        "startLine": 882,
+        "startChar": 4,
+        "endLine": 882,
+        "endChar": 19
+      },
+      "revId": "c6dbbf77de0ad9e54ccb233f16d684f2debff048",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
