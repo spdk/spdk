@@ -795,6 +795,7 @@ INPUT                  = ../include/spdk \
                          performance_reports.md \
                          \
                          about.md \
+                         applications.md \
                          changelog.md \
                          concurrency.md \
                          directory_structure.md \
@@ -818,7 +819,6 @@ INPUT                  = ../include/spdk \
                          peer_2_peer.md \
                          spdkcli.md \
                          ssd_internals.md \
-                         user_guides_common.md \
                          userspace.md \
                          vagrant.md \
                          vhost.md \
