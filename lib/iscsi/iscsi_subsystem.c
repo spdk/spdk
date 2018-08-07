@@ -836,6 +836,39 @@ nomem:
 }
 
 int
+spdk_iscsi_chap_group_delete_secret(struct spdk_iscsi_chap_group *group,
+				    const char *user)
+{
+	struct spdk_iscsi_chap_secret *_secret;
+
+	if (user == NULL) {
+		SPDK_ERRLOG("user must be specified\n");
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(_secret, &group->secret_head, tailq) {
+		if (strcmp(_secret->user, user) == 0) {
+			break;
+		}
+	}
+
+	if (_secret == NULL) {
+		SPDK_ERRLOG("secret is not found\n");
+		return -EINVAL;
+	}
+
+	TAILQ_REMOVE(&group->secret_head, _secret, tailq);
+
+	free(_secret->user);
+	free(_secret->secret);
+	free(_secret->muser);
+	free(_secret->msecret);
+	free(_secret);
+
+	return 0;
+}
+
+int
 spdk_iscsi_add_chap_group(int32_t tag, struct spdk_iscsi_chap_group **_group)
 {
 	struct spdk_iscsi_chap_group *group;

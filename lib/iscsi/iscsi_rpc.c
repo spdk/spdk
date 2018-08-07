@@ -1347,3 +1347,134 @@ invalid:
 					 "Invalid parameters");
 }
 SPDK_RPC_REGISTER("delete_chap_group", spdk_rpc_delete_chap_group, SPDK_RPC_RUNTIME)
+
+struct rpc_add_chap_secret {
+	int32_t tag;
+	char *user;
+	char *secret;
+	char *muser;
+	char *msecret;
+};
+
+static void
+free_rpc_add_chap_secret(struct rpc_add_chap_secret *_secret)
+{
+	free(_secret->user);
+	free(_secret->secret);
+	free(_secret->muser);
+	free(_secret->msecret);
+}
+
+static const struct spdk_json_object_decoder rpc_add_chap_secret_decoders[] = {
+	{"tag", offsetof(struct rpc_add_chap_secret, tag), spdk_json_decode_int32},
+	{"user", offsetof(struct rpc_add_chap_secret, user), spdk_json_decode_string},
+	{"secret", offsetof(struct rpc_add_chap_secret, secret), spdk_json_decode_string},
+	{"muser", offsetof(struct rpc_add_chap_secret, muser), spdk_json_decode_string, true},
+	{"msecret", offsetof(struct rpc_add_chap_secret, msecret), spdk_json_decode_string, true},
+};
+
+static void
+spdk_rpc_chap_group_add_secret(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_add_chap_secret req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_iscsi_chap_group *group;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_add_chap_secret_decoders,
+				    SPDK_COUNTOF(rpc_add_chap_secret_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	group = spdk_iscsi_find_chap_group_by_tag(req.tag);
+	if (group == NULL) {
+		SPDK_ERRLOG("chap group is not found\n");
+		goto invalid;
+	}
+
+	rc = spdk_iscsi_chap_group_add_secret(group, req.user, req.secret, req.muser, req.msecret);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to add secret to chap group\n");
+		goto invalid;
+	}
+
+	free_rpc_add_chap_secret(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	free_rpc_add_chap_secret(&req);
+}
+SPDK_RPC_REGISTER("chap_group_add_secret", spdk_rpc_chap_group_add_secret, SPDK_RPC_RUNTIME)
+
+struct rpc_delete_chap_secret {
+	int32_t tag;
+	char *user;
+};
+
+static void
+free_rpc_delete_chap_secret(struct rpc_delete_chap_secret *_secret)
+{
+	free(_secret->user);
+}
+
+static const struct spdk_json_object_decoder rpc_delete_chap_secret_decoders[] = {
+	{"tag", offsetof(struct rpc_delete_chap_secret, tag), spdk_json_decode_int32},
+	{"user", offsetof(struct rpc_delete_chap_secret, user), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_chap_group_delete_secret(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct rpc_delete_chap_secret req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_iscsi_chap_group *group;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_delete_chap_secret_decoders,
+				    SPDK_COUNTOF(rpc_delete_chap_secret_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	group = spdk_iscsi_find_chap_group_by_tag(req.tag);
+	if (group == NULL) {
+		SPDK_ERRLOG("chap group is not found\n");
+		goto invalid;
+	}
+
+	rc = spdk_iscsi_chap_group_delete_secret(group, req.user);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to delete secret from chap group\n");
+		goto invalid;
+	}
+
+	free_rpc_delete_chap_secret(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	free_rpc_delete_chap_secret(&req);
+}
+SPDK_RPC_REGISTER("chap_group_delete_secret", spdk_rpc_chap_group_delete_secret, SPDK_RPC_RUNTIME)
