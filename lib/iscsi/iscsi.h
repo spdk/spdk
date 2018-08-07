@@ -224,6 +224,20 @@ struct iscsi_chap_auth {
 	uint8_t chap_mchallenge[ISCSI_CHAP_CHALLENGE_LEN];
 };
 
+struct spdk_iscsi_chap_secret {
+	char *user;
+	char *secret;
+	char *muser;
+	char *msecret;
+	TAILQ_ENTRY(spdk_iscsi_chap_secret) tailq;
+};
+
+struct spdk_iscsi_chap_group {
+	int32_t tag;
+	TAILQ_HEAD(, spdk_iscsi_chap_secret) secret_head;
+	TAILQ_ENTRY(spdk_iscsi_chap_group) tailq;
+};
+
 struct spdk_iscsi_sess {
 	uint32_t connections;
 	struct spdk_iscsi_conn **conns;
@@ -294,6 +308,7 @@ struct spdk_iscsi_globals {
 	TAILQ_HEAD(, spdk_iscsi_portal_grp)	pg_head;
 	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
 	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
+	TAILQ_HEAD(, spdk_iscsi_chap_group)	chap_group_head;
 
 	int32_t timeout;
 	int32_t nopininterval;
@@ -366,6 +381,8 @@ struct spdk_iscsi_opts *spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src);
 void spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w);
 int spdk_iscsi_set_discovery_auth(bool no_discovery_auth, bool req_discovery_auth,
 				  bool req_discovery_auth_mutual, int32_t discovery_auth_group);
+int spdk_iscsi_chap_get_auth_info(struct iscsi_chap_auth *auth, const char *authuser,
+				  int ag_tag);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
