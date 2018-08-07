@@ -389,6 +389,8 @@ void spdk_iscsi_delete_chap_group(struct spdk_iscsi_chap_group *group);
 int spdk_iscsi_chap_group_add_secret(struct spdk_iscsi_chap_group *group,
 				     const char *user, const char *secret,
 				     const char *muser, const char *msecret);
+int spdk_iscsi_chap_group_delete_secret(struct spdk_iscsi_chap_group *group,
+					const char *user);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
