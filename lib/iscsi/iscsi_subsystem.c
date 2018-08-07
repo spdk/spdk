@@ -775,7 +775,7 @@ spdk_iscsi_set_discovery_auth(bool no_discovery_auth, bool req_discovery_auth,
 	return 0;
 }
 
-static int
+int
 spdk_iscsi_chap_group_add_secret(struct spdk_iscsi_chap_group *group,
 				 const char *user, const char *secret,
 				 const char *muser, const char *msecret)
@@ -835,7 +835,7 @@ nomem:
 	return -ENOMEM;
 }
 
-static int
+int
 spdk_iscsi_add_chap_group(int32_t tag, struct spdk_iscsi_chap_group **_group)
 {
 	struct spdk_iscsi_chap_group *group;
@@ -862,7 +862,7 @@ spdk_iscsi_add_chap_group(int32_t tag, struct spdk_iscsi_chap_group **_group)
 	return 0;
 }
 
-static void
+void
 spdk_iscsi_delete_chap_group(struct spdk_iscsi_chap_group *group)
 {
 	struct spdk_iscsi_chap_secret *_secret, *tmp;
@@ -877,6 +877,20 @@ spdk_iscsi_delete_chap_group(struct spdk_iscsi_chap_group *group)
 		free(_secret->msecret);
 		free(_secret);
 	}
+}
+
+struct spdk_iscsi_chap_group *
+spdk_iscsi_find_chap_group_by_tag(int32_t tag)
+{
+	struct spdk_iscsi_chap_group *group;
+
+	TAILQ_FOREACH(group, &g_spdk_iscsi.chap_group_head, tailq) {
+		if (group->tag == tag) {
+			return group;
+		}
+	}
+
+	return NULL;
 }
 
 static void
@@ -1016,8 +1030,12 @@ spdk_iscsi_chap_get_auth_info(struct iscsi_chap_auth *auth, const char *authuser
 		auth->muser = auth->msecret = NULL;
 	}
 
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+
 	_secret = spdk_iscsi_find_chap_secret(authuser, ag_tag);
 	if (_secret == NULL) {
+		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
 		SPDK_ERRLOG("chap secret (user:%s, tag:%d) is not found\n",
 			    authuser, ag_tag);
 		return -ENOENT;
@@ -1039,9 +1057,12 @@ spdk_iscsi_chap_get_auth_info(struct iscsi_chap_auth *auth, const char *authuser
 		}
 	}
 
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	return 0;
 
 nomem:
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
 	free(auth->user);
 	free(auth->secret);
 	free(auth->muser);

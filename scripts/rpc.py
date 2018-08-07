@@ -550,6 +550,29 @@ if __name__ == "__main__":
     p.set_defaults(func=set_auth_for_discovery)
 
     @call_cmd
+    def add_chap_group(args):
+        secrets = None
+        if args.secrets:
+            secrets = [dict(u.split(":") for u in a.split(" ")) for a in args.secrets.split(",")]
+
+        rpc.iscsi.add_chap_group(args.client, tag=args.tag, secrets=secrets)
+
+    p = subparsers.add_parser('add_chap_group', help='Add CHAP group for CHAP authentication.')
+    p.add_argument('tag', help='CHAP group tag (unique, integer > 0).', type=int)
+    p.add_argument('secrets', help="""Comma-separated list of secrets
+<user:user_name secret:chap_secret muser:mutual_user_name msecret:mutual_chap_secret> enclosed in quotes.
+Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 msecret:ms2'""")
+    p.set_defaults(func=add_chap_group)
+
+    @call_cmd
+    def delete_chap_group(args):
+        rpc.iscsi.delete_chap_group(args.client, tag=args.tag)
+
+    p = subparsers.add_parser('delete_chap_group', help='Delete a CHAP group.')
+    p.add_argument('tag', help='CHAP group tag', type=int)
+    p.set_defaults(func=delete_chap_group)
+
+    @call_cmd
     def get_portal_groups(args):
         print_dict(rpc.iscsi.get_portal_groups(args.client))
 
