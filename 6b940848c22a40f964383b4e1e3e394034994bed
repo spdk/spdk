@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2d183db3_c2913ea2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2293,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-07T16:13:14Z",
+      "side": 1,
+      "message": "True, good catch. I will address it in another patch since I don\u0027t touch these lines in this one.",
+      "parentUuid": "7ef857db_1b703c79",
+      "revId": "6b940848c22a40f964383b4e1e3e394034994bed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a846778_3941c3bb",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
