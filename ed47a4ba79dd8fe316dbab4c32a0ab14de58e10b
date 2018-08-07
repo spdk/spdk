@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "941c3b88_fb8f23a1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-07T04:54:29Z",
+      "side": 1,
+      "message": "Thanks for the suggestion. I will have a change based on this structure.",
+      "parentUuid": "e1ed51c6_466d766a",
+      "revId": "ed47a4ba79dd8fe316dbab4c32a0ab14de58e10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f03b813_f648b24e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 48
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "0758b5cd_cb2a3354",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 984,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-07T04:54:29Z",
+      "side": 1,
+      "message": "Later will have other types like read and write only IOPS and Bandwidth rate limits. Defined the helper function here and to extend later.",
+      "parentUuid": "3f03b813_f648b24e",
+      "revId": "ed47a4ba79dd8fe316dbab4c32a0ab14de58e10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ad0dff4_3cb76981",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 48
@@ -47,6 +83,24 @@
       "writtenOn": "2018-08-06T19:38:22Z",
       "side": 1,
       "message": "If one type of I/O gets throttled, does that mean we should throttle all other I/O queued behind it? The answer becomes a lot less clear when there are read-only and write-only limits. Even for this patch, what about flushes, unmaps, and passthru?",
+      "revId": "ed47a4ba79dd8fe316dbab4c32a0ab14de58e10b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "241a8e48_5eec0e4d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1064,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-07T04:54:29Z",
+      "side": 1,
+      "message": "For read only and write only, it has been addressed in the read/write related patch. For flush, unmap..., in this patch, there has some handling on the Bandwidth, please take a look at _spdk_bdev_get_io_size_in_byte() function. It can also extend for the IOPS, for IOPS, it could be just little impact if these operations are just counted as one I/O.\n\nThe basic idea is that all types of IOs will be queued first and then send the IOs as allowed, for those specific IO types like flush, unmap..., will count their bytes or IO count specially which is relating to the quota in single timeslice.",
+      "parentUuid": "2ad0dff4_3cb76981",
       "revId": "ed47a4ba79dd8fe316dbab4c32a0ab14de58e10b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
