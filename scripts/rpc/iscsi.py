@@ -115,6 +115,36 @@ def set_auth_for_discovery(
     return client.call('set_auth_for_discovery', params)
 
 
+def add_chap_group(client, tag, secrets=None):
+    """Add CHAP group for CHAP authentication.
+
+    Args:
+        tag: CHAP group tag (unique, integer > 0).
+        secrets: Array of secrets objects (optional).
+
+    Returns:
+        True or False
+    """
+    params = {'tag': tag}
+
+    if secrets:
+        params['secrets'] = secrets
+    return client.call('add_chap_group', params)
+
+
+def delete_chap_group(client, tag):
+    """Delete a CHAP group.
+
+    Args:
+        tag: CHAP group tag (unique, integer > 0)
+
+    Returns:
+        True or False
+    """
+    params = {'tag': tag}
+    return client.call('delete_chap_group', params)
+
+
 def get_portal_groups(client):
     """Display current portal group configuration.
 
