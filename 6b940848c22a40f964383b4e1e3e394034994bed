@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "70b11883_6562ed24",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2293,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-07T16:17:52Z",
+      "side": 1,
+      "message": "Sorry, I see your point now. I took out the lines in qpair_destroy that take it out of the poller.",
+      "parentUuid": "2d183db3_c2913ea2",
+      "revId": "6b940848c22a40f964383b4e1e3e394034994bed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a846778_3941c3bb",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
