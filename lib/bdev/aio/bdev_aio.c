@@ -54,6 +54,7 @@ static TAILQ_HEAD(, file_disk) g_aio_disk_head;
 static bool g_aio_group_poller_device_is_registered = false;
 
 #define SPDK_AIO_QUEUE_DEPTH 128
+#define MAX_EVENTS_PER_POLL 32
 
 static int
 bdev_aio_get_ctx_size(void)
@@ -70,8 +71,8 @@ static struct spdk_bdev_module aio_if = {
 };
 
 struct bdev_aio_group_channel {
-	struct spdk_poller			*poller;
-	TAILQ_HEAD(, bdev_aio_io_channel)	aio_channel_head;
+	struct spdk_poller	*poller;
+	int			epfd;
 };
 
 SPDK_BDEV_MODULE_REGISTER(&aio_if)
@@ -131,6 +132,7 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	io_prep_preadv(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
+	io_set_eventfd(iocb, aio_ch->efd);
 
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "read %d iovs size %lu to off: %#lx\n",
 		      iovcnt, nbytes, offset);
@@ -161,6 +163,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	io_prep_pwritev(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = len;
+	io_set_eventfd(iocb, aio_ch->efd);
 
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "write %d iovs size %lu from off: %#lx\n",
 		      iovcnt, len, offset);
@@ -205,7 +208,14 @@ bdev_aio_destruct(void *ctx)
 static int
 bdev_aio_initialize_io_channel(struct bdev_aio_io_channel *ch)
 {
+	ch->efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (ch->efd == -1) {
+		SPDK_ERRLOG("Cannot create efd\n");
+		return -1;
+	}
+
 	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
+		close(ch->efd);
 		SPDK_ERRLOG("async I/O context setup failure\n");
 		return -1;
 	}
@@ -217,17 +227,24 @@ static int
 bdev_aio_group_poll(void *arg)
 {
 	struct bdev_aio_group_channel *group_ch = arg;
-	struct bdev_aio_io_channel *ch, *tmp;
-	int nr, i;
+	struct bdev_aio_io_channel *ch;
+	int nr, i, j, rc;
 	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
 	struct timespec timeout;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
+	struct epoll_event epevents[MAX_EVENTS_PER_POLL];
 
-	TAILQ_FOREACH_SAFE(ch, &group_ch->aio_channel_head, link, tmp) {
+	rc = epoll_wait(group_ch->epfd, epevents, MAX_EVENTS_PER_POLL, 0);
+	if (rc == -1) {
+		SPDK_ERRLOG("epoll_wait error(%d): %s on ch=%p\n", errno, spdk_strerror(errno), group_ch);
+		return -1;
+	}
+
+	for (j = 0; j < rc; j++) {
 		timeout.tv_sec = 0;
 		timeout.tv_nsec = 0;
-
+		ch = epevents[j].data.ptr;
 		nr = io_getevents(ch->io_ctx, 1, SPDK_AIO_QUEUE_DEPTH,
 				  events, &timeout);
 
@@ -376,6 +393,7 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_io_channel *ch = ctx_buf;
 	struct bdev_aio_group_channel *group_ch_ctx;
+	struct epoll_event epevent;
 
 	if (bdev_aio_initialize_io_channel(ch) != 0) {
 		return -1;
@@ -383,7 +401,16 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 
 	ch->group_ch = spdk_get_io_channel(&aio_if);
 	group_ch_ctx = spdk_io_channel_get_ctx(ch->group_ch);
-	TAILQ_INSERT_TAIL(&group_ch_ctx->aio_channel_head, ch, link);
+
+	epevent.events = EPOLLIN | EPOLLET;
+	epevent.data.ptr = ch;
+	if (epoll_ctl(group_ch_ctx->epfd, EPOLL_CTL_ADD, ch->efd, &epevent)) {
+		close(ch->efd);
+		io_destroy(ch->io_ctx);
+		spdk_put_io_channel(ch->group_ch);
+		SPDK_ERRLOG("epoll_ctl error\n");
+		return -1;
+	}
 	return 0;
 }
 
@@ -392,10 +419,12 @@ bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_io_channel *io_channel = ctx_buf;
 	struct bdev_aio_group_channel *group_ch_ctx;
+	struct epoll_event event;
 
 	group_ch_ctx = spdk_io_channel_get_ctx(io_channel->group_ch);
-	TAILQ_REMOVE(&group_ch_ctx->aio_channel_head, io_channel, link);
+	epoll_ctl(group_ch_ctx->epfd, EPOLL_CTL_DEL, io_channel->efd, &event);
 	spdk_put_io_channel(io_channel->group_ch);
+	close(io_channel->efd);
 	io_destroy(io_channel->io_ctx);
 
 }
@@ -469,7 +498,12 @@ bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_group_channel *ch = ctx_buf;
 
-	TAILQ_INIT(&ch->aio_channel_head);
+	ch->epfd = epoll_create1(0);
+	if (ch->epfd == -1) {
+		SPDK_ERRLOG("cannot create epoll fd\n");
+		return -1;
+	}
+
 	ch->poller = spdk_poller_register(bdev_aio_group_poll, ch, 0);
 	return 0;
 }
@@ -479,6 +513,7 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_group_channel *ch = ctx_buf;
 
+	close(ch->epfd);
 	spdk_poller_unregister(&ch->poller);
 }
 
