@@ -359,34 +359,25 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		case SPDK_MEM_MAP_NOTIFY_REGISTER:
 			if (paddr == SPDK_VTOPHYS_ERROR) {
 				/* This is not an address that DPDK is managing. */
+				/* Get the physical address from /proc/self/pagemap. */
+				paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
+				if (paddr == SPDK_VTOPHYS_ERROR) {
+					/* Get the physical address from PCI devices */
+					paddr = vtophys_get_paddr_pci((uint64_t)vaddr);
+					if (paddr == SPDK_VTOPHYS_ERROR) {
+						DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
+						return -EFAULT;
+					}
+					pci_phys = 1;
+				}
 #if SPDK_VFIO_ENABLED
-				if (g_vfio.enabled) {
-					/* We'll use the virtual address as the iova. DPDK
-					 * currently uses physical addresses as the iovas (or counts
-					 * up from 0 if it can't get physical addresses), so
-					 * the range of user space virtual addresses and physical
-					 * addresses will never overlap.
-					 */
-					paddr = (uint64_t)vaddr;
+				if (!pci_phys && g_vfio.enabled) {
 					rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
 					if (rc) {
 						return -EFAULT;
 					}
-				} else
-#endif
-				{
-					/* Get the physical address from /proc/self/pagemap. */
-					paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
-					if (paddr == SPDK_VTOPHYS_ERROR) {
-						/* Get the physical address from PCI devices */
-						paddr = vtophys_get_paddr_pci((uint64_t)vaddr);
-						if (paddr == SPDK_VTOPHYS_ERROR) {
-							DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
-							return -EFAULT;
-						}
-						pci_phys = 1;
-					}
 				}
+#endif
 			}
 			/* Since PCI paddr can break the 2MiB physical alginment skip this check for that. */
 			if (!pci_phys && (paddr & MASK_2MB)) {
