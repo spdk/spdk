@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c49f62f_09f79831",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1228,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "initialization not needed.",
+      "range": {
+        "startLine": 1228,
+        "startChar": 6,
+        "endLine": 1228,
+        "endChar": 10
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1715830a_dc13c56e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1248,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "you can easly merge this loop with loop in lines 1255 to get rid of this ugly variables \u0027limits\u0027 and \u0027limit_strs\u0027",
+      "range": {
+        "startLine": 1239,
+        "startChar": 0,
+        "endLine": 1248,
+        "endChar": 2
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29bad731_5979178a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1546,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 1546,
+        "startChar": 6,
+        "endLine": 1546,
+        "endChar": 11
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9dc987b_dbeeaac3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1580,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "Can you use memset for whole rate_limits array?",
+      "range": {
+        "startLine": 1576,
+        "startChar": 0,
+        "endLine": 1580,
+        "endChar": 2
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "381de1ff_7cd6e07f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1713,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "memset?",
+      "range": {
+        "startLine": 1711,
+        "startChar": 0,
+        "endLine": 1713,
+        "endChar": 2
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09cbe446_9abd4939",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 2838,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "Now you always set this in this function so no need to initialize it any more.",
+      "range": {
+        "startLine": 2838,
+        "startChar": 21,
+        "endLine": 2838,
+        "endChar": 25
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60d2a4b7_1cb9a4c1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 2840,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 2840,
+        "startChar": 8,
+        "endLine": 2840,
+        "endChar": 11
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "057b8f6f_603ba2be",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 2849,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "if (i \u003d\u003d SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES) ?",
+      "range": {
+        "startLine": 2849,
+        "startChar": 5,
+        "endLine": 2849,
+        "endChar": 27
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9783b0da_a2188a3e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 3567,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 3567,
+        "startChar": 6,
+        "endLine": 3567,
+        "endChar": 10
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cc6b5ab_168143cb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 3587,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T16:40:53Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 3584,
+        "startChar": 0,
+        "endLine": 3587,
+        "endChar": 14
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
