@@ -132,7 +132,7 @@ if $INSTALL; then
     sudo dnf install -y perl-Switch
     sudo dnf install -y librdmacm-utils
     sudo dnf install -y libibverbs-utils
-    sudo dnf install -y sgdisk
+    sudo dnf install -y gdisk
 fi
 
 cd ~
