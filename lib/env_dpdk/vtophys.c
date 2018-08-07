@@ -71,11 +71,14 @@ struct spdk_vfio_dma_map {
 	struct vfio_iommu_type1_dma_map map;
 	struct vfio_iommu_type1_dma_unmap unmap;
 	TAILQ_ENTRY(spdk_vfio_dma_map) tailq;
+	bool aligned;
 };
 
 struct vfio_cfg {
 	int fd;
 	bool enabled;
+	bool overlapping_iovas;
+	struct spdk_mem_map *iova_ref_map;
 	unsigned device_ref;
 	TAILQ_HEAD(, spdk_vfio_dma_map) maps;
 	pthread_mutex_t mutex;
@@ -84,6 +87,8 @@ struct vfio_cfg {
 static struct vfio_cfg g_vfio = {
 	.fd = -1,
 	.enabled = false,
+	.overlapping_iovas = true, /* TODO */
+	.iova_ref_map = NULL,
 	.device_ref = 0,
 	.maps = TAILQ_HEAD_INITIALIZER(g_vfio.maps),
 	.mutex = PTHREAD_MUTEX_INITIALIZER
@@ -113,8 +118,82 @@ static TAILQ_HEAD(, spdk_vtophys_pci_device) g_vtophys_pci_devices =
 static struct spdk_mem_map *g_vtophys_map;
 
 #if SPDK_VFIO_ENABLED
+/* must be called under the vfio lock */
 static int
-vtophys_iommu_map_dma_one(uint64_t vaddr, uint64_t iova)
+vtophys_iommu_map_dma_one_overlap(struct spdk_vfio_dma_map *dma_map)
+{
+	uint64_t iova = dma_map->map.iova;
+	uint64_t ref_count;
+
+	assert(dma_map->map.size == VALUE_2MB);
+	if (!dma_map->aligned) {
+		/* don't handle unaligned overlapping regions */
+		return ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+	}
+
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
+	void *memseg_va;
+
+	memseg_va = rte_mem_iova2virt(iova);
+	if (memseg_va != NULL) {
+		/* If this is an address managed by DPDK, assume we're
+		 * mapping either an entire memseg list or a part of it.
+		 * As all memsegs are already mapped by DPDK, we can
+		 * just return here.
+		 */
+		return 0;
+	}
+#else
+	/* FIXME */
+#endif
+
+	/* In g_vfio.paddr_map, the "translation" is the reference count */
+	ref_count = spdk_mem_map_translate(g_vfio.iova_ref_map, iova, VALUE_2MB);
+	spdk_mem_map_set_translation(g_vfio.iova_ref_map, iova, VALUE_2MB, ref_count + 1);
+
+	if (ref_count > 0) {
+		return 0;
+	}
+
+	return ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+}
+
+/* must be called under the vfio lock */
+static int
+vtophys_iommu_unmap_dma_one_overlap(struct spdk_vfio_dma_map *dma_map)
+{
+	uint64_t iova = dma_map->map.iova;
+	uint64_t ref_count;
+
+	assert(dma_map->map.size == VALUE_2MB);
+	if (!dma_map->aligned) {
+		return ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
+	}
+
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
+	void *memseg_va;
+
+	memseg_va = rte_mem_iova2virt(iova);
+	if (memseg_va != NULL) {
+		return 0;
+	}
+#else
+	/* FIXME */
+#endif
+
+	/* In g_vfio.paddr_map, the "translation" is the reference count */
+	ref_count = spdk_mem_map_translate(g_vfio.iova_ref_map, iova, VALUE_2MB);
+	spdk_mem_map_set_translation(g_vfio.iova_ref_map, iova, VALUE_2MB, ref_count - 1);
+
+	if (ref_count > 1) {
+		return 0;
+	}
+
+	return ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
+}
+
+static int
+vtophys_iommu_map_dma_one(uint64_t vaddr, uint64_t iova, bool aligned)
 {
 	struct spdk_vfio_dma_map *dma_map;
 	int ret;
@@ -135,6 +214,8 @@ vtophys_iommu_map_dma_one(uint64_t vaddr, uint64_t iova)
 	dma_map->unmap.iova = iova;
 	dma_map->unmap.size = VALUE_2MB;
 
+	dma_map->aligned = aligned;
+
 	pthread_mutex_lock(&g_vfio.mutex);
 	if (g_vfio.device_ref == 0) {
 		/* VFIO requires at least one device (IOMMU group) to be added to
@@ -154,7 +235,12 @@ vtophys_iommu_map_dma_one(uint64_t vaddr, uint64_t iova)
 		goto out_insert;
 	}
 
-	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+	if (g_vfio.overlapping_iovas) {
+		ret = vtophys_iommu_map_dma_one_overlap(dma_map);
+	} else {
+		ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+	}
+
 	if (ret) {
 		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
 		pthread_mutex_unlock(&g_vfio.mutex);
@@ -192,7 +278,12 @@ vtophys_iommu_unmap_dma_one(uint64_t iova)
 		goto out_remove;
 	}
 
-	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
+	if (g_vfio.overlapping_iovas) {
+		ret = vtophys_iommu_unmap_dma_one_overlap(dma_map);
+	} else {
+		ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
+	}
+
 	if (ret) {
 		DEBUG_PRINT("Cannot clear DMA mapping, error %d\n", errno);
 		pthread_mutex_unlock(&g_vfio.mutex);
@@ -356,34 +447,25 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		case SPDK_MEM_MAP_NOTIFY_REGISTER:
 			if (paddr == SPDK_VTOPHYS_ERROR) {
 				/* This is not an address that DPDK is managing. */
+				/* Get the physical address from /proc/self/pagemap. */
+				paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
+				if (paddr == SPDK_VTOPHYS_ERROR) {
+					/* Get the physical address from PCI devices */
+					paddr = vtophys_get_paddr_pci((uint64_t)vaddr);
+					if (paddr == SPDK_VTOPHYS_ERROR) {
+						DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
+						return -EFAULT;
+					}
+					pci_phys = 1;
+				}
 #if SPDK_VFIO_ENABLED
 				if (g_vfio.enabled) {
-					/* We'll use the virtual address as the iova. DPDK
-					 * currently uses physical addresses as the iovas (or counts
-					 * up from 0 if it can't get physical addresses), so
-					 * the range of user space virtual addresses and physical
-					 * addresses will never overlap.
-					 */
-					paddr = (uint64_t)vaddr;
-					rc = vtophys_iommu_map_dma_one((uint64_t)vaddr, paddr);
+					rc = vtophys_iommu_map_dma_one((uint64_t)vaddr, paddr, !pci_phys);
 					if (rc) {
 						return -EFAULT;
 					}
-				} else
-#endif
-				{
-					/* Get the physical address from /proc/self/pagemap. */
-					paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
-					if (paddr == SPDK_VTOPHYS_ERROR) {
-						/* Get the physical address from PCI devices */
-						paddr = vtophys_get_paddr_pci((uint64_t)vaddr);
-						if (paddr == SPDK_VTOPHYS_ERROR) {
-							DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
-							return -EFAULT;
-						}
-						pci_phys = 1;
-					}
 				}
+#endif
 			}
 			/* Since PCI paddr can break the 2MiB physical alginment skip this check for that. */
 			if (!pci_phys && (paddr & MASK_2MB)) {
@@ -479,6 +561,14 @@ spdk_vtophys_iommu_init(void)
 		return;
 	}
 
+	if (g_vfio.overlapping_iovas) {
+		g_vfio.iova_ref_map = spdk_mem_map_alloc(0, NULL, NULL);
+		if (g_vfio.iova_ref_map == NULL) {
+			DEBUG_PRINT("vtophys iova ref map allocation failed\n");
+			return;
+		}
+	}
+
 	g_vfio.enabled = true;
 
 	return;
@@ -532,7 +622,12 @@ spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device)
 	 * From this point it is certain that the memory can be mapped now.
 	 */
 	TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
-		ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+		if (g_vfio.overlapping_iovas) {
+			ret = vtophys_iommu_map_dma_one_overlap(dma_map);
+		} else {
+			ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+		}
+
 		if (ret) {
 			DEBUG_PRINT("Cannot update DMA mapping, error %d\n", errno);
 			break;
@@ -583,7 +678,12 @@ spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device)
 	 * of other, external factors.
 	 */
 	TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
-		ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
+		if (g_vfio.overlapping_iovas) {
+			ret = vtophys_iommu_unmap_dma_one_overlap(dma_map);
+		} else {
+			ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
+		}
+
 		if (ret) {
 			DEBUG_PRINT("Cannot unmap DMA memory, error %d\n", errno);
 			break;
