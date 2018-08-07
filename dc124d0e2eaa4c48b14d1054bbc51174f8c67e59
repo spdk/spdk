@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca98dcf3_ce3a3fa2",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1393,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T15:52:02Z",
+      "side": 1,
+      "message": "Error logs are already printed in API functions. There is no reason to duplicate them.",
+      "range": {
+        "startLine": 1393,
+        "startChar": 2,
+        "endLine": 1393,
+        "endChar": 43
+      },
+      "revId": "dc124d0e2eaa4c48b14d1054bbc51174f8c67e59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f46d2c2_38091145",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1416,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T15:52:02Z",
+      "side": 1,
+      "message": "Can we start returning more descriptive error messages pls? You already have error code in rc so it can be traslated.\nThanks",
+      "range": {
+        "startLine": 1416,
+        "startChar": 6,
+        "endLine": 1416,
+        "endChar": 26
+      },
+      "revId": "dc124d0e2eaa4c48b14d1054bbc51174f8c67e59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ff80ab6_48a514f8",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-07T15:52:02Z",
+      "side": 1,
+      "message": "Maybe ENOENT would be better here.",
+      "range": {
+        "startLine": 857,
+        "startChar": 10,
+        "endLine": 857,
+        "endChar": 16
+      },
+      "revId": "dc124d0e2eaa4c48b14d1054bbc51174f8c67e59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
