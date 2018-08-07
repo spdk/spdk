@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "340eb178_8cfb9c10",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-07T23:18:40Z",
+      "side": 1,
+      "message": "the extra tab looks being added unintentionally.",
+      "revId": "9276bd3aedc80e26d173e0fbadd47b38cbf08c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
