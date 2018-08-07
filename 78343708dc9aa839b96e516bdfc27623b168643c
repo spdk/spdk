@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f187a861_81990d9f",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-07T09:34:08Z",
+      "side": 1,
+      "message": "In the group_add_subsystem function, poll_group_update_subsystem() is called to allocate some channel resource. Later it found that some channel is NULL and the error popped up without cleaning up the allocated resource. We can also leave them to be cleaned up at the time of destruction.",
+      "parentUuid": "479e391c_988f7be2",
+      "revId": "78343708dc9aa839b96e516bdfc27623b168643c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5c665b5c_e4e70363",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 5
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "975de251_fa2266dc",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-07T09:34:08Z",
+      "side": 1,
+      "message": "In this way, maybe just log the error log and continue...?",
+      "parentUuid": "5c665b5c_e4e70363",
+      "revId": "78343708dc9aa839b96e516bdfc27623b168643c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d27d3ea_f06e77cf",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 5
@@ -47,6 +83,24 @@
       "writtenOn": "2018-07-11T01:39:05Z",
       "side": 1,
       "message": "I think just \"Could not allocate I/O channel.\" will be sufficient.  \"May config fewer cores\" will probably not help much - a lot more explanation would be needed.",
+      "revId": "78343708dc9aa839b96e516bdfc27623b168643c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "777a48a7_87d6b5f1",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 793,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-07T09:34:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d27d3ea_f06e77cf",
       "revId": "78343708dc9aa839b96e516bdfc27623b168643c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
