@@ -386,7 +386,6 @@ function rbd_setup() {
 		$NS_CMD $rootdir/scripts/ceph/start.sh $1
 
 		$NS_CMD ceph osd pool create $RBD_POOL $PG_NUM || true
-		$NS_CMD rbd pool init $RBD_POOL || true
 		$NS_CMD rbd create $RBD_NAME --size 1000
 	fi
 }
