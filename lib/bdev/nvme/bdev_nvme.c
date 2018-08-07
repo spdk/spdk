@@ -851,8 +851,19 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	   struct spdk_nvme_qpair *qpair, uint16_t cid)
 {
 	int rc;
+	union spdk_nvme_csts_register csts;
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
+
+	csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
+	if (csts.bits.cfs) {
+		SPDK_ERRLOG("Controller Fatal Status, reset required\n");
+		rc = spdk_nvme_ctrlr_reset(ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("Resetting controller failed.\n");
+		}
+		return;
+	}
 
 	switch (g_opts.action_on_timeout) {
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:

@@ -669,7 +669,10 @@ struct spdk_nvme_qpair;
  * request.
  *
  * For timeouts detected on the admin queue pair, the qpair returned here will
- * be NULL.
+ * be NULL.  If the controller has a serious error condition and is unable to
+ * communicate with driver via completion queue, the controller can set Controller
+ * Fatal Status field to 1, then reset is required to recover from such error.
+ * Users may detect Controller Fatal Status when timeout happens.
  *
  * \param cb_arg Argument passed to callback funciton.
  * \param ctrlr Opaque handle to NVMe controller.
