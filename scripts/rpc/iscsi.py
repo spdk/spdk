@@ -184,6 +184,15 @@ def chap_group_delete_secret(client, tag, user):
     return client.call('chap_group_delete_secret', params)
 
 
+def get_chap_groups(client):
+    """Display current CHAP group configuration.
+
+    Returns:
+        List of current CHAP group configuration.
+    """
+    return client.call('get_chap_groups')
+
+
 def get_portal_groups(client):
     """Display current portal group configuration.
 
