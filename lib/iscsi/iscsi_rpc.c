@@ -1512,3 +1512,28 @@ spdk_rpc_chap_group_delete_secret(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("chap_group_delete_secret", spdk_rpc_chap_group_delete_secret, SPDK_RPC_RUNTIME)
+
+static void
+spdk_rpc_get_chap_groups(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_chap_groups requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	spdk_iscsi_chap_groups_info_json(w);
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_chap_groups", spdk_rpc_get_chap_groups, SPDK_RPC_RUNTIME)

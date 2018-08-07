@@ -602,6 +602,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=chap_group_delete_secret)
 
     @call_cmd
+    def get_chap_groups(args):
+        print_dict(rpc.iscsi.get_chap_groups(args.client))
+
+    p = subparsers.add_parser('get_chap_groups',
+                              help='Display current chap group configuration')
+    p.set_defaults(func=get_chap_groups)
+
+    @call_cmd
     def get_portal_groups(args):
         print_dict(rpc.iscsi.get_portal_groups(args.client))
 

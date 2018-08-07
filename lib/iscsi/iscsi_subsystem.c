@@ -1431,6 +1431,45 @@ spdk_iscsi_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_object_end(w);
 }
 
+static void
+spdk_iscsi_chap_group_info_json(struct spdk_iscsi_chap_group *group,
+				struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_chap_secret *_secret;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_int32(w, "tag", group->tag);
+
+	spdk_json_write_named_array_begin(w, "secrets");
+	TAILQ_FOREACH(_secret, &group->secret_head, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "user", _secret->user);
+		spdk_json_write_named_string(w, "secret", _secret->secret);
+
+		if (_secret->muser != NULL) {
+			spdk_json_write_named_string(w, "muser", _secret->muser);
+			spdk_json_write_named_string(w, "msecret", _secret->msecret);
+		}
+
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+void
+spdk_iscsi_chap_groups_info_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_chap_group *group;
+
+	TAILQ_FOREACH(group, &g_spdk_iscsi.chap_group_head, tailq) {
+		spdk_iscsi_chap_group_info_json(group, w);
+	}
+}
+
 void
 spdk_iscsi_config_json(struct spdk_json_write_ctx *w)
 {
