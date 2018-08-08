@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37802357_108f0a18",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 1540,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-08T07:36:51Z",
+      "side": 1,
+      "message": "Please change those to more standard block size, like in other places - 4096.",
+      "range": {
+        "startLine": 1540,
+        "startChar": 59,
+        "endLine": 1540,
+        "endChar": 63
+      },
+      "revId": "61c378b2118ccca7166af035c9edcb88611aca70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42962e91_cb7c07a5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-08T07:36:51Z",
+      "side": 1,
+      "message": "4096",
+      "range": {
+        "startLine": 1541,
+        "startChar": 60,
+        "endLine": 1541,
+        "endChar": 64
+      },
+      "revId": "61c378b2118ccca7166af035c9edcb88611aca70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5de6e917_d5b085c2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 1592,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-08T07:36:51Z",
+      "side": 1,
+      "message": "4096",
+      "range": {
+        "startLine": 1592,
+        "startChar": 59,
+        "endLine": 1592,
+        "endChar": 63
+      },
+      "revId": "61c378b2118ccca7166af035c9edcb88611aca70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be6339a7_4c595a54",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 1593,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-08T07:36:51Z",
+      "side": 1,
+      "message": "4096",
+      "range": {
+        "startLine": 1593,
+        "startChar": 60,
+        "endLine": 1593,
+        "endChar": 64
+      },
+      "revId": "61c378b2118ccca7166af035c9edcb88611aca70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
