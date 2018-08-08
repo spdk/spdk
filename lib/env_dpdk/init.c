@@ -109,11 +109,6 @@ spdk_env_unlink_shared_files(void)
 {
 	char buffer[PATH_MAX];
 
-	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_config", getpid());
-	if (unlink(buffer)) {
-		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
-	}
-
 #if RTE_VERSION < RTE_VERSION_NUM(18, 05, 0, 0)
 	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_hugepage_info", getpid());
 	if (unlink(buffer)) {
@@ -215,6 +210,12 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 
 	/* set the program name */
 	args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s", opts->name));
+	if (args == NULL) {
+		return -1;
+	}
+
+	/* disable shared configuration files. This allows for cleaner shutdown */
+	args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s", "--no-shconf"));
 	if (args == NULL) {
 		return -1;
 	}
