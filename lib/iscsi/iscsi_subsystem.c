@@ -397,6 +397,7 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->authfile = NULL;
 	opts->nodebase = NULL;
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
+	opts->no_authfile = false;
 }
 
 struct spdk_iscsi_opts *
@@ -469,6 +470,7 @@ spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src)
 	dst->req_discovery_auth_mutual = src->req_discovery_auth_mutual;
 	dst->discovery_auth_group = src->discovery_auth_group;
 	dst->min_connections_per_core = src->min_connections_per_core;
+	dst->no_authfile = src->no_authfile;
 
 	return dst;
 }
@@ -747,6 +749,7 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.req_discovery_auth = opts->req_discovery_auth;
 	g_spdk_iscsi.req_discovery_auth_mutual = opts->req_discovery_auth_mutual;
 	g_spdk_iscsi.discovery_auth_group = opts->discovery_auth_group;
+	g_spdk_iscsi.no_authfile = opts->no_authfile;
 
 	spdk_iscsi_conn_set_min_per_core(opts->min_connections_per_core);
 
@@ -1251,7 +1254,7 @@ spdk_iscsi_parse_configuration(void *ctx)
 		SPDK_ERRLOG("spdk_iscsi_parse_tgt_nodes() failed\n");
 	}
 
-	if (access(g_spdk_iscsi.authfile, R_OK) == 0) {
+	if (!g_spdk_iscsi.no_authfile && access(g_spdk_iscsi.authfile, R_OK) == 0) {
 		rc = spdk_iscsi_parse_auth_info();
 		if (rc < 0) {
 			SPDK_ERRLOG("spdk_iscsi_parse_auth_info() failed\n");
@@ -1409,6 +1412,8 @@ spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_uint32(w, "min_connections_per_core",
 				     spdk_iscsi_conn_get_min_per_core());
+
+	spdk_json_write_named_bool(w, "no_auth_file", g_spdk_iscsi.no_authfile);
 
 	spdk_json_write_object_end(w);
 }
