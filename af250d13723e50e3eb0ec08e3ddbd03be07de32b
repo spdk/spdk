@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "feeb97f0_220dc5fe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:29:09Z",
+      "side": 1,
+      "message": "Pls remove size",
+      "range": {
+        "startLine": 71,
+        "startChar": 32,
+        "endLine": 71,
+        "endChar": 66
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "344ea7d8_81642959",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:29:09Z",
+      "side": 1,
+      "message": "const char",
+      "range": {
+        "startLine": 1230,
+        "startChar": 1,
+        "endLine": 1230,
+        "endChar": 7
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfa13c7e_c6aa7dc8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:29:09Z",
+      "side": 1,
+      "message": "pls remove size",
+      "range": {
+        "startLine": 1230,
+        "startChar": 14,
+        "endLine": 1230,
+        "endChar": 48
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1948db41_c99032df",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1232,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:29:09Z",
+      "side": 1,
+      "message": "Pls make it global as you did with qos_type_str",
+      "range": {
+        "startLine": 1230,
+        "startChar": 1,
+        "endLine": 1232,
+        "endChar": 12
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59a79aa0_b5b57c26",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1255,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:29:09Z",
+      "side": 1,
+      "message": "Maybe something like this?\n\n  limit \u003d qos-\u003erate_limits[i].limit;\n  limit \u003d limit \u003d\u003d UINT64_MAX ? 0 : limit\n  if (_spdk_bdev_qos_is_iops_rate_limit(i) \u003d\u003d false) {\n    limit /\u003d 1024 * 1024;\n  }\n  spdk_json_write_named_uint64(w, limits[i], limit);",
+      "range": {
+        "startLine": 1244,
+        "startChar": 0,
+        "endLine": 1255,
+        "endChar": 2
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
