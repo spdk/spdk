@@ -148,9 +148,18 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 		goto out_insert;
 	}
 
+	ret = spdk_mem_map_set_translation(g_vtophys_map, vaddr, size, iova);
+	if (ret) {
+		DEBUG_PRINT("Cannot set up vtophys translation, error %d\n", ret);
+		pthread_mutex_unlock(&g_vfio.mutex);
+		free(dma_map);
+		return ret;
+	}
+
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
 	if (ret) {
 		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
+		spdk_mem_map_clear_translation(g_vtophys_map, vaddr, size);
 		pthread_mutex_unlock(&g_vfio.mutex);
 		free(dma_map);
 		return ret;
@@ -394,7 +403,6 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				return -EINVAL;
 			}
 
-			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
 			break;
 		case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
 #if SPDK_VFIO_ENABLED
