@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "625f0677_9ea37d25",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-08T10:13:06Z",
+      "side": 0,
+      "message": "I think that this command is valid in ceph, why remove it?",
+      "range": {
+        "startLine": 389,
+        "startChar": 34,
+        "endLine": 389,
+        "endChar": 36
+      },
+      "revId": "2b3abb2a339cfb1033108808ffa7577b860cca09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
