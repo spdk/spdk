@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62249e03_9759ce27",
+        "filename": "examples/sock/hello_world/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T23:12:47Z",
+      "side": 1,
+      "message": "Hi Tomek,\n\nCan we remove all of the bdev and copy-related libraries?  We shouldn\u0027t need them for socket operations.\n\nThis would also include COPY_* and BLOCKDEV_* stuff in later lines in this Makefile.\n\n-Jim",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dac8183b_7050cb70",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T23:12:47Z",
+      "side": 1,
+      "message": "should this say \"server mode\"?  the commit message and the g_is_server variable use \"server\" instead of \"listen\".",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad09293e_bd06e695",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T23:12:47Z",
+      "side": 1,
+      "message": "these should be aligned - first two are using tabs (and one of the tabs could be removed), the last line isn\u0027t tabbed",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c3aabae_c617662a",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T23:12:47Z",
+      "side": 1,
+      "message": "same as above (name alignment)\n\nsimilar on functions below",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16d8b305_7bd3052f",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T23:12:47Z",
+      "side": 1,
+      "message": "STDIN_FILENO would make this more obvious than using 0",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c8bd21a_85a09a02",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T23:12:47Z",
+      "side": 1,
+      "message": "the 1024 number gets used a lot - maybe we should #define this at the top of the file?",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a8465d4_27545363",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T23:12:47Z",
+      "side": 1,
+      "message": "this comment can probably be removed - it doesn\u0027t provide extra useful information to the reader (they can see it is calling spdk_sock_listen())",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d3332de_455df781",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T23:12:47Z",
+      "side": 1,
+      "message": "this should be removed",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
