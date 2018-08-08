@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b59b1c3_4773f778",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T17:23:43Z",
+      "side": 1,
+      "message": "can we make the names of these consistent with similar names for discovery auth RPC?\n\nfor example, these include \"chap\" in the names, but the discovery ones do not\n\nthis one uses \"require\" while discovery one uses \"req\"\n\nI know that the names chosen here match the C structure member names.  So maybe the C structure member names should be changed too?",
+      "revId": "e19665d56f1302b4ff5ce88593abcf0484a78ee8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5237a2b_4cd45874",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T17:23:43Z",
+      "side": 1,
+      "message": "maybe set_iscsi_target_node_auth?  it would be consistent with name of similar RPC for discovery that I suggested in previous patch review",
+      "revId": "e19665d56f1302b4ff5ce88593abcf0484a78ee8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
