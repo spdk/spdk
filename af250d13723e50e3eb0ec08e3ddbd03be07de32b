@@ -114,6 +114,144 @@
       "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "975246ca_8f73f931",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1255,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:40:47Z",
+      "side": 1,
+      "message": "You introduce spdk_bdev_get_qos_rate_limits in this patch so why this copy paste here?",
+      "range": {
+        "startLine": 1244,
+        "startChar": 1,
+        "endLine": 1255,
+        "endChar": 2
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e555cfce_e161ff5e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1728,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:40:47Z",
+      "side": 1,
+      "message": "Maybe something like this?\n\n  limits[i] \u003d qos-\u003erate_limits[i].limit;\n  limits[i] \u003d limit \u003d\u003d UINT64_MAX ? 0 : limit\n  if (_spdk_bdev_qos_is_iops_rate_limit(i) \u003d\u003d false) {\n    limits[i] /\u003d 1024 * 1024;\n  }",
+      "range": {
+        "startLine": 1718,
+        "startChar": 0,
+        "endLine": 1728,
+        "endChar": 3
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbbe9925_ecfce262",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:40:47Z",
+      "side": 1,
+      "message": "can you add some function that will translate qos to it\u0027s name so this won\u0027t be needed all over again?",
+      "range": {
+        "startLine": 217,
+        "startChar": 0,
+        "endLine": 219,
+        "endChar": 12
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbbeefe2_1bb23c7d",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:40:47Z",
+      "side": 1,
+      "message": "spdk_json_write_named_uint64",
+      "range": {
+        "startLine": 263,
+        "startChar": 2,
+        "endLine": 263,
+        "endChar": 22
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9627618_f6da441e",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:40:47Z",
+      "side": 1,
+      "message": "Please look at all files in this patch to remove all not needed variables and initialization.",
+      "range": {
+        "startLine": 613,
+        "startChar": 6,
+        "endLine": 613,
+        "endChar": 10
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab262d69_60c511f4",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:40:47Z",
+      "side": 1,
+      "message": "pls return meaningful error response rather than generic one all the time.",
+      "range": {
+        "startLine": 644,
+        "startChar": 78,
+        "endLine": 644,
+        "endChar": 98
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
