@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f587a46_b8340325",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-08T07:06:52Z",
+      "side": 1,
+      "message": "Typo \"into\" or \"by\"",
+      "range": {
+        "startLine": 280,
+        "startChar": 42,
+        "endLine": 280,
+        "endChar": 46
+      },
+      "revId": "421770928f38b4ba7b313fc69a57fef38dff13e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ad40f98_9d25f5f4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-08T07:06:52Z",
+      "side": 1,
+      "message": "Description although true, doesn\u0027t really explain why its done this way rather than just get_lvs_size()/split_num.\n\n\"Actual size of lvol bdevs on creation is rounded up to multiple of cluster size. In order to avoid over provisioning, this function returns lvol store size in MB divided by split_num - rounded down to multiple of cluster size.\"\n\nPlease let me know if you think this sounds better.",
+      "range": {
+        "startLine": 280,
+        "startChar": 0,
+        "endLine": 281,
+        "endChar": 34
+      },
+      "revId": "421770928f38b4ba7b313fc69a57fef38dff13e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
