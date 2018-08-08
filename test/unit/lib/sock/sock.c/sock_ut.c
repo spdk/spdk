@@ -144,6 +144,7 @@ spdk_ut_sock_close(struct spdk_sock *_sock)
 	if (sock == g_ut_client_sock) {
 		g_ut_client_sock = NULL;
 	}
+	free(_sock);
 
 	return 0;
 }
