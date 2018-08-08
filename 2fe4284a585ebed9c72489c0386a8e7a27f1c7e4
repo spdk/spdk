@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f5f117b4_5d7ef3a0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1228,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c49f62f_09f79831",
+      "range": {
+        "startLine": 1228,
+        "startChar": 6,
+        "endLine": 1228,
+        "endChar": 10
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1715830a_dc13c56e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 50
@@ -36,6 +60,30 @@
       "writtenOn": "2018-08-07T16:40:53Z",
       "side": 1,
       "message": "you can easly merge this loop with loop in lines 1255 to get rid of this ugly variables \u0027limits\u0027 and \u0027limit_strs\u0027",
+      "range": {
+        "startLine": 1239,
+        "startChar": 0,
+        "endLine": 1248,
+        "endChar": 2
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6edebe53_5a7c1046",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1248,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "Thanks for the suggestion. The array of string will be remained so that it can easily extend to new types of rate limits. In this patch, have introduced several help functions like _is_iops_rate_limit() in order to support new types of rate limits.",
+      "parentUuid": "1715830a_dc13c56e",
       "range": {
         "startLine": 1239,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "380fca64_db5551d6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1546,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "29bad731_5979178a",
+      "range": {
+        "startLine": 1546,
+        "startChar": 6,
+        "endLine": 1546,
+        "endChar": 11
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b9dc987b_dbeeaac3",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 50
@@ -82,6 +154,30 @@
       "writtenOn": "2018-08-07T16:40:53Z",
       "side": 1,
       "message": "Can you use memset for whole rate_limits array?",
+      "range": {
+        "startLine": 1576,
+        "startChar": 0,
+        "endLine": 1580,
+        "endChar": 2
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac32e232_dbd3c210",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1580,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9dc987b_dbeeaac3",
       "range": {
         "startLine": 1576,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "a7daadbc_4de121e8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1713,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "381de1ff_7cd6e07f",
+      "range": {
+        "startLine": 1711,
+        "startChar": 0,
+        "endLine": 1713,
+        "endChar": 2
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09cbe446_9abd4939",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 50
@@ -128,6 +248,30 @@
       "writtenOn": "2018-08-07T16:40:53Z",
       "side": 1,
       "message": "Now you always set this in this function so no need to initialize it any more.",
+      "range": {
+        "startLine": 2838,
+        "startChar": 21,
+        "endLine": 2838,
+        "endChar": 25
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d47b37c_4bd787f0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 2838,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "09cbe446_9abd4939",
       "range": {
         "startLine": 2838,
         "startChar": 21,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "a60dece0_68dc7902",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 2840,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "60d2a4b7_1cb9a4c1",
+      "range": {
+        "startLine": 2840,
+        "startChar": 8,
+        "endLine": 2840,
+        "endChar": 11
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "057b8f6f_603ba2be",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 50
@@ -174,6 +342,30 @@
       "writtenOn": "2018-08-07T16:40:53Z",
       "side": 1,
       "message": "if (i \u003d\u003d SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES) ?",
+      "range": {
+        "startLine": 2849,
+        "startChar": 5,
+        "endLine": 2849,
+        "endChar": 27
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b163d2a9_e81201d3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 2849,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "057b8f6f_603ba2be",
       "range": {
         "startLine": 2849,
         "startChar": 5,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "cd13d370_25708f50",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 3567,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9783b0da_a2188a3e",
+      "range": {
+        "startLine": 3567,
+        "startChar": 6,
+        "endLine": 3567,
+        "endChar": 10
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3cc6b5ab_168143cb",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 50
@@ -220,6 +436,30 @@
       "writtenOn": "2018-08-07T16:40:53Z",
       "side": 1,
       "message": "^",
+      "range": {
+        "startLine": 3584,
+        "startChar": 0,
+        "endLine": 3587,
+        "endChar": 14
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b925bbd7_5f320cd0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 3587,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:13:18Z",
+      "side": 1,
+      "message": "disable_rate_limit needs to have the initialized value as it is used in the line 3634 where at line 3591, it can always \"continue\" to break out the loop with uninitialized value.",
+      "parentUuid": "3cc6b5ab_168143cb",
       "range": {
         "startLine": 3584,
         "startChar": 0,
