@@ -329,8 +329,14 @@ static int
 spdk_posix_sock_close(struct spdk_sock *_sock)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
 
-	return close(sock->fd);
+	rc = close(sock->fd);
+	if (rc == 0) {
+		free(sock);
+	}
+
+	return rc;
 }
 
 static ssize_t
