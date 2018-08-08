@@ -75,6 +75,29 @@
       "revId": "6b940848c22a40f964383b4e1e3e394034994bed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb1b0acf_7adf1482",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2342,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T00:50:08Z",
+      "side": 1,
+      "message": "This addition will be addressed in separate patches?\nThis is not in poll group removal but qpair removal.\nSo not including in this patch looks reasonable to me.",
+      "range": {
+        "startLine": 2341,
+        "startChar": 0,
+        "endLine": 2342,
+        "endChar": 25
+      },
+      "revId": "6b940848c22a40f964383b4e1e3e394034994bed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
