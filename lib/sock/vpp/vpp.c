@@ -346,6 +346,7 @@ spdk_vpp_sock_close(struct spdk_sock *_sock)
 		errno = -rc;
 		return -1;
 	}
+	free(sock);
 
 	return 0;
 }

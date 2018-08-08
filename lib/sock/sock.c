@@ -111,7 +111,6 @@ spdk_sock_close(struct spdk_sock **sock)
 
 	rc = (*sock)->net_impl->close(*sock);
 	if (rc == 0) {
-		free(*sock);
 		*sock = NULL;
 	}
 
