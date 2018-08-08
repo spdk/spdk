@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "3d99fec1_ee4fc908",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T08:26:11Z",
+      "side": 1,
+      "message": "Your concern makes sense to me and I\u0027m working on that now. That may be the week after next because I will have a vacation. But I\u0027ll do that anyway. Sorry for inconvenience.",
+      "parentUuid": "c7ee8a2e_fb43463e",
+      "range": {
+        "startLine": 808,
+        "startChar": 1,
+        "endLine": 808,
+        "endChar": 30
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64b5d3ec_c106a649",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 1
