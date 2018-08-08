@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0b7a9999_ee6aa6ce",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:08:13Z",
+      "side": 1,
+      "message": "As you suggest, we should have the fixed max string size in user names and secrets.\n\nThis is a little different issue and hence may I do in separate patches?",
+      "parentUuid": "c2558310_7192b405",
+      "range": {
+        "startLine": 808,
+        "startChar": 1,
+        "endLine": 808,
+        "endChar": 30
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64b5d3ec_c106a649",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-08-07T16:17:35Z",
       "side": 1,
       "message": "-ENOMEM",
+      "range": {
+        "startLine": 946,
+        "startChar": 9,
+        "endLine": 946,
+        "endChar": 11
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4439099_3e1b3eff",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:08:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64b5d3ec_c106a649",
       "range": {
         "startLine": 946,
         "startChar": 9,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "58101552_35bc61f0",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:08:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b27da073_67bda7b2",
+      "range": {
+        "startLine": 953,
+        "startChar": 9,
+        "endLine": 953,
+        "endChar": 11
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e209c65_4091be00",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2018-08-07T16:17:35Z",
       "side": 1,
       "message": "-EINVAL?",
+      "range": {
+        "startLine": 963,
+        "startChar": 11,
+        "endLine": 963,
+        "endChar": 13
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35a32c58_a7dada17",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 963,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:08:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3e209c65_4091be00",
       "range": {
         "startLine": 963,
         "startChar": 11,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "166d34f3_81a1572b",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 971,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:08:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3cfba4b7_33f81682",
+      "range": {
+        "startLine": 971,
+        "startChar": 11,
+        "endLine": 971,
+        "endChar": 13
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d7ae226_a42f3b1a",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 1
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "72a28d4d_17626d1e",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:08:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d7ae226_a42f3b1a",
+      "range": {
+        "startLine": 1018,
+        "startChar": 9,
+        "endLine": 1018,
+        "endChar": 11
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0778810_6189b874",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 1
@@ -151,6 +295,30 @@
       "writtenOn": "2018-08-07T16:17:35Z",
       "side": 1,
       "message": "-ENOMEM",
+      "range": {
+        "startLine": 1047,
+        "startChar": 7,
+        "endLine": 1047,
+        "endChar": 10
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d98ae6f_d3ee2190",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:08:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0778810_6189b874",
       "range": {
         "startLine": 1047,
         "startChar": 7,
@@ -202,6 +370,54 @@
         "startChar": 1,
         "endLine": 1195,
         "endChar": 48
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd73e16a_f025ea4e",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1195,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:08:13Z",
+      "side": 1,
+      "message": "Even if we don\u0027t have RPCs to configure CHAP, we can use iSCSI target not by using CHAP authentication.\n\nBut some notification should be added and I add a message as SPDK_INFOLOG.\n\nThank you for your feedback.",
+      "parentUuid": "21beb348_e583587f",
+      "range": {
+        "startLine": 1195,
+        "startChar": 1,
+        "endLine": 1195,
+        "endChar": 48
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bef99b6b_3376ce42",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1195,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:08:13Z",
+      "side": 1,
+      "message": "Oh, F_OK is not enough. Thank you.",
+      "parentUuid": "b4c21dc2_6d095036",
+      "range": {
+        "startLine": 1195,
+        "startChar": 35,
+        "endLine": 1195,
+        "endChar": 39
       },
       "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
