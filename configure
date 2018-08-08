@@ -239,6 +239,15 @@ for i in "$@"; do
 	esac
 done
 
+case "$CONFIG_LOG_BACKTRACE" in
+	""|ERROR|WARN|NOTICE|DEBUG)
+		;;
+	*)
+		echo "Invalid '--enable-log-bt=$CONFIG_LOG_BACKTRACE' option. Valid levels are ERROR, WARN, NOTICE or DEBUG"
+		exit 1
+		;;
+esac
+
 if [ -z "$CONFIG_ENV" ]; then
 	if [ -z "$CONFIG_DPDK_DIR" ]; then
 		rootdir=$(readlink -f $(dirname $0))
