@@ -47,6 +47,7 @@
 #include "spdk_internal/log.h"
 
 static int bdev_aio_initialize(void);
+static void bdev_aio_fini(void);
 static void aio_free_disk(struct file_disk *fdisk);
 static void bdev_aio_get_spdk_running_config(FILE *fp);
 static TAILQ_HEAD(, file_disk) g_aio_disk_head;
@@ -62,9 +63,14 @@ bdev_aio_get_ctx_size(void)
 static struct spdk_bdev_module aio_if = {
 	.name		= "aio",
 	.module_init	= bdev_aio_initialize,
-	.module_fini	= NULL,
+	.module_fini	= bdev_aio_fini,
 	.config_text	= bdev_aio_get_spdk_running_config,
 	.get_ctx_size	= bdev_aio_get_ctx_size,
+};
+
+struct bdev_aio_group_channel {
+	struct spdk_poller			*poller;
+	TAILQ_HEAD(, bdev_aio_io_channel)	aio_channel_head;
 };
 
 SPDK_BDEV_MODULE_REGISTER(&aio_if)
@@ -207,10 +213,11 @@ bdev_aio_initialize_io_channel(struct bdev_aio_io_channel *ch)
 }
 
 static int
-bdev_aio_poll(void *arg)
+bdev_aio_group_poll(void *arg)
 {
-	struct bdev_aio_io_channel *ch = arg;
-	int nr, i;
+	struct bdev_aio_group_channel *group_ch = arg;
+	struct bdev_aio_io_channel *ch;
+	int nr, i, total_nr = 0;
 	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
 	struct timespec timeout;
@@ -218,28 +225,31 @@ bdev_aio_poll(void *arg)
 
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
+	TAILQ_FOREACH(ch, &group_ch->aio_channel_head, link) {
+		nr = io_getevents(ch->io_ctx, 1, SPDK_AIO_QUEUE_DEPTH,
+				  events, &timeout);
 
-	nr = io_getevents(ch->io_ctx, 1, SPDK_AIO_QUEUE_DEPTH,
-			  events, &timeout);
-
-	if (nr < 0) {
-		SPDK_ERRLOG("%s: io_getevents returned %d\n", __func__, nr);
-		return -1;
-	}
-
-	for (i = 0; i < nr; i++) {
-		aio_task = events[i].data;
-		if (events[i].res != aio_task->len) {
-			status = SPDK_BDEV_IO_STATUS_FAILED;
-		} else {
-			status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		if (nr < 0) {
+			SPDK_ERRLOG("%s: Returned %d on bdev_aio_io_channel %p\n", __func__, nr,
+				    ch);
+			continue;
 		}
 
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
-		ch->io_inflight--;
+		total_nr += nr;
+		for (i = 0; i < nr; i++) {
+			aio_task = events[i].data;
+			if (events[i].res != aio_task->len) {
+				status = SPDK_BDEV_IO_STATUS_FAILED;
+			} else {
+				status = SPDK_BDEV_IO_STATUS_SUCCESS;
+			}
+
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
+			ch->io_inflight--;
+		}
 	}
 
-	return nr;
+	return total_nr;
 }
 
 static void
@@ -364,12 +374,15 @@ static int
 bdev_aio_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_io_channel *ch = ctx_buf;
+	struct bdev_aio_group_channel *group_ch_ctx;
 
 	if (bdev_aio_initialize_io_channel(ch) != 0) {
 		return -1;
 	}
 
-	ch->poller = spdk_poller_register(bdev_aio_poll, ch, 0);
+	ch->group_ch = spdk_get_io_channel(&aio_if);
+	group_ch_ctx = spdk_io_channel_get_ctx(ch->group_ch);
+	TAILQ_INSERT_TAIL(&group_ch_ctx->aio_channel_head, ch, link);
 	return 0;
 }
 
@@ -377,9 +390,13 @@ static void
 bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_io_channel *io_channel = ctx_buf;
+	struct bdev_aio_group_channel *group_ch_ctx;
 
+	group_ch_ctx = spdk_io_channel_get_ctx(io_channel->group_ch);
+	TAILQ_REMOVE(&group_ch_ctx->aio_channel_head, io_channel, link);
+	spdk_put_io_channel(io_channel->group_ch);
 	io_destroy(io_channel->io_ctx);
-	spdk_poller_unregister(&io_channel->poller);
+
 }
 
 static struct spdk_io_channel *
@@ -444,6 +461,24 @@ static void aio_free_disk(struct file_disk *fdisk)
 	free(fdisk->filename);
 	free(fdisk->disk.name);
 	free(fdisk);
+}
+
+static int
+bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
+{
+	struct bdev_aio_group_channel *ch = ctx_buf;
+
+	TAILQ_INIT(&ch->aio_channel_head);
+	ch->poller = spdk_poller_register(bdev_aio_group_poll, ch, 0);
+	return 0;
+}
+
+static void
+bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct bdev_aio_group_channel *ch = ctx_buf;
+
+	spdk_poller_unregister(&ch->poller);
 }
 
 struct spdk_bdev *
@@ -593,6 +628,9 @@ bdev_aio_initialize(void)
 	struct spdk_bdev *bdev;
 
 	TAILQ_INIT(&g_aio_disk_head);
+	spdk_io_device_register(&aio_if, bdev_aio_group_create_cb, bdev_aio_group_destroy_cb,
+				sizeof(struct bdev_aio_group_channel));
+
 	sp = spdk_conf_find_section(NULL, "AIO");
 	if (!sp) {
 		return 0;
@@ -633,6 +671,12 @@ bdev_aio_initialize(void)
 	}
 
 	return 0;
+}
+
+static void
+bdev_aio_fini(void)
+{
+	spdk_io_device_unregister(&aio_if, NULL);
 }
 
 static void
