@@ -35,5 +35,6 @@ trap 'on_error_exit "${FUNCNAME}" "${LINENO}"; rm -f $base_nvmf_config $last_nvm
 timing_enter nvmf_json_config
 test_subsystems
 timing_exit nvmf_json_config
+revert_soft_roce
 
 report_test_completion nvmf_json_config
