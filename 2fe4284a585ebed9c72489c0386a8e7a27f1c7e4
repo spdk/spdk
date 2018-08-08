@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "9aa2aa97_85669ced",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1580,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-08T02:40:05Z",
+      "side": 1,
+      "message": "Just tested, one member of the structure will not be zeroed. So leave it as is.",
+      "parentUuid": "ac32e232_dbd3c210",
+      "range": {
+        "startLine": 1576,
+        "startChar": 0,
+        "endLine": 1580,
+        "endChar": 2
+      },
+      "revId": "2fe4284a585ebed9c72489c0386a8e7a27f1c7e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "381de1ff_7cd6e07f",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 50
