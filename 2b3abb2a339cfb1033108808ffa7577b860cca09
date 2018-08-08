@@ -22,6 +22,30 @@
       "revId": "2b3abb2a339cfb1033108808ffa7577b860cca09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d83b46b_afc4ab02",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-08T15:37:18Z",
+      "side": 0,
+      "message": "We have nightly test logs that show this command is not valid.\n\nSee this log from last night\u0027s nightly test run:\n\nhttps://ci.spdk.io/spdk/builds/review/5e6901fef6048c9ec854c7c052d93ad46981433b.1533729636/fedora-02/build.log\n\nSearch for \"rbd pool init\".",
+      "parentUuid": "625f0677_9ea37d25",
+      "range": {
+        "startLine": 389,
+        "startChar": 34,
+        "endLine": 389,
+        "endChar": 36
+      },
+      "revId": "2b3abb2a339cfb1033108808ffa7577b860cca09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
