@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "c7ee8a2e_fb43463e",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-08T08:07:27Z",
+      "side": 1,
+      "message": "Just asking. libiscsi uses fixed max string size, just wondering why we can\u0027t do the same to limit amount of malloc/free.",
+      "parentUuid": "0b7a9999_ee6aa6ce",
+      "range": {
+        "startLine": 808,
+        "startChar": 1,
+        "endLine": 808,
+        "endChar": 30
+      },
+      "revId": "fd585358db50c6012d7ed1420fb071ebfd7416b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64b5d3ec_c106a649",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 1
