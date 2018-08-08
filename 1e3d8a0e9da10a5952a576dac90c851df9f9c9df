@@ -74,6 +74,24 @@
       "revId": "1e3d8a0e9da10a5952a576dac90c851df9f9c9df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "225135c6_9ccfd1de",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T07:45:41Z",
+      "side": 1,
+      "message": "Thank you for lecturing me, I got it. Your update patch looks refined. I\u0027ll read it.",
+      "parentUuid": "059a7875_33dc0372",
+      "revId": "1e3d8a0e9da10a5952a576dac90c851df9f9c9df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
