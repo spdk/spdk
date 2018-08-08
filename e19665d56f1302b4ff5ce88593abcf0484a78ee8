@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e75f520f_b4860f64",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T23:17:44Z",
+      "side": 1,
+      "message": "OK, now is the good chance to use more consistent naming rule for iSCSI initiator-target authentication.\n\nI\u0027ll do this in the first patch of the series.",
+      "parentUuid": "3b59b1c3_4773f778",
+      "revId": "e19665d56f1302b4ff5ce88593abcf0484a78ee8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5237a2b_4cd45874",
         "filename": "lib/iscsi/iscsi_rpc.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-08T17:23:43Z",
       "side": 1,
       "message": "maybe set_iscsi_target_node_auth?  it would be consistent with name of similar RPC for discovery that I suggested in previous patch review",
+      "revId": "e19665d56f1302b4ff5ce88593abcf0484a78ee8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "258f1df7_c2fcf6db",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1105,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-08T23:17:44Z",
+      "side": 1,
+      "message": "set_iscsi_target_node_auth looks nice. I\u0027ll use it. Thank you.",
+      "parentUuid": "a5237a2b_4cd45874",
       "revId": "e19665d56f1302b4ff5ce88593abcf0484a78ee8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
