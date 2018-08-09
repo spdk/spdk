@@ -114,7 +114,7 @@ static struct spdk_mem_map *g_vtophys_map;
 
 #if SPDK_VFIO_ENABLED
 static int
-vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
+vtophys_iommu_map_dma_one(uint64_t vaddr, uint64_t iova)
 {
 	struct spdk_vfio_dma_map *dma_map;
 	int ret;
@@ -128,12 +128,12 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 	dma_map->map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
 	dma_map->map.vaddr = vaddr;
 	dma_map->map.iova = iova;
-	dma_map->map.size = size;
+	dma_map->map.size = VALUE_2MB;
 
 	dma_map->unmap.argsz = sizeof(dma_map->unmap);
 	dma_map->unmap.flags = 0;
 	dma_map->unmap.iova = iova;
-	dma_map->unmap.size = size;
+	dma_map->unmap.size = VALUE_2MB;
 
 	pthread_mutex_lock(&g_vfio.mutex);
 	if (g_vfio.device_ref == 0) {
@@ -169,7 +169,7 @@ out_insert:
 }
 
 static int
-vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
+vtophys_iommu_unmap_dma_one(uint64_t iova)
 {
 	struct spdk_vfio_dma_map *dma_map;
 	int ret;
@@ -187,14 +187,10 @@ vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 		return -ENXIO;
 	}
 
-	/** don't support partial or multiple-page unmap for now */
-	assert(dma_map->map.size == size);
-
 	if (g_vfio.device_ref == 0) {
 		/* Memory is not mapped anymore, just remove it's references */
 		goto out_remove;
 	}
-
 
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
 	if (ret) {
@@ -369,7 +365,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 					 * addresses will never overlap.
 					 */
 					paddr = (uint64_t)vaddr;
-					rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
+					rc = vtophys_iommu_map_dma_one((uint64_t)vaddr, paddr);
 					if (rc) {
 						return -EFAULT;
 					}
@@ -406,7 +402,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				 */
 				if (g_vfio.enabled) {
 					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, VALUE_2MB);
-					rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
+					rc = vtophys_iommu_unmap_dma_one(paddr);
 					if (rc) {
 						return -EFAULT;
 					}
