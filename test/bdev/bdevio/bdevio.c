@@ -38,14 +38,13 @@
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"
+#include "spdk/event.h"
 
 #include "CUnit/Basic.h"
 
 #define BUFFER_IOVS		1024
 #define BUFFER_SIZE		260 * 1024
 #define BDEV_TASK_ARRAY_SIZE	2048
-
-#include "../common.c"
 
 pthread_mutex_t g_test_mutex;
 pthread_cond_t g_test_cond;
@@ -940,21 +939,31 @@ test_main(void *arg1, void *arg2)
 	spdk_event_call(event);
 }
 
+static void
+bdevio_usage(void)
+{
+}
+
+static void
+bdevio_parse_arg(int ch, char *arg)
+{
+}
+
 int
 main(int argc, char **argv)
 {
-	const char		*config_file;
 	int			num_failures;
 	struct spdk_app_opts	opts = {};
 
-	if (argc == 1) {
-		config_file = "/usr/local/etc/spdk/iscsi.conf";
-	} else {
-		config_file = argv[1];
-	}
-
-	bdevtest_init(config_file, "0x7", &opts);
+	spdk_app_opts_init(&opts);
+	opts.name = "bdevtest";
+	opts.config_file = "/usr/local/etc/spdk/iscsi.conf";
 	opts.rpc_addr = NULL;
+	opts.reactor_mask = "0x7";
+	opts.mem_size = 1024;
+
+	spdk_app_parse_args(argc, argv, &opts, "", NULL,
+			    bdevio_parse_arg, bdevio_usage);
 
 	num_failures = spdk_app_start(&opts, test_main, NULL, NULL);
 	spdk_app_fini();
