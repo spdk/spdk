@@ -18,6 +18,13 @@ each of the SPDK static ones.  Although the production of the shared
 libs conforms with conventional version naming practices, such naming
 does not at this time confer any SPDK ABI compatibility claims.
 
+### iSCSI
+
+CHAP shared secret file has been loaded only once at startup. During run time
+CHAP shared secrets can be configured by JSON RPCs. CHAP authentication setting
+of iSCSI targets and discovery sessions can be configured dynamically by JSON
+RPCs too.
+
 ## v18.07:
 
 ### bdev
