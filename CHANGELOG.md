@@ -33,8 +33,10 @@ but will be removed in future release.
 been added to set CHAP authentication for discovery sessions and existing
 target nodes, respectively.
 
-CHAP shared secret file is now loaded only once at startup. During run time
-CHAP shared secrets can be configured by new JSON RPCs `add_iscsi_auth_group`,
+CHAP shared secret file is now loaded only once at startup, and its path is required
+to specify explicitly in the configuration file or JSON RPC `set_iscsi_options`.
+Previously its default path was `/usr/local/etc/spdk/auth.conf`. During run time CHAP
+shared secrets can be configured by new JSON RPCs `add_iscsi_auth_group`,
 `delete_iscsi_auth_group`, `add_secret_to_iscsi_auth_group`, and
 `delete_secret_from_iscsi_auth_group` instead.
 
