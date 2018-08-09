@@ -1771,7 +1771,7 @@ This RPC may only be called before SPDK subsystems have been initialized. This R
 
 Name                        | Type    | Description
 --------------------------- | --------| -----------
-auth_file                   | string  | Path to CHAP shared secret file for discovery session (default: "/usr/local/etc/spdk/auth.conf")
+auth_file                   | string  | Path to CHAP shared secret file (default: `""`)
 node_base                   | string  | Prefix of the name of iSCSI target node (default: "iqn.2016-06.io.spdk")
 nop_timeout                 | number  | Timeout in seconds to nop-in request to the initiator (default: 60)
 nop_in_interval             | number  | Time interval in secs between nop-in requests by the target (default: 30)
@@ -1788,6 +1788,9 @@ immediate_data              | boolean | Session specific parameter, ImmediateDat
 error_recovery_level        | number  | Session specific parameter, ErrorRecoveryLevel (default: 0)
 allow_duplicated_isid       | boolean | Allow duplicated initiator session ID (default: `false`)
 min_connections_per_core    | number  | Allocation unit of connections per core (default: 4)
+no_authfile                 | boolean | Disable loadin CHAP shared secret file (default: `false`)
+
+To load CHAP shared secret file, its path is required to specify explicitly in the parameter `auth_file`.
 
 Parameters `disable_chap` and `require_chap` are mutually exclusive. Parameters `no_discovery_auth`, `req_discovery_auth`, `req_discovery_auth_mutual`, and `discovery_auth_group` are still available instead of `disable_chap`, `require_chap`, `mutual_chap`, and `chap_group`, respectivey but will be removed in future releases.
 
