@@ -61,6 +61,7 @@ static int g_is_random;
 static bool g_verify = false;
 static bool g_reset = false;
 static bool g_unmap = false;
+static bool g_write_zeroes = false;
 static bool g_flush = false;
 static int g_queue_depth;
 static uint64_t g_time_in_usec;
@@ -396,6 +397,8 @@ bdevperf_prep_task(struct bdevperf_task *task)
 		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
 	} else if (g_unmap) {
 		task->io_type = SPDK_BDEV_IO_TYPE_UNMAP;
+	} else if (g_write_zeroes) {
+		task->io_type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
 	} else if ((g_rw_percentage == 100) ||
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
@@ -433,6 +436,10 @@ bdevperf_submit_task(void *arg)
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		rc = spdk_bdev_unmap_blocks(desc, ch, task->offset_blocks,
 					    target->io_size_blocks, bdevperf_complete, task);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		rc = spdk_bdev_write_zeroes_blocks(desc, ch, task->offset_blocks,
+						   target->io_size_blocks, bdevperf_complete, task);
 		break;
 	case SPDK_BDEV_IO_TYPE_READ:
 		rbuf = g_zcopy ? NULL : task->buf;
@@ -907,6 +914,7 @@ main(int argc, char **argv)
 	    strcmp(g_workload_type, "verify") &&
 	    strcmp(g_workload_type, "reset") &&
 	    strcmp(g_workload_type, "unmap") &&
+	    strcmp(g_workload_type, "write_zeroes") &&
 	    strcmp(g_workload_type, "flush")) {
 		fprintf(stderr,
 			"io pattern type must be one of\n"
@@ -926,6 +934,10 @@ main(int argc, char **argv)
 
 	if (!strcmp(g_workload_type, "unmap")) {
 		g_unmap = true;
+	}
+
+	if (!strcmp(g_workload_type, "write_zeroes")) {
+		g_write_zeroes = true;
 	}
 
 	if (!strcmp(g_workload_type, "flush")) {
@@ -957,6 +969,7 @@ main(int argc, char **argv)
 	    !strcmp(g_workload_type, "verify") ||
 	    !strcmp(g_workload_type, "reset") ||
 	    !strcmp(g_workload_type, "unmap") ||
+	    !strcmp(g_workload_type, "write_zeroes") ||
 	    !strcmp(g_workload_type, "flush")) {
 		if (g_mix_specified) {
 			fprintf(stderr, "Ignoring -M option... Please use -M option"
@@ -979,7 +992,8 @@ main(int argc, char **argv)
 	    !strcmp(g_workload_type, "rw") ||
 	    !strcmp(g_workload_type, "verify") ||
 	    !strcmp(g_workload_type, "reset") ||
-	    !strcmp(g_workload_type, "unmap")) {
+	    !strcmp(g_workload_type, "unmap") ||
+	    !strcmp(g_workload_type, "write_zeroes")) {
 		g_is_random = 0;
 	} else {
 		g_is_random = 1;
