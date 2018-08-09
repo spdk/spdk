@@ -5,10 +5,11 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-MALLOC_BDEV_SIZE=128
+MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 LVOL_BDEV_SIZE=10
-SUBSYS_NR=10
+SUBSYS_NR=2
+LVOL_BDEVS_NR=6
 
 rpc_py="python $rootdir/scripts/rpc.py"
 
@@ -57,14 +58,14 @@ lvol_bdevs=()
 # Create malloc backends and creat lvol store on each
 for i in `seq 1 $SUBSYS_NR`; do
 	bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-	ls_guid="$($rpc_py construct_lvol_store $bdev lvs_$i -c 1048576)"
+	ls_guid="$($rpc_py construct_lvol_store $bdev lvs_$i -c 524288)"
 	lvol_stores+=("$ls_guid")
 
 	# 1 NVMe-OF subsystem per malloc bdev / lvol store / 10 lvol bdevs
 	ns_bdevs=""
 
 	# Create lvol bdevs on each lvol store
-	for j in `seq 1 10`; do
+	for j in `seq 1 $LVOL_BDEVS_NR`; do
 		lb_name="$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j $LVOL_BDEV_SIZE)"
 		lvol_bdevs+=("$lb_name")
 		ns_bdevs+="$lb_name "
@@ -76,7 +77,7 @@ for i in `seq 1 $SUBSYS_NR`; do
 	k=$[$i-1]
 	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
-	for j in `seq 1 10`; do
+	for j in `seq 1 $LVOL_BDEVS_NR`; do
 		waitforblk "nvme${k}n${j}"
 	done
 done
