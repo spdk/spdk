@@ -386,6 +386,12 @@ int spdk_iscsi_set_discovery_auth(bool no_auth, bool req_auth, bool req_auth_mut
 				  int32_t auth_group);
 int spdk_iscsi_chap_get_auth_info(struct iscsi_chap_auth *auth, const char *authuser,
 				  int ag_tag);
+int spdk_iscsi_add_auth_group(int32_t tag, struct spdk_iscsi_auth_group **_group);
+struct spdk_iscsi_auth_group *spdk_iscsi_find_auth_group_by_tag(int32_t tag);
+void spdk_iscsi_delete_auth_group(struct spdk_iscsi_auth_group *group);
+int spdk_iscsi_auth_group_add_secret(struct spdk_iscsi_auth_group *group,
+				     const char *user, const char *secret,
+				     const char *muser, const char *msecret);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
