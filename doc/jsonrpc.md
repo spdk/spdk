@@ -2003,6 +2003,86 @@ Example response:
 }
 ~~~
 
+## add_secret_to_iscsi_auth_group {#rpc_add_secret_to_iscsi_auth_group}
+
+Add a secret to an existing authentication group for CHAP authentication.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Authentication group tag (unique, integer > 0)
+user                        | Required | string  | Unidirectional CHAP name
+secret                      | Required | string  | Unidirectional CHAP secret
+muser                       | Optional | string  | Bidirectional CHAP name
+msecret                     | Optional | string  | Bidirectional CHAP secret
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "muser": "mu3",
+    "secret": "s3",
+    "tag": 2,
+    "user": "u3",
+    "msecret": "ms3"
+  },
+  "jsonrpc": "2.0",
+  "method": "add_secret_to_iscsi_auth_group",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## delete_secret_from_iscsi_auth_group {#rpc_delete_secret_from_iscsi_auth_group}
+
+Delete a secret from an existing authentication group for CHAP authentication.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Authentication group tag (unique, integer > 0)
+user                        | Required | string  | Unidirectional CHAP name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "tag": 2,
+    "user": "u3"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_secret_from_iscsi_auth_group",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## get_initiator_groups method {#rpc_get_initiator_groups}
 
 Show information about all available initiator groups.
