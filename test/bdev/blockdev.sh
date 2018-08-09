@@ -147,6 +147,7 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 
 # Run bdevperf with gpt
 $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -s 4096 -w verify -t 5
+$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -s 4096 -w write_zeroes -t 1
 rm -f $testdir/bdev_gpt.conf
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
