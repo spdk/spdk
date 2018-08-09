@@ -1916,6 +1916,93 @@ Example response:
 }
 ~~~
 
+## add_iscsi_auth_group method {#rpc_add_iscsi_auth_group}
+
+Add an authentication group for CHAP authentication.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Authentication group tag (unique, integer > 0)
+secrets                     | Optional | array   | Array of @ref rpc_add_iscsi_auth_group_secret objects
+
+### secret {#rpc_add_iscsi_auth_group_secret}
+
+Name                        | Optional | Type    | Description
+--------------------------- | ---------| --------| -----------
+user                        | Required | string  | Unidirectional CHAP name
+secret                      | Required | string  | Unidirectional CHAP secret
+muser                       | Optional | string  | Bidirectional CHAP name
+msecret                     | Optional | string  | Bidirectional CHAP secret
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "secrets": [
+      {
+        "muser": "mu1",
+        "secret": "s1",
+        "user": "u1",
+        "msecret": "ms1"
+      }
+    ],
+    "tag": 2
+  },
+  "jsonrpc": "2.0",
+  "method": "add_iscsi_auth_group",
+  "id": 1
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## delete_iscsi_auth_group method {#rpc_delete_iscsi_auth_group}
+
+Delete an existing authentication group for CHAP authentication.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Authentication group tag (unique, integer > 0)
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "tag": 2
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_iscsi_auth_group",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## get_initiator_groups method {#rpc_get_initiator_groups}
 
 Show information about all available initiator groups.
