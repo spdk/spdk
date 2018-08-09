@@ -157,6 +157,10 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	run_test suite ./test/vhost/json_config/json_config.sh
 	timing_exit vhost_json_config
 
+	timing_enter vhost_boot
+	run_test suite ./test/vhost/spdk_vhost.sh --boot
+	timing_exit vhost_boot
+
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		timing_enter integrity_blk
 		run_test suite ./test/vhost/spdk_vhost.sh --integrity-blk
