@@ -542,6 +542,7 @@ function vm_setup()
 				incoming=*) local vm_incoming="${OPTARG#*=}" ;;
 				migrate-to=*) local vm_migrate_to="${OPTARG#*=}" ;;
 				vhost-num=*) local vhost_dir="$(get_vhost_dir ${OPTARG#*=})" ;;
+				spdk-boot=*) local boot_from="${OPTARG#*=}" ;;
 				*)
 					error "unknown argument $OPTARG"
 					return 1
@@ -669,6 +670,7 @@ function vm_setup()
 	$shell_restore_x
 
 	local node_num=${!qemu_numa_node_param}
+	local boot_disk_present=false
 	notice "NUMA NODE: $node_num"
 	cmd+="-m $guest_memory --enable-kvm -cpu host -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize ${eol}"
 	cmd+="-object memory-backend-file,id=mem,size=${guest_memory}M,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
@@ -681,8 +683,10 @@ function vm_setup()
 	cmd+="-D $vm_dir/qemu.log ${eol}"
 	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765 ${eol}"
 	cmd+="-net nic ${eol}"
-	cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
-	cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
+	if [[ -z "$boot_from" ]]; then
+		cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
+		cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
+	fi
 
 	if ( [[ $disks == '' ]] && [[ $disk_type_g == virtio* ]] ); then
 		disks=1
@@ -729,12 +733,22 @@ function vm_setup()
 			spdk_vhost_scsi)
 				notice "using socket $vhost_dir/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$queue_number,chardev=char_$disk ${eol}"
+				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$queue_number,chardev=char_$disk"
+				if [[ "$disk" == "$boot_from" ]]; then
+					cmd+=",bootindex=0"
+					boot_disk_present=true
+				fi
+				cmd+=" ${eol}"
 				;;
 			spdk_vhost_blk)
 				notice "using socket $vhost_dir/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk ${eol}"
+				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk"
+				if [[ "$disk" == "$boot_from" ]]; then
+					cmd+=",bootindex=0"
+					boot_disk_present=true
+				fi
+				cmd+=" ${eol}"
 				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
@@ -752,6 +766,11 @@ function vm_setup()
 				return 1
 		esac
 	done
+
+	if [[ -n $boot_from ]] && [[ $boot_disk_present == false ]]; then
+		error "Boot from $boot_from is selected but device is not present"
+		return 1
+	fi
 
 	[[ ! -z $qemu_args ]] && cmd+=" $qemu_args ${eol}"
 	# remove last $eol
