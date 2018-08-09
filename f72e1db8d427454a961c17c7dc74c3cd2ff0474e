@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "c29c1339_71e0642e",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-09T18:23:15Z",
+      "side": 1,
+      "message": "timeout initialization can go outside of the loop",
+      "revId": "f72e1db8d427454a961c17c7dc74c3cd2ff0474e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7244eb21_c8b77a95",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-09T18:23:15Z",
+      "side": 1,
+      "message": "pollers should return a positive integer if they did some work\n\nso in this case, we should keep track of how many total IO were completed and just return that number - it is the equivalent of the previous code\n\nthen if no I/O were completed, it would return 0, and the reactor code would know that the poller did no real work and count it as \"idle\" time",
+      "revId": "f72e1db8d427454a961c17c7dc74c3cd2ff0474e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cdc8b763_e749174b",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 3
