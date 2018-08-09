@@ -97,6 +97,13 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 }
 
 int
+spdk_iscsi_chap_get_auth_info(struct iscsi_chap_auth *auth, const char *authuser,
+			      int ag_tag)
+{
+	return 0;
+}
+
+int
 spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
 {
 	return lun->id;

@@ -72,6 +72,7 @@ struct spdk_iscsi_globals g_spdk_iscsi = {
 	.pg_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.pg_head),
 	.ig_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.ig_head),
 	.target_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.target_head),
+	.auth_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.auth_group_head),
 };
 
 /* random value generation */
@@ -678,94 +679,8 @@ spdk_iscsi_append_param(struct spdk_iscsi_conn *conn, const char *key,
 }
 
 static int
-spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authfile,
-			     const char *authuser, int ag_tag)
-{
-	struct spdk_conf *config = NULL;
-	struct spdk_conf_section *sp;
-	const char *val;
-	const char *user, *muser;
-	const char *secret, *msecret;
-	int rc;
-	int i;
-
-	if (auth->user != NULL) {
-		free(auth->user);
-		free(auth->secret);
-		free(auth->muser);
-		free(auth->msecret);
-		auth->user = auth->secret = NULL;
-		auth->muser = auth->msecret = NULL;
-	}
-
-	/* read config files */
-	config = spdk_conf_allocate();
-	if (config == NULL) {
-		SPDK_ERRLOG("allocate config fail\n");
-		return -1;
-	}
-	rc = spdk_conf_read(config, authfile);
-	if (rc < 0) {
-		SPDK_ERRLOG("auth conf error\n");
-		spdk_conf_free(config);
-		return -1;
-	}
-	//spdk_conf_print(config);
-
-	sp = spdk_conf_first_section(config);
-	while (sp != NULL) {
-		if (spdk_conf_section_match_prefix(sp, "AuthGroup")) {
-			int group = spdk_conf_section_get_num(sp);
-			if (group == 0) {
-				SPDK_ERRLOG("Group 0 is invalid\n");
-				spdk_conf_free(config);
-				return -1;
-			}
-			if (ag_tag != group) {
-				goto skip_ag_tag;
-			}
-
-			val = spdk_conf_section_get_val(sp, "Comment");
-			if (val != NULL) {
-				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
-			}
-			for (i = 0; ; i++) {
-				val = spdk_conf_section_get_nval(sp, "Auth", i);
-				if (val == NULL) {
-					break;
-				}
-				user = spdk_conf_section_get_nmval(sp, "Auth", i, 0);
-				secret = spdk_conf_section_get_nmval(sp, "Auth", i, 1);
-				muser = spdk_conf_section_get_nmval(sp, "Auth", i, 2);
-				msecret = spdk_conf_section_get_nmval(sp, "Auth", i, 3);
-				if (user != NULL) {
-					if (strcasecmp(authuser, user) == 0) {
-						/* match user */
-						auth->user = xstrdup(user);
-						auth->secret = xstrdup(secret);
-						auth->muser = xstrdup(muser);
-						auth->msecret = xstrdup(msecret);
-						spdk_conf_free(config);
-						return 0;
-					}
-				} else {
-					SPDK_ERRLOG("Invalid Auth format, skip this line\n");
-					continue;
-				}
-			}
-		}
-skip_ag_tag:
-		sp = spdk_conf_next_section(sp);
-	}
-
-	spdk_conf_free(config);
-	return 0;
-}
-
-static int
 spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 {
-	char *authfile = NULL;
 	int ag_tag;
 	int rc;
 
@@ -775,27 +690,15 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 		ag_tag = -1;
 	}
 	if (ag_tag < 0) {
-		pthread_mutex_lock(&g_spdk_iscsi.mutex);
 		ag_tag = g_spdk_iscsi.discovery_auth_group;
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ag_tag=%d\n", ag_tag);
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	authfile = strdup(g_spdk_iscsi.authfile);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-	if (!authfile) {
-		SPDK_ERRLOG("strdup() failed for authfile\n");
-		return -ENOMEM;
-	}
-
-	rc = spdk_iscsi_chap_get_authinfo(&conn->auth, authfile, authuser, ag_tag);
+	rc = spdk_iscsi_chap_get_auth_info(&conn->auth, authuser, ag_tag);
 	if (rc < 0) {
 		SPDK_ERRLOG("chap_get_authinfo() failed\n");
-		free(authfile);
 		return -1;
 	}
-	free(authfile);
 	return 0;
 }
 
@@ -917,7 +820,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			SPDK_ERRLOG("iscsi_get_authinfo() failed\n");
 			goto error_return;
 		}
-		if (conn->auth.user == NULL || conn->auth.secret == NULL) {
+		if (conn->auth.user[0] == '\0' || conn->auth.secret[0] == '\0') {
 			//SPDK_ERRLOG("auth user or secret is missing\n");
 			SPDK_ERRLOG("auth failed (user %.64s)\n", user);
 			goto error_return;
@@ -977,7 +880,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 #endif
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_I/CHAP_C\n");
 
-			if (conn->auth.muser == NULL || conn->auth.msecret == NULL) {
+			if (conn->auth.muser[0] == '\0' || conn->auth.msecret[0] == '\0') {
 				//SPDK_ERRLOG("mutual auth user or secret is missing\n");
 				SPDK_ERRLOG("auth failed (user %.64s)\n", user);
 				goto error_return;
