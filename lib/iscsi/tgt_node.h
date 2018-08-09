@@ -67,10 +67,10 @@ struct spdk_iscsi_tgt_node {
 
 	pthread_mutex_t mutex;
 
-	bool disable_chap;
-	bool require_chap;
-	bool mutual_chap;
-	int chap_group;
+	bool no_auth;
+	bool req_auth;
+	bool req_auth_mutual;
+	int32_t auth_group;
 	bool header_digest;
 	bool data_digest;
 	int queue_depth;
@@ -113,10 +113,11 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      int *pg_tag_list, int *ig_tag_list, uint16_t num_maps,
 			      const char *bdev_name_list[], int *lun_id_list, int num_luns,
 			      int queue_depth,
-			      bool disable_chap, bool require_chap, bool mutual_chap, int chap_group,
+			      bool no_auth, bool req_auth, bool req_auth_mutual, int auth_group,
 			      bool header_digest, bool data_digest);
 
-bool spdk_iscsi_check_chap_params(bool disable, bool require, bool mutual, int group);
+bool spdk_iscsi_check_auth_params(bool no_auth, bool req_auth, bool req_auth_mutual,
+				  int32_t auth_group);
 
 int spdk_iscsi_tgt_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
 				       int *pg_tag_list, int *ig_tag_list,

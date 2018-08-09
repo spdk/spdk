@@ -572,10 +572,10 @@ if __name__ == "__main__":
             name=args.name,
             alias_name=args.alias_name,
             queue_depth=args.queue_depth,
-            chap_group=args.chap_group,
-            disable_chap=args.disable_chap,
-            require_chap=args.require_chap,
-            mutual_chap=args.mutual_chap,
+            auth_group=args.auth_group,
+            no_auth=args.no_auth,
+            req_auth=args.req_auth,
+            req_auth_mutual=args.req_auth_mutual,
             header_digest=args.header_digest,
             data_digest=args.data_digest)
 
@@ -595,14 +595,14 @@ if __name__ == "__main__":
     Example: '1:1 2:2 2:1'
     *** The Portal/Initiator Groups must be precreated ***""")
     p.add_argument('queue_depth', help='Desired target queue depth', type=int)
-    p.add_argument('-g', '--chap-group', help="""Authentication group ID for this target node.
+    p.add_argument('-g', '--auth-group', help="""Authentication group ID for this target node.
     *** Authentication group must be precreated ***""", type=int, default=0)
-    p.add_argument('-d', '--disable-chap', help="""CHAP authentication should be disabled for this target node.
-    *** Mutually exclusive with --require-chap ***""", action='store_true')
-    p.add_argument('-r', '--require-chap', help="""CHAP authentication should be required for this target node.
-    *** Mutually exclusive with --disable-chap ***""", action='store_true')
+    p.add_argument('-d', '--no-auth', help="""CHAP authentication should be disabled for this target node.
+    *** Mutually exclusive with --req-auth ***""", action='store_true')
+    p.add_argument('-r', '--req-auth', help="""CHAP authentication should be required for this target node.
+    *** Mutually exclusive with --no-auth ***""", action='store_true')
     p.add_argument(
-        '-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.', action='store_true')
+        '-m', '--req-auth-mutual', help='CHAP authentication should be mutual/bidirectional.', action='store_true')
     p.add_argument('-H', '--header-digest',
                    help='Header Digest should be required for this target node.', action='store_true')
     p.add_argument('-D', '--data-digest',

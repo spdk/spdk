@@ -797,39 +797,39 @@ allow_iscsi_name_multi_maps_case(void)
 
 /*
  * static bool
- * spdk_iscsi_check_chap_params(bool disable_chap, bool require_chap,
- *                              bool mutual_chap, int chap_group);
+ * spdk_iscsi_check_auth_params(bool no_auth, bool req_auth,
+ *                              bool req_auth_mutual, int32_t auth_group);
  */
 static void
-chap_param_test_cases(void)
+auth_param_test_cases(void)
 {
 	/* Auto */
-	CU_ASSERT(spdk_iscsi_check_chap_params(false, false, false, 0) == true);
+	CU_ASSERT(spdk_iscsi_check_auth_params(false, false, false, 0) == true);
 
 	/* None */
-	CU_ASSERT(spdk_iscsi_check_chap_params(true, false, false, 0) == true);
+	CU_ASSERT(spdk_iscsi_check_auth_params(true, false, false, 0) == true);
 
 	/* CHAP */
-	CU_ASSERT(spdk_iscsi_check_chap_params(false, true, false, 0) == true);
+	CU_ASSERT(spdk_iscsi_check_auth_params(false, true, false, 0) == true);
 
 	/* CHAP Mutual */
-	CU_ASSERT(spdk_iscsi_check_chap_params(false, true, true, 0) == true);
+	CU_ASSERT(spdk_iscsi_check_auth_params(false, true, true, 0) == true);
 
 	/* Check mutual exclusiveness of disabled and required */
-	CU_ASSERT(spdk_iscsi_check_chap_params(true, true, false, 0) == false);
+	CU_ASSERT(spdk_iscsi_check_auth_params(true, true, false, 0) == false);
 
 	/* Mutual requires Required */
-	CU_ASSERT(spdk_iscsi_check_chap_params(false, false, true, 0) == false);
+	CU_ASSERT(spdk_iscsi_check_auth_params(false, false, true, 0) == false);
 
 	/* Remaining combinations */
-	CU_ASSERT(spdk_iscsi_check_chap_params(true, false, true, 0) == false);
-	CU_ASSERT(spdk_iscsi_check_chap_params(true, true, true, 0) == false);
+	CU_ASSERT(spdk_iscsi_check_auth_params(true, false, true, 0) == false);
+	CU_ASSERT(spdk_iscsi_check_auth_params(true, true, true, 0) == false);
 
 	/* Valid auth group ID */
-	CU_ASSERT(spdk_iscsi_check_chap_params(false, false, false, 1) == true);
+	CU_ASSERT(spdk_iscsi_check_auth_params(false, false, false, 1) == true);
 
 	/* Invalid auth group ID */
-	CU_ASSERT(spdk_iscsi_check_chap_params(false, false, false, -1) == false);
+	CU_ASSERT(spdk_iscsi_check_auth_params(false, false, false, -1) == false);
 }
 
 int
@@ -872,7 +872,7 @@ main(int argc, char **argv)
 			       node_access_multi_initiator_groups_cases) == NULL
 		|| CU_add_test(suite, "allow iscsi name case",
 			       allow_iscsi_name_multi_maps_case) == NULL
-		|| CU_add_test(suite, "chap param test cases", chap_param_test_cases) == NULL
+		|| CU_add_test(suite, "auth param test cases", auth_param_test_cases) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
