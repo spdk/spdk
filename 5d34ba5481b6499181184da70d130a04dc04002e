@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9afa12c_fe088922",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-09T18:05:48Z",
+      "side": 1,
+      "message": "we should get rid of these default config files at some point too - definitely a separate patch (same in bdevio.c I think)",
+      "revId": "5d34ba5481b6499181184da70d130a04dc04002e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
