@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50f0b8a7_1afc99fd",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-09T14:07:39Z",
+      "side": 1,
+      "message": "the case that conn-\u003estate \u003e\u003d EXITING is unlikely as far as I have investigated.",
+      "revId": "f7723c1521f6fd7fdb682f55b421ca43613dbeb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
