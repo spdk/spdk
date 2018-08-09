@@ -117,10 +117,10 @@ def construct_target_node(
         name,
         alias_name,
         queue_depth,
-        chap_group=None,
-        disable_chap=None,
-        require_chap=None,
-        mutual_chap=None,
+        auth_group=None,
+        no_auth=None,
+        req_auth=None,
+        req_auth_mutual=None,
         header_digest=None,
         data_digest=None):
     """Add a target node.
@@ -131,10 +131,10 @@ def construct_target_node(
         name: Target node name (ASCII)
         alias_name: Target node alias name (ASCII)
         queue_depth: Desired target queue depth
-        chap_group: Authentication group ID for this target node
-        disable_chap: CHAP authentication should be disabled for this target node
-        require_chap: CHAP authentication should be required for this target node
-        mutual_chap: CHAP authentication should be mutual/bidirectional
+        auth_group: Authentication group ID for this target node
+        no_auth: CHAP authentication should be disabled for this target node
+        req_auth: CHAP authentication should be required for this target node
+        req_auth_mutual: CHAP authentication should be mutual/bidirectional
         header_digest: Header Digest should be required for this target node
         data_digest: Data Digest should be required for this target node
 
@@ -149,14 +149,14 @@ def construct_target_node(
         'queue_depth': queue_depth,
     }
 
-    if chap_group:
-        params['chap_group'] = chap_group
-    if disable_chap:
-        params['disable_chap'] = disable_chap
-    if require_chap:
-        params['require_chap'] = require_chap
-    if mutual_chap:
-        params['mutual_chap'] = mutual_chap
+    if auth_group:
+        params['auth_group'] = auth_group
+    if no_auth:
+        params['no_auth'] = no_auth
+    if req_auth:
+        params['req_auth'] = req_auth
+    if req_auth_mutual:
+        params['req_auth_mutual'] = req_auth_mutual
     if header_digest:
         params['header_digest'] = header_digest
     if data_digest:

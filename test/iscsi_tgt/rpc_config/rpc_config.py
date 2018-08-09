@@ -36,10 +36,10 @@ rpc_param = {
     'queue_depth': 64,
     'target_name': 'Target3',
     'alias_name': 'Target3_alias',
-    'disable_chap': True,
-    'mutual_chap': False,
-    'require_chap': False,
-    'chap_group': 0,
+    'no_auth': True,
+    'req_auth_mutual': False,
+    'req_auth': False,
+    'auth_group': 0,
     'header_digest': False,
     'data_digest': False,
     'trace_flag': 'rpc',
@@ -360,14 +360,14 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
            "queue depth value is {}, expected {}".format(jsonvalues[0]['queue_depth'], rpc_param['queue_depth']))
     verify(jsonvalues[0]['pg_ig_maps'][0]['pg_tag'] == int(portal_tag), 1,
            "portal group tag value is {}, expected {}".format(jsonvalues[0]['pg_ig_maps'][0]['pg_tag'], portal_tag))
-    verify(jsonvalues[0]['disable_chap'] == rpc_param['disable_chap'], 1,
-           "disable chap value is {}, expected {}".format(jsonvalues[0]['disable_chap'], rpc_param['disable_chap']))
-    verify(jsonvalues[0]['mutual_chap'] == rpc_param['mutual_chap'], 1,
-           "chap mutual value is {}, expected {}".format(jsonvalues[0]['mutual_chap'], rpc_param['mutual_chap']))
-    verify(jsonvalues[0]['require_chap'] == rpc_param['require_chap'], 1,
-           "chap required value is {}, expected {}".format(jsonvalues[0]['require_chap'], rpc_param['require_chap']))
-    verify(jsonvalues[0]['chap_group'] == rpc_param['chap_group'], 1,
-           "chap auth group value is {}, expected {}".format(jsonvalues[0]['chap_group'], rpc_param['chap_group']))
+    verify(jsonvalues[0]['no_auth'] == rpc_param['no_auth'], 1,
+           "no_auth value is {}, expected {}".format(jsonvalues[0]['no_auth'], rpc_param['no_auth']))
+    verify(jsonvalues[0]['req_auth_mutual'] == rpc_param['req_auth_mutual'], 1,
+           "req_auth mutual value is {}, expected {}".format(jsonvalues[0]['req_auth_mutual'], rpc_param['req_auth_mutual']))
+    verify(jsonvalues[0]['req_auth'] == rpc_param['req_auth'], 1,
+           "req_auth value is {}, expected {}".format(jsonvalues[0]['req_auth'], rpc_param['req_auth']))
+    verify(jsonvalues[0]['auth_group'] == rpc_param['auth_group'], 1,
+           "auth group value is {}, expected {}".format(jsonvalues[0]['auth_group'], rpc_param['auth_group']))
     verify(jsonvalues[0]['header_digest'] == rpc_param['header_digest'], 1,
            "header digest value is {}, expected {}".format(jsonvalues[0]['header_digest'], rpc_param['header_digest']))
     verify(jsonvalues[0]['data_digest'] == rpc_param['data_digest'], 1,

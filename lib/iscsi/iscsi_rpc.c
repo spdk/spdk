@@ -424,10 +424,10 @@ struct rpc_target_node {
 	struct rpc_luns luns;
 
 	int32_t queue_depth;
-	bool disable_chap;
-	bool require_chap;
-	bool mutual_chap;
-	int32_t chap_group;
+	bool no_auth;
+	bool req_auth;
+	bool req_auth_mutual;
+	int32_t auth_group;
 
 	bool header_digest;
 	bool data_digest;
@@ -447,10 +447,10 @@ static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
 	{"pg_ig_maps", offsetof(struct rpc_target_node, pg_ig_maps), decode_rpc_pg_ig_maps},
 	{"luns", offsetof(struct rpc_target_node, luns), decode_rpc_luns},
 	{"queue_depth", offsetof(struct rpc_target_node, queue_depth), spdk_json_decode_int32},
-	{"disable_chap", offsetof(struct rpc_target_node, disable_chap), spdk_json_decode_bool, true},
-	{"require_chap", offsetof(struct rpc_target_node, require_chap), spdk_json_decode_bool, true},
-	{"mutual_chap", offsetof(struct rpc_target_node, mutual_chap), spdk_json_decode_bool, true},
-	{"chap_group", offsetof(struct rpc_target_node, chap_group), spdk_json_decode_int32, true},
+	{"no_auth", offsetof(struct rpc_target_node, no_auth), spdk_json_decode_bool, true},
+	{"req_auth", offsetof(struct rpc_target_node, req_auth), spdk_json_decode_bool, true},
+	{"req_auth_mutual", offsetof(struct rpc_target_node, req_auth_mutual), spdk_json_decode_bool, true},
+	{"auth_group", offsetof(struct rpc_target_node, auth_group), spdk_json_decode_int32, true},
 	{"header_digest", offsetof(struct rpc_target_node, header_digest), spdk_json_decode_bool, true},
 	{"data_digest", offsetof(struct rpc_target_node, data_digest), spdk_json_decode_bool, true},
 };
@@ -497,10 +497,10 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 					       lun_ids,
 					       req.luns.num_luns,
 					       req.queue_depth,
-					       req.disable_chap,
-					       req.require_chap,
-					       req.mutual_chap,
-					       req.chap_group,
+					       req.no_auth,
+					       req.req_auth,
+					       req.req_auth_mutual,
+					       req.auth_group,
 					       req.header_digest,
 					       req.data_digest);
 

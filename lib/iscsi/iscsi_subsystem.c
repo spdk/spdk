@@ -670,7 +670,7 @@ spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 		return -EINVAL;
 	}
 
-	if (!spdk_iscsi_check_chap_params(opts->no_discovery_auth, opts->req_discovery_auth,
+	if (!spdk_iscsi_check_auth_params(opts->no_discovery_auth, opts->req_discovery_auth,
 					  opts->req_discovery_auth_mutual,
 					  opts->discovery_auth_group)) {
 		SPDK_ERRLOG("CHAP params in opts are illegal combination\n");
