@@ -39,6 +39,8 @@
 
 #include "spdk/bdev_module.h"
 
+#include "spdk_internal/lvolstore.h"
+
 struct rpc_get_bdevs_iostat_ctx {
 	int bdev_count;
 	struct spdk_jsonrpc_request *request;
@@ -447,6 +449,7 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_bdev req = {};
 	struct spdk_bdev *bdev;
+	struct spdk_lvol *lvol;
 
 	if (spdk_json_decode_object(params, rpc_delete_bdev_decoders,
 				    SPDK_COUNTOF(rpc_delete_bdev_decoders),
@@ -466,7 +469,12 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_bdev_unregister(bdev, _spdk_rpc_delete_bdev_cb, request);
+	lvol = vbdev_lvol_get_from_bdev(bdev);
+	if (lvol == NULL) {
+		spdk_bdev_unregister(bdev, _spdk_rpc_delete_bdev_cb, request);
+	} else {
+		vbdev_lvol_destroy(lvol, _spdk_rpc_delete_bdev_cb, request);
+	}
 
 	free_rpc_delete_bdev(&req);
 
