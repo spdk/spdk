@@ -752,7 +752,11 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 			}
 
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CID=%u\n", xconn->cid);
-			xconn->state = ISCSI_CONN_STATE_EXITING;
+
+			if ((conn->state != ISCSI_CONN_STATE_EXITING)) &&
+				(conn->state != ISCSI_CONN_STATE_EXITED) {
+				xconn->state = ISCSI_CONN_STATE_EXITING;
+			}
 			num++;
 		}
 	}
