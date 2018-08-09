@@ -38,6 +38,7 @@ fi
 timing_enter host
 
 run_test test/nvmf/host/bdevperf.sh
+run_test test/nvmf/host/bdev_io_wait.sh
 run_test test/nvmf/host/identify.sh
 run_test test/nvmf/host/perf.sh
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
