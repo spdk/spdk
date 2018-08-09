@@ -45,14 +45,14 @@
 #define BUFFER_SIZE		260 * 1024
 #define BDEV_TASK_ARRAY_SIZE	2048
 
-#define LCORE_ID_INIT		0
-#define LCORE_ID_UT		1
-#define LCORE_ID_IO		2
-
 #include "../common.c"
 
 pthread_mutex_t g_test_mutex;
 pthread_cond_t g_test_cond;
+
+static uint32_t g_lcore_id_init;
+static uint32_t g_lcore_id_ut;
+static uint32_t g_lcore_id_io;
 
 struct io_target {
 	struct spdk_bdev	*bdev;
@@ -77,7 +77,7 @@ execute_spdk_function(spdk_event_fn fn, void *arg1, void *arg2)
 {
 	struct spdk_event *event;
 
-	event = spdk_event_allocate(LCORE_ID_IO, fn, arg1, arg2);
+	event = spdk_event_allocate(g_lcore_id_io, fn, arg1, arg2);
 	pthread_mutex_lock(&g_test_mutex);
 	spdk_event_call(event);
 	pthread_cond_wait(&g_test_cond, &g_test_mutex);
@@ -845,7 +845,7 @@ stop_init_thread(unsigned num_failures)
 {
 	struct spdk_event *event;
 
-	event = spdk_event_allocate(LCORE_ID_INIT, __stop_init_thread,
+	event = spdk_event_allocate(g_lcore_id_init, __stop_init_thread,
 				    (void *)(uintptr_t)num_failures, NULL);
 	spdk_event_call(event);
 }
@@ -920,12 +920,23 @@ test_main(void *arg1, void *arg2)
 	pthread_mutex_init(&g_test_mutex, NULL);
 	pthread_cond_init(&g_test_cond, NULL);
 
+	g_lcore_id_init = spdk_env_get_first_core();
+	g_lcore_id_ut = spdk_env_get_next_core(g_lcore_id_init);
+	g_lcore_id_io = spdk_env_get_next_core(g_lcore_id_ut);
+
+	if (g_lcore_id_init == SPDK_ENV_LCORE_ID_ANY ||
+	    g_lcore_id_ut == SPDK_ENV_LCORE_ID_ANY ||
+	    g_lcore_id_io == SPDK_ENV_LCORE_ID_ANY) {
+		SPDK_ERRLOG("Could not reserve 3 separate threads.\n");
+		spdk_app_stop(-1);
+	}
+
 	if (bdevio_construct_targets() < 0) {
 		spdk_app_stop(-1);
 		return;
 	}
 
-	event = spdk_event_allocate(LCORE_ID_UT, __run_ut_thread, NULL, NULL);
+	event = spdk_event_allocate(g_lcore_id_ut, __run_ut_thread, NULL, NULL);
 	spdk_event_call(event);
 }
 
