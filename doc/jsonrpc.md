@@ -2069,10 +2069,10 @@ alias_name                  | string  | Target node alias name (ASCII)
 pg_ig_maps                  | array   | Array of Portal_Group_Tag:Initiator_Group_Tag mappings
 luns                        | array   | Array of Bdev names to LUN ID mappings
 queue_depth                 | number  | Target queue depth
-disable_chap                | boolean | CHAP authentication should be disabled for this target
-require_chap                | boolean | CHAP authentication should be required for this target
-mutual_chap                 | boolean | CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)
-chap_group                  | number  | Authentication group ID for this target node
+no_auth                     | boolean | CHAP authentication should be disabled for this target
+req_auth                    | boolean | CHAP authentication should be required for this target
+req_auth_mutual             | boolean | CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)
+auth_group                  | number  | Authentication group ID for this target node
 header_digest               | boolean | Header Digest should be required for this target node
 data_digest                 | boolean | Data Digest should be required for this target node
 
@@ -2135,10 +2135,10 @@ alias_name                  | Required | string  | Target node alias name (ASCII
 pg_ig_maps                  | Required | array   | Array of (Portal_Group_Tag:Initiator_Group_Tag) mappings
 luns                        | Required | array   | Array of Bdev names to LUN ID mappings
 queue_depth                 | Required | number  | Target queue depth
-disable_chap                | Optional | boolean | CHAP authentication should be disabled for this target
-require_chap                | Optional | boolean | CHAP authentication should be required for this target
-mutual_chap                 | Optional | boolean | CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)
-chap_group                  | Optional | number  | Authentication group ID for this target node
+no_auth                     | Optional | boolean | CHAP authentication should be disabled for this target
+req_auth                    | Optional | boolean | CHAP authentication should be required for this target
+req_auth_mutual             | Optional | boolean | CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)
+auth_group                  | Optional | number  | Authentication group ID for this target node
 header_digest               | Optional | boolean | Header Digest should be required for this target node
 data_digest                 | Optional | boolean | Data Digest should be required for this target node
 
