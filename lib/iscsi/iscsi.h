@@ -301,6 +301,7 @@ struct spdk_iscsi_opts {
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
 	uint32_t min_connections_per_core;
+	bool no_authfile;
 };
 
 struct spdk_iscsi_globals {
@@ -319,6 +320,7 @@ struct spdk_iscsi_globals {
 	bool req_discovery_auth;
 	bool req_discovery_auth_mutual;
 	int32_t discovery_auth_group;
+	bool no_authfile;
 
 	uint32_t MaxSessions;
 	uint32_t MaxConnectionsPerSession;

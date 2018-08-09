@@ -18,7 +18,8 @@ def set_iscsi_options(
         immediate_data=None,
         error_recovery_level=None,
         allow_duplicated_isid=None,
-        min_connections_per_core=None):
+        min_connections_per_core=None,
+        no_auth_file=None):
     """Set iSCSI target options.
 
     Args:
@@ -39,6 +40,7 @@ def set_iscsi_options(
         error_recovery_level: Negotiated parameter, ErrorRecoveryLevel
         allow_duplicated_isid: Allow duplicated initiator session ID
         min_connections_per_core: Allocation unit of connections per core
+        no_auth_file: Disable loading CHAP shared secret file
 
     Returns:
         True or False
@@ -79,6 +81,8 @@ def set_iscsi_options(
         params['allow_duplicated_isid'] = allow_duplicated_isid
     if min_connections_per_core:
         params['min_connections_per_core'] = min_connections_per_core
+    if no_auth_file:
+        params['no_auth_file'] = no_auth_file
 
     return client.call('set_iscsi_options', params)
 
