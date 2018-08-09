@@ -2008,6 +2008,65 @@ Example response:
 }
 ~~~
 
+## get_iscsi_auth_groups {#rpc_get_iscsi_auth_groups}
+
+Show information about all existing authentication group for CHAP authentication.
+
+### Parameters
+
+This method has no parameters.
+
+### Result
+
+Array of objects describing authentication group.
+
+Name                        | Type    | Description
+--------------------------- | --------| -----------
+tag                         | number  | Authentication group tag
+secrets                     | array   | Array of @ref rpc_add_iscsi_auth_group_secret objects
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_iscsi_auth_groups",
+  "id": 1
+}
+~~~
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "secrets": [
+        {
+          "muser": "mu1",
+          "secret": "s1",
+          "user": "u1",
+          "msecret": "ms1"
+        }
+      ],
+      "tag": 1
+    },
+    {
+      "secrets": [
+        {
+          "secret": "s2",
+          "user": "u2"
+        }
+      ],
+      "tag": 2
+    }
+  ]
+}
+~~~
+
 ## add_secret_to_iscsi_auth_group {#rpc_add_secret_to_iscsi_auth_group}
 
 Add a secret to an existing authentication group for CHAP authentication.
