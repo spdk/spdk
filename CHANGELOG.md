@@ -2,6 +2,13 @@
 
 ## v18.10: (Upcoming Release)
 
+### iSCSI
+
+CHAP shared secret file has been loaded only once at startup. During run time
+CHAP shared secrets can be configured by JSON RPCs. CHAP authentication setting
+of iSCSI targets and discovery sessions can be configured dynamically by JSON
+RPCs too.
+
 ## v18.07:
 
 ### bdev
