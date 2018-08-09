@@ -279,6 +279,42 @@ def delete_iscsi_auth_group(client, tag):
     return client.call('delete_iscsi_auth_group', params)
 
 
+def add_secret_to_iscsi_auth_group(client, tag, user, secret, muser=None, msecret=None):
+    """Add a secret to an authentication group.
+
+    Args:
+        tag: Authentication group tag (unique, integer > 0)
+        user: User name for one-way CHAP authentication
+        secret: Secret for one-way CHAP authentication
+        muser: User name for mutual CHAP authentication (optional)
+        msecret: Secret for mutual CHAP authentication (optional)
+
+    Returns:
+        True or False
+    """
+    params = {'tag': tag, 'user': user, 'secret': secret}
+
+    if muser:
+        params['muser'] = muser
+    if msecret:
+        params['msecret'] = msecret
+    return client.call('add_secret_to_iscsi_auth_group', params)
+
+
+def delete_secret_from_iscsi_auth_group(client, tag, user):
+    """Delete a secret from an authentication group.
+
+    Args:
+        tag: Authentication group tag (unique, integer > 0)
+        user: User name for one-way CHAP authentication
+
+    Returns:
+        True or False
+    """
+    params = {'tag': tag, 'user': user}
+    return client.call('delete_secret_from_iscsi_auth_group', params)
+
+
 def delete_pg_ig_maps(client, pg_ig_maps, name):
     """Delete PG-IG maps from the target node.
 
