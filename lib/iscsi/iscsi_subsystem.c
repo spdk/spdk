@@ -332,7 +332,8 @@ struct spdk_iscsi_pdu *spdk_get_pdu(void)
 static void
 spdk_iscsi_log_globals(void)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthFile %s\n", g_spdk_iscsi.authfile);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthFile %s\n",
+		      g_spdk_iscsi.authfile != NULL ? g_spdk_iscsi.authfile : "");
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NodeBase %s\n", g_spdk_iscsi.nodebase);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxConnectionsPerSession %d\n",
@@ -608,14 +609,6 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 static int
 spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 {
-	if (!opts->authfile) {
-		opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
-		if (opts->authfile == NULL) {
-			SPDK_ERRLOG("strdup() failed for default authfile\n");
-			return -ENOMEM;
-		}
-	}
-
 	if (!opts->nodebase) {
 		opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
 		if (opts->nodebase == NULL) {
@@ -720,10 +713,12 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 		return rc;
 	}
 
-	g_spdk_iscsi.authfile = strdup(opts->authfile);
-	if (!g_spdk_iscsi.authfile) {
-		SPDK_ERRLOG("failed to strdup for auth file %s\n", opts->authfile);
-		return -ENOMEM;
+	if (opts->authfile != NULL) {
+		g_spdk_iscsi.authfile = strdup(opts->authfile);
+		if (!g_spdk_iscsi.authfile) {
+			SPDK_ERRLOG("failed to strdup for auth file %s\n", opts->authfile);
+			return -ENOMEM;
+		}
 	}
 
 	g_spdk_iscsi.nodebase = strdup(opts->nodebase);
@@ -1233,14 +1228,11 @@ spdk_iscsi_parse_configuration(void *ctx)
 		SPDK_ERRLOG("spdk_iscsi_parse_tgt_nodes() failed\n");
 	}
 
-	if (access(g_spdk_iscsi.authfile, R_OK) == 0) {
+	if (g_spdk_iscsi.authfile != NULL) {
 		rc = spdk_iscsi_parse_auth_info();
 		if (rc < 0) {
 			SPDK_ERRLOG("spdk_iscsi_parse_auth_info() failed\n");
 		}
-	} else {
-		SPDK_INFOLOG(SPDK_LOG_ISCSI, "CHAP secret file is not found in the path %s\n",
-			     g_spdk_iscsi.authfile);
 	}
 
 end:
@@ -1362,7 +1354,9 @@ spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "auth_file", g_spdk_iscsi.authfile);
+	if (g_spdk_iscsi.authfile != NULL) {
+		spdk_json_write_named_string(w, "auth_file", g_spdk_iscsi.authfile);
+	}
 	spdk_json_write_named_string(w, "node_base", g_spdk_iscsi.nodebase);
 
 	spdk_json_write_named_uint32(w, "max_sessions", g_spdk_iscsi.MaxSessions);
