@@ -16,6 +16,24 @@
       "revId": "f7723c1521f6fd7fdb682f55b421ca43613dbeb7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "156f833e_ecf6c000",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-09T23:48:17Z",
+      "side": 1,
+      "message": "It is likely to happen.I reproduced in my environment due to connection re-connection. In my test environment, I disabled the nic card of the client machine...",
+      "parentUuid": "50f0b8a7_1afc99fd",
+      "revId": "f7723c1521f6fd7fdb682f55b421ca43613dbeb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
