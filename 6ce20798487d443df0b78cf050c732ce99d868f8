@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6ede0f9_5ab836d5",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-09T17:22:00Z",
+      "side": 1,
+      "message": "I think this whole function can be removed if we use this new --no-shconf option.\n\n--no-shconf was added to DPDK in 2015.  I don\u0027t see any reason to try to keep this code around for versions of DPDK before then - there are almost certainly other parts of current SPDK that would be broken with version of DPDK that are that old anyways.",
+      "revId": "6ce20798487d443df0b78cf050c732ce99d868f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
