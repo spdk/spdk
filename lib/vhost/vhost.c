@@ -267,7 +267,8 @@ check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
 	struct spdk_vhost_virtqueue *virtqueue;
 	uint32_t irq_delay_base = vdev->coalescing_delay_time_base;
 	uint32_t io_threshold = vdev->coalescing_io_rate_threshold;
-	uint32_t irq_delay, req_cnt;
+	int32_t irq_delay;
+	uint32_t req_cnt;
 	uint16_t q_idx;
 
 	if (now < vdev->next_stats_check_time) {
@@ -284,7 +285,7 @@ check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
 		}
 
 		irq_delay = (irq_delay_base * (req_cnt - io_threshold)) / io_threshold;
-		virtqueue->irq_delay_time = (uint32_t) spdk_min(0, irq_delay);
+		virtqueue->irq_delay_time = (uint32_t) spdk_max(0, irq_delay);
 
 		virtqueue->req_cnt = 0;
 		virtqueue->next_event_time = now;
