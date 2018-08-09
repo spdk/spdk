@@ -69,6 +69,7 @@ int pci_vfio_is_enabled(void);
 
 struct spdk_vfio_dma_map {
 	struct vfio_iommu_type1_dma_map map;
+	struct vfio_iommu_type1_dma_map unmap;
 	TAILQ_ENTRY(spdk_vfio_dma_map) tailq;
 };
 
@@ -129,6 +130,11 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 	dma_map->map.iova = iova;
 	dma_map->map.size = size;
 
+	dma_map->unmap.argsz = sizeof(dma_map->unmap);
+	dma_map->unmap.flags = 0;
+	dma_map->unmap.iova = iova;
+	dma_map->unmap.size = size;
+
 	pthread_mutex_lock(&g_vfio.mutex);
 	if (g_vfio.device_ref == 0) {
 		/* VFIO requires at least one device (IOMMU group) to be added to
@@ -165,7 +171,6 @@ out_insert:
 static int
 vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 {
-	struct vfio_iommu_type1_dma_unmap dma_unmap;
 	struct spdk_vfio_dma_map *dma_map;
 	int ret;
 
@@ -190,12 +195,8 @@ vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 		goto out_remove;
 	}
 
-	dma_unmap.argsz = sizeof(dma_unmap);
-	dma_unmap.flags = 0;
-	dma_unmap.iova = iova;
-	dma_unmap.size = size;
 
-	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_unmap);
+	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
 	if (ret) {
 		DEBUG_PRINT("Cannot clear DMA mapping, error %d\n", errno);
 		pthread_mutex_unlock(&g_vfio.mutex);
@@ -586,7 +587,7 @@ spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device)
 	 * of other, external factors.
 	 */
 	TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
-		ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->map);
+		ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
 		if (ret) {
 			DEBUG_PRINT("Cannot unmap DMA memory, error %d\n", errno);
 			break;
