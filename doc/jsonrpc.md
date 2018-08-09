@@ -1771,7 +1771,7 @@ This RPC may only be called before SPDK subsystems have been initialized. This R
 
 Name                        | Type    | Description
 --------------------------- | --------| -----------
-auth_file                   | string  | Path to CHAP shared secret file for discovery session (default: "/usr/local/etc/spdk/auth.conf")
+auth_file                   | string  | Path to CHAP shared secret file (default: "/usr/local/etc/spdk/auth.conf")
 node_base                   | string  | Prefix of the name of iSCSI target node (default: "iqn.2016-06.io.spdk")
 nop_timeout                 | number  | Timeout in seconds to nop-in request to the initiator (default: 60)
 nop_in_interval             | number  | Time interval in secs between nop-in requests by the target (default: 30)
