@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7df5b30a_5712c0be",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-09T12:33:36Z",
+      "side": 1,
+      "message": "I don\u0027t think you should remove the config unconditionally.\n\nNote that we called spdk_env_unlink_shared_files() only when:\nif (opts-\u003eshm_id \u003c 0 \u0026\u0026 !opts-\u003ehugepage_single_segments) {\n(init.c:400)\n\nFor --no-shconf it should be safe to push it just if (opts-\u003eshm_id \u003c 0). hugepage_single_segments check is a bit obsolete - for dynamic memory allocation it should be even removed and I\u0027ll take care of that.",
+      "revId": "5c4aac26302d717b2790fb269fb083a253f5a12d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
