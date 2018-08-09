@@ -688,7 +688,13 @@ void spdk_shutdown_iscsi_conns(void)
 		if (conn == NULL) {
 			continue;
 		}
-		conn->state = ISCSI_CONN_STATE_EXITING;
+
+		/* Do not set conn->state if the connection has already started exiting.
+		  * This ensures we do not move a connection from EXITED state back to EXITING.
+		  */
+		if (conn->state < ISCSI_CONN_STATE_EXITING) {
+			conn->state = ISCSI_CONN_STATE_EXITING;
+		}
 	}
 
 	pthread_mutex_unlock(&g_conns_mutex);
@@ -747,7 +753,13 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 			}
 
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CID=%u\n", xconn->cid);
-			xconn->state = ISCSI_CONN_STATE_EXITING;
+
+			/* Do not set xconn->state if the connection has already started exiting.
+			  * This ensures we do not move a connection from EXITED state back to EXITING.
+			  */
+			if (xconn->state < ISCSI_CONN_STATE_EXITING) {
+				xconn->state = ISCSI_CONN_STATE_EXITING;
+			}
 			num++;
 		}
 	}
