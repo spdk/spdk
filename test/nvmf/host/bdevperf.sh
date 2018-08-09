@@ -38,7 +38,7 @@ $rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:
 
 echo "[Nvme]" > $testdir/bdevperf.conf
 echo "  TransportID \"trtype:RDMA adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode1 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420\" Nvme0" >> $testdir/bdevperf.conf
-$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -s 4096 -w verify -t 1
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -l verify -t 1
 sync
 rm -rf $testdir/bdevperf.conf
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
