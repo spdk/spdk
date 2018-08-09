@@ -508,7 +508,7 @@ if __name__ == "__main__":
             min_connections_per_core=args.min_connections_per_core)
 
     p = subparsers.add_parser('set_iscsi_options', help="""Set options of iSCSI subsystem""")
-    p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file for discovery session')
+    p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file')
     p.add_argument('-b', '--node-base', help='Prefix of the name of iSCSI target node')
     p.add_argument('-o', '--nop-timeout', help='Timeout in seconds to nop-in request to the initiator', type=int)
     p.add_argument('-n', '--nop-in-interval', help='Time interval in secs between nop-in requests by the target', type=int)

@@ -22,7 +22,7 @@ def set_iscsi_options(
     """Set iSCSI target options.
 
     Args:
-        auth_file: Path to CHAP shared secret file for discovery session (optional)
+        auth_file: Path to CHAP shared secret file (optional)
         node_base: Prefix of the name of iSCSI target node (optional)
         nop_timeout: Timeout in seconds to nop-in request to the initiator (optional)
         nop_in_interval: Time interval in secs between nop-in requests by the target (optional)
