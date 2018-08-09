@@ -142,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "19a14b9e_1ebd5094",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-09T15:46:14Z",
+      "side": 1,
+      "message": "I think my comment is still relevant. This code can now send spurious, unnecessary interrupts.\nCan you provide any counter-argument?\n\nWhen the Virtio driver is poll-mode, it constantly sets an unreachable vring_used_event().\nLet\u0027s start with a fresh virtqueue, last_used_idx \u003d 0, signaled_used_idx \u003d 0, vring_used_event() \u003d 1000,\nAnd we roll, current code does this:\nvring_need_event(1000, 0, 0) \u003d false\nvring_need_event(1000, 1, 0) \u003d false\nvring_need_event(1000, 2, 0) \u003d false\n...\nvring_need_event(x, 65535, 0) \u003d true for any x !\u003d 65535, sending interrupt\n\nYou see what I mean?\n\nWhat I\u0027m suggesting works the same for common interrupt-driven drivers, but doesn\u0027t send that spurious interrupts for poll-mode ones.\nLet\u0027s assume we\u0027ve signaled at used_idx \u003d\u003d 4. The driver set vring_used_event() to 8\ncurrent code:\nvring_need_event(8, 5, 4) \u003d false\nvring_need_event(8, 6, 4) \u003d false\nvring_need_event(8, 7, 4) \u003d false\nvring_need_event(8, 8, 4) \u003d false\nvring_need_event(8, 9, 4) \u003d true, sending interrupt\nvring_need_event(12, 10, 9) \u003d false\nvring_need_event(12, 11, 9) \u003d false\n\nvs:\nvring_need_event(8, 5, 4) \u003d false\nvring_need_event(8, 6, 5) \u003d false\nvring_need_event(8, 7, 6) \u003d false\nvring_need_event(8, 8, 7) \u003d false\nvring_need_event(8, 9, 8) \u003d true, sending interrupt\nvring_need_event(12, 10, 9) \u003d false\nvring_need_event(12, 11, 10) \u003d false",
+      "parentUuid": "59ed141d_58ccecbb",
+      "range": {
+        "startLine": 314,
+        "startChar": 5,
+        "endLine": 314,
+        "endChar": 33
+      },
+      "revId": "577064c166bd0ca6d83e47f2d99513248b53cc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "602f7dfe_0fc6bf5b",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 18
