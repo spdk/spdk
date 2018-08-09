@@ -406,10 +406,6 @@ static void spdk_iscsi_conn_free(struct spdk_iscsi_conn *conn)
 	 */
 	spdk_put_pdu(conn->pdu_in_progress);
 
-	free(conn->auth.user);
-	free(conn->auth.secret);
-	free(conn->auth.muser);
-	free(conn->auth.msecret);
 	free_conn(conn);
 }
 
