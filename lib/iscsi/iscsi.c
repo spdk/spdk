@@ -770,7 +770,7 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 	int rc;
 
 	if (conn->sess->target != NULL) {
-		ag_tag = conn->sess->target->chap_group;
+		ag_tag = conn->sess->target->auth_group;
 	} else {
 		ag_tag = -1;
 	}
@@ -1288,13 +1288,13 @@ spdk_iscsi_op_login_negotiate_chap_param(struct spdk_iscsi_conn *conn,
 {
 	int rc;
 
-	if (target->disable_chap) {
+	if (target->no_auth) {
 		conn->req_auth = 0;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod", "None", "None");
 		if (rc < 0) {
 			return rc;
 		}
-	} else if (target->require_chap) {
+	} else if (target->req_auth) {
 		conn->req_auth = 1;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod", "CHAP", "CHAP");
 		if (rc < 0) {
@@ -1302,7 +1302,7 @@ spdk_iscsi_op_login_negotiate_chap_param(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	if (target->mutual_chap) {
+	if (target->req_auth_mutual) {
 		conn->req_mutual = 1;
 	}
 
