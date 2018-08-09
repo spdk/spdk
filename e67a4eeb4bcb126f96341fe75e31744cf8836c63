@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f0db8f1_25240346",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-09T17:32:05Z",
+      "side": 1,
+      "message": "This will run much faster if you do:\n\ntruncate -s 400M $BASE_DIR/aio_bdev_0",
+      "revId": "e67a4eeb4bcb126f96341fe75e31744cf8836c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
