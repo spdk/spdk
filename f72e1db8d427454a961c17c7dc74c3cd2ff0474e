@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdc8b763_e749174b",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-09T18:01:42Z",
+      "side": 1,
+      "message": "I think you should do this when the module is first initialized (bdev_aio_initialize). If you do it then, you don\u0027t need the g_aio_group_poller_device_is_registered flag either.\n\nThe pollers won\u0027t start until an actual channel is first created, if that\u0027s why you were delaying this registration.",
+      "revId": "f72e1db8d427454a961c17c7dc74c3cd2ff0474e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
