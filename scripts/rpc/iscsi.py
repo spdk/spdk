@@ -249,6 +249,36 @@ def set_iscsi_target_node_auth(
     return client.call('set_iscsi_target_node_auth', params)
 
 
+def add_iscsi_auth_group(client, tag, secrets=None):
+    """Add authentication group for CHAP authentication.
+
+    Args:
+        tag: Authentication group tag (unique, integer > 0).
+        secrets: Array of secrets objects (optional).
+
+    Returns:
+        True or False
+    """
+    params = {'tag': tag}
+
+    if secrets:
+        params['secrets'] = secrets
+    return client.call('add_iscsi_auth_group', params)
+
+
+def delete_iscsi_auth_group(client, tag):
+    """Delete an authentication group.
+
+    Args:
+        tag: Authentication group tag (unique, integer > 0)
+
+    Returns:
+        True or False
+    """
+    params = {'tag': tag}
+    return client.call('delete_iscsi_auth_group', params)
+
+
 def delete_pg_ig_maps(client, pg_ig_maps, name):
     """Delete PG-IG maps from the target node.
 
