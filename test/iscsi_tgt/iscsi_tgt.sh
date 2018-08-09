@@ -39,6 +39,7 @@ run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh $TEST_TYPE
 run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test ./test/iscsi_tgt/fio/fio.sh
 run_test ./test/iscsi_tgt/qos/qos.sh
+run_test ./test/iscsi_tgt/chap/chap.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	if [ $SPDK_TEST_PMDK -eq 1 ]; then
@@ -47,6 +48,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test ./test/iscsi_tgt/ip_migration/ip_migration.sh
 	run_test ./test/iscsi_tgt/ext4test/ext4test.sh
 	run_test ./test/iscsi_tgt/digests/digests.sh
+	run_test ./test/iscsi_tgt/chap/chap.sh
 fi
 if [ $SPDK_TEST_RBD -eq 1 ]; then
 	run_test ./test/iscsi_tgt/rbd/rbd.sh
