@@ -601,6 +601,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=delete_secret_from_iscsi_auth_group)
 
     @call_cmd
+    def get_iscsi_auth_groups(args):
+        print_dict(rpc.iscsi.get_iscsi_auth_groups(args.client))
+
+    p = subparsers.add_parser('get_iscsi_auth_groups',
+                              help='Display current authentication group configuration')
+    p.set_defaults(func=get_iscsi_auth_groups)
+
+    @call_cmd
     def get_portal_groups(args):
         print_dict(rpc.iscsi.get_portal_groups(args.client))
 
