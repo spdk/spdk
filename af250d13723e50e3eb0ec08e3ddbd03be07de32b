@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3812ce3e_38eb0531",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-09T00:56:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "feeb97f0_220dc5fe",
+      "range": {
+        "startLine": 71,
+        "startChar": 32,
+        "endLine": 71,
+        "endChar": 66
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "344ea7d8_81642959",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 51
@@ -140,6 +164,30 @@
     },
     {
       "key": {
+        "uuid": "e9fef615_bc18f74e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1255,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-09T00:56:33Z",
+      "side": 1,
+      "message": "Good suggestion. It seems like I can directly call spdk_bdev_get_qos_rate_limits() instead of having duplicated codes.",
+      "parentUuid": "975246ca_8f73f931",
+      "range": {
+        "startLine": 1244,
+        "startChar": 1,
+        "endLine": 1255,
+        "endChar": 2
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e555cfce_e161ff5e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 51
@@ -151,6 +199,30 @@
       "writtenOn": "2018-08-08T08:40:47Z",
       "side": 1,
       "message": "Maybe something like this?\n\n  limits[i] \u003d qos-\u003erate_limits[i].limit;\n  limits[i] \u003d limit \u003d\u003d UINT64_MAX ? 0 : limit\n  if (_spdk_bdev_qos_is_iops_rate_limit(i) \u003d\u003d false) {\n    limits[i] /\u003d 1024 * 1024;\n  }",
+      "range": {
+        "startLine": 1718,
+        "startChar": 0,
+        "endLine": 1728,
+        "endChar": 3
+      },
+      "revId": "af250d13723e50e3eb0ec08e3ddbd03be07de32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f98dc7b_a86b5892",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1728,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-09T00:56:33Z",
+      "side": 1,
+      "message": "Thanks. Looks like a little simpler.",
+      "parentUuid": "e555cfce_e161ff5e",
       "range": {
         "startLine": 1718,
         "startChar": 0,
