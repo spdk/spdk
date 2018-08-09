@@ -1431,6 +1431,20 @@ spdk_iscsi_auth_group_info_json(struct spdk_iscsi_auth_group *group,
 	spdk_json_write_object_end(w);
 }
 
+static void
+spdk_iscsi_chap_group_config_json(struct spdk_iscsi_chap_group *group,
+				  struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "add_iscsi_auth_group");
+
+	spdk_json_write_name(w, "params");
+	spdk_iscsi_chap_group_info_json(group, w);
+
+	spdk_json_write_object_end(w);
+}
+
 void
 spdk_iscsi_auth_groups_info_json(struct spdk_json_write_ctx *w)
 {
@@ -1438,6 +1452,16 @@ spdk_iscsi_auth_groups_info_json(struct spdk_json_write_ctx *w)
 
 	TAILQ_FOREACH(group, &g_spdk_iscsi.auth_group_head, tailq) {
 		spdk_iscsi_auth_group_info_json(group, w);
+	}
+}
+
+static void
+spdk_iscsi_auth_groups_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_auth_group *group;
+
+	TAILQ_FOREACH(group, &g_spdk_iscsi.auth_group_head, tailq) {
+		spdk_iscsi_auth_group_config_json(group, w);
 	}
 }
 
@@ -1462,6 +1486,9 @@ spdk_iscsi_config_json(struct spdk_json_write_ctx *w)
 	spdk_iscsi_portal_grps_config_json(w);
 	spdk_iscsi_init_grps_config_json(w);
 	spdk_iscsi_tgt_nodes_config_json(w);
+	if (g_spdk_iscsi.no_authfile) {
+		spdk_iscsi_chap_groups_config_json(w);
+	}
 	spdk_json_write_array_end(w);
 }
 
