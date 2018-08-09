@@ -146,13 +146,13 @@ EOL
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 
 # Run bdevperf with gpt
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -s 4096 -w verify -t 5
+$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
 rm -f $testdir/bdev_gpt.conf
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Temporarily disabled - infinite loop
 	timing_enter reset
-	#$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -s 4096 -t 60
+	#$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -l reset -o 4096 -t 60
 	timing_exit reset
 	report_test_completion "nightly_bdev_reset"
 fi
