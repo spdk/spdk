@@ -115,6 +115,4 @@ struct spdk_lvol_store *vbdev_get_lvol_store_by_name(const char *name);
  */
 struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs);
 
-struct spdk_lvol *vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev);
-
 #endif /* SPDK_VBDEV_LVOL_H */

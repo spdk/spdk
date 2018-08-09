@@ -39,6 +39,8 @@
 
 #include "spdk/bdev_module.h"
 
+#include "spdk_internal/lvolstore.h"
+
 struct rpc_get_bdevs_iostat_ctx {
 	int bdev_count;
 	struct spdk_jsonrpc_request *request;
@@ -463,6 +465,11 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+		goto invalid;
+	}
+
+	if (vbdev_lvol_get_from_bdev(bdev)) {
+		SPDK_ERRLOG("delete_bdev can't delete lvol_bdev\n");
 		goto invalid;
 	}
 
