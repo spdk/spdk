@@ -207,14 +207,17 @@ enum session_type {
 	SESSION_TYPE_DISCOVERY = 2,
 };
 
-#define ISCSI_CHAP_CHALLENGE_LEN 1024
+#define ISCSI_CHAP_CHALLENGE_LEN	1024
+#define ISCSI_CHAP_MAX_USER_LEN		255
+#define ISCSI_CHAP_MAX_SECRET_LEN	255
+
 struct iscsi_chap_auth {
 	enum iscsi_chap_phase chap_phase;
 
-	char *user;
-	char *secret;
-	char *muser;
-	char *msecret;
+	char user[ISCSI_CHAP_MAX_USER_LEN + 1];
+	char secret[ISCSI_CHAP_MAX_SECRET_LEN + 1];
+	char muser[ISCSI_CHAP_MAX_USER_LEN + 1];
+	char msecret[ISCSI_CHAP_MAX_SECRET_LEN + 1];
 
 	uint8_t chap_id[1];
 	uint8_t chap_mid[1];
@@ -222,6 +225,20 @@ struct iscsi_chap_auth {
 	uint8_t chap_challenge[ISCSI_CHAP_CHALLENGE_LEN];
 	int chap_mchallenge_len;
 	uint8_t chap_mchallenge[ISCSI_CHAP_CHALLENGE_LEN];
+};
+
+struct spdk_iscsi_auth_secret {
+	char user[ISCSI_CHAP_MAX_USER_LEN + 1];
+	char secret[ISCSI_CHAP_MAX_SECRET_LEN + 1];
+	char muser[ISCSI_CHAP_MAX_USER_LEN + 1];
+	char msecret[ISCSI_CHAP_MAX_SECRET_LEN + 1];
+	TAILQ_ENTRY(spdk_iscsi_auth_secret) tailq;
+};
+
+struct spdk_iscsi_auth_group {
+	int32_t tag;
+	TAILQ_HEAD(, spdk_iscsi_auth_secret) secret_head;
+	TAILQ_ENTRY(spdk_iscsi_auth_group) tailq;
 };
 
 struct spdk_iscsi_sess {
@@ -294,6 +311,7 @@ struct spdk_iscsi_globals {
 	TAILQ_HEAD(, spdk_iscsi_portal_grp)	pg_head;
 	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
 	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
+	TAILQ_HEAD(, spdk_iscsi_auth_group)	auth_group_head;
 
 	int32_t timeout;
 	int32_t nopininterval;
@@ -366,6 +384,8 @@ struct spdk_iscsi_opts *spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src);
 void spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w);
 int spdk_iscsi_set_discovery_auth(bool no_auth, bool req_auth, bool req_auth_mutual,
 				  int32_t auth_group);
+int spdk_iscsi_chap_get_auth_info(struct iscsi_chap_auth *auth, const char *authuser,
+				  int ag_tag);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
