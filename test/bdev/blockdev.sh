@@ -81,7 +81,7 @@ fi
 timing_exit hello_bdev
 
 timing_enter bounds
-$testdir/bdevio/bdevio $testdir/bdev.conf
+$testdir/bdevio/bdevio -c $testdir/bdev.conf
 timing_exit bounds
 
 # RAID module doesn't support multi-iov yet, so bdevio test
