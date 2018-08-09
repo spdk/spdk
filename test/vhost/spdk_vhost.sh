@@ -27,6 +27,7 @@ case $1 in
 		echo "  -shr|--scsi-hot-remove               for running scsi hot remove tests"
 		echo "  -bhr|--blk-hot-remove                for running blk hot remove tests"
 		echo "  -ro|--readonly                       for running readonly test for vhost blk"
+		echo "  -b|--boot                            for booting vm from vhost controller"
 		echo "  -h |--help                           prints this message"
 		echo ""
 		echo "Environment:"
@@ -196,6 +197,11 @@ case $1 in
 		echo 'Running readonly tests suite...'
 		run_test case $WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1 -x
 		report_test_completion "vhost_readonly"
+		;;
+	-b|--boot)
+		echo 'Running os boot from vhost controller...'
+		$WORKDIR/vhost_boot/vhost_boot.sh --vm_image=$VM_IMAGE
+		report_test_completion "vhost_boot"
 		;;
 	*)
 		echo "unknown test type: $1"
