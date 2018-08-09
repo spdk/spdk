@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f00a7d1_1cdf48fd",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-09T06:08:34Z",
+      "side": 1,
+      "message": "Is there any place that we can release the task\u0027s pdu ?",
+      "revId": "6c5b56ed781a1414632b3e3919dde286a55e95ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
