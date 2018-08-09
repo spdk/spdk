@@ -97,6 +97,7 @@ struct spdk_iscsi_task {
 
 	TAILQ_HEAD(subtask_list, spdk_iscsi_task) subtask_list;
 	TAILQ_ENTRY(spdk_iscsi_task) subtask_link;
+	bool is_queued; /* is queued in scsi layer for handling */
 };
 
 static inline void
