@@ -848,6 +848,34 @@ spdk_iscsi_auth_group_add_secret(struct spdk_iscsi_auth_group *group,
 }
 
 int
+spdk_iscsi_auth_group_delete_secret(struct spdk_iscsi_auth_group *group,
+				    const char *user)
+{
+	struct spdk_iscsi_auth_secret *_secret;
+
+	if (user == NULL) {
+		SPDK_ERRLOG("user must be specified\n");
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(_secret, &group->secret_head, tailq) {
+		if (strcmp(_secret->user, user) == 0) {
+			break;
+		}
+	}
+
+	if (_secret == NULL) {
+		SPDK_ERRLOG("secret is not found\n");
+		return -ENODEV;
+	}
+
+	TAILQ_REMOVE(&group->secret_head, _secret, tailq);
+	free(_secret);
+
+	return 0;
+}
+
+int
 spdk_iscsi_add_auth_group(int32_t tag, struct spdk_iscsi_auth_group **_group)
 {
 	struct spdk_iscsi_auth_group *group;
