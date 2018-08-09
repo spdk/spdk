@@ -324,7 +324,7 @@ function vm_ssh()
 	local ssh_config="$VM_BASE_DIR/ssh_config"
 
 	local ssh_cmd="ssh -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
-		-p $(vm_ssh_socket $1) 127.0.0.1"
+		-p $(vm_ssh_socket $1) $VM_SSH_OPTIONS 127.0.0.1"
 
 	shift
 	$ssh_cmd "$@"
@@ -386,10 +386,9 @@ function vm_os_booted()
 		return 1
 	fi
 
-	# Shutdown existing master. Ignore errors as it might not exist.
-	ssh -O exit -F $VM_BASE_DIR/ssh_config -p $(vm_ssh_socket $1) 127.0.0.1 2> /dev/null || true
-
-	if ! vm_ssh $1 "true" 2>/dev/null; then
+	if ! VM_SSH_OPTIONS="-o ControlMaster=no" vm_ssh $1 "true" 2>/dev/null; then
+		# Shutdown existing master. Ignore errors as it might not exist.
+		VM_SSH_OPTIONS="-O exit" vm_ssh $1 "true" 2>/dev/null
 		return 1
 	fi
 
