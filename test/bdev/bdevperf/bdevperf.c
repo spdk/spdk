@@ -53,6 +53,7 @@ struct bdevperf_task {
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 };
 
+static const char *g_workload_type;
 static int g_io_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
 static int g_rw_percentage = -1;
@@ -71,14 +72,13 @@ static bool g_run_failed = false;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
-static int g_mem_size = 0;
 static unsigned g_master_core;
+static int g_time_in_sec;
+static bool g_mix_specified;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
 static void bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task);
-
-#include "../common.c"
 
 struct io_target {
 	char				*name;
@@ -582,25 +582,19 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 	}
 }
 
-static void usage(char *program_name)
+static void
+bdevperf_usage(void)
 {
-	printf("%s options\n", program_name);
-	printf("\t[-c configuration file]\n");
-	printf("\t[-d memory size in MB]\n");
-	printf("\t[-m core mask for distributing I/O submission/completion work\n");
-	printf("\t\t(default: 0x1 - use core 0 only)]\n");
-	printf("\t[-q io depth]\n");
-	printf("\t[-s io size in bytes]\n");
-	printf("\t[-w io pattern type, must be one of\n");
-	printf("\t\t(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)]\n");
-	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
-	printf("\t[-t time in seconds]\n");
-	printf("\t[-P Number of moving average period]\n");
+	printf(" -q <depth>                io depth\n");
+	printf(" -o <size>                 io size in bytes\n");
+	printf(" -w <type>                 io pattern type, must be one of (read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
+	printf(" -t <time>                 time in seconds\n");
+	printf(" -M <percent>              rwmixread (100 for reads, 0 for writes)\n");
+	printf(" -P <num>                  number of moving average period\n");
 	printf("\t\t(If set to n, show weighted mean of the previous n IO/s in real time)\n");
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
 	printf("\t\t(only valid with -S)\n");
-	printf("\t[-S Show performance result in real time in seconds]\n");
-	spdk_tracelog_usage(stdout, "-L");
+	printf(" -S                        show performance result in real time in seconds\n");
 }
 
 /*
@@ -821,108 +815,79 @@ spdk_bdevperf_shutdown_cb(void)
 	}
 }
 
+static void
+bdevperf_parse_arg(int ch, char *arg)
+{
+	switch (ch) {
+	case 'q':
+		g_queue_depth = atoi(optarg);
+		break;
+	case 'o':
+		g_io_size = atoi(optarg);
+		break;
+	case 't':
+		g_time_in_sec = atoi(optarg);
+		break;
+	case 'w':
+		g_workload_type = optarg;
+		break;
+	case 'M':
+		g_rw_percentage = atoi(optarg);
+		g_mix_specified = true;
+		break;
+	case 'P':
+		g_show_performance_ema_period = atoi(optarg);
+		break;
+	case 'S':
+		g_show_performance_real_time = 1;
+		g_show_performance_period_in_usec = atoi(optarg) * 1000000;
+		g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
+						    g_show_performance_period_in_usec);
+		break;
+	}
+}
+
 int
 main(int argc, char **argv)
 {
-	const char *config_file;
-	const char *core_mask;
-	const char *workload_type;
-	int op;
-	bool mix_specified;
 	struct spdk_app_opts opts = {};
-	int time_in_sec;
-	uint64_t show_performance_period_in_usec = 0;
 	int rc;
-	bool debug_mode = false;
+
+	spdk_app_opts_init(&opts);
+	opts.name = "bdevtest";
+	opts.config_file = "/usr/local/etc/spdk/iscsi.conf";
+	opts.rpc_addr = NULL;
+	opts.reactor_mask = NULL;
+	opts.mem_size = 1024;
+	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
 	/* default value */
-	config_file = NULL;
 	g_queue_depth = 0;
 	g_io_size = 0;
-	workload_type = NULL;
-	time_in_sec = 0;
-	mix_specified = false;
-	core_mask = NULL;
+	g_workload_type = NULL;
+	g_time_in_sec = 0;
+	g_mix_specified = false;
 
-	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:L:M:P:S:")) != -1) {
-		switch (op) {
-		case 'c':
-			config_file = optarg;
-			break;
-		case 'd':
-			g_mem_size = atoi(optarg);
-			break;
-		case 'm':
-			core_mask = optarg;
-			break;
-		case 'q':
-			g_queue_depth = atoi(optarg);
-			break;
-		case 's':
-			g_io_size = atoi(optarg);
-			break;
-		case 't':
-			time_in_sec = atoi(optarg);
-			break;
-		case 'w':
-			workload_type = optarg;
-			break;
-		case 'L':
-#ifndef DEBUG
-			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -L flag\n",
-				argv[0]);
-			usage(argv[0]);
-			exit(1);
-#else
-			rc = spdk_log_set_trace_flag(optarg);
-			if (rc < 0) {
-				fprintf(stderr, "unknown flag\n");
-				usage(argv[0]);
-			}
+	spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:", NULL,
+			    bdevperf_parse_arg, bdevperf_usage);
 
-			debug_mode = true;
-			break;
-#endif
-		case 'M':
-			g_rw_percentage = atoi(optarg);
-			mix_specified = true;
-			break;
-		case 'P':
-			g_show_performance_ema_period = atoi(optarg);
-			break;
-		case 'S':
-			g_show_performance_real_time = 1;
-			show_performance_period_in_usec = atoi(optarg) * 1000000;
-			g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
-							    show_performance_period_in_usec);
-			break;
-		default:
-			usage(argv[0]);
-			exit(1);
-		}
-	}
-
-	if (!config_file) {
-		usage(argv[0]);
-		exit(1);
-	}
 	if (g_queue_depth <= 0) {
-		usage(argv[0]);
+		spdk_app_usage();
 		exit(1);
 	}
 	if (g_io_size <= 0) {
-		usage(argv[0]);
+		spdk_app_usage();
 		exit(1);
 	}
-	if (!workload_type) {
-		usage(argv[0]);
+	if (!g_workload_type) {
+		spdk_app_usage();
 		exit(1);
 	}
-	if (time_in_sec <= 0) {
-		usage(argv[0]);
+	if (g_time_in_sec <= 0) {
+		spdk_app_usage();
 		exit(1);
 	}
-	g_time_in_usec = time_in_sec * 1000000LL;
+	g_time_in_usec = g_time_in_sec * 1000000LL;
 
 	if (g_show_performance_ema_period > 0 &&
 	    g_show_performance_real_time == 0) {
@@ -930,74 +895,74 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (strcmp(workload_type, "read") &&
-	    strcmp(workload_type, "write") &&
-	    strcmp(workload_type, "randread") &&
-	    strcmp(workload_type, "randwrite") &&
-	    strcmp(workload_type, "rw") &&
-	    strcmp(workload_type, "randrw") &&
-	    strcmp(workload_type, "verify") &&
-	    strcmp(workload_type, "reset") &&
-	    strcmp(workload_type, "unmap") &&
-	    strcmp(workload_type, "flush")) {
+	if (strcmp(g_workload_type, "read") &&
+	    strcmp(g_workload_type, "write") &&
+	    strcmp(g_workload_type, "randread") &&
+	    strcmp(g_workload_type, "randwrite") &&
+	    strcmp(g_workload_type, "rw") &&
+	    strcmp(g_workload_type, "randrw") &&
+	    strcmp(g_workload_type, "verify") &&
+	    strcmp(g_workload_type, "reset") &&
+	    strcmp(g_workload_type, "unmap") &&
+	    strcmp(g_workload_type, "flush")) {
 		fprintf(stderr,
 			"io pattern type must be one of\n"
 			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
 		exit(1);
 	}
 
-	if (!strcmp(workload_type, "read") ||
-	    !strcmp(workload_type, "randread")) {
+	if (!strcmp(g_workload_type, "read") ||
+	    !strcmp(g_workload_type, "randread")) {
 		g_rw_percentage = 100;
 	}
 
-	if (!strcmp(workload_type, "write") ||
-	    !strcmp(workload_type, "randwrite")) {
+	if (!strcmp(g_workload_type, "write") ||
+	    !strcmp(g_workload_type, "randwrite")) {
 		g_rw_percentage = 0;
 	}
 
-	if (!strcmp(workload_type, "unmap")) {
+	if (!strcmp(g_workload_type, "unmap")) {
 		g_unmap = true;
 	}
 
-	if (!strcmp(workload_type, "flush")) {
+	if (!strcmp(g_workload_type, "flush")) {
 		g_flush = true;
 	}
 
-	if (!strcmp(workload_type, "verify") ||
-	    !strcmp(workload_type, "reset")) {
+	if (!strcmp(g_workload_type, "verify") ||
+	    !strcmp(g_workload_type, "reset")) {
 		g_rw_percentage = 50;
 		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
 			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
 				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
 			exit(1);
 		}
-		if (core_mask) {
+		if (opts.reactor_mask) {
 			fprintf(stderr, "Ignoring -m option. Verify can only run with a single core.\n");
-			core_mask = NULL;
+			opts.reactor_mask = NULL;
 		}
 		g_verify = true;
-		if (!strcmp(workload_type, "reset")) {
+		if (!strcmp(g_workload_type, "reset")) {
 			g_reset = true;
 		}
 	}
 
-	if (!strcmp(workload_type, "read") ||
-	    !strcmp(workload_type, "randread") ||
-	    !strcmp(workload_type, "write") ||
-	    !strcmp(workload_type, "randwrite") ||
-	    !strcmp(workload_type, "verify") ||
-	    !strcmp(workload_type, "reset") ||
-	    !strcmp(workload_type, "unmap") ||
-	    !strcmp(workload_type, "flush")) {
-		if (mix_specified) {
+	if (!strcmp(g_workload_type, "read") ||
+	    !strcmp(g_workload_type, "randread") ||
+	    !strcmp(g_workload_type, "write") ||
+	    !strcmp(g_workload_type, "randwrite") ||
+	    !strcmp(g_workload_type, "verify") ||
+	    !strcmp(g_workload_type, "reset") ||
+	    !strcmp(g_workload_type, "unmap") ||
+	    !strcmp(g_workload_type, "flush")) {
+		if (g_mix_specified) {
 			fprintf(stderr, "Ignoring -M option... Please use -M option"
 				" only when using rw or randrw.\n");
 		}
 	}
 
-	if (!strcmp(workload_type, "rw") ||
-	    !strcmp(workload_type, "randrw")) {
+	if (!strcmp(g_workload_type, "rw") ||
+	    !strcmp(g_workload_type, "randrw")) {
 		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
 			fprintf(stderr,
 				"-M must be specified to value from 0 to 100 "
@@ -1006,12 +971,12 @@ main(int argc, char **argv)
 		}
 	}
 
-	if (!strcmp(workload_type, "read") ||
-	    !strcmp(workload_type, "write") ||
-	    !strcmp(workload_type, "rw") ||
-	    !strcmp(workload_type, "verify") ||
-	    !strcmp(workload_type, "reset") ||
-	    !strcmp(workload_type, "unmap")) {
+	if (!strcmp(g_workload_type, "read") ||
+	    !strcmp(g_workload_type, "write") ||
+	    !strcmp(g_workload_type, "rw") ||
+	    !strcmp(g_workload_type, "verify") ||
+	    !strcmp(g_workload_type, "reset") ||
+	    !strcmp(g_workload_type, "unmap")) {
 		g_is_random = 0;
 	} else {
 		g_is_random = 1;
@@ -1024,16 +989,6 @@ main(int argc, char **argv)
 		g_zcopy = false;
 	}
 
-	bdevtest_init(config_file, core_mask, &opts);
-	if (debug_mode) {
-		opts.print_level = SPDK_LOG_DEBUG;
-	}
-	opts.rpc_addr = NULL;
-	if (g_mem_size) {
-		opts.mem_size = g_mem_size;
-	}
-
-	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 	rc = spdk_app_start(&opts, bdevperf_run, NULL, NULL);
 	if (rc) {
 		g_run_failed = true;
