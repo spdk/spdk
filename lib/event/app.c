@@ -93,8 +93,6 @@ static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
 	{"mem-channels",		required_argument,	NULL, MEM_CHANNELS_OPT_IDX},
 #define MASTER_CORE_OPT_IDX	'p'
 	{"master-core",			required_argument,	NULL, MASTER_CORE_OPT_IDX},
-#define SILENCE_NOTICELOG_OPT_IDX 'q'
-	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
 #define RPC_SOCKET_OPT_IDX	'r'
 	{"rpc-socket",			required_argument,	NULL, RPC_SOCKET_OPT_IDX},
 #define MEM_SIZE_OPT_IDX	's'
@@ -111,6 +109,8 @@ static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
 	{"huge-unlink",			no_argument,		NULL, HUGE_UNLINK_OPT_IDX},
 #define PCI_WHITELIST_OPT_IDX	'W'
 	{"pci-whitelist",		required_argument,	NULL, PCI_WHITELIST_OPT_IDX},
+#define SILENCE_NOTICELOG_OPT_IDX 257
+	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
 	{NULL,				no_argument,		NULL, 0}
 };
 
@@ -538,8 +538,8 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	    isatty(STDERR_FILENO) &&
 	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
 		printf("Warning: printing stderr to console terminal without -q option specified.\n");
-		printf("Suggest using -q to disable logging to stderr and monitor syslog, or\n");
-		printf("redirect stderr to a file.\n");
+		printf("Suggest using --silence-noticelog to disable logging to stderr and\n");
+		printf("monitor syslog, or redirect stderr to a file.\n");
 		printf("(Delaying for 10 seconds...)\n");
 		sleep(10);
 	}
@@ -681,7 +681,7 @@ usage(void (*app_usage)(void))
 	printf(" -m, --cpumask <mask>      core mask for DPDK\n");
 	printf(" -n, --mem-channels <num>  channel number of memory channels used for DPDK\n");
 	printf(" -p, --master-core <id>    master (primary) core for DPDK\n");
-	printf(" -q, --silence-noticelog   disable notice level logging to stderr\n");
+	printf(" --silence-noticelog       disable notice level logging to stderr\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: ");
 	if (g_default_opts.mem_size > 0) {
