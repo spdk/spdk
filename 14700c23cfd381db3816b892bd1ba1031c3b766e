@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bc15c3c_f4c7774d",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-09T17:50:28Z",
+      "side": 1,
+      "message": "this error message needs to be updated too",
+      "revId": "14700c23cfd381db3816b892bd1ba1031c3b766e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
