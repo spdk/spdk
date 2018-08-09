@@ -380,8 +380,10 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 	}
 
 	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
-		TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
-		spdk_iscsi_task_put(iscsi_task);
+		if (!iscsi_task->is_queued) {
+			TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
+			spdk_iscsi_task_put(iscsi_task);
+		}
 	}
 
 	if (conn->pending_task_cnt) {
@@ -895,6 +897,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 
 	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task, 0);
 
+	task->is_queued = false;
 	primary = spdk_iscsi_task_get_primary(task);
 
 	if (spdk_iscsi_task_is_read(primary)) {
