@@ -62,6 +62,8 @@ Vagrant.configure(2) do |config|
   vmcpu=(ENV['SPDK_VAGRANT_VMCPU'] || 2)
   vmram=(ENV['SPDK_VAGRANT_VMRAM'] || 4096)
   spdk_dir=(ENV['SPDK_DIR'] || "none")
+  vhost_host_dir=(ENV['VHOST_HOST_DIR'] || "none")
+  vhost_vm_dir=(ENV['VHOST_VM_DIR'] || "none")
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
@@ -70,18 +72,6 @@ Vagrant.configure(2) do |config|
     vb.customize ["modifyvm", :id, "--ioapic", "on"]
     vb.memory = "#{vmram}"
     vb.cpus = "#{vmcpu}"
-
-    # rsync the spdk directory if provision hasn't happened yet
-    unless File.exist? (".vagrant/machines/default/virtualbox/action_provision")
-      if spdk_dir != "none"
-        config.vm.synced_folder "#{spdk_dir}", "/home/vagrant/spdk_repo/spdk", type: "rsync", rsync__auto: false
-      end
-
-      # Copy in the user's tools if they exists
-      if File.directory?(File.expand_path("~/vagrant_tools"))
-        config.vm.synced_folder "~/vagrant_tools", "/home/vagrant/tools", type: "rsync", rsync__auto: false
-      end
-    end
 
     nvme_disk = 'nvme.vdi'
     unless File.exist? (nvme_disk)
@@ -99,12 +89,14 @@ Vagrant.configure(2) do |config|
   # libvirt configuration need modern Qemu(tested on 2.10) & vagrant-libvirt in version 0.0.39+
   # There are few limitation for SElinux - The file added outside libvirt must have proper SE ACL policy or setenforce 0
   config.vm.provider "libvirt" do |libvirt, override|
+    libvirt.random_hostname = "1"
+    libvirt.disk_bus = "virtio"
 
     # we put nvme_disk inside default pool to eliminate libvirt/SELinux Permissions Problems
     # and to be able to run vagrant from user $HOME directory
     nvme_disk = '/var/lib/libvirt/images/nvme_disk.img'
     unless File.exist? (nvme_disk)
-      override.puts "If run with libvirt provider please execute create_nvme_img.sh"
+      puts "If run with libvirt provider please execute create_nvme_img.sh"
     end
 
     libvirt.qemuargs :value => "-drive"
@@ -119,12 +111,25 @@ Vagrant.configure(2) do |config|
 
     # Optional field if we want use other storage pools than default
     # libvirt.storage_pool_name = "vm"
+  end
 
-    # rsync the spdk directory if provision hasn't happened yet
-    unless File.exist? (".vagrant/machines/default/virtualbox/action_provision")
-      if spdk_dir != "none"
-        config.vm.synced_folder "#{spdk_dir}", "/home/vagrant/spdk_repo/spdk", type: "rsync"
-      end
+  # rsync the spdk directory if provision hasn't happened yet
+  unless File.exist? (".vagrant/machines/default/virtualbox/action_provision")
+    if spdk_dir != "none"
+      config.vm.synced_folder "#{spdk_dir}", "/home/vagrant/spdk_repo/spdk", type: "rsync", rsync__auto: false
+    end
+
+    if vhost_host_dir != "none"
+      config.vm.synced_folder "#{vhost_host_dir}", "#{vhost_vm_dir}", type: "rsync", rsync__auto: false
+      config.vm.provision "shell", inline: "sudo mkdir -p /root/.ssh"
+      config.vm.provision "shell", inline: "sudo cp #{vhost_vm_dir}/spdk_vhost_id_rsa* /root/.ssh"
+      config.vm.provision "shell", inline: "sudo chmod 600 /root/.ssh/spdk_vhost_id_rsa"
+    end
+
+    # Copy in the user's tools if they exists
+    if File.directory?(File.expand_path("~/vagrant_tools"))
+      config.vm.synced_folder "~/vagrant_tools", "/home/vagrant/tools", type: "rsync", rsync__auto: false
     end
   end
+
 end
