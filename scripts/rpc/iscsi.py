@@ -15,6 +15,7 @@ def set_iscsi_options(
         max_connections_per_session=None,
         default_time2wait=None,
         default_time2retain=None,
+        first_burst_length=None,
         immediate_data=None,
         error_recovery_level=None,
         allow_duplicated_isid=None,
@@ -35,6 +36,7 @@ def set_iscsi_options(
         max_connections_per_session: Negotiated parameter, MaxConnections
         default_time2wait: Negotiated parameter, DefaultTime2Wait
         default_time2retain: Negotiated parameter, DefaultTime2Retain
+        first_burst_length: Negotiated parameter, FirstBurstLength
         immediate_data: Negotiated parameter, ImmediateData
         error_recovery_level: Negotiated parameter, ErrorRecoveryLevel
         allow_duplicated_isid: Allow duplicated initiator session ID
@@ -71,6 +73,8 @@ def set_iscsi_options(
         params['default_time2wait'] = default_time2wait
     if default_time2retain:
         params['default_time2retain'] = default_time2retain
+    if first_burst_length:
+        params['first_burst_length'] = first_burst_length
     if immediate_data:
         params['immediate_data'] = immediate_data
     if error_recovery_level:
