@@ -16,6 +16,24 @@
       "revId": "e67a4eeb4bcb126f96341fe75e31744cf8836c63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fff9ab83_e649d77e",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-08-10T13:09:06Z",
+      "side": 1,
+      "message": "Done, thanks",
+      "parentUuid": "1f0db8f1_25240346",
+      "revId": "e67a4eeb4bcb126f96341fe75e31744cf8836c63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
