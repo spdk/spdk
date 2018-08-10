@@ -471,7 +471,6 @@ static int bdev_malloc_initialize(void)
 		BlockSize = spdk_conf_section_get_intval(sp, "BlockSize");
 		if ((NumberOfLuns < 1) || (LunSizeInMB < 1)) {
 			SPDK_ERRLOG("Malloc section present, but no devices specified\n");
-			rc = EINVAL;
 			goto end;
 		}
 		if (BlockSize < 1) {
