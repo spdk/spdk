@@ -22,6 +22,30 @@
       "revId": "605887c682a0eefc66d0832dfefa6e173be6b2fe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19903507_8f27b03f",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-08-10T11:00:43Z",
+      "side": 1,
+      "message": "Unfortunately it is not.",
+      "parentUuid": "1f5e61da_7cd191ba",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 42
+      },
+      "revId": "605887c682a0eefc66d0832dfefa6e173be6b2fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
