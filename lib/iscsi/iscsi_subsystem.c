@@ -141,7 +141,7 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 
 #define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth + MAX_LARGE_DATAIN_PER_CONNECTION + 8))
 #define PDU_POOL_SIZE(iscsi)	(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION(iscsi))
-#define IMMEDIATE_DATA_POOL_SIZE(iscsi)	(iscsi->MaxConnections * 128)
+#define IMMEDIATE_DATA_POOL_SIZE(iscsi)	(iscsi->MaxConnections * 16)
 #define DATA_OUT_POOL_SIZE(iscsi)	(iscsi->MaxConnections * MAX_DATA_OUT_PER_CONNECTION)
 
 static int spdk_iscsi_initialize_pdu_pool(void)
@@ -168,7 +168,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 					 spdk_env_get_socket_id(spdk_env_get_current_core()),
 					 spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_immediate_data_pool) {
-		SPDK_ERRLOG("create PDU 8k pool failed\n");
+		SPDK_ERRLOG("create PDU immediate data pool failed\n");
 		return -1;
 	}
 
@@ -178,7 +178,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 				   spdk_env_get_socket_id(spdk_env_get_current_core()),
 				   spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_data_out_pool) {
-		SPDK_ERRLOG("create PDU 64k pool failed\n");
+		SPDK_ERRLOG("create PDU data out pool failed\n");
 		return -1;
 	}
 
