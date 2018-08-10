@@ -22,10 +22,14 @@ display_help() {
 	echo "  -s <ram-size> in kb       default: ${SPDK_VAGRANT_VMRAM}"
 	echo "  -n <num-cpus> 1 to 4      default: ${SPDK_VAGRANT_VMCPU}"
 	echo "  -x <http-proxy>           default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
+	echo "  -p <provider>             libvirt or virtualbox"
+	echo "  --vhost-host-dir=<path>   directory path with vhost test dependencies"
+	echo "                            (test VM qcow image, fio binary, ssh keys)"
+	echo "  --vhost-vm-dir=<path>     directory where to put vhost dependencies in VM"
 	echo "  -r dry-run"
 	echo "  -h help"
 	echo "  -v verbose"
-        echo
+	echo
 	echo " Examples:"
 	echo
 	echo "  $0 -x http://user:password@host:port fedora27"
@@ -46,9 +50,17 @@ SPDK_VAGRANT_DISTRO="distro"
 SPDK_VAGRANT_VMCPU=4
 SPDK_VAGRANT_VMRAM=4096
 OPTIND=1
+PROVIDER="virtualbox"
 
-while getopts ":n:s:x:vrh" opt; do
+while getopts ":n:s:x:p:vrh-:" opt; do
 	case "${opt}" in
+		-)
+		case "${OPTARG}" in
+			vhost-host-dir=*) VHOST_HOST_DIR="${OPTARG#*=}" ;;
+			vhost-vm-dir=*) VHOST_VM_DIR="${OPTARG#*=}" ;;
+			*) echo "Invalid argument '$OPTARG'" ;;
+		esac
+		;;
 		x)
 			http_proxy=$OPTARG
 			https_proxy=$http_proxy
@@ -59,6 +71,9 @@ while getopts ":n:s:x:vrh" opt; do
 		;;
 		s)
 			SPDK_VAGRANT_VMRAM=$OPTARG
+		;;
+		p)
+			PROVIDER=$OPTARG
 		;;
 		v)
 			VERBOSE=1
@@ -119,6 +134,8 @@ if [ ${VERBOSE} = 1 ]; then
 	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
 	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
 	echo SPDK_VAGRANT_HTTP_PROXY=$SPDK_VAGRANT_HTTP_PROXY
+	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
+	echo VHOST_VM_DIR=$VHOST_VM_DIR
 	echo
 fi
 
@@ -126,6 +143,14 @@ export SPDK_VAGRANT_HTTP_PROXY
 export SPDK_VAGRANT_VMCPU
 export SPDK_VAGRANT_VMRAM
 export SPDK_DIR
+
+if [ -n $VHOST_HOST_DIR ]; then
+    export VHOST_HOST_DIR
+fi
+
+if [ -n VHOST_VM_DIR ]; then
+    export VHOST_VM_DIR
+fi
 
 if [ ${DRY_RUN} = 1 ]; then
 	echo "Environemnt Variables"
@@ -154,7 +179,7 @@ if [ ${DRY_RUN} != 1 ]; then
 			vagrant plugin install vagrant-proxyconf
 		fi
 	fi
-	vagrant up
+	vagrant up --provider="${PROVIDER}"
 	echo ""
 	echo "  SUCCESS!"
 	echo ""
