@@ -22,6 +22,7 @@ display_help() {
 	echo "  -s <ram-size> in kb       default: ${SPDK_VAGRANT_VMRAM}"
 	echo "  -n <num-cpus> 1 to 4      default: ${SPDK_VAGRANT_VMCPU}"
 	echo "  -x <http-proxy>           default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
+	echo "  -p <provider> libvirt or virtualbox"
 	echo "  -r dry-run"
 	echo "  -h help"
 	echo "  -v verbose"
@@ -46,8 +47,9 @@ SPDK_VAGRANT_DISTRO="distro"
 SPDK_VAGRANT_VMCPU=4
 SPDK_VAGRANT_VMRAM=4096
 OPTIND=1
+PROVIDER="libvirt"
 
-while getopts ":n:s:x:vrh" opt; do
+while getopts ":n:s:x:p:vrh" opt; do
 	case "${opt}" in
 		x)
 			http_proxy=$OPTARG
@@ -60,6 +62,9 @@ while getopts ":n:s:x:vrh" opt; do
 		s)
 			SPDK_VAGRANT_VMRAM=$OPTARG
 		;;
+		p)
+		    PROVIDER=$OPTARG
+        ;;
 		v)
 			VERBOSE=1
 		;;
@@ -154,7 +159,7 @@ if [ ${DRY_RUN} != 1 ]; then
 			vagrant plugin install vagrant-proxyconf
 		fi
 	fi
-	vagrant up
+	vagrant up --provider="${PROVIDER}"
 	echo ""
 	echo "  SUCCESS!"
 	echo ""
