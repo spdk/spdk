@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f5e61da_7cd191ba",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-10T08:11:39Z",
+      "side": 1,
+      "message": "If optimal_io_size or alignment_offset is greater than 0:\noptimal_io_size + alignment_offset should equal physical_block_size\n\nPlease confirm if this is true.",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 42
+      },
+      "revId": "605887c682a0eefc66d0832dfefa6e173be6b2fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
