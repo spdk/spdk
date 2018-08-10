@@ -1116,9 +1116,9 @@ spdk_iscsi_check_values(struct spdk_iscsi_conn *conn)
 			    conn->sess->MaxBurstLength);
 		return -1;
 	}
-	if (conn->sess->FirstBurstLength > SPDK_ISCSI_FIRST_BURST_LENGTH) {
+	if (conn->sess->FirstBurstLength > g_spdk_iscsi.FirstBurstLength) {
 		SPDK_ERRLOG("FirstBurstLength(%d) > iSCSI target restriction(%d)\n",
-			    conn->sess->FirstBurstLength, SPDK_ISCSI_FIRST_BURST_LENGTH);
+			    conn->sess->FirstBurstLength, g_spdk_iscsi.FirstBurstLength);
 		return -1;
 	}
 	if (conn->sess->MaxBurstLength > 0x00ffffff) {
@@ -4471,7 +4471,7 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 
 	sess->DefaultTime2Wait = g_spdk_iscsi.DefaultTime2Wait;
 	sess->DefaultTime2Retain = g_spdk_iscsi.DefaultTime2Retain;
-	sess->FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
+	sess->FirstBurstLength = g_spdk_iscsi.FirstBurstLength;
 	sess->MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 	sess->InitialR2T = DEFAULT_INITIALR2T;
 	sess->ImmediateData = g_spdk_iscsi.ImmediateData;
