@@ -16,7 +16,7 @@ timing_enter start_iscsi_tgt
 
 # Start the iSCSI target without using stub
 # Reason: Two SPDK processes will be started
-$ISCSI_APP -m 0x2 -p 1 -s 512 -w &
+$ISCSI_APP -m 0x2 -p 1 -s 2048 -w &
 pid=$!
 echo "iSCSI target launched. pid: $pid"
 trap "killprocess $pid;exit 1" SIGINT SIGTERM EXIT
@@ -43,6 +43,9 @@ cp $testdir/bdev.conf.in $testdir/bdev.conf
 echo "[iSCSI_Initiator]" >> $testdir/bdev.conf
 echo "  URL iscsi://$TARGET_IP/iqn.2016-06.io.spdk:disk1/0 iSCSI0" >> $testdir/bdev.conf
 $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -s 4096 -w verify -t 5 -d 512
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -s 4096 -w unmap -t 5 -d 512
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -s 4096 -w flush -t 5 -d 512
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -s 4096 -w reset -t 10 -d 512
 rm -f $testdir/bdev.conf
 
 trap - SIGINT SIGTERM EXIT
