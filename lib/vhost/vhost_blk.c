@@ -777,13 +777,13 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	if (bdev == NULL) {
 		SPDK_ERRLOG("Controller %s: bdev '%s' not found\n",
 			    name, dev_name);
-		ret = -1;
+		ret = -ENODEV;
 		goto out;
 	}
 
 	bvdev = spdk_dma_zmalloc(sizeof(*bvdev), SPDK_CACHE_LINE_SIZE, NULL);
 	if (bvdev == NULL) {
-		ret = -1;
+		ret = -ENOMEM;
 		goto out;
 	}
 
@@ -791,7 +791,6 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	if (ret != 0) {
 		SPDK_ERRLOG("Controller %s: could not open bdev '%s', error=%d\n",
 			    name, dev_name, ret);
-		ret = -1;
 		goto out;
 	}
 
@@ -800,7 +799,6 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	ret = spdk_vhost_dev_register(&bvdev->vdev, name, cpumask, &vhost_blk_device_backend);
 	if (ret != 0) {
 		spdk_bdev_close(bvdev->bdev_desc);
-		ret = -1;
 		goto out;
 	}
 
