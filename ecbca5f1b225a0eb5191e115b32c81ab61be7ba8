@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da5a0e78_8cadcf63",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-10T05:56:48Z",
+      "side": 1,
+      "message": "This function seems to get the lvol from the requested the bdev. The error log says that \"can\u0027t delete lvol_bdev\" looks like unclear. Do it try to say:\n\"can not delete the bdev with valid lvol created\" ?",
+      "range": {
+        "startLine": 471,
+        "startChar": 5,
+        "endLine": 471,
+        "endChar": 35
+      },
+      "revId": "ecbca5f1b225a0eb5191e115b32c81ab61be7ba8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
