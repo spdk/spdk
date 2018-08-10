@@ -1164,6 +1164,34 @@ if __name__ == "__main__":
     p.add_argument('-r', '--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
     p.set_defaults(func=set_nvmf_target_config)
 
+    # NVMe-oF stats
+    @call_cmd
+    def get_nvmf_tgt_stats(args):
+        print_dict(rpc.nvmf.get_nvmf_tgt_stats(args.client, args))
+
+    p = subparsers.add_parser('get_nvmf_tgt_stats',
+                              help='Display nvmf target level statistics')
+    p.set_defaults(func=get_nvmf_tgt_stats)
+
+    @call_cmd
+    def get_nvmf_ctrlr_stats(args):
+        print_dict(rpc.nvmf.get_nvmf_ctrlr_stats(args.client, args))
+
+    p = subparsers.add_parser('get_nvmf_ctrlr_stats',
+                              help='Display nvmf controller level statistics in a subsystem')
+    p.add_argument('ss_nqn', help='subsystem nqn')
+    p.add_argument('-c', '--ctrlr_id', help='controller id', required=False, type=int)
+    p.set_defaults(func=get_nvmf_ctrlr_stats)
+
+    @call_cmd
+    def get_nvmf_subsystem_stats(args):
+        print_dict(rpc.nvmf.get_nvmf_subsystem_stats(args.client, args))
+
+    p = subparsers.add_parser('get_nvmf_subsystem_stats',
+                              help='Display nvmf subsystem stats')
+    p.add_argument('-n', '--ss_nqn', help='subsystem nqn', required=False)
+    p.set_defaults(func=get_nvmf_subsystem_stats)
+
     @call_cmd
     def get_nvmf_subsystems(args):
         print_dict(rpc.nvmf.get_nvmf_subsystems(args.client))

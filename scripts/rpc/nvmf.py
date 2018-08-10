@@ -273,3 +273,23 @@ def delete_nvmf_subsystem(client, nqn):
     """
     params = {'nqn': nqn}
     return client.call('delete_nvmf_subsystem', params)
+
+
+def get_nvmf_subsystem_stats(client, args):
+    params = {}
+    if args.ss_nqn:
+        params['ss_nqn'] = args.ss_nqn
+
+    return client.call('get_nvmf_subsystem_stats', params)
+
+
+def get_nvmf_tgt_stats(client, args):
+    return client.call('get_nvmf_tgt_stats')
+
+
+def get_nvmf_ctrlr_stats(client, args):
+    params = {'ss_nqn': args.ss_nqn}
+    if args.ctrlr_id:
+        params['ctrlr_id'] = args.ctrlr_id
+
+    return client.call('get_nvmf_ctrlr_stats', params)
