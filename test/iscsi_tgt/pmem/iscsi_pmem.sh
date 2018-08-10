@@ -18,7 +18,7 @@ fio_py="python $rootdir/scripts/fio.py"
 timing_enter iscsi_pmem
 
 timing_enter start_iscsi_target
-$ISCSI_APP -m $ISCSI_TEST_CORE_MASK -w &
+$ISCSI_APP -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 

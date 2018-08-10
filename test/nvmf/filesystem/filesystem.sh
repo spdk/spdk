@@ -23,7 +23,7 @@ timing_enter fs_test
 
 for incapsule in 0 4096; do
 	# Start up the NVMf target in another process
-	$NVMF_APP -m 0xF -w &
+	$NVMF_APP -m 0xF --wait-for-rpc &
 	nvmfpid=$!
 
 	trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT

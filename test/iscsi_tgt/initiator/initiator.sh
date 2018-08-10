@@ -16,7 +16,7 @@ timing_enter start_iscsi_tgt
 
 # Start the iSCSI target without using stub
 # Reason: Two SPDK processes will be started
-$ISCSI_APP -m 0x2 -p 1 -s 512 -w &
+$ISCSI_APP -m 0x2 -p 1 -s 512 --wait-for-rpc &
 pid=$!
 echo "iSCSI target launched. pid: $pid"
 trap "killprocess $pid;exit 1" SIGINT SIGTERM EXIT
