@@ -287,12 +287,12 @@ function waitforlisten() {
 		fi
 
 		if hash ss; then
-			if $ns_cmd ss -lx | grep -q $rpc_addr; then
+			if $ns_cmd ss -ln | grep -q $rpc_addr; then
 				ret=0
 			fi
 		else
 			# if system doesn't have ss, just assume it has netstat
-			if $ns_cmd netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
+			if $ns_cmd netstat -an | grep -iw LISTENING | grep -q $rpc_addr; then
 				ret=0
 			fi
 		fi
