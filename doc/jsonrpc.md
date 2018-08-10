@@ -1784,6 +1784,7 @@ max_queue_depth             | number  | Maximum number of outstanding I/Os per q
 max_connections_per_session | number  | Session specific parameter, MaxConnections (default: 2)
 default_time2wait           | number  | Session specific parameter, DefaultTime2Wait (default: 2)
 default_time2retain         | number  | Session specific parameter, DefaultTime2Retain (default: 20)
+first_burst_length          | number  | Session specific parameter, FirstBurstLength (default: 8192)
 immediate_data              | boolean | Session specific parameter, ImmediateData (default: `true`)
 error_recovery_level        | number  | Session specific parameter, ErrorRecoveryLevel (default: 0)
 allow_duplicated_isid       | boolean | Allow duplicated initiator session ID (default: `false`)
@@ -1800,6 +1801,7 @@ Example request:
   "params": {
     "allow_duplicated_isid": true,
     "default_time2retain": 60,
+    "first_burst_length": 8192,
     "immediate_data": true,
     "node_base": "iqn.2016-06.io.spdk",
     "max_sessions": 128,
@@ -1855,6 +1857,7 @@ Example response:
   "result": {
     "allow_duplicated_isid": true,
     "default_time2retain": 60,
+    "first_burst_length": 8192,
     "immediate_data": true,
     "node_base": "iqn.2016-06.io.spdk",
     "req_discovery_auth_mutual": false,

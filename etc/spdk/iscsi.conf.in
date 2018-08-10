@@ -63,6 +63,11 @@
   DefaultTime2Wait 2
   DefaultTime2Retain 60
 
+  # Maximum amount in bytes of unsolicited data the iSCSI
+  # initiator may send to the target during the execution of
+  # a single SCSI command.
+  FirstBurstLength 8192
+
   ImmediateData Yes
   ErrorRecoveryLevel 0
 
