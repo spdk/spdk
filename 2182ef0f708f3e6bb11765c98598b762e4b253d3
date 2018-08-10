@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74e5e94f_3795cc80",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-10T15:49:44Z",
+      "side": 1,
+      "message": "this -l reset needs to be changed back to -w",
+      "revId": "2182ef0f708f3e6bb11765c98598b762e4b253d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
