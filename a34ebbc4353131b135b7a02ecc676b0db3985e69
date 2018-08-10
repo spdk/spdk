@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "112c6c18_6d32ed92",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-10T14:13:03Z",
+      "side": 1,
+      "message": "vagrant sets the domain name to \"default\" which makes it not possible to test on multiple vms at once",
+      "range": {
+        "startLine": 91,
+        "startChar": 4,
+        "endLine": 91,
+        "endChar": 33
+      },
+      "revId": "a34ebbc4353131b135b7a02ecc676b0db3985e69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30a76d33_5a52aded",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-10T14:13:03Z",
+      "side": 1,
+      "message": "Libvirt presents OS image to guest as SCSI and for some reason this causes VM to hang during boot (tested on F26 and F27).\nPresenting the image as virtio disk fixes the problem.",
+      "range": {
+        "startLine": 92,
+        "startChar": 4,
+        "endLine": 92,
+        "endChar": 31
+      },
+      "revId": "a34ebbc4353131b135b7a02ecc676b0db3985e69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e73b7c4d_6223b917",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-10T14:13:03Z",
+      "side": 1,
+      "message": "Currently user would have to create everything on his own and put VM image, fio binary and keys in \"vhost_dir\". We could create a separate vagrant script in future to automate creating test image for vhost tests.",
+      "range": {
+        "startLine": 122,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 88
+      },
+      "revId": "a34ebbc4353131b135b7a02ecc676b0db3985e69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
