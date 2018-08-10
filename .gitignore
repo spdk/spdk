@@ -10,6 +10,7 @@
 *.o
 *.pyc
 *.so
+*.so.*
 *.swp
 *.DS_Store
 ut_coverage/
