@@ -227,6 +227,26 @@ LINK_CXX=\
 	$(Q)echo "  LINK $S/$@"; \
 	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(SYS_LIBS)
 
+#
+# Variables to use for versioning shared libs
+#
+SO_VER := 0
+SO_MINOR := 0
+SO_REL := 0
+SO_SUFFIX_ALL := $(SO_VER).$(SO_MINOR).$(SO_REL)
+
+# Provide function to ease build of a shared lib
+define spdk_build_realname_shared_lib
+	$(CC) -o $@ -shared $(CPPFLAGS) $(LDFLAGS) \
+	    -Wl,--soname,$(patsubst %.so.$(SO_SUFFIX_ALL),%.so.$(SO_VER),$(notdir $@)) \
+	    -Wl,--whole-archive $(1) -Wl,--no-whole-archive \
+	    -Wl,--version-script=$(2) \
+	    $(3)
+endef
+
+BUILD_LINKERNAME_LIB=\
+	ln -sf $(notdir $<) $@
+
 # Archive $(OBJS) into $@ (.a)
 LIB_C=\
 	$(Q)echo "  LIB $(notdir $@)"; \
@@ -243,11 +263,18 @@ INSTALL_LIB=\
 	install -d -m 755 "$(DESTDIR)$(libdir)"; \
 	install -m 644 "$(LIB)" "$(DESTDIR)$(libdir)/"
 
-# Install a shared library
-INSTALL_SHARED_LIB=\
-	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/$(notdir $(SHARED_LIB))"; \
-	install -d -m 755 "$(DESTDIR)$(libdir)"; \
-	install -m 644 "$(SHARED_LIB)" "$(DESTDIR)$(libdir)/"
+# Install shared library(s)
+define spdk_install_shared_libs
+	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/$(notdir $(1))"
+	install -d -m 755 $(DESTDIR)$(libdir)
+	@for l in $(1); do \
+		bln=$${l##*/}; \
+		rn=$$l.$(SO_SUFFIX_ALL); \
+		install -m 644 $$rn $(DESTDIR)$(libdir)/; \
+		ln -sf -r $(DESTDIR)$(libdir)/$$bln.$(SO_SUFFIX_ALL) \
+		$(DESTDIR)$(libdir)/$$bln; \
+	done
+endef
 
 # Install an app binary
 INSTALL_APP=\
