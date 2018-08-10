@@ -34,6 +34,24 @@
       "revId": "5a1cdcbd90fd01142ad43a431f3a3b16547c7a67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c637666a_300c2742",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-10T09:03:45Z",
+      "side": 1,
+      "message": "As suggested, change to DefaultQueueDepth and looks like it is OK for the memory allocation with the default setup.sh.\n\nThanks for this comment.",
+      "parentUuid": "f586be20_b3362431",
+      "revId": "5a1cdcbd90fd01142ad43a431f3a3b16547c7a67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
