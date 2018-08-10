@@ -32,6 +32,7 @@ create_veth_interfaces $TEST_TYPE
 start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
 trap "kill_stub; cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
 
+run_test suite ./test/iscsi_tgt/sock/sock.sh
 run_test suite ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test suite ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test suite ./test/iscsi_tgt/reset/reset.sh
