@@ -16,6 +16,24 @@
       "revId": "5a1cdcbd90fd01142ad43a431f3a3b16547c7a67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f586be20_b3362431",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-10T08:52:11Z",
+      "side": 1,
+      "message": "DEFAULT_MAX_QUEUE_DEPTH (64)? The background for this change is that after increasing from 8K to 64K as the default FirstBurstLength, the immediate_data_pool will be created with 8x larger and looks like our default setting of HugePages will fail at the immediate_data_pool creation unless with specifying NRHUGE to allocate more pages (in the building pool, we just run with default setting, so that the patch build failed).\n\nThe other question is that since now ImmeidateDataPool and DataOutPool are quite close in size of 64K, and not like before 8K and 64K, should we consolidate these two Pools into just one?\n\nThanks, Gang",
+      "parentUuid": "da21a51b_04661e49",
+      "revId": "5a1cdcbd90fd01142ad43a431f3a3b16547c7a67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
