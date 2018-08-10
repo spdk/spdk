@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "5f6ae511_0c34b551",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-08-10T16:44:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "dac8183b_7050cb70",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ad09293e_bd06e695",
         "filename": "examples/sock/hello_world/hello_sock.c",
         "patchSetId": 6
@@ -47,6 +65,24 @@
       "writtenOn": "2018-08-08T23:12:47Z",
       "side": 1,
       "message": "these should be aligned - first two are using tabs (and one of the tabs could be removed), the last line isn\u0027t tabbed",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3da67056_61d76d7c",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-08-10T16:44:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ad09293e_bd06e695",
       "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "4f271e9c_ae871a6e",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-08-10T16:44:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7c3aabae_c617662a",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16d8b305_7bd3052f",
         "filename": "examples/sock/hello_world/hello_sock.c",
         "patchSetId": 6
@@ -81,6 +135,24 @@
       "writtenOn": "2018-08-08T23:12:47Z",
       "side": 1,
       "message": "STDIN_FILENO would make this more obvious than using 0",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54491d51_6181b283",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-08-10T16:44:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "16d8b305_7bd3052f",
       "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -132,6 +204,24 @@
       "writtenOn": "2018-08-08T23:12:47Z",
       "side": 1,
       "message": "this should be removed",
+      "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53bce4c5_e0e294a9",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-08-10T16:44:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3d3332de_455df781",
       "revId": "8b3a921f13809d2271cc7ee0bf12fdadf311845c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
