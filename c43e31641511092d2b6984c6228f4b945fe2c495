@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a246d973_3b9bf9a7",
+        "filename": "examples/sock/hello_world/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-10T15:37:58Z",
+      "side": 1,
+      "message": "see previous review comment on removing bdev and copy related libraries, etc. - I don\u0027t think they are needed for this example app",
+      "revId": "c43e31641511092d2b6984c6228f4b945fe2c495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0041c8f7_5db9691e",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-10T15:37:58Z",
+      "side": 1,
+      "message": "I still think this 1024 should be a #define.  (See previous review.)",
+      "revId": "c43e31641511092d2b6984c6228f4b945fe2c495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
