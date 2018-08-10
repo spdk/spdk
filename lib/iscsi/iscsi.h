@@ -114,7 +114,15 @@
 #define SPDK_ISCSI_MAX_BURST_LENGTH	\
 		(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH * MAX_DATA_OUT_PER_CONNECTION)
 
-#define SPDK_ISCSI_FIRST_BURST_LENGTH	8192
+/*
+ * Defines default maximum amount in bytes of unsolicited data the iSCSI
+ *  initiator may send to the SPDK iSCSI target during the execution of
+ *  a single SCSI command.
+ *
+ * According to RFC3720(12.14), the default value is 65536 (64 Kbytes)
+ *  and shall be smaller than the MaxBurstLength.
+ */
+#define SPDK_ISCSI_FIRST_BURST_LENGTH	65536
 
 /** Defines how long we should wait for a TCP close after responding to a
  *   logout request, before terminating the connection ourselves.
