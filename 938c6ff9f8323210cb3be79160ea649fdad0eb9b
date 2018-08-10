@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f67c8f54_bbe31aa6",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-10T08:21:00Z",
+      "side": 1,
+      "message": "\u003e I think my comment is still relevant. This code can now send spurious, unnecessary interrupts.\n\u003e Can you provide any counter-argument?\nI did simmalar thing as you did in virtio. See comments.\n\n\u003e When the Virtio driver is poll-mode, it constantly sets an unreachable vring_used_event().\n\u003e Let\u0027s start with a fresh virtqueue, last_used_idx \u003d 0, signaled_used_idx \u003d 0, vring_used_event() \u003d 1000,\n\u003e And we roll, current code does this:\n\u003e vring_need_event(1000, 0, 0) \u003d false\n\u003e vring_need_event(1000, 1, 0) \u003d false\n\u003e vring_need_event(1000, 2, 0) \u003d false\n\u003e ...\n\u003e vring_need_event(x, 65535, 0) \u003d true for any x !\u003d 65535, sending interrupt\n\u003e\n\u003e You see what I mean?\n\nYes, you have right. I changed this to use `used_req_cnt` since this will be \u003c\u003d vring.size\n\n\u003e What I\u0027m suggesting works the same for common interrupt-driven drivers, but doesn\u0027t send that spurious interrupts for poll-mode ones.\n\u003e ...\n\nAck, done.",
+      "range": {
+        "startLine": 317,
+        "startChar": 0,
+        "endLine": 318,
+        "endChar": 63
+      },
+      "revId": "938c6ff9f8323210cb3be79160ea649fdad0eb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
