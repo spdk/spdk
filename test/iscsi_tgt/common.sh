@@ -31,6 +31,9 @@ function create_veth_interfaces() {
 	ip netns add $TARGET_NAMESPACE
 	ip link set $TARGET_INTERFACE netns $TARGET_NAMESPACE
 
+	# Accept connections from veth interface
+	iptables -I INPUT 1 -i $INITIATOR_INTERFACE -p tcp --dport $ISCSI_PORT -j ACCEPT
+
 	$TARGET_NS_CMD ip link set lo up
 	$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
 	$TARGET_NS_CMD ip link set $TARGET_INTERFACE up
