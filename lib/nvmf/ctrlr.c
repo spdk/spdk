@@ -297,6 +297,24 @@ _spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 	spdk_thread_send_msg(admin_qpair->group->thread, spdk_nvmf_ctrlr_add_io_qpair, req);
 }
 
+static void
+spdk_nvmf_ctrlr_update_unauth_host_conn_count(void *ctx)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctx;
+
+	spdk_nvmf_subsystem_update_unauth_host_conn_count(subsystem);
+}
+
+uint32_t
+spdk_nvmf_ctrlr_get_num_qpairs(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	if (ctrlr) {
+		return spdk_bit_array_count_set(ctrlr->qpair_mask);
+	}
+
+	return 0;
+}
+
 static int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
@@ -368,6 +386,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", subnqn, hostnqn);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
+		spdk_thread_send_msg(subsystem->thread, spdk_nvmf_ctrlr_update_unauth_host_conn_count, subsystem);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
@@ -1737,4 +1756,39 @@ spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 
 	spdk_nvmf_request_complete(ctrlr->aer_req);
 	ctrlr->aer_req = NULL;
+}
+
+void
+spdk_nvmf_ctrlr_get_host_id_fmt(struct spdk_nvmf_ctrlr *ctrlr, uint8_t *host_id, size_t len)
+{
+	if (ctrlr) {
+		/* hostid characters in string are of 36 */
+		snprintf(host_id, len, "%08x-%04x-%04x-%02x%02x-%04x%08x",
+			 ntohl(*(uint32_t *)&ctrlr->hostid[0]),
+			 ntohs(*(uint16_t *)&ctrlr->hostid[4]),
+			 ntohs(*(uint16_t *)&ctrlr->hostid[6]),
+			 ctrlr->hostid[8],
+			 ctrlr->hostid[9],
+			 ntohs(*(uint16_t *)&ctrlr->hostid[10]),
+			 ntohl(*(uint32_t *)&ctrlr->hostid[12]));
+	}
+}
+
+uint16_t
+spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	if (ctrlr) {
+		return ctrlr->cntlid;
+	}
+
+	return 0;
+}
+
+void
+spdk_nvmf_ctrlr_get_admin_cmd_stats(struct spdk_nvmf_ctrlr *ctrlr, uint64_t *rcvd, uint64_t *failed)
+{
+	if ((ctrlr) && (ctrlr->admin_qpair)) {
+		*rcvd   = ctrlr->admin_qpair->num_cmds_rcvd;
+		*failed = ctrlr->admin_qpair->num_cmds_failed;
+	}
 }

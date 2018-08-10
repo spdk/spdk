@@ -51,6 +51,9 @@ DEFINE_STUB(spdk_nvmf_tgt_find_subsystem,
 	    (struct spdk_nvmf_tgt *tgt, const char *subnqn),
 	    NULL);
 
+DEFINE_STUB_V(spdk_nvmf_subsystem_update_unauth_host_conn_count,
+	      (struct spdk_nvmf_subsystem *subsystem));
+
 DEFINE_STUB(spdk_nvmf_poll_group_create,
 	    struct spdk_nvmf_poll_group *,
 	    (struct spdk_nvmf_tgt *tgt),
