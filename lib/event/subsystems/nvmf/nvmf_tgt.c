@@ -73,6 +73,12 @@ static struct spdk_poller *g_acceptor_poller = NULL;
 
 static void nvmf_tgt_advance_state(void);
 
+struct spdk_nvmf_poll_group *
+nvmf_tgt_get_poll_group(uint32_t core)
+{
+	return (&g_poll_groups[core])->group;
+}
+
 static void
 _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 {

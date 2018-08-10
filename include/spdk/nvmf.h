@@ -70,6 +70,31 @@ struct spdk_nvmf_tgt_opts {
 	uint32_t max_subsystems;
 	uint32_t io_unit_size;
 };
+
+/** Received command statistics at Nvmf tgt level */
+struct spdk_nvmf_cmd_stats {
+	uint64_t num_fabric_cmds;		/* number of fabric commands received */
+	uint64_t num_admin_cmds;		/* number of admin commands received */
+	uint64_t num_io_cmds;			/* number of io commands received */
+};
+
+/** Subsystem level statistics */
+struct spdk_nvmf_subsystem_stats {
+	uint32_t num_ss_paused;                  /* number of times subsystem paused           */
+	uint32_t num_ss_resumed;                 /* number of times subsystem resumed          */
+	uint32_t num_connects;                   /* number of connects to subsystem            */
+	uint32_t num_disconnects;                /* number of disconnects to the subsystem     */
+	uint16_t num_active_hosts;               /* number of hosts actively connected to the subsystem   */
+	uint16_t num_add_ns_fail;                /* number of times add ns failed              */
+	uint16_t num_rem_ns_fail;                /* number of times remove ns failed           */
+	uint16_t num_add_host_fail;              /* number of times add host failed            */
+	uint16_t num_rem_host_fail;              /* number of times remove host failed         */
+	uint16_t num_unauth_connects;            /* number of unauth connects to the subsystem */
+	uint16_t num_set_allow_any_host_fail;    /* number of times set_allow_any_host failed  */
+	uint16_t num_add_listener_fail;          /* number of times add listener failed    */
+	uint16_t num_rem_listener_fail;          /* number of times remove listener failed */
+};
+
 /**
  * Initialize the default value of opts.
  *
@@ -666,6 +691,115 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
  * \return the type of the specified subsystem.
  */
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Get controller from conroller id for the specified subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ * \param cntlid controller id to query.
+ *
+ * \return the controller with controller id of the specified subsystem.
+ */
+struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+		uint16_t cntlid);
+
+/**
+ * Get command statistics at NVMf tgt level.
+ *
+ * \param nvmf_stats NVMf command statistics structure.
+ */
+void spdk_nvmf_tgt_get_cmd_stats(struct spdk_nvmf_cmd_stats *nvmf_stats);
+
+/**
+ * Get poll group of the specified core.
+ *
+ * \param core core id to query.
+ *
+ * \return poll group of the respective core.
+ */
+struct spdk_nvmf_poll_group *nvmf_tgt_get_poll_group(uint32_t core);
+
+/**
+ * Get controller id from controller.
+ *
+ * \param ctrlr NVMf controller to query.
+ *
+ * \return id of the specified controller.
+ */
+uint16_t spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr);
+
+/**
+ * Get number of qpairs of the controller.
+ *
+ * \param ctrlr NVMf controller.
+ *
+ * \return actual number of qpairs of the specified controller.
+ */
+uint32_t spdk_nvmf_ctrlr_get_num_qpairs(struct spdk_nvmf_ctrlr *ctrlr);
+
+/**
+ * Get admin commands count of the controller.
+ *
+ * \param ctrlr NVMF controller.
+ * \param rcvd gets total admin commands received for the query controller.
+ * \param failed gets total admin commands failed for the query controller.
+ */
+void spdk_nvmf_ctrlr_get_admin_cmd_stats(struct spdk_nvmf_ctrlr *ctrlr,
+		uint64_t *rcvd, uint64_t *failed);
+
+/**
+ * Get io commands count of the controller.
+ *
+ * \param ctrlr NVMF controller.
+ * \param rcvd gets total io commands received for the query controller.
+ * \param failed gets total io commands failed for the query controller.
+ */
+void spdk_nvmf_ctrlr_get_io_cmd_stats(struct spdk_nvmf_ctrlr *ctrlr, uint64_t *rcvd,
+				      uint64_t *failed);
+
+/**
+ * Get id of the host connected to the controller.
+ *
+ * \param ctrlr NVMF controller.
+ * \param host_id gets the host id from the controller in query.
+ */
+void spdk_nvmf_ctrlr_get_host_id(struct spdk_nvmf_ctrlr *ctrlr, uint8_t *host_id);
+
+/**
+ * Get the count of the failure of creating subsystem.
+ *
+ * \param tgt Nvmf tgt.
+ *
+ * \return number of times subsystem create failed.
+ */
+uint32_t spdk_nvmf_subsystem_create_fail_count(struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Get the first allowed ctrlr in a subsystem.
+ *
+ * \param subsystem subsystem to query.
+ *
+ * \return first allowed ctrlr in this subsystem, or NULL if none allowed.
+ */
+struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_first_ctrlr(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Get the next allowed ctrlr in a subsystem.
+ *
+ * \param prev_ctrlr Previous ctrlr returned from this function.
+ *
+ * \return  next allowed ctrlr in this subsystem, or NULL if prev_ctrlr was the last host.
+ */
+struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_next_ctrlr(struct spdk_nvmf_ctrlr *prev_ctrlr);
+
+/**
+ * Get the statistics of the subsystem.
+ *
+ * \param subsystem subsystem to query.
+ * \param stats structure to collect all the subsystem level statistics.
+ */
+void spdk_nvmf_subsystem_get_stats(struct spdk_nvmf_subsystem *subsystem,
+				   struct spdk_nvmf_subsystem_stats *stats);
 
 #ifdef __cplusplus
 }
