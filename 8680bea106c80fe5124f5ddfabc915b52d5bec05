@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "845d6ab7_2c215413",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-10T07:52:54Z",
+      "side": 0,
+      "message": "This looks like not a severe problem. May output an error is enough and continue the initialization.\n\nThe original behavior like following to hit a core dump:\n\nbdev_malloc.c: 473:bdev_malloc_initialize: *ERROR*: Malloc section present, but no devices specified\nbdev.c: 797:spdk_bdev_initialize: *ERROR*: bdev modules init failed\nthread.c: 393:spdk_io_device_unregister: *ERROR*: io_device 0x727d50 not found\niscsi_tgt: thread.c:394: spdk_io_device_unregister: Assertion `0\u0027 failed.",
+      "range": {
+        "startLine": 474,
+        "startChar": 3,
+        "endLine": 474,
+        "endChar": 15
+      },
+      "revId": "8680bea106c80fe5124f5ddfabc915b52d5bec05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
