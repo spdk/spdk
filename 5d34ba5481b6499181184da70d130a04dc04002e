@@ -16,6 +16,24 @@
       "revId": "5d34ba5481b6499181184da70d130a04dc04002e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea6a1f0f_ed530808",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-10T10:46:17Z",
+      "side": 1,
+      "message": "I was thinking we can drop them when we switch to json configuration files. There\u0027s no need to break compatibility even more now.",
+      "parentUuid": "a9afa12c_fe088922",
+      "revId": "5d34ba5481b6499181184da70d130a04dc04002e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
