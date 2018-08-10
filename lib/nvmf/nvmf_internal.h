@@ -74,6 +74,7 @@ struct spdk_nvmf_tgt {
 
 	/* Array of subsystem pointers of size max_subsystems indexed by sid */
 	struct spdk_nvmf_subsystem		**subsystems;
+	uint32_t				num_ss_create_fail;
 
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
 	size_t					discovery_log_page_size;
@@ -118,6 +119,7 @@ struct spdk_nvmf_poll_group {
 	/* Array of poll groups indexed by subsystem id (sid) */
 	struct spdk_nvmf_subsystem_poll_group		*sgroups;
 	uint32_t					num_sgroups;
+	struct spdk_nvmf_cmd_stats			nvmf_stats;
 
 	/* All of the queue pairs that belong to this poll group */
 	TAILQ_HEAD(, spdk_nvmf_qpair)			qpairs;
@@ -173,6 +175,8 @@ struct spdk_nvmf_qpair {
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	struct spdk_nvmf_poll_group		*group;
 
+	uint64_t				num_cmds_rcvd;
+	uint64_t				num_cmds_failed;
 	uint16_t				qid;
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
@@ -243,6 +247,9 @@ struct spdk_nvmf_subsystem {
 	/* This is the maximum allowed nsid to a subsystem */
 	uint32_t				max_allowed_nsid;
 
+	/* subsystem level stats */
+	struct spdk_nvmf_subsystem_stats	stats;
+
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
 
 	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
@@ -310,6 +317,8 @@ void spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr);
  * AER without sending a completion is to prevent the host from sending another AER.
  */
 void spdk_nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair);
+
+void spdk_nvmf_subsystem_update_unauth_host_conn_count(struct spdk_nvmf_subsystem *subsystem);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
