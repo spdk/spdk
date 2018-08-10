@@ -34,6 +34,24 @@
       "revId": "6c5b56ed781a1414632b3e3919dde286a55e95ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11e99682_1efa3f8b",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-10T03:59:18Z",
+      "side": 1,
+      "message": "For tasks in the conn-\u003equeued_datain_tasks list, they are primary tasks, so there should be a pdu associated with it, can you point me which place release the associated pdu ?",
+      "parentUuid": "85f7c9d6_95e3aa8f",
+      "revId": "6c5b56ed781a1414632b3e3919dde286a55e95ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
