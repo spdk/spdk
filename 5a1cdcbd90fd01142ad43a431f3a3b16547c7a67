@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da21a51b_04661e49",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-10T07:54:41Z",
+      "side": 1,
+      "message": "This makes the pool too small, the right calculation here should be DefaultQueueDepth * MaxConnections.",
+      "revId": "5a1cdcbd90fd01142ad43a431f3a3b16547c7a67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
