@@ -32,7 +32,7 @@ echo "IP=$TARGET_IP" >> /usr/local/etc/its.conf
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -m 0x1 -w &
+$ISCSI_APP -m 0x1 --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 

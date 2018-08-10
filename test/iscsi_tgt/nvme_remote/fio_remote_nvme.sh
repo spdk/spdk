@@ -31,7 +31,7 @@ function run_nvme_remote() {
 	# Start the iSCSI target without using stub
 	iscsi_rpc_addr="/var/tmp/spdk-iscsi.sock"
 	ISCSI_APP="$rootdir/app/iscsi_tgt/iscsi_tgt"
-	$ISCSI_APP -r "$iscsi_rpc_addr" -m 0x1 -p 0 -s 512 -w &
+	$ISCSI_APP -r "$iscsi_rpc_addr" -m 0x1 -p 0 -s 512 --wait-for-rpc &
 	iscsipid=$!
 	echo "iSCSI target launched. pid: $iscsipid"
 	trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -64,7 +64,7 @@ timing_enter nvme_remote
 
 # Start the NVMf target
 NVMF_APP="$rootdir/app/nvmf_tgt/nvmf_tgt"
-$NVMF_APP -m 0x2 -p 1 -s 512 -w &
+$NVMF_APP -m 0x2 -p 1 -s 512 --wait-for-rpc &
 nvmfpid=$!
 echo "NVMf target launched. pid: $nvmfpid"
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT

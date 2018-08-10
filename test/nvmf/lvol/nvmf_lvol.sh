@@ -39,7 +39,7 @@ fi
 timing_enter lvol_integrity
 timing_enter start_nvmf_tgt
 # Start up the NVMf target in another process
-$NVMF_APP -m 0xF -w &
+$NVMF_APP -m 0xF --wait-for-rpc &
 pid=$!
 
 trap "disconnect_nvmf; killprocess $pid; exit 1" SIGINT SIGTERM EXIT

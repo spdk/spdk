@@ -22,7 +22,7 @@ fi
 timing_enter perf
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -m 0xF -w -i 0 &
+$NVMF_APP -m 0xF --wait-for-rpc -i 0 &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT

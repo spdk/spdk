@@ -99,8 +99,6 @@ static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
 	{"mem-size",			required_argument,	NULL, MEM_SIZE_OPT_IDX},
 #define NO_PCI_OPT_IDX		'u'
 	{"no-pci",			no_argument,		NULL, NO_PCI_OPT_IDX},
-#define WAIT_FOR_RPC_OPT_IDX	'w'
-	{"wait-for-rpc",		no_argument,		NULL, WAIT_FOR_RPC_OPT_IDX},
 #define PCI_BLACKLIST_OPT_IDX	'B'
 	{"pci-blacklist",		required_argument,	NULL, PCI_BLACKLIST_OPT_IDX},
 #define TRACEFLAG_OPT_IDX	'L'
@@ -111,6 +109,8 @@ static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
 	{"pci-whitelist",		required_argument,	NULL, PCI_WHITELIST_OPT_IDX},
 #define SILENCE_NOTICELOG_OPT_IDX 257
 	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
+#define WAIT_FOR_RPC_OPT_IDX	258
+	{"wait-for-rpc",		no_argument,		NULL, WAIT_FOR_RPC_OPT_IDX},
 	{NULL,				no_argument,		NULL, 0}
 };
 
@@ -888,7 +888,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	/* TBD: Replace warning by failure when RPCs for startup are prepared. */
 	if (opts->config_file && opts->delay_subsystem_init) {
 		fprintf(stderr,
-			"WARNING: -w and config file are used at the same time. "
+			"WARNING: --wait-for-rpc and config file are used at the same time. "
 			"- Please be careful one options might overwrite others.\n");
 	}
 
