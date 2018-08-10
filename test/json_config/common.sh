@@ -17,7 +17,7 @@ null_json_config=$JSON_DIR/null_json_config.json
 
 function run_spdk_tgt() {
 	echo "Running spdk target"
-	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x1 -p 0 -s 1024 -w &
+	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x1 -p 0 -s 1024 --wait-for-rpc &
 	spdk_tgt_pid=$!
 
 	echo "Waiting for app to run..."
@@ -36,7 +36,7 @@ function load_nvme() {
 }
 
 function run_initiator() {
-	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock -w &
+	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock --wait-for-rpc &
 	virtio_pid=$!
 	waitforlisten $virtio_pid /var/tmp/virtio.sock
 }

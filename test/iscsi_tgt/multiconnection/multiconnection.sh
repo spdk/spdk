@@ -35,7 +35,7 @@ timing_enter multiconnection
 
 timing_enter start_iscsi_tgt
 # Start the iSCSI target without using stub.
-$ISCSI_APP -w &
+$ISCSI_APP --wait-for-rpc &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
 trap "remove_backends; iscsicleanup; killprocess $iscsipid; exit 1" SIGINT SIGTERM EXIT
