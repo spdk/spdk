@@ -81,6 +81,7 @@ static void *g_fini_cb_arg;
 "  DefaultTime2Wait %d\n" \
 "  DefaultTime2Retain %d\n" \
 "\n" \
+"  FirstBurstLength %d\n" \
 "  ImmediateData %s\n" \
 "  ErrorRecoveryLevel %d\n" \
 "\n"
@@ -114,6 +115,7 @@ spdk_iscsi_globals_config_text(FILE *fp)
 		g_spdk_iscsi.MaxConnections,
 		g_spdk_iscsi.MaxQueueDepth,
 		g_spdk_iscsi.DefaultTime2Wait, g_spdk_iscsi.DefaultTime2Retain,
+		g_spdk_iscsi.FirstBurstLength,
 		(g_spdk_iscsi.ImmediateData) ? "Yes" : "No",
 		g_spdk_iscsi.ErrorRecoveryLevel);
 }
@@ -168,7 +170,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 					 spdk_env_get_socket_id(spdk_env_get_current_core()),
 					 spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_immediate_data_pool) {
-		SPDK_ERRLOG("create PDU 8k pool failed\n");
+		SPDK_ERRLOG("create PDU immediate data pool failed\n");
 		return -1;
 	}
 
@@ -178,7 +180,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 				   spdk_env_get_socket_id(spdk_env_get_current_core()),
 				   spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_data_out_pool) {
-		SPDK_ERRLOG("create PDU 64k pool failed\n");
+		SPDK_ERRLOG("create PDU data out pool failed\n");
 		return -1;
 	}
 
@@ -342,6 +344,8 @@ spdk_iscsi_log_globals(void)
 		      g_spdk_iscsi.DefaultTime2Wait);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DefaultTime2Retain %d\n",
 		      g_spdk_iscsi.DefaultTime2Retain);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "FirstBurstLength %d\n",
+		      g_spdk_iscsi.FirstBurstLength);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ImmediateData %s\n",
 		      g_spdk_iscsi.ImmediateData ? "Yes" : "No");
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AllowDuplicateIsid %s\n",
@@ -385,6 +389,7 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->MaxQueueDepth = DEFAULT_MAX_QUEUE_DEPTH;
 	opts->DefaultTime2Wait = DEFAULT_DEFAULTTIME2WAIT;
 	opts->DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
+	opts->FirstBurstLength = DEFAULT_FIRSTBURSTLENGTH;
 	opts->ImmediateData = DEFAULT_IMMEDIATEDATA;
 	opts->AllowDuplicateIsid = false;
 	opts->ErrorRecoveryLevel = DEFAULT_ERRORRECOVERYLEVEL;
@@ -459,6 +464,7 @@ spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src)
 	dst->MaxQueueDepth = src->MaxQueueDepth;
 	dst->DefaultTime2Wait = src->DefaultTime2Wait;
 	dst->DefaultTime2Retain = src->DefaultTime2Retain;
+	dst->FirstBurstLength = src->FirstBurstLength;
 	dst->ImmediateData = src->ImmediateData;
 	dst->AllowDuplicateIsid = src->AllowDuplicateIsid;
 	dst->ErrorRecoveryLevel = src->ErrorRecoveryLevel;
@@ -483,6 +489,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	int MaxQueueDepth;
 	int DefaultTime2Wait;
 	int DefaultTime2Retain;
+	int FirstBurstLength;
 	int ErrorRecoveryLevel;
 	int timeout;
 	int nopininterval;
@@ -533,10 +540,22 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	if (DefaultTime2Wait >= 0) {
 		opts->DefaultTime2Wait = DefaultTime2Wait;
 	}
+
 	DefaultTime2Retain = spdk_conf_section_get_intval(sp, "DefaultTime2Retain");
 	if (DefaultTime2Retain >= 0) {
 		opts->DefaultTime2Retain = DefaultTime2Retain;
 	}
+
+	FirstBurstLength = spdk_conf_section_get_intval(sp, "FirstBurstLength");
+	if (FirstBurstLength >= SPDK_ISCSI_FIRST_BURST_LENGTH) {
+		if (FirstBurstLength < SPDK_ISCSI_MAX_BURST_LENGTH) {
+			opts->FirstBurstLength = FirstBurstLength;
+		} else {
+			SPDK_ERRLOG("FirstBurstLength %d shall be less than MaxBurstLength %d\n",
+				    FirstBurstLength, SPDK_ISCSI_MAX_BURST_LENGTH);
+		}
+	}
+
 	opts->ImmediateData = spdk_conf_section_get_boolval(sp, "ImmediateData",
 			      opts->ImmediateData);
 
@@ -738,6 +757,7 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.MaxQueueDepth = opts->MaxQueueDepth;
 	g_spdk_iscsi.DefaultTime2Wait = opts->DefaultTime2Wait;
 	g_spdk_iscsi.DefaultTime2Retain = opts->DefaultTime2Retain;
+	g_spdk_iscsi.FirstBurstLength = opts->FirstBurstLength;
 	g_spdk_iscsi.ImmediateData = opts->ImmediateData;
 	g_spdk_iscsi.AllowDuplicateIsid = opts->AllowDuplicateIsid;
 	g_spdk_iscsi.ErrorRecoveryLevel = opts->ErrorRecoveryLevel;
@@ -1029,6 +1049,8 @@ spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_uint32(w, "default_time2wait", g_spdk_iscsi.DefaultTime2Wait);
 	spdk_json_write_named_uint32(w, "default_time2retain", g_spdk_iscsi.DefaultTime2Retain);
+
+	spdk_json_write_named_uint32(w, "first_burst_length", g_spdk_iscsi.FirstBurstLength);
 
 	spdk_json_write_named_bool(w, "immediate_data", g_spdk_iscsi.ImmediateData);
 

@@ -46,6 +46,7 @@
 #include "iscsi/tgt_node.h"
 
 #include "spdk/assert.h"
+#include "spdk/util.h"
 
 #define SPDK_ISCSI_BUILD_ETC "/usr/local/etc/spdk"
 #define SPDK_ISCSI_DEFAULT_CONFIG SPDK_ISCSI_BUILD_ETC "/iscsi.conf"
@@ -114,6 +115,11 @@
 #define SPDK_ISCSI_MAX_BURST_LENGTH	\
 		(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH * MAX_DATA_OUT_PER_CONNECTION)
 
+/*
+ * Defines default maximum amount in bytes of unsolicited data the iSCSI
+ *  initiator may send to the SPDK iSCSI target during the execution of
+ *  a single SCSI command. And it is smaller than the MaxBurstLength.
+ */
 #define SPDK_ISCSI_FIRST_BURST_LENGTH	8192
 
 /** Defines how long we should wait for a TCP close after responding to a
@@ -280,6 +286,7 @@ struct spdk_iscsi_opts {
 	uint32_t MaxQueueDepth;
 	uint32_t DefaultTime2Wait;
 	uint32_t DefaultTime2Retain;
+	uint32_t FirstBurstLength;
 	bool ImmediateData;
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
@@ -308,6 +315,7 @@ struct spdk_iscsi_globals {
 	uint32_t MaxQueueDepth;
 	uint32_t DefaultTime2Wait;
 	uint32_t DefaultTime2Retain;
+	uint32_t FirstBurstLength;
 	bool ImmediateData;
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
@@ -408,7 +416,7 @@ spdk_get_immediate_data_buffer_size(void)
 	 *  take up much space and we need to make sure the worst-case scenario
 	 *  can be satisified by the size returned here.
 	 */
-	return SPDK_ISCSI_FIRST_BURST_LENGTH +
+	return g_spdk_iscsi.FirstBurstLength +
 	       ISCSI_DIGEST_LEN + /* data digest */
 	       ISCSI_DIGEST_LEN + /* header digest */
 	       8 +		   /* bidirectional AHS */
