@@ -37,7 +37,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 # Build combined libspdk.so shared library
-SHARED_LIB = $(SPDK_ROOT_DIR)/build/lib/libspdk.so
+COMBINED_LINKERNAME_LIB = $(SPDK_ROOT_DIR)/build/lib/libspdk.so
+COMBINED_SHARED_LIB = $(COMBINED_LINKERNAME_LIB).$(SO_SUFFIX_ALL)
 
 SPDK_LIB_LIST += app_rpc
 SPDK_LIB_LIST += bdev
@@ -85,24 +86,22 @@ LIBS += $(ENV_LINKER_ARGS)
 
 comma := ,
 
-$(SHARED_LIB): $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES) $(SOCK_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS) $(MAKEFILE_LIST) spdk.map
+$(COMBINED_SHARED_LIB): $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES) $(SOCK_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS) $(MAKEFILE_LIST) spdk.map
 	$(Q)echo "  SO $(notdir $@)"; \
 	rm -f $@; \
-	$(CC) -o $@ -shared $(CPPFLAGS) $(LDFLAGS) \
-		-Wl,--whole-archive \
-		$(filter-out -Wl$(comma)--no-whole-archive,$(LIBS)) \
-		-Wl,--no-whole-archive \
-		-Wl,--version-script=spdk.map \
-		$(SYS_LIBS)
+	$(call spdk_build_realname_shared_lib,$(filter-out -Wl$(comma)--no-whole-archive,$(LIBS)),spdk.map,$(SYS_LIBS))
+
+$(COMBINED_LINKERNAME_LIB) : %.so : %.so.$(SO_SUFFIX_ALL)
+	$(BUILD_LINKERNAME_LIB)
 
 .PHONY: all clean $(DIRS-y)
 
-all: $(SHARED_LIB)
+all: $(COMBINED_SHARED_LIB) $(COMBINED_LINKERNAME_LIB)
 
 clean:
-	$(CLEAN_C) $(SHARED_LIB)
+	$(CLEAN_C) $(COMBINED_SHARED_LIB) $(COMBINED_LINKERNAME_LIB)
 
 install:
-	$(INSTALL_SHARED_LIB)
+	$(call spdk_install_shared_libs, $(COMBINED_LINKERNAME_LIB))
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
