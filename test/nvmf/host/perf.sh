@@ -51,18 +51,13 @@ $rootdir/examples/nvme/perf/perf -q 32 -s 4096 -w randrw -M 50 -t 1 -r "trtype:R
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
+if [ $RUN_NIGHTLY -eq 0 ]; then
 	# Configure nvme devices with nvmf lvol_bdev backend
 	if [ -n "$local_nvme_trid" ]; then
 		ls_guid=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
 		get_lvs_free_mb $ls_guid
 		lb_guid=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_0 $free_mb)
 		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "$lb_guid"
-		# Create lvol bdev for nested lvol stores
-		ls_nested_guid=$($rpc_py construct_lvol_store $lb_guid lvs_n_0)
-		get_lvs_free_mb $ls_nested_guid
-		lb_nested_guid=$($rpc_py construct_lvol_bdev -u $ls_nested_guid lbd_nest_0 $free_mb)
-		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode2 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000002 -n "$lb_nested_guid"
 
 		# Test perf as host with different io_size and qd_depth in nightly
 		qd_depth=("1" "128")
@@ -75,9 +70,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 
 		# Delete subsystems, lvol_bdev and destroy lvol_store.
 		$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
-		$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2
-		$rpc_py destroy_lvol_bdev "$lb_nested_guid"
-		$rpc_py destroy_lvol_store -l lvs_n_0
 		$rpc_py destroy_lvol_bdev "$lb_guid"
 		$rpc_py destroy_lvol_store -l lvs_0
 		$rpc_py delete_nvme_controller Nvme0
