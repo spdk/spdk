@@ -41,6 +41,7 @@
 #include "spdk/nvmf.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/thread.h"
 
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
@@ -1668,3 +1669,365 @@ nvmf_rpc_subsystem_set_tgt_conf(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("set_nvmf_target_config", nvmf_rpc_subsystem_set_tgt_conf, SPDK_RPC_STARTUP)
+
+struct spdk_rpc_nvmf_cmd_stats_ctx {
+	struct spdk_nvmf_cmd_stats nvmf_stats;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+spdk_rpc_dump_nvmf_tgt_stats(void *arg)
+{
+	struct spdk_rpc_nvmf_cmd_stats_ctx *ctx = arg;
+	struct spdk_jsonrpc_request *request = ctx->request;
+	struct spdk_json_write_ctx *w = ctx->w;
+	struct spdk_nvmf_cmd_stats *nvmf_stats = &(ctx->nvmf_stats);
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "num_fabric_cmds");
+	spdk_json_write_uint64(w, nvmf_stats->num_fabric_cmds);
+
+	spdk_json_write_name(w, "num_admin_cmds");
+	spdk_json_write_uint64(w, nvmf_stats->num_admin_cmds);
+
+	spdk_json_write_name(w, "num_io_cmds");
+	spdk_json_write_uint64(w, nvmf_stats->num_io_cmds);
+
+	spdk_json_write_name(w, "num_subsystem_create_fail");
+	spdk_json_write_uint32(w, spdk_nvmf_subsystem_create_fail_count(g_spdk_nvmf_tgt));
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+	free(ctx);
+}
+
+static void
+spdk_rpc_get_nvmf_tgt_cmd_stats(void *arg)
+{
+	struct spdk_rpc_nvmf_cmd_stats_ctx *ctx = arg;
+	struct spdk_nvmf_cmd_stats *nvmf_stats = &(ctx->nvmf_stats);
+
+	spdk_nvmf_tgt_get_cmd_stats(nvmf_stats);
+}
+
+static void
+spdk_rpc_get_nvmf_tgt_stats(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct spdk_rpc_nvmf_cmd_stats_ctx *ctx;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_nvmf_tgt_stats requires no parameters");
+		return;
+	}
+
+	ctx = calloc(1, sizeof(struct spdk_rpc_nvmf_cmd_stats_ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate spdk_rpc_nvmf_cmd_stats_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "No memory left");
+		return;
+	}
+
+	ctx->w = spdk_jsonrpc_begin_result(request);
+	if (ctx->w == NULL) {
+		free(ctx);
+		return;
+	}
+	ctx->request = request;
+
+	spdk_json_write_array_begin(ctx->w);
+	spdk_for_each_thread(spdk_rpc_get_nvmf_tgt_cmd_stats, ctx, spdk_rpc_dump_nvmf_tgt_stats);
+}
+SPDK_RPC_REGISTER("get_nvmf_tgt_stats", spdk_rpc_get_nvmf_tgt_stats, SPDK_RPC_RUNTIME)
+
+struct spdk_rpc_ctrlr_cmd_stats_ctx {
+	uint64_t io_cmds_rcvd;
+	uint64_t io_cmds_failed;
+	uint32_t ctrlr_count;
+	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+spdk_rpc_get_ctrlr_cmd_stats(void *arg)
+{
+	struct spdk_rpc_ctrlr_cmd_stats_ctx *ctx = arg;
+
+	spdk_nvmf_ctrlr_get_io_cmd_stats(ctx->ctrlr, &(ctx->io_cmds_rcvd), &(ctx->io_cmds_failed));
+}
+
+static void
+spdk_rpc_dump_ctrlr_stats(void *arg)
+{
+	struct spdk_rpc_ctrlr_cmd_stats_ctx *ctx = arg;
+	struct spdk_json_write_ctx *w = ctx->w;
+	struct spdk_nvmf_ctrlr *ctrlr = ctx->ctrlr;
+	uint64_t admin_cmds_rcvd = 0;
+	uint64_t admin_cmds_failed = 0;
+	uint8_t host_id[40] = {};
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "subsystem_nqn");
+	spdk_json_write_string(w, spdk_nvmf_subsystem_get_nqn(ctx->subsystem));
+	spdk_json_write_name(w, "controller_id");
+	spdk_json_write_uint32(w, spdk_nvmf_ctrlr_get_id(ctrlr));
+	spdk_nvmf_ctrlr_get_host_id(ctrlr, host_id);
+	spdk_json_write_name(w, "host_id");
+	spdk_json_write_string(w, host_id);
+	spdk_json_write_name(w, "num_qpairs");
+	spdk_json_write_int32(w, spdk_nvmf_ctrlr_get_num_qpairs(ctrlr));
+
+	spdk_nvmf_ctrlr_get_admin_cmd_stats(ctrlr, &admin_cmds_rcvd, &admin_cmds_failed);
+	spdk_json_write_name(w, "num_admin_cmds_rcvd");
+	spdk_json_write_uint64(w, admin_cmds_rcvd);
+	spdk_json_write_name(w, "num_admin_cmds_failed");
+	spdk_json_write_uint64(w, admin_cmds_failed);
+
+	spdk_json_write_name(w, "num_io_cmds_rcvd");
+	spdk_json_write_uint64(w, ctx->io_cmds_rcvd);
+	spdk_json_write_name(w, "num_io_cmds_failed");
+	spdk_json_write_uint64(w, ctx->io_cmds_failed);
+
+	spdk_json_write_object_end(w);
+
+	ctx->ctrlr_count--;
+	ctx->ctrlr = spdk_nvmf_subsystem_get_next_ctrlr(ctrlr);
+	if (ctx->ctrlr_count && ctx->ctrlr) {
+		ctx->io_cmds_rcvd = 0;
+		ctx->io_cmds_failed = 0;
+		spdk_for_each_thread(spdk_rpc_get_ctrlr_cmd_stats, ctx, spdk_rpc_dump_ctrlr_stats);
+	} else {
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(ctx->request, w);
+		free(ctx);
+	}
+}
+
+struct rpc_get_nvmf_stats {
+	uint8_t *ss_nqn;
+	uint16_t ctrlr_id;
+};
+
+static void
+free_rpc_get_nvmf_stats(struct rpc_get_nvmf_stats *r)
+{
+	if (r && r->ss_nqn) {
+		free(r->ss_nqn);
+	}
+}
+
+static const struct spdk_json_object_decoder rpc_get_nvmf_stats_decoders[] = {
+	{"ss_nqn", offsetof(struct rpc_get_nvmf_stats, ss_nqn), spdk_json_decode_string},
+	{"ctrlr_id", offsetof(struct rpc_get_nvmf_stats, ctrlr_id), spdk_json_decode_uint32, true},
+};
+
+static void
+spdk_rpc_get_nvmf_ctrlr_stats(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct rpc_get_nvmf_stats req = {};
+	struct spdk_nvmf_subsystem *subsystem = NULL;
+	struct spdk_nvmf_ctrlr *ctrlr = NULL;
+	struct spdk_rpc_ctrlr_cmd_stats_ctx *ctx;
+
+	if (params == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_nvmf_ctrlr_stats requires atleast one param");
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_get_nvmf_stats_decoders,
+				    SPDK_COUNTOF(rpc_get_nvmf_stats_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (req.ss_nqn == NULL) {
+		SPDK_ERRLOG("Subsystem name missing\n");
+		goto invalid;
+	}
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, req.ss_nqn);
+	if (!subsystem) {
+		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", req.ss_nqn);
+		goto invalid;
+	}
+
+	if (req.ctrlr_id) {
+		ctrlr = spdk_nvmf_subsystem_get_ctrlr(subsystem, req.ctrlr_id);
+		if (!ctrlr) {
+			SPDK_ERRLOG("Unable to find ctrl %d in subsystem NQN %s\n", req.ctrlr_id, req.ss_nqn);
+			goto invalid;
+		}
+	}
+	free_rpc_get_nvmf_stats(&req);
+
+	ctx = calloc(1, sizeof(struct spdk_rpc_ctrlr_cmd_stats_ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate spdk_rpc_ctrlr_cmd_stats_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "No memory left");
+		return;
+	}
+
+	ctx->w = spdk_jsonrpc_begin_result(request);
+	if (ctx->w == NULL) {
+		free(ctx);
+		return;
+	}
+	ctx->request = request;
+	ctx->subsystem = subsystem;
+
+	spdk_json_write_array_begin(ctx->w);
+
+	if (ctrlr) {
+		ctx->ctrlr = ctrlr;
+		ctx->ctrlr_count = 1;
+		spdk_for_each_thread(spdk_rpc_get_ctrlr_cmd_stats, ctx, spdk_rpc_dump_ctrlr_stats);
+	} else {
+		ctrlr = spdk_nvmf_subsystem_get_first_ctrlr(subsystem);
+		while (ctrlr) {
+			ctx->ctrlr_count++;
+			ctrlr = spdk_nvmf_subsystem_get_next_ctrlr(ctrlr);
+		}
+
+		if (ctx->ctrlr_count) {
+			ctx->ctrlr = spdk_nvmf_subsystem_get_first_ctrlr(subsystem);
+			spdk_for_each_thread(spdk_rpc_get_ctrlr_cmd_stats, ctx, spdk_rpc_dump_ctrlr_stats);
+		} else {
+			/* No controllers available in this subsystem */
+			spdk_json_write_array_end(ctx->w);
+			spdk_jsonrpc_end_result(ctx->request, ctx->w);
+			free(ctx);
+		}
+	}
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_get_nvmf_stats(&req);
+}
+SPDK_RPC_REGISTER("get_nvmf_ctrlr_stats", spdk_rpc_get_nvmf_ctrlr_stats, SPDK_RPC_RUNTIME)
+
+static void
+spdk_rpc_dump_nvmf_subsystem_stats(struct spdk_json_write_ctx *w,
+				   struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_subsystem_stats stats;
+
+	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		return;
+	}
+
+	spdk_nvmf_subsystem_get_stats(subsystem, &stats);
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "subsystem_nqn");
+	spdk_json_write_string(w, spdk_nvmf_subsystem_get_nqn(subsystem));
+	spdk_json_write_name(w, "total_connects_count");
+	spdk_json_write_int32(w, stats.num_connects);
+	spdk_json_write_name(w, "total_disconnects_count");
+	spdk_json_write_int32(w, stats.num_disconnects);
+	spdk_json_write_name(w, "active_hosts_count");
+	spdk_json_write_int32(w, stats.num_active_hosts);
+	spdk_json_write_name(w, "add_ns_fail_count");
+	spdk_json_write_int32(w, stats.num_add_ns_fail);
+	spdk_json_write_name(w, "remove_ns_fail_count");
+	spdk_json_write_int32(w, stats.num_rem_ns_fail);
+	spdk_json_write_name(w, "add_host_fail_count");
+	spdk_json_write_int32(w, stats.num_add_host_fail);
+	spdk_json_write_name(w, "remove_host_fail_count");
+	spdk_json_write_int32(w, stats.num_rem_host_fail);
+	spdk_json_write_name(w, "unauthorized_connection_count");
+	spdk_json_write_int32(w, stats.num_unauth_connects);
+	spdk_json_write_name(w, "set_allow_any_host_fail_count");
+	spdk_json_write_int32(w, stats.num_set_allow_any_host_fail);
+	spdk_json_write_name(w, "subsystem_paused_count");
+	spdk_json_write_int32(w, stats.num_ss_paused);
+	spdk_json_write_name(w, "subsystem_resumed_count");
+	spdk_json_write_int32(w, stats.num_ss_resumed);
+	spdk_json_write_name(w, "add_listener_fail_count");
+	spdk_json_write_int32(w, stats.num_add_listener_fail);
+	spdk_json_write_name(w, "remove_listener_fail_count");
+	spdk_json_write_int32(w, stats.num_rem_listener_fail);
+
+	spdk_json_write_object_end(w);
+}
+
+struct rpc_get_nvmf_ss_stats {
+	uint8_t *ss_nqn;
+};
+
+static void
+free_rpc_get_nvmf_ss_stats(struct rpc_get_nvmf_ss_stats *r)
+{
+	if (r && r->ss_nqn) {
+		free(r->ss_nqn);
+	}
+}
+
+static const struct spdk_json_object_decoder rpc_get_nvmf_ss_stats_decoders[] = {
+	{"ss_nqn", offsetof(struct rpc_get_nvmf_ss_stats, ss_nqn), spdk_json_decode_string, true},
+};
+
+static void
+spdk_rpc_get_nvmf_subsystem_stats(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct rpc_get_nvmf_ss_stats req = {};
+	struct spdk_json_write_ctx *w = NULL;
+	struct spdk_nvmf_subsystem *subsystem = NULL;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_get_nvmf_ss_stats_decoders,
+					    SPDK_COUNTOF(rpc_get_nvmf_ss_stats_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			goto invalid;
+		}
+		if (req.ss_nqn == NULL) {
+			SPDK_ERRLOG("Subsystem name missing\n");
+			goto invalid;
+		}
+		subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, req.ss_nqn);
+		if (!subsystem) {
+			SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", req.ss_nqn);
+			goto invalid;
+		}
+		free_rpc_get_nvmf_ss_stats(&req);
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+	spdk_json_write_array_begin(w);
+
+	if (subsystem) {
+		spdk_rpc_dump_nvmf_subsystem_stats(w, subsystem);
+	} else {
+		subsystem = spdk_nvmf_subsystem_get_first(g_spdk_nvmf_tgt);
+		while (subsystem) {
+			spdk_rpc_dump_nvmf_subsystem_stats(w, subsystem);
+			subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_get_nvmf_ss_stats(&req);
+}
+SPDK_RPC_REGISTER("get_nvmf_subsystem_stats", spdk_rpc_get_nvmf_subsystem_stats, SPDK_RPC_RUNTIME)
