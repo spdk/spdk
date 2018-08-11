@@ -121,7 +121,7 @@ struct spdk_nvme_rdma_req {
 
 	struct nvme_request			*req;
 
-	struct ibv_sge				send_sgl;
+	struct ibv_sge				send_sgl[NVME_RDMA_DEFAULT_TX_SGE];
 
 	TAILQ_ENTRY(spdk_nvme_rdma_req)		link;
 };
@@ -413,16 +413,16 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 
 		rdma_req->id = i;
 
-		rdma_req->send_sgl.addr = (uint64_t)cmd;
-		rdma_req->send_sgl.length = sizeof(*cmd);
-		rdma_req->send_sgl.lkey = rqpair->cmd_mr->lkey;
+		rdma_req->send_sgl[0].addr = (uint64_t)cmd;
+		rdma_req->send_sgl[0].length = sizeof(*cmd);
+		rdma_req->send_sgl[0].lkey = rqpair->cmd_mr->lkey;
 
 		rdma_req->send_wr.wr_id = (uint64_t)rdma_req;
 		rdma_req->send_wr.next = NULL;
 		rdma_req->send_wr.opcode = IBV_WR_SEND;
 		rdma_req->send_wr.send_flags = IBV_SEND_SIGNALED;
-		rdma_req->send_wr.sg_list = &rdma_req->send_sgl;
-		rdma_req->send_wr.num_sge = 1;
+		rdma_req->send_wr.sg_list = &rdma_req->send_sgl[0];
+		rdma_req->send_wr.num_sge = 1; /* Need to increment if inline */
 		rdma_req->send_wr.imm_data = 0;
 
 		TAILQ_INSERT_TAIL(&rqpair->free_reqs, rdma_req, link);
@@ -831,11 +831,51 @@ nvme_rdma_build_null_request(struct nvme_request *req)
 }
 
 /*
+ * Build inline SGL describing contiguous payload buffer.
+ */
+static int
+nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
+				      struct spdk_nvme_rdma_req *rdma_req)
+{
+	struct ibv_sge *sge_inline = &rdma_req->send_sgl[1];
+	struct nvme_request *req = rdma_req->req;
+	struct ibv_mr *mr;
+	void *payload;
+
+
+	payload = req->payload.contig_or_cb_arg + req->payload_offset;
+	assert(req->payload_size != 0);
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
+
+	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map,
+			(uint64_t)payload, req->payload_size);
+
+	if (mr == NULL) {
+		return -EINVAL;
+	}
+
+	sge_inline->addr = (uint64_t)payload;
+	sge_inline->length = (uint32_t)req->payload_size;
+	sge_inline->lkey = mr->lkey;
+
+	rdma_req->send_wr.num_sge = 2;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
+	req->cmd.dptr.sgl1.unkeyed.length = (uint32_t)req->payload_size;
+	req->cmd.dptr.sgl1.address = (uint64_t)0; /* icdoff is '0' for spdk */
+
+	return 0;
+}
+
+/*
  * Build SGL describing contiguous payload buffer.
  */
 static int
-nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_request *req)
+nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
+			       struct spdk_nvme_rdma_req *rdma_req)
 {
+	struct nvme_request *req = rdma_req->req;
 	void *payload = req->payload.contig_or_cb_arg + req->payload_offset;
 	struct ibv_mr *mr;
 
@@ -848,6 +888,7 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 		return -1;
 	}
 
+	rdma_req->send_wr.num_sge = 1;
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
@@ -862,12 +903,14 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_reque
  * Build SGL describing scattered payload buffer.
  */
 static int
-nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request *req)
+nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
+			    struct spdk_nvme_rdma_req *rdma_req)
 {
-	int rc;
-	void *virt_addr;
+	struct nvme_request *req = rdma_req->req;
 	struct ibv_mr *mr;
+	void *virt_addr;
 	uint32_t length;
+	int rc;
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
@@ -892,6 +935,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 		return -1;
 	}
 
+	rdma_req->send_wr.num_sge = 1;
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
@@ -902,10 +946,68 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 	return 0;
 }
 
+/*
+ * Build inline SGL describing sgl payload buffer.
+ */
+static int
+nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
+				   struct spdk_nvme_rdma_req *rdma_req)
+{
+	struct ibv_sge *sge_inline = &rdma_req->send_sgl[1];
+	struct nvme_request *req = rdma_req->req;
+	struct ibv_mr *mr;
+	uint32_t length;
+	void *virt_addr;
+	int rc;
+
+	assert(req->payload_size != 0);
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
+	assert(req->payload.reset_sgl_fn != NULL);
+	assert(req->payload.next_sge_fn != NULL);
+	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
+
+	/* TODO: for now, we only support a single SGL entry */
+	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
+	if (rc) {
+		return -1;
+	}
+
+	if (length < req->payload_size) {
+		SPDK_ERRLOG("multi-element SGL currently not supported for RDMA\n");
+		return -1;
+	}
+
+	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
+			req->payload_size);
+	if (mr == NULL) {
+		return -1;
+	}
+
+	sge_inline->addr = (uint64_t)virt_addr;
+	sge_inline->length = (uint32_t)req->payload_size;
+	sge_inline->lkey = mr->lkey;
+
+	rdma_req->send_wr.num_sge = 2;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
+	req->cmd.dptr.sgl1.unkeyed.length = (uint32_t)req->payload_size;
+	req->cmd.dptr.sgl1.address = (uint64_t)0; /* icdoff is '0' for spdk */
+
+	return 0;
+}
+
+static inline unsigned int
+nvme_rdma_icdsz_bytes(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return (ctrlr->cdata.nvmf_specific.ioccsz * 16 - sizeof(struct spdk_nvme_cmd));
+}
+
 static int
 nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 		   struct spdk_nvme_rdma_req *rdma_req)
 {
+	struct spdk_nvme_ctrlr *ctrlr = rqpair->qpair.ctrlr;
 	int rc;
 
 	rdma_req->req = req;
@@ -914,9 +1016,25 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 	if (req->payload_size == 0) {
 		rc = nvme_rdma_build_null_request(req);
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		rc = nvme_rdma_build_contig_request(rqpair, req);
+		/*
+		 * Check if icdoff is non zero, to avoid interop conflicts with
+		 * non spdk targets.
+		 */
+		if (req->cmd.opc == SPDK_NVME_OPC_WRITE &&
+		    req->payload_size <= nvme_rdma_icdsz_bytes(ctrlr) &&
+		    (ctrlr->cdata.nvmf_specific.icdoff == 0)) {
+			rc = nvme_rdma_build_contig_inline_request(rqpair, rdma_req);
+		} else {
+			rc = nvme_rdma_build_contig_request(rqpair, rdma_req);
+		}
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
-		rc = nvme_rdma_build_sgl_request(rqpair, req);
+		if (req->cmd.opc == SPDK_NVME_OPC_WRITE &&
+		    req->payload_size <= nvme_rdma_icdsz_bytes(ctrlr) &&
+		    ctrlr->cdata.nvmf_specific.icdoff == 0) {
+			rc = nvme_rdma_build_sgl_inline_request(rqpair, rdma_req);
+		} else {
+			rc = nvme_rdma_build_sgl_request(rqpair, rdma_req);
+		}
 	} else {
 		rc = -1;
 	}
