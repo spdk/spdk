@@ -515,6 +515,19 @@ int spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 			int base_bdev_count);
 
 /**
+ * Add a base bdev to a virtual bdev.
+ *
+ * \param vbdev Virtual bdev to add to.
+ * \param base_bdevs Base bdev being added.
+ *
+ * \return 0 on success
+ * \return -ENODEV if @vbdev or bdev does not exist.
+ * \return -EEXIST if the bdev already exists under @vbdev.
+ * \return -ENOMEM if reallocation of the base_bdevs array or the base bdevs vbdevs array fails.
+ */
+int spdk_vbdev_add_base_bdev(struct spdk_bdev *vbdev, struct spdk_bdev *bdev);
+
+/**
  * Indicate to the bdev layer that the module is done examining a bdev.
  *
  * To be called synchronously or asynchronously in response to the

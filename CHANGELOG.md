@@ -2,6 +2,21 @@
 
 ## v18.10: (Upcoming Release)
 
+### bdev
+
+A capability to allow virtual bdevs to add/remove base bdev at run-time
+has been added.
+
+First, a new call `spdk_vbdev_add_base_bdev` has been added that lets a
+vbdev add its base bdev at run-time, something that is not possible
+with the extant base bdev management API.
+
+Second, a new call `spdk_bdev_remove_from_vbdevs` has been added,
+to remove a bdev being unregistered from vbdevs referencing it (this refers to
+`base_bdevs` array management only). This second call is not exposed
+through bdev module API, and is only called by `spdk_bdev_unregister`
+at the final step of the base bdev unregistration.
+
 ## v18.07:
 
 ### bdev
