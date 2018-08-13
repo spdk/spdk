@@ -13,7 +13,7 @@ export ASAN_OPTIONS=new_delete_type_mismatch=0
 PS4=' \t	\$ '
 ulimit -c unlimited
 
-: ${RUN_NIGHTLY:=0}
+: ${RUN_NIGHTLY:=1}
 export RUN_NIGHTLY
 
 : ${RUN_NIGHTLY_FAILING:=0}
