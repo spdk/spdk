@@ -243,13 +243,20 @@ begin_response(struct spdk_jsonrpc_request *request)
 	return w;
 }
 
+void
+skip_response(struct spdk_jsonrpc_request *request)
+{
+	request->send_len = 0;
+	spdk_jsonrpc_server_send_response(request);
+}
+
 static void
 end_response(struct spdk_jsonrpc_request *request, struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_object_end(w);
 	spdk_json_write_end(w);
 	spdk_jsonrpc_server_write_cb(request, "\n", 1);
-	spdk_jsonrpc_server_send_response(request->conn, request);
+	spdk_jsonrpc_server_send_response(request);
 }
 
 void
@@ -267,13 +274,13 @@ spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 
 	if (request->id.type == SPDK_JSON_VAL_INVALID) {
 		/* Notification - no response required */
-		spdk_jsonrpc_free_request(request);
+		skip_response(request);
 		return NULL;
 	}
 
 	w = begin_response(request);
 	if (w == NULL) {
-		spdk_jsonrpc_free_request(request);
+		skip_response(request);
 		return NULL;
 	}
 
@@ -303,7 +310,7 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 
 	w = begin_response(request);
 	if (w == NULL) {
-		free(request);
+		skip_response(request);
 		return;
 	}
 
@@ -332,7 +339,7 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 
 	w = begin_response(request);
 	if (w == NULL) {
-		free(request);
+		skip_response(request);
 		return;
 	}
 

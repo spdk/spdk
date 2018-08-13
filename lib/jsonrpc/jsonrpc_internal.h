@@ -99,11 +99,14 @@ void spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
 					const struct spdk_json_val *method,
 					const struct spdk_json_val *params);
 void spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error);
-void spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_server_conn *conn,
-				       struct spdk_jsonrpc_request *request);
+
+/* Might be called from any thread */
+void spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_request *request);
 
 /* jsonrpc_server */
 int spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, size_t size);
+
+/* Must be called only from server poll thread */
 void spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request);
 
 #endif

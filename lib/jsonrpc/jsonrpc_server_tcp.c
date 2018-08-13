@@ -259,9 +259,10 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 }
 
 void
-spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_server_conn *conn,
-				  struct spdk_jsonrpc_request *request)
+spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 {
+	struct spdk_jsonrpc_server_conn *conn = request->conn;
+
 	/* Queue the response to be sent */
 	pthread_spin_lock(&conn->queue_lock);
 	STAILQ_INSERT_TAIL(&conn->send_queue, request, link);
@@ -296,9 +297,6 @@ more:
 
 	if (conn->send_request == NULL) {
 		conn->send_request = spdk_jsonrpc_server_dequeue_request(conn);
-		if (conn->send_request == NULL) {
-			return 0;
-		}
 	}
 
 	request = conn->send_request;
@@ -307,19 +305,21 @@ more:
 		return 0;
 	}
 
-	rc = send(conn->sockfd, request->send_buf + request->send_offset,
-		  request->send_len, 0);
-	if (rc < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-			return 0;
+	if (request->send_len > 0) {
+		rc = send(conn->sockfd, request->send_buf + request->send_offset,
+			  request->send_len, 0);
+		if (rc < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+				return 0;
+			}
+
+			SPDK_DEBUGLOG(SPDK_LOG_RPC, "send() failed: %s\n", spdk_strerror(errno));
+			return -1;
 		}
 
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "send() failed: %s\n", spdk_strerror(errno));
-		return -1;
+		request->send_offset += rc;
+		request->send_len -= rc;
 	}
-
-	request->send_offset += rc;
-	request->send_len -= rc;
 
 	if (request->send_len == 0) {
 		/*
