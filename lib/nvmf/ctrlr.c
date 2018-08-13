@@ -142,7 +142,7 @@ _spdk_nvmf_subsystem_add_ctrlr(void *ctx)
 		return;
 	}
 
-	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_ctrlr_add_admin_qpair, req);
+	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_add_admin_qpair, req);
 }
 
 static struct spdk_nvmf_ctrlr *
@@ -164,6 +164,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	req->qpair->ctrlr = ctrlr;
 	ctrlr->subsys = subsystem;
+	ctrlr->thread = req->qpair->group->thread;
 
 	ctrlr->qpair_mask = spdk_bit_array_create(tgt->opts.max_qpairs_per_ctrlr);
 	if (!ctrlr->qpair_mask) {
