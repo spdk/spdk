@@ -16,6 +16,24 @@
       "revId": "6ce20798487d443df0b78cf050c732ce99d868f8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "586eaca8_59fa487b",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-13T12:01:33Z",
+      "side": 1,
+      "message": "--no-shconf prevents only the config file from being created. The hugepage_info, hugepage_data and fbarray_* files (in the runtime dir) are created unconditionally and we still have to clean them up",
+      "parentUuid": "a6ede0f9_5ab836d5",
+      "revId": "6ce20798487d443df0b78cf050c732ce99d868f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
