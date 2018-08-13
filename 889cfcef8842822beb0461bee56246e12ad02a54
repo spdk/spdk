@@ -1,0 +1,280 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55522d29_f8a40ad8",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "Can you use child_request here instead of request_in_batch?",
+      "range": {
+        "startLine": 201,
+        "startChar": 3,
+        "endLine": 201,
+        "endChar": 19
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "349ab694_44f1fe94",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "request_in_batch-\u003esend_buf_size",
+      "range": {
+        "startLine": 209,
+        "startChar": 39,
+        "endLine": 209,
+        "endChar": 61
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e14935fc_67238c02",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "Move this after line 223",
+      "range": {
+        "startLine": 209,
+        "startChar": 3,
+        "endLine": 214,
+        "endChar": 4
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb5b0bde_a30e43b9",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "This is use-after-free error. Please use this scheme (along with spdk_jsonrpc_free_request() comment).\n\n  while(!TAILQ_EMPTY(...)) {\n    spdk_jsonrpc_free_request(TAILQ_FIRST(\u0026request-\u003echildren));\n  }",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 4
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bcf1c33d_9dc65826",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "This is use-after-free error. Please use this scheme (along with spdk_jsonrpc_free_request() comment).\n\n  while(!TAILQ_EMPTY(...)) {\n    spdk_jsonrpc_free_request(TAILQ_FIRST(\u0026request-\u003echildren));\n  }",
+      "range": {
+        "startLine": 307,
+        "startChar": 0,
+        "endLine": 310,
+        "endChar": 2
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc3b8315_cc6473f3",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "This function don\u0027t need to take parent_request as request have it inside.",
+      "range": {
+        "startLine": 313,
+        "startChar": 26,
+        "endLine": 314,
+        "endChar": 42
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38272d47_3d3aa05a",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "Pls use this valiable in whole function or remove it.",
+      "range": {
+        "startLine": 349,
+        "startChar": 1,
+        "endLine": 349,
+        "endChar": 71
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb0d80a2_a01acfdb",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "} else {\n   TAILQ_REMOVE(\u0026request-\u003eparent_request, request, child_tailq);\n}",
+      "range": {
+        "startLine": 375,
+        "startChar": 1,
+        "endLine": 375,
+        "endChar": 2
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecac9f91_88c8e929",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "Why you added these checks?",
+      "range": {
+        "startLine": 376,
+        "startChar": 1,
+        "endLine": 376,
+        "endChar": 25
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15050226_3b9bfc77",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 379,
+        "startChar": 1,
+        "endLine": 379,
+        "endChar": 15
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a12d179_58d1efa2",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "There was no ERRLOG before so I think it isn\u0027t needed now. \n\nAlso please rebase on https://review.gerrithub.io/#/c/spdk/spdk/+/422124/ so changing this part won\u0027t be needed.",
+      "range": {
+        "startLine": 407,
+        "startChar": 0,
+        "endLine": 408,
+        "endChar": 35
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1c4925d_762251c2",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:10:32Z",
+      "side": 1,
+      "message": "There was no ERRLOG before so I think it isn\u0027t needed now. \n\nAlso please rebase on https://review.gerrithub.io/#/c/spdk/spdk/+/422124/ so changing this part won\u0027t be needed.",
+      "range": {
+        "startLine": 444,
+        "startChar": 3,
+        "endLine": 445,
+        "endChar": 35
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
