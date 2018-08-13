@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85dd59d0_9b01b22f",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-13T07:29:18Z",
+      "side": 1,
+      "message": "Do we need the _SAFE version here?",
+      "range": {
+        "startLine": 228,
+        "startChar": 14,
+        "endLine": 228,
+        "endChar": 19
+      },
+      "revId": "786dd1f391c2af69d1f6f95b99f6d733386bb016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b912dbb9_e9e978a5",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-13T07:29:18Z",
+      "side": 1,
+      "message": "Not sure whether trace a pointer address here can have some useful information...",
+      "range": {
+        "startLine": 234,
+        "startChar": 68,
+        "endLine": 234,
+        "endChar": 70
+      },
+      "revId": "786dd1f391c2af69d1f6f95b99f6d733386bb016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5d1b6bb_8a1b8569",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-13T07:29:18Z",
+      "side": 1,
+      "message": "This seems like duplicate as SPDK_ERRLOG will output the function name.",
+      "range": {
+        "startLine": 234,
+        "startChar": 75,
+        "endLine": 234,
+        "endChar": 83
+      },
+      "revId": "786dd1f391c2af69d1f6f95b99f6d733386bb016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
