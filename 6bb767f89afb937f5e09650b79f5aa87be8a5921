@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3dce05d_d9faad0f",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 890,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T20:20:45Z",
+      "side": 1,
+      "message": "can we goto done_failed here?\n\nI know that goto done works OK but it\u0027s weird to have all of the other failure cases goto done_failed, while this obvious failed case doesn\u0027t",
+      "revId": "6bb767f89afb937f5e09650b79f5aa87be8a5921",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
