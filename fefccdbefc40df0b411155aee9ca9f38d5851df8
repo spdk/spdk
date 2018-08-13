@@ -800,6 +800,30 @@
     },
     {
       "key": {
+        "uuid": "69b72e1e_40b8a782",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1773,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "Ohhh.... so the code in line 342 need to be fixed in separate patch.",
+      "parentUuid": "52c9c4bc_52e281be",
+      "range": {
+        "startLine": 1767,
+        "startChar": 4,
+        "endLine": 1773,
+        "endChar": 44
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "909cb356_e52cba77",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 1

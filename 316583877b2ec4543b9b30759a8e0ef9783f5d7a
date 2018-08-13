@@ -1,0 +1,280 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c1e169e_a898a7a6",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "Would be better to have\n\nint spdk_nvmf_ctrlr_get_host_id(struct spdk_nvmf_ctrlr *ctrlr, char *host_id, size_t len);\n\nThis way you have len validated and can return whatever snprintf returns.\n\nSecond thing - name of this function might be confusing because host_id !\u003d ctrlr-\u003ehostid. Maybe rename this function to spdk_nvmf_ctrlr_host_id_fmt or return just ctrlr-\u003ehostid? Maybe other reviewers will have better ideas here?",
+      "range": {
+        "startLine": 760,
+        "startChar": 0,
+        "endLine": 766,
+        "endChar": 82
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26713632_96ac8ea7",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1748,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "Do you need both variables?",
+      "range": {
+        "startLine": 1747,
+        "startChar": 0,
+        "endLine": 1748,
+        "endChar": 31
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8352c394_3a0ecb15",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1770,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "Size should be deffined somwhere. You use 37 in spdk_nvmf_ctrlr_get_host_id() not 40 so little inconsistent.",
+      "range": {
+        "startLine": 1770,
+        "startChar": 17,
+        "endLine": 1770,
+        "endChar": 19
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51a903d8_aef3f6c0",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "Don\u0027t think checking nvmf_stats is needed.",
+      "range": {
+        "startLine": 100,
+        "startChar": 5,
+        "endLine": 100,
+        "endChar": 15
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a1f254d_650a4879",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "\"Get command statistics at NVMf tgt level.\" is not equal to \"Add command statistics at NVMf tgt level to nvmf_stats\". Pls do the memcpy or return \u0026group-\u003envmf_stats directly. The same for rest of the stats.",
+      "range": {
+        "startLine": 101,
+        "startChar": 30,
+        "endLine": 101,
+        "endChar": 32
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd295623_17bbf341",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 114,
+        "startChar": 5,
+        "endLine": 114,
+        "endChar": 10
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9768939_a1361ce2",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "skip redundant ( )",
+      "range": {
+        "startLine": 116,
+        "startChar": 4,
+        "endLine": 116,
+        "endChar": 66
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb7ca055_2eead96b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "Unreleated changes. Wrong astyle version? Pls use astyle version \u003e\u003d 3",
+      "range": {
+        "startLine": 384,
+        "startChar": 0,
+        "endLine": 406,
+        "endChar": 3
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79ed9b9f_e193f120",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "Collecting those statistics could be costly. Can you consider doing something like https://git.dpdk.org/dpdk/tree/lib/librte_port/rte_port_ethdev.c#n16 ?\n\nJim, Ben: any opinion ?",
+      "range": {
+        "startLine": 197,
+        "startChar": 0,
+        "endLine": 200,
+        "endChar": 25
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "469f0eee_58df1a6e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1271,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "I don\u0027t understand this loop. Are you searching for controller that you just added in spdk_nvmf_subsystem_add_ctrlr()?",
+      "range": {
+        "startLine": 1261,
+        "startChar": 0,
+        "endLine": 1271,
+        "endChar": 2
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "726c07f6_c1c558be",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1275,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "uint8_t or you can pass ctrlr pointer like in spdk_nvmf_subsystem_connect_stats()?",
+      "range": {
+        "startLine": 1275,
+        "startChar": 76,
+        "endLine": 1275,
+        "endChar": 86
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc9f2027_dd66b9ef",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T13:02:08Z",
+      "side": 1,
+      "message": "No hardcoded values, pls use SPDK_COUNTOF()",
+      "range": {
+        "startLine": 1292,
+        "startChar": 40,
+        "endLine": 1292,
+        "endChar": 42
+      },
+      "revId": "316583877b2ec4543b9b30759a8e0ef9783f5d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
