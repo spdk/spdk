@@ -209,8 +209,8 @@ struct spdk_nvmf_ctrlr {
 
 	struct spdk_nvmf_ctrlr_feat feat;
 
-	struct spdk_nvmf_qpair *admin_qpair;
-
+	struct spdk_nvmf_qpair	*admin_qpair;
+	struct spdk_thread	*thread;
 	struct spdk_bit_array	*qpair_mask;
 
 	struct spdk_nvmf_request *aer_req;
