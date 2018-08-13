@@ -291,6 +291,8 @@ struct spdk_bdev {
 		 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
 		 */
 		struct spdk_bdev_module *claim_module;
+		/* Allows claiming module to issue claim call multiple times */
+		int claim_ref_count;
 
 		/** Callback function that will be called after bdev destruct is completed. */
 		spdk_bdev_unregister_cb	unregister_cb;

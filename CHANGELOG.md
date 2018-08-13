@@ -4,6 +4,15 @@
 
 ### bdev
 
+Allow the same module to claim base bdev multiple times.
+
+Multipath vbdev driver tests employ multiple passthrough vbdevs built atop
+the same base bdev. To create multiple passthrough vbdevs atop the same base
+bdev, passthrough module needs to claim the same base bdev multiple times.
+This optional patch adds this capability.
+
+### bdev
+
 Opening bdev in write mode has been decoupled from bdev claims.
 
 Multipath vbdev driver needs to be able to access the same bdev through
@@ -11,7 +20,6 @@ multiple paths and thus open it in write mode in multiple vbdevs. This optional
 patch, based on the
 [earlier submitted patch](https://review.gerrithub.io/c/spdk/spdk/+/409862),
 adds this capability.
-
 
 ### bdev
 

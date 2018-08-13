@@ -3291,7 +3291,8 @@ int
 spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_bdev_module *module)
 {
-	if (bdev->internal.claim_module != NULL) {
+	if (bdev->internal.claim_module != NULL &&
+	    strcmp(module->name, bdev->internal.claim_module->name) != 0) {
 		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
 			    bdev->internal.claim_module->name);
 		return -EPERM;
@@ -3301,7 +3302,15 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		desc->write = true;
 	}
 
-	bdev->internal.claim_module = module;
+	pthread_mutex_lock(&bdev->internal.mutex);
+	if (bdev->internal.claim_module != NULL) {
+		bdev->internal.claim_ref_count ++;
+	} else {
+		bdev->internal.claim_module = module;
+		bdev->internal.claim_ref_count = 1;
+	}
+	pthread_mutex_unlock(&bdev->internal.mutex);
+
 	return 0;
 }
 
@@ -3309,7 +3318,13 @@ void
 spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 {
 	assert(bdev->internal.claim_module != NULL);
-	bdev->internal.claim_module = NULL;
+	assert(bdev->internal.claim_ref_count > 0);
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+	if (-- bdev->internal.claim_ref_count == 0) {
+		bdev->internal.claim_module = NULL;
+	}
+	pthread_mutex_unlock(&bdev->internal.mutex);
 }
 
 struct spdk_bdev *
