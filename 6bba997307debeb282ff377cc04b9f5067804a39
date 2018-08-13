@@ -16,6 +16,24 @@
       "revId": "6bba997307debeb282ff377cc04b9f5067804a39",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acebec4d_fd1bef0c",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 4
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-08-13T20:10:19Z",
+      "side": 1,
+      "message": "I\u0027ll be happy to change the permissions to 755 (from 644) when doing the install.   Looking at a running system, I can see examples of both types of permissions:   some libs have 755 while others have 644.   I don\u0027t think execute is required, but given that the majority of libs I\u0027ve seen on a system have them set, perhaps we should follow suit.",
+      "parentUuid": "d05312d6_5d0e09f2",
+      "revId": "6bba997307debeb282ff377cc04b9f5067804a39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
