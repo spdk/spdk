@@ -47,6 +47,8 @@ extern "C" {
 
 #include "spdk/assert.h"
 
+#define SPDK_IOAT_PCI_CHANERR_INT_OFFSET	0x180
+
 #define SPDK_IOAT_INTRCTRL_MASTER_INT_EN	0x01
 
 #define SPDK_IOAT_VER_3_0                0x30
