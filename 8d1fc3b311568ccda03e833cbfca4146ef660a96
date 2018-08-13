@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa8f884f_629bc9b1",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-13T03:13:53Z",
+      "side": 1,
+      "message": "the controller might not be bound to the nvme kernel driver and might not have any block devices affiliated, which doesn\u0027t mean it should be skipped.\n\nEven the `./setup.sh reset` checks if the nvme driver is available and if it\u0027s not, it simply leaves the controller with no driver bound. Such controller will now fail to be configured through `./setup.sh config`.",
+      "range": {
+        "startLine": 183,
+        "startChar": 3,
+        "endLine": 183,
+        "endChar": 57
+      },
+      "revId": "8d1fc3b311568ccda03e833cbfca4146ef660a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
