@@ -4,6 +4,17 @@
 
 ### bdev
 
+Opening bdev in write mode has been decoupled from bdev claims.
+
+Multipath vbdev driver needs to be able to access the same bdev through
+multiple paths and thus open it in write mode in multiple vbdevs. This optional
+patch, based on the
+[earlier submitted patch](https://review.gerrithub.io/c/spdk/spdk/+/409862),
+adds this capability.
+
+
+### bdev
+
 A capability to allow virtual bdevs to add/remove base bdev at run-time
 has been added.
 

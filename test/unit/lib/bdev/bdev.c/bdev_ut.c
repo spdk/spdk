@@ -436,18 +436,20 @@ open_write_test(void)
 	spdk_bdev_close(desc[0]);
 
 	/*
-	 * Open bdev1 read/write.  This should fail since bdev1 has been claimed
+	 * Open bdev1 read/write.  This should succeed though bdev1 has been claimed
 	 * by a vbdev module.
 	 */
 	rc = spdk_bdev_open(bdev[1], true, NULL, NULL, &desc[1]);
-	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_close(desc[1]);
 
 	/*
-	 * Open bdev4 read/write.  This should fail since bdev3 has been claimed
+	 * Open bdev4 read/write.  This should succeed though bdev4 has been claimed
 	 * by a vbdev module.
 	 */
 	rc = spdk_bdev_open(bdev[4], true, NULL, NULL, &desc[4]);
-	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_close(desc[4]);
 
 	/* Open bdev4 read-only.  This should succeed. */
 	rc = spdk_bdev_open(bdev[4], false, NULL, NULL, &desc[4]);
@@ -465,11 +467,12 @@ open_write_test(void)
 	spdk_bdev_close(desc[8]);
 
 	/*
-	 * Open bdev5 read/write.  This should fail since bdev4 has been claimed
+	 * Open bdev5 read/write.  This should succeed though bdev4 has been claimed
 	 * by a vbdev module.
 	 */
 	rc = spdk_bdev_open(bdev[5], true, NULL, NULL, &desc[5]);
-	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_close(desc[5]);
 
 	/* Open bdev4 read-only.  This should succeed. */
 	rc = spdk_bdev_open(bdev[5], false, NULL, NULL, &desc[5]);
