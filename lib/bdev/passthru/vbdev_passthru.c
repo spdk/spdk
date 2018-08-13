@@ -104,6 +104,28 @@ struct passthru_bdev_io {
 	uint8_t test;
 };
 
+static void
+passthru_release_base_bdev(struct vbdev_passthru *pt_node)
+{
+	assert(pt_node);
+
+	if (pt_node->base_bdev) {
+		/* Unclaim the underlying bdev. */
+		SPDK_NOTICELOG("releasing bdev %s.\n",
+			       spdk_bdev_get_name(pt_node->base_bdev));
+		spdk_bdev_module_release_bdev(pt_node->base_bdev);
+		pt_node->base_bdev = NULL;
+	}
+
+	if (pt_node->base_desc) {
+		/* Close the underlying bdev. */
+		SPDK_NOTICELOG("closing bdev %s.\n",
+			       spdk_bdev_get_name(spdk_bdev_desc_get_bdev(pt_node->base_desc)));
+		spdk_bdev_close(pt_node->base_desc);
+		pt_node->base_desc = NULL;
+	}
+}
+
 /* Called after we've unregistered following a hot remove callback.
  * Our finish entry point will be called next.
  */
@@ -112,11 +134,8 @@ vbdev_passthru_destruct(void *ctx)
 {
 	struct vbdev_passthru *pt_node = (struct vbdev_passthru *)ctx;
 
-	/* Unclaim the underlying bdev. */
-	spdk_bdev_module_release_bdev(pt_node->base_bdev);
-
-	/* Close the underlying bdev. */
-	spdk_bdev_close(pt_node->base_desc);
+	/* Unclaim and close the underlying bdev. */
+	passthru_release_base_bdev(pt_node);
 
 	/* Done with this pt_node. */
 	TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
@@ -447,11 +466,11 @@ static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 static void
 vbdev_passthru_base_bdev_hotremove_cb(void *ctx)
 {
-	struct vbdev_passthru *pt_node, *tmp;
-	struct spdk_bdev *bdev_find = ctx;
+	struct vbdev_passthru *pt_find = ctx, *pt_node, *tmp;
 
 	TAILQ_FOREACH_SAFE(pt_node, &g_pt_nodes, link, tmp) {
-		if (bdev_find == pt_node->base_bdev) {
+		if (pt_find == pt_node) {
+			passthru_release_base_bdev(pt_node);
 			spdk_bdev_unregister(&pt_node->pt_bdev, NULL, NULL);
 		}
 	}
@@ -512,7 +531,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
 
 		rc = spdk_bdev_open(bdev, true, vbdev_passthru_base_bdev_hotremove_cb,
-				    bdev, &pt_node->base_desc);
+				    pt_node, &pt_node->base_desc);
 		if (rc) {
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
 			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
