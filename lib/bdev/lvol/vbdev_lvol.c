@@ -889,8 +889,43 @@ static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.write_config_json	= vbdev_lvol_write_config_json,
 };
 
-static struct spdk_bdev *
-_create_lvol_disk(struct spdk_lvol *lvol)
+static void
+_spdk_lvol_destroy_cb(void *cb_arg, int bdeverrno)
+{
+}
+
+static void
+_create_lvol_disk_destroy_cb(void *cb_arg, int bdeverrno)
+{
+	struct spdk_lvol *lvol = cb_arg;
+
+	if (bdeverrno < 0) {
+		SPDK_ERRLOG("Could not unregister bdev for lvol %s\n",
+			    lvol->unique_id);
+		return;
+	}
+
+	spdk_lvol_destroy(lvol, _spdk_lvol_destroy_cb, NULL);
+}
+
+static void
+_create_lvol_disk_unload_cb(void *cb_arg, int bdeverrno)
+{
+	struct spdk_lvol *lvol = cb_arg;
+
+	if (bdeverrno < 0) {
+		SPDK_ERRLOG("Could not unregister bdev for lvol %s\n",
+			    lvol->unique_id);
+		return;
+	}
+
+	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
+	free(lvol->unique_id);
+	free(lvol);
+}
+
+static int
+_create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 {
 	struct spdk_bdev *bdev;
 	struct lvol_store_bdev *lvs_bdev;
@@ -899,19 +934,19 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	int rc;
 
 	if (!lvol->unique_id) {
-		return NULL;
+		return -EINVAL;
 	}
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	if (lvs_bdev == NULL) {
 		SPDK_ERRLOG("No spdk lvs-bdev pair found for lvol %s\n", lvol->unique_id);
-		return NULL;
+		return -ENODEV;
 	}
 
 	bdev = calloc(1, sizeof(struct spdk_bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol bdev\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev->name = lvol->unique_id;
@@ -931,44 +966,39 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	rc = spdk_vbdev_register(bdev, &lvs_bdev->bdev, 1);
 	if (rc) {
 		free(bdev);
-		return NULL;
+		return rc;
 	}
+	lvol->bdev = bdev;
 
 	alias = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
 	if (alias == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for alias\n");
-		free(bdev);
-		return NULL;
+		spdk_bdev_unregister(lvol->bdev, (destroy ? _create_lvol_disk_destroy_cb :
+						  _create_lvol_disk_unload_cb), lvol);
+		return -ENOMEM;
 	}
 
 	rc = spdk_bdev_alias_add(bdev, alias);
 	if (rc != 0) {
 		SPDK_ERRLOG("Cannot add alias to lvol bdev\n");
-		free(bdev);
-		free(alias);
-		return NULL;
+		spdk_bdev_unregister(lvol->bdev, (destroy ? _create_lvol_disk_destroy_cb :
+						  _create_lvol_disk_unload_cb), lvol);
 	}
 	free(alias);
 
-	return bdev;
+	return rc;
 }
 
 static void
 _vbdev_lvol_create_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_lvol_with_handle_req *req = cb_arg;
-	struct spdk_bdev *bdev = NULL;
 
 	if (lvolerrno < 0) {
 		goto end;
 	}
 
-	bdev = _create_lvol_disk(lvol);
-	if (bdev == NULL) {
-		lvolerrno = -ENODEV;
-		goto end;
-	}
-	lvol->bdev = bdev;
+	lvolerrno = _create_lvol_disk(lvol, true);
 
 end:
 	req->cb_fn(req->cb_arg, lvol, lvolerrno);
@@ -1145,10 +1175,8 @@ _vbdev_lvs_examine_failed(void *cb_arg, int lvserrno)
 }
 
 static void
-_vbdev_lvol_examine_close_cb(void *cb_arg, int lvserrno)
+_vbdev_lvol_examine_close_cb(struct spdk_lvol_store *lvs)
 {
-	struct spdk_lvol_store *lvs = cb_arg;
-
 	if (lvs->lvols_opened >= lvs->lvol_count) {
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvols finished\n");
 		spdk_bdev_module_examine_done(&g_lvol_if);
@@ -1159,7 +1187,6 @@ static void
 _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_lvol_store *lvs = cb_arg;
-	struct spdk_bdev *bdev;
 
 	if (lvolerrno != 0) {
 		SPDK_ERRLOG("Error opening lvol %s\n", lvol->unique_id);
@@ -1170,17 +1197,14 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 		goto end;
 	}
 
-	bdev = _create_lvol_disk(lvol);
-	if (bdev == NULL) {
+	if (_create_lvol_disk(lvol, false)) {
 		SPDK_ERRLOG("Cannot create bdev for lvol %s\n", lvol->unique_id);
-		TAILQ_REMOVE(&lvs->lvols, lvol, link);
 		lvs->lvol_count--;
-		spdk_lvol_close(lvol, _vbdev_lvol_examine_close_cb, lvs);
+		_vbdev_lvol_examine_close_cb(lvs);
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s failed\n", lvol->unique_id);
 		return;
 	}
 
-	lvol->bdev = bdev;
 	lvs->lvols_opened++;
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s succeeded\n", lvol->unique_id);
 
