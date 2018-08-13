@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b886e9b_d5800ccf",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1901,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T18:56:53Z",
+      "side": 1,
+      "message": "Should we do this before the IBV_QPS_ERR check?\n\nI\u0027m just worried there is a case where the qpair was disconnected while the qp_state was IBV_QPS_ERR.  Would it ever recover in that case?  It seems if the queue depth has gotten back to 0, we would want to just clean up the qpair immediately rather than waiting for some kind of error recovery to complete on a disconnected queue pair.",
+      "revId": "c581d11680d6a938ebd6e1cdfa57a2d03d071dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69a7efac_a8ee5b6b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1902,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T18:56:53Z",
+      "side": 1,
+      "message": "Would it be any cleaner to just put this check in spdk_nvmf_rdma_qpair_destroy()?  It looks like it is not valid now to call spdk_nvmf_rdma_qpair_destroy() if cur_queue_depth \u003e 0.  Just looking how we can simplify the code so we don\u0027t always have to do this check for every place where spdk_nvmf_rdma_qpair_destroy is called.  It could check queue depth, and if it\u0027s \u003e 0, it could set qpair_disconnected \u003d true and return immediately.",
+      "revId": "c581d11680d6a938ebd6e1cdfa57a2d03d071dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a76fe861_fd7737eb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2380,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T18:56:53Z",
+      "side": 1,
+      "message": "newline after declarations and before code starts",
+      "revId": "c581d11680d6a938ebd6e1cdfa57a2d03d071dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
