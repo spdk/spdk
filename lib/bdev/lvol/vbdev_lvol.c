@@ -953,13 +953,6 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	bdev->fn_table = &vbdev_lvol_fn_table;
 	bdev->module = &g_lvol_if;
 
-	rc = spdk_vbdev_register(bdev, &lvs_bdev->bdev, 1);
-	if (rc) {
-		free(bdev->name);
-		free(bdev);
-		return NULL;
-	}
-
 	alias = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
 	if (alias == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for alias\n");
@@ -968,16 +961,19 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 
-	rc = spdk_bdev_alias_add(bdev, alias);
-	if (rc != 0) {
-		SPDK_ERRLOG("Cannot add alias to lvol bdev\n");
+	rc = spdk_vbdev_register(bdev, &lvs_bdev->bdev, 1);
+	if (rc) {
 		free(bdev->name);
 		free(bdev);
 		free(alias);
 		return NULL;
 	}
-	free(alias);
 
+	rc = spdk_bdev_alias_add(bdev, alias);
+	/* FIXME */
+	assert(rc == 0);
+
+	free(alias);
 	return bdev;
 }
 
