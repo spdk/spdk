@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "654455eb_7f0f16fb",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T16:44:24Z",
+      "side": 1,
+      "message": "Agreed - I don\u0027t think we need this to be the _SAFE variant.  Since this is a performance path, we should remove the _SAFE if it is not needed.",
+      "parentUuid": "85dd59d0_9b01b22f",
+      "range": {
+        "startLine": 228,
+        "startChar": 14,
+        "endLine": 228,
+        "endChar": 19
+      },
+      "revId": "786dd1f391c2af69d1f6f95b99f6d733386bb016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b912dbb9_e9e978a5",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 6
@@ -59,6 +83,30 @@
       "writtenOn": "2018-08-13T07:29:18Z",
       "side": 1,
       "message": "This seems like duplicate as SPDK_ERRLOG will output the function name.",
+      "range": {
+        "startLine": 234,
+        "startChar": 75,
+        "endLine": 234,
+        "endChar": 83
+      },
+      "revId": "786dd1f391c2af69d1f6f95b99f6d733386bb016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6233d281_9fd8b77f",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T16:44:24Z",
+      "side": 1,
+      "message": "Agreed - function name is duplicated and should be removed.\n\nI think the pointer is OK - it could be useful if debugging with GDB.  I don\u0027t see any harm in keeping it.",
+      "parentUuid": "b5d1b6bb_8a1b8569",
       "range": {
         "startLine": 234,
         "startChar": 75,
