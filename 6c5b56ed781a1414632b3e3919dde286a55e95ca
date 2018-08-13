@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "75afe35c_624e91c7",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T18:08:05Z",
+      "side": 1,
+      "message": "Hi Ziye,\n\nI think this comment can be removed.  This comment explains why the change was made, but long-term, this adds too many details of spdk_iscsi_conn_free_pdu here.\n\nJust calling spdk_iscsi_conn_free_pdu() here, without a comment, I think is fine - it removes some code duplication and makes sure the primary task gets freed.  Just having these details in the commit message is fine.\n\nThanks,\n\n-Jim",
+      "revId": "6c5b56ed781a1414632b3e3919dde286a55e95ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f00a7d1_1cdf48fd",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 7
@@ -49,6 +66,24 @@
       "side": 1,
       "message": "For tasks in the conn-\u003equeued_datain_tasks list, they are primary tasks, so there should be a pdu associated with it, can you point me which place release the associated pdu ?",
       "parentUuid": "85f7c9d6_95e3aa8f",
+      "revId": "6c5b56ed781a1414632b3e3919dde286a55e95ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa86744b_3770be7e",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T18:08:05Z",
+      "side": 1,
+      "message": "I think this is done as part of spdk_iscsi_task_put:\n\nspdk_iscsi_task_put\n  spdk_scsi_task_put\n    task-\u003efree_fn() \u003d\u003d\u003e spdk_iscsi_task_free\n      spdk_iscsi_task_disassociate_pdu\n        spdk_put_pdu\n\nZiye - can you confirm?",
+      "parentUuid": "11e99682_1efa3f8b",
       "revId": "6c5b56ed781a1414632b3e3919dde286a55e95ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
