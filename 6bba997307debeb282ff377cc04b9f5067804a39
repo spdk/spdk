@@ -34,6 +34,24 @@
       "revId": "6bba997307debeb282ff377cc04b9f5067804a39",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0444aa9a_9c387888",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 4
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-08-13T20:30:35Z",
+      "side": 1,
+      "message": "Following up on my own comment, an inspection of a FreeBSD system reveals that their shared libs have perms 444 in /lib and /usr/lib, though those in /usr/local/lib typically have execute on them.",
+      "parentUuid": "acebec4d_fd1bef0c",
+      "revId": "6bba997307debeb282ff377cc04b9f5067804a39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
