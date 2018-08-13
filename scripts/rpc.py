@@ -393,6 +393,42 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_passthru_bdev)
 
     @call_cmd
+    def construct_multipath_bdev(args):
+        print_array(
+            rpc.bdev.construct_multipath_bdev(args.client,
+                                              multipath_bdev_name=args.multipath_bdev_name, base_bdev_names=args.base_bdev_names))
+
+    p = subparsers.add_parser('construct_multipath_bdev',
+                              help='Add a multipath bdev atop existing bdevs')
+    p.add_argument('-m', '--multipath-bdev-name', help="Name of the multipath bdev", required=True)
+    p.add_argument('-b', '--base-bdev-names', help="Comma-separated list of extant bdev names", required=True)
+    p.set_defaults(func=construct_multipath_bdev)
+
+    @call_cmd
+    def vbdev_multipath_path_down(args):
+        print_array(
+            rpc.bdev.vbdev_multipath_path_down(args.client,
+                                               multipath_bdev_name=args.multipath_bdev_name, base_bdev_names=args.base_bdev_names))
+
+    p = subparsers.add_parser('vbdev_multipath_path_down',
+                              help='Drop a path bdev of the running multi-path virtual block device')
+    p.add_argument('-m', '--multipath-bdev-name', help="Name of the multipath bdev", required=True)
+    p.add_argument('-b', '--base-bdev-names', help="Comma-separated list of extant bdev names", required=True)
+    p.set_defaults(func=vbdev_multipath_path_down)
+
+    @call_cmd
+    def vbdev_multipath_path_up(args):
+        print_array(
+            rpc.bdev.vbdev_multipath_path_up(args.client,
+                                             multipath_bdev_name=args.multipath_bdev_name, base_bdev_names=args.base_bdev_names))
+
+    p = subparsers.add_parser('vbdev_multipath_path_up',
+                              help='Add a path bdev to the running multi-path virtual block device')
+    p.add_argument('-m', '--multipath-bdev-name', help="Name of the multipath bdev", required=True)
+    p.add_argument('-b', '--base-bdev-names', help="Comma-separated list of extant bdev names", required=True)
+    p.set_defaults(func=vbdev_multipath_path_up)
+
+    @call_cmd
     def get_bdevs(args):
         print_dict(rpc.bdev.get_bdevs(args.client,
                                       name=args.name))

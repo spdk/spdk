@@ -3,6 +3,34 @@
 ## v18.10: (Upcoming Release)
 
 ### bdev
+Multipath vbdev driver has been added.
+
+This is an experimental driver aiming to provide a testbed for
+evaluating various options to implement dynamic virtual/base bdev
+management in the SPDK bdev layer, particularly in relation to
+hotplug/hotremove and startup/ shutdown.  Particular focus of this
+driver toward that dynamic management end is the runtime base bdev
+addition/removal, necessary to properly disable/enable configured path
+bdevs as they come and go.
+
+Longer-term, this driver may be (after some strengthening) used for
+protocol-agnostic bdev-level multipathing. Toward that goal, specific
+areas that will need improvement are:
+
+- true path error detection (while initial version interprets
+any downstream error as an indication to retry the
+command over another available path, if any), and
+
+- bdev uuid-based path bdev detection/management as opposed to
+the simplistic path bdev names-based implementation in
+the initial version.
+
+Multipath vbdev driver tests use passthrough vbdevs built atop the
+same base bdev. Optional patches 1-4 of this series add various fixes
+required for this specific testing scenarios, and are not strictly necessary
+for the core multipath driver functionality.
+
+### bdev
 
 Allow the same module to claim base bdev multiple times.
 

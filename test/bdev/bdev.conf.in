@@ -1,9 +1,15 @@
+[Multipath]
+  # MP <vbdev name> <bdev_name> [<bdev_name> ...]
+  MP TestMP PT_MP0 PT_MP1
+
 [Passthru]
   # PT <bdev name> <vbdev name>
   PT Malloc3 TestPT
+  PT Malloc6 PT_MP0
+  PT Malloc6 PT_MP1
 
 [Malloc]
-  NumberOfLuns 6
+  NumberOfLuns 7
   LunSizeInMB 64
 
 [Split]

@@ -366,6 +366,72 @@ def delete_passthru_bdev(client, name):
     return client.call('delete_passthru_bdev', params)
 
 
+def construct_multipath_vbdev(client, multipath_bdev_name, base_bdev_names):
+    """Construct a multi-path virtual block device.
+
+    Args:
+        multipath_bdev_name: name of block device
+        base_bdev_names: NULL-terminated list of the existing path bdev names
+
+    Returns:
+        List of created block devices.
+    """
+    params = {
+        'multipath_bdev_name': multipath_bdev_name,
+        'base_bdev_names': [],
+    }
+
+    names = base_bdev_names.split(",")
+    for name in names:
+        params['base_bdev_names'].append(name)
+
+    return client.call('vbdev_multipath_construct_vbdev', params)
+
+
+def vbdev_multipath_path_down(client, multipath_bdev_name, base_bdev_names):
+    """Drop a path of the running multi-path virtual block device.
+
+    Args:
+        multipath_bdev_name: name of the virtual block device
+        base_bdev_names: NULL-terminated list of the path bdevs to drop
+
+    Returns:
+        Virtual bdev name on success.
+    """
+    params = {
+        'multipath_bdev_name': multipath_bdev_name,
+        'base_bdev_names': [],
+    }
+
+    names = base_bdev_names.split(",")
+    for name in names:
+        params['base_bdev_names'].append(name)
+
+    return client.call('vbdev_multipath_path_down', params)
+
+
+def vbdev_multipath_path_up(client, multipath_bdev_name, base_bdev_names):
+    """Add a path to the running multi-path virtual block device.
+
+    Args:
+        multipath_bdev_name: name of the virtual block device
+        base_bdev_names: NULL-terminated list of the path bdevs to add
+
+    Returns:
+        Virtual bdev name on success.
+    """
+    params = {
+        'multipath_bdev_name': multipath_bdev_name,
+        'base_bdev_names': [],
+    }
+
+    names = base_bdev_names.split(",")
+    for name in names:
+        params['base_bdev_names'].append(name)
+
+    return client.call('vbdev_multipath_path_up', params)
+
+
 def construct_split_vbdev(client, base_bdev, split_count, split_size_mb=None):
     """Construct split block devices from a base bdev.
 
