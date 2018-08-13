@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f23c64b9_32df0b68",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T08:01:32Z",
+      "side": 1,
+      "message": "No :)",
+      "parentUuid": "56d2dcad_b0321e45",
+      "range": {
+        "startLine": 96,
+        "startChar": 4,
+        "endLine": 96,
+        "endChar": 8
+      },
+      "revId": "aa52ec15ba3f594f83dc288d1967a9abdae98726",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4662e263_7490427a",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 23
@@ -59,6 +83,30 @@
       "writtenOn": "2018-08-13T03:33:18Z",
       "side": 1,
       "message": "it seems like we will hit this assert whenever a device failed to init in those 1000 iterations. should we remove it?",
+      "range": {
+        "startLine": 923,
+        "startChar": 2,
+        "endLine": 923,
+        "endChar": 16
+      },
+      "revId": "aa52ec15ba3f594f83dc288d1967a9abdae98726",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0e588c6_c98c4dd5",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T08:01:32Z",
+      "side": 1,
+      "message": "I would like to leave it here for debug builds as this should never ever happen.",
+      "parentUuid": "3fc81cd9_b6dd7c95",
       "range": {
         "startLine": 923,
         "startChar": 2,
