@@ -16,6 +16,24 @@
       "revId": "611e113c3e8e4a53a49270afe77605a0a6d7cd9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dc1a135_8ad536fe",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-08-13T05:21:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1fdbf070_a60ec3f1",
+      "revId": "611e113c3e8e4a53a49270afe77605a0a6d7cd9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
