@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aec20fd0_7f719a13",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T20:06:12Z",
+      "side": 1,
+      "message": "If you move this before line 367 you should fix this bug without ignoring memory table.",
+      "range": {
+        "startLine": 375,
+        "startChar": 0,
+        "endLine": 379,
+        "endChar": 2
+      },
+      "revId": "c7e5eaa8dea3a956a62c10c78cb6dbb608a44139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
