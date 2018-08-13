@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f1872ab_901aeba9",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-13T02:56:10Z",
+      "side": 1,
+      "message": "is this a workaround for some broken drivers which fail to update their used_event?\nor could this be here to detect when used_event_shadow got stale? shouldn\u0027t vring_need_event handle that?\n\nplease add a comment here.",
+      "range": {
+        "startLine": 323,
+        "startChar": 2,
+        "endLine": 323,
+        "endChar": 79
+      },
+      "revId": "18b53cdf88c3b0bf406f01e54128ee12460411b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e74b1cc3_74babeba",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-13T02:56:10Z",
+      "side": 1,
+      "message": "please describe this",
+      "range": {
+        "startLine": 324,
+        "startChar": 2,
+        "endLine": 325,
+        "endChar": 13
+      },
+      "revId": "18b53cdf88c3b0bf406f01e54128ee12460411b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
