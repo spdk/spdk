@@ -653,7 +653,6 @@ _spdk_nvmf_ctrlr_free_from_qpair(void *ctx)
 	spdk_bit_array_clear(ctrlr->qpair_mask, qpair_ctx->qid);
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
 	if (count == 0) {
-		/* TODO: Verify that qpair mask has been cleared. */
 		spdk_bit_array_free(&ctrlr->qpair_mask);
 
 		spdk_thread_send_msg(ctrlr->subsys->thread, _nvmf_ctrlr_destruct, ctrlr);
@@ -671,12 +670,6 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-	struct spdk_thread *thread = NULL;
-
-	if (ctrlr && ctrlr->admin_qpair && ctrlr->admin_qpair->group) {
-		/* store the thread of admin_qpair and use it later */
-		thread = ctrlr->admin_qpair->group->thread;
-	}
 
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
 	qpair->group = NULL;
@@ -687,7 +680,7 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 
 	spdk_nvmf_transport_qpair_fini(qpair);
 
-	if (!thread) {
+	if (!ctrlr || !ctrlr->thread) {
 		if (qpair_ctx->cb_fn) {
 			spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
 		}
@@ -696,7 +689,7 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	}
 
 	qpair_ctx->ctrlr = ctrlr;
-	spdk_thread_send_msg(thread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx);
+	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx);
 
 }
 
