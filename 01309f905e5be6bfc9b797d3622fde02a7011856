@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad629f1a_87af75ba",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T19:36:32Z",
+      "side": 1,
+      "message": "should this be strnlen?  this would guard against input strings that are not null-terminated",
+      "revId": "01309f905e5be6bfc9b797d3622fde02a7011856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a0c1a27_5dab5d91",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 817,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T19:36:32Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "01309f905e5be6bfc9b797d3622fde02a7011856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3fa5d66_671f666e",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T19:36:32Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "01309f905e5be6bfc9b797d3622fde02a7011856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a34b5eab_91adee97",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T19:36:32Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "01309f905e5be6bfc9b797d3622fde02a7011856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1e1093d_557ee3ff",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 887,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T19:36:32Z",
+      "side": 1,
+      "message": "do we need to free(group)?",
+      "revId": "01309f905e5be6bfc9b797d3622fde02a7011856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "512deec4_625caf17",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1009,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T19:36:32Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nCould you create an intermediate patch, that just moves spdk_iscsi_chap_get_auth_info to this file, without changing the function?\n\nThen this patch can contain the refactoring of spdk_iscsi_chap_get_auth_info\n\nThis will make the patch easier to review closely.\n\nThanks,\n\n-Jim",
+      "revId": "01309f905e5be6bfc9b797d3622fde02a7011856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
