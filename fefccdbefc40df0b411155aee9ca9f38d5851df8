@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "18ab5f82_f2ba0528",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1685,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7bba8e3c_fd15865f",
+      "range": {
+        "startLine": 1685,
+        "startChar": 43,
+        "endLine": 1685,
+        "endChar": 44
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf7ee699_c0c2bec9",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-08-10T13:36:59Z",
       "side": 1,
       "message": "pls use spdk_json_write_named_ API in whole patch.",
+      "range": {
+        "startLine": 1689,
+        "startChar": 1,
+        "endLine": 1689,
+        "endChar": 21
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22994e18_4505d98b",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1689,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bf7ee699_c0c2bec9",
       "range": {
         "startLine": 1689,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "c39961f8_34f009a8",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1764,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7f8fde5_402403f6",
+      "range": {
+        "startLine": 1764,
+        "startChar": 47,
+        "endLine": 1764,
+        "endChar": 66
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "709e0c84_37cb8259",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2018-08-10T13:36:59Z",
       "side": 1,
       "message": "Why you initialize these variables?",
+      "range": {
+        "startLine": 1773,
+        "startChar": 0,
+        "endLine": 1775,
+        "endChar": 26
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bc7c5c1_8b78a9e9",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1775,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "709e0c84_37cb8259",
       "range": {
         "startLine": 1773,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "ceb1344c_dfc825fe",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1823,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f8513336_d1eacd6a",
+      "range": {
+        "startLine": 1823,
+        "startChar": 1,
+        "endLine": 1823,
+        "endChar": 22
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c76c981e_835758dc",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
@@ -128,6 +248,30 @@
       "writtenOn": "2018-08-10T13:36:59Z",
       "side": 1,
       "message": "Why you initialize this variable?",
+      "range": {
+        "startLine": 1838,
+        "startChar": 41,
+        "endLine": 1838,
+        "endChar": 45
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1795a14c_91c9ba36",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1838,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c76c981e_835758dc",
       "range": {
         "startLine": 1838,
         "startChar": 41,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "0fa358c7_7b81490d",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1846,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b2b3993a_2aed8ef4",
+      "range": {
+        "startLine": 1842,
+        "startChar": 0,
+        "endLine": 1846,
+        "endChar": 2
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f9807e9_10bfcd1f",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
@@ -174,6 +342,30 @@
       "writtenOn": "2018-08-10T13:36:59Z",
       "side": 1,
       "message": "dead code",
+      "range": {
+        "startLine": 1855,
+        "startChar": 0,
+        "endLine": 1858,
+        "endChar": 2
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c97b1fa_ac13988f",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1858,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f9807e9_10bfcd1f",
       "range": {
         "startLine": 1855,
         "startChar": 0,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "65f22384_54ab0aa1",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1865,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Ctrl_id 0 is not a valid value.\nKindly let me know how to identify whether the user has entered the argument or not.\nFor now, if user pass ctrl_id\u003d0, it\u0027ll be considered as get all controller stats.",
+      "parentUuid": "ebfc4da7_922d4610",
+      "range": {
+        "startLine": 1865,
+        "startChar": 1,
+        "endLine": 1865,
+        "endChar": 20
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6383682_20ef02a7",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
@@ -220,6 +436,30 @@
       "writtenOn": "2018-08-10T13:36:59Z",
       "side": 1,
       "message": "There is no reason to have this loop and ctx-\u003ectrlr_count variable.",
+      "range": {
+        "startLine": 1897,
+        "startChar": 2,
+        "endLine": 1900,
+        "endChar": 3
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8617d637_ccd0491c",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1900,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6383682_20ef02a7",
       "range": {
         "startLine": 1897,
         "startChar": 2,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "dbfc62b0_a81aff05",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1973,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4d46318e_3bba151c",
+      "range": {
+        "startLine": 1973,
+        "startChar": 1,
+        "endLine": 1973,
+        "endChar": 22
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0adaf0bb_23eb6c27",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
@@ -266,6 +530,30 @@
       "writtenOn": "2018-08-10T13:36:59Z",
       "side": 1,
       "message": "Why you initialize this variable?",
+      "range": {
+        "startLine": 1987,
+        "startChar": 0,
+        "endLine": 1987,
+        "endChar": 38
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae8540cd_56a282ad",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1987,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0adaf0bb_23eb6c27",
       "range": {
         "startLine": 1987,
         "startChar": 0,
@@ -301,6 +589,30 @@
     },
     {
       "key": {
+        "uuid": "6dd68bb0_b1122345",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2007,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34d21730_33c9b84f",
+      "range": {
+        "startLine": 1990,
+        "startChar": 0,
+        "endLine": 2007,
+        "endChar": 2
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e1aa7737_528ab0dd",
         "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
         "patchSetId": 1
@@ -312,6 +624,24 @@
       "writtenOn": "2018-08-10T13:36:59Z",
       "side": 1,
       "message": "Unneeded line.",
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27a61968_61f54cb1",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e1aa7737_528ab0dd",
       "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -341,6 +671,30 @@
     },
     {
       "key": {
+        "uuid": "6b04cb87_8149b24e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "43ab6a86_9507e8df",
+      "range": {
+        "startLine": 304,
+        "startChar": 1,
+        "endLine": 304,
+        "endChar": 62
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea579c51_b756276a",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 1
@@ -352,6 +706,24 @@
       "writtenOn": "2018-08-10T13:36:59Z",
       "side": 1,
       "message": "unrelated change.",
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc07adbf_4b20c8c0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea579c51_b756276a",
       "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -392,6 +764,30 @@
       "writtenOn": "2018-08-10T13:36:59Z",
       "side": 1,
       "message": "those are not pointers to u16/u32. Use from_be16/32",
+      "range": {
+        "startLine": 1767,
+        "startChar": 4,
+        "endLine": 1773,
+        "endChar": 44
+      },
+      "revId": "fefccdbefc40df0b411155aee9ca9f38d5851df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52c9c4bc_52e281be",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1773,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-08-13T05:49:22Z",
+      "side": 1,
+      "message": "This code is reused from the function spdk_nvmf_ctrlr_connect() in line 342 in this file.",
+      "parentUuid": "b1755344_a98a882c",
       "range": {
         "startLine": 1767,
         "startChar": 4,
