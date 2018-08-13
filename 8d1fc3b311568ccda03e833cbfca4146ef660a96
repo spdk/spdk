@@ -22,6 +22,30 @@
       "revId": "8d1fc3b311568ccda03e833cbfca4146ef660a96",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "639051e0_1262caf5",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-08-13T15:59:19Z",
+      "side": 1,
+      "message": "Yes, I see your point. I will need to reimplement this a little. \nThe fix was introduced to handle issue with platforms that have OS installed on NVMe drive.\nWe observe that script.sh unmounts system drive.",
+      "parentUuid": "fa8f884f_629bc9b1",
+      "range": {
+        "startLine": 183,
+        "startChar": 3,
+        "endLine": 183,
+        "endChar": 57
+      },
+      "revId": "8d1fc3b311568ccda03e833cbfca4146ef660a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
