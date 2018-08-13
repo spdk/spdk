@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56d2dcad_b0321e45",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-13T03:33:18Z",
+      "side": 1,
+      "message": "is this \"No\" intended here?",
+      "range": {
+        "startLine": 96,
+        "startChar": 4,
+        "endLine": 96,
+        "endChar": 8
+      },
+      "revId": "aa52ec15ba3f594f83dc288d1967a9abdae98726",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4662e263_7490427a",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-13T03:33:18Z",
+      "side": 1,
+      "message": "this is set to 1000 initially and decrements, which is probably not what you expect here",
+      "range": {
+        "startLine": 864,
+        "startChar": 100,
+        "endLine": 864,
+        "endChar": 109
+      },
+      "revId": "aa52ec15ba3f594f83dc288d1967a9abdae98726",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fc81cd9_b6dd7c95",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-13T03:33:18Z",
+      "side": 1,
+      "message": "it seems like we will hit this assert whenever a device failed to init in those 1000 iterations. should we remove it?",
+      "range": {
+        "startLine": 923,
+        "startChar": 2,
+        "endLine": 923,
+        "endChar": 16
+      },
+      "revId": "aa52ec15ba3f594f83dc288d1967a9abdae98726",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
