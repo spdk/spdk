@@ -48,6 +48,40 @@
     },
     {
       "key": {
+        "uuid": "3ce6e066_3776c519",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T20:42:18Z",
+      "side": 1,
+      "message": "could we make this part of the patch separate - making the spdk sync process common for all providers?",
+      "revId": "a34ebbc4353131b135b7a02ecc676b0db3985e69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f490b8a9_a34440ad",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T20:42:18Z",
+      "side": 1,
+      "message": "I think we should remove the /home/sys_sgsw hardcoded path.  Maybe VHOST_VM_DIR and VHOST_HOST_DIR to differentiate between the two?\n\nThese /home/sys_sgsw hardcoded paths have caused some problems as people work to replicate this outside of Intel - I\u0027d like to make this configurable.  Even making VHOST_HOST_DIR default to /home/sys_sgsw would be OK.",
+      "revId": "a34ebbc4353131b135b7a02ecc676b0db3985e69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e73b7c4d_6223b917",
         "filename": "scripts/vagrant/Vagrantfile",
         "patchSetId": 1
@@ -65,6 +99,40 @@
         "endLine": 125,
         "endChar": 88
       },
+      "revId": "a34ebbc4353131b135b7a02ecc676b0db3985e69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02307960_439b9f3b",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T20:42:18Z",
+      "side": 1,
+      "message": "If I\u0027m reading this correctly, this is a change in behavior for existing Vagrant users on MacOS (who use virtual box and not libvirt).  Like me.  :-)",
+      "revId": "a34ebbc4353131b135b7a02ecc676b0db3985e69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec4394b5_e7223541",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T20:42:18Z",
+      "side": 1,
+      "message": "needs to be indented more",
       "revId": "a34ebbc4353131b135b7a02ecc676b0db3985e69",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
