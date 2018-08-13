@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "bcabdf35_f4e6875f",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T18:13:23Z",
+      "side": 1,
+      "message": "Setting it to EXITING again is redundant, but not a problem.\n\nThe problem is setting it to EXITING if it already was in EXITED state.\n\nSo I think the following comment would be better:\n\n/* Do not set conn-\u003estate if the connection has already started exiting.  This ensures we do not move a connection from EXITED state back to EXITING. */",
+      "revId": "f7723c1521f6fd7fdb682f55b421ca43613dbeb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6391ac64_d2030d3a",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T18:13:23Z",
+      "side": 1,
+      "message": "Comment should be adjusted similar to above.",
+      "revId": "f7723c1521f6fd7fdb682f55b421ca43613dbeb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50f0b8a7_1afc99fd",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 5
@@ -31,6 +65,24 @@
       "side": 1,
       "message": "It is likely to happen.I reproduced in my environment due to connection re-connection. In my test environment, I disabled the nic card of the client machine...",
       "parentUuid": "50f0b8a7_1afc99fd",
+      "revId": "f7723c1521f6fd7fdb682f55b421ca43613dbeb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "687a87dd_761f98bd",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T18:13:23Z",
+      "side": 1,
+      "message": "It is not clear to me why this is checking conn-\u003estate though.  Shouldn\u0027t it be checking xconn-\u003estate?",
+      "parentUuid": "156f833e_ecf6c000",
       "revId": "f7723c1521f6fd7fdb682f55b421ca43613dbeb7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
