@@ -219,8 +219,7 @@ spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
 }
 
 void
-spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_server_conn *conn,
-				  struct spdk_jsonrpc_request *request)
+spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 {
 	/* TODO */
 }
