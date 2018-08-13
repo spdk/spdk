@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fdbf070_a60ec3f1",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-13T04:37:51Z",
+      "side": 1,
+      "message": "typo for lovl, \"lvol based bdev\" sounds better.",
+      "revId": "611e113c3e8e4a53a49270afe77605a0a6d7cd9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
