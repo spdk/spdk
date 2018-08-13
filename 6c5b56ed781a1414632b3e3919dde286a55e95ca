@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "00ed3fb5_126c3fdf",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-13T23:13:01Z",
+      "side": 1,
+      "message": "Yes, this comments, can be removed.",
+      "parentUuid": "75afe35c_624e91c7",
+      "revId": "6c5b56ed781a1414632b3e3919dde286a55e95ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f00a7d1_1cdf48fd",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 7
