@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d05312d6_5d0e09f2",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 4
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-13T18:08:50Z",
+      "side": 1,
+      "message": "When I tested this the libspdk.so.1.0 in my local spdk/build/lib directory has execute permissions, but if I do a make install the installed version of libspdk.so.1.0 loses the execute bits.\n\nThe libspdk.so maintains the correct permissions.",
+      "revId": "6bba997307debeb282ff377cc04b9f5067804a39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
