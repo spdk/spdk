@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5e8c2d0_65f49e24",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T20:31:51Z",
+      "side": 1,
+      "message": "Do we need the max with SPDK_ISCSI_FIRST_BURST_LENGTH?\n\nI\u0027m trying to understand what would happen if user specified FIRST_BURST_LENGTH \u003d 4096.  I think we would waste memory - for any kind of write, only the first 4KB would come in the immediate data, but we would always allocate 8KB of memory for the immediate_data_pool buffers.\n\nI think you can probably just change the line below to use g_spdk_iscsi.FirstBurstLength directly.",
+      "revId": "b74e0d116a23c35bb2c77bf38d41574c1d33fba7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e3d5699_81851932",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-13T20:31:51Z",
+      "side": 1,
+      "message": "I don\u0027t think we should change this - at least not in this patch.  This changes the current behavior of the target, even if the user does not change an alternate FirstBurstLength.",
+      "revId": "b74e0d116a23c35bb2c77bf38d41574c1d33fba7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
