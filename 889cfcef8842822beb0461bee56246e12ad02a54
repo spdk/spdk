@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f0695761_7a7049ed",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-13T15:11:59Z",
+      "side": 1,
+      "message": "This comment is still valid.\n\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/409297/1//COMMIT_MSG@7",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 125
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55522d29_f8a40ad8",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
