@@ -55,6 +55,7 @@ SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 #define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS 1024
 #define SPDK_NVMF_DEFAULT_IO_UNIT_SIZE 131072
+#define SPDK_NVMF_DEFAULT_CONN_SCHED CONNECT_SCHED_ROUND_ROBIN
 
 typedef void (*nvmf_qpair_disconnect_cpl)(void *ctx, int status);
 
@@ -89,6 +90,7 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
 	opts->max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS;
 	opts->io_unit_size = SPDK_NVMF_DEFAULT_IO_UNIT_SIZE;
+	opts->conn_sched = SPDK_NVMF_DEFAULT_CONN_SCHED;
 }
 
 static int
@@ -218,6 +220,18 @@ spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 	_nvmf_tgt_disconnect_next_qpair(ctx);
 }
 
+static char *get_conn_sched_string(uint8_t sched)
+{
+	if (sched == CONNECT_SCHED_ROUND_ROBIN) {
+		return "roundrobin";
+	} else if (sched == CONNECT_SCHED_HOST_IP) {
+		return "hostip";
+	} else {
+		SPDK_ERRLOG("Invalid connection scheduling method\n");
+		return NULL;
+	}
+}
+
 struct spdk_nvmf_tgt *
 spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 {
@@ -265,6 +279,8 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 		      tgt->opts.in_capsule_data_size);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "I/O Unit Size: %d bytes\n", tgt->opts.io_unit_size);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connection scheduler: %s\n",
+		      get_conn_sched_string(tgt->opts.conn_sched));
 
 	return tgt;
 }
@@ -448,6 +464,7 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	spdk_json_write_named_uint32(w, "max_io_size", tgt->opts.max_io_size);
 	spdk_json_write_named_uint32(w, "max_subsystems", tgt->opts.max_subsystems);
 	spdk_json_write_named_uint32(w, "io_unit_size", tgt->opts.io_unit_size);
+	spdk_json_write_named_string(w, "conn_sched", get_conn_sched_string(tgt->opts.conn_sched));
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

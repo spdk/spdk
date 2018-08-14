@@ -63,7 +63,8 @@ struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 
 static enum nvmf_tgt_state g_tgt_state;
 
-static uint32_t g_tgt_core; /* Round-robin tracking of cores for qpair assignment */
+/* Round-Robin/IP-based tracking of cores for qpair assignment */
+uint32_t g_tgt_core;
 
 static struct nvmf_tgt_poll_group *g_poll_groups = NULL;
 static size_t g_num_poll_groups = 0;
@@ -123,11 +124,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 		return;
 	}
 
-	core = g_tgt_core;
-	g_tgt_core = spdk_env_get_next_core(core);
-	if (g_tgt_core == UINT32_MAX) {
-		g_tgt_core = spdk_env_get_first_core();
-	}
+	core = spdk_nvmf_get_qpair_core(qpair);
 
 	pg = &g_poll_groups[core];
 	assert(pg != NULL);
