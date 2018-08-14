@@ -16,6 +16,24 @@
       "revId": "6bb767f89afb937f5e09650b79f5aa87be8a5921",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b81be06_b2a83520",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 890,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-14T07:12:21Z",
+      "side": 1,
+      "message": "/* No  NBD kernel thread created */\n\tNBD_KERNEL_STATE_INVALID \u003d 0,\n\nI would be verry happy to do that but there is no other way to tell if kernel thread was created and need to be joind than comparing nbd-\u003ekernel_state vs NBD_KERNEL_STATE_INVALID (see line 391)",
+      "parentUuid": "f3dce05d_d9faad0f",
+      "revId": "6bb767f89afb937f5e09650b79f5aa87be8a5921",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
