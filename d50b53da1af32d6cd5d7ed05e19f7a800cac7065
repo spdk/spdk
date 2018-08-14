@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65140527_cba7790f",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-14T22:48:54Z",
+      "side": 1,
+      "message": "Hi Karol,\n\nInstead of specifying a default, could we only specify --provider to vagrant up if PROVIDER is not empty?\n\nI think that is closest to keeping existing behavior.  Vagrant must be figuring out which provider to use by default?  I\u0027m not actually sure - I know it\u0027s always working with macOS/VirtualBox but not sure what happens on Linux if only libvirt provider is available.\n\nThanks,\n\n-Jim",
+      "revId": "d50b53da1af32d6cd5d7ed05e19f7a800cac7065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
