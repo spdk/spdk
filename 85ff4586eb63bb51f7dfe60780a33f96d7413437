@@ -48,6 +48,75 @@
     },
     {
       "key": {
+        "uuid": "4d194bff_2bc109fe",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1639,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-08-14T07:40:31Z",
+      "side": 1,
+      "message": "Going from io_unit to page and to cluster is a bit messy. Can we do this without using pages?",
+      "range": {
+        "startLine": 1635,
+        "startChar": 0,
+        "endLine": 1639,
+        "endChar": 73
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c27a4448_fb13a14c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1946,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-08-14T07:40:31Z",
+      "side": 1,
+      "message": "This can be _spdk_bs_cluster_to_lba with blob-\u003eactive.num_clusters as an argument.",
+      "range": {
+        "startLine": 1945,
+        "startChar": 23,
+        "endLine": 1946,
+        "endChar": 40
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67e48c96_21746964",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 2070,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-08-14T07:40:31Z",
+      "side": 1,
+      "message": "This can be _spdk_bs_cluster_to_lba with blob-\u003eactive.num_clusters as an argument.",
+      "range": {
+        "startLine": 2069,
+        "startChar": 23,
+        "endLine": 2070,
+        "endChar": 40
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1283be4f_02bd4283",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 14
@@ -59,6 +128,30 @@
       "writtenOn": "2018-08-09T08:03:48Z",
       "side": 1,
       "message": "This is doing the exact same thing as function below (_spdk_bs_back_dev_length).",
+      "range": {
+        "startLine": 423,
+        "startChar": 0,
+        "endLine": 423,
+        "endChar": 24
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bd58cc1_a12da273",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-08-14T07:40:31Z",
+      "side": 1,
+      "message": "And exact same thing that _spdk_bs_blob_lba_to_back_dev_lba did. Can we stay with the old function? (See also my general comment to this patch).",
+      "parentUuid": "1283be4f_02bd4283",
       "range": {
         "startLine": 423,
         "startChar": 0,
@@ -140,6 +233,30 @@
     },
     {
       "key": {
+        "uuid": "55fc8f6a_5fa51831",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-08-14T07:40:31Z",
+      "side": 1,
+      "message": "io_unit / _spdk_bs_io_unit_per_page(bs)\n(/, not *)\n\nThis is actually the same function as removed _spdk_bs_lba_to_page. Why you changed it?",
+      "parentUuid": "f1365ac1_3a65494c",
+      "range": {
+        "startLine": 437,
+        "startChar": 8,
+        "endLine": 437,
+        "endChar": 58
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d34ef552_97beb83c",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 14
@@ -186,6 +303,29 @@
     },
     {
       "key": {
+        "uuid": "65fff3aa_e8c841a2",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-08-14T07:40:31Z",
+      "side": 1,
+      "message": "Result of this function should be exact same as from _spdk_bs_cluster_to_lba function.",
+      "range": {
+        "startLine": 453,
+        "startChar": 0,
+        "endLine": 453,
+        "endChar": 27
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "01f36e75_7daf1377",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 14
@@ -229,6 +369,75 @@
       "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fadf0b8a_50d6a185",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-08-14T07:40:31Z",
+      "side": 1,
+      "message": "You can just use _spdk_bs_lba_to_cluster here with io_unit as argument.",
+      "range": {
+        "startLine": 527,
+        "startChar": 29,
+        "endLine": 527,
+        "endChar": 53
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e6cb50f_19e419d4",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-08-14T07:40:31Z",
+      "side": 1,
+      "message": "You can use here _spdk_bs_cluster_to_lba with cluster \u003d 1.",
+      "range": {
+        "startLine": 528,
+        "startChar": 18,
+        "endLine": 528,
+        "endChar": 38
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "704c1cec_5688e6c5",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-08-14T07:40:31Z",
+      "side": 1,
+      "message": "You can use here _spdk_bs_cluster_to_lba with cluster \u003d 1.",
+      "range": {
+        "startLine": 540,
+        "startChar": 24,
+        "endLine": 540,
+        "endChar": 90
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
