@@ -51,6 +51,8 @@ function usage()
 	echo "                           No path required."
 	echo " rdma                      [disabled]"
 	echo "                           No path required."
+	echo " shared                    Required to build spdk shared libraries."
+	echo "                           No path required."
 	echo " iscsi-initiator           [disabled]"
 	echo "                           No path required."
 	echo " raid                      [disabled]"
@@ -157,6 +159,12 @@ for i in "$@"; do
 			;;
 		--without-rdma)
 			CONFIG_RDMA=n
+			;;
+		--with-shared)
+			CONFIG_SHARED=y
+			;;
+		--without-shared)
+			CONFIG_SHARED=n
 			;;
 		--with-iscsi-initiator)
 			CONFIG_ISCSI_INITIATOR=y
@@ -291,10 +299,14 @@ if [ "$CONFIG_ASAN" = "y" -a "$CONFIG_TSAN" = "y" ]; then
 	exit 1
 fi
 
-if [[ "$OSTYPE" == "FreeBSD"* ]]; then
+if [[ "${OSTYPE,freebsd}" == "freebsd"* ]]; then
 	# FreeBSD doesn't support all configurations
 	if [[ "$CONFIG_COVERAGE" == "y" ]]; then
 		echo "ERROR: CONFIG_COVERAGE not available on FreeBSD"
+		exit 1
+	fi
+	if [[ "$CONFIG_SHARED" == "y" ]]; then
+		echo "ERROR: CONFIG_SHARED not available on FreeBSD"
 		exit 1
 	fi
 fi
@@ -369,6 +381,9 @@ fi
 if [ -n "$CONFIG_RDMA" ]; then
 	echo "CONFIG_RDMA?=$CONFIG_RDMA" >> CONFIG.local
 fi
+if [ -n "$CONFIG_SHARED" ]; then
+	echo "CONFIG_SHARED?=$CONFIG_SHARED" >> CONFIG.local
+fi
 if [ -n "$CONFIG_ISCSI_INITIATOR" ]; then
 	echo "CONFIG_ISCSI_INITIATOR?=$CONFIG_ISCSI_INITIATOR" >> CONFIG.local
 fi
@@ -415,7 +430,7 @@ echo $python_command > PYTHON_COMMAND
 $python_command scripts/genconfig.py > config.h
 
 echo "done."
-if [[ "$OSTYPE" == "FreeBSD"* ]]; then
+if [[ "${OSTYPE,freebsd}" == "freebsd"* ]]; then
 	echo "Type 'gmake' to build."
 else
 	echo "Type 'make' to build."
