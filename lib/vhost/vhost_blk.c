@@ -374,6 +374,11 @@ no_bdev_vdev_worker(void *arg)
 
 	spdk_vhost_dev_used_signal(&bvdev->vdev);
 
+	if (bvdev->vdev.task_cnt == 0 && bvdev->bdev_io_channel) {
+		spdk_put_io_channel(bvdev->bdev_io_channel);
+		bvdev->bdev_io_channel = NULL;
+	}
+
 	return -1;
 }
 
