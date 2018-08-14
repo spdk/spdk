@@ -583,7 +583,6 @@ void
 vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct vbdev_lvol_destroy_ctx *ctx;
-	char *alias;
 
 	assert(lvol != NULL);
 	assert(cb_fn != NULL);
@@ -605,17 +604,6 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 	ctx->lvol = lvol;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
-
-	alias = spdk_sprintf_alloc("%s/%s", lvol->lvol_store->name, lvol->name);
-	if (alias != NULL) {
-		spdk_bdev_alias_del(lvol->bdev, alias);
-		free(alias);
-	} else {
-		SPDK_ERRLOG("Cannot alloc memory for alias\n");
-		cb_fn(cb_arg, -ENOMEM);
-		free(ctx);
-		return;
-	}
 
 	spdk_bdev_unregister(lvol->bdev, _vbdev_lvol_destroy_cb, ctx);
 }
