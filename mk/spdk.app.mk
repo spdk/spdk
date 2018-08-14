@@ -58,9 +58,12 @@ SPDK_REMAINING_LIB_LIST = $(filter-out $(SPDK_WHOLE_ARCHIVE_LIB_LIST),$(SPDK_LIB
 SPDK_LIB_FILES = $(call spdk_lib_list_to_files,$(SPDK_LIB_LIST))
 SPDK_LIB_LINKER_ARGS = \
 	-L$(SPDK_ROOT_DIR)/build/lib \
+	-Wl,--push-state \
+	-Wl,-Bstatic \
 	-Wl,--whole-archive \
 	$(SPDK_WHOLE_ARCHIVE_LIB_LIST:%=-lspdk_%) \
 	-Wl,--no-whole-archive \
-	$(SPDK_REMAINING_LIB_LIST:%=-lspdk_%)
+	$(SPDK_REMAINING_LIB_LIST:%=-lspdk_%) \
+	-Wl,--pop-state
 
 install: all
