@@ -19,6 +19,9 @@ rpc_py="python $rootdir/scripts/rpc.py"
 
 set -e
 
+# pass the parameter 'init' to this script to trigger RDMA device initialization.
+nvmftestinit $1
+
 RDMA_IP_LIST=$(get_available_rdma_ips)
 NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 if [ -z $NVMF_FIRST_TARGET_IP ]; then
@@ -31,7 +34,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF --wait-for-rpc &
 nvmfpid=$!
 
-trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 $rpc_py set_nvmf_target_options -u 8192 -p 4
@@ -86,5 +89,6 @@ trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 killprocess $nvmfpid
+nvmftestfini $1
 report_test_completion "nvmf_spdk_nvme_cli"
 timing_exit nvme_cli
