@@ -12,6 +12,8 @@ rpc_py="python $rootdir/scripts/rpc.py"
 
 set -e
 
+nvmftestinit $1
+
 if ! hash nvme; then
 	echo "nvme command not found; skipping discovery test"
 	exit 0
@@ -30,7 +32,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF --wait-for-rpc &
 nvmfpid=$!
 
-trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 $rpc_py set_nvmf_target_options -u 8192 -p 4
@@ -68,4 +70,5 @@ trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 killprocess $nvmfpid
+nvmftestfini $1
 timing_exit discovery
