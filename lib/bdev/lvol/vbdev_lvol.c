@@ -542,17 +542,10 @@ static int
 vbdev_lvol_unregister(void *ctx)
 {
 	struct spdk_lvol *lvol = ctx;
-	char *alias;
 
 	assert(lvol != NULL);
 
-	alias = spdk_sprintf_alloc("%s/%s", lvol->lvol_store->name, lvol->name);
-	if (alias != NULL) {
-		spdk_bdev_alias_del(lvol->bdev, alias);
-		free(alias);
-	} else {
-		SPDK_ERRLOG("Cannot alloc memory for alias\n");
-	}
+	spdk_bdev_alias_del_all(lvol->bdev);
 	spdk_lvol_close(lvol, _vbdev_lvol_unregister_cb, lvol->bdev);
 
 	/* return 1 to indicate we have an operation that must finish asynchronously before the

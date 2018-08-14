@@ -577,7 +577,7 @@ io_valid_test(void)
 static void
 alias_add_del_test(void)
 {
-	struct spdk_bdev *bdev[2];
+	struct spdk_bdev *bdev[3];
 	int rc;
 
 	/* Creating and registering bdevs */
@@ -586,6 +586,9 @@ alias_add_del_test(void)
 
 	bdev[1] = allocate_bdev("bdev1");
 	SPDK_CU_ASSERT_FATAL(bdev[1] != 0);
+
+	bdev[2] = allocate_bdev("bdev2");
+	SPDK_CU_ASSERT_FATAL(bdev[2] != 0);
 
 	/*
 	 * Trying adding an alias identical to name.
@@ -633,12 +636,26 @@ alias_add_del_test(void)
 	rc = spdk_bdev_alias_del(bdev[0], bdev[0]->name);
 	CU_ASSERT(rc != 0);
 
+	/* Trying to del all alias from empty alias list */
+	spdk_bdev_alias_del_all(bdev[2]);
+	CU_ASSERT(TAILQ_EMPTY(&bdev[2]->aliases));
+
+	/* Trying to del all alias from non-empty alias list */
+	rc = spdk_bdev_alias_add(bdev[2], "alias0");
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_alias_add(bdev[2], "alias1");
+	CU_ASSERT(rc == 0);
+	spdk_bdev_alias_del_all(bdev[2]);
+	CU_ASSERT(TAILQ_EMPTY(&bdev[2]->aliases));
+
 	/* Unregister and free bdevs */
 	spdk_bdev_unregister(bdev[0], NULL, NULL);
 	spdk_bdev_unregister(bdev[1], NULL, NULL);
+	spdk_bdev_unregister(bdev[2], NULL, NULL);
 
 	free(bdev[0]);
 	free(bdev[1]);
+	free(bdev[2]);
 }
 
 static void
