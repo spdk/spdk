@@ -133,6 +133,7 @@ if $INSTALL; then
     sudo dnf install -y librdmacm-utils
     sudo dnf install -y libibverbs-utils
     sudo dnf install -y gdisk
+	sudo dnf install -y socat
 fi
 
 cd ~
