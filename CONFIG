@@ -107,3 +107,6 @@ CONFIG_RAID?=n
 
 # Enable the dependencies for building the crypto vbdev
 CONFIG_CRYPTO?=n
+
+# Build spdk shared libraries in addition to the static ones.
+CONFIG_SHARED?=n
