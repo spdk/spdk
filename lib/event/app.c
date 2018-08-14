@@ -41,6 +41,7 @@
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
@@ -74,7 +75,7 @@ spdk_app_get_shm_id(void)
 }
 
 /* append one empty option to indicate the end of the array */
-static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
+static const struct option g_cmdline_options[] = {
 #define CONFIG_FILE_OPT_IDX	'c'
 	{"config",			required_argument,	NULL, CONFIG_FILE_OPT_IDX},
 #define DISABLE_COREDUMP_OPT_IDX 'd'
@@ -111,10 +112,7 @@ static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
 	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
 #define WAIT_FOR_RPC_OPT_IDX	258
 	{"wait-for-rpc",		no_argument,		NULL, WAIT_FOR_RPC_OPT_IDX},
-	{NULL,				no_argument,		NULL, 0}
 };
-
-static char g_cmdline_short_opts[2 * SPDK_APP_MAX_CMDLINE_OPTIONS + 1];
 
 /* Global section */
 #define GLOBAL_CONFIG_TMPL \
@@ -709,6 +707,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		    void (*app_usage)(void))
 {
 	int ch, rc, opt_idx, global_long_opts_len, app_long_opts_len;
+	struct option *cmdline_options;
+	char *cmdline_short_opts;
+	enum spdk_app_parse_args_rvals retval = SPDK_APP_PARSE_ARGS_FAIL;
 
 	memcpy(&g_default_opts, opts, sizeof(g_default_opts));
 
@@ -716,39 +717,32 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		opts->config_file = NULL;
 	}
 
-	if (app_long_opts == NULL) {
-		app_long_opts_len = 0;
-	} else {
-		for (app_long_opts_len = 0;
-		     app_long_opts[app_long_opts_len].name != NULL;
-		     app_long_opts_len++);
-	}
+	global_long_opts_len = SPDK_COUNTOF(g_cmdline_options);
 
-	for (global_long_opts_len = 0;
-	     g_cmdline_options[global_long_opts_len].name != NULL;
-	     global_long_opts_len++);
+	for (app_long_opts_len = 0;
+	     app_long_opts[app_long_opts_len].name != NULL;
+	     app_long_opts_len++);
 
-	if (app_long_opts_len + global_long_opts_len > SPDK_APP_MAX_CMDLINE_OPTIONS) {
-		fprintf(stderr, "Too many parseable command line options in %s()."
-			" (got %d, max %d)\n", __func__,
-			app_long_opts_len + global_long_opts_len,
-			SPDK_APP_MAX_CMDLINE_OPTIONS);
+	cmdline_options = calloc(global_long_opts_len + app_long_opts_len + 1, sizeof(*cmdline_options));
+	if (!cmdline_options) {
+		fprintf(stderr, "Out of memory\n");
 		return SPDK_APP_PARSE_ARGS_FAIL;
 	}
 
-	if (app_long_opts) {
-		memcpy(&g_cmdline_options[global_long_opts_len], app_long_opts,
-		       app_long_opts_len * sizeof(*app_long_opts));
+	memcpy(&cmdline_options[0], g_cmdline_options, sizeof(g_cmdline_options));
+	memcpy(&cmdline_options[global_long_opts_len], app_long_opts,
+	       app_long_opts_len * sizeof(*app_long_opts));
+
+	cmdline_short_opts = spdk_sprintf_alloc("%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
+	if (!cmdline_short_opts) {
+		fprintf(stderr, "Out of memory\n");
+		goto out;
 	}
-
-
-	snprintf(g_cmdline_short_opts, sizeof(g_cmdline_short_opts),
-		 "%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
 
 	g_executable_name = argv[0];
 
-	while ((ch = getopt_long(argc, argv, g_cmdline_short_opts,
-				 g_cmdline_options, &opt_idx)) != -1) {
+
+	while ((ch = getopt_long(argc, argv, cmdline_short_opts, cmdline_options, &opt_idx)) != -1) {
 		switch (ch) {
 		case CONFIG_FILE_OPT_IDX:
 			opts->config_file = optarg;
@@ -764,10 +758,11 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case HELP_OPT_IDX:
 			usage(app_usage);
-			return SPDK_APP_PARSE_ARGS_HELP;
+			retval = SPDK_APP_PARSE_ARGS_HELP;
+			goto out;
 		case SHM_ID_OPT_IDX:
 			if (optarg == NULL) {
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			opts->shm_id = atoi(optarg);
 			break;
@@ -776,13 +771,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case MEM_CHANNELS_OPT_IDX:
 			if (optarg == NULL) {
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			opts->mem_channel = atoi(optarg);
 			break;
 		case MASTER_CORE_OPT_IDX:
 			if (optarg == NULL) {
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			opts->master_core = atoi(optarg);
 			break;
@@ -800,7 +795,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (rc != 0) {
 				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 
 			if (mem_size_has_prefix) {
@@ -813,7 +808,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (mem_size_mb > INT_MAX) {
 				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 
 			opts->mem_size = (int) mem_size_mb;
@@ -830,13 +825,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				free(opts->pci_whitelist);
 				fprintf(stderr, "-B and -W cannot be used at the same time\n");
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 
 			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_blacklist, optarg);
 			if (rc != 0) {
 				free(opts->pci_blacklist);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			break;
 		case TRACEFLAG_OPT_IDX:
@@ -844,13 +839,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -L flag\n",
 				argv[0]);
 			usage(app_usage);
-			return SPDK_APP_PARSE_ARGS_FAIL;
+			goto out;
 #else
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			opts->print_level = SPDK_LOG_DEBUG;
 			break;
@@ -863,13 +858,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				free(opts->pci_blacklist);
 				fprintf(stderr, "-B and -W cannot be used at the same time\n");
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 
 			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_whitelist, optarg);
 			if (rc != 0) {
 				free(opts->pci_whitelist);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			break;
 		case '?':
@@ -879,7 +874,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			 * getopt() will return a '?' indicating failure.
 			 */
 			usage(app_usage);
-			return SPDK_APP_PARSE_ARGS_FAIL;
+			goto out;
 		default:
 			app_parse(ch, optarg);
 		}
@@ -892,7 +887,11 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			"- Please be careful one options might overwrite others.\n");
 	}
 
-	return SPDK_APP_PARSE_ARGS_SUCCESS;
+	retval = SPDK_APP_PARSE_ARGS_SUCCESS;
+out:
+	free(cmdline_short_opts);
+	free(cmdline_options);
+	return retval;
 }
 
 void
