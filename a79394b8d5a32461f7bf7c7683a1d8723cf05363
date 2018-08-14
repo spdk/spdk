@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8a980bd_c3fd8f94",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1124,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-14T04:55:48Z",
+      "side": 1,
+      "message": "uint16_t *",
+      "range": {
+        "startLine": 1124,
+        "startChar": 21,
+        "endLine": 1124,
+        "endChar": 22
+      },
+      "revId": "a79394b8d5a32461f7bf7c7683a1d8723cf05363",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22e8cf3a_742f9d49",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1125,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-14T04:55:48Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "a79394b8d5a32461f7bf7c7683a1d8723cf05363",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
