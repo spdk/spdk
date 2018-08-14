@@ -191,6 +191,9 @@ spdk_iscsi_poll_group_remove_conn_sock(struct spdk_iscsi_conn *conn)
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to remove sock=%p of conn=%p\n", conn->sock, conn);
 	}
+
+	conn->is_stopped = true;
+	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
 }
 
 static void
@@ -201,15 +204,6 @@ spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 	conn->is_stopped = false;
 	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
 	spdk_iscsi_poll_group_add_conn_sock(conn);
-}
-
-static void
-spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
-{
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
-
-	conn->is_stopped = true;
-	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
 }
 
 /**
@@ -675,7 +669,6 @@ spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 	}
 
 	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
-	spdk_iscsi_poll_group_remove_conn(conn);
 }
 
 void spdk_shutdown_iscsi_conns(void)
