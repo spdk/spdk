@@ -89,6 +89,7 @@ typedef void (*spdk_sighandler_t)(int signal);
 struct spdk_app_opts {
 	const char *name;
 	const char *config_file;
+	const char *json_config;
 	const char *rpc_addr; /* Can be UNIX domain socket path or IP address + TCP port */
 	const char *reactor_mask;
 	const char *tpoint_group_mask;
