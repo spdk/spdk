@@ -307,6 +307,13 @@ struct spdk_nvmf_rdma_port {
 	TAILQ_ENTRY(spdk_nvmf_rdma_port)	link;
 };
 
+struct spdk_nvmf_rdma_host_ips {
+	char ip_addr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+	uint32_t				core;
+	uint32_t				ref;
+	TAILQ_ENTRY(spdk_nvmf_rdma_host_ips)	link;
+};
+
 struct spdk_nvmf_rdma_transport {
 	struct spdk_nvmf_transport	transport;
 
@@ -320,6 +327,7 @@ struct spdk_nvmf_rdma_transport {
 	uint32_t			max_io_size;
 	uint32_t			io_unit_size;
 	uint32_t			in_capsule_data_size;
+	enum spdk_nvmf_connect_sched	sched;
 
 	/* fields used to poll RDMA/IB events */
 	nfds_t			npoll_fds;
@@ -327,6 +335,10 @@ struct spdk_nvmf_rdma_transport {
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_device)	devices;
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
+	/* TODO: Instead of a list, we can have a table indexed by
+	 * IP segments
+	 */
+	TAILQ_HEAD(, spdk_nvmf_rdma_host_ips)	host_ips;
 };
 
 struct spdk_nvmf_rdma_mgmt_channel {
@@ -830,6 +842,7 @@ spdk_nvmf_rdma_event_reject(struct rdma_cm_id *id, enum spdk_nvmf_rdma_transport
 	rdma_reject(id, &rej_data, sizeof(rej_data));
 }
 
+
 static int
 nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event,
 		  new_qpair_fn cb_fn)
@@ -929,6 +942,70 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	return 0;
 }
 
+static int nvmf_rdma_get_hostip(char *ip_buf, size_t len, struct rdma_cm_id *id)
+{
+	struct sockaddr *sa = NULL;
+	const char *ip_addr = NULL;
+	int rc = -1;
+
+	if (!ip_buf || !id) {
+		return -1;
+	}
+
+	sa = &id->route.addr.dst_addr;
+	if (!sa) {
+		SPDK_ERRLOG("Error getting host IP\n");
+		return -1;
+	}
+	switch (sa->sa_family) {
+	case AF_INET:
+		ip_addr = inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+				    ip_buf, len);
+		break;
+	case AF_INET6:
+		ip_addr = inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+				    ip_buf, len);
+		break;
+	default:
+		break;
+	}
+
+	if (ip_addr) {
+		rc = 0;
+	}
+
+	return rc;
+}
+
+static void spdk_free_host_ip(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_rdma_qpair *rqpair;
+	struct spdk_nvmf_rdma_host_ips *host_ip = NULL;
+	char host_traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+	int ret;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
+
+	if (rtransport->sched == CONNECT_SCHED_HOST_IP) {
+		ret = nvmf_rdma_get_hostip(host_traddr, sizeof(host_traddr), rqpair->cm_id);
+		if (!ret) {
+			TAILQ_FOREACH(host_ip, &rtransport->host_ips, link) {
+				if (!strncmp(host_ip->ip_addr, host_traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
+					if (host_ip->ref) {
+						host_ip->ref--;
+					} else {
+						TAILQ_REMOVE(&rtransport->host_ips, host_ip, link);
+						free(host_ip);
+					}
+					break;
+				}
+			}
+		}
+	}
+}
+
 static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
@@ -949,6 +1026,8 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	rdma_ack_cm_event(evt);
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	spdk_free_host_ip(qpair);
 	spdk_nvmf_rdma_update_ibv_state(rqpair);
 
 	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
@@ -1465,6 +1544,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 
 	TAILQ_INIT(&rtransport->devices);
 	TAILQ_INIT(&rtransport->ports);
+	TAILQ_INIT(&rtransport->host_ips);
 
 	rtransport->transport.tgt = tgt;
 	rtransport->transport.ops = &spdk_nvmf_transport_rdma;
@@ -1475,6 +1555,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	rtransport->max_io_size = tgt->opts.max_io_size;
 	rtransport->io_unit_size = tgt->opts.io_unit_size;
 	rtransport->in_capsule_data_size = tgt->opts.in_capsule_data_size;
+	rtransport->sched = tgt->opts.conn_sched;
 
 	/* I/O unit size cannot be larger than max I/O size */
 	if (rtransport->io_unit_size > rtransport->max_io_size) {
@@ -2185,6 +2266,57 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 	assert(nfds == 0);
 }
 
+
+static uint32_t
+spdk_nvmf_rdma_get_core(struct spdk_nvmf_qpair *qpair, enum spdk_nvmf_connect_sched sched)
+{
+	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_rdma_qpair     *rqpair;
+	char host_traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+	uint32_t core = 0;
+	struct spdk_nvmf_rdma_host_ips *host_ip = NULL, *tmp = NULL;
+	int ret;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
+
+	switch (rtransport->sched) {
+	case CONNECT_SCHED_HOST_IP:
+		ret = nvmf_rdma_get_hostip(host_traddr, sizeof(host_traddr), rqpair->cm_id);
+		if (!ret) {
+			TAILQ_FOREACH(tmp, &rtransport->host_ips, link) {
+				if (tmp && !strncmp(tmp->ip_addr, host_traddr,
+						    SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
+					tmp->ref++;
+					core = tmp->core;
+					break;
+				}
+			}
+
+			if (!tmp) {
+				host_ip = calloc(1, sizeof(*host_ip));
+				/* If calloc fails, assign core 0 */
+				if (!host_ip) {
+					SPDK_ERRLOG("Insufficient memory. Assigning first available core\n");
+					break;
+				}
+				/* Get the next available core for the new host */
+				core = spdk_nvmf_get_core_rr();
+				host_ip->core = core;
+				memcpy(host_ip->ip_addr, host_traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1);
+				TAILQ_INSERT_TAIL(&rtransport->host_ips, host_ip, link);
+			}
+		}
+		break;
+	case CONNECT_SCHED_ROUND_ROBIN:
+	default:
+		core = spdk_nvmf_get_core_rr();
+		break;
+	};
+
+	return core;
+}
+
 static void
 spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
 			struct spdk_nvme_transport_id *trid,
@@ -2564,6 +2696,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.listen = spdk_nvmf_rdma_listen,
 	.stop_listen = spdk_nvmf_rdma_stop_listen,
 	.accept = spdk_nvmf_rdma_accept,
+	.get_core = spdk_nvmf_rdma_get_core,
 
 	.listener_discover = spdk_nvmf_rdma_discover,
 

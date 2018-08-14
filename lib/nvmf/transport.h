@@ -81,6 +81,11 @@ struct spdk_nvmf_transport_ops {
 	void (*accept)(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn);
 
 	/**
+	 * Get the target core based om configured load balancing policy
+	 */
+	uint32_t (*get_core)(struct spdk_nvmf_qpair *qpair, enum spdk_nvmf_connect_sched sched);
+
+	/**
 	 * Fill out a discovery log entry for a specific listen address.
 	 */
 	void (*listener_discover)(struct spdk_nvmf_transport *transport,
@@ -146,6 +151,10 @@ void spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair
 void spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 		struct spdk_nvme_transport_id *trid,
 		struct spdk_nvmf_discovery_log_page_entry *entry);
+
+uint32_t spdk_nvmf_get_core_rr(void);
+
+uint32_t spdk_nvmf_transport_get_core(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair);
 
 struct spdk_nvmf_transport_poll_group *spdk_nvmf_transport_poll_group_create(
 	struct spdk_nvmf_transport *transport);
