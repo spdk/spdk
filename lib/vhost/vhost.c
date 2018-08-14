@@ -770,7 +770,7 @@ spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
 	if (vdev->vid != -1) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
-		return -ENODEV;
+		return -EBUSY;
 	}
 
 	if (vdev->registered && rte_vhost_driver_unregister(vdev->path) != 0) {
