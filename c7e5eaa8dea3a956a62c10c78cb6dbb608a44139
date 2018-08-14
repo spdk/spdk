@@ -46,6 +46,30 @@
       "revId": "c7e5eaa8dea3a956a62c10c78cb6dbb608a44139",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62bd6499_0b5367c8",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-14T06:46:30Z",
+      "side": 1,
+      "message": "\u003e it\u0027s time for us to consider it again and remove this workaround.\n\nYes, for 150% :D\n\n\u003e Adding this code here just make existing code safe for migration, I don\u0027t see the issue you mentioned.\n\nI\u0027m talking about that the device will be stopped anyway here so there is no reason why we can\u0027t stop it few lines earlier and avoid ignoring pending new memory table.\n\nSecond issue is that why there is pending new memory table while we are processing SET_VRING_BASE?",
+      "parentUuid": "d0c5eea7_69291379",
+      "range": {
+        "startLine": 375,
+        "startChar": 0,
+        "endLine": 379,
+        "endChar": 2
+      },
+      "revId": "c7e5eaa8dea3a956a62c10c78cb6dbb608a44139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
