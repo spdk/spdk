@@ -44,6 +44,8 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
+#include "json_config.h"
+
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
 #define SPDK_APP_DEFAULT_BACKTRACE_LOG_LEVEL	SPDK_LOG_ERROR
@@ -119,6 +121,8 @@ static const struct option g_cmdline_options[] = {
 	{"huge-dir",			no_argument,		NULL, HUGE_DIR_OPT_IDX},
 #define NUM_TRACE_ENTRIES_OPT_IDX	260
 	{"num-trace-entries",		required_argument,	NULL, NUM_TRACE_ENTRIES_OPT_IDX},
+#define JSON_CONFIG_OPT_IDX		261
+	{"json",			required_argument,	NULL, JSON_CONFIG_OPT_IDX},
 };
 
 /* Global section */
@@ -554,7 +558,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 {
 	struct spdk_conf	*config = NULL;
 	int			rc;
-	struct spdk_event	*rpc_start_event;
+	struct spdk_event	*rpc_start_event, *config_load_event;
 	char			*tty;
 
 	if (!opts) {
@@ -648,10 +652,18 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
 					      (void *)opts->rpc_addr, NULL);
 
-	if (!g_delay_subsystem_init) {
-		spdk_subsystem_init(rpc_start_event);
+	if (opts->json_config) {
+		g_delay_subsystem_init = false;
+		/* Invoke on event context so the thread handler can be obtained. */
+		config_load_event = spdk_event_allocate(g_init_lcore, spdk_app_json_config_load_cb,
+							opts, rpc_start_event);
+		spdk_event_call(config_load_event);
 	} else {
-		spdk_event_call(rpc_start_event);
+		if (!g_delay_subsystem_init) {
+			spdk_subsystem_init(rpc_start_event);
+		} else {
+			spdk_event_call(rpc_start_event);
+		}
 	}
 
 	/* This blocks until spdk_app_stop is called */
@@ -711,6 +723,8 @@ usage(void (*app_usage)(void))
 	printf("options:\n");
 	printf(" -c, --config <config>     config file (default %s)\n",
 	       g_default_opts.config_file != NULL ? g_default_opts.config_file : "none");
+	printf("     --json <config>       JSON config file (default %s)\n",
+	       g_default_opts.json_config != NULL ? g_default_opts.json_config : "none");
 	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
 	printf(" -g, --single-file-segments\n");
 	printf("                           force creating just one hugetlbfs file\n");
@@ -760,8 +774,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 
 	memcpy(&g_default_opts, opts, sizeof(g_default_opts));
 
-	if (opts->config_file && access(opts->config_file, F_OK) != 0) {
+	if (opts->config_file && access(opts->config_file, R_OK) != 0) {
+		SPDK_WARNLOG("Can't read configuration file '%s'\n", opts->config_file);
 		opts->config_file = NULL;
+	}
+
+	if (opts->json_config && access(opts->json_config, R_OK) != 0) {
+		SPDK_WARNLOG("Can't read JSON configuration file '%s'\n", opts->json_config);
+		opts->json_config = NULL;
 	}
 
 	if (app_long_opts == NULL) {
@@ -807,6 +827,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		switch (ch) {
 		case CONFIG_FILE_OPT_IDX:
 			opts->config_file = optarg;
+			break;
+		case JSON_CONFIG_OPT_IDX:
+			opts->json_config = optarg;
 			break;
 		case LIMIT_COREDUMP_OPT_IDX:
 			opts->enable_coredump = false;
@@ -954,6 +977,16 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		default:
 			app_parse(ch, optarg);
 		}
+	}
+
+	if (opts->config_file && opts->json_config) {
+		fprintf(stderr, "ERROR: Legacy config and JSON config can't be used together.\n");
+		goto out;
+	}
+
+	if (opts->json_config && opts->delay_subsystem_init) {
+		fprintf(stderr, "ERROR: JSON configuration file can't be used togeter with --wait-for-rpc.\n");
+		goto out;
 	}
 
 	/* TBD: Replace warning by failure when RPCs for startup are prepared. */
