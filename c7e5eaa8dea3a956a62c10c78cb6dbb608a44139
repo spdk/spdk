@@ -70,6 +70,30 @@
       "revId": "c7e5eaa8dea3a956a62c10c78cb6dbb608a44139",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97cdf5d8_c6782cb6",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-14T06:59:36Z",
+      "side": 1,
+      "message": "I see you comments, yes, moving line 375-379 to the beginning should also work.  The test case is only for live migration, QEMU will send SET_VRING_ADDR when doing dirty page logging, at the moment, the Guest may still doing the IO workloads, so it\u0027s not safe to set the memory table.",
+      "parentUuid": "62bd6499_0b5367c8",
+      "range": {
+        "startLine": 375,
+        "startChar": 0,
+        "endLine": 379,
+        "endChar": 2
+      },
+      "revId": "c7e5eaa8dea3a956a62c10c78cb6dbb608a44139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
