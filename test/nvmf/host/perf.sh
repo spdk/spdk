@@ -22,7 +22,7 @@ fi
 timing_enter perf
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -m 0xF --wait-for-rpc -i 0 &
+$NVMF_APP -m 0xF -s 1024 --wait-for-rpc -i 0 &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -76,7 +76,14 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	fi
 fi
 
+$rpc_py construct_malloc_bdev 512 512 -b Malloc1
+$rpc_py construct_nvmf_subsystem -s SPDK0 nqn.2014-08.org.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" '' -a -n "Malloc1"
+$rootdir/examples/nvme/perf/perf -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" -d 1024 -q 128 -s 4096 -w randread -t 10 -c 0x2 &
+perfpid=$!
+sleep 6
+
 trap - SIGINT SIGTERM EXIT
 
 killprocess $nvmfpid
+killprocess $perfpid
 timing_exit perf
