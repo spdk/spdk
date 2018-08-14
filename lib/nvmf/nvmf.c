@@ -569,6 +569,13 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_
 	return NULL;
 }
 
+int
+spdk_nvmf_tgt_get_host_trid(struct spdk_nvmf_qpair *qpair,
+			    struct spdk_nvme_transport_id *trid)
+{
+	return spdk_nvmf_transport_get_host_trid(qpair, trid);
+}
+
 void
 spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn)
 {

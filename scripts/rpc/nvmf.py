@@ -37,11 +37,14 @@ def set_nvmf_target_options(client,
     return client.call('set_nvmf_target_options', params)
 
 
-def set_nvmf_target_config(client, acceptor_poll_rate=None):
+def set_nvmf_target_config(client,
+                           acceptor_poll_rate=None,
+                           conn_sched=None):
     """Set NVMe-oF target subsystem configuration.
 
     Args:
         acceptor_poll_rate: Acceptor poll period in microseconds (optional)
+        conn_sched: Scheduling of incoming connections (optional)
 
     Returns:
         True or False
@@ -50,6 +53,8 @@ def set_nvmf_target_config(client, acceptor_poll_rate=None):
 
     if acceptor_poll_rate:
         params['acceptor_poll_rate'] = acceptor_poll_rate
+    if conn_sched:
+        params['conn_sched'] = conn_sched
     return client.call('set_nvmf_target_config', params)
 
 

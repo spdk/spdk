@@ -1618,8 +1618,25 @@ nvmf_rpc_subsystem_set_tgt_opts(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("set_nvmf_target_options", nvmf_rpc_subsystem_set_tgt_opts, SPDK_RPC_STARTUP)
 
+static int decode_conn_sched(const struct spdk_json_val *val, void *out)
+{
+	enum spdk_nvmf_connect_sched *sched = out;
+
+	if (spdk_json_strequal(val, "roundrobin") == true) {
+		*sched = CONNECT_SCHED_ROUND_ROBIN;
+	} else if (spdk_json_strequal(val, "hostip") == true) {
+		*sched = CONNECT_SCHED_HOST_IP;
+	} else {
+		SPDK_ERRLOG("Invalid connection scheduling parameter\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder[] = {
 	{"acceptor_poll_rate", offsetof(struct spdk_nvmf_tgt_conf, acceptor_poll_rate), spdk_json_decode_uint32, true},
+	{"conn_sched", offsetof(struct spdk_nvmf_tgt_conf, conn_sched), decode_conn_sched, true},
 };
 
 static void
@@ -1645,6 +1662,7 @@ nvmf_rpc_subsystem_set_tgt_conf(struct spdk_jsonrpc_request *request,
 	}
 
 	conf->acceptor_poll_rate = ACCEPT_TIMEOUT_US;
+	conf->conn_sched = DEFAULT_CONN_SCHED;
 
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, nvmf_rpc_subsystem_tgt_conf_decoder,

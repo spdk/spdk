@@ -2199,6 +2199,46 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 	assert(nfds == 0);
 }
 
+static int
+spdk_nvmf_rdma_get_host_trid(struct spdk_nvmf_qpair *qpair, struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair;
+	struct sockaddr *sa = NULL;
+	const char *ip_addr = NULL;
+	int ret = -1;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	if (!trid) {
+		return ret;
+	}
+
+	sa = &rqpair->cm_id->route.addr.dst_addr;
+	if (!sa) {
+		SPDK_ERRLOG("Error getting host IP\n");
+		return ret;
+	}
+
+	switch (sa->sa_family) {
+	case AF_INET:
+		ip_addr = inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+				    trid->traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1);
+		break;
+	case AF_INET6:
+		ip_addr = inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+				    trid->traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1);
+		break;
+	default:
+		break;
+	}
+
+	if (ip_addr) {
+		ret = 0;
+	}
+
+	return ret;
+}
+
 static void
 spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
 			struct spdk_nvme_transport_id *trid,
@@ -2609,6 +2649,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.listen = spdk_nvmf_rdma_listen,
 	.stop_listen = spdk_nvmf_rdma_stop_listen,
 	.accept = spdk_nvmf_rdma_accept,
+	.get_host_trid = spdk_nvmf_rdma_get_host_trid,
 
 	.listener_discover = spdk_nvmf_rdma_discover,
 

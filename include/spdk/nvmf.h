@@ -153,6 +153,16 @@ void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
 
 /**
+ * Get the transport Id of the host.
+ * \param qpair The qpair associated with the connecting host
+ * \param trid Transport Id buffer
+ *
+ * \return On success, 0 is returned and trid will contain a valid Id
+ *	   or negative errno on failue
+ */
+int spdk_nvmf_tgt_get_host_trid(struct spdk_nvmf_qpair *qpair,
+				struct spdk_nvme_transport_id *trid);
+/**
  * Poll the target for incoming connections.
  *
  * The new_qpair_fn cb_fn will be called for each newly discovered

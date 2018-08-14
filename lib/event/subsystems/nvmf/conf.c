@@ -146,6 +146,7 @@ spdk_nvmf_parse_tgt_conf(void)
 	}
 
 	conf->acceptor_poll_rate = ACCEPT_TIMEOUT_US;
+	conf->conn_sched = DEFAULT_CONN_SCHED;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
 	if (sp != NULL) {

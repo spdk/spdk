@@ -147,6 +147,20 @@ spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 	transport->ops->listener_discover(transport, trid, entry);
 }
 
+int
+spdk_nvmf_transport_get_host_trid(struct spdk_nvmf_qpair *qpair,
+				  struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_transport *transport = qpair->transport;
+	int ret = -EINVAL;
+
+	if (transport->ops->get_host_trid) {
+		return transport->ops->get_host_trid(qpair, trid);
+	} else {
+		return ret;
+	}
+}
+
 struct spdk_nvmf_transport_poll_group *
 spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 {
