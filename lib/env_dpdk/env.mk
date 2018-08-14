@@ -78,6 +78,10 @@ ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_bus_pci.*))
 DPDK_LIB_LIST += rte_bus_pci
 endif
 
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
+DPDK_LIB_LIST += rte_kvargs
+endif
+
 DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
 
 # SPDK memory registration requires experimental (deprecated) rte_memory API for DPDK 18.05
