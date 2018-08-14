@@ -28,6 +28,8 @@ I/O queue depth tracking and samples options have been added. See
 spdk_bdev_get_qd(), spdk_bdev_get_qd_sampling_period(), and
 spdk_bdev_set_qd_sampling_period().
 
+spdk_bdev_alias_del_all() was added to delete all alias from block device.
+
 ### RAID module
 A new bdev module called "raid" has been added as experimental module which
 aggregates underlying NVMe bdevs and exposes a single raid bdev. Please note
