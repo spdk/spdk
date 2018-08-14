@@ -413,6 +413,11 @@ _bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
 		bvdev->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvdev, 0);
 	}
 
+	if (bvdev->bdev_io_channel) {
+		spdk_put_io_channel(bvdev->bdev_io_channel);
+		bvdev->bdev_io_channel = NULL;
+	}
+
 	spdk_bdev_close(bvdev->bdev_desc);
 	bvdev->bdev_desc = NULL;
 	bvdev->bdev = NULL;
