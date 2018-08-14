@@ -133,6 +133,7 @@ function get_ip_address()
 function nvmfcleanup()
 {
 	sync
+	sleep 3
 	rmmod nvme-rdma
 }
 
