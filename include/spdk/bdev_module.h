@@ -590,6 +590,13 @@ int spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias);
 int spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias);
 
 /**
+ * Removes all alias from block device alias list.
+ *
+ * \param bdev Block device to operate.
+ */
+void spdk_bdev_alias_del_all(struct spdk_bdev *bdev);
+
+/**
  * Get pointer to block device aliases list.
  *
  * \param bdev Block device to query.
