@@ -34,6 +34,24 @@
       "revId": "6ce20798487d443df0b78cf050c732ce99d868f8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ba28c46_a05fd917",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-14T14:36:26Z",
+      "side": 1,
+      "message": "Yeah, Darek is right. There are quite a few other files in that directory.",
+      "parentUuid": "586eaca8_59fa487b",
+      "revId": "6ce20798487d443df0b78cf050c732ce99d868f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
