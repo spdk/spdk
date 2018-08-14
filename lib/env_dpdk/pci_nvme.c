@@ -52,7 +52,11 @@ static struct rte_pci_id nvme_pci_driver_id[] = {
 
 static struct spdk_pci_enum_ctx g_nvme_pci_drv = {
 	.driver = {
-		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING,
+		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 8, 0, 0)
+		| RTE_PCI_DRV_WC_ACTIVATE
+#endif
+		,
 		.id_table	= nvme_pci_driver_id,
 #if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 		.probe		= spdk_pci_device_init,
