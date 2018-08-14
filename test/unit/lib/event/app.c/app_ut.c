@@ -60,6 +60,7 @@ DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_han
 		uint32_t state_mask));
 DEFINE_STUB_V(spdk_rpc_set_state, (uint32_t state));
 DEFINE_STUB(spdk_rpc_get_state, uint32_t, (void), SPDK_RPC_RUNTIME);
+DEFINE_STUB_V(spdk_app_json_config_load, (const char *json_path, struct spdk_event *done_event));
 
 static void
 unittest_usage(void)
