@@ -105,6 +105,24 @@
       "revId": "6c5b56ed781a1414632b3e3919dde286a55e95ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "064c8dd3_9f8e56c2",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-08-14T02:18:17Z",
+      "side": 1,
+      "message": "I can confirm. Changpeng\u0027s question is already addressed. This is related with read task. For read task, we will not free the primary task. So we should do it here. For the pdu remove, it is already done in spdk_iscsi_conn_free_pdu function.",
+      "parentUuid": "fa86744b_3770be7e",
+      "revId": "6c5b56ed781a1414632b3e3919dde286a55e95ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
