@@ -56,7 +56,7 @@ spdk_allocate_thread().
 From an allocated thread, the bdev library may be initialized by calling
 spdk_bdev_initialize(), which is an asynchronous operation. Until the completion
 callback is called, no other bdev library functions may be invoked. Similarly,
-to tear down the bdev library, call spdk_bdev_finish.
+to tear down the bdev library, call spdk_bdev_finish().
 
 ## Discovering Block Devices
 
@@ -105,7 +105,7 @@ Once a descriptor and a channel have been obtained, I/O may be sent by calling
 the various I/O submission functions such as spdk_bdev_read(). These calls each
 take a callback as an argument which will be called some time later with a
 handle to an spdk_bdev_io object. In response to that completion, the user
-must call spdk_free_bdev_io() to release the resources. Within this callback,
+must call spdk_bdev_free_io() to release the resources. Within this callback,
 the user may also use the functions spdk_bdev_io_get_nvme_status() and
 spdk_bdev_io_get_scsi_status() to obtain error information in the format of
 their choosing.
