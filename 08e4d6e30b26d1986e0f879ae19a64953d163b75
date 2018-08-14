@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77ffc991_66aa1737",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-14T14:40:17Z",
+      "side": 1,
+      "message": "Darek have a point. So maybe move this to no_bdev_vdev_worker and if bvdev-\u003evdev.task_cnt \u003d\u003d 0 then put io channel.",
+      "range": {
+        "startLine": 416,
+        "startChar": 0,
+        "endLine": 419,
+        "endChar": 2
+      },
+      "revId": "08e4d6e30b26d1986e0f879ae19a64953d163b75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
