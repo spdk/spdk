@@ -18,6 +18,10 @@ each of the SPDK static ones.  Although the production of the shared
 libs conforms with conventional version naming practices, such naming
 does not at this time confer any SPDK ABI compatibility claims.
 
+### bdev
+
+spdk_bdev_alias_del_all() was added to delete all alias from block device.
+
 ## v18.07:
 
 ### bdev
