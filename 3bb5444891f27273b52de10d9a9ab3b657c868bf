@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ac2cfa80_dd6ae866",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1013512
+      },
+      "writtenOn": "2018-08-14T10:44:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8df6d005_6357c385",
+      "range": {
+        "startLine": 81,
+        "startChar": 8,
+        "endLine": 81,
+        "endChar": 9
+      },
+      "revId": "3bb5444891f27273b52de10d9a9ab3b657c868bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c17f40d5_8fde989c",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-08-14T08:18:24Z",
       "side": 1,
       "message": "spdk_json_strequal() can be used to avoid string copy-free.",
+      "range": {
+        "startLine": 1570,
+        "startChar": 1,
+        "endLine": 1570,
+        "endChar": 48
+      },
+      "revId": "3bb5444891f27273b52de10d9a9ab3b657c868bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f59a0d8e_e03643fc",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1570,
+      "author": {
+        "id": 1013512
+      },
+      "writtenOn": "2018-08-14T10:44:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c17f40d5_8fde989c",
       "range": {
         "startLine": 1570,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "ef8c710c_079d8c99",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1013512
+      },
+      "writtenOn": "2018-08-14T10:44:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e87b282_c54a572e",
+      "range": {
+        "startLine": 64,
+        "startChar": 36,
+        "endLine": 64,
+        "endChar": 37
+      },
+      "revId": "3bb5444891f27273b52de10d9a9ab3b657c868bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f9f66628_f32580b6",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2018-08-14T08:18:24Z",
       "side": 1,
       "message": "Please expose this so conn_sched_string won\u0027t be needed as global. In general pls avoid globals as much as possible.",
+      "range": {
+        "startLine": 229,
+        "startChar": 13,
+        "endLine": 229,
+        "endChar": 34
+      },
+      "revId": "3bb5444891f27273b52de10d9a9ab3b657c868bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7adc19b_395dbf37",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1013512
+      },
+      "writtenOn": "2018-08-14T10:44:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f9f66628_f32580b6",
       "range": {
         "startLine": 229,
         "startChar": 13,
