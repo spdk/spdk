@@ -104,6 +104,18 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 }
 
 void
+spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_alias *p, *tmp;
+
+	TAILQ_FOREACH_SAFE(p, &bdev->aliases, tailq, tmp) {
+		TAILQ_REMOVE(&bdev->aliases, p, tailq);
+		free(p->alias);
+		free(p);
+	}
+}
+
+void
 spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
 {
 }
