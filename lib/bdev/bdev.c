@@ -1566,6 +1566,18 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 	return -ENOENT;
 }
 
+void
+spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_alias *p, *tmp;
+
+	TAILQ_FOREACH_SAFE(p, &bdev->aliases, tailq, tmp) {
+		TAILQ_REMOVE(&bdev->aliases, p, tailq);
+		free(p->alias);
+		free(p);
+	}
+}
+
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
