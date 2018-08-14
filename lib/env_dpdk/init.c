@@ -246,7 +246,7 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 	/* set the memory size */
-	if (opts->mem_size > 0) {
+	if (opts->mem_size >= 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("-m %d", opts->mem_size));
 		if (args == NULL) {
 			return -1;
