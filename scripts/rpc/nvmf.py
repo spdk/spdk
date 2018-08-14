@@ -6,7 +6,8 @@ def set_nvmf_target_options(client,
                             in_capsule_data_size=None,
                             max_io_size=None,
                             max_subsystems=None,
-                            io_unit_size=None):
+                            io_unit_size=None,
+                            conn_sched=None):
     """Set NVMe-oF target options.
 
     Args:
@@ -16,6 +17,7 @@ def set_nvmf_target_options(client,
         max_io_size: Maximum I/O data size in bytes (optional)
         max_subsystems: Maximum number of NVMe-oF subsystems (optional)
         io_unit_size: I/O unit size in bytes (optional)
+        conn_sched: Scheduling of incoming connections (optional)
 
     Returns:
         True or False
@@ -34,6 +36,8 @@ def set_nvmf_target_options(client,
         params['max_subsystems'] = max_subsystems
     if io_unit_size:
         params['io_unit_size'] = io_unit_size
+    if conn_sched:
+        params['conn_sched'] = conn_sched
     return client.call('set_nvmf_target_options', params)
 
 

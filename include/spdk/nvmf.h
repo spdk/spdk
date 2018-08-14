@@ -62,6 +62,15 @@ struct spdk_nvmf_listener;
 struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 
+enum spdk_nvmf_connect_sched {
+	CONNECT_SCHED_ROUND_ROBIN = 0,
+	CONNECT_SCHED_HOST_IP,
+};
+extern char *conn_sched_string[];
+
+extern uint32_t g_tgt_core;
+uint32_t spdk_nvmf_get_qpair_core(struct spdk_nvmf_qpair *qpair);
+
 struct spdk_nvmf_tgt_opts {
 	uint16_t max_queue_depth;
 	uint16_t max_qpairs_per_ctrlr;
@@ -69,6 +78,7 @@ struct spdk_nvmf_tgt_opts {
 	uint32_t max_io_size;
 	uint32_t max_subsystems;
 	uint32_t io_unit_size;
+	uint8_t	conn_sched;
 };
 /**
  * Initialize the default value of opts.

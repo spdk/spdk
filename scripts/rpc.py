@@ -1144,7 +1144,8 @@ if __name__ == "__main__":
                                          in_capsule_data_size=args.in_capsule_data_size,
                                          max_io_size=args.max_io_size,
                                          max_subsystems=args.max_subsystems,
-                                         io_unit_size=args.io_unit_size)
+                                         io_unit_size=args.io_unit_size,
+                                         conn_sched=args.conn_sched)
 
     p = subparsers.add_parser('set_nvmf_target_options', help='Set NVMf target options')
     p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int)
@@ -1153,6 +1154,10 @@ if __name__ == "__main__":
     p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
     p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int)
     p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
+    p.add_argument('-s', '--conn-sched', help="""'roundrobin' - Schedule the incoming connections from any host
+    on the cores in a round robin manner (Default). 'hostip' - Schedule all the incoming connections from a
+    specific host IP on to the same core. Connections from different IP will be assigned to cores in a round
+    robin manner""")
     p.set_defaults(func=set_nvmf_target_options)
 
     @call_cmd
