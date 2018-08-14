@@ -59,11 +59,23 @@ struct nvmf_tgt_poll_group {
 	struct spdk_nvmf_poll_group *group;
 };
 
+struct nvmf_tgt_host_trid {
+	struct spdk_nvme_transport_id       host_trid;
+	uint32_t                            core;
+	uint32_t                            ref;
+	TAILQ_ENTRY(nvmf_tgt_host_trid)     link;
+};
+
+/* List of host trids that are connected to the target */
+static TAILQ_HEAD(, nvmf_tgt_host_trid) g_nvmf_tgt_host_trids =
+	TAILQ_HEAD_INITIALIZER(g_nvmf_tgt_host_trids);
+
 struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 
 static enum nvmf_tgt_state g_tgt_state;
 
-static uint32_t g_tgt_core; /* Round-robin tracking of cores for qpair assignment */
+/* Round-Robin/IP-based tracking of cores for qpair assignment */
+static uint32_t g_tgt_core;
 
 static struct nvmf_tgt_poll_group *g_poll_groups = NULL;
 static size_t g_num_poll_groups = 0;
@@ -111,6 +123,68 @@ nvmf_tgt_poll_group_add(void *arg1, void *arg2)
 	spdk_nvmf_poll_group_add(pg->group, qpair);
 }
 
+/* Round robin selection of cores */
+static uint32_t
+spdk_nvmf_get_core_rr(void)
+{
+	uint32_t core;
+
+	core = g_tgt_core;
+	g_tgt_core = spdk_env_get_next_core(core);
+	if (g_tgt_core == UINT32_MAX) {
+		g_tgt_core = spdk_env_get_first_core();
+	}
+
+	return core;
+}
+
+static uint32_t
+nvmf_tgt_get_qpair_core(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvme_transport_id trid;
+	struct nvmf_tgt_host_trid *tmp_trid = NULL, *new_trid = NULL;
+	int ret;
+	uint32_t core = 0;
+
+	switch (g_spdk_nvmf_tgt_conf->conn_sched) {
+	case CONNECT_SCHED_HOST_IP:
+		ret = spdk_nvmf_qpair_get_src_trid(qpair, &trid);
+		if (ret) {
+			SPDK_ERRLOG("Invalid host transport Id. Assigning to core %d\n", core);
+			break;
+		}
+
+		TAILQ_FOREACH(tmp_trid, &g_nvmf_tgt_host_trids, link) {
+			if (tmp_trid && !strncmp(tmp_trid->host_trid.traddr,
+						 trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
+				tmp_trid->ref++;
+				core = tmp_trid->core;
+				break;
+			}
+		}
+		if (!tmp_trid) {
+			new_trid = calloc(1, sizeof(*new_trid));
+			if (!new_trid) {
+				SPDK_ERRLOG("Insufficient memory. Assigning to core %d\n", core);
+				break;
+			}
+			/* Get the next available core for the new host */
+			core = spdk_nvmf_get_core_rr();
+			new_trid->core = core;
+			memcpy(new_trid->host_trid.traddr, trid.traddr,
+			       SPDK_NVMF_TRADDR_MAX_LEN + 1);
+			TAILQ_INSERT_TAIL(&g_nvmf_tgt_host_trids, new_trid, link);
+		}
+		break;
+	case CONNECT_SCHED_ROUND_ROBIN:
+	default:
+		core = spdk_nvmf_get_core_rr();
+		break;
+	}
+
+	return core;
+}
+
 static void
 new_qpair(struct spdk_nvmf_qpair *qpair)
 {
@@ -123,11 +197,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 		return;
 	}
 
-	core = g_tgt_core;
-	g_tgt_core = spdk_env_get_next_core(core);
-	if (g_tgt_core == UINT32_MAX) {
-		g_tgt_core = spdk_env_get_first_core();
-	}
+	core = nvmf_tgt_get_qpair_core(qpair);
 
 	pg = &g_poll_groups[core];
 	assert(pg != NULL);
@@ -334,6 +404,19 @@ spdk_nvmf_subsystem_init(void)
 	nvmf_tgt_advance_state();
 }
 
+static char *
+get_conn_sched_string(enum spdk_nvmf_connect_sched sched)
+{
+	if (sched == CONNECT_SCHED_ROUND_ROBIN) {
+		return "roundrobin";
+	} else if (sched == CONNECT_SCHED_HOST_IP) {
+		return "hostip";
+	} else {
+		SPDK_ERRLOG("Invalid connection scheduling method\n");
+		return NULL;
+	}
+}
+
 static void
 spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
 {
@@ -344,6 +427,8 @@ spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w, struct spdk
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_uint32(w, "acceptor_poll_rate", g_spdk_nvmf_tgt_conf->acceptor_poll_rate);
+	spdk_json_write_named_string(w, "conn_sched",
+				     get_conn_sched_string(g_spdk_nvmf_tgt_conf->conn_sched));
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 

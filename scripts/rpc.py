@@ -1258,10 +1258,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     @call_cmd
     def set_nvmf_target_config(args):
         rpc.nvmf.set_nvmf_target_config(args.client,
-                                        acceptor_poll_rate=args.acceptor_poll_rate)
+                                        acceptor_poll_rate=args.acceptor_poll_rate,
+                                        conn_sched=args.conn_sched)
 
     p = subparsers.add_parser('set_nvmf_target_config', help='Set NVMf target config')
     p.add_argument('-r', '--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
+    p.add_argument('-s', '--conn-sched', help="""'roundrobin' - Schedule the incoming connections from any host
+    on the cores in a round robin manner (Default). 'hostip' - Schedule all the incoming connections from a
+    specific host IP on to the same core. Connections from different IP will be assigned to cores in a round
+    robin manner""")
     p.set_defaults(func=set_nvmf_target_config)
 
     @call_cmd
