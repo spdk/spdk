@@ -2,6 +2,18 @@
 
 ## v18.10: (Upcoming Release)
 
+### Build System
+
+New `configure` options, `--with-shared` and `--without-shared`
+[default], provide the capability to build, or not, SPDK shared libraries.
+This includes the single SPDK shared lib encompassing all of the SPDK
+static libs as well as individual SPDK shared libs corresponding to
+each of the SPDK static ones.  Although the production of the shared
+libs conforms with conventional version naming practices, such naming
+does not at this time confer any SPDK ABI compatibility claims.
+At this juncture, the build of SPDK shared libs is limited to Linux;
+i.e. not supported yet on FreeBSD.
+
 ## v18.07:
 
 ### bdev
