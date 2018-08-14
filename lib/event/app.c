@@ -41,10 +41,10 @@
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
-#define SPDK_APP_MAX_CMDLINE_OPTIONS		64
 
 #define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		-1
 #define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	-1
@@ -74,7 +74,7 @@ spdk_app_get_shm_id(void)
 }
 
 /* append one empty option to indicate the end of the array */
-static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
+static const struct option g_cmdline_options[] = {
 #define CONFIG_FILE_OPT_IDX	'c'
 	{"config",			required_argument,	NULL, CONFIG_FILE_OPT_IDX},
 #define LIMIT_COREDUMP_OPT_IDX 'd'
@@ -111,10 +111,7 @@ static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
 	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
 #define WAIT_FOR_RPC_OPT_IDX	258
 	{"wait-for-rpc",		no_argument,		NULL, WAIT_FOR_RPC_OPT_IDX},
-	{NULL,				no_argument,		NULL, 0}
 };
-
-static char g_cmdline_short_opts[2 * SPDK_APP_MAX_CMDLINE_OPTIONS + 1];
 
 /* Global section */
 #define GLOBAL_CONFIG_TMPL \
@@ -731,6 +728,8 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		    void (*app_usage)(void))
 {
 	int ch, rc, opt_idx, global_long_opts_len, app_long_opts_len;
+	struct option *cmdline_options;
+	char *cmdline_short_opts = NULL;
 	enum spdk_app_parse_args_rvals retval = SPDK_APP_PARSE_ARGS_FAIL;
 
 	memcpy(&g_default_opts, opts, sizeof(g_default_opts));
@@ -747,20 +746,17 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		     app_long_opts_len++);
 	}
 
-	for (global_long_opts_len = 0;
-	     g_cmdline_options[global_long_opts_len].name != NULL;
-	     global_long_opts_len++);
+	global_long_opts_len = SPDK_COUNTOF(g_cmdline_options);
 
-	if (app_long_opts_len + global_long_opts_len > SPDK_APP_MAX_CMDLINE_OPTIONS) {
-		fprintf(stderr, "Too many parseable command line options in %s()."
-			" (got %d, max %d)\n", __func__,
-			app_long_opts_len + global_long_opts_len,
-			SPDK_APP_MAX_CMDLINE_OPTIONS);
-		goto out;
+	cmdline_options = calloc(global_long_opts_len + app_long_opts_len + 1, sizeof(*cmdline_options));
+	if (!cmdline_options) {
+		fprintf(stderr, "Out of memory\n");
+		return SPDK_APP_PARSE_ARGS_FAIL;
 	}
 
+	memcpy(&cmdline_options[0], g_cmdline_options, sizeof(g_cmdline_options));
 	if (app_long_opts) {
-		memcpy(&g_cmdline_options[global_long_opts_len], app_long_opts,
+		memcpy(&cmdline_options[global_long_opts_len], app_long_opts,
 		       app_long_opts_len * sizeof(*app_long_opts));
 	}
 
@@ -773,13 +769,15 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		}
 	}
 
-	snprintf(g_cmdline_short_opts, sizeof(g_cmdline_short_opts),
-		 "%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
+	cmdline_short_opts = spdk_sprintf_alloc("%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
+	if (!cmdline_short_opts) {
+		fprintf(stderr, "Out of memory\n");
+		goto out;
+	}
 
 	g_executable_name = argv[0];
 
-	while ((ch = getopt_long(argc, argv, g_cmdline_short_opts,
-				 g_cmdline_options, &opt_idx)) != -1) {
+	while ((ch = getopt_long(argc, argv, cmdline_short_opts, cmdline_options, &opt_idx)) != -1) {
 		switch (ch) {
 		case CONFIG_FILE_OPT_IDX:
 			opts->config_file = optarg;
@@ -926,6 +924,8 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 
 	retval = SPDK_APP_PARSE_ARGS_SUCCESS;
 out:
+	free(cmdline_short_opts);
+	free(cmdline_options);
 	return retval;
 }
 
