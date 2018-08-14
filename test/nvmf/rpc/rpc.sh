@@ -9,6 +9,10 @@ rpc_py="python $rootdir/scripts/rpc.py"
 
 set -e
 
+# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
+# e.g. sudo ./rpc.sh iso
+nvmftestinit $1
+
 RDMA_IP_LIST=$(get_available_rdma_ips)
 NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 if [ -z $NVMF_FIRST_TARGET_IP ]; then
@@ -22,7 +26,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF --wait-for-rpc &
 pid=$!
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_nvmf_target_options -u 8192 -p 4
@@ -133,4 +137,5 @@ done
 trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
+nvmftestfini $1
 timing_exit rpc
