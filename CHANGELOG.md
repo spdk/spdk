@@ -8,6 +8,16 @@ spdk_nvme_ns_get_extended_sector_size() was added.  This function includes
 the metadata size per sector (if any).  spdk_nvme_ns_get_sector_size() still
 returns only the data size per sector, not including metadata.
 
+### Build System
+
+New `configure` options, `--with-shared` and `--without-shared`
+[default], provide the capability to build, or not, SPDK shared libraries.
+This includes the single SPDK shared lib encompassing all of the SPDK
+static libs as well as individual SPDK shared libs corresponding to
+each of the SPDK static ones.  Although the production of the shared
+libs conforms with conventional version naming practices, such naming
+does not at this time confer any SPDK ABI compatibility claims.
+
 ## v18.07:
 
 ### bdev
