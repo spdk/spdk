@@ -114,6 +114,31 @@ spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 	transport->ops->listener_discover(transport, trid, entry);
 }
 
+uint32_t spdk_nvmf_get_core_rr(void)
+{
+	uint32_t core;
+
+	core = g_tgt_core;
+	g_tgt_core = spdk_env_get_next_core(core);
+	if (g_tgt_core == UINT32_MAX) {
+		g_tgt_core = spdk_env_get_first_core();
+	}
+
+	return core;
+}
+
+uint32_t
+spdk_nvmf_transport_get_core(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_transport *transport = qpair->transport;
+
+	if (transport->ops->get_core) {
+		return transport->ops->get_core(qpair, tgt->opts.conn_sched);
+	} else {
+		return spdk_nvmf_get_core_rr();
+	}
+}
+
 struct spdk_nvmf_transport_poll_group *
 spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 {
