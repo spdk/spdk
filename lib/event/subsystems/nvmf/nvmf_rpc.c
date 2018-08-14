@@ -1562,6 +1562,22 @@ nvmf_rpc_subsystem_allow_any_host(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_allow_any_host", nvmf_rpc_subsystem_allow_any_host,
 		  SPDK_RPC_RUNTIME)
 
+static int decode_conn_sched(const struct spdk_json_val *val, void *out)
+{
+	enum spdk_nvmf_connect_sched *sched = out;
+
+	if (spdk_json_strequal(val, "roundrobin") == true) {
+		*sched = CONNECT_SCHED_ROUND_ROBIN;
+	} else if (spdk_json_strequal(val, "hostip") == true) {
+		*sched = CONNECT_SCHED_HOST_IP;
+	} else {
+		SPDK_ERRLOG("Invalid connection scheduling parameter\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_opts_decoder[] = {
 	{"max_queue_depth", offsetof(struct spdk_nvmf_tgt_opts, max_queue_depth), spdk_json_decode_uint16, true},
 	{"max_qpairs_per_ctrlr", offsetof(struct spdk_nvmf_tgt_opts, max_qpairs_per_ctrlr), spdk_json_decode_uint16, true},
@@ -1569,6 +1585,7 @@ static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_opts_decoder
 	{"max_io_size", offsetof(struct spdk_nvmf_tgt_opts, max_io_size), spdk_json_decode_uint32, true},
 	{"max_subsystems", offsetof(struct spdk_nvmf_tgt_opts, max_subsystems), spdk_json_decode_uint32, true},
 	{"io_unit_size", offsetof(struct spdk_nvmf_tgt_opts, io_unit_size), spdk_json_decode_uint32, true},
+	{"conn_sched", offsetof(struct spdk_nvmf_tgt_opts, conn_sched), decode_conn_sched, true},
 };
 
 static void
