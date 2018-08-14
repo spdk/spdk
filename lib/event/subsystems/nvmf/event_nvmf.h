@@ -43,9 +43,16 @@
 #include "spdk_internal/log.h"
 
 #define ACCEPT_TIMEOUT_US	10000 /* 10ms */
+#define DEFAULT_CONN_SCHED CONNECT_SCHED_ROUND_ROBIN
+
+enum spdk_nvmf_connect_sched {
+	CONNECT_SCHED_ROUND_ROBIN = 0,
+	CONNECT_SCHED_HOST_IP,
+};
 
 struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_poll_rate;
+	enum spdk_nvmf_connect_sched conn_sched;
 };
 
 extern struct spdk_nvmf_tgt_opts *g_spdk_nvmf_tgt_opts;
