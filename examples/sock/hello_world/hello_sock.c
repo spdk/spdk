@@ -385,7 +385,7 @@ main(int argc, char **argv)
 	opts.config_file = "sock.conf";
 	opts.shutdown_cb = hello_sock_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "H:P:SV", hello_sock_parse_arg,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "H:P:SV", NULL, hello_sock_parse_arg,
 				      hello_sock_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
