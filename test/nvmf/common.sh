@@ -136,6 +136,22 @@ function nvmfcleanup()
 	rmmod nvme-rdma
 }
 
+function nvmftestinit()
+{
+	if [ $1 == "init" ]; then
+		$rootdir/scripts/setup.sh
+		rdma_device_init
+	fi
+}
+
+function nvmftestfini()
+{
+	if [ $1 == "init" ]; then
+		$rootdir/scripts/setup.sh reset
+		rdma_device_init
+	fi
+}
+
 function rdma_device_init()
 {
 	load_ib_rdma_modules

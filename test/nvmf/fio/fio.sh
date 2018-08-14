@@ -12,6 +12,8 @@ rpc_py="python $rootdir/scripts/rpc.py"
 
 set -e
 
+nvmftestinit $1
+
 RDMA_IP_LIST=$(get_available_rdma_ips)
 NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 if [ -z $NVMF_FIRST_TARGET_IP ]; then
@@ -25,7 +27,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF --wait-for-rpc &
 nvmfpid=$!
 
-trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 $rpc_py set_nvmf_target_options -u 8192 -p 4
@@ -90,5 +92,6 @@ rm -f ./local-job2-2-verify.state
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
+nvmftestfini $1
 killprocess $nvmfpid
 timing_exit fio
