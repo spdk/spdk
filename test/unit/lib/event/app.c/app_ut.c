@@ -75,10 +75,8 @@ static void
 test_spdk_app_parse_args(void)
 {
 	spdk_app_parse_args_rvals_t rc;
-	int i;
 	struct spdk_app_opts opts = {};
-	struct option my_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {{0}};
-	char name_teaser[5] = "SPDK";
+	struct option my_options[2] = {};
 	char *valid_argv[test_argc] = {"app_ut",
 				       "--wait-for-rpc",
 				       "-d",
@@ -149,14 +147,6 @@ test_spdk_app_parse_args(void)
 	/* Test overlapping global and local options. Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, SPDK_APP_GETOPT_STRING, NULL,
 				 unittest_parse_args, NULL);
-	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
-	optind = 1;
-
-	/* Test too many long options. Expected result: FAIL */
-	for (i = 0; i < SPDK_APP_MAX_CMDLINE_OPTIONS; i++) {
-		my_options[i].name = name_teaser;
-	}
-	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, "", my_options, unittest_parse_args, NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 
