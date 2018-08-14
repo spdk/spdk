@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4e1bf102_d08f502a",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "70dced99_7b1b0e84",
+      "range": {
+        "startLine": 136,
+        "startChar": 38,
+        "endLine": 136,
+        "endChar": 83
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e20d2f3c_c0f1ca2c",
         "filename": "lib/blob/blob_bs_dev.c",
         "patchSetId": 14
@@ -36,6 +60,30 @@
       "writtenOn": "2018-08-09T08:03:48Z",
       "side": 1,
       "message": "Could be replaced with _spdk_bs_io_unit().",
+      "range": {
+        "startLine": 137,
+        "startChar": 22,
+        "endLine": 137,
+        "endChar": 45
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1627140e_3bbf5633",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "Even better: spdk_bs_get_io_unit_size",
+      "parentUuid": "e20d2f3c_c0f1ca2c",
       "range": {
         "startLine": 137,
         "startChar": 22,
@@ -164,6 +212,30 @@
     },
     {
       "key": {
+        "uuid": "8560d098_2963428e",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7bd58cc1_a12da273",
+      "range": {
+        "startLine": 423,
+        "startChar": 0,
+        "endLine": 423,
+        "endChar": 24
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4a615cba_1140f760",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 14
@@ -187,6 +259,30 @@
     },
     {
       "key": {
+        "uuid": "cc15a772_9715c87e",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "Yes, they can be different.\nFor example: Blob with thin provision enabled and blocklen \u003d\u003d SPDK_BS_PAGE_SIZE. \nback_bs_dev zeroes device however now always have blocklen \u003d\u003d 512.",
+      "parentUuid": "4a615cba_1140f760",
+      "range": {
+        "startLine": 425,
+        "startChar": 19,
+        "endLine": 425,
+        "endChar": 72
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e5f59201_479a36c0",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 14
@@ -198,6 +294,30 @@
       "writtenOn": "2018-08-09T08:03:48Z",
       "side": 1,
       "message": "Should be removed, see above.",
+      "range": {
+        "startLine": 428,
+        "startChar": 0,
+        "endLine": 432,
+        "endChar": 1
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1022ca51_3c29a6be",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e5f59201_479a36c0",
       "range": {
         "startLine": 428,
         "startChar": 0,
@@ -257,6 +377,30 @@
     },
     {
       "key": {
+        "uuid": "54ad50a1_3209e766",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "Convenience in naming. Changed only lba -\u003e io_unit.",
+      "parentUuid": "55fc8f6a_5fa51831",
+      "range": {
+        "startLine": 437,
+        "startChar": 8,
+        "endLine": 437,
+        "endChar": 58
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d34ef552_97beb83c",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 14
@@ -268,6 +412,30 @@
       "writtenOn": "2018-08-09T08:03:48Z",
       "side": 1,
       "message": "Is this name accurate ?",
+      "range": {
+        "startLine": 441,
+        "startChar": 0,
+        "endLine": 441,
+        "endChar": 19
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "340eaeab_13e75a94",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "d34ef552_97beb83c",
       "range": {
         "startLine": 441,
         "startChar": 0,
@@ -303,6 +471,30 @@
     },
     {
       "key": {
+        "uuid": "70b70284_4d32f5d0",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f79afe7f_b4b77d95",
+      "range": {
+        "startLine": 443,
+        "startChar": 1,
+        "endLine": 443,
+        "endChar": 62
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65fff3aa_e8c841a2",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 14
@@ -314,6 +506,30 @@
       "writtenOn": "2018-08-14T07:40:31Z",
       "side": 1,
       "message": "Result of this function should be exact same as from _spdk_bs_cluster_to_lba function.",
+      "range": {
+        "startLine": 453,
+        "startChar": 0,
+        "endLine": 453,
+        "endChar": 27
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b579a499_0e44f5f3",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "I think that is not true, Result depends on io_unit size, which might be equal to 512 or SPDK_BS_PAGE_SIZE.",
+      "parentUuid": "65fff3aa_e8c841a2",
       "range": {
         "startLine": 453,
         "startChar": 0,
@@ -383,6 +599,30 @@
       "writtenOn": "2018-08-14T07:40:31Z",
       "side": 1,
       "message": "You can just use _spdk_bs_lba_to_cluster here with io_unit as argument.",
+      "range": {
+        "startLine": 527,
+        "startChar": 29,
+        "endLine": 527,
+        "endChar": 53
+      },
+      "revId": "85ff4586eb63bb51f7dfe60780a33f96d7413437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "324d0a83_72d8b33a",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-14T13:22:11Z",
+      "side": 1,
+      "message": "assert(lba % (bs-\u003ecluster_sz / bs-\u003edev-\u003eblocklen) \u003d\u003d 0);q",
+      "parentUuid": "fadf0b8a_50d6a185",
       "range": {
         "startLine": 527,
         "startChar": 29,
