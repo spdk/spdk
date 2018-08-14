@@ -2,6 +2,10 @@
 
 ## v18.10: (Upcoming Release)
 
+### bdev
+
+spdk_bdev_alias_del_all() was added to delete all alias from block device.
+
 ## v18.07:
 
 ### bdev
