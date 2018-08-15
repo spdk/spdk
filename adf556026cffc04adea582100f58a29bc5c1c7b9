@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "352bf9cd_ad0fc7f1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 702,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-15T19:14:18Z",
+      "side": 1,
+      "message": "does errno get updated by ibv_post_send?  the man pages do not explicitly say so - it says it will return an errno, but doesn\u0027t say errno is set\n\ncompare this with readv/writev man pages for example - these explicitly say that -1 is returned and errno is set appropriately",
+      "revId": "adf556026cffc04adea582100f58a29bc5c1c7b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2624ec6_dc51f9fe",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-15T19:14:18Z",
+      "side": 1,
+      "message": "Does ibv_reg_mr set errno?  The man page does not indicate so.",
+      "revId": "adf556026cffc04adea582100f58a29bc5c1c7b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
