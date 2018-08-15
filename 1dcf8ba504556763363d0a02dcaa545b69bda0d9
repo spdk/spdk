@@ -16,6 +16,24 @@
       "revId": "1dcf8ba504556763363d0a02dcaa545b69bda0d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "665b3e63_c2726714",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1900,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-15T17:14:33Z",
+      "side": 1,
+      "message": "This function gets called each time the poll group is polled.\n\nIf a queue pair was disconnected, but still had I/O outstanding, then the first time it went into spdk_nvmf_rdma_qpair_destroy it just set the qpair_disconnected flag and returned. Then, each time spdk_nvmf_rdma_qpair_process_pending is called it attempts to destroy the qpair again here. If the qpair has no I/O outstanding, this will actually destroy it. Otherwise, it will just return again.",
+      "parentUuid": "ce68bdde_41cbe7ec",
+      "revId": "1dcf8ba504556763363d0a02dcaa545b69bda0d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
