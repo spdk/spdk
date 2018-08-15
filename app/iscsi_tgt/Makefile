@@ -44,9 +44,9 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
 C_SRCS := iscsi_tgt.c
 
-SPDK_LIB_LIST = event_bdev event_copy event_iscsi event_net event_scsi
+SPDK_LIB_LIST = event_bdev event_copy event_iscsi event_net event_scsi event
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev iscsi scsi copy trace conf
-SPDK_LIB_LIST += thread util log log_rpc event app_rpc net
+SPDK_LIB_LIST += thread util log log_rpc app_rpc net
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
