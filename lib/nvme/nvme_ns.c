@@ -170,6 +170,12 @@ spdk_nvme_ns_get_sector_size(struct spdk_nvme_ns *ns)
 	return ns->sector_size;
 }
 
+uint32_t
+spdk_nvme_ns_get_extended_sector_size(struct spdk_nvme_ns *ns)
+{
+	return ns->extended_lba_size;
+}
+
 uint64_t
 spdk_nvme_ns_get_num_sectors(struct spdk_nvme_ns *ns)
 {

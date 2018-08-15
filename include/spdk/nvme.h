@@ -1290,6 +1290,9 @@ uint32_t spdk_nvme_ns_get_max_io_xfer_size(struct spdk_nvme_ns *ns);
 /**
  * Get the sector size, in bytes, of the given namespace.
  *
+ * This function returns the size of the data sector only.  It does not
+ * include metadata size.
+ *
  * This function is thread safe and can be called at any point while the controller
  * is attached to the SPDK NVMe driver.
  *
@@ -1298,6 +1301,20 @@ uint32_t spdk_nvme_ns_get_max_io_xfer_size(struct spdk_nvme_ns *ns);
  * /return the sector size in bytes.
  */
 uint32_t spdk_nvme_ns_get_sector_size(struct spdk_nvme_ns *ns);
+
+/**
+ * Get the extended sector size, in bytes, of the given namespace.
+ *
+ * This function returns the size of the data sector plus metadata.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace to query.
+ *
+ * /return the extended sector size in bytes.
+ */
+uint32_t spdk_nvme_ns_get_extended_sector_size(struct spdk_nvme_ns *ns);
 
 /**
  * Get the number of sectors for the given namespace.
