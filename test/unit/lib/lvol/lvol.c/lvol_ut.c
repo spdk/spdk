@@ -459,12 +459,6 @@ spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 }
 
 static void
-_lvol_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	fn(ctx);
-}
-
-static void
 lvol_store_op_with_handle_complete(void *cb_arg, struct spdk_lvol_store *lvol_store, int lvserrno)
 {
 	g_lvol_store = lvol_store;
@@ -511,7 +505,7 @@ lvs_init_unload_success(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
 
@@ -561,7 +555,7 @@ lvs_init_destroy_success(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
 
@@ -606,7 +600,7 @@ lvs_init_opts_success(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	g_lvserrno = -1;
 
@@ -635,7 +629,7 @@ lvs_unload_lvs_is_null_fail(void)
 {
 	int rc = 0;
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_unload(NULL, lvol_store_op_complete, NULL);
@@ -657,7 +651,7 @@ lvs_names(void)
 	init_dev(&dev_y);
 	init_dev(&dev_x2);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts_none);
 	spdk_lvs_opts_init(&opts_x);
@@ -763,7 +757,7 @@ lvol_create_destroy_success(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -803,7 +797,7 @@ lvol_create_fail(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -850,7 +844,7 @@ lvol_destroy_fail(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -889,7 +883,7 @@ lvol_close_fail(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -926,7 +920,7 @@ lvol_close_success(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -964,7 +958,7 @@ lvol_resize(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -1048,7 +1042,7 @@ lvs_load(void)
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	/* Fail on bs load */
 	dev.load_status = -1;
@@ -1173,7 +1167,7 @@ lvols_load(void)
 	spdk_blob_set_xattr(blob3, "name", "lvol3", strnlen("lvol3", SPDK_LVOL_NAME_MAX) + 1);
 	blob3->uuid[SPDK_UUID_STRING_LEN - 2] = '3';
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	/* Load lvs with 0 blobs */
 	g_lvserrno = 0;
@@ -1284,7 +1278,7 @@ lvol_open(void)
 	spdk_blob_set_xattr(blob3, "name", "lvol3", strnlen("lvol3", SPDK_LVOL_NAME_MAX) + 1);
 	blob3->uuid[SPDK_UUID_STRING_LEN - 2] = '3';
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, blob1, link);
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, blob2, link);
@@ -1345,7 +1339,7 @@ lvol_snapshot(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -1396,7 +1390,7 @@ lvol_snapshot_fail(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -1464,7 +1458,7 @@ lvol_clone(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -1528,7 +1522,7 @@ lvol_clone_fail(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -1606,7 +1600,7 @@ lvol_names(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -1704,7 +1698,7 @@ lvol_rename(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -1776,7 +1770,7 @@ lvs_rename(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -1855,7 +1849,7 @@ static void lvol_refcnt(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
 
@@ -1916,7 +1910,7 @@ lvol_create_thin_provisioned(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -1969,7 +1963,7 @@ lvol_inflate(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
@@ -2022,7 +2016,7 @@ lvol_decouple_parent(void)
 
 	init_dev(&dev);
 
-	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
