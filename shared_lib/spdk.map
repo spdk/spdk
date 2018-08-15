@@ -1,4 +1,8 @@
 {
-	global: spdk_*;
+	global:
+
+	spdk_*;
+	rte_vhost_*;
+
 	local: *;
 };
