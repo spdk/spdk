@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "445fda17_ee292c3d",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-15T01:01:24Z",
+      "side": 1,
+      "message": "I think in the commit message, and here, we should explain how and why this \"init\" string is used.  It took me a minute to figure it out.  :)  It might even be worth putting a one-liner before it\u0027s used in each of the nvmf test scripts.  Something simple like:\n\n# Call this script with \"init\" as parameter to trigger RDMA device initialization",
+      "revId": "d64ed8ced3ac7369bc256c680c20fb17e18c9dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9db7ee7d_f47049a3",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-15T01:01:24Z",
+      "side": 1,
+      "message": "semicolon not needed here",
+      "revId": "d64ed8ced3ac7369bc256c680c20fb17e18c9dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
