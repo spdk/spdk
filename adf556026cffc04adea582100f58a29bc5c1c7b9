@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "61312b06_36a1e311",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-15T19:15:01Z",
+      "side": 1,
+      "message": "commit message says its adding an assert, but the code is only changing the log messages",
+      "revId": "adf556026cffc04adea582100f58a29bc5c1c7b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "352bf9cd_ad0fc7f1",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
