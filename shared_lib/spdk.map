@@ -1,4 +1,13 @@
 {
-	global: spdk_*;
+	global:
+
+	spdk_*;
+	rte_vhost_*;
+	virt*;
+	SPDK_LOG*;
+	g_subsystems;
+	g_subsystems_deps;
+	g_spdk_iscsi_opts;
+
 	local: *;
 };
