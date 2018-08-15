@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
-#include "CUnit/Basic.h"
 
 #include "iscsi/conn.c"
 
