@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61c35888_9e2f7198",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-15T23:37:41Z",
+      "side": 1,
+      "message": "FreeBSD",
+      "revId": "b3e06fcd74aefa8857ba4427441b8d990fa22749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2930fa23_7b3b794f",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-15T23:37:41Z",
+      "side": 1,
+      "message": "WARNING: The Infiniband Verbs opcode Send With Invalidate is either not supported or is not functional with the current version of libibverbs installed on this system. Please upgrade to at least version 1.1.\n\nBeginning with Linux kernel 4.14, the kernel NVMe-oF initiator leverages Send With Invalidate RDMA operations to improve performance. Failing to use the Send With Invalidate operation on the NVMe-oF target side results in full functionality, but greatly reduced performance. The SPDK NVMe-oF target will be unable to leverage that operation using the currently installed version of libibverbs, so Linux kernel NVMe-oF initiators based on kernels greater than or equal to 4.14 will see significantly reduced performance.",
+      "revId": "b3e06fcd74aefa8857ba4427441b8d990fa22749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
