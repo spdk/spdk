@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "be91c567_2cc0002f",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-15T15:19:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "445fda17_ee292c3d",
+      "revId": "d64ed8ced3ac7369bc256c680c20fb17e18c9dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9db7ee7d_f47049a3",
         "filename": "test/nvmf/shutdown/shutdown.sh",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-15T01:01:24Z",
       "side": 1,
       "message": "semicolon not needed here",
+      "revId": "d64ed8ced3ac7369bc256c680c20fb17e18c9dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ccf0fe9f_fc52cae1",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-15T15:19:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9db7ee7d_f47049a3",
       "revId": "d64ed8ced3ac7369bc256c680c20fb17e18c9dcf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
