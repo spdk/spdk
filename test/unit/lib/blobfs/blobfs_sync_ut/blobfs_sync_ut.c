@@ -64,12 +64,6 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 	return -1;
 }
 
-static void
-_fs_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
-{
-	fn(ctx);
-}
-
 struct ut_request {
 	fs_request_fn fn;
 	void *arg;
@@ -144,12 +138,18 @@ fs_op_with_handle_complete(void *ctx, struct spdk_filesystem *fs, int fserrno)
 static void
 _fs_init(void *arg)
 {
+	struct spdk_thread *thread;
 	struct spdk_bs_dev *dev;
 
 	g_fs = NULL;
 	g_fserrno = -1;
 	dev = init_dev();
+	thread = spdk_get_thread();
 	spdk_fs_init(dev, NULL, send_request, fs_op_with_handle_complete, NULL);
+	spdk_set_thread(NULL);
+	while (spdk_thread_poll(thread, 0) > 0) {}
+	spdk_set_thread(thread);
+
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 }
@@ -157,8 +157,14 @@ _fs_init(void *arg)
 static void
 _fs_unload(void *arg)
 {
+	struct spdk_thread *thread;
+
 	g_fserrno = -1;
+	thread = spdk_get_thread();
 	spdk_fs_unload(g_fs, fs_op_complete, NULL);
+	spdk_set_thread(NULL);
+	while (spdk_thread_poll(thread, 0) > 0) {}
+	spdk_set_thread(thread);
 	CU_ASSERT(g_fserrno == 0);
 	g_fs = NULL;
 }
@@ -208,6 +214,7 @@ cache_write_null_buffer(void)
 	uint64_t length;
 	int rc;
 	struct spdk_io_channel *channel;
+	struct spdk_thread *thread;
 
 	ut_send_request(_fs_init, NULL);
 
@@ -230,6 +237,11 @@ cache_write_null_buffer(void)
 
 	spdk_fs_free_io_channel(channel);
 
+	thread = spdk_get_thread();
+	spdk_set_thread(NULL);
+	while (spdk_thread_poll(thread, 0) > 0) {}
+	spdk_set_thread(thread);
+
 	ut_send_request(_fs_unload, NULL);
 }
 
@@ -238,6 +250,7 @@ fs_create_sync(void)
 {
 	int rc;
 	struct spdk_io_channel *channel;
+	struct spdk_thread *thread;
 
 	ut_send_request(_fs_init, NULL);
 
@@ -256,6 +269,11 @@ fs_create_sync(void)
 
 	spdk_fs_free_io_channel(channel);
 
+	thread = spdk_get_thread();
+	spdk_set_thread(NULL);
+	while (spdk_thread_poll(thread, 0) > 0) {}
+	spdk_set_thread(thread);
+
 	ut_send_request(_fs_unload, NULL);
 }
 
@@ -265,6 +283,7 @@ cache_append_no_cache(void)
 	int rc;
 	char buf[100];
 	struct spdk_io_channel *channel;
+	struct spdk_thread *thread;
 
 	ut_send_request(_fs_init, NULL);
 
@@ -293,6 +312,11 @@ cache_append_no_cache(void)
 
 	spdk_fs_free_io_channel(channel);
 
+	thread = spdk_get_thread();
+	spdk_set_thread(NULL);
+	while (spdk_thread_poll(thread, 0) > 0) {}
+	spdk_set_thread(thread);
+
 	ut_send_request(_fs_unload, NULL);
 }
 
@@ -302,6 +326,7 @@ fs_delete_file_without_close(void)
 	int rc;
 	struct spdk_io_channel *channel;
 	struct spdk_file *file;
+	struct spdk_thread *thread;
 
 	ut_send_request(_fs_init, NULL);
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
@@ -326,6 +351,11 @@ fs_delete_file_without_close(void)
 
 	spdk_fs_free_io_channel(channel);
 
+	thread = spdk_get_thread();
+	spdk_set_thread(NULL);
+	while (spdk_thread_poll(thread, 0) > 0) {}
+	spdk_set_thread(thread);
+
 	ut_send_request(_fs_unload, NULL);
 
 }
@@ -343,7 +373,7 @@ spdk_thread(void *arg)
 	struct spdk_thread *thread;
 	struct ut_request *req;
 
-	thread = spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread1");
+	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread1");
 	spdk_set_thread(thread);
 
 	while (1) {
@@ -358,6 +388,10 @@ spdk_thread(void *arg)
 			g_req = NULL;
 		}
 		pthread_mutex_unlock(&g_mutex);
+
+		spdk_set_thread(NULL);
+		spdk_thread_poll(thread, 0);
+		spdk_set_thread(thread);
 	}
 
 	spdk_free_thread();
@@ -393,7 +427,7 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	thread = spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
 	spdk_set_thread(thread);
 
 	pthread_create(&spdk_tid, NULL, spdk_thread, NULL);
