@@ -42,10 +42,12 @@
 
 #include "spdk_cunit.h"
 #include "unit/lib/blob/bs_dev_common.c"
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 #include "blobfs/blobfs.c"
 #include "blobfs/tree.c"
+#include "blob/blobstore.h"
 
+struct spdk_bs_dev *g_dev;
 struct spdk_filesystem *g_fs;
 struct spdk_file *g_file;
 int g_fserrno;
@@ -65,73 +67,20 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 }
 
 static void
-_fs_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
-{
-	fn(ctx);
-}
-
-struct ut_request {
-	fs_request_fn fn;
-	void *arg;
-	volatile int done;
-	int from_ut;
-};
-
-static struct ut_request *g_req = NULL;
-static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static void
 send_request(fs_request_fn fn, void *arg)
 {
-	struct ut_request *req;
+	set_thread(1);
+	fn(arg);
 
-	req = calloc(1, sizeof(*req));
-	assert(req != NULL);
-	req->fn = fn;
-	req->arg = arg;
-	req->done = 0;
-	req->from_ut = 0;
-
-	pthread_mutex_lock(&g_mutex);
-	g_req = req;
-	pthread_mutex_unlock(&g_mutex);
-}
-
-static void
-ut_send_request(fs_request_fn fn, void *arg)
-{
-	struct ut_request req;
-
-
-	req.fn = fn;
-	req.arg = arg;
-	req.done = 0;
-	req.from_ut = 1;
-
-	pthread_mutex_lock(&g_mutex);
-	g_req = &req;
-	pthread_mutex_unlock(&g_mutex);
-
-	while (1) {
-		pthread_mutex_lock(&g_mutex);
-		if (req.done == 1) {
-			pthread_mutex_unlock(&g_mutex);
-			break;
-		}
-		pthread_mutex_unlock(&g_mutex);
-	}
-
-	/*
-	 * Make sure the address of the local req variable is not in g_req when we exit this
-	 * function to make static analysis tools happy.
-	 */
-	g_req = NULL;
+	poll_threads();
+	set_thread(0);
 }
 
 static void
 fs_op_complete(void *ctx, int fserrno)
 {
 	g_fserrno = fserrno;
+	*(bool *)ctx = true;
 }
 
 static void
@@ -139,17 +88,26 @@ fs_op_with_handle_complete(void *ctx, struct spdk_filesystem *fs, int fserrno)
 {
 	g_fs = fs;
 	g_fserrno = fserrno;
+	*(bool *)ctx = true;
 }
 
 static void
 _fs_init(void *arg)
 {
-	struct spdk_bs_dev *dev;
-
 	g_fs = NULL;
 	g_fserrno = -1;
-	dev = init_dev();
-	spdk_fs_init(dev, NULL, send_request, fs_op_with_handle_complete, NULL);
+	g_dev = init_dev();
+	spdk_fs_init(g_dev, NULL, send_request, fs_op_with_handle_complete, arg);
+}
+
+static void
+fs_init(void)
+{
+	bool done;
+
+	done = false;
+	send_request(_fs_init, &done);
+	while (!done) { poll_threads(); }
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 }
@@ -158,9 +116,20 @@ static void
 _fs_unload(void *arg)
 {
 	g_fserrno = -1;
-	spdk_fs_unload(g_fs, fs_op_complete, NULL);
-	CU_ASSERT(g_fserrno == 0);
+	spdk_fs_unload(g_fs, fs_op_complete, arg);
 	g_fs = NULL;
+	g_dev = NULL;
+}
+
+static void
+fs_unload(void)
+{
+	bool done;
+
+	done = false;
+	send_request(_fs_unload, &done);
+	while (!done) { poll_threads(); }
+	CU_ASSERT(g_fserrno == 0);
 }
 
 static void
@@ -171,7 +140,7 @@ cache_write(void)
 	char buf[100];
 	struct spdk_io_channel *channel;
 
-	ut_send_request(_fs_init, NULL);
+	fs_init();
 
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
@@ -199,7 +168,7 @@ cache_write(void)
 
 	spdk_fs_free_io_channel(channel);
 
-	ut_send_request(_fs_unload, NULL);
+	fs_unload();
 }
 
 static void
@@ -209,7 +178,7 @@ cache_write_null_buffer(void)
 	int rc;
 	struct spdk_io_channel *channel;
 
-	ut_send_request(_fs_init, NULL);
+	fs_init();
 
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
@@ -230,7 +199,7 @@ cache_write_null_buffer(void)
 
 	spdk_fs_free_io_channel(channel);
 
-	ut_send_request(_fs_unload, NULL);
+	fs_unload();
 }
 
 static void
@@ -239,7 +208,7 @@ fs_create_sync(void)
 	int rc;
 	struct spdk_io_channel *channel;
 
-	ut_send_request(_fs_init, NULL);
+	fs_init();
 
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	CU_ASSERT(channel != NULL);
@@ -256,7 +225,7 @@ fs_create_sync(void)
 
 	spdk_fs_free_io_channel(channel);
 
-	ut_send_request(_fs_unload, NULL);
+	fs_unload();
 }
 
 static void
@@ -266,7 +235,7 @@ cache_append_no_cache(void)
 	char buf[100];
 	struct spdk_io_channel *channel;
 
-	ut_send_request(_fs_init, NULL);
+	fs_init();
 
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
@@ -293,7 +262,7 @@ cache_append_no_cache(void)
 
 	spdk_fs_free_io_channel(channel);
 
-	ut_send_request(_fs_unload, NULL);
+	fs_unload();
 }
 
 static void
@@ -303,7 +272,9 @@ fs_delete_file_without_close(void)
 	struct spdk_io_channel *channel;
 	struct spdk_file *file;
 
-	ut_send_request(_fs_init, NULL);
+	fs_init();
+	SPDK_CU_ASSERT_FATAL(g_dev == g_fs->bs->dev);
+
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	CU_ASSERT(channel != NULL);
 
@@ -326,50 +297,12 @@ fs_delete_file_without_close(void)
 
 	spdk_fs_free_io_channel(channel);
 
-	ut_send_request(_fs_unload, NULL);
-
-}
-
-static void
-terminate_spdk_thread(void *arg)
-{
-	spdk_free_thread();
-	pthread_exit(NULL);
-}
-
-static void *
-spdk_thread(void *arg)
-{
-	struct spdk_thread *thread;
-	struct ut_request *req;
-
-	thread = spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread1");
-	spdk_set_thread(thread);
-
-	while (1) {
-		pthread_mutex_lock(&g_mutex);
-		if (g_req != NULL) {
-			req = g_req;
-			req->fn(req->arg);
-			req->done = 1;
-			if (!req->from_ut) {
-				free(req);
-			}
-			g_req = NULL;
-		}
-		pthread_mutex_unlock(&g_mutex);
-	}
-
-	spdk_free_thread();
-
-	return NULL;
+	fs_unload();
 }
 
 int main(int argc, char **argv)
 {
-	struct spdk_thread *thread;
 	CU_pSuite	suite = NULL;
-	pthread_t	spdk_tid;
 	unsigned int	num_failures;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
@@ -393,18 +326,19 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	thread = spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
-	spdk_set_thread(thread);
+	allocate_threads(2);
+	set_thread(0);
 
-	pthread_create(&spdk_tid, NULL, spdk_thread, NULL);
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
+
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+
 	free(g_dev_buffer);
-	send_request(terminate_spdk_thread, NULL);
-	pthread_join(spdk_tid, NULL);
-	spdk_free_thread();
+
+	free_threads();
+
 	return num_failures;
 }
