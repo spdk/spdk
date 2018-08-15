@@ -35,7 +35,6 @@
 
 #include "common/lib/test_env.c"
 #include "spdk_cunit.h"
-#include "CUnit/Basic.h"
 
 #include "iscsi/conn.c"
 
