@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0705baa1_d7094a9e",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-08-15T04:47:17Z",
+      "side": 1,
+      "message": "The result of this function is 4096, not 4096+128\u003d4228. So this if loop is not actually executed.",
+      "range": {
+        "startLine": 391,
+        "startChar": 5,
+        "endLine": 391,
+        "endChar": 29
+      },
+      "revId": "51db311cdeb725a56efaa071d46553e13a3181bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
