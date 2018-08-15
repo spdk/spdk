@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f647def_dbcc6797",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-15T17:18:31Z",
+      "side": 1,
+      "message": "This logic prevents the user from setting the first burst length smaller than the default. Why? I think it\u0027s perfectly valid for the user to specify even 0 as a size.",
+      "revId": "7e05de355dfa08a1b971a1e6c5e0e4689722586f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
