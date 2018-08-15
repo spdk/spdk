@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "eb810874_f0d72fe3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 702,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-15T20:20:17Z",
+      "side": 1,
+      "message": "I looked at the code here and the setting of errno isn\u0027t consistent between the various providers within rdma-core. That means errno isn\u0027t going to be reliable. What is reliable is \u0027rc\u0027, which I think we can just use here instead.",
+      "parentUuid": "352bf9cd_ad0fc7f1",
+      "revId": "adf556026cffc04adea582100f58a29bc5c1c7b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f2624ec6_dc51f9fe",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -47,6 +65,24 @@
       "writtenOn": "2018-08-15T19:14:18Z",
       "side": 1,
       "message": "Does ibv_reg_mr set errno?  The man page does not indicate so.",
+      "revId": "adf556026cffc04adea582100f58a29bc5c1c7b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6aeb4bd7_93312dfe",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-15T20:20:17Z",
+      "side": 1,
+      "message": "After looking through rdma-core, errno gets set for some errors but not for others, depending on the specific provider. I don\u0027t think we can rely on it.",
+      "parentUuid": "f2624ec6_dc51f9fe",
       "revId": "adf556026cffc04adea582100f58a29bc5c1c7b9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
