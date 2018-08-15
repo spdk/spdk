@@ -40,8 +40,8 @@ APP = spdk_tgt
 
 C_SRCS := spdk_tgt.c
 
-SPDK_LIB_LIST = event_bdev event_copy event_iscsi event_net event_scsi event_nvmf
-SPDK_LIB_LIST += nvmf event log trace conf thread util bdev iscsi scsi copy rpc jsonrpc json
+SPDK_LIB_LIST = event_bdev event_copy event_iscsi event_net event_scsi event_nvmf event
+SPDK_LIB_LIST += nvmf trace log conf thread util bdev iscsi scsi copy rpc jsonrpc json
 SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc net
 
 ifeq ($(OS),Linux)
