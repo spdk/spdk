@@ -39,7 +39,7 @@
 
 #include "nvmf/subsystem.c"
 
-SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
+static struct spdk_thread *g_thread;
 
 DEFINE_STUB(spdk_bdev_module_claim_bdev,
 	    int,
@@ -49,11 +49,7 @@ DEFINE_STUB(spdk_bdev_module_claim_bdev,
 DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 	      (struct spdk_bdev *bdev));
 
-static void
-_subsystem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	fn(ctx);
-}
+SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
 static void
 subsystem_ns_remove_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
@@ -291,7 +287,9 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	CU_ASSERT(subsystem.max_nsid == 5);
 
 	spdk_nvmf_subsystem_remove_ns(&subsystem, 1, subsystem_ns_remove_cb, NULL);
+	while (spdk_thread_poll(g_thread, 0)) {}
 	spdk_nvmf_subsystem_remove_ns(&subsystem, 5, subsystem_ns_remove_cb, NULL);
+	while (spdk_thread_poll(g_thread, 0)) {}
 
 	free(subsystem.ns);
 	free(tgt.subsystems);
@@ -466,11 +464,13 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	spdk_allocate_thread(_subsystem_send_msg, NULL, NULL, NULL, "thread0");
+	g_thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+
+	while (spdk_thread_poll(g_thread, 0)) {}
 	spdk_free_thread();
 
 	return num_failures;
