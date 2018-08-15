@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f4f1309_c7fdef63",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-15T23:27:36Z",
+      "side": 1,
+      "message": "I just shifted the code to the new functions as-is here, but I think we\u0027re going to want to change the algorithm in the patch series that introduces the dynamic threading model. This should definitely poll all pollers instead of the first one. And the generic poll call should do msgs, pollers, msgs before returning. This patch series is just refactoring internals without actually introducing dynamic threading though, so I intentionally did not make any modifications to the existing algorithm.",
+      "revId": "e50a305f566cded1342c92b66dc0744279b16311",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
