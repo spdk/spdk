@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c8e40ec_6a054097",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-15T16:55:46Z",
+      "side": 1,
+      "message": "An actual example command line would be useful here.",
+      "revId": "144f589625764a9d62c4d13055ba079d007aa6e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38824314_7810f800",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-15T16:55:46Z",
+      "side": 1,
+      "message": "I think the string \"iso\" would make more sense, short for isolate or isolated. The user is going to invoke the test on the command line and pass the argument to it, so informing the test that it is being run \"isolated\" from the rest makes sense to me.",
+      "revId": "144f589625764a9d62c4d13055ba079d007aa6e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
