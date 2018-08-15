@@ -699,7 +699,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	rdma_req->data.wr.next = NULL;
 	rc = ibv_post_send(rqpair->cm_id->qp, &rdma_req->data.wr, &bad_wr);
 	if (rc) {
-		SPDK_ERRLOG("Unable to transfer data from host to target\n");
+		SPDK_ERRLOG("Unable to transfer data from host to target %s %d\n", spdk_strerror(errno), errno);
 		return -1;
 	}
 	return 0;
@@ -763,7 +763,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	/* Send the completion */
 	rc = ibv_post_send(rqpair->cm_id->qp, send_wr, &bad_send_wr);
 	if (rc) {
-		SPDK_ERRLOG("Unable to send response capsule\n");
+		SPDK_ERRLOG("Unable to send response capsule, %s %d\n", spdk_strerror(errno), errno);
 	}
 
 	return rc;
@@ -969,7 +969,7 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 				IBV_ACCESS_REMOTE_READ |
 				IBV_ACCESS_REMOTE_WRITE);
 		if (mr == NULL) {
-			SPDK_ERRLOG("ibv_reg_mr() failed\n");
+			SPDK_ERRLOG("ibv_reg_mr() failed error %s %d\n", spdk_strerror(errno), errno);
 			return -1;
 		} else {
 			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
@@ -1502,7 +1502,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		device->context = contexts[i];
 		rc = ibv_query_device(device->context, &device->attr);
 		if (rc < 0) {
-			SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
+			SPDK_ERRLOG("Failed to query RDMA device attributes %s (%d),\n", spdk_strerror(errno), errno);
 			free(device);
 			break;
 
@@ -2204,7 +2204,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 
 		poller->cq = ibv_create_cq(device->context, NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
 		if (!poller->cq) {
-			SPDK_ERRLOG("Unable to create completion queue\n");
+			SPDK_ERRLOG("Unable to create completion queue (%s), %d\n", spdk_strerror(errno), errno);
 			free(poller);
 			free(rgroup);
 			pthread_mutex_unlock(&rtransport->lock);
