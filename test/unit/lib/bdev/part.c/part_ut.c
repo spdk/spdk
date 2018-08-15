@@ -33,7 +33,7 @@
 
 #include "spdk_cunit.h"
 
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 #include "unit/lib/json_mock.c"
 
 #include "spdk/config.h"
@@ -61,12 +61,6 @@ DEFINE_STUB_V(spdk_trace_register_description, (const char *name, const char *sh
 		uint8_t arg1_is_ptr, const char *arg1_name));
 DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 				   uint32_t size, uint64_t object_id, uint64_t arg1));
-
-static void
-_part_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
-{
-	fn(ctx);
-}
 
 static void
 _part_cleanup(struct spdk_bdev_part *part)
@@ -146,12 +140,13 @@ part_test(void)
 	_part_cleanup(&part1);
 	_part_cleanup(&part2);
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
+
+	poll_threads();
 }
 
 int
 main(int argc, char **argv)
 {
-	struct spdk_thread	*thread;
 	CU_pSuite		suite = NULL;
 	unsigned int		num_failures;
 
@@ -172,12 +167,15 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	thread = spdk_allocate_thread(_part_send_msg, NULL, NULL, NULL, "thread0");
-	spdk_set_thread(thread);
+	allocate_threads(1);
+	set_thread(0);
+
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
-	spdk_free_thread();
+
+	free_threads();
+
 	return num_failures;
 }
