@@ -48,12 +48,6 @@ DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
 DEFINE_STUB(spdk_conf_section_get_intval, int, (struct spdk_conf_section *sp, const char *key), -1);
 
-static void
-_part_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	fn(ctx);
-}
-
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			 int *sc, int *sk, int *asc, int *ascq)
@@ -63,6 +57,8 @@ spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 struct spdk_bdev_module bdev_ut_if = {
 	.name = "bdev_ut",
 };
+
+static struct spdk_thread *g_thread;
 
 static void vbdev_ut_examine(struct spdk_bdev *bdev);
 
@@ -127,6 +123,8 @@ part_test(void)
 
 	spdk_bdev_part_base_free(base);
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
+
+	while (spdk_thread_poll(g_thread, 0)) {}
 }
 
 int
@@ -152,11 +150,14 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	spdk_allocate_thread(_part_send_msg, NULL, NULL, NULL, "thread0");
+	g_thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+
+	while (spdk_thread_poll(g_thread, 0)) {}
 	spdk_free_thread();
+
 	return num_failures;
 }
