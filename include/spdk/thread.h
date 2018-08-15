@@ -207,8 +207,31 @@ struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 void spdk_free_thread(void);
 
 /**
+ * Execute any pending messages on this thread.
+ *
+ * \param thread The thread to process
+ * \param max_msgs The maximum number of messages that will be processed.
+ *                 Use 0 to process all pending events.
+ *
+ * \return 1 if work was done. 0 if no work was done. -1 if unknown.
+ */
+int spdk_thread_process_msgs(struct spdk_thread *thread, uint32_t max_msgs);
+
+/**
+ * Execute any expired pollers on this thread.
+ *
+ * \param thread The thread to process
+ *
+ * \return 1 if work was done. 0 if no work was done. -1 if unknown.
+ */
+int spdk_thread_process_pollers(struct spdk_thread *thread);
+
+/**
  * Perform one iteration worth of processing on the thread. This includes executing
  * any pending messages as well as pollers.
+ *
+ * This is implemented by calling spdk_thread_process_msgs() and
+ * spdk_thread_process_pollers() and acts as a convenient wrapper.
  *
  * \param thread The thread to process
  * \param max_msgs The maximum number of messages that will be processed.
