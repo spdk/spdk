@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce68bdde_41cbe7ec",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1900,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-15T01:36:05Z",
+      "side": 1,
+      "message": "qpair_disconnected is only set to true in function spdk_nvmf_rdma_qpair_destroy, why here calling spdk_nvmf_rdma_qpair_destroy again ?",
+      "revId": "1dcf8ba504556763363d0a02dcaa545b69bda0d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
