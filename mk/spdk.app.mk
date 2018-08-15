@@ -45,14 +45,14 @@ SPDK_FILTER_LIB_LIST += $(filter %_rpc,$(SPDK_LIB_LIST))
 SPDK_FILTER_LIB_LIST += $(filter iscsi,$(SPDK_LIB_LIST))
 SPDK_FILTER_LIB_LIST += $(filter nbd,$(SPDK_LIB_LIST))
 SPDK_FILTER_LIB_LIST += $(filter net,$(SPDK_LIB_LIST))
-SPDK_FILTER_LIB_LIST += $(filter scsi,$(SPDK_LIB_LIST))
 SPDK_FILTER_LIB_LIST += $(filter vhost,$(SPDK_LIB_LIST))
+SPDK_FILTER_LIB_LIST += $(filter scsi,$(SPDK_LIB_LIST))
 
 # The unit test mock wrappers need to be wrapped in whole-archive so they don't get
 # automatically removed with LTO.
 SPDK_FILTER_LIB_LIST += $(filter spdk_mock,$(SPDK_LIB_LIST))
 
-SPDK_WHOLE_ARCHIVE_LIB_LIST = $(sort $(SPDK_FILTER_LIB_LIST))
+SPDK_WHOLE_ARCHIVE_LIB_LIST = $(SPDK_FILTER_LIB_LIST)
 SPDK_REMAINING_LIB_LIST = $(filter-out $(SPDK_WHOLE_ARCHIVE_LIB_LIST),$(SPDK_LIB_LIST))
 
 SPDK_LIB_FILES = $(call spdk_lib_list_to_files,$(SPDK_LIB_LIST))
