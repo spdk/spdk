@@ -352,17 +352,21 @@ _spdk_poller_insert_timer(struct spdk_thread *thread, struct spdk_poller *poller
 }
 
 int
-spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
+spdk_thread_process_msgs(struct spdk_thread *thread, uint32_t max_msgs)
 {
 	uint32_t msg_count;
+
+	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
+
+	return (msg_count > 0) ? 1 : 0;
+}
+
+int
+spdk_thread_process_pollers(struct spdk_thread *thread)
+{
 	struct spdk_poller *poller;
 	int rc;
 	int aggregate_rc = 0;
-
-	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
-	if (msg_count > 0) {
-		aggregate_rc = 1;
-	}
 
 	poller = TAILQ_FIRST(&thread->active_pollers);
 	if (poller) {
@@ -376,9 +380,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 			TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
 		}
 
-		if (aggregate_rc <= 0) {
-			aggregate_rc = rc;
-		}
+		aggregate_rc = rc;
 	}
 
 	poller = TAILQ_FIRST(&thread->timer_pollers);
@@ -403,6 +405,24 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 	}
 
 	return aggregate_rc;
+}
+
+int
+spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
+{
+	int msgs_rc, pollers_rc;
+
+	msgs_rc = spdk_thread_process_msgs(thread, max_msgs);
+
+	pollers_rc = spdk_thread_process_pollers(thread);
+
+	if (pollers_rc > 0 || msgs_rc > 0) {
+		return 1;
+	} else if (pollers_rc == 0 && msgs_rc == 0) {
+		return 0;
+	} else {
+		return -1;
+	}
 }
 
 uint64_t
