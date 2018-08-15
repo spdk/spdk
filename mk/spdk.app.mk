@@ -63,4 +63,13 @@ SPDK_LIB_LINKER_ARGS = \
 	-Wl,--no-whole-archive \
 	$(SPDK_REMAINING_LIB_LIST:%=-lspdk_%)
 
+# This is primarily used for unit tests to ensure they link when shared library
+# build is enabled.  Shared libraries can't get their mock implementation from
+# the unit test file.
+SPDK_STATIC_LIB_LINKER_ARGS = \
+	-Wl,--whole-archive \
+	$(SPDK_WHOLE_ARCHIVE_LIB_LIST:%=$(SPDK_ROOT_DIR)/build/lib/libspdk_%.a) \
+	-Wl,--no-whole-archive \
+	$(SPDK_REMAINING_LIB_LIST:%=$(SPDK_ROOT_DIR)/build/lib/libspdk_%.a)
+
 install: all
