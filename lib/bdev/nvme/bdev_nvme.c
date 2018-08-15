@@ -727,7 +727,7 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 		/* Enable if the Volatile Write Cache exists */
 		bdev->disk.write_cache = 1;
 	}
-	bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
+	bdev->disk.blocklen = spdk_nvme_ns_get_extended_sector_size(ns);
 	bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
 	bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
 
@@ -1621,7 +1621,7 @@ bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-	size_t nr_sectors = nbytes / spdk_nvme_ns_get_sector_size(nbdev->ns);
+	size_t nr_sectors = nbytes / spdk_nvme_ns_get_extended_sector_size(nbdev->ns);
 	uint32_t max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nbdev->nvme_ctrlr->ctrlr);
 
 	if (nbytes > max_xfer_size) {
