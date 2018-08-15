@@ -299,6 +299,34 @@ if [[ "$OSTYPE" == "FreeBSD"* ]]; then
 	fi
 fi
 
+if [ "$CONFIG_RDMA" = "y" ]; then
+	if [ "$OSTYPE" != "FreBSD"* ]; then
+		ibv_lib_file="$(readlink -f /usr/lib64/libibverbs.so)" || true
+		if [ -z $ibv_lib_file ]; then
+			ibv_lib_file="libibverbs.so.0.0.0"
+		fi
+		ibv_ver_str="$(basename $ibv_lib_file)"
+		ibv_maj_ver=`echo $ibv_ver_str | cut -d. -f3`
+		ibv_min_ver=`echo $ibv_ver_str | cut -d. -f4`
+		if [[ "$ibv_maj_var" > 1 || ("$ibv_maj_ver" -eq 1 && "$ibv_min_ver" -ge 1) ]]; then
+			CONFIG_RDMA_SEND_WITH_INVAL="y"
+		else
+			CONFIG_RDMA_SEND_WITH_INVAL="n"
+			cat <<EOF
+******************************************************************************
+Warning: The IB opcode Send With Invalidate is not supported for this version
+of libibverbs with SPDK. On linux kernel versions greater than 4.14 you may see
+a significant performance impact to all NVMe-oF workloads.
+
+Please upgrade your libibverbs version to 1.1.*
+******************************************************************************
+EOF
+		fi
+	fi
+fi
+
+
+
 echo -n "Creating CONFIG.local..."
 
 # Write the configuration file
@@ -368,6 +396,9 @@ if [ -n "$FIO_SOURCE_DIR" ]; then
 fi
 if [ -n "$CONFIG_RDMA" ]; then
 	echo "CONFIG_RDMA?=$CONFIG_RDMA" >> CONFIG.local
+fi
+if [ -n "$CONFIG_RDMA_SEND_WITH_INVAL" ]; then
+	echo "CONFIG_RDMA_SEND_WITH_INVAL?=$CONFIG_RDMA_SEND_WITH_INVAL" >> CONFIG.local
 fi
 if [ -n "$CONFIG_ISCSI_INITIATOR" ]; then
 	echo "CONFIG_ISCSI_INITIATOR?=$CONFIG_ISCSI_INITIATOR" >> CONFIG.local
