@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61766ce3_b617be90",
+        "filename": "configure",
+        "patchSetId": 8
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-16T17:32:06Z",
+      "side": 1,
+      "message": "This was a bug in the original patch - Lance is fixing it here as part of testing all of this on both Linux and FreeBSD.",
+      "revId": "ba8233214e25e25d92a35b6fa4a3acd0595dec72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
