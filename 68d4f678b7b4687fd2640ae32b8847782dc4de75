@@ -16,6 +16,24 @@
       "revId": "68d4f678b7b4687fd2640ae32b8847782dc4de75",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f1ddcde_3fb6d245",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1014782
+      },
+      "writtenOn": "2018-08-16T15:45:44Z",
+      "side": 1,
+      "message": "Indeed. Sorry about that.",
+      "parentUuid": "ac397a86_0d4fa4c8",
+      "revId": "68d4f678b7b4687fd2640ae32b8847782dc4de75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
