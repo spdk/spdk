@@ -572,11 +572,27 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 void
 delete_passthru_disk(struct spdk_bdev *bdev, spdk_delete_passthru_complete cb_fn, void *cb_arg)
 {
+	struct bdev_names *name;
+
 	if (!bdev || bdev->module != &passthru_if) {
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
 
+	/* First remove from the name matching list so it doesn't get
+	 * get matched again unless added back to the list.
+	 */
+	while ((name = TAILQ_FIRST(&g_bdev_names))) {
+		if (strcmp(name->vbdev_name, bdev->name) == 0) {
+			TAILQ_REMOVE(&g_bdev_names, name, link);
+			free(name->bdev_name);
+			free(name->vbdev_name);
+			free(name);
+			break;
+		}
+	}
+
+	/* Now un-register. */
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
