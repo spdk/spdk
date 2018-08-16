@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12d86da8_e7794b2d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1529,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-16T20:51:13Z",
+      "side": 1,
+      "message": "From what I read on RDMA Mojo, I think this will fail because the NICs on either side of the connection need to be associated with the same protection domain. I think that may be why rdma_cm keeps it from happening until the connection is made. I wouldn\u0027t know how to communicate this protection domain id to the other side.",
+      "revId": "8efe6b110f586325453f904a1e7a59fd782e7286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
