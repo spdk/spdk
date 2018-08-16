@@ -61,7 +61,18 @@ lvol_bdevs=()
 
 # Create malloc backends and creat lvol store on each
 for i in `seq 1 $SUBSYS_NR`; do
-	bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+	# Create a RAID-0 from two malloc bdevs the first time through this loop
+	if [ $i -eq 1 ]; then
+		# construct 2 malloc bdevs
+		# construct RAID bdev and put name of it in $bdev
+		malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
+		malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+		$rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$malloc_bdevs"
+		bdev="raid0"
+	else
+		# construct malloc bdev and put name of it in $bdev
+		bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+	fi
 	ls_guid="$($rpc_py construct_lvol_store $bdev lvs_$i -c 524288)"
 	lvol_stores+=("$ls_guid")
 
