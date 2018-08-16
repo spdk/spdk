@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dcbb587b_ab047581",
+        "filename": "configure",
+        "patchSetId": 7
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-16T16:36:43Z",
+      "side": 1,
+      "message": "Hey Lance,\n\nWhat does the ${OSTYPE,freebsd} do here?\n\nI think the FreeBSD needs to be replaced with freebsd like you\u0027ve done here.\n\n-Jim",
+      "revId": "02593ac636caa1c7c5dea545dfa7b18550c3a4fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
