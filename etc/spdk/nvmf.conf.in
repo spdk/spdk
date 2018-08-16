@@ -17,7 +17,7 @@
 
   # Tracepoint group mask for spdk trace buffers
   # Default: 0x0 (all tracepoint groups disabled)
-  # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.
+  # Set to 0xFFFF to enable all tracepoint groups.
   #TpointGroupMask 0x0
 
   # PciBlacklist and PciWhitelist cannot be used at the same time
