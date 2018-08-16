@@ -566,7 +566,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair->ibv_init_attr.cap.max_send_sge	= rqpair->max_sge;
 	rqpair->ibv_init_attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
-	rc = rdma_create_qp(rqpair->cm_id, NULL, &rqpair->ibv_init_attr);
+	rc = rdma_create_qp(rqpair->cm_id, rqpair->port->device->pd, &rqpair->ibv_init_attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
 		rdma_destroy_id(rqpair->cm_id);
@@ -1526,8 +1526,22 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 			break;
 		}
 
-		device->pd = NULL;
-		device->map = NULL;
+		device->pd = ibv_alloc_pd(device->context);
+		if (!device->pd) {
+			SPDK_ERRLOG("Unable to allocate protection domain.\n");
+			free(device);
+			rc = -1;
+			break;
+		}
+
+		device->map = spdk_mem_map_alloc(0, spdk_nvmf_rdma_mem_notify, device);
+		if (!device->map) {
+			SPDK_ERRLOG("Unable to allocate memory map for new poll group\n");
+			ibv_dealloc_pd(device->pd);
+			free(device);
+			rc = -1;
+			break;
+		}
 
 		TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
 		i++;
@@ -1589,6 +1603,9 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 		TAILQ_REMOVE(&rtransport->devices, device, link);
 		if (device->map) {
 			spdk_mem_map_free(&device->map);
+		}
+		if (device->pd) {
+			ibv_dealloc_pd(device->pd);
 		}
 		free(device);
 	}
@@ -1722,17 +1739,6 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
-	}
-
-	if (!device->map) {
-		device->pd = port->id->pd;
-		device->map = spdk_mem_map_alloc(0, spdk_nvmf_rdma_mem_notify, device);
-		if (!device->map) {
-			SPDK_ERRLOG("Unable to allocate memory map for new poll group\n");
-			return -1;
-		}
-	} else {
-		assert(device->pd == port->id->pd);
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_RDMA, "*** NVMf Target Listening on %s port %d ***\n",
@@ -2194,16 +2200,6 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 
 	pthread_mutex_lock(&rtransport->lock);
 	TAILQ_FOREACH(device, &rtransport->devices, link) {
-		if (device->map == NULL) {
-			/*
-			 * The device is not in use (no listeners),
-			 * so no protection domain has been constructed.
-			 * Skip it.
-			 */
-			SPDK_NOTICELOG("Skipping unused RDMA device when creating poll group.\n");
-			continue;
-		}
-
 		poller = calloc(1, sizeof(*poller));
 		if (!poller) {
 			SPDK_ERRLOG("Unable to allocate memory for new RDMA poller\n");
