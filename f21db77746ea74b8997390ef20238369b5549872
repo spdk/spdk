@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14264c64_c2b450a8",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 9
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-16T23:09:46Z",
+      "side": 1,
+      "message": "Can you repeat [sections] with the same name? For example, two [Transport] sections with different types. I don\u0027t think the configuration file parser will actually work correctly if you do that.",
+      "revId": "f21db77746ea74b8997390ef20238369b5549872",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9c22bb9_f7274478",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-16T23:09:46Z",
+      "side": 1,
+      "message": "I don\u0027t think you actually implement this function anywhere - the code is just inlined into spdk_nvmf_tgt_write_config_json. That seems fine to me, so you can delete this.",
+      "revId": "f21db77746ea74b8997390ef20238369b5549872",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa2199fe_57182305",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2202,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-16T23:09:46Z",
+      "side": 1,
+      "message": "There are a number of different orderings that must be supported. Assuming you start with just a target, the scenarios are:\n\nA\n1) Create transport/add transport to target\n2) Add listener\n3) Create poll group\n\nB\n1) Create transport/add transport to target\n2) Create poll group\n3) Add listener\n\nC\n1) Create poll group\n2) Create transport/add transport to target\n3) Add listener\n\nThis check was handling cases B and C. For example, to put a concrete scenario behind case B, imagine a system with two RDMA NICs. The target is created and the RDMA transport is added to it. At start up time, a listener is only added for one of the NICs. The poll groups are created and the target runs for awhile. Sometime later, the user adds a listener for the other RDMA NIC.\n\nWhen the poll group is first created above, it will encounter two RDMA devices, but it has only been instructed to listen on one of them. Therefore it only needs to create the poller (line 2215) for that one. By removing this check, you\u0027ve broken that.\n\nI think one way to solve this is that we can shift some of the work done when setting up a listener (spdk_nvmf_rdma_listen) to occur when the transport is constructed (spdk_nvmf_rdma_create) instead. We can create the protection domain and allocate the memory map up front for every device, then create completion queues and poller objects for every device here. That means we\u0027re consuming some resources on RDMA NICs that aren\u0027t actually in use, but it\u0027s probably not a big deal. I submitted a patch today that does the shift of code from spdk_nvmf_rdma_listen to spdk_nvmf_rdma_create, such that device-\u003emap will never be NULL here.\n\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/422602/\n\nThe other solution, which is the way it is currently coded, is that the listen call could be made asynchronous again. It would need to be asynchronous because it potentially has to go create a poller on each existing poll group if it is the first listener on a given device. I think that\u0027s a lot more complicated and the current implementation looks  prone to race conditions anyway, so I agree with moving toward a synchronous listen call like you have it.",
+      "revId": "f21db77746ea74b8997390ef20238369b5549872",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

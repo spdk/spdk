@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a1099e4_c5654277",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-16T23:09:46Z",
+      "side": 0,
+      "message": "I don\u0027t think you meant to delete this",
+      "revId": "3113b446f126635ec63029e6829eba51c4d4437e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
