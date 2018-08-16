@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29074ea2_50fbec98",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-16T14:35:10Z",
+      "side": 1,
+      "message": "Patch looks fine.  I like the parameter \"clean\" but unfortunately I think it\u0027s actually \"cleanup\".",
+      "revId": "4e3f85749316f7ae0b6584ec742d06dca47b4a5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
