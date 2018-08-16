@@ -681,7 +681,6 @@ usage(void (*app_usage)(void))
 	printf(" -m, --cpumask <mask>      core mask for DPDK\n");
 	printf(" -n, --mem-channels <num>  channel number of memory channels used for DPDK\n");
 	printf(" -p, --master-core <id>    master (primary) core for DPDK\n");
-	printf(" --silence-noticelog       disable notice level logging to stderr\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: ");
 	if (g_default_opts.mem_size > 0) {
@@ -689,8 +688,9 @@ usage(void (*app_usage)(void))
 	} else {
 		printf("all hugepage memory)\n");
 	}
+	printf("     --silence-noticelog   disable notice level logging to stderr\n");
 	printf(" -u, --no-pci              disable PCI access\n");
-	printf(" -w, --wait-for-rpc        wait for RPCs to initialize subsystems\n");
+	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
 	printf(" -B, --pci-blacklist <bdf>\n");
 	printf("                           pci addr to blacklist (can be used more than once)\n");
 	printf(" -R, --huge-unlink         unlink huge files after initialization\n");
