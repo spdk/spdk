@@ -44,7 +44,9 @@
 extern "C" {
 #endif
 
-#ifdef static_assert
+#if defined(static_assert) && defined(__clang__)
+#define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
+#elif defined(static_assert) && __GNUC_PREREQ(4,8)
 #define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
 #else
 /**
