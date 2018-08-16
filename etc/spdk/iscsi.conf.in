@@ -26,7 +26,7 @@
 
   # Tracepoint group mask for spdk trace buffers
   # Default: 0x0 (all tracepoint groups disabled)
-  # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.
+  # Set to 0xFFFF to enable all tracepoint groups.
   #TpointGroupMask 0x0
 
 # Users may activate entries in this section to override default values for
