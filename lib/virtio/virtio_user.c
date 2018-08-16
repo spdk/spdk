@@ -142,6 +142,67 @@ virtio_user_queue_setup(struct virtio_dev *vdev,
 }
 
 static int
+virtio_user_map_notify(void *cb_ctx, struct spdk_mem_map *map,
+		       enum spdk_mem_map_notify_action action,
+		       void *vaddr, size_t size)
+{
+	struct virtio_dev *vdev = cb_ctx;
+	struct virtio_user_dev *dev = vdev->ctx;
+	uint64_t features;
+	int ret;
+
+	/* We have to resend all mappings anyway, so don't bother with any
+	 * page tracking.
+	 */
+	ret = dev->ops->send_request(dev, VHOST_USER_SET_MEM_TABLE, NULL);
+	if (ret < 0) {
+		return ret;
+	}
+
+	/* We have to send SET_VRING_ADDR to make rte_vhost flush a pending
+	 * SET_MEM_TABLE...
+	 */
+	ret = virtio_user_queue_setup(vdev, virtio_user_kick_queue);
+	if (ret < 0) {
+		return ret;
+	}
+
+	/* Since we might want to use that mapping straight away, we have to
+	 * make sure the guest has already processed our SET_MEM_TABLE message.
+	 * F_REPLY_ACK is just a feature and the host is not obliged to
+	 * support it, so we send a simple message that always has a response
+	 * and we wait for that response. Messages are always processed in order.
+	 */
+	return dev->ops->send_request(dev, VHOST_USER_GET_FEATURES, &features);
+}
+
+static int
+virtio_user_register_mem(struct virtio_dev *vdev)
+{
+	struct virtio_user_dev *dev = vdev->ctx;
+	const struct spdk_mem_map_ops virtio_user_map_ops = {
+		.notify_cb = virtio_user_map_notify,
+		.are_contiguous = NULL
+	};
+
+	dev->mem_map = spdk_mem_map_alloc(0, &virtio_user_map_ops, vdev);
+	if (dev->mem_map == NULL) {
+		SPDK_ERRLOG("spdk_mem_map_alloc() failed\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+virtio_user_unregister_mem(struct virtio_dev *vdev)
+{
+	struct virtio_user_dev *dev = vdev->ctx;
+
+	spdk_mem_map_free(&dev->mem_map);
+}
+
+static int
 virtio_user_start_device(struct virtio_dev *vdev)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
@@ -177,14 +238,7 @@ virtio_user_start_device(struct virtio_dev *vdev)
 		return ret;
 	}
 
-	/* share memory regions */
-	ret = dev->ops->send_request(dev, VHOST_USER_SET_MEM_TABLE, NULL);
-	if (ret < 0) {
-		return ret;
-	}
-
-	/* kick queues */
-	ret = virtio_user_queue_setup(vdev, virtio_user_kick_queue);
+	ret = virtio_user_register_mem(vdev);
 	if (ret < 0) {
 		return ret;
 	}
@@ -192,9 +246,18 @@ virtio_user_start_device(struct virtio_dev *vdev)
 	return 0;
 }
 
-static int virtio_user_stop_device(struct virtio_dev *vdev)
+static int
+virtio_user_stop_device(struct virtio_dev *vdev)
 {
-	return virtio_user_queue_setup(vdev, virtio_user_stop_queue);
+	int ret;
+
+	ret = virtio_user_queue_setup(vdev, virtio_user_stop_queue);
+	/* a queue might fail to stop for various reasons, e.g. socket
+	 * connection going down, but this mustn't prevent us from freeing
+	 * the mem map.
+	 */
+	virtio_user_unregister_mem(vdev);
+	return ret;
 }
 
 static int
