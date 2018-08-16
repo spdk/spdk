@@ -38,6 +38,8 @@ timing_exit start_nvmf_tgt
 
 malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+malloc_bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+raid_bdevs="$($rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b $malloc_bdev)"
 
 modprobe -v nvme-rdma
 
@@ -47,10 +49,13 @@ for malloc_bdev in $malloc_bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$malloc_bdev"
 done
 
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 raid0
+
 nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforblk "nvme0n1"
 waitforblk "nvme0n2"
+waitforblk "nvme0n3"
 
 $testdir/nvmf_fio.py 4096 1 write 1 verify
 $testdir/nvmf_fio.py 4096 1 randwrite 1 verify
