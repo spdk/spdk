@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac397a86_0d4fa4c8",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-16T15:10:04Z",
+      "side": 1,
+      "message": "the break needs to be inside of the strcmp() check - we only want to break once we\u0027ve found a match (this will break after only comparing the first entry)",
+      "revId": "68d4f678b7b4687fd2640ae32b8847782dc4de75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
