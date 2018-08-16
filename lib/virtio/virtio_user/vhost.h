@@ -90,6 +90,7 @@ struct virtio_user_dev {
 	uint64_t	protocol_features;
 	struct vring	vrings[SPDK_VIRTIO_MAX_VIRTQUEUES];
 	struct virtio_user_backend_ops *ops;
+	struct spdk_mem_map *mem_map;
 };
 
 struct virtio_user_backend_ops {
