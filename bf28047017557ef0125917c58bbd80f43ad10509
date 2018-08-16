@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba1496ba_66515cb3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-08-16T01:10:17Z",
+      "side": 1,
+      "message": "Oops, I put the changelog on the wrong place.",
+      "revId": "bf28047017557ef0125917c58bbd80f43ad10509",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
