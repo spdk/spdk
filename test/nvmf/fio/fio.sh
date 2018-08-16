@@ -38,6 +38,10 @@ timing_exit start_nvmf_tgt
 
 malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+# Create a RAID-0 bdev from two malloc bdevs
+raid_malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
+raid_malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+$rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$raid_malloc_bdevs"
 
 modprobe -v nvme-rdma
 
@@ -47,10 +51,14 @@ for malloc_bdev in $malloc_bdevs; do
 done
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
 
+# Append the raid0 bdev into subsystem
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 raid0
+
 nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforblk "nvme0n1"
 waitforblk "nvme0n2"
+waitforblk "nvme0n3"
 
 $testdir/nvmf_fio.py 4096 1 write 1 verify
 $testdir/nvmf_fio.py 4096 1 randwrite 1 verify
@@ -66,6 +74,7 @@ fio_pid=$!
 sleep 3
 set +e
 
+$rpc_py destroy_raid_bdev "raid0"
 for malloc_bdev in $malloc_bdevs; do
 	$rpc_py delete_malloc_bdev "$malloc_bdev"
 done

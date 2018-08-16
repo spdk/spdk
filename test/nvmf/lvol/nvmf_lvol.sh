@@ -58,10 +58,19 @@ modprobe -v nvme-rdma
 
 lvol_stores=()
 lvol_bdevs=()
-
-# Create malloc backends and creat lvol store on each
+# Create the first LVS from a Raid-0 bdev, which is created from two malloc bdevs
+# Create remaining LVSs from a malloc bdev, respectively
 for i in `seq 1 $SUBSYS_NR`; do
-	bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+	if [ $i -eq 1 ]; then
+		# construct RAID bdev and put its name in $bdev
+		malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
+		malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+		$rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$malloc_bdevs"
+		bdev="raid0"
+	else
+		# construct malloc bdev and put its name in $bdev
+		bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+	fi
 	ls_guid="$($rpc_py construct_lvol_store $bdev lvs_$i -c 524288)"
 	lvol_stores+=("$ls_guid")
 
