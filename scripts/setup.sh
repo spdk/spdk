@@ -238,7 +238,20 @@ function configure_linux_pci {
 }
 
 function cleanup_linux {
-	files_to_clean="$(echo /dev/shm/* | egrep '(spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevtest)_trace|spdk_iscsi_conns' || true)"
+	shopt -s extglob nullglob
+	dirs_to_clean=""
+	dirs_to_clean="$(echo {/var/run,/tmp}/dpdk/spdk{,_pid}+([0-9])) "
+	if [[ -d $XDG_RUNTIME_DIR && $XDG_RUNTIME_DIR != *" "* ]]; then
+		dirs_to_clean+="$(readlink -e assert_not_empty $XDG_RUNTIME_DIR/dpdk/spdk{,_pid}+([0-9]) || true) "
+	fi
+
+	files_to_clean=""
+	for dir in $dirs_to_clean; do
+		files_to_clean+="$(echo $dir/*) "
+	done
+	shopt -u extglob nullglob
+
+	files_to_clean+="$(echo /dev/shm/* | egrep '(spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevtest)_trace|spdk_iscsi_conns' || true) "
 	files_to_clean="$(readlink -e assert_not_empty $files_to_clean || true)"
 	if [[ -z "$files_to_clean" ]]; then
 		echo "Clean"
@@ -265,9 +278,18 @@ function cleanup_linux {
 			echo "Still open: $f"
 		fi
 	done
+
+	for dir in $dirs_to_clean; do
+	if ! echo "$opened_files" | egrep -q "^$dir\$"; then
+		echo "Removing:    $dir"
+		rmdir $dir
+	else
+		echo "Still open: $dir"
+	fi
+	done
 	echo "Clean"
 
-	unset files_to_clean opened_files
+	unset dirs_to_clean files_to_clean opened_files
 }
 
 function configure_linux {
