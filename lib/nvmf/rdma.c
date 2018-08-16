@@ -1121,9 +1121,19 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			return -1;
 		}
 #ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
-		if (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
-			rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
-			rdma_req->rsp.wr.imm_data = sgl->keyed.key;
+		/**
+		 * These vendor IDs are assigned by the IEEE and an ID of 0 implies Soft-RoCE.
+		 * The Soft-RoCE RXE driver does not currently support send with invalidate.
+		 * There are changes making their way through the kernel now that will enable
+		 * this feature. When they are merged, we can conditionally enable this feature.
+		 *
+		 * todo: enable this for versions of the kernel rxe driver that support it.
+		 */
+		if (device->attr.vendor_id != 0) {
+			if (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
+				rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
+				rdma_req->rsp.wr.imm_data = sgl->keyed.key;
+			}
 		}
 #endif
 
