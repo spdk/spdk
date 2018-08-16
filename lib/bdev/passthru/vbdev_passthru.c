@@ -151,6 +151,23 @@ _pt_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	spdk_bdev_free_io(bdev_io);
 }
 
+/* Callback for getting a buf from the bdev pool in the event that the caller passed
+ * in NULL, we need to own the buffer so it doesn't get freed by another vbdev module
+ * beneath us before we're done with it. That won't happen in this example but it could
+ * if this example were used as a template for something more complex.
+ */
+static void
+pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_passthru,
+					 pt_bdev);
+	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
+
+	spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+			       bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+			       bdev_io->u.bdev.num_blocks, _pt_complete_io,
+			       bdev_io);
+}
 
 /* Called when someone above submits IO to this pt vbdev. We're simply passing it on here
  * via SPDK IO calls which in turn allocate another bdev IO and call our cpl callback provided
@@ -162,7 +179,6 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_passthru, pt_bdev);
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)bdev_io->driver_ctx;
-	int rc = 1;
 
 	/* Setup a per IO context value; we don't do anything with it in the vbdev other
 	 * than confirm we get the same thing back in the completion callback just to
@@ -172,47 +188,41 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		rc = spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-					    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks, _pt_complete_io,
-					    bdev_io);
+		spdk_bdev_io_get_buf(bdev_io, pt_read_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		rc = spdk_bdev_writev_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-					     bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-					     bdev_io->u.bdev.num_blocks, _pt_complete_io,
-					     bdev_io);
+		spdk_bdev_writev_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+					bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+					bdev_io->u.bdev.num_blocks, _pt_complete_io,
+					bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		rc = spdk_bdev_write_zeroes_blocks(pt_node->base_desc, pt_ch->base_ch,
-						   bdev_io->u.bdev.offset_blocks,
-						   bdev_io->u.bdev.num_blocks,
-						   _pt_complete_io, bdev_io);
+		spdk_bdev_write_zeroes_blocks(pt_node->base_desc, pt_ch->base_ch,
+					      bdev_io->u.bdev.offset_blocks,
+					      bdev_io->u.bdev.num_blocks,
+					      _pt_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		rc = spdk_bdev_unmap_blocks(pt_node->base_desc, pt_ch->base_ch,
-					    bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks,
-					    _pt_complete_io, bdev_io);
+		spdk_bdev_unmap_blocks(pt_node->base_desc, pt_ch->base_ch,
+				       bdev_io->u.bdev.offset_blocks,
+				       bdev_io->u.bdev.num_blocks,
+				       _pt_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		rc = spdk_bdev_flush_blocks(pt_node->base_desc, pt_ch->base_ch,
-					    bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks,
-					    _pt_complete_io, bdev_io);
+		spdk_bdev_flush_blocks(pt_node->base_desc, pt_ch->base_ch,
+				       bdev_io->u.bdev.offset_blocks,
+				       bdev_io->u.bdev.num_blocks,
+				       _pt_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		rc = spdk_bdev_reset(pt_node->base_desc, pt_ch->base_ch,
-				     _pt_complete_io, bdev_io);
+		spdk_bdev_reset(pt_node->base_desc, pt_ch->base_ch,
+				_pt_complete_io, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("passthru: unknown I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
-	}
-	if (rc != 0) {
-		SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
