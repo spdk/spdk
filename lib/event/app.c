@@ -141,7 +141,7 @@ static char g_cmdline_short_opts[2 * SPDK_APP_MAX_CMDLINE_OPTIONS + 1];
 "\n" \
 "  # Tracepoint group mask for spdk trace buffers\n" \
 "  # Default: 0x0 (all tracepoint groups disabled)\n" \
-"  # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.\n" \
+"  # Set to 0xFFFF to enable all tracepoint groups.\n" \
 "  TpointGroupMask \"0x%" PRIX64 "\"\n" \
 "\n" \
 
