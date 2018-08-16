@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88c3db29_d6508c1e",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-16T03:25:29Z",
+      "side": 1,
+      "message": "Thanks for the bug report...and the fix!\n\nI think this should break here after we\u0027ve found the match. We don\u0027t need to keep going through the list once we\u0027ve found the match.  This will also dereference name after it\u0027s been freed.  TAILQ_FOREACH_SAFE would work here, but I think a break is the better solution.",
+      "revId": "168fd63b7afa6a2256f698e4b9972dea87ea0f47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
