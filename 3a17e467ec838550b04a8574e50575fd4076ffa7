@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33afb1c9_327fbd27",
+        "filename": "include/spdk/assert.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-16T20:48:24Z",
+      "side": 1,
+      "message": "__GNUC_PREREQ is not defined in clang (used on FreeBSD).\n\nYou could try:\n\n#if defined static_assert \u0026\u0026 (defined(__FreeBSD) || __GNUC_PREREQ(4, 8))",
+      "revId": "3a17e467ec838550b04a8574e50575fd4076ffa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
