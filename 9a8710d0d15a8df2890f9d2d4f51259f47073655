@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c77bee8_0ebfcbec",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-16T15:21:15Z",
+      "side": 1,
+      "message": "Thanks for adding RAID tests!\n\nlet\u0027s call this raid_malloc_bdevs - the name \"malloc_bdev\" is too close to \"malloc_bdevs\"\n\nthen let\u0027s create two new malloc bdevs here and put the names in raid_malloc_bdevs - then create the RAID0 out of these two malloc bdevs instead of just one - this will test the striping capabilities",
+      "revId": "9a8710d0d15a8df2890f9d2d4f51259f47073655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96c36190_1560df68",
+        "filename": "test/nvmf/lvol/nvmf_lvol.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-16T15:21:15Z",
+      "side": 1,
+      "message": "I think this is not very clear.  It should definitely have a comment.  Maybe something like this:\n\n# Create a RAID-0 from two malloc bdevs the first time through this loop\nif [ $i -eq 1 ]; then\n  # construct 2 malloc bdevs\n  # construct RAID bdev and put name of it in $bdev\nelse\n  # construct malloc bdev and put name of it in $bdev\nfi\nconstruct lvol_store",
+      "revId": "9a8710d0d15a8df2890f9d2d4f51259f47073655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
