@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fe043638_c5008183",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 9
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-08-16T23:35:14Z",
+      "side": 1,
+      "message": "I can change it to be Transport1, Transport2, etc. (similar to subsystems). This will work better.",
+      "parentUuid": "14264c64_c2b450a8",
+      "revId": "f21db77746ea74b8997390ef20238369b5549872",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9c22bb9_f7274478",
         "filename": "include/spdk/nvmf.h",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-16T23:09:46Z",
       "side": 1,
       "message": "I don\u0027t think you actually implement this function anywhere - the code is just inlined into spdk_nvmf_tgt_write_config_json. That seems fine to me, so you can delete this.",
+      "revId": "f21db77746ea74b8997390ef20238369b5549872",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80430614_b6eeaaf5",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-08-16T23:35:14Z",
+      "side": 1,
+      "message": "This function is implemented in transport.c where it calls the transport-\u003eops opts_init function to assign the defaults for the protocol transport.",
+      "parentUuid": "c9c22bb9_f7274478",
       "revId": "f21db77746ea74b8997390ef20238369b5549872",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -50,6 +86,24 @@
       "revId": "f21db77746ea74b8997390ef20238369b5549872",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d544a9be_1d2ba7b1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2202,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-08-16T23:35:14Z",
+      "side": 1,
+      "message": "This is why I #if 0\u0027d this code instead of just deleting it. I knew you would want to do something about it.  It\u0027s just that now with the independent creation of the transport (without listeners), if there are already poll groups, the poll groups will never get the rdma transport.",
+      "parentUuid": "fa2199fe_57182305",
+      "revId": "f21db77746ea74b8997390ef20238369b5549872",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
