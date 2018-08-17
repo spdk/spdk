@@ -79,6 +79,7 @@ struct ns_entry {
 	bool			is_draining;
 	uint32_t		current_queue_depth;
 	char			name[1024];
+	struct ns_entry		*next;
 
 	struct spdk_histogram_data	*submit_histogram;
 	struct spdk_histogram_data	*complete_histogram;
@@ -155,6 +156,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
+	entry->next = g_ns;
 	g_ns = entry;
 }
 
@@ -173,6 +175,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
 	entry->ctrlr = ctrlr;
+
+	entry->next = g_ctrlr;
 	g_ctrlr = entry;
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
@@ -627,6 +631,30 @@ register_controllers(void)
 	return 0;
 }
 
+static void
+cleanup(void)
+{
+	struct ns_entry *ns_entry = g_ns;
+	struct ctrlr_entry *ctrlr_entry = g_ctrlr;
+
+	while (ns_entry) {
+		struct ns_entry *next = ns_entry->next;
+
+		spdk_histogram_data_free(ns_entry->submit_histogram);
+		spdk_histogram_data_free(ns_entry->complete_histogram);
+		free(ns_entry);
+		ns_entry = next;
+	}
+
+	while (ctrlr_entry) {
+		struct ctrlr_entry *next = ctrlr_entry->next;
+
+		spdk_nvme_detach(ctrlr_entry->ctrlr);
+		free(ctrlr_entry);
+		ctrlr_entry = next;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int			rc;
@@ -664,15 +692,15 @@ int main(int argc, char **argv)
 	if (g_aio_optind < argc) {
 		printf("Measuring overhead for AIO device %s.\n", argv[g_aio_optind]);
 		if (register_aio_file(argv[g_aio_optind]) != 0) {
-			rc = -1;
-			goto cleanup;
+			cleanup();
+			return -1;
 		}
 	} else
 #endif
 	{
 		if (register_controllers() != 0) {
-			rc = -1;
-			goto cleanup;
+			cleanup();
+			return -1;
 		}
 	}
 
@@ -682,16 +710,7 @@ int main(int argc, char **argv)
 
 	print_stats();
 
-cleanup:
-	if (g_ns) {
-		spdk_histogram_data_free(g_ns->submit_histogram);
-		spdk_histogram_data_free(g_ns->complete_histogram);
-		free(g_ns);
-	}
-	if (g_ctrlr) {
-		spdk_nvme_detach(g_ctrlr->ctrlr);
-		free(g_ctrlr);
-	}
+	cleanup();
 
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occured\n", argv[0]);
