@@ -104,6 +104,23 @@
       "revId": "f21db77746ea74b8997390ef20238369b5549872",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac1a63fe_b7911509",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-17T21:55:12Z",
+      "side": 1,
+      "message": "Create a transport based off of the given opts?",
+      "revId": "f21db77746ea74b8997390ef20238369b5549872",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
