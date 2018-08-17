@@ -250,7 +250,7 @@ usage(char *program_name)
 	printf("\t[-c core mask for distributing I/O submission/completion work]\n");
 	printf("\t[-q queue depth]\n");
 	printf("\t[-n number of channels]\n");
-	printf("\t[-s transfer size in bytes]\n");
+	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-v verify copy result if this switch is on]\n");
 }
@@ -261,9 +261,9 @@ parse_args(int argc, char **argv)
 	int op;
 
 	construct_user_config(&g_user_config);
-	while ((op = getopt(argc, argv, "c:hn:q:s:t:v")) != -1) {
+	while ((op = getopt(argc, argv, "c:hn:o:q:t:v")) != -1) {
 		switch (op) {
-		case 's':
+		case 'o':
 			g_user_config.xfer_size_bytes = atoi(optarg);
 			break;
 		case 'n':
