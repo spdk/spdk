@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "145fdc30_8153ea28",
+        "filename": "lib/trace/trace_flags.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-17T19:24:52Z",
+      "side": 1,
+      "message": "This 16 should be SPDK_TRACE_MAX_GROUP_ID",
+      "revId": "ad9c795f5735c23198cdc76eaf9541b97e38415d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
