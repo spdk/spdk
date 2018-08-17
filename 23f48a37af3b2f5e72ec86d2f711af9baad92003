@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a1d6521_88ca715c",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-17T00:08:29Z",
+      "side": 1,
+      "message": "Hey Paul,\n\nYou need to keep the rc here.  These functions return int (not void) - they return errors especially in the case where a bdev_io cannot be allocated.\n\nThe spdk_bdev_io_get_buf() changes look good though - we should get that part of this patch in pronto.\n\n-Jim",
+      "revId": "23f48a37af3b2f5e72ec86d2f711af9baad92003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
