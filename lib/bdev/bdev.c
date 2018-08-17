@@ -1822,6 +1822,7 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.bdev.iovs = &bdev_io->iov;
 	bdev_io->u.bdev.iovs[0].iov_base = buf;
@@ -1869,6 +1870,7 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.bdev.iovs = iov;
 	bdev_io->u.bdev.iovcnt = iovcnt;
@@ -1917,6 +1919,7 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.bdev.iovs = &bdev_io->iov;
 	bdev_io->u.bdev.iovs[0].iov_base = buf;
@@ -1969,6 +1972,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.bdev.iovs = iov;
 	bdev_io->u.bdev.iovcnt = iovcnt;
@@ -2020,6 +2024,7 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 
 	if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
@@ -2103,6 +2108,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
 
 	bdev_io->u.bdev.iovs = &bdev_io->iov;
@@ -2155,6 +2161,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
 	bdev_io->u.bdev.iovs = NULL;
 	bdev_io->u.bdev.iovcnt = 0;
@@ -2261,6 +2268,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
 	bdev_io->u.reset.ch_ref = NULL;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
@@ -2357,6 +2365,7 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_ADMIN;
 	bdev_io->u.nvme_passthru.cmd = *cmd;
 	bdev_io->u.nvme_passthru.buf = buf;
@@ -2394,6 +2403,7 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_IO;
 	bdev_io->u.nvme_passthru.cmd = *cmd;
 	bdev_io->u.nvme_passthru.buf = buf;
@@ -2431,6 +2441,7 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	}
 
 	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_IO_MD;
 	bdev_io->u.nvme_passthru.cmd = *cmd;
 	bdev_io->u.nvme_passthru.buf = buf;
