@@ -764,6 +764,8 @@ spdk_get_io_channel(void *io_device)
 			 *  thread, so return it.
 			 */
 			pthread_mutex_unlock(&g_devlist_mutex);
+			SPDK_ERRLOG("ch=%p ch->thread=%p spdk_get_thread()=%p ref=%u\n",
+				    ch, ch->thread, spdk_get_thread(), ch->ref);
 			return ch;
 		}
 	}
@@ -785,6 +787,9 @@ spdk_get_io_channel(void *io_device)
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
+	SPDK_ERRLOG("ch=%p ch->thread=%p spdk_get_thread()=%p ref=%u\n",
+		    ch, ch->thread, spdk_get_thread(), ch->ref);
+
 	rc = dev->create_cb(io_device, (uint8_t *)ch + sizeof(*ch));
 	if (rc == -1) {
 		pthread_mutex_lock(&g_devlist_mutex);
@@ -804,6 +809,8 @@ _spdk_put_io_channel(void *arg)
 	struct spdk_io_channel *ch = arg;
 	bool do_remove_dev = true;
 
+	SPDK_ERRLOG("ch=%p ch->thread=%p spdk_get_thread()=%p\n",
+		    ch, ch->thread, spdk_get_thread());
 	assert(ch->thread == spdk_get_thread());
 
 	if (ch->ref > 0) {
@@ -845,6 +852,9 @@ void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
 	ch->ref--;
+
+	SPDK_ERRLOG("ch=%p ch->thread=%p spdk_get_thread()=%p ref=%u\n",
+		    ch, ch->thread, spdk_get_thread(), ch->ref);
 
 	if (ch->ref == 0) {
 		spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
