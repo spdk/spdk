@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "065c3a84_c3367a94",
+        "filename": "lib/bdev/multipath/vbdev_multipath.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-17T23:00:40Z",
+      "side": 1,
+      "message": "I think the code would simplify a little bit if you combined this struct with vbdev_multipath_def. You can allocate the spdk_bdev up front, based on the config file. The part that needs to be deferred to examine is just whether that vbdev is registered or not.",
+      "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "520a88cc_e3e55b8f",
         "filename": "lib/bdev/multipath/vbdev_multipath.c",
         "patchSetId": 1
@@ -16,6 +33,40 @@
       "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "366d442b_47aaf2ea",
+        "filename": "lib/bdev/multipath/vbdev_multipath.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-17T23:00:40Z",
+      "side": 1,
+      "message": "You could also consider scattering the I/O across the paths, but that\u0027s probably an idea for a future update and not the initial patch.",
+      "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "faf816e5_7eb303c4",
+        "filename": "lib/bdev/multipath/vbdev_multipath.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-17T23:00:40Z",
+      "side": 1,
+      "message": "One thought is that there is the function spdk_bdev_get_uuid(). For some types of bdevs this is meaningful - for instance NVMe and NVMe-oF bdevs likely return a unique ID that is meaningful. If you detect two bdevs with the same UUID you could automatically set up multipathing with no user configuration. That\u0027s just an idea for the future.",
+      "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
