@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "061065e6_bfc1e930",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-17T13:00:43Z",
+      "side": 1,
+      "message": "For this and all other similar loops.\nInstead of doing i\u003d0 and i+\u003d1 inside loop why not just use:\ni, item for vhost_subsystem?\n\nAnd if \"insert_index \u003c item_index\" then just return instead of break?",
+      "range": {
+        "startLine": 146,
+        "startChar": 0,
+        "endLine": 155,
+        "endChar": 14
+      },
+      "revId": "3f74cbfed8bda18cba070c954ff129f01688329e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad948d96_a788e9ce",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-17T13:00:43Z",
+      "side": 1,
+      "message": "Kind of hard to read. Maybe put comment somewhere around here what is [4][3], so that there\u0027s no need to search for it?",
+      "range": {
+        "startLine": 474,
+        "startChar": 4,
+        "endLine": 474,
+        "endChar": 20
+      },
+      "revId": "3f74cbfed8bda18cba070c954ff129f01688329e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
