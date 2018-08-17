@@ -34,6 +34,24 @@
       "revId": "05e479afea0f950e5593f5a449608bf85b6e03ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ef7c92d_575bb691",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-17T22:06:20Z",
+      "side": 1,
+      "message": "I think you could do this a little easier by using a flag internal to this function. If you created the transport in this call to the function it means you are the first listener. In that case, delete it, otherwise don\u0027t.",
+      "parentUuid": "5c9edbfe_a2aa84d2",
+      "revId": "05e479afea0f950e5593f5a449608bf85b6e03ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
