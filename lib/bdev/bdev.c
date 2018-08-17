@@ -1047,6 +1047,218 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 	}
 }
 
+static bool
+_spdk_bdev_io_type_can_split(uint8_t type)
+{
+	assert(type != SPDK_BDEV_IO_TYPE_INVALID);
+	assert(type < SPDK_BDEV_NUM_IO_TYPES);
+
+	switch (type) {
+	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		/* These types of bdev_io do not specify an LBA offset/length. */
+		return false;
+	default:
+		return true;
+	}
+}
+
+static bool
+_spdk_bdev_io_spans_boundary(struct spdk_bdev_io *bdev_io)
+{
+	uint64_t start_stripe, end_stripe;
+	uint32_t io_boundary = bdev_io->bdev->optimal_io_boundary;
+
+	if (io_boundary == 0) {
+		return false;
+	}
+
+	if (!_spdk_bdev_io_type_can_split(bdev_io->type)) {
+		return false;
+	}
+
+	start_stripe = bdev_io->u.bdev.offset_blocks;
+	end_stripe = start_stripe + bdev_io->u.bdev.num_blocks - 1;
+	/* Avoid expensive div operations if possible.  These spdk_u32 functions are very cheap. */
+	if (spdk_likely(spdk_u32_is_pow2(io_boundary))) {
+		start_stripe >>= spdk_u32log2(io_boundary);
+		end_stripe >>= spdk_u32log2(io_boundary);
+	} else {
+		start_stripe /= io_boundary;
+		end_stripe /= io_boundary;
+	}
+	return (start_stripe != end_stripe);
+}
+
+static uint32_t
+_to_next_boundary(uint64_t offset, uint32_t boundary)
+{
+	return (boundary - (offset % boundary));
+}
+
+static void
+_spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+
+static void
+_spdk_bdev_io_split_with_payload(void *_bdev_io)
+{
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	uint64_t current_offset, remaining, bytes_handled;
+	uint32_t blocklen, to_next_boundary, to_next_boundary_bytes;
+	struct iovec *parent_iov;
+	uint64_t parent_iov_offset, child_iov_len;
+	uint32_t child_iovcnt;
+	int rc;
+
+	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
+	current_offset = bdev_io->u.bdev.split_current_offset_blocks;
+	blocklen = bdev_io->bdev->blocklen;
+	bytes_handled = (current_offset - bdev_io->u.bdev.offset_blocks) * blocklen;
+	parent_iov = &bdev_io->u.bdev.iovs[0];
+	parent_iov_offset = 0;
+
+	while (bytes_handled > 0) {
+		if (bytes_handled >= parent_iov->iov_len) {
+			bytes_handled -= parent_iov->iov_len;
+			parent_iov++;
+			continue;
+		}
+		parent_iov_offset += bytes_handled;
+		break;
+	}
+
+	to_next_boundary = _to_next_boundary(current_offset, bdev_io->bdev->optimal_io_boundary);
+	to_next_boundary = spdk_min(remaining, to_next_boundary);
+	to_next_boundary_bytes = to_next_boundary * blocklen;
+	child_iovcnt = 0;
+	while (to_next_boundary_bytes > 0) {
+		child_iov_len = spdk_min(to_next_boundary_bytes, parent_iov->iov_len - parent_iov_offset);
+		to_next_boundary_bytes -= child_iov_len;
+
+		bdev_io->scratch_iov[child_iovcnt].iov_base = parent_iov->iov_base + parent_iov_offset;
+		bdev_io->scratch_iov[child_iovcnt].iov_len = child_iov_len;
+
+		parent_iov++;
+		parent_iov_offset = 0;
+		child_iovcnt++;
+	}
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		rc = spdk_bdev_readv_blocks(bdev_io->internal.desc,
+					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					    bdev_io->scratch_iov, child_iovcnt, current_offset, to_next_boundary,
+					    _spdk_bdev_io_split_done, bdev_io);
+	} else {
+		rc = spdk_bdev_writev_blocks(bdev_io->internal.desc,
+					     spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					     bdev_io->scratch_iov, child_iovcnt, current_offset, to_next_boundary,
+					     _spdk_bdev_io_split_done, bdev_io);
+	}
+
+	if (rc == 0) {
+		bdev_io->u.bdev.split_current_offset_blocks += to_next_boundary;
+		bdev_io->u.bdev.split_remaining_num_blocks -= to_next_boundary;
+	} else {
+		assert(rc == -ENOMEM);
+		bdev_io->internal.waitq_entry.bdev = bdev_io->bdev;
+		bdev_io->internal.waitq_entry.cb_fn = _spdk_bdev_io_split_with_payload;
+		bdev_io->internal.waitq_entry.cb_arg = bdev_io;
+		spdk_bdev_queue_io_wait(bdev_io->bdev, spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					&bdev_io->internal.waitq_entry);
+	}
+}
+
+static void
+_spdk_bdev_io_split_no_payload(void *_bdev_io)
+{
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	uint64_t current_offset, remaining;
+	uint32_t to_next_boundary;
+	int rc;
+
+	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
+	current_offset = bdev_io->u.bdev.split_current_offset_blocks;
+
+	to_next_boundary = _to_next_boundary(current_offset, bdev_io->bdev->optimal_io_boundary);
+	to_next_boundary = spdk_min(remaining, to_next_boundary);
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP) {
+		rc = spdk_bdev_unmap_blocks(bdev_io->internal.desc,
+					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					    current_offset, to_next_boundary,
+					    _spdk_bdev_io_split_done, bdev_io);
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE_ZEROES) {
+		rc = spdk_bdev_write_zeroes_blocks(bdev_io->internal.desc,
+						   spdk_io_channel_from_ctx(bdev_io->internal.ch),
+						   current_offset, to_next_boundary,
+						   _spdk_bdev_io_split_done, bdev_io);
+	} else {
+		rc = spdk_bdev_flush_blocks(bdev_io->internal.desc,
+					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					    current_offset, to_next_boundary,
+					    _spdk_bdev_io_split_done, bdev_io);
+	}
+
+	if (rc == 0) {
+		bdev_io->u.bdev.split_current_offset_blocks += to_next_boundary;
+		bdev_io->u.bdev.split_remaining_num_blocks -= to_next_boundary;
+	} else {
+		assert(rc == -ENOMEM);
+		bdev_io->internal.waitq_entry.bdev = bdev_io->bdev;
+		bdev_io->internal.waitq_entry.cb_fn = _spdk_bdev_io_split_with_payload;
+		bdev_io->internal.waitq_entry.cb_arg = bdev_io;
+		spdk_bdev_queue_io_wait(bdev_io->bdev, spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					&bdev_io->internal.waitq_entry);
+	}
+}
+
+static void
+_spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *parent_io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		parent_io->internal.cb(parent_io, SPDK_BDEV_IO_STATUS_FAILED, parent_io->internal.caller_ctx);
+		return;
+	}
+
+	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
+		parent_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		parent_io->internal.cb(parent_io, SPDK_BDEV_IO_STATUS_SUCCESS, parent_io->internal.caller_ctx);
+		return;
+	}
+
+	/*
+	 * Continue with the splitting process.  This function will complete the parent I/O if the
+	 * splitting is done.
+	 */
+	if (parent_io->type == SPDK_BDEV_IO_TYPE_READ || parent_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		_spdk_bdev_io_split_with_payload(parent_io);
+	} else {
+		_spdk_bdev_io_split_no_payload(parent_io);
+	}
+}
+
+static void
+_spdk_bdev_io_split(struct spdk_bdev_io *bdev_io)
+{
+	assert(_spdk_bdev_io_type_can_split(bdev_io->type));
+
+	bdev_io->u.bdev.split_current_offset_blocks = bdev_io->u.bdev.offset_blocks;
+	bdev_io->u.bdev.split_remaining_num_blocks = bdev_io->u.bdev.num_blocks;
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ || bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		_spdk_bdev_io_split_with_payload(bdev_io);
+	} else {
+		_spdk_bdev_io_split_no_payload(bdev_io);
+	}
+}
+
 static void
 _spdk_bdev_io_submit(void *ctx)
 {
@@ -1090,6 +1302,11 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	assert(thread != NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
+
+	if (bdev->split_on_optimal_io_boundary && _spdk_bdev_io_spans_boundary(bdev_io)) {
+		_spdk_bdev_io_split(bdev_io);
+		return;
+	}
 
 	if (bdev_io->internal.ch->flags & BDEV_CH_QOS_ENABLED) {
 		if ((thread == bdev->internal.qos->thread) || !bdev->internal.qos->thread) {

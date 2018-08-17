@@ -249,7 +249,15 @@ struct spdk_bdev {
 	 * This is used to make sure buffers are sector aligned.
 	 * This causes double buffering on writes.
 	 */
-	int need_aligned_buffer;
+	bool need_aligned_buffer;
+
+	/**
+	 * Specifies whether the optimal_io_boundary is mandatory or
+	 * only advisory.  If set to true, the bdev layer will split
+	 * I/O that span the optimal_io_boundary before submitting them
+	 * to the bdev module.
+	 */
+	bool split_on_optimal_io_boundary;
 
 	/**
 	 * Optimal I/O boundary in blocks, or 0 for no value reported.
@@ -332,6 +340,8 @@ struct spdk_bdev {
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
+#define BDEV_IO_NUM_SCRATCH_IOV 32
+
 struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
@@ -341,6 +351,9 @@ struct spdk_bdev_io {
 
 	/** A single iovec element for use by this bdev_io. */
 	struct iovec iov;
+
+	/** Scratch array of iovecs used for I/O splitting. */
+	struct iovec scratch_iov[BDEV_IO_NUM_SCRATCH_IOV];
 
 	union {
 		struct {
@@ -460,6 +473,9 @@ struct spdk_bdev_io {
 
 		/** Entry to the list need_buf of struct spdk_bdev. */
 		STAILQ_ENTRY(spdk_bdev_io) buf_link;
+
+		/** Enables queuing parent I/O when no bdev_ios available for split children. */
+		struct spdk_bdev_io_wait_entry waitq_entry;
 	} internal;
 
 	/**
