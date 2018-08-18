@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "57fe8b2b_b9bf6511",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-18T18:09:42Z",
+      "side": 1,
+      "message": "So that\u0027s pretty fugly from a crypto perspective, we\u0027d have to jump through serious hopps to support that kind of IOV. We know this isn\u0027t the data corruption thing, that\u0027s solved, but I wrote a test case for this (bunch of small IOVs that together make up an even block count) and it simply won\u0027t work. The reason is because a crypto operation needs an IV and we\u0027re calling that an LBA so I can\u0027t process a cryptop operation with an mbuf \u003c an LBA size (or better said not an even multiple of a block size) that\u0027s why there\u0027s an assert in there to catch it. We could if the crypto driver supported chaining because we could use multiple mbufs in the same crypto operation with one IV that represents the LBA *but* not all DPDK crypto drivers support chaining.  QAT does, the AESNI driver does not. As a result I\u0027ll upgrade the assert to something a little more friendly.  I need to revisit QAT as a result of all this other work and put chaining back in, I took it out not realizing this use case existed.  That\u0027s not for the first release though as we still need to get QAT HW in the test pool somewhere.",
+      "parentUuid": "3b3405eb_7a853b8b",
+      "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f3363c5_638fb1d3",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 60
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-03T16:51:58Z",
       "side": 1,
       "message": "I don\u0027t think this needs to be 4KB (0x1000) aligned.  64 bytes should be fine.  (Adding extra unneeded alignment will waste some amount of memory in the allocators.)\n\ncan you also add a check here to make sure that these allocations never span a 2MB boundary?  (if they do then this would cause a data corruption as this function is currently written)",
+      "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21ead0c6_a0aaad92",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-18T18:09:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f3363c5_638fb1d3",
       "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "5e21a1b4_dd689065",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-18T18:09:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "08e80c7b_f052aeca",
+      "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bee0f8ed_18d374b2",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 60
@@ -64,6 +118,24 @@
       "writtenOn": "2018-08-03T16:51:58Z",
       "side": 1,
       "message": "I think we should break this up into separate functions.  Then just specify different callback functions for different operations (read, write, etc.)\n\nNot critical now but would be a good cleanup in a later patch.",
+      "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4acb88d_7784f7a9",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-18T18:09:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bee0f8ed_18d374b2",
       "revId": "3a748be74ca6a2db624ef632166053e785fe9b87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
