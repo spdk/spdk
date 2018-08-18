@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "30b45730_d927d4cd",
+        "filename": "lib/bdev/multipath/vbdev_multipath.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-08-18T17:19:39Z",
+      "side": 1,
+      "message": "Sure, but I\u0027d rather defer that until register/hotplug and shutdown/hotremove paths are clearly decoupled.",
+      "parentUuid": "065c3a84_c3367a94",
+      "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "520a88cc_e3e55b8f",
         "filename": "lib/bdev/multipath/vbdev_multipath.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-17T22:05:14Z",
       "side": 1,
       "message": "I am not 100% sure but since in terms of io handling multipath is kinda similar to passthru you have to take into consideration this patch \nhttps://github.com/spdk/spdk/commit/6fd1d004a8b0aa51047a359ec464919892854049\nand allocate  buf for io  in case of SPDK_BDEV_IO_TYPE_READ by spdk_bdev_io_get_buf",
+      "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "915a1203_8148582c",
+        "filename": "lib/bdev/multipath/vbdev_multipath.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 610,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-08-18T17:19:39Z",
+      "side": 1,
+      "message": "I guess buffer management is up to the caller.",
+      "parentUuid": "520a88cc_e3e55b8f",
       "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "8596d113_3060e7fb",
+        "filename": "lib/bdev/multipath/vbdev_multipath.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-08-18T17:19:39Z",
+      "side": 1,
+      "message": "mp_setup_io_ctx already does that by keeping a reference to the path channel the last I/O was submitted on, and advancing it on each invocation. It would be pretty straightforward to upgrade path policy to weighted so that it can support any active/active or active/passive setup.",
+      "parentUuid": "366d442b_47aaf2ea",
+      "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "faf816e5_7eb303c4",
         "filename": "lib/bdev/multipath/vbdev_multipath.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-08-17T23:00:40Z",
       "side": 1,
       "message": "One thought is that there is the function spdk_bdev_get_uuid(). For some types of bdevs this is meaningful - for instance NVMe and NVMe-oF bdevs likely return a unique ID that is meaningful. If you detect two bdevs with the same UUID you could automatically set up multipathing with no user configuration. That\u0027s just an idea for the future.",
+      "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c7ec126_de26ecc5",
+        "filename": "lib/bdev/multipath/vbdev_multipath.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1151,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-08-18T17:19:39Z",
+      "side": 1,
+      "message": "Right, that\u0027s very much the approach I\u0027ve had in mind when mentioning uuid-based discovery under TODO. The issue here is that uuids aren\u0027t always meaningful, so in practice the driver should provide both configuration options.",
+      "parentUuid": "faf816e5_7eb303c4",
       "revId": "d2de48a3cfd2e40d632f34e0be4ac7e93262582e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
