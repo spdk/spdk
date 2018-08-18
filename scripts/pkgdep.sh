@@ -3,6 +3,9 @@
 
 SYSTEM=`uname -s`
 
+scriptsdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $scriptsdir/..)
+
 if [ -s /etc/redhat-release ]; then
 	# Includes Fedora, CentOS
 	if [ -f /etc/centos-release ]; then
@@ -61,4 +64,20 @@ elif [ $SYSTEM = "FreeBSD" ] ; then
 else
 	echo "pkgdep: unknown system type."
 	exit 1
+fi
+
+# Only crypto needs nasm and this lib but because the lib requires root to
+# install we do it here.
+nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
+if [[ $nasm_ver -lt "21202" ]]; then
+              echo Crypto requires NASM version 2.12.02 or newer.  Please install
+              echo or upgrade and re-run this script if you are going to use Crypto.
+else
+	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
+	if [[ "$ipsec" == "" ]]; then
+		cd $rootdir/intel-ipsec-mb
+		make
+		make install
+		cd -
+	fi
 fi

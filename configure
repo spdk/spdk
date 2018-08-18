@@ -339,7 +339,21 @@ EOF
 	fi
 fi
 
-
+if [[ "$CONFIG_CRYPTO" = "y" ]]; then
+	set +e
+	nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
+	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
+	set -e
+	if [[ $nasm_ver -lt "21202" ]]; then
+                echo or upgrade and re-run this scrip.
+        else
+		if [[ "$ipsec" == "" ]]; then
+			echo "To enable crypto you must first go to the intel-ipsec-mb directory and "
+			echo "run 'make' then 'sudo make install' then re-run this script."
+			exit 1
+		fi
+	fi
+fi
 
 echo -n "Creating CONFIG.local..."
 
