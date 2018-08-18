@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "26bf43fc_66c80f02",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-18T18:17:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67c9140b_9643f11f",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33772578_1b5e3d57",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 59
@@ -65,6 +83,24 @@
       "writtenOn": "2018-07-27T19:28:27Z",
       "side": 1,
       "message": "If I\u0027m understanding this correctly, there can be multiple crypto devices of each type, each of which may support multiple queue pairs. It\u0027s basically like NVMe devices in that sense. However, since the crypto operations are generally stateless, the user doesn\u0027t really care which crypto device they use, so you just multiply the number of devices times the queues per device to get a total number.\n\nFor the software devices, how are they exposed here? Is there one device with lots of queue pairs? Many devices each with one queue pair?\n\nFor QAT I assume there are 8-16 devices each with 1 queue pair. Is that right?\n\nThere is NUMA locality to consider, but I think we can ignore that for this first round.",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f8f5daa_68336249",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-18T18:17:39Z",
+      "side": 1,
+      "message": "I\u0027m not sure what the code comment is but we\u0027ve talked about these things already so I won\u0027t take any action on this specific comment right now",
+      "parentUuid": "33772578_1b5e3d57",
       "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -88,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "8547ab7d_c0712c0c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-18T18:17:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55d669e4_11d716cb",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cae8bf27_d7ee0b0f",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 59
@@ -99,6 +153,24 @@
       "writtenOn": "2018-07-27T19:28:27Z",
       "side": 1,
       "message": "I\u0027ve been staring at this function for a long time and I\u0027m not confident that I understand what is going on here. I think running the following test is going to make some things much more apparent:\n\nRun the bdev fio plugin with cpumask set to include lots of cores and at least 1 job per core. Each job should be doing random writes (rw\u003drandwrite) with data verification (verify\u003d1) enabled at high queue depth (iodepth\u003d256). Run this for an hour maybe.\n\nIf that passes, then I need to spend more time looking at what this is doing. I asked a question above about how the software crypto is exposed (multiple devices or one device) that would clear some things up for me too.",
+      "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87801ccb_39153d76",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-18T18:17:39Z",
+      "side": 1,
+      "message": "Yup, I think this needs to be reworked.  Thanks",
+      "parentUuid": "cae8bf27_d7ee0b0f",
       "revId": "302e7c83bc219794cae3d3a9ee8e57540eeadfc9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
