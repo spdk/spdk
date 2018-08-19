@@ -83,6 +83,37 @@ def set_iscsi_options(
     return client.call('set_iscsi_options', params)
 
 
+def set_iscsi_discovery_auth(
+        client,
+        no_auth=None,
+        req_auth=None,
+        req_auth_mutual=None,
+        auth_group=None):
+    """Set CHAP authentication for discovery service.
+
+    Args:
+        no_auth: CHAP for discovery session should be disabled (optional)
+        req_auth: CHAP for discovery session should be required (optional)
+        req_auth_mutual: CHAP for discovery session should be mutual (optional)
+        auth_group: Authentication group ID for discovery session (optional)
+
+    Returns:
+        True or False
+    """
+    params = {}
+
+    if no_auth:
+        params['no_auth'] = no_auth
+    if req_auth:
+        params['req_auth'] = req_auth
+    if req_auth_mutual:
+        params['req_auth_mutual'] = req_auth_mutual
+    if auth_group:
+        params['auth_group'] = auth_group
+
+    return client.call('set_iscsi_discovery_auth', params)
+
+
 def get_portal_groups(client):
     """Display current portal group configuration.
 
