@@ -21,15 +21,16 @@ def highest_value(inp):
 def generateTestCompletionTables(output_dir, completion_table):
     data_table = pd.DataFrame(completion_table, columns=["Agent", "Test", "With Asan", "With UBsan"])
     data_table.to_html(os.path.join(output_dir, 'completions_table.html'))
+    os.makedirs(os.path.join(output_dir, "post_process"), exist_ok=True)
 
     pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Test"])
-    pivot_by_agent.to_html(os.path.join(output_dir, 'completions_table_by_agent.html'))
+    pivot_by_agent.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_agent.html'))
     pivot_by_test = pd.pivot_table(data_table, index=["Test", "Agent"])
-    pivot_by_test.to_html(os.path.join(output_dir, 'completions_table_by_test.html'))
+    pivot_by_test.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_test.html'))
     pivot_by_asan = pd.pivot_table(data_table, index=["Test"], values=["With Asan"], aggfunc=highest_value)
-    pivot_by_asan.to_html(os.path.join(output_dir, 'completions_table_by_asan.html'))
+    pivot_by_asan.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_asan.html'))
     pivot_by_ubsan = pd.pivot_table(data_table, index=["Test"], values=["With UBsan"], aggfunc=highest_value)
-    pivot_by_ubsan.to_html(os.path.join(output_dir, 'completions_table_by_ubsan.html'))
+    pivot_by_ubsan.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_ubsan.html'))
 
 
 def generateCoverageReport(output_dir, repo_dir):
