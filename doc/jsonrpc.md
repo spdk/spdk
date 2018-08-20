@@ -2184,6 +2184,8 @@ chap_group                  | Optional | number  | Authentication group ID for t
 header_digest               | Optional | boolean | Header Digest should be required for this target node
 data_digest                 | Optional | boolean | Data Digest should be required for this target node
 
+Parameters `disable_chap` and `require_chap` are mutually exclusive.
+
 ### Example
 
 Example request:
@@ -2217,6 +2219,50 @@ Example request:
   },
   "jsonrpc": "2.0",
   "method": "construct_target_node",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## set_iscsi_target_node_auth method {#rpc_set_iscsi_target_node_auth}
+
+Set CHAP authentication to an existing iSCSI target node.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+name                        | Required | string  | Target node name (ASCII)
+disable_chap                | Optional | boolean | CHAP authentication should be disabled for this target
+require_chap                | Optional | boolean | CHAP authentication should be required for this target
+mutual_chap                 | Optional | boolean | CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)
+chap_group                  | Optional | number  | Authentication group ID for this target node
+
+Parameters `disable_chap` and `require_chap` are mutually exclusive.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "chap_group": 1,
+    "require_chap": true,
+    "name": "iqn.2016-06.io.spdk:target1",
+    "mutual_chap": true
+  },
+  "jsonrpc": "2.0",
+  "method": "set_iscsi_target_node_auth",
   "id": 1
 }
 ~~~
