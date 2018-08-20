@@ -389,6 +389,11 @@ spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 		    state == SPDK_NVMF_SUBSYSTEM_ACTIVE) {
 			expected_old_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
 		}
+		/* This is for the case when activating the subsystem fails. */
+		if (actual_old_state == SPDK_NVMF_SUBSYSTEM_ACTIVATING &&
+		    state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING) {
+			expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
+		}
 		actual_old_state = __sync_val_compare_and_swap(&subsystem->state, expected_old_state, state);
 	}
 	assert(actual_old_state == expected_old_state);
