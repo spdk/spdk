@@ -719,7 +719,7 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 			}
 			CU_ASSERT(pd_lba == g_io_output[index].offset_blocks);
 			CU_ASSERT(pd_blocks == g_io_output[index].num_blocks);
-			CU_ASSERT(ch_ctx->base_bdevs_io_channel[pd_idx] == g_io_output[index].ch);
+			CU_ASSERT(ch_ctx->base_channel[pd_idx] == g_io_output[index].ch);
 			CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].desc == g_io_output[index].desc);
 			CU_ASSERT(buf == g_io_output[index].buf);
 			CU_ASSERT(bdev_io->type == g_io_output[index].iotype);
@@ -729,7 +729,7 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 		CU_ASSERT(g_io_output_index == 1);
 		CU_ASSERT(bdev_io->u.bdev.offset_blocks == g_io_output[0].offset_blocks);
 		CU_ASSERT(bdev_io->u.bdev.num_blocks == g_io_output[0].num_blocks);
-		CU_ASSERT(ch_ctx->base_bdevs_io_channel[0] == g_io_output[0].ch);
+		CU_ASSERT(ch_ctx->base_channel[0] == g_io_output[0].ch);
 		CU_ASSERT(raid_bdev->base_bdev_info[0].desc == g_io_output[0].desc);
 		CU_ASSERT(buf == g_io_output[index].buf);
 	}
@@ -1299,10 +1299,10 @@ test_io_channel(void)
 
 	CU_ASSERT(raid_bdev_create_cb(pbdev, ch_ctx) == 0);
 	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		CU_ASSERT(ch_ctx->base_bdevs_io_channel && ch_ctx->base_bdevs_io_channel[i] == (void *)0x1);
+		CU_ASSERT(ch_ctx->base_channel && ch_ctx->base_channel[i] == (void *)0x1);
 	}
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
-	CU_ASSERT(ch_ctx->base_bdevs_io_channel == NULL);
+	CU_ASSERT(ch_ctx->base_channel == NULL);
 	free_test_req(&req);
 
 	destroy_req.name = strdup("raid1");
@@ -1361,7 +1361,7 @@ test_write_io(void)
 
 	CU_ASSERT(raid_bdev_create_cb(pbdev, ch_ctx) == 0);
 	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		CU_ASSERT(ch_ctx->base_bdevs_io_channel && ch_ctx->base_bdevs_io_channel[i] == (void *)0x1);
+		CU_ASSERT(ch_ctx->base_channel && ch_ctx->base_channel[i] == (void *)0x1);
 	}
 
 	lba = 0;
@@ -1382,7 +1382,7 @@ test_write_io(void)
 	free_test_req(&req);
 
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
-	CU_ASSERT(ch_ctx->base_bdevs_io_channel == NULL);
+	CU_ASSERT(ch_ctx->base_channel == NULL);
 	free(ch);
 	destroy_req.name = strdup("raid1");
 	rpc_req = &destroy_req;
@@ -1439,7 +1439,7 @@ test_read_io(void)
 
 	CU_ASSERT(raid_bdev_create_cb(pbdev, ch_ctx) == 0);
 	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		CU_ASSERT(ch_ctx->base_bdevs_io_channel && ch_ctx->base_bdevs_io_channel[i] == (void *)0x1);
+		CU_ASSERT(ch_ctx->base_channel && ch_ctx->base_channel[i] == (void *)0x1);
 	}
 	free_test_req(&req);
 
@@ -1460,7 +1460,7 @@ test_read_io(void)
 	}
 
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
-	CU_ASSERT(ch_ctx->base_bdevs_io_channel == NULL);
+	CU_ASSERT(ch_ctx->base_channel == NULL);
 	free(ch);
 	destroy_req.name = strdup("raid1");
 	rpc_req = &destroy_req;
@@ -1518,7 +1518,7 @@ test_io_failure(void)
 
 	CU_ASSERT(raid_bdev_create_cb(pbdev, ch_ctx) == 0);
 	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		CU_ASSERT(ch_ctx->base_bdevs_io_channel && ch_ctx->base_bdevs_io_channel[i] == (void *)0x1);
+		CU_ASSERT(ch_ctx->base_channel && ch_ctx->base_channel[i] == (void *)0x1);
 	}
 	free_test_req(&req);
 
@@ -1557,7 +1557,7 @@ test_io_failure(void)
 	}
 
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
-	CU_ASSERT(ch_ctx->base_bdevs_io_channel == NULL);
+	CU_ASSERT(ch_ctx->base_channel == NULL);
 	free(ch);
 	destroy_req.name = strdup("raid1");
 	rpc_req = &destroy_req;
@@ -1616,9 +1616,9 @@ test_io_waitq(void)
 	SPDK_CU_ASSERT_FATAL(ch_ctx != NULL);
 
 	CU_ASSERT(raid_bdev_create_cb(pbdev, ch_ctx) == 0);
-	SPDK_CU_ASSERT_FATAL(ch_ctx->base_bdevs_io_channel != NULL);
+	SPDK_CU_ASSERT_FATAL(ch_ctx->base_channel != NULL);
 	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		CU_ASSERT(ch_ctx->base_bdevs_io_channel[i] == (void *)0x1);
+		CU_ASSERT(ch_ctx->base_channel[i] == (void *)0x1);
 	}
 	free_test_req(&req);
 
@@ -1649,7 +1649,7 @@ test_io_waitq(void)
 	}
 
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
-	CU_ASSERT(ch_ctx->base_bdevs_io_channel == NULL);
+	CU_ASSERT(ch_ctx->base_channel == NULL);
 	g_ignore_io_output = 0;
 	free(ch);
 	destroy_req.name = strdup("raid1");
@@ -1852,9 +1852,9 @@ test_multi_raid_with_io(void)
 		ch_ctx = spdk_io_channel_get_ctx(&ch[i]);
 		SPDK_CU_ASSERT_FATAL(ch_ctx != NULL);
 		CU_ASSERT(raid_bdev_create_cb(pbdev, ch_ctx) == 0);
-		CU_ASSERT(ch_ctx->base_bdevs_io_channel != NULL);
+		CU_ASSERT(ch_ctx->base_channel != NULL);
 		for (j = 0; j < construct_req[i].base_bdevs.num_base_bdevs; j++) {
-			CU_ASSERT(ch_ctx->base_bdevs_io_channel[j] == (void *)0x1);
+			CU_ASSERT(ch_ctx->base_channel[j] == (void *)0x1);
 		}
 	}
 
@@ -1894,7 +1894,7 @@ test_multi_raid_with_io(void)
 		ch_ctx = spdk_io_channel_get_ctx(&ch[i]);
 		SPDK_CU_ASSERT_FATAL(ch_ctx != NULL);
 		raid_bdev_destroy_cb(pbdev, ch_ctx);
-		CU_ASSERT(ch_ctx->base_bdevs_io_channel == NULL);
+		CU_ASSERT(ch_ctx->base_channel == NULL);
 		destroy_req.name = strdup(construct_req[i].name);
 		count = snprintf(name, 16, "%s", destroy_req.name);
 		name[count] = '\0';
