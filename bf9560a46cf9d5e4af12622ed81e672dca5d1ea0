@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "358f650c_070f0b64",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-20T15:22:10Z",
+      "side": 1,
+      "message": "I think we can just call spdk_bdev_unregister().  I would suggest reverting back to the original code, and call spdk_bdev_unregister if the spdk_bdev_alias_add fails.",
+      "revId": "bf9560a46cf9d5e4af12622ed81e672dca5d1ea0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
