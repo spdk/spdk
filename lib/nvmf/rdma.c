@@ -977,6 +977,8 @@ static const char *CM_EVENT_STR[] = {
 };
 #endif /* DEBUG */
 
+#define TWO_MB (1U << 21)
+
 static int
 spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			  enum spdk_mem_map_notify_action action,
@@ -985,9 +987,54 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 	struct spdk_nvmf_rdma_device *device = cb_ctx;
 	struct ibv_pd *pd = device->pd;
 	struct ibv_mr *mr;
+	enum ibv_rereg_mr_err_code err;
+	uint64_t va = (uint64_t)vaddr;
+	size_t sz = size;
+
+	/* vaddr and size are guaranteed to be a multiple of 2MB */
+
+	assert((sz % TWO_MB) == 0);
+	assert((va % TWO_MB) == 0);
 
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		/* Check if the page before this one is already registered */
+		mr = (struct ibv_mr *)spdk_mem_map_translate(map, va - TWO_MB, TWO_MB);
+		if (mr) {
+			/* Extend this memory registration to include the new region */
+			err = ibv_rereg_mr(mr, IBV_REREG_MR_CHANGE_TRANSLATION,
+					   pd, mr->addr, mr->length + sz,
+					   IBV_ACCESS_LOCAL_WRITE |
+					   IBV_ACCESS_REMOTE_READ |
+					   IBV_ACCESS_REMOTE_WRITE);
+			if (err != 0) {
+				SPDK_ERRLOG("Unable to set up IBV MR translation for %p\n", vaddr);
+				return -1;
+			}
+
+			spdk_mem_map_set_translation(map, va, sz, (uint64_t)mr);
+			return 0;
+		}
+
+		/* Check if the page after this region is already registered */
+		mr = (struct ibv_mr *)spdk_mem_map_translate(map, va + sz, TWO_MB);
+		if (mr) {
+			/* Extend this memory registration to include the new region */
+			err = ibv_rereg_mr(mr, IBV_REREG_MR_CHANGE_TRANSLATION,
+					   pd, vaddr, mr->length + sz,
+					   IBV_ACCESS_LOCAL_WRITE |
+					   IBV_ACCESS_REMOTE_READ |
+					   IBV_ACCESS_REMOTE_WRITE);
+			if (err != 0) {
+				SPDK_ERRLOG("Unable to set up IBV MR translation for %p\n", vaddr);
+				return -1;
+			}
+
+			spdk_mem_map_set_translation(map, va, sz, (uint64_t)mr);
+			return 0;
+		}
+
+		/* Register a new region */
 		mr = ibv_reg_mr(pd, vaddr, size,
 				IBV_ACCESS_LOCAL_WRITE |
 				IBV_ACCESS_REMOTE_READ |
@@ -995,15 +1042,18 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 		if (mr == NULL) {
 			SPDK_ERRLOG("ibv_reg_mr() failed\n");
 			return -1;
-		} else {
-			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
 		}
+
+		spdk_mem_map_set_translation(map, va, sz, (uint64_t)mr);
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, size);
-		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
+		/* Only unregister if the unregister call is the entire MR */
+		mr = (struct ibv_mr *)spdk_mem_map_translate(map, va, sz);
 		if (mr) {
-			ibv_dereg_mr(mr);
+			if (mr->addr == vaddr && mr->length == sz) {
+				spdk_mem_map_clear_translation(map, va, sz);
+				ibv_dereg_mr(mr);
+			}
 		}
 		break;
 	}
