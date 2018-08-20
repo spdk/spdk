@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44725c46_b4825ffb",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-20T12:44:16Z",
+      "side": 1,
+      "message": "Memory map i per virtio device so why this mutext is needed? It if it needed can you put it inside virtio_user_dev?",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 75
+      },
+      "revId": "7fc2647c3fc97c5e9a63ec426c6c26c09deb5f66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
