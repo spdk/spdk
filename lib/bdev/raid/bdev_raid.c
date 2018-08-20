@@ -329,6 +329,7 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 		SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", 0);
 		assert(0);
 	}
+	raid_bdev_io->ch = ch;
 	raid_bdev_io->splits_pending = 0;
 	raid_bdev_io->splits_comp_outstanding = 1;
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
@@ -359,7 +360,6 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 		 */
 		raid_bdev_io->splits_pending = 1;
 		raid_bdev_io->splits_comp_outstanding = 0;
-		raid_bdev_io->ch = ch;
 		return ret;
 	}
 
@@ -383,11 +383,11 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
  * non zero - failure
  */
 static int
-raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
-			  uint64_t start_strip, uint64_t end_strip, uint64_t cur_strip, uint8_t *buf)
+raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip,
+			  uint64_t end_strip, uint64_t cur_strip, uint8_t *buf)
 {
-	struct   raid_bdev_io_channel *raid_bdev_io_channel = spdk_io_channel_get_ctx(ch);
 	struct   raid_bdev_io         *raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	struct   raid_bdev_io_channel *raid_bdev_io_channel = spdk_io_channel_get_ctx(raid_bdev_io->ch);
 	struct   raid_bdev            *raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	uint64_t                      pd_strip;
 	uint32_t                      offset_in_strip;
@@ -458,7 +458,6 @@ raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 			 * try to submit the remaining 3 and 4 childs
 			 */
 			raid_bdev_io->buf = buf;
-			raid_bdev_io->ch = ch;
 			raid_bdev_io->splits_comp_outstanding--;
 			raid_bdev_io->splits_pending++;
 			return ret;
@@ -589,7 +588,7 @@ raid_bdev_waitq_io_process(void *ctx)
 		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
 			    raid_bdev->strip_size_shift;
 		cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_bdev_io->splits_pending);
-		ret = raid_bdev_submit_children(raid_bdev_io->ch, bdev_io, start_strip, end_strip, cur_strip,
+		ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, cur_strip,
 						raid_bdev_io->buf);
 	} else {
 		ret = raid_bdev_send_passthru(raid_bdev_io->ch, bdev_io);
@@ -636,10 +635,11 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 		/*
 		 * IO parameters used during io split and io completion
 		 */
+		raid_bdev_io->ch = ch;
 		raid_bdev_io->splits_pending = (end_strip - start_strip + 1);
 		raid_bdev_io->splits_comp_outstanding = 0;
 		raid_bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		ret = raid_bdev_submit_children(ch, bdev_io, start_strip, end_strip, start_strip,
+		ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, start_strip,
 						bdev_io->u.bdev.iovs->iov_base);
 	} else {
 		ret = raid_bdev_send_passthru(ch, bdev_io);
