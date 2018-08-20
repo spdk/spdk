@@ -268,21 +268,12 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_bdev_config)
 		assert(raid_bdev->base_bdev_info != NULL);
 		if (raid_bdev->base_bdev_info[i].base_bdev) {
 			/* Release base bdev related resources */
-			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].base_bdev);
-			spdk_bdev_close(raid_bdev->base_bdev_info[i].base_bdev_desc);
-			raid_bdev->base_bdev_info[i].base_bdev_desc = NULL;
-			raid_bdev->base_bdev_info[i].base_bdev = NULL;
-			assert(raid_bdev->num_base_bdevs_discovered);
-			raid_bdev->num_base_bdevs_discovered--;
+			raid_bdev_free_base_bdev_resource(raid_bdev, i);
 		}
 	}
 	/* Free raid */
 	assert(raid_bdev->num_base_bdevs_discovered == 0);
-	TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-	TAILQ_REMOVE(&g_spdk_raid_bdev_list, raid_bdev, link_global_list);
-	free(raid_bdev->base_bdev_info);
-	free(raid_bdev);
-	raid_bdev_config->raid_bdev = NULL;
+	raid_bdev_cleanup(raid_bdev);
 }
 
 /*
