@@ -42,7 +42,7 @@ VHOST_APP="$SPDK_BUILD_DIR/app/vhost/vhost"
 
 notice "Testing vhost command line arguments"
 # Printing help will force vhost to exit without error
-$VHOST_APP -c /path/to/non_existing_file/conf -S $NEGATIVE_BASE_DIR -e 0x0 -s 1024 -d -q -h
+$VHOST_APP -c /path/to/non_existing_file/conf -S $NEGATIVE_BASE_DIR -e 0x0 -s 1024 -d -h --silence-noticelog
 
 # Testing vhost create pid file option. Vhost will exit with error as invalid config path is given
 if $VHOST_APP -c /path/to/non_existing_file/conf -f $SPDK_VHOST_SCSI_TEST_DIR/vhost.pid; then
