@@ -720,7 +720,7 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 			CU_ASSERT(pd_lba == g_io_output[index].offset_blocks);
 			CU_ASSERT(pd_blocks == g_io_output[index].num_blocks);
 			CU_ASSERT(ch_ctx->base_bdevs_io_channel[pd_idx] == g_io_output[index].ch);
-			CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].base_bdev_desc == g_io_output[index].desc);
+			CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].desc == g_io_output[index].desc);
 			CU_ASSERT(buf == g_io_output[index].buf);
 			CU_ASSERT(bdev_io->type == g_io_output[index].iotype);
 			buf += (pd_blocks << spdk_u32log2(g_block_len));
@@ -730,7 +730,7 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 		CU_ASSERT(bdev_io->u.bdev.offset_blocks == g_io_output[0].offset_blocks);
 		CU_ASSERT(bdev_io->u.bdev.num_blocks == g_io_output[0].num_blocks);
 		CU_ASSERT(ch_ctx->base_bdevs_io_channel[0] == g_io_output[0].ch);
-		CU_ASSERT(raid_bdev->base_bdev_info[0].base_bdev_desc == g_io_output[0].desc);
+		CU_ASSERT(raid_bdev->base_bdev_info[0].desc == g_io_output[0].desc);
 		CU_ASSERT(buf == g_io_output[index].buf);
 	}
 	CU_ASSERT(g_io_comp_status == io_status);
@@ -839,10 +839,10 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 			CU_ASSERT(pbdev->raid_level == r->raid_level);
 			CU_ASSERT(pbdev->destruct_called == false);
 			for (i = 0; i < pbdev->num_base_bdevs; i++) {
-				if (pbdev->base_bdev_info && pbdev->base_bdev_info[i].base_bdev) {
-					bdev = spdk_bdev_get_by_name(pbdev->base_bdev_info[i].base_bdev->name);
+				if (pbdev->base_bdev_info && pbdev->base_bdev_info[i].bdev) {
+					bdev = spdk_bdev_get_by_name(pbdev->base_bdev_info[i].bdev->name);
 					CU_ASSERT(bdev != NULL);
-					CU_ASSERT(pbdev->base_bdev_info[i].base_bdev_remove_scheduled == false);
+					CU_ASSERT(pbdev->base_bdev_info[i].remove_scheduled == false);
 				} else {
 					CU_ASSERT(0);
 				}

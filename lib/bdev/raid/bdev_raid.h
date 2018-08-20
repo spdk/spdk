@@ -64,17 +64,17 @@ enum raid_bdev_state {
  */
 struct raid_base_bdev_info {
 	/* pointer to base spdk bdev */
-	struct spdk_bdev         *base_bdev;
+	struct spdk_bdev	*bdev;
 
 	/* pointer to base bdev descriptor opened by raid bdev */
-	struct spdk_bdev_desc    *base_bdev_desc;
+	struct spdk_bdev_desc	*desc;
 
 	/*
 	 * When underlying base device calls the hot plug function on drive removal,
 	 * this flag will be set and later after doing some processing, base device
 	 * descriptor will be closed
 	 */
-	bool                     base_bdev_remove_scheduled;
+	bool			remove_scheduled;
 };
 
 /*
