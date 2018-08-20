@@ -823,6 +823,21 @@ raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
 {
 	struct raid_bdev_config *raid_cfg;
 
+	if (spdk_u32_is_pow2(strip_size) == false) {
+		SPDK_ERRLOG("Invalid strip size %d\n", strip_size);
+		return -EINVAL;
+	}
+
+	if (num_base_bdevs <= 0) {
+		SPDK_ERRLOG("Invalid base device count %d\n", num_base_bdevs);
+		return -EINVAL;
+	}
+
+	if (raid_level != 0) {
+		SPDK_ERRLOG("invalid raid level %d, only raid level 0 is supported\n", raid_level);
+		return -EINVAL;
+	}
+
 	TAILQ_FOREACH(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link) {
 		if (!strcmp(raid_cfg->name, raid_name)) {
 			SPDK_ERRLOG("Duplicate raid bdev name found in config file %s\n",
@@ -943,21 +958,10 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		SPDK_ERRLOG("raid_name %s is null\n", raid_name);
 		return -1;
 	}
+
 	strip_size = spdk_conf_section_get_intval(conf_section, "StripSize");
-	if (spdk_u32_is_pow2(strip_size) == false) {
-		SPDK_ERRLOG("Invalid strip size %d\n", strip_size);
-		return -1;
-	}
 	num_base_bdevs = spdk_conf_section_get_intval(conf_section, "NumDevices");
-	if (num_base_bdevs <= 0) {
-		SPDK_ERRLOG("Invalid base device count %d\n", num_base_bdevs);
-		return -1;
-	}
 	raid_level = spdk_conf_section_get_intval(conf_section, "RaidLevel");
-	if (raid_level != 0) {
-		SPDK_ERRLOG("invalid raid level %d, only raid level 0 is supported\n", raid_level);
-		return -1;
-	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "%s %d %d %d\n", raid_name, strip_size, num_base_bdevs,
 		      raid_level);
