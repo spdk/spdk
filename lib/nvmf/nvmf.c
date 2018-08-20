@@ -883,17 +883,18 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 				   struct spdk_nvmf_subsystem *subsystem,
 				   spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
-	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc = 0;
+	struct spdk_nvmf_subsystem_poll_group *sgroup = &group->sgroups[subsystem->id];
+
+	TAILQ_INIT(&sgroup->queued);
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {
+		sgroup->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 		goto fini;
 	}
 
-	sgroup = &group->sgroups[subsystem->id];
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
-	TAILQ_INIT(&sgroup->queued);
 fini:
 	if (cb_fn) {
 		cb_fn(cb_arg, rc);
