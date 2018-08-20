@@ -233,6 +233,26 @@ __shutdown_event_cb(void *arg1, void *arg2)
 	g_spdk_app.shutdown_cb();
 }
 
+static int
+spdk_app_opts_validate(const char *app_opts)
+{
+	int i = 0, j;
+
+	for (i = 0; app_opts[i] != '\0'; i++) {
+		/* ignore getopt control characters */
+		if (app_opts[i] == ':' || app_opts[i] == '+' || app_opts[i] == '-') {
+			continue;
+		}
+
+		for (j = 0; SPDK_APP_GETOPT_STRING[j] != '\0'; j++) {
+			if (app_opts[i] == SPDK_APP_GETOPT_STRING[j]) {
+				return app_opts[i];
+			}
+		}
+	}
+	return 0;
+}
+
 void
 spdk_app_opts_init(struct spdk_app_opts *opts)
 {
@@ -741,6 +761,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		       app_long_opts_len * sizeof(*app_long_opts));
 	}
 
+	if (app_getopt_str != NULL) {
+		ch = spdk_app_opts_validate(app_getopt_str);
+		if (ch) {
+			fprintf(stderr, "Duplicated option '%c' between the generic and application specific spdk opts.\n",
+				ch);
+			return SPDK_APP_PARSE_ARGS_FAIL;
+		}
+	}
 
 	snprintf(g_cmdline_short_opts, sizeof(g_cmdline_short_opts),
 		 "%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
