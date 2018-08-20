@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "558953a8_d4785d1f",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-08-20T08:56:27Z",
+      "side": 1,
+      "message": "I moved it up just after \"name\". Thanks.",
+      "parentUuid": "7912e3e9_eaf9c5ce",
+      "revId": "59621a28f399f21a3d7fb5fe401064b8cc5157df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc60f9dd_24565c94",
         "filename": "test/nvme/overhead/overhead.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-17T16:02:52Z",
       "side": 1,
       "message": "In SPDK style, we always put an empty line after the variable declarations, before the first non-declaration starts.  For example, see line 639 here in this same function - it separates the variable declarations from the while() statement.",
+      "revId": "59621a28f399f21a3d7fb5fe401064b8cc5157df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d901f33b_1d8564c1",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-08-20T08:56:27Z",
+      "side": 1,
+      "message": "OK, fixed.",
+      "parentUuid": "bc60f9dd_24565c94",
       "revId": "59621a28f399f21a3d7fb5fe401064b8cc5157df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
