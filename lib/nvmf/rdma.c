@@ -977,6 +977,25 @@ static const char *CM_EVENT_STR[] = {
 };
 #endif /* DEBUG */
 
+#define TWO_MB (1U << 21)
+
+static void
+spdk_nvmf_rdma_mem_unregister(struct spdk_mem_map *map, uint64_t va, size_t sz)
+{
+	struct ibv_mr *mr;
+
+	/* For each two megabyte page being unregistered... */
+	while (sz > 0) {
+		mr = (struct ibv_mr *)spdk_mem_map_translate(map, va, TWO_MB);
+		if (mr) {
+			ibv_dereg_mr(mr);
+		}
+
+		va += TWO_MB;
+		sz -= TWO_MB;
+	}
+}
+
 static int
 spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			  enum spdk_mem_map_notify_action action,
@@ -985,26 +1004,36 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 	struct spdk_nvmf_rdma_device *device = cb_ctx;
 	struct ibv_pd *pd = device->pd;
 	struct ibv_mr *mr;
+	uint64_t va = (uint64_t)vaddr;
+	size_t sz = size;
+
+	/* vaddr and size are guaranteed to be a multiple of 2MB */
+
+	assert((sz % TWO_MB) == 0);
+	assert((va % TWO_MB) == 0);
 
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
-		mr = ibv_reg_mr(pd, vaddr, size,
-				IBV_ACCESS_LOCAL_WRITE |
-				IBV_ACCESS_REMOTE_READ |
-				IBV_ACCESS_REMOTE_WRITE);
-		if (mr == NULL) {
-			SPDK_ERRLOG("ibv_reg_mr() failed\n");
-			return -1;
-		} else {
-			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
+		/* For each two megabyte page being registered... */
+		while (sz > 0) {
+			mr = ibv_reg_mr(pd, vaddr, size,
+					IBV_ACCESS_LOCAL_WRITE |
+					IBV_ACCESS_REMOTE_READ |
+					IBV_ACCESS_REMOTE_WRITE);
+			if (mr == NULL) {
+				SPDK_ERRLOG("ibv_reg_mr() failed\n");
+				spdk_nvmf_rdma_mem_unregister(map, (uint64_t)vaddr, size);
+				return -1;
+			}
+
+			spdk_mem_map_set_translation(map, va, TWO_MB, (uint64_t)mr);
+
+			va += TWO_MB;
+			sz -= TWO_MB;
 		}
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, size);
-		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
-		if (mr) {
-			ibv_dereg_mr(mr);
-		}
+		spdk_nvmf_rdma_mem_unregister(map, (uint64_t)vaddr, size);
 		break;
 	}
 
@@ -1554,6 +1583,9 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 			rc = -1;
 			break;
 		}
+
+		SPDK_ERRLOG("RDMA device supports a maximum MR size of %lu and a maximum number of MRs %u\n",
+			    device->attr.max_mr_size, device->attr.max_mr);
 
 		device->map = spdk_mem_map_alloc(0, spdk_nvmf_rdma_mem_notify, device);
 		if (!device->map) {
