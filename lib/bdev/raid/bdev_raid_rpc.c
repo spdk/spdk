@@ -266,12 +266,12 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_bdev_config)
 	assert(raid_bdev->state == RAID_BDEV_STATE_CONFIGURING);
 	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		assert(raid_bdev->base_bdev_info != NULL);
-		if (raid_bdev->base_bdev_info[i].base_bdev) {
+		if (raid_bdev->base_bdev_info[i].bdev) {
 			/* Release base bdev related resources */
-			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].base_bdev);
-			spdk_bdev_close(raid_bdev->base_bdev_info[i].base_bdev_desc);
-			raid_bdev->base_bdev_info[i].base_bdev_desc = NULL;
-			raid_bdev->base_bdev_info[i].base_bdev = NULL;
+			spdk_bdev_module_release_bdev(raid_bdev->base_bdev_info[i].bdev);
+			spdk_bdev_close(raid_bdev->base_bdev_info[i].desc);
+			raid_bdev->base_bdev_info[i].desc = NULL;
+			raid_bdev->base_bdev_info[i].bdev = NULL;
 			assert(raid_bdev->num_base_bdevs_discovered);
 			raid_bdev->num_base_bdevs_discovered--;
 		}

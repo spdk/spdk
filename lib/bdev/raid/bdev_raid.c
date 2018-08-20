@@ -105,7 +105,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		 * bdev io channel.
 		 */
 		ch->base_bdevs_io_channel[i] = spdk_bdev_get_io_channel(
-						       raid_bdev->base_bdev_info[i].base_bdev_desc);
+						       raid_bdev->base_bdev_info[i].desc);
 		if (!ch->base_bdevs_io_channel[i]) {
 			for (uint32_t j = 0; j < i; j++) {
 				spdk_put_io_channel(ch->base_bdevs_io_channel[j]);
@@ -201,10 +201,10 @@ raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev, uint32_t base_bde
 
 	info = &raid_bdev->base_bdev_info[base_bdev_slot];
 
-	spdk_bdev_module_release_bdev(info->base_bdev);
-	spdk_bdev_close(info->base_bdev_desc);
-	info->base_bdev_desc = NULL;
-	info->base_bdev = NULL;
+	spdk_bdev_module_release_bdev(info->bdev);
+	spdk_bdev_close(info->desc);
+	info->desc = NULL;
+	info->bdev = NULL;
 
 	assert(raid_bdev->num_base_bdevs_discovered);
 	raid_bdev->num_base_bdevs_discovered--;
@@ -233,8 +233,8 @@ raid_bdev_destruct(void *ctxt)
 		 * layers.  Also close the descriptors if we have started shutdown.
 		 */
 		if (g_shutdown_started ||
-		    ((raid_bdev->base_bdev_info[i].base_bdev_remove_scheduled == true) &&
-		     (raid_bdev->base_bdev_info[i].base_bdev != NULL))) {
+		    ((raid_bdev->base_bdev_info[i].remove_scheduled == true) &&
+		     (raid_bdev->base_bdev_info[i].bdev != NULL))) {
 			raid_bdev_free_base_bdev_resource(raid_bdev, i);
 		}
 	}
@@ -325,21 +325,21 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	if (raid_bdev->base_bdev_info[0].base_bdev_desc == NULL) {
+	if (raid_bdev->base_bdev_info[0].desc == NULL) {
 		SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", 0);
 		assert(0);
 	}
 	raid_bdev_io->splits_pending = 0;
 	raid_bdev_io->splits_comp_outstanding = 1;
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[0].base_bdev_desc,
+		ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[0].desc,
 					    raid_bdev_io_channel->base_bdevs_io_channel[0],
 					    bdev_io->u.bdev.iovs->iov_base,
 					    bdev_io->u.bdev.offset_blocks,
 					    bdev_io->u.bdev.num_blocks, raid_bdev_io_completion,
 					    bdev_io);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[0].base_bdev_desc,
+		ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[0].desc,
 					     raid_bdev_io_channel->base_bdevs_io_channel[0],
 					     bdev_io->u.bdev.iovs->iov_base,
 					     bdev_io->u.bdev.offset_blocks,
@@ -423,7 +423,7 @@ raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		raid_bdev_io->splits_comp_outstanding++;
 		assert(raid_bdev_io->splits_pending);
 		raid_bdev_io->splits_pending--;
-		if (raid_bdev->base_bdev_info[pd_idx].base_bdev_desc == NULL) {
+		if (raid_bdev->base_bdev_info[pd_idx].desc == NULL) {
 			SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", pd_idx);
 			assert(0);
 		}
@@ -434,13 +434,13 @@ raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		 * function and function callback context
 		 */
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[pd_idx].base_bdev_desc,
+			ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
 						    raid_bdev_io_channel->base_bdevs_io_channel[pd_idx],
 						    buf, pd_lba, pd_blocks, raid_bdev_io_completion,
 						    bdev_io);
 
 		} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[pd_idx].base_bdev_desc,
+			ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
 						     raid_bdev_io_channel->base_bdevs_io_channel[pd_idx],
 						     buf, pd_lba, pd_blocks, raid_bdev_io_completion,
 						     bdev_io);
@@ -544,11 +544,11 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 	} else {
 		/* Queue the IO to bdev layer wait queue */
 		pd_idx = get_curr_base_bdev_index(raid_bdev, raid_bdev_io);
-		raid_bdev_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].base_bdev;
+		raid_bdev_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
 		raid_bdev_io->waitq_entry.cb_fn = raid_bdev_waitq_io_process;
 		raid_bdev_io->waitq_entry.cb_arg = raid_bdev_io;
 		raid_bdev_io_channel = spdk_io_channel_get_ctx(raid_bdev_io->ch);
-		if (spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].base_bdev,
+		if (spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
 					    raid_bdev_io_channel->base_bdevs_io_channel[pd_idx],
 					    &raid_bdev_io->waitq_entry) != 0) {
 			SPDK_ERRLOG("bdev io waitq error, it should not happen\n");
@@ -764,8 +764,8 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "base_bdevs_list");
 	spdk_json_write_array_begin(w);
 	for (uint16_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		if (raid_bdev->base_bdev_info[i].base_bdev) {
-			spdk_json_write_string(w, raid_bdev->base_bdev_info[i].base_bdev->name);
+		if (raid_bdev->base_bdev_info[i].bdev) {
+			spdk_json_write_string(w, raid_bdev->base_bdev_info[i].bdev->name);
 		} else {
 			spdk_json_write_null(w);
 		}
@@ -1260,8 +1260,8 @@ raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, struct spdk_bdev
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 	assert(base_bdev_slot < raid_bdev->num_base_bdevs);
 
-	raid_bdev->base_bdev_info[base_bdev_slot].base_bdev = bdev;
-	raid_bdev->base_bdev_info[base_bdev_slot].base_bdev_desc = desc;
+	raid_bdev->base_bdev_info[base_bdev_slot].bdev = bdev;
+	raid_bdev->base_bdev_info[base_bdev_slot].desc = desc;
 	raid_bdev->num_base_bdevs_discovered++;
 	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
 
@@ -1286,16 +1286,16 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	uint64_t		min_blockcnt;
 	struct spdk_bdev	*raid_bdev_gen;
 
-	blocklen = raid_bdev->base_bdev_info[0].base_bdev->blocklen;
-	min_blockcnt = raid_bdev->base_bdev_info[0].base_bdev->blockcnt;
+	blocklen = raid_bdev->base_bdev_info[0].bdev->blocklen;
+	min_blockcnt = raid_bdev->base_bdev_info[0].bdev->blockcnt;
 	for (uint32_t i = 1; i < raid_bdev->num_base_bdevs; i++) {
 		/* Calculate minimum block count from all base bdevs */
-		if (raid_bdev->base_bdev_info[i].base_bdev->blockcnt < min_blockcnt) {
-			min_blockcnt = raid_bdev->base_bdev_info[i].base_bdev->blockcnt;
+		if (raid_bdev->base_bdev_info[i].bdev->blockcnt < min_blockcnt) {
+			min_blockcnt = raid_bdev->base_bdev_info[i].bdev->blockcnt;
 		}
 
 		/* Check blocklen for all base bdevs that it should be same */
-		if (blocklen != raid_bdev->base_bdev_info[i].base_bdev->blocklen) {
+		if (blocklen != raid_bdev->base_bdev_info[i].bdev->blocklen) {
 			/*
 			 * Assumption is that all the base bdevs for any raid bdev should
 			 * have same blocklen
@@ -1416,7 +1416,7 @@ raid_bdev_remove_base_bdev(void *ctx)
 	/* Find the raid_bdev which has claimed this base_bdev */
 	TAILQ_FOREACH_SAFE(raid_bdev, &g_spdk_raid_bdev_list, link_global_list, next_raid_bdev) {
 		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-			if (raid_bdev->base_bdev_info[i].base_bdev == base_bdev) {
+			if (raid_bdev->base_bdev_info[i].bdev == base_bdev) {
 				found = true;
 				break;
 			}
@@ -1432,11 +1432,11 @@ raid_bdev_remove_base_bdev(void *ctx)
 	}
 
 	assert(raid_bdev != NULL);
-	assert(raid_bdev->base_bdev_info[i].base_bdev);
-	assert(raid_bdev->base_bdev_info[i].base_bdev_desc);
-	raid_bdev->base_bdev_info[i].base_bdev_remove_scheduled = true;
+	assert(raid_bdev->base_bdev_info[i].bdev);
+	assert(raid_bdev->base_bdev_info[i].desc);
+	raid_bdev->base_bdev_info[i].remove_scheduled = true;
 
-	if (raid_bdev->destruct_called == true && raid_bdev->base_bdev_info[i].base_bdev != NULL) {
+	if (raid_bdev->destruct_called == true && raid_bdev->base_bdev_info[i].bdev != NULL) {
 		/* As raid bdev is already unregistered, so cleanup should be done here itself */
 		raid_bdev_free_base_bdev_resource(raid_bdev, i);
 		if (raid_bdev->num_base_bdevs_discovered == 0) {
