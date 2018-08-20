@@ -85,16 +85,16 @@ static int
 raid_bdev_create_cb(void *io_device, void *ctx_buf)
 {
 	struct raid_bdev            *raid_bdev = io_device;
-	struct raid_bdev_io_channel *ch = ctx_buf;
+	struct raid_bdev_io_channel *raid_ch = ctx_buf;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_create_cb, %p\n", ch);
 
 	assert(raid_bdev != NULL);
 	assert(raid_bdev->state == RAID_BDEV_STATE_ONLINE);
 
-	ch->base_bdevs_io_channel = calloc(raid_bdev->num_base_bdevs,
+	raid_ch->base_bdevs_io_channel = calloc(raid_bdev->num_base_bdevs,
 					   sizeof(struct spdk_io_channel *));
-	if (!ch->base_bdevs_io_channel) {
+	if (!raid_ch->base_bdevs_io_channel) {
 		SPDK_ERRLOG("Unable to allocate base bdevs io channel\n");
 		return -1;
 	}
@@ -104,13 +104,13 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		 * split logic to send the respective child bdev ios to respective base
 		 * bdev io channel.
 		 */
-		ch->base_bdevs_io_channel[i] = spdk_bdev_get_io_channel(
+		raid_ch->base_bdevs_io_channel[i] = spdk_bdev_get_io_channel(
 						       raid_bdev->base_bdev_info[i].desc);
-		if (!ch->base_bdevs_io_channel[i]) {
+		if (!raid_ch->base_bdevs_io_channel[i]) {
 			for (uint32_t j = 0; j < i; j++) {
-				spdk_put_io_channel(ch->base_bdevs_io_channel[j]);
+				spdk_put_io_channel(raid_ch->base_bdevs_io_channel[j]);
 			}
-			free(ch->base_bdevs_io_channel);
+			free(raid_ch->base_bdevs_io_channel);
 			SPDK_ERRLOG("Unable to create io channel for base bdev\n");
 			return -1;
 		}
@@ -132,22 +132,22 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 static void
 raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 {
-	struct raid_bdev_io_channel *ch = ctx_buf;
+	struct raid_bdev_io_channel *raid_ch = ctx_buf;
 	struct raid_bdev            *raid_bdev = io_device;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destroy_cb\n");
 
 	assert(raid_bdev != NULL);
-	assert(ch != NULL);
-	assert(ch->base_bdevs_io_channel);
+	assert(raid_ch != NULL);
+	assert(raid_ch->base_bdevs_io_channel);
 	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/* Free base bdev channels */
-		assert(ch->base_bdevs_io_channel[i] != NULL);
-		spdk_put_io_channel(ch->base_bdevs_io_channel[i]);
-		ch->base_bdevs_io_channel[i] = NULL;
+		assert(raid_ch->base_bdevs_io_channel[i] != NULL);
+		spdk_put_io_channel(raid_ch->base_bdevs_io_channel[i]);
+		raid_ch->base_bdevs_io_channel[i] = NULL;
 	}
-	free(ch->base_bdevs_io_channel);
-	ch->base_bdevs_io_channel = NULL;
+	free(raid_ch->base_bdevs_io_channel);
+	raid_ch->base_bdevs_io_channel = NULL;
 }
 
 /*
@@ -315,12 +315,12 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 static int
 raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct   raid_bdev_io_channel *raid_bdev_io_channel;
+	struct   raid_bdev_io_channel *raid_ch;
 	struct   raid_bdev_io         *raid_bdev_io;
 	struct   raid_bdev            *raid_bdev;
 	int                           ret;
 
-	raid_bdev_io_channel = spdk_io_channel_get_ctx(ch);
+	raid_ch = spdk_io_channel_get_ctx(ch);
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -333,14 +333,14 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	raid_bdev_io->splits_comp_outstanding = 1;
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[0].desc,
-					    raid_bdev_io_channel->base_bdevs_io_channel[0],
+					    raid_ch->base_bdevs_io_channel[0],
 					    bdev_io->u.bdev.iovs->iov_base,
 					    bdev_io->u.bdev.offset_blocks,
 					    bdev_io->u.bdev.num_blocks, raid_bdev_io_completion,
 					    bdev_io);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[0].desc,
-					     raid_bdev_io_channel->base_bdevs_io_channel[0],
+					     raid_ch->base_bdevs_io_channel[0],
 					     bdev_io->u.bdev.iovs->iov_base,
 					     bdev_io->u.bdev.offset_blocks,
 					     bdev_io->u.bdev.num_blocks, raid_bdev_io_completion,
@@ -386,7 +386,7 @@ static int
 raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			  uint64_t start_strip, uint64_t end_strip, uint64_t cur_strip, uint8_t *buf)
 {
-	struct   raid_bdev_io_channel *raid_bdev_io_channel = spdk_io_channel_get_ctx(ch);
+	struct   raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(ch);
 	struct   raid_bdev_io         *raid_bdev_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct   raid_bdev            *raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	uint64_t                      pd_strip;
@@ -435,13 +435,13 @@ raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		 */
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 			ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
-						    raid_bdev_io_channel->base_bdevs_io_channel[pd_idx],
+						    raid_ch->base_bdevs_io_channel[pd_idx],
 						    buf, pd_lba, pd_blocks, raid_bdev_io_completion,
 						    bdev_io);
 
 		} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
-						     raid_bdev_io_channel->base_bdevs_io_channel[pd_idx],
+						     raid_ch->base_bdevs_io_channel[pd_idx],
 						     buf, pd_lba, pd_blocks, raid_bdev_io_completion,
 						     bdev_io);
 		} else {
@@ -536,7 +536,7 @@ static void
 raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_io *bdev_io,
 				 struct raid_bdev_io *raid_bdev_io, int ret)
 {
-	struct   raid_bdev_io_channel *raid_bdev_io_channel;
+	struct   raid_bdev_io_channel *raid_ch;
 	uint8_t pd_idx;
 
 	if (ret != -ENOMEM) {
@@ -547,9 +547,9 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 		raid_bdev_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
 		raid_bdev_io->waitq_entry.cb_fn = raid_bdev_waitq_io_process;
 		raid_bdev_io->waitq_entry.cb_arg = raid_bdev_io;
-		raid_bdev_io_channel = spdk_io_channel_get_ctx(raid_bdev_io->ch);
+		raid_ch = spdk_io_channel_get_ctx(raid_bdev_io->ch);
 		if (spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
-					    raid_bdev_io_channel->base_bdevs_io_channel[pd_idx],
+					    raid_ch->base_bdevs_io_channel[pd_idx],
 					    &raid_bdev_io->waitq_entry) != 0) {
 			SPDK_ERRLOG("bdev io waitq error, it should not happen\n");
 			assert(0);
