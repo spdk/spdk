@@ -97,8 +97,8 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 }
 
 int
-spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authfile,
-			     const char *authuser, int ag_tag)
+spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authuser,
+			     int ag_tag)
 {
 	return 0;
 }
