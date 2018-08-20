@@ -1963,6 +1963,7 @@ struct rw_iov_ctx {
 	bool read;
 	int iovcnt;
 	struct iovec *orig_iov;
+	size_t orig_iovoff;
 	uint64_t page_offset;
 	uint64_t pages_remaining;
 	uint64_t pages_done;
@@ -1997,23 +1998,9 @@ _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 	pages_to_boundary = _spdk_bs_num_pages_to_cluster_boundary(blob, page_offset);
 	page_count = spdk_min(ctx->pages_remaining, pages_to_boundary);
 
-	/*
-	 * Get index and offset into the original iov array for our current position in the I/O sequence.
-	 *  byte_count will keep track of how many bytes remaining until orig_iov and orig_iovoff will
-	 *  point to the current position in the I/O sequence.
-	 */
-	byte_count = ctx->pages_done * sizeof(struct spdk_blob_md_page);
-	orig_iov = &ctx->orig_iov[0];
-	orig_iovoff = 0;
-	while (byte_count > 0) {
-		if (byte_count >= orig_iov->iov_len) {
-			byte_count -= orig_iov->iov_len;
-			orig_iov++;
-		} else {
-			orig_iovoff = byte_count;
-			byte_count = 0;
-		}
-	}
+	/* Get current index and offset in the original iov array in the I/O sequence. */
+	orig_iov = ctx->orig_iov;
+	orig_iovoff = ctx->orig_iovoff;
 
 	/*
 	 * Build an iov array for the next I/O in the sequence.  byte_count will keep track of how many
@@ -2031,6 +2018,26 @@ _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 		iov++;
 		iovcnt++;
 	}
+
+	/* Update index and offset in the original iov array in the I/O sequence.
+	 *  byte_count will keep track of how many bytes remaining until orig_iov and orig_iovoff
+	 *  will point to the next position in the I/O sequence.
+	 */
+	byte_count = page_count * sizeof(struct spdk_blob_md_page);
+	orig_iov = ctx->orig_iov;
+	orig_iovoff = ctx->orig_iovoff;
+	while (byte_count > 0) {
+		if (byte_count >= orig_iov->iov_len - orig_iovoff) {
+			byte_count -= orig_iov->iov_len - orig_iovoff;
+			orig_iov++;
+			orig_iovoff = 0;
+		} else {
+			orig_iovoff += byte_count;
+			byte_count = 0;
+		}
+	}
+	ctx->orig_iov = orig_iov;
+	ctx->orig_iovoff = orig_iovoff;
 
 	ctx->page_offset += page_count;
 	ctx->pages_done += page_count;
@@ -2163,6 +2170,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 		ctx->cb_arg = cb_arg;
 		ctx->read = read;
 		ctx->orig_iov = iov;
+		ctx->orig_iovoff = 0;
 		ctx->iovcnt = iovcnt;
 		ctx->page_offset = offset;
 		ctx->pages_remaining = length;
