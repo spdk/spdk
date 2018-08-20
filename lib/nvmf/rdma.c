@@ -977,6 +977,8 @@ static const char *CM_EVENT_STR[] = {
 };
 #endif /* DEBUG */
 
+#define TWO_MB (1U << 21)
+
 static int
 spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			  enum spdk_mem_map_notify_action action,
@@ -999,13 +1001,44 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
 		}
 		break;
-	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, size);
-		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
-		if (mr) {
-			ibv_dereg_mr(mr);
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER: {
+		uint64_t va = (uint64_t)vaddr;
+
+		/* For each two megabyte page being unregistered... */
+		while (size > 0) {
+			mr = (struct ibv_mr *)spdk_mem_map_translate(map, va, TWO_MB);
+			if (mr) {
+				uint64_t start = (uint64_t)mr->addr;
+				uint64_t len = mr->length;
+				bool dereg = true;
+				struct ibv_mr *tmp_mr;
+
+				spdk_mem_map_clear_translation(map, va, TWO_MB);
+
+				/* Check if every page associated with this region has now been unregistered */
+				while (len > 0) {
+					tmp_mr = (struct ibv_mr *)spdk_mem_map_translate(map, start, TWO_MB);
+					if (tmp_mr) {
+						/* Parts of the region associated with this MR are still
+						 * mapped. Don't destroy it. */
+						dereg = false;
+						break;
+					}
+
+					start += TWO_MB;
+					len -= TWO_MB;
+				}
+
+				if (dereg) {
+					ibv_dereg_mr(mr);
+				}
+			}
+
+			va += TWO_MB;
+			size -= TWO_MB;
 		}
 		break;
+	}
 	}
 
 	return 0;
