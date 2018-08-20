@@ -137,6 +137,12 @@ struct raid_bdev_io {
 	/* current buffer location, used in queueing logic */
 	uint8_t                         *buf;
 
+	/* current block address */
+	uint64_t			block_offset;
+
+	/* remaining IO size */
+	uint64_t			blocks_remaining;
+
 	/* outstanding child completions */
 	uint16_t                        splits_comp_outstanding;
 
