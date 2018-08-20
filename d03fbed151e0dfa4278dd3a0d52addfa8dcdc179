@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "449f31aa_3a53d2ee",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-20T13:50:41Z",
+      "side": 1,
+      "message": "Look at comment from PS18",
+      "range": {
+        "startLine": 146,
+        "startChar": 0,
+        "endLine": 155,
+        "endChar": 14
+      },
+      "revId": "d03fbed151e0dfa4278dd3a0d52addfa8dcdc179",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "496d3a05_777b224d",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-20T13:50:41Z",
+      "side": 1,
+      "message": "This dict is not used anywhere, and name is very confusing.\nHow about changing this to function?\n\nSomething like below maybe?\nstring2bool(string):\n   return string.lower() in (\"yes\"):",
+      "range": {
+        "startLine": 194,
+        "startChar": 0,
+        "endLine": 194,
+        "endChar": 65
+      },
+      "revId": "d03fbed151e0dfa4278dd3a0d52addfa8dcdc179",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "425798b9_9d861a48",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-20T13:50:41Z",
+      "side": 1,
+      "message": "Is this to remove duplicates and have only unique values in \"header_set\"?\nIf so, then header_set \u003d list(set(headers)) would be better. You probably don\u0027t even need list() casting after that...",
+      "range": {
+        "startLine": 211,
+        "startChar": 0,
+        "endLine": 214,
+        "endChar": 37
+      },
+      "revId": "d03fbed151e0dfa4278dd3a0d52addfa8dcdc179",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2e9b1ab_7c62be22",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-20T13:50:41Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 341,
+        "startChar": 3,
+        "endLine": 341,
+        "endChar": 4
+      },
+      "revId": "d03fbed151e0dfa4278dd3a0d52addfa8dcdc179",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8085696_78265da3",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-20T13:50:41Z",
+      "side": 1,
+      "message": "Look at comment from PS18",
+      "range": {
+        "startLine": 473,
+        "startChar": 0,
+        "endLine": 474,
+        "endChar": 20
+      },
+      "revId": "d03fbed151e0dfa4278dd3a0d52addfa8dcdc179",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
