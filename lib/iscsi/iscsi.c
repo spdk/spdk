@@ -71,6 +71,7 @@ struct spdk_iscsi_globals g_spdk_iscsi = {
 	.pg_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.pg_head),
 	.ig_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.ig_head),
 	.target_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.target_head),
+	.auth_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.auth_group_head),
 };
 
 /* random value generation */
@@ -679,7 +680,6 @@ spdk_iscsi_append_param(struct spdk_iscsi_conn *conn, const char *key,
 static int
 spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 {
-	char *authfile = NULL;
 	int ag_tag;
 	int rc;
 
@@ -693,21 +693,11 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ag_tag=%d\n", ag_tag);
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	authfile = strdup(g_spdk_iscsi.authfile);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-	if (!authfile) {
-		SPDK_ERRLOG("strdup() failed for authfile\n");
-		return -ENOMEM;
-	}
-
-	rc = spdk_iscsi_chap_get_authinfo(&conn->auth, authfile, authuser, ag_tag);
+	rc = spdk_iscsi_chap_get_authinfo(&conn->auth, authuser, ag_tag);
 	if (rc < 0) {
 		SPDK_ERRLOG("chap_get_authinfo() failed\n");
-		free(authfile);
 		return -1;
 	}
-	free(authfile);
 	return 0;
 }
 
@@ -829,7 +819,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			SPDK_ERRLOG("iscsi_get_authinfo() failed\n");
 			goto error_return;
 		}
-		if (conn->auth.user == NULL || conn->auth.secret == NULL) {
+		if (conn->auth.user[0] == '\0' || conn->auth.secret[0] == '\0') {
 			//SPDK_ERRLOG("auth user or secret is missing\n");
 			SPDK_ERRLOG("auth failed (user %.64s)\n", user);
 			goto error_return;
@@ -889,7 +879,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 #endif
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_I/CHAP_C\n");
 
-			if (conn->auth.muser == NULL || conn->auth.msecret == NULL) {
+			if (conn->auth.muser[0] == '\0' || conn->auth.msecret[0] == '\0') {
 				//SPDK_ERRLOG("mutual auth user or secret is missing\n");
 				SPDK_ERRLOG("auth failed (user %.64s)\n", user);
 				goto error_return;
