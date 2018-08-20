@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bf862617_fc428a39",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1124,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-20T14:38:15Z",
+      "side": 1,
+      "message": "Nope, I need to cast it to to \u0027void *\u0027 so it can be casted to \u0027uint16_t *\u0027",
+      "parentUuid": "a8a980bd_c3fd8f94",
+      "range": {
+        "startLine": 1124,
+        "startChar": 21,
+        "endLine": 1124,
+        "endChar": 22
+      },
+      "revId": "a79394b8d5a32461f7bf7c7683a1d8723cf05363",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22e8cf3a_742f9d49",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 29
