@@ -1,0 +1,111 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+
+  # Pick the right distro and bootstrap, default is ubuntu1604
+  distro = ( ENV['SPDK_VAGRANT_DISTRO'] || "ubuntu16")
+  case distro
+  when "ubuntu16"
+    # See: https://app.vagrantup.com/puppetlabs/boxes/ubuntu-16.04-64-nocm
+    config.vm.box = "puppetlabs/ubuntu-16.04-64-nocm"
+    config.vm.box_version = "1.0.0"
+  when "ubuntu18"
+    # See: https://app.vagrantup.com/bento/boxes/ubuntu-18.04
+    config.vm.box = "bento/ubuntu-18.04"
+    config.vm.box_version = "201808.24.0"
+  else
+    "Invalid argument #{distro}"
+    abort("Invalid argument!")
+  end
+  config.vm.box_check_update = false
+
+  # vagrant-cachier caches apt/yum etc to speed subsequent
+  # vagrant up
+  # to enable, run
+  # vagrant plugin install vagrant-cachier
+  #
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.scope = :box
+  end
+
+  # use http proxy if avaiable
+  if ENV['http_proxy'] && Vagrant.has_plugin?("vagrant-proxyconf")
+   config.proxy.http     = ENV['http_proxy']
+   config.proxy.https    = ENV['https_proxy']
+   config.proxy.no_proxy = "localhost,127.0.0.1"
+  end
+
+  vmcpu=(ENV['SPDK_VAGRANT_VMCPU'] || 2)
+  vmram=(ENV['SPDK_VAGRANT_VMRAM'] || 4096)
+  ssh_key_dir=(ENV['SPDK_VAGRANT_SSH_KEY'])
+  spdk_dir=(ENV['SPDK_DIR'] || "none")
+  install_deps=(ENV['INSTALL_DEPS'] || "false")
+
+  config.ssh.forward_agent = true
+  config.ssh.forward_x11 = true
+
+  # Change root passwd and allow root SSH
+  config.vm.provision "shell", inline: 'echo -e "root\nroot" | sudo passwd root'
+  config.vm.provision "shell", inline: 'sudo sh -c "echo \"PermitRootLogin yes\" >> /etc/ssh/sshd_config"'
+
+  # Use previously generated SSH keys for setting up a key pair
+  $ssh_key_gen_script = <<-SCRIPT
+  sudo mkdir -p /root/.ssh
+  cat /vagrant/ssh_keys/spdk_vhost_id_rsa.pub > /root/.ssh/authorized_keys
+  sudo chmod 644 /root/.ssh/authorized_keys
+  SCRIPT
+  config.vm.provision "shell", inline: $ssh_key_gen_script
+
+  # Install needed deps
+  $apt_script = <<-SCRIPT
+  sudo apt -y update
+  sudo DEBIAN_FRONTEND=noninteractive apt -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
+  sudo apt -y install -y fio sg3-utils bc
+  SCRIPT
+  config.vm.provision "shell", inline: $apt_script
+
+  # Modify GRUB options
+  # console=ttyS0 earlyprintk=ttyS0 - reroute output to serial dev, so that QEMU can write output to file
+  # scsi_mod.use_blk_mq=1 - for multiqueue use
+  # net.ifnames=0 biosdevname=0 - do not rename NICs on boot. That way we ensure that addded NIC is always eth0.
+  #     Reason for these options is that NIC can have different udev name during provisioning with Vagrant
+  #     and then some other name while running SPDK tests which use Qemu without any hypervisor like vbox or libvirt
+  #     so no corresponding configuration for this NIC name will be present in /etc.
+  config.vm.provision "shell", inline: 'sudo sed -ir s#GRUB_CMDLINE_LINUX=\"\"#GRUB_CMDLINE_LINUX=\"console=ttyS0\ earlyprintk=ttyS0\ scsi_mod.use_blk_mq=1\ net.ifnames=0\ biosdevname=0\"#g /etc/default/grub'
+  config.vm.provision "shell", inline: 'sudo update-grub'
+
+  # TODO: Next 2 lines break any future ssh communication via "vagrant ssh"
+  # I'd be good to check NIC names in ifconfig and then sed them in /etc/network/interfaces to eht0, eht1, and so on
+  config.vm.provision "shell", inline: 'sudo sh -c "echo \"auto eth0\" >> /etc/network/interfaces"'
+  config.vm.provision "shell", inline: 'sudo sh -c "echo \"iface eth0 inet dhcp\" >> /etc/network/interfaces"'
+
+  if distro.include? "ubuntu18"
+    # This is to avoid annoying "Start job is running for wait for network to be configured" 2 minute timeout
+    # in case of not-so-perfect NIC and virtual network configuration for the VM
+    config.vm.provision "shell", inline: 'systemctl disable systemd-networkd-wait-online.service'
+    config.vm.provision "shell", inline: 'systemctl mask systemd-networkd-wait-online.service'
+  end
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--ioapic", "on"]
+    vb.memory = "#{vmram}"
+    vb.cpus = "#{vmcpu}"
+
+    #support for the SSE4.x instruction is required in some versions of VB.
+    vb.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+    vb.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+  end
+
+  if spdk_dir != "none"
+    config.vm.synced_folder "#{spdk_dir}", "/home/vagrant/spdk_repo/spdk", type: "rsync", rsync__auto: false
+    if install_deps.include? "true"
+      config.vm.provision "shell", inline: 'sudo /home/vagrant/spdk_repo/spdk/scripts/pkgdep.sh'
+    end
+  end
+
+  # Copy in the user's tools if they exists
+  if File.directory?(File.expand_path("~/vagrant_tools"))
+    config.vm.synced_folder "~/vagrant_tools", "/home/vagrant/tools", type: "rsync", rsync__auto: false
+  end
+end
