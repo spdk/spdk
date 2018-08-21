@@ -36,6 +36,8 @@
 
 #include "spdk/bdev_module.h"
 
+#define RAID_BDEV_MAX_SPLIT_IO	64
+
 /*
  * Raid state describes the state of the raid. This raid bdev can be either in
  * configured list or configuring list
@@ -134,9 +136,6 @@ struct raid_bdev_io {
 	/* Original channel for this IO, used in queuing logic */
 	struct spdk_io_channel          *ch;
 
-	/* current buffer location, used in queueing logic */
-	uint8_t                         *buf;
-
 	/* current block address */
 	uint64_t			block_offset;
 
@@ -148,6 +147,18 @@ struct raid_bdev_io {
 
 	/* pending splits yet to happen */
 	uint16_t                        splits_pending;
+
+	/* start of strip */
+	uint64_t                        start_strip;
+
+	/* iov for each strip */
+	struct iovec                    iov[RAID_BDEV_MAX_SPLIT_IO];
+
+	/* original iov */
+	struct iovec                    *orig_iov;
+
+	/* current offset in original iov */
+	size_t                          orig_iovoff;
 
 	/* status of parent io */
 	bool                            status;
