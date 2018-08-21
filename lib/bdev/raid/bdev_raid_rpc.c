@@ -41,7 +41,7 @@
 
 #define RPC_MAX_BASE_BDEVS 255
 
-static void raid_bdev_config_destroy(struct raid_bdev_config *raid_bdev_config);
+static void raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg);
 
 SPDK_LOG_REGISTER_COMPONENT("raidrpc", SPDK_LOG_RAID_RPC)
 
@@ -249,12 +249,12 @@ static const struct spdk_json_object_decoder rpc_construct_raid_bdev_decoders[] 
  * non NULL - raid present, returns raid_bdev
  */
 static void
-check_and_remove_raid_bdev(struct raid_bdev_config *raid_bdev_config)
+check_and_remove_raid_bdev(struct raid_bdev_config *raid_cfg)
 {
 	struct raid_bdev       *raid_bdev;
 
 	/* Get the raid structured allocated if exists */
-	raid_bdev = raid_bdev_config->raid_bdev;
+	raid_bdev = raid_cfg->raid_bdev;
 	if (raid_bdev == NULL) {
 		return;
 	}
@@ -282,7 +282,7 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_bdev_config)
 	TAILQ_REMOVE(&g_spdk_raid_bdev_list, raid_bdev, link_global_list);
 	free(raid_bdev->base_bdev_info);
 	free(raid_bdev);
-	raid_bdev_config->raid_bdev = NULL;
+	raid_cfg->raid_bdev = NULL;
 }
 
 /*
@@ -301,7 +301,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_raid_bdev req = {};
 	struct spdk_json_write_ctx     *w;
-	struct raid_bdev_config        *raid_bdev_config;
+	struct raid_bdev_config        *raid_cfg;
 	struct raid_bdev               *raid_bdev;
 	struct spdk_bdev               *base_bdev;
 	int			       rc;
@@ -337,7 +337,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = raid_bdev_config_add(req.name, req.strip_size, req.base_bdevs.num_base_bdevs, req.raid_level,
-				  &raid_bdev_config);
+				  &raid_cfg);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
 		free_rpc_construct_raid_bdev(&req);
@@ -345,21 +345,21 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	for (size_t i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		rc = raid_bdev_config_add_base_bdev(raid_bdev_config, req.base_bdevs.base_bdevs[i], i);
+		rc = raid_bdev_config_add_base_bdev(raid_cfg, req.base_bdevs.base_bdevs[i], i);
 		if (rc != 0) {
-			raid_bdev_config_cleanup(raid_bdev_config);
+			raid_bdev_config_cleanup(raid_cfg);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
 			free_rpc_construct_raid_bdev(&req);
 			return;
 		}
 	}
 
-	for (size_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
+	for (size_t i = 0; i < raid_cfg->num_base_bdevs; i++) {
 		/* Check if base_bdev exists already, if not fail the command */
 		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[i]);
 		if (base_bdev == NULL) {
-			check_and_remove_raid_bdev(raid_bdev_config);
-			raid_bdev_config_cleanup(raid_bdev_config);
+			check_and_remove_raid_bdev(raid_cfg);
+			raid_bdev_config_cleanup(raid_cfg);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "base bdev not found");
 			free_rpc_construct_raid_bdev(&req);
 			return;
@@ -371,8 +371,8 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		 * by some other module
 		 */
 		if (raid_bdev_add_base_device(base_bdev)) {
-			check_and_remove_raid_bdev(raid_bdev_config);
-			raid_bdev_config_cleanup(raid_bdev_config);
+			check_and_remove_raid_bdev(raid_cfg);
+			raid_bdev_config_cleanup(raid_cfg);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "base bdev can't be added because of either memory allocation failed or not able to claim");
 			free_rpc_construct_raid_bdev(&req);
@@ -439,7 +439,8 @@ raid_bdev_config_destroy_check_raid_bdev_exists(void *arg)
 	assert(raid_cfg != NULL);
 	if (raid_cfg->raid_bdev != NULL) {
 		/* If raid bdev still exists, schedule event and come back later */
-		spdk_thread_send_msg(spdk_get_thread(), raid_bdev_config_destroy_check_raid_bdev_exists, raid_cfg);
+		spdk_thread_send_msg(spdk_get_thread(), raid_bdev_config_destroy_check_raid_bdev_exists,
+				     raid_cfg);
 		return;
 	} else {
 		/* If raid bdev does not exist now, go for raid bdev config cleanup */
@@ -464,7 +465,8 @@ raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
 		 * If raid bdev exists for this config, wait for raid bdev to get
 		 * destroyed and come back later
 		 */
-		spdk_thread_send_msg(spdk_get_thread(), raid_bdev_config_destroy_check_raid_bdev_exists, raid_cfg);
+		spdk_thread_send_msg(spdk_get_thread(), raid_bdev_config_destroy_check_raid_bdev_exists,
+				     raid_cfg);
 		return;
 	}
 
@@ -487,7 +489,7 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 {
 	struct rpc_destroy_raid_bdev req = {};
 	struct spdk_json_write_ctx   *w;
-	struct raid_bdev_config      *raid_bdev_config = NULL;
+	struct raid_bdev_config      *raid_cfg = NULL;
 	struct spdk_bdev             *base_bdev;
 
 	if (spdk_json_decode_object(params, rpc_destroy_raid_bdev_decoders,
@@ -499,13 +501,13 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 	}
 
 	/* Find raid bdev config for this raid bdev */
-	TAILQ_FOREACH(raid_bdev_config, &g_spdk_raid_config.raid_bdev_config_head, link) {
-		if (strcmp(raid_bdev_config->name, req.name) == 0) {
+	TAILQ_FOREACH(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link) {
+		if (strcmp(raid_cfg->name, req.name) == 0) {
 			break;
 		}
 	}
 
-	if (raid_bdev_config == NULL) {
+	if (raid_cfg == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "raid bdev name not found");
 		free_rpc_destroy_raid_bdev(&req);
@@ -513,8 +515,8 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 	}
 
 	/* Remove all the base bdevs from this raid bdev before destroying the raid bdev */
-	for (uint32_t i = 0; i < raid_bdev_config->num_base_bdevs; i++) {
-		base_bdev = spdk_bdev_get_by_name(raid_bdev_config->base_bdev[i].bdev_name);
+	for (uint32_t i = 0; i < raid_cfg->num_base_bdevs; i++) {
+		base_bdev = spdk_bdev_get_by_name(raid_cfg->base_bdev[i].bdev_name);
 		if (base_bdev != NULL) {
 			raid_bdev_remove_base_bdev(base_bdev);
 		}
@@ -524,7 +526,7 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 	 * Call to destroy the raid bdev, but it will only destroy raid bdev if underlying
 	 * cleanup is done
 	 */
-	raid_bdev_config_destroy(raid_bdev_config);
+	raid_bdev_config_destroy(raid_cfg);
 
 	free_rpc_destroy_raid_bdev(&req);
 
