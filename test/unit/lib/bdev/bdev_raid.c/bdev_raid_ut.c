@@ -183,9 +183,10 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 /* It will cache the split IOs for verification */
 int
-spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		       void *buf, uint64_t offset_blocks, uint64_t num_blocks,
-		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			struct iovec *iov, int iovcnt,
+			uint64_t offset_blocks, uint64_t num_blocks,
+			spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct io_output *p = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
@@ -202,7 +203,7 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	if (g_bdev_io_submit_status == 0) {
 		p->desc = desc;
 		p->ch = ch;
-		p->buf = buf;
+		p->buf = iov[0].iov_base;
 		p->offset_blocks = offset_blocks;
 		p->num_blocks = num_blocks;
 		p->cb = cb;
@@ -375,9 +376,10 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 
 /* It will cache split IOs for verification */
 int
-spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		      void *buf, uint64_t offset_blocks, uint64_t num_blocks,
-		      spdk_bdev_io_completion_cb cb, void *cb_arg)
+spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		       struct iovec *iov, int iovcnt,
+		       uint64_t offset_blocks, uint64_t num_blocks,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct io_output *p = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
@@ -390,7 +392,7 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	if (g_bdev_io_submit_status == 0) {
 		p->desc = desc;
 		p->ch = ch;
-		p->buf = buf;
+		p->buf = iov[0].iov_base;
 		p->offset_blocks = offset_blocks;
 		p->num_blocks = num_blocks;
 		p->cb = cb;

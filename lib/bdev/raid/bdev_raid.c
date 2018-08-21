@@ -331,19 +331,19 @@ raid_bdev_send_passthru(struct spdk_bdev_io *bdev_io)
 	raid_io->splits_pending = 0;
 	raid_io->splits_comp_outstanding = 1;
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[0].desc,
-					    raid_ch->base_channel[0],
-					    bdev_io->u.bdev.iovs->iov_base,
-					    bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks, raid_bdev_io_completion,
-					    bdev_io);
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[0].desc,
+		ret = spdk_bdev_readv_blocks(raid_bdev->base_bdev_info[0].desc,
 					     raid_ch->base_channel[0],
-					     bdev_io->u.bdev.iovs->iov_base,
+					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 					     bdev_io->u.bdev.offset_blocks,
 					     bdev_io->u.bdev.num_blocks, raid_bdev_io_completion,
 					     bdev_io);
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		ret = spdk_bdev_writev_blocks(raid_bdev->base_bdev_info[0].desc,
+					      raid_ch->base_channel[0],
+					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					      bdev_io->u.bdev.offset_blocks,
+					      bdev_io->u.bdev.num_blocks, raid_bdev_io_completion,
+					      bdev_io);
 	} else {
 		ret = -EINVAL;
 	}
@@ -383,18 +383,20 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io)
 	struct   raid_bdev            *raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	uint64_t                      blocks_remaining;
 	uint64_t                      block_offset;
-	uint8_t                       *buf;
 	uint64_t                      cur_strip;
 	uint64_t                      pd_strip;
 	uint32_t                      offset_in_strip;
 	uint64_t                      pd_lba;
 	uint64_t                      pd_blocks;
 	uint32_t                      pd_idx;
+	uint64_t                      iov_idx;
+	struct iovec                  *iov;
+	size_t                        orig_iovoff;
 	int                           ret;
 
 	blocks_remaining = raid_io->blocks_remaining;
 	block_offset = raid_io->block_offset;
-	buf = raid_io->buf;
+	orig_iovoff = raid_io->orig_iovoff;
 
 	while (blocks_remaining != 0) {
 		/*
@@ -403,6 +405,7 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io)
 		 * and buffer for this child io
 		 */
 		cur_strip = block_offset >> raid_bdev->strip_size_shift;
+		iov_idx = cur_strip - raid_io->start_strip;
 		offset_in_strip = block_offset % raid_bdev->strip_size;
 
 		pd_blocks = spdk_min(blocks_remaining, raid_bdev->strip_size - offset_in_strip);
@@ -410,6 +413,10 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io)
 		pd_idx = cur_strip % raid_bdev->num_base_bdevs;
 		pd_strip = cur_strip / raid_bdev->num_base_bdevs;
 		pd_lba = (pd_strip << raid_bdev->strip_size_shift) + offset_in_strip;
+
+		iov = &raid_io->iov[iov_idx];
+		iov->iov_len = pd_blocks << raid_bdev->blocklen_shift;
+		iov->iov_base = raid_io->orig_iov[0].iov_base + orig_iovoff;
 
 		raid_io->splits_comp_outstanding++;
 		assert(raid_io->splits_pending);
@@ -425,16 +432,18 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io)
 		 * function and function callback context
 		 */
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
-						    raid_ch->base_channel[pd_idx],
-						    buf, pd_lba, pd_blocks, raid_bdev_io_completion,
-						    bdev_io);
+			ret = spdk_bdev_readv_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
+						     raid_ch->base_channel[pd_idx],
+						     iov, 1,
+						     pd_lba, pd_blocks, raid_bdev_io_completion,
+						     bdev_io);
 
 		} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
-						     raid_ch->base_channel[pd_idx],
-						     buf, pd_lba, pd_blocks, raid_bdev_io_completion,
-						     bdev_io);
+			ret = spdk_bdev_writev_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
+						      raid_ch->base_channel[pd_idx],
+						      iov, 1,
+						      pd_lba, pd_blocks, raid_bdev_io_completion,
+						      bdev_io);
 		} else {
 			SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 			assert(0);
@@ -448,14 +457,14 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io)
 			 * io is queued to io waitq of this core and it will get resumed and
 			 * try to submit the remaining 3 and 4 childs
 			 */
-			raid_io->buf = buf;
+			raid_io->orig_iovoff = orig_iovoff;
 			raid_io->block_offset = block_offset;
 			raid_io->blocks_remaining = blocks_remaining;
 			raid_io->splits_comp_outstanding--;
 			raid_io->splits_pending++;
 			return ret;
 		}
-		buf += (pd_blocks << raid_bdev->blocklen_shift);
+		orig_iovoff += (pd_blocks << raid_bdev->blocklen_shift);
 		block_offset += pd_blocks;
 		blocks_remaining -= pd_blocks;
 	}
@@ -603,11 +612,14 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 		/*
 		 * IO parameters used during io split and io completion
 		 */
-		raid_io->buf = bdev_io->u.bdev.iovs->iov_base;
 		raid_io->block_offset = block_offset;
 		raid_io->blocks_remaining = block_count;
+		raid_io->splits_count = (end_strip - start_strip + 1);
 		raid_io->splits_pending = (end_strip - start_strip + 1);
 		raid_io->splits_comp_outstanding = 0;
+		raid_io->start_strip = start_strip;
+		raid_io->orig_iov = bdev_io->u.bdev.iovs;
+		raid_io->orig_iovoff = 0;
 		raid_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 		ret = raid_bdev_submit_children(bdev_io);
 	} else {
