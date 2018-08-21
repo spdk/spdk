@@ -93,7 +93,7 @@ struct raid_bdev {
 	TAILQ_ENTRY(raid_bdev)      link_global_list;
 
 	/* pointer to config file entry */
-	struct raid_bdev_config     *raid_bdev_config;
+	struct raid_bdev_config     *config;
 
 	/* array of base bdev info */
 	struct raid_base_bdev_info  *base_bdev_info;
