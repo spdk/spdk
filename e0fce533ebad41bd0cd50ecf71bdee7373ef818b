@@ -16,6 +16,24 @@
       "revId": "e0fce533ebad41bd0cd50ecf71bdee7373ef818b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e52127a0_95fac7d2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2119,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-21T16:54:17Z",
+      "side": 1,
+      "message": "Yeah this doesn\u0027t need to be called twice. I put the update in up top without realizing that it was also called here. We should fix it.",
+      "parentUuid": "ffdf46aa_9321f4b4",
+      "revId": "e0fce533ebad41bd0cd50ecf71bdee7373ef818b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
