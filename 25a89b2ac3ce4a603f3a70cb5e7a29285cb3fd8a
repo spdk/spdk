@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2927214d_a521df1d",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-21T05:16:43Z",
+      "side": 0,
+      "message": "just changing this part to cleanup() may keep error message when any error occurs at initialization.",
+      "range": {
+        "startLine": 686,
+        "startChar": 0,
+        "endLine": 694,
+        "endChar": 2
+      },
+      "revId": "25a89b2ac3ce4a603f3a70cb5e7a29285cb3fd8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
