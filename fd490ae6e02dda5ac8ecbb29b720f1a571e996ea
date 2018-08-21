@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74c5e5aa_9ea26556",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-21T17:03:46Z",
+      "side": 1,
+      "message": "In code comments we always write out NVMe-oF (because the NVMe working group requires it). In the code itself you can just use nvmf though.",
+      "revId": "fd490ae6e02dda5ac8ecbb29b720f1a571e996ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c1889e7_e480d1e6",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-21T17:03:46Z",
+      "side": 1,
+      "message": "conroller -\u003e controller",
+      "revId": "fd490ae6e02dda5ac8ecbb29b720f1a571e996ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32c31f0b_916de496",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-21T17:03:46Z",
+      "side": 1,
+      "message": "This function only gathers stats for a single poll group, so I think it should operate on a poll group directly. The user of this function will already have a pointer to the specific poll group their thread is using because they need it for other operations. The function signature should look like this:\n\nvoid spdk_nvmf_poll_group_get_stats(struct spdk_nvmf_poll_group *group, struct spdk_nvmf_cmd_stats *stats);\n\nAlso, group this function with the other poll group functions above.",
+      "revId": "fd490ae6e02dda5ac8ecbb29b720f1a571e996ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08f9aaf8_7ab592fa",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-21T17:03:46Z",
+      "side": 1,
+      "message": "The user already has a pointer to the poll group for their thread - it was returned to them when they created it and they need it to perform most operations.",
+      "revId": "fd490ae6e02dda5ac8ecbb29b720f1a571e996ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ed9f6a8_31113c6a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1787,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-21T17:03:46Z",
+      "side": 1,
+      "message": "This is only safe to call on the thread that the admin_qpair is associated with, since that thread is where num_cmds_* is being updated.",
+      "revId": "fd490ae6e02dda5ac8ecbb29b720f1a571e996ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
