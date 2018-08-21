@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc6c0ee3_574f59df",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 41
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-21T22:34:36Z",
+      "side": 1,
+      "message": "Since each header will only match one of these conditions, it may be good to put a continue after each for loop. Or make all but the first elif statements.",
+      "revId": "3b3582fd0246ca3ee3528e56303f00673f699986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25a6abfc_1f73e10c",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 41
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-21T22:34:36Z",
+      "side": 1,
+      "message": "It could be possible that a user brings in an invalid .ini file with either a misspelled or wrong case header. From the looks of it now, we just ignore that case.\nIt may be good to have an else statement here at the bottom that picks up on that and spits out a warning to the user. This would fit well with the elif idea from above.",
+      "revId": "3b3582fd0246ca3ee3528e56303f00673f699986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
