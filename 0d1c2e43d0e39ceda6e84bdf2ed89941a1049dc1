@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "260e7f8a_551e38d2",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-21T15:59:29Z",
+      "side": 1,
+      "message": "Haha one step ahead of me. Since there is no unittest file for app yet, I was going to add that file and the unittests in the next patch. I figured it would be a good time to test all of the paths in spdk_app_parse_args.\n\nI can squash them into the same patch if you think that would be better though.",
+      "parentUuid": "9a9fc9e7_71268037",
+      "revId": "0d1c2e43d0e39ceda6e84bdf2ed89941a1049dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65783677_aec357e2",
         "filename": "lib/event/app.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-21T15:39:37Z",
       "side": 1,
       "message": "I think this could be written more concisely as a nested for statement:\n\nfor (i \u003d 0; app_opts[i] !\u003d \u0027\\0\u0027; i++) {",
+      "revId": "0d1c2e43d0e39ceda6e84bdf2ed89941a1049dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09b39471_d7412d89",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-21T15:59:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65783677_aec357e2",
       "revId": "0d1c2e43d0e39ceda6e84bdf2ed89941a1049dc1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
