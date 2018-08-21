@@ -840,11 +840,11 @@ raid_bdev_free(void)
  * strip_size - strip size in KB
  * num_base_bdevs - number of base bdevs.
  * raid_level - raid level, only raid level 0 is supported.
- * _raid_bdev_config - Pointer to newly added configuration
+ * _raid_cfg - Pointer to newly added configuration
  */
 int
 raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
-		     int raid_level, struct raid_bdev_config **_raid_bdev_config)
+		     int raid_level, struct raid_bdev_config **_raid_cfg)
 {
 	struct raid_bdev_config *raid_cfg;
 
@@ -883,7 +883,7 @@ raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
 	TAILQ_INSERT_TAIL(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
 	g_spdk_raid_config.total_raid_bdev++;
 
-	*_raid_bdev_config = raid_cfg;
+	*_raid_cfg = raid_cfg;
 	return 0;
 }
 
@@ -960,7 +960,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	int i, num_base_bdevs;
 	int raid_level;
 	const char *base_bdev_name;
-	struct raid_bdev_config *raid_bdev_config;
+	struct raid_bdev_config *raid_cfg;
 	int rc;
 
 	raid_name = spdk_conf_section_get_val(conf_section, "Name");
@@ -988,7 +988,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		      raid_level);
 
 	rc = raid_bdev_config_add(raid_name, strip_size, num_base_bdevs, raid_level,
-				  &raid_bdev_config);
+				  &raid_cfg);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to add raid bdev config\n");
 		return rc;
@@ -1000,21 +1000,21 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 			break;
 		}
 		if (i >= num_base_bdevs) {
-			raid_bdev_config_cleanup(raid_bdev_config);
+			raid_bdev_config_cleanup(raid_cfg);
 			SPDK_ERRLOG("Number of devices mentioned is more than count\n");
 			return -1;
 		}
 
-		rc = raid_bdev_config_add_base_bdev(raid_bdev_config, base_bdev_name, i);
+		rc = raid_bdev_config_add_base_bdev(raid_cfg, base_bdev_name, i);
 		if (rc != 0) {
-			raid_bdev_config_cleanup(raid_bdev_config);
+			raid_bdev_config_cleanup(raid_cfg);
 			SPDK_ERRLOG("Failed to add base bdev to raid bdev config\n");
 			return rc;
 		}
 	}
 
-	if (i != raid_bdev_config->num_base_bdevs) {
-		raid_bdev_config_cleanup(raid_bdev_config);
+	if (i != raid_cfg->num_base_bdevs) {
+		raid_bdev_config_cleanup(raid_cfg);
 		SPDK_ERRLOG("Number of devices mentioned is less than count\n");
 		return -1;
 	}
@@ -1106,7 +1106,7 @@ raid_bdev_get_ctx_size(void)
  * claimed by raid bdev or not.
  * params:
  * bdev_name - represents base bdev name
- * raid_bdev_config - pointer to raid bdev config parsed from config file
+ * _raid_cfg - pointer to raid bdev config parsed from config file
  * base_bdev_slot - if bdev can be claimed, it represents the base_bdev correct
  * slot. This field is only valid if return value of this function is true
  * returns:
@@ -1114,7 +1114,7 @@ raid_bdev_get_ctx_size(void)
  * false - if bdev can't be claimed
  */
 static bool
-raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **raid_bdev_config,
+raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **_raid_cfg,
 			 uint32_t *base_bdev_slot)
 {
 	bool rv = false;
@@ -1129,7 +1129,7 @@ raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **raid_b
 			 * this base bdev should be inserted in raid bdev
 			 */
 			if (!strcmp(bdev_name, raid_cfg->base_bdev[i].bdev_name)) {
-				*raid_bdev_config = raid_cfg;
+				*_raid_cfg = raid_cfg;
 				*base_bdev_slot = i;
 				rv = true;
 				break;;
@@ -1463,7 +1463,7 @@ raid_bdev_remove_base_bdev(void *ctx)
 int
 raid_bdev_add_base_device(struct spdk_bdev *bdev)
 {
-	struct raid_bdev_config	*raid_bdev_config = NULL;
+	struct raid_bdev_config	*raid_cfg = NULL;
 	struct raid_bdev	*raid_bdev;
 	uint32_t		base_bdev_slot;
 	bool			can_claim;
@@ -1471,22 +1471,22 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_examine %p\n", bdev);
 
-	can_claim = raid_bdev_can_claim_bdev(bdev->name, &raid_bdev_config, &base_bdev_slot);
+	can_claim = raid_bdev_can_claim_bdev(bdev->name, &raid_cfg, &base_bdev_slot);
 
 	if (!can_claim) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "bdev %s can't be claimed\n", bdev->name);
 		return -1;
 	}
-	assert(raid_bdev_config);
+	assert(raid_cfg);
 
-	raid_bdev = raid_bdev_config->raid_bdev;
+	raid_bdev = raid_cfg->raid_bdev;
 	if (!raid_bdev) {
-		rc = raid_bdev_create(raid_bdev_config, &raid_bdev);
+		rc = raid_bdev_create(raid_cfg, &raid_bdev);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to create raid bdev for bdev '%s'\n", bdev->name);
 			return -1;
 		}
-		raid_bdev_config->raid_bdev = raid_bdev;
+		raid_cfg->raid_bdev = raid_bdev;
 	}
 
 	rc = raid_bdev_alloc_base_bdev_resource(raid_bdev, bdev, base_bdev_slot);
