@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bd5f9a0_839a2893",
+        "filename": "scripts/vagrant/Vagrantfile_vhst",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-21T15:13:08Z",
+      "side": 1,
+      "message": "Remove that, just use virtualbox for setting up the Vhost test VM.",
+      "range": {
+        "startLine": 92,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 5
+      },
+      "revId": "90527a61f17a182fed3a924fea34eb981b0887f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
