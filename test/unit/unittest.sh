@@ -68,6 +68,7 @@ $valgrind $testdir/lib/blobfs/blobfs_async_ut/blobfs_async_ut
 $testdir/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
 
 $valgrind $testdir/lib/event/subsystem.c/subsystem_ut
+$valgrind $testdir/lib/event/app.c/app_ut
 
 $valgrind $testdir/lib/sock/sock.c/sock_ut
 
