@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1b5c31a_07de26b4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-21T23:11:50Z",
+      "side": 1,
+      "message": "Two divisions in the I/O path isn\u0027t fun. Can we require the optimal_io_boundary to be expressed as a power of two?",
+      "revId": "137608c0dd26c56fda746617a935b66b16efca0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
