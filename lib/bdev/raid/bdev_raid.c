@@ -371,21 +371,20 @@ raid_bdev_send_passthru(struct spdk_bdev_io *bdev_io)
  * bdev nvme module
  * params:
  * bdev_io - parent bdev io
- * start_strip - start strip number of this io
- * end_strip - end strip number of this io
- * cur_strip - current strip number of this io to start processing
- * buf - pointer to buffer for this io
  * returns:
  * 0 - success
  * non zero - failure
  */
 static int
-raid_bdev_submit_children(struct spdk_bdev_io *bdev_io,
-			  uint64_t start_strip, uint64_t end_strip, uint64_t cur_strip, uint8_t *buf)
+raid_bdev_submit_children(struct spdk_bdev_io *bdev_io)
 {
 	struct   raid_bdev_io         *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct   raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
 	struct   raid_bdev            *raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+	uint64_t                      blocks_remaining;
+	uint64_t                      block_offset;
+	uint8_t                       *buf;
+	uint64_t                      cur_strip;
 	uint64_t                      pd_strip;
 	uint32_t                      offset_in_strip;
 	uint64_t                      pd_lba;
@@ -393,30 +392,25 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io,
 	uint32_t                      pd_idx;
 	int                           ret;
 
-	for (uint64_t strip = cur_strip; strip <= end_strip; strip++) {
+	blocks_remaining = raid_io->blocks_remaining;
+	block_offset = raid_io->block_offset;
+	buf = raid_io->buf;
+
+	while (blocks_remaining != 0) {
 		/*
 		 * For each strip of parent bdev io, process for each strip and submit
 		 * child io to bdev layer. Calculate base bdev level start lba, length
 		 * and buffer for this child io
 		 */
-		pd_strip = strip / raid_bdev->num_base_bdevs;
-		pd_idx = strip % raid_bdev->num_base_bdevs;
-		if (strip == start_strip) {
-			offset_in_strip = bdev_io->u.bdev.offset_blocks & (raid_bdev->strip_size - 1);
-			pd_lba = (pd_strip << raid_bdev->strip_size_shift) + offset_in_strip;
-			if (strip == end_strip) {
-				pd_blocks = bdev_io->u.bdev.num_blocks;
-			} else {
-				pd_blocks = raid_bdev->strip_size - offset_in_strip;
-			}
-		} else if (strip == end_strip) {
-			pd_lba = pd_strip << raid_bdev->strip_size_shift;
-			pd_blocks = ((bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) &
-				     (raid_bdev->strip_size - 1)) + 1;
-		} else {
-			pd_lba = pd_strip << raid_bdev->strip_size_shift;
-			pd_blocks = raid_bdev->strip_size;
-		}
+		cur_strip = block_offset >> raid_bdev->strip_size_shift;
+		offset_in_strip = block_offset % raid_bdev->strip_size;
+
+		pd_blocks = spdk_min(blocks_remaining, raid_bdev->strip_size - offset_in_strip);
+
+		pd_idx = cur_strip % raid_bdev->num_base_bdevs;
+		pd_strip = cur_strip / raid_bdev->num_base_bdevs;
+		pd_lba = (pd_strip << raid_bdev->strip_size_shift) + offset_in_strip;
+
 		raid_io->splits_comp_outstanding++;
 		assert(raid_io->splits_pending);
 		raid_io->splits_pending--;
@@ -455,41 +449,18 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io,
 			 * try to submit the remaining 3 and 4 childs
 			 */
 			raid_io->buf = buf;
+			raid_io->block_offset = block_offset;
+			raid_io->blocks_remaining = blocks_remaining;
 			raid_io->splits_comp_outstanding--;
 			raid_io->splits_pending++;
 			return ret;
 		}
 		buf += (pd_blocks << raid_bdev->blocklen_shift);
+		block_offset += pd_blocks;
+		blocks_remaining -= pd_blocks;
 	}
 
 	return 0;
-}
-
-/*
- * brief:
- * get_curr_base_bdev_index function calculates the base bdev index
- * which should be processed next based on splits_pending parameter
- * params:
- * raid_bdev - pointer to pooled bdev
- * raid_io - pointer to parent io context
- * returns:
- * base bdev index
- */
-static uint8_t
-get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_io)
-{
-	struct spdk_bdev_io *bdev_io;
-	uint64_t            start_strip;
-	uint64_t            end_strip;
-	uint64_t            cur_strip;
-
-	bdev_io = SPDK_CONTAINEROF(raid_io, struct spdk_bdev_io, driver_ctx);
-	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-		    raid_bdev->strip_size_shift;
-	cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_io->splits_pending);
-
-	return (cur_strip % raid_bdev->num_base_bdevs);
 }
 
 /*
@@ -533,13 +504,15 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 				 struct raid_bdev_io *raid_io, int ret)
 {
 	struct   raid_bdev_io_channel *raid_ch;
+	uint64_t cur_strip;
 	uint8_t pd_idx;
 
 	if (ret != -ENOMEM) {
 		raid_bdev_io_terminate(bdev_io, raid_io);
 	} else {
 		/* Queue the IO to bdev layer wait queue */
-		pd_idx = get_curr_base_bdev_index(raid_bdev, raid_io);
+		cur_strip = raid_io->block_offset >> raid_bdev->strip_size_shift;
+		pd_idx = cur_strip % raid_bdev->num_base_bdevs;
 		raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
 		raid_io->waitq_entry.cb_fn = raid_bdev_waitq_io_process;
 		raid_io->waitq_entry.cb_arg = raid_io;
@@ -570,9 +543,6 @@ raid_bdev_waitq_io_process(void *ctx)
 	struct   spdk_bdev_io         *bdev_io;
 	struct   raid_bdev            *raid_bdev;
 	int                           ret;
-	uint64_t                      start_strip;
-	uint64_t                      end_strip;
-	uint64_t                      cur_strip;
 
 	bdev_io = SPDK_CONTAINEROF(raid_io, struct spdk_bdev_io, driver_ctx);
 	/*
@@ -581,12 +551,7 @@ raid_bdev_waitq_io_process(void *ctx)
 	 */
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	if (raid_bdev->num_base_bdevs > 1) {
-		start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-			    raid_bdev->strip_size_shift;
-		cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_io->splits_pending);
-		ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, cur_strip,
-						raid_io->buf);
+		ret = raid_bdev_submit_children(bdev_io);
 	} else {
 		ret = raid_bdev_send_passthru(bdev_io);
 	}
@@ -610,6 +575,8 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 {
 	struct raid_bdev_io		*raid_io;
 	struct raid_bdev		*raid_bdev;
+	uint64_t			block_offset;
+	uint64_t			block_count;
 	uint64_t			start_strip = 0;
 	uint64_t			end_strip = 0;
 	int				ret;
@@ -627,17 +594,22 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_io->ch = ch;
 	if (raid_bdev->num_base_bdevs > 1) {
-		start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-			    raid_bdev->strip_size_shift;
+		block_offset = bdev_io->u.bdev.offset_blocks;
+		block_count = bdev_io->u.bdev.num_blocks;
+
+		start_strip = block_offset >> raid_bdev->strip_size_shift;
+		end_strip = (block_offset + block_count - 1) >> raid_bdev->strip_size_shift;
+
 		/*
 		 * IO parameters used during io split and io completion
 		 */
+		raid_io->buf = bdev_io->u.bdev.iovs->iov_base;
+		raid_io->block_offset = block_offset;
+		raid_io->blocks_remaining = block_count;
 		raid_io->splits_pending = (end_strip - start_strip + 1);
 		raid_io->splits_comp_outstanding = 0;
 		raid_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, start_strip,
-						bdev_io->u.bdev.iovs->iov_base);
+		ret = raid_bdev_submit_children(bdev_io);
 	} else {
 		ret = raid_bdev_send_passthru(bdev_io);
 	}
