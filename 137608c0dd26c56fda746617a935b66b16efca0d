@@ -34,6 +34,98 @@
       "revId": "137608c0dd26c56fda746617a935b66b16efca0d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43491cb5_8561937a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1143,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-21T23:56:36Z",
+      "side": 1,
+      "message": "this descriptor must be child bdev\u0027s one?",
+      "range": {
+        "startLine": 1143,
+        "startChar": 48,
+        "endLine": 1143,
+        "endChar": 52
+      },
+      "revId": "137608c0dd26c56fda746617a935b66b16efca0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1a9650e_b7928e72",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1144,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-21T23:56:36Z",
+      "side": 1,
+      "message": "this IO channel must be child bdev\u0027s one?",
+      "range": {
+        "startLine": 1144,
+        "startChar": 52,
+        "endLine": 1144,
+        "endChar": 54
+      },
+      "revId": "137608c0dd26c56fda746617a935b66b16efca0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15994350_cc09cb4c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1148,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-21T23:56:36Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 1148,
+        "startChar": 49,
+        "endLine": 1148,
+        "endChar": 53
+      },
+      "revId": "137608c0dd26c56fda746617a935b66b16efca0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55fb9839_04f77888",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1149,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-21T23:56:36Z",
+      "side": 1,
+      "message": "same as above\n\n_spdk_bdev_io_split_no_payload will have same ones",
+      "range": {
+        "startLine": 1149,
+        "startChar": 52,
+        "endLine": 1149,
+        "endChar": 56
+      },
+      "revId": "137608c0dd26c56fda746617a935b66b16efca0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
