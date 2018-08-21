@@ -2101,15 +2101,15 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 
 	rqpair = event.element.qp->qp_context;
 
-	/* This call is thread-safe. Immediately update the IBV state on error notification. */
-	spdk_nvmf_rdma_update_ibv_state(rqpair);
-
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
+		/* This call is thread-safe. Immediately update the IBV state on error notification. */
+		spdk_nvmf_rdma_update_ibv_state(rqpair);
+
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
 		break;
-	case IBV_EVENT_SQ_DRAINED: {
+	case IBV_EVENT_SQ_DRAINED:
 		/* This event occurs frequently in both error and non-error states.
 		 * Check if the qpair is in an error state before sending a message.
 		 * Note that we're not on the correct thread to access the qpair, but
@@ -2120,14 +2120,14 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 			spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
 		}
 		break;
-
-	}
-	case IBV_EVENT_CQ_ERR:
 	case IBV_EVENT_QP_REQ_ERR:
 	case IBV_EVENT_QP_ACCESS_ERR:
 	case IBV_EVENT_COMM_EST:
 	case IBV_EVENT_PATH_MIG:
 	case IBV_EVENT_PATH_MIG_ERR:
+		spdk_nvmf_rdma_update_ibv_state(rqpair);
+		break;
+	case IBV_EVENT_CQ_ERR:
 	case IBV_EVENT_DEVICE_FATAL:
 	case IBV_EVENT_PORT_ACTIVE:
 	case IBV_EVENT_PORT_ERR:
