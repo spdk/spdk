@@ -199,7 +199,7 @@ struct raid_config {
  */
 struct raid_bdev_io_channel {
 	/* Array of IO channels of base bdevs */
-	struct spdk_io_channel      **base_bdevs_io_channel;
+	struct spdk_io_channel      **base_channel;
 };
 
 /* TAIL heads for various raid bdev lists */
