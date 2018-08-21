@@ -162,9 +162,9 @@ raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 static void
 raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_cleanup, %p name %s, state %u, raid_bdev_config %p\n",
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_cleanup, %p name %s, state %u, config %p\n",
 		      raid_bdev,
-		      raid_bdev->bdev.name, raid_bdev->state, raid_bdev->raid_bdev_config);
+		      raid_bdev->bdev.name, raid_bdev->state, raid_bdev->config);
 	if (raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
 		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
 	} else if (raid_bdev->state == RAID_BDEV_STATE_OFFLINE) {
@@ -178,8 +178,8 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 	assert(raid_bdev->base_bdev_info);
 	free(raid_bdev->base_bdev_info);
 	raid_bdev->base_bdev_info = NULL;
-	if (raid_bdev->raid_bdev_config) {
-		raid_bdev->raid_bdev_config->raid_bdev = NULL;
+	if (raid_bdev->config) {
+		raid_bdev->config->raid_bdev = NULL;
 	}
 	free(raid_bdev);
 }
@@ -1218,7 +1218,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg, struct raid_bdev **_raid_bde
 
 	raid_bdev->strip_size = raid_cfg->strip_size;
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
-	raid_bdev->raid_bdev_config = raid_cfg;
+	raid_bdev->config = raid_cfg;
 	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
 	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_list, raid_bdev, link_global_list);
 
@@ -1306,7 +1306,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	}
 
 	raid_bdev_gen = &raid_bdev->bdev;
-	raid_bdev_gen->name = strdup(raid_bdev->raid_bdev_config->name);
+	raid_bdev_gen->name = strdup(raid_bdev->config->name);
 	if (!raid_bdev_gen->name) {
 		SPDK_ERRLOG("Unable to allocate name for raid\n");
 		goto offline;

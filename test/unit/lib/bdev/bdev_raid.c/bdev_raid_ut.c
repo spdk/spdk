@@ -828,7 +828,7 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 			if (presence == false) {
 				break;
 			}
-			CU_ASSERT(pbdev->raid_bdev_config->raid_bdev == pbdev);
+			CU_ASSERT(pbdev->config->raid_bdev == pbdev);
 			CU_ASSERT(pbdev->base_bdev_info != NULL);
 			CU_ASSERT(pbdev->strip_size == ((r->strip_size * 1024) / g_block_len));
 			CU_ASSERT(pbdev->strip_size_shift == spdk_u32log2(((r->strip_size * 1024) / g_block_len)));
