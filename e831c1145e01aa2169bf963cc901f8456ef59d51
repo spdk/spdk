@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a66f40e7_3c6f7ab4",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-21T22:53:46Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI have looked at this in more detail now.  I think I made suggestions before that were based on my incorrect understanding.\n\nCurrently in set_iscsi_options RPC, we use these parameter names:\nno_discovery_auth, req_discovery_auth, req_discovery_auth_mutual, discovery_auth_group\n\nconstruct_target_node RPC uses:\ndisable_chap, require_chap, mutual_chap, chap_group\n\nI think construct_target_node RPC parameter names are more clear and also shorter in length.  This RPC has also been available for longer than set_iscsi_options (which was just added in last release).\n\nSo I propose:\n1) change set_iscsi_options RPC to use same parameter names as construct_target_node RPC\n  * this will break RPC API but I think it is OK as long as we document it in the CHANGELOG\n  * we could also deprecate them, but not remove them for one release - this should work by putting multiple entries in rpc_set_iscsi_opts_decoders\n2) use the construct_target_node RPC parameter names for your new set_iscsi_discovery_auth and set_iscsi_target_node_auth RPCs\n3) separately we can change all variable/member names to use the \"chap\" names instead of \"discovery_auth\"\n\nThen all iSCSI RPC parameter names related to auth/CHAP will be 100% consistent.\n\n-Jim",
+      "revId": "e831c1145e01aa2169bf963cc901f8456ef59d51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
