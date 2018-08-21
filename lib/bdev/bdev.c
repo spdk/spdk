@@ -1661,6 +1661,7 @@ _calculate_measured_qd_cpl(struct spdk_io_channel_iter *i, int status)
 	bdev->internal.measured_queue_depth = bdev->internal.temporary_queue_depth;
 
 	if (bdev->internal.measured_queue_depth) {
+		bdev->internal.io_time += bdev->internal.period;
 		bdev->internal.weighted_io_time += bdev->internal.period * bdev->internal.measured_queue_depth;
 	}
 }
