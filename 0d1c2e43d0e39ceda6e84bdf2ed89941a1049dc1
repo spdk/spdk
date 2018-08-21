@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a9fc9e7_71268037",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-21T15:39:37Z",
+      "side": 1,
+      "message": "in general, this seems like a good thing to have some unit tests for - could we add something just for spdk_app_opts_validate?",
+      "revId": "0d1c2e43d0e39ceda6e84bdf2ed89941a1049dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65783677_aec357e2",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-21T15:39:37Z",
+      "side": 1,
+      "message": "I think this could be written more concisely as a nested for statement:\n\nfor (i \u003d 0; app_opts[i] !\u003d \u0027\\0\u0027; i++) {",
+      "revId": "0d1c2e43d0e39ceda6e84bdf2ed89941a1049dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
