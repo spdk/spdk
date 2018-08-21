@@ -158,6 +158,7 @@ bdev_ut_module_init(void)
 static void
 bdev_ut_module_fini(void)
 {
+	spdk_io_device_unregister(&g_bdev_ut_io_device, NULL);
 }
 
 struct spdk_bdev_module bdev_ut_if = {
@@ -595,6 +596,11 @@ bdev_init_cb(void *arg, int rc)
 	CU_ASSERT(rc == 0);
 }
 
+static void
+bdev_fini_cb(void *arg)
+{
+}
+
 struct bdev_ut_io_wait_entry {
 	struct spdk_bdev_io_wait_entry	entry;
 	struct spdk_io_channel		*io_ch;
@@ -685,6 +691,7 @@ bdev_io_wait_test(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
 }
 
 int
