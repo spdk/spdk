@@ -16,6 +16,24 @@
       "revId": "137608c0dd26c56fda746617a935b66b16efca0d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a82b6b7a_d8703286",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-21T23:23:00Z",
+      "side": 1,
+      "message": "Thanks for catching this.  I knew when I wrote this that the div operations would be suboptimal but forgot to go back and do it right before I pushed.",
+      "parentUuid": "e1b5c31a_07de26b4",
+      "revId": "137608c0dd26c56fda746617a935b66b16efca0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
