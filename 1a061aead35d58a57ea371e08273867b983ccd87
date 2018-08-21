@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee0eaafa_b57d3d94",
+        "filename": "test/config_converter/common.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-21T11:45:47Z",
+      "side": 1,
+      "message": "tabs /spaces consistency",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 8
+      },
+      "revId": "1a061aead35d58a57ea371e08273867b983ccd87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "baa32539_7b671b3b",
+        "filename": "test/config_converter/test_converter.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-21T11:45:47Z",
+      "side": 1,
+      "message": "Sed\u0027s like these could use some comment so that other people know what is going on here",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 61
+      },
+      "revId": "1a061aead35d58a57ea371e08273867b983ccd87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

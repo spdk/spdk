@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30d4291c_26c710e6",
+        "filename": "autotest.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-21T11:45:47Z",
+      "side": 0,
+      "message": "Should this be changed?",
+      "range": {
+        "startLine": 219,
+        "startChar": 10,
+        "endLine": 219,
+        "endChar": 15
+      },
+      "revId": "b5616804dc9b8882314c7df7d43b02cbda994f76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
