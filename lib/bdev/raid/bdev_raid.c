@@ -306,23 +306,22 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
  * base device by-passing the splitting logic. This is used for optimization
  * when the total number of base devices in a raid bdev is only 1.
  * params:
- * ch - pointer to io channel for this io
  * bdev_io - pointer to bdev_io
  * returns:
  * 0 - success
  * non-zero - error
  */
 static int
-raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+raid_bdev_send_passthru(struct spdk_bdev_io *bdev_io)
 {
 	struct   raid_bdev_io_channel *raid_ch;
 	struct   raid_bdev_io         *raid_io;
 	struct   raid_bdev            *raid_bdev;
 	int                           ret;
 
-	raid_ch = spdk_io_channel_get_ctx(ch);
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
 	raid_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	if (raid_bdev->base_bdev_info[0].desc == NULL) {
@@ -359,7 +358,6 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 		 */
 		raid_io->splits_pending = 1;
 		raid_io->splits_comp_outstanding = 0;
-		raid_io->ch = ch;
 		return ret;
 	}
 
@@ -372,7 +370,6 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
  * the childs to bdev layer. bdev layer redirects the childs to appropriate base
  * bdev nvme module
  * params:
- * ch - pointer to spdk_io_channel for the raid bdev
  * bdev_io - parent bdev io
  * start_strip - start strip number of this io
  * end_strip - end strip number of this io
@@ -383,11 +380,11 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
  * non zero - failure
  */
 static int
-raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+raid_bdev_submit_children(struct spdk_bdev_io *bdev_io,
 			  uint64_t start_strip, uint64_t end_strip, uint64_t cur_strip, uint8_t *buf)
 {
-	struct   raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(ch);
 	struct   raid_bdev_io         *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	struct   raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
 	struct   raid_bdev            *raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	uint64_t                      pd_strip;
 	uint32_t                      offset_in_strip;
@@ -458,7 +455,6 @@ raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 			 * try to submit the remaining 3 and 4 childs
 			 */
 			raid_io->buf = buf;
-			raid_io->ch = ch;
 			raid_io->splits_comp_outstanding--;
 			raid_io->splits_pending++;
 			return ret;
@@ -589,10 +585,10 @@ raid_bdev_waitq_io_process(void *ctx)
 		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
 			    raid_bdev->strip_size_shift;
 		cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_io->splits_pending);
-		ret = raid_bdev_submit_children(raid_io->ch, bdev_io, start_strip, end_strip, cur_strip,
+		ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, cur_strip,
 						raid_io->buf);
 	} else {
-		ret = raid_bdev_send_passthru(raid_io->ch, bdev_io);
+		ret = raid_bdev_send_passthru(bdev_io);
 	}
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
@@ -629,6 +625,7 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 	 */
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	raid_io->ch = ch;
 	if (raid_bdev->num_base_bdevs > 1) {
 		start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
 		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
@@ -639,10 +636,10 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 		raid_io->splits_pending = (end_strip - start_strip + 1);
 		raid_io->splits_comp_outstanding = 0;
 		raid_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		ret = raid_bdev_submit_children(ch, bdev_io, start_strip, end_strip, start_strip,
+		ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, start_strip,
 						bdev_io->u.bdev.iovs->iov_base);
 	} else {
-		ret = raid_bdev_send_passthru(ch, bdev_io);
+		ret = raid_bdev_send_passthru(bdev_io);
 	}
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
