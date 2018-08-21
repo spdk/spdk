@@ -218,6 +218,11 @@ __initialize_cache(void)
 					   CACHE_BUFFER_SIZE,
 					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					   SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_cache_pool) {
+		SPDK_ERRLOG("Create mempool failed, you may "
+			"increase the memory and try again\n");
+		assert(false);
+	}
 	TAILQ_INIT(&g_caches);
 	pthread_spin_init(&g_caches_lock, 0);
 }
