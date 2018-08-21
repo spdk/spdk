@@ -323,19 +323,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	/* Fail the command if input raid level is other than 0 */
-	if (req.raid_level != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "invalid raid level");
-		free_rpc_construct_raid_bdev(&req);
-		return;
-	}
-
-	if (spdk_u32_is_pow2(req.strip_size) == false) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "invalid strip size");
-		free_rpc_construct_raid_bdev(&req);
-		return;
-	}
-
 	rc = raid_bdev_config_add(req.name, req.strip_size, req.base_bdevs.num_base_bdevs, req.raid_level,
 				  &raid_cfg);
 	if (rc != 0) {
