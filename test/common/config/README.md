@@ -40,6 +40,26 @@ configuration file. For a full list of the variable declarations available for a
 The Vhost tests also require the creation of a second virtual machine nested inside of the test VM.
 Please follow the directions below to complete that installation. Note that host refers to the Fedora VM
 created above and guest or VM refer to the Ubuntu VM created in this section.
+
+1. Follow instructions from spdk/scripts/vagrant/README.md
+	- install all needed packages mentioned in "Mac OSX Setup" or "Windows 10 Setup" sections
+	- follow steps from "Configure Vagrant" section
+
+2. Use Vagrant scripts located in spdk/scripts/vagrant to automatically generate
+	VM image to use in SPDK vhost tests.
+	Example command:
+	~~~{.sh}
+	spdk/scripts/vagrant/create_vhost_vm.sh --move-to-def-dirs ubuntu16
+	~~~
+	This command will:
+		- Download a Ubuntu 16.04 image file
+		- upgrade the system and install needed dependencies (fio, sg3-utils, bc)
+		- add entry to VM's ~/.ssh/autorized_keys
+		- add appropriate options to GRUB command line and update grub
+		- convert the image to .qcow2 format
+		- move .qcow2 file and ssh keys to default locations used by vhost test scripts
+
+Alternatively it is possible to create the VM image manually using following steps:
 1. Create an image file for the VM. It does not have to be large, about 3.5G should suffice.
 2. Create an ssh keypair for host-guest communications (performed on the host):
     - Generate an ssh keypair with the name spdk_vhost_id_rsa and save it in `/root/.ssh`.
