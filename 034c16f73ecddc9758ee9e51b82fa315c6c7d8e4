@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "278f5aff_c9b84e62",
+        "filename": "test/unit/lib/event/app.c/app_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-21T23:02:06Z",
+      "side": 1,
+      "message": "You can initialize the array without the length and the compiler will infer it.\nchar *valid_argv[] \u003d {\"app_ut\", \"--wait-for-rpc\", ...}\n\nYou can recover that length for use elsewhere by doing sizeof(valid_argv) / sizeof(valid_argv[0]), and with some nice macros the code doesn\u0027t look that awful. That would let you have different size arrays here. This is just a note for the future expansion of this test. What you have here is fine with me for now.",
+      "revId": "034c16f73ecddc9758ee9e51b82fa315c6c7d8e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
