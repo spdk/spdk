@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffdf46aa_9321f4b4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2119,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-21T16:52:15Z",
+      "side": 1,
+      "message": "This is a bit confusing to me.  Why do we call spdk_nvmf_rdma_update_ibv_state() twice in a row?\n\nThe original code did this too, but I think we should fix it here, even if it\u0027s just a comment explaining why.",
+      "revId": "e0fce533ebad41bd0cd50ecf71bdee7373ef818b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
