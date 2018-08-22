@@ -11,7 +11,7 @@ if [ -s /etc/redhat-release ]; then
 	fi
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 		git astyle python-pep8 lcov python clang-analyzer libuuid-devel \
-		sg3_utils libiscsi-devel
+		sg3_utils libiscsi-devel pciutils
 	# Additional (optional) dependencies for showing backtrace in logs
 	yum install -y libunwind-devel
 	# Additional dependencies for NVMe over Fabrics
@@ -27,7 +27,7 @@ if [ -s /etc/redhat-release ]; then
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
-		git astyle pep8 lcov clang uuid-dev sg3-utils libiscsi-dev
+		git astyle pep8 lcov clang uuid-dev sg3-utils libiscsi-dev pciutils
 	# Additional (optional) dependencies for showing backtrace in logs
 	apt-get install libunwind-dev
 	# Additional dependencies for NVMe over Fabrics
@@ -42,7 +42,7 @@ elif [ -f /etc/debian_version ]; then
 	pip3 install configshell_fb pexpect
 elif [ -f /etc/SuSE-release ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
-		git-core lcov python-base python-pep8 libuuid-devel sg3_utils
+		git-core lcov python-base python-pep8 libuuid-devel sg3_utils pciutils
 	# Additional (optional) dependencies for showing backtrace in logs
 	zypper install libunwind-devel
 	# Additional dependencies for NVMe over Fabrics
