@@ -95,16 +95,16 @@ spdk_iscsi_globals_config_text(FILE *fp)
 		return;
 	}
 
-	if (g_spdk_iscsi.req_discovery_auth) {
+	if (g_spdk_iscsi.require_chap) {
 		authmethod = "CHAP";
-	} else if (g_spdk_iscsi.req_discovery_auth_mutual) {
+	} else if (g_spdk_iscsi.mutual_chap) {
 		authmethod = "CHAP Mutual";
-	} else if (!g_spdk_iscsi.no_discovery_auth) {
+	} else if (!g_spdk_iscsi.disable_chap) {
 		authmethod = "Auto";
 	}
 
-	if (g_spdk_iscsi.discovery_auth_group) {
-		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", g_spdk_iscsi.discovery_auth_group);
+	if (g_spdk_iscsi.chap_group) {
+		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", g_spdk_iscsi.chap_group);
 	}
 
 	fprintf(fp, ISCSI_CONFIG_TMPL,
@@ -351,26 +351,26 @@ spdk_iscsi_log_globals(void)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Timeout %d\n", g_spdk_iscsi.timeout);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NopInInterval %d\n",
 		      g_spdk_iscsi.nopininterval);
-	if (g_spdk_iscsi.no_discovery_auth) {
+	if (g_spdk_iscsi.disable_chap) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod None\n");
-	} else if (!g_spdk_iscsi.req_discovery_auth) {
+	} else if (!g_spdk_iscsi.require_chap) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod Auto\n");
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod %s %s\n",
-			      g_spdk_iscsi.req_discovery_auth ? "CHAP" : "",
-			      g_spdk_iscsi.req_discovery_auth_mutual ? "Mutual" : "");
+			      g_spdk_iscsi.require_chap ? "CHAP" : "",
+			      g_spdk_iscsi.mutual_chap ? "Mutual" : "");
 	}
 
-	if (g_spdk_iscsi.discovery_auth_group == 0) {
+	if (g_spdk_iscsi.chap_group == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthGroup None\n");
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthGroup AuthGroup%d\n",
-			      g_spdk_iscsi.discovery_auth_group);
+			      g_spdk_iscsi.chap_group);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MinConnectionsPerCore%d\n",
@@ -390,10 +390,10 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->ErrorRecoveryLevel = DEFAULT_ERRORRECOVERYLEVEL;
 	opts->timeout = DEFAULT_TIMEOUT;
 	opts->nopininterval = DEFAULT_NOPININTERVAL;
-	opts->no_discovery_auth = false;
-	opts->req_discovery_auth = false;
-	opts->req_discovery_auth_mutual = false;
-	opts->discovery_auth_group = 0;
+	opts->disable_chap = false;
+	opts->require_chap = false;
+	opts->mutual_chap = false;
+	opts->chap_group = 0;
 	opts->authfile = NULL;
 	opts->nodebase = NULL;
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
@@ -464,10 +464,10 @@ spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src)
 	dst->ErrorRecoveryLevel = src->ErrorRecoveryLevel;
 	dst->timeout = src->timeout;
 	dst->nopininterval = src->nopininterval;
-	dst->no_discovery_auth = src->no_discovery_auth;
-	dst->req_discovery_auth = src->req_discovery_auth;
-	dst->req_discovery_auth_mutual = src->req_discovery_auth_mutual;
-	dst->discovery_auth_group = src->discovery_auth_group;
+	dst->disable_chap = src->disable_chap;
+	dst->require_chap = src->require_chap;
+	dst->mutual_chap = src->mutual_chap;
+	dst->chap_group = src->chap_group;
 	dst->min_connections_per_core = src->min_connections_per_core;
 
 	return dst;
@@ -562,21 +562,21 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
 	if (val != NULL) {
 		if (strcasecmp(val, "CHAP") == 0) {
-			opts->no_discovery_auth = false;
-			opts->req_discovery_auth = true;
-			opts->req_discovery_auth_mutual = false;
+			opts->disable_chap = false;
+			opts->require_chap = true;
+			opts->mutual_chap = false;
 		} else if (strcasecmp(val, "Mutual") == 0) {
-			opts->no_discovery_auth = false;
-			opts->req_discovery_auth = true;
-			opts->req_discovery_auth_mutual = true;
+			opts->disable_chap = false;
+			opts->require_chap = true;
+			opts->mutual_chap = true;
 		} else if (strcasecmp(val, "Auto") == 0) {
-			opts->no_discovery_auth = false;
-			opts->req_discovery_auth = false;
-			opts->req_discovery_auth_mutual = false;
+			opts->disable_chap = false;
+			opts->require_chap = false;
+			opts->mutual_chap = false;
 		} else if (strcasecmp(val, "None") == 0) {
-			opts->no_discovery_auth = true;
-			opts->req_discovery_auth = false;
-			opts->req_discovery_auth_mutual = false;
+			opts->disable_chap = true;
+			opts->require_chap = false;
+			opts->mutual_chap = false;
 		} else {
 			SPDK_ERRLOG("unknown auth %s, ignoring\n", val);
 		}
@@ -585,7 +585,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	if (val != NULL) {
 		ag_tag = val;
 		if (strcasecmp(ag_tag, "None") == 0) {
-			opts->discovery_auth_group = 0;
+			opts->chap_group = 0;
 		} else {
 			if (strncasecmp(ag_tag, "AuthGroup",
 					strlen("AuthGroup")) != 0
@@ -593,7 +593,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 			    || ag_tag_i == 0) {
 				SPDK_ERRLOG("invalid auth group %s, ignoring\n", ag_tag);
 			} else {
-				opts->discovery_auth_group = ag_tag_i;
+				opts->chap_group = ag_tag_i;
 			}
 		}
 	}
@@ -670,9 +670,8 @@ spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 		return -EINVAL;
 	}
 
-	if (!spdk_iscsi_check_chap_params(opts->no_discovery_auth, opts->req_discovery_auth,
-					  opts->req_discovery_auth_mutual,
-					  opts->discovery_auth_group)) {
+	if (!spdk_iscsi_check_chap_params(opts->disable_chap, opts->require_chap,
+					  opts->mutual_chap, opts->chap_group)) {
 		SPDK_ERRLOG("CHAP params in opts are illegal combination\n");
 		return -EINVAL;
 	}
@@ -743,10 +742,10 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.ErrorRecoveryLevel = opts->ErrorRecoveryLevel;
 	g_spdk_iscsi.timeout = opts->timeout;
 	g_spdk_iscsi.nopininterval = opts->nopininterval;
-	g_spdk_iscsi.no_discovery_auth = opts->no_discovery_auth;
-	g_spdk_iscsi.req_discovery_auth = opts->req_discovery_auth;
-	g_spdk_iscsi.req_discovery_auth_mutual = opts->req_discovery_auth_mutual;
-	g_spdk_iscsi.discovery_auth_group = opts->discovery_auth_group;
+	g_spdk_iscsi.disable_chap = opts->disable_chap;
+	g_spdk_iscsi.require_chap = opts->require_chap;
+	g_spdk_iscsi.mutual_chap = opts->mutual_chap;
+	g_spdk_iscsi.chap_group = opts->chap_group;
 
 	spdk_iscsi_conn_set_min_per_core(opts->min_connections_per_core);
 
@@ -1039,11 +1038,10 @@ spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_int32(w, "nop_timeout", g_spdk_iscsi.timeout);
 	spdk_json_write_named_int32(w, "nop_in_interval", g_spdk_iscsi.nopininterval);
 
-	spdk_json_write_named_bool(w, "no_discovery_auth", g_spdk_iscsi.no_discovery_auth);
-	spdk_json_write_named_bool(w, "req_discovery_auth", g_spdk_iscsi.req_discovery_auth);
-	spdk_json_write_named_bool(w, "req_discovery_auth_mutual",
-				   g_spdk_iscsi.req_discovery_auth_mutual);
-	spdk_json_write_named_int32(w, "discovery_auth_group", g_spdk_iscsi.discovery_auth_group);
+	spdk_json_write_named_bool(w, "no_discovery_auth", g_spdk_iscsi.disable_chap);
+	spdk_json_write_named_bool(w, "req_discovery_auth", g_spdk_iscsi.require_chap);
+	spdk_json_write_named_bool(w, "req_discovery_auth_mutual", g_spdk_iscsi.mutual_chap);
+	spdk_json_write_named_int32(w, "discovery_auth_group", g_spdk_iscsi.chap_group);
 
 	spdk_json_write_named_uint32(w, "min_connections_per_core",
 				     spdk_iscsi_conn_get_min_per_core());

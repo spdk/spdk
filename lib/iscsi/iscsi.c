@@ -776,7 +776,7 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 	}
 	if (ag_tag < 0) {
 		pthread_mutex_lock(&g_spdk_iscsi.mutex);
-		ag_tag = g_spdk_iscsi.discovery_auth_group;
+		ag_tag = g_spdk_iscsi.chap_group;
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ag_tag=%d\n", ag_tag);
@@ -1255,20 +1255,20 @@ spdk_iscsi_op_login_session_discovery_chap(struct spdk_iscsi_conn *conn)
 {
 	int rc = 0;
 
-	if (g_spdk_iscsi.no_discovery_auth) {
+	if (g_spdk_iscsi.disable_chap) {
 		conn->req_auth = 0;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod", "None", "None");
 		if (rc < 0) {
 			return rc;
 		}
-	} else if (g_spdk_iscsi.req_discovery_auth) {
+	} else if (g_spdk_iscsi.require_chap) {
 		conn->req_auth = 1;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod", "CHAP", "CHAP");
 		if (rc < 0) {
 			return rc;
 		}
 	}
-	if (g_spdk_iscsi.req_discovery_auth_mutual) {
+	if (g_spdk_iscsi.mutual_chap) {
 		conn->req_mutual = 1;
 	}
 
