@@ -18,8 +18,8 @@
 # Miscellaneous
 @copydoc misc
 
-# Modules
-@copydoc modules
+# Driver Modules
+@copydoc driver_modules
 
 # Tools
 @copydoc tools
