@@ -1,0 +1,11 @@
+[global]
+thread=1
+group_reporting=1
+direct=1
+norandommap=1
+
+[perf_test]
+stonewall
+description="Run NVMe driver performance test for a given workload"
+time_based=1
+numjobs=1
