@@ -27,8 +27,8 @@ applications that use it. Specific applications may implement additional flags.
 Param    | Long Param             | Type     | Default                | Description
 -------- | ---------------------- | -------- | ---------------------- | -----------
 -c       | --config               | string   |                        | @ref cmd_arg_config_file
--d       | --limit-coredump       | flag     |                        |
--e       | --tpoint-group-mask    | integer  | 0x0                    |
+-d       | --limit-coredump       | flag     |                        | .
+-e       | --tpoint-group-mask    | integer  | 0x0                    | .
 -g       | --single-file-segments | flag     |                        | @ref cmd_arg_single_file_segments
 -h       | --help                 | flag     |                        | show all available parameters and exit
 -i       | --shm-id               | integer  |                        | @ref cmd_arg_multi_process
