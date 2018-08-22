@@ -754,6 +754,26 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	return 0;
 }
 
+int
+spdk_iscsi_set_discovery_auth(bool disable_chap, bool require_chap, bool mutual_chap,
+			      int32_t chap_group)
+{
+	if (!spdk_iscsi_check_chap_params(disable_chap, require_chap, mutual_chap,
+					  chap_group)) {
+		SPDK_ERRLOG("CHAP params are illegal combination\n");
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	g_spdk_iscsi.disable_chap = disable_chap;
+	g_spdk_iscsi.require_chap = require_chap;
+	g_spdk_iscsi.mutual_chap = mutual_chap;
+	g_spdk_iscsi.chap_group = chap_group;
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+	return 0;
+}
+
 static int
 spdk_iscsi_initialize_global_params(void)
 {

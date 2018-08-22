@@ -41,7 +41,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/event.h"
-
+#include "spdk/string.h"
 #include "spdk_internal/log.h"
 
 static void
@@ -1057,3 +1057,51 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_iscsi_global_params", spdk_rpc_get_iscsi_global_params, SPDK_RPC_RUNTIME)
+
+struct rpc_discovery_auth {
+	bool disable_chap;
+	bool require_chap;
+	bool mutual_chap;
+	int32_t chap_group;
+};
+
+static const struct spdk_json_object_decoder rpc_discovery_auth_decoders[] = {
+	{"disable_chap", offsetof(struct rpc_discovery_auth, disable_chap), spdk_json_decode_bool, true},
+	{"require_chap", offsetof(struct rpc_discovery_auth, require_chap), spdk_json_decode_bool, true},
+	{"mutual_chap", offsetof(struct rpc_discovery_auth, mutual_chap), spdk_json_decode_bool, true},
+	{"chap_group", offsetof(struct rpc_discovery_auth, chap_group), spdk_json_decode_int32, true},
+};
+
+static void
+spdk_rpc_set_iscsi_discovery_auth(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct rpc_discovery_auth req = {};
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_discovery_auth_decoders,
+				    SPDK_COUNTOF(rpc_discovery_auth_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		return;
+	}
+
+	rc = spdk_iscsi_set_discovery_auth(req.disable_chap, req.require_chap,
+					   req.mutual_chap, req.chap_group);
+	if (rc < 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid combination of CHAP params");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("set_iscsi_discovery_auth", spdk_rpc_set_iscsi_discovery_auth, SPDK_RPC_RUNTIME)

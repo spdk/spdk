@@ -531,6 +531,25 @@ if __name__ == "__main__":
     p.set_defaults(func=set_iscsi_options)
 
     @call_cmd
+    def set_iscsi_discovery_auth(args):
+        rpc.iscsi.set_iscsi_discovery_auth(
+            args.client,
+            disable_chap=args.disable_chap,
+            require_chap=args.require_chap,
+            mutual_chap=args.mutual_chap,
+            chap_group=args.chap_group)
+
+    p = subparsers.add_parser('set_iscsi_discovery_auth', help="""Set CHAP authentication for discovery session.""")
+    p.add_argument('-d', '--disable-chap', help="""CHAP for discovery session should be disabled.
+    *** Mutually exclusive with --require-chap""", action='store_true')
+    p.add_argument('-r', '--require-chap', help="""CHAP for discovery session should be required.
+    *** Mutually exclusive with --disable-chap""", action='store_true')
+    p.add_argument('-m', '--mutual-chap', help='CHAP for discovery session should be mutual', action='store_true')
+    p.add_argument('-g', '--chap-group', help="""Authentication group ID for discovery session.
+    *** Authentication group must be precreated ***""", type=int)
+    p.set_defaults(func=set_iscsi_discovery_auth)
+
+    @call_cmd
     def get_portal_groups(args):
         print_dict(rpc.iscsi.get_portal_groups(args.client))
 

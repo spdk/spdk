@@ -1873,6 +1873,48 @@ Example response:
   }
 }
 ~~~
+## set_iscsi_discovery_auth method {#rpc_set_iscsi_discovery_auth}
+
+Set CHAP authentication for sessions dynamically.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+disable_chap                | Optional | boolean | CHAP for discovery session should be disabled (default: `false`)
+require_chap                | Optional | boolean | CHAP for discovery session should be required (default: `false`)
+mutual_chap                 | Optional | boolean | CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)
+chap_group                  | Optional | number  | CHAP group ID for discovery session (default: 0)
+
+Parameters `disable_chap` and `require_chap` are mutually exclusive.
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "params": {
+    "chap_group": 1,
+    "require_chap": true,
+    "mutual_chap": true
+  },
+  "jsonrpc": "2.0",
+  "method": "set_iscsi_discovery_auth",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
 
 ## get_initiator_groups method {#rpc_get_initiator_groups}
 
