@@ -46,7 +46,6 @@
 
 #define SPDK_REACTOR_SPIN_TIME_USEC	1000
 #define SPDK_EVENT_BATCH_SIZE		8
-#define SPDK_SEC_TO_USEC		1000000ULL
 
 enum spdk_poller_state {
 	/* The poller is registered with a reactor but not currently executing its fn. */
