@@ -16,7 +16,14 @@ If you want to kill the application by using signal, make sure use the SIGTERM, 
 will release all the shared memory resource before exit, the SIGKILL will make the shared memory
 resource have no chance to be released by applications, you may need to release the resource manually.
 
-## Configuring iSCSI Target {#iscsi_config}
+## Introduction
+
+The following diagram shows relations between diferent parts of iSCSI structure described in this
+document.
+
+![iSCSI structure](iscsi.svg)
+
+## Configuring iSCSI Target via config file {#iscsi_config}
 
 A `iscsi_tgt` specific configuration file is used to configure the iSCSI target. A fully documented
 example configuration file is located at `etc/spdk/iscsi.conf.in`.
@@ -34,7 +41,7 @@ the target requires elevated privileges (root) to run.
 app/iscsi_tgt/iscsi_tgt -c /path/to/iscsi.conf
 ~~~
 
-## Assigning CPU Cores to the iSCSI Target {#iscsi_config_lcore}
+### Assigning CPU Cores to the iSCSI Target {#iscsi_config_lcore}
 
 SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
 to gain access to hardware resources such as huge memory pages and CPU core(s). DPDK EAL provides
@@ -50,7 +57,7 @@ to assign lcores 24,25,26 and 27 to iSCSI target work items, set the ReactorMask
 ReactorMask 0xF000000
 ~~~
 
-## Configuring a LUN in the iSCSI Target {#iscsi_lun}
+### Configuring a LUN in the iSCSI Target {#iscsi_lun}
 
 Each LUN in an iSCSI target node is associated with an SPDK block device.  See @ref bdev
 for details on configuring SPDK block devices.  The block device to LUN mappings are specified in the
@@ -71,28 +78,38 @@ channels.
 In addition to the configuration file, the iSCSI target may also be configured via JSON-RPC calls. See
 @ref jsonrpc for details.
 
-### Add the portal group
+### Portal groups
+
+ - add_portal_group -- Add a portal group.
+ - delete_portal_group -- Delete an existing portal group.
+ - add_pg_ig_maps -- Add initiator group to portal group mappings to an existing iSCSI target node.
+ - delete_pg_ig_maps -- Delete initiator group to portal group mappings from an existing iSCSI target node.
+ - get_portal_groups -- Show information about all available portal groups.
 
 ~~~
-python /path/to/spdk/scripts/rpc.py add_portal_group 1 127.0.0.1:3260
+python /path/to/spdk/scripts/rpc.py add_portal_group 1 10.0.0.1:3260
 ~~~
 
-### Add the initiator group
+### Initiator groups
+
+ - add_initiator_group -- Add an initiator group.
+ - delete_initiator_group -- Delete an existing initiator group.
+ - add_initiators_to_initiator_group -- Add initiators to an existing initiator group.
+ - get_initiator_groups -- Show information about all available initiator groups.
 
 ~~~
-python /path/to/spdk/scripts/rpc.py add_initiator_group 2 ANY 127.0.0.1/32
+python /path/to/spdk/scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
 ~~~
 
-### Construct the backend block device
+### Target nodes
+
+ - construct_target_node -- Add a iSCSI target node.
+ - delete_target_node -- Delete a iSCSI target node.
+ - target_node_add_lun -- Add an LUN to an existing iSCSI target node.
+ - get_target_nodes -- Show information about all available iSCSI target nodes.
 
 ~~~
-python /path/to/spdk/scripts/rpc.py construct_malloc_bdev -b MyBdev 64 512
-~~~
-
-### Construct the target node
-
-~~~
-python /path/to/spdk/scripts/rpc.py construct_target_node Target3 Target3_alias MyBdev:0 1:2 64 0 0 0 1
+python /path/to/spdk/scripts/rpc.py construct_target_node Target3 Target3_alias MyBdev:0 1:2 64 -d
 ~~~
 
 ## Configuring iSCSI Initiator {#iscsi_initiator}
@@ -141,9 +158,9 @@ net.core.netdev_max_backlog = 300000
 
 ### Discovery
 
-Assume target is at 192.168.1.5
+Assume target is at 10.0.0.1
 ~~~
-iscsiadm -m discovery -t sendtargets -p 192.168.1.5
+iscsiadm -m discovery -t sendtargets -p 10.0.0.1
 ~~~
 
 ### Connect to target
@@ -199,6 +216,93 @@ Increase requests for block queue
 echo "1024" > /sys/block/sdc/queue/nr_requests
 ~~~
 
+### Example: Configure simple iSCSI Target with one portal and two LUNs
+
+Assuming we have one iSCSI Target server with portal at 10.0.0.1:3200, two LUNs (Malloc0 and Malloc),
+ and accepting initiators on 10.0.0.2/32, like on diagram below:
+
+![Sample iSCSI configuration](iscsi_example.svg)
+
+#### Configure iSCSI Target
+
+Start iscsi_tgt application:
+```
+$ ./app/iscsi_tgt/iscsi_tgt
+```
+
+Construct two Malloc devices with a name "Malloc0" and "Malloc1":
+
+```
+$ python ./scripts/rpc.py construct_malloc_bdev -b Malloc0 64 512
+$ python ./scripts/rpc.py construct_malloc_bdev -b Malloc1 64 512
+```
+
+Create new portal group with id 1, and address 10.0.0.1:3260:
+
+```
+$ python ./scripts/rpc.py add_portal_group 1 10.0.0.1:3260
+```
+
+Create one initiator group with id 2 to accept any connection from 10.0.0.2/32:
+
+```
+$ python ./scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
+```
+
+Finaly construct one target using previously created bdevs as LUN0 (Malloc0) and LUN1 (Malloc1)
+with a name "disk1" and alias "Data Disk1" using portal group 1 and initiator group 2.
+
+```
+$ python ./scripts/rpc.py construct_target_node disk1 "Data Disk1" "Malloc0:0 Malloc1:1" 1:2 64 -d
+```
+
+#### Configure initiator
+
+Discover target
+
+~~~
+$ iscsiadm -m discovery -t sendtargets -p 10.0.0.1
+10.0.0.1:3260,1 iqn.2016-06.io.spdk:disk1
+~~~
+
+Connect to the target
+
+~~~
+$ iscsiadm -m node --login
+~~~
+
+At this point the iSCSI target should show up as SCSI disks.
+
+Check dmesg to see what they came up as. In this example it can look like below:
+
+~~~
+...
+[630111.860078] scsi host68: iSCSI Initiator over TCP/IP
+[630112.124743] scsi 68:0:0:0: Direct-Access     INTEL    Malloc disk      0001 PQ: 0 ANSI: 5
+[630112.125445] sd 68:0:0:0: [sdd] 131072 512-byte logical blocks: (67.1 MB/64.0 MiB)
+[630112.125468] sd 68:0:0:0: Attached scsi generic sg3 type 0
+[630112.125926] sd 68:0:0:0: [sdd] Write Protect is off
+[630112.125934] sd 68:0:0:0: [sdd] Mode Sense: 83 00 00 08
+[630112.126049] sd 68:0:0:0: [sdd] Write cache: enabled, read cache: disabled, doesn't support DPO or FUA
+[630112.126483] scsi 68:0:0:1: Direct-Access     INTEL    Malloc disk      0001 PQ: 0 ANSI: 5
+[630112.127096] sd 68:0:0:1: Attached scsi generic sg4 type 0
+[630112.127143] sd 68:0:0:1: [sde] 131072 512-byte logical blocks: (67.1 MB/64.0 MiB)
+[630112.127566] sd 68:0:0:1: [sde] Write Protect is off
+[630112.127573] sd 68:0:0:1: [sde] Mode Sense: 83 00 00 08
+[630112.127728] sd 68:0:0:1: [sde] Write cache: enabled, read cache: disabled, doesn't support DPO or FUA
+[630112.128246] sd 68:0:0:0: [sdd] Attached SCSI disk
+[630112.129789] sd 68:0:0:1: [sde] Attached SCSI disk
+...
+~~~
+
+You may also use simple bash command to find /dev/sdX nodes for each iSCSI LUN
+in all logged iSCSI sessions:
+
+~~~
+$ iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}'
+sdd
+sde
+~~~
 
 # Vector Packet Processing {#vpp}
 
