@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb68e645_bbbc48c2",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-22T17:46:26Z",
+      "side": 1,
+      "message": "maybe CHILD instead of SCRATCH?",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4bee85c2_9a2d72ad",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-22T17:46:26Z",
+      "side": 1,
+      "message": "same thing, maybe child instead of scratch?",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2acd443_0393b1ee",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1064,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-22T17:46:26Z",
+      "side": 1,
+      "message": "I think it would be better to only report TRUE to those types that are tested in UT and let everything else fall through to false and if something is missed it will be caught/added in a very clear way",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5431d491_1f6d2f67",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1089,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-22T17:46:26Z",
+      "side": 1,
+      "message": "noticed you aren\u0027t testing this case in UT",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ac4b5c7_df42a93a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1171,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-22T17:46:26Z",
+      "side": 1,
+      "message": "I don\u0027t believe the ability to queue here is tested but assume that we use this mechanism enough that we don\u0027t need to add tests for it everyone someone uses it in the bdev layer",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2667ea21_78500052",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1194,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-22T17:46:26Z",
+      "side": 1,
+      "message": "UT only covers WZ, not unmap or flush",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
