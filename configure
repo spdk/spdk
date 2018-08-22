@@ -320,7 +320,7 @@ if [ "$CONFIG_RDMA" = "y" ]; then
 			CONFIG_RDMA_SEND_WITH_INVAL="y"
 		else
 			CONFIG_RDMA_SEND_WITH_INVAL="n"
-			cat <<EOF
+			echo "
 *******************************************************************************
 WARNING: The Infiniband Verbs opcode Send With Invalidate is either not
 supported or is not functional with the current version of libibverbs installed
@@ -333,8 +333,7 @@ functionality, but greatly reduced performance. The SPDK NVMe-oF target will
 be unable to leverage that operation using the currently installed version
 of libibverbs, so Linux kernel NVMe-oF initiators based on kernels greater
 than or equal to 4.14 will see significantly reduced performance.
-*******************************************************************************
-EOF
+*******************************************************************************"
 		fi
 	fi
 fi
