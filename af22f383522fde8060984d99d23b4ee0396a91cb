@@ -1,0 +1,344 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efa5b4e4_210248f5",
+        "filename": "doc/crypto.md",
+        "patchSetId": 73
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "Do we have a follow-on patch that implements RPCs?  IMHO, RPCs are a must for this.  All of our bdev modules support RPCs and our bdev.md examples only specify RPCs.  It\u0027s not really usable with the old config file format - especially to specify keys for dynamically generated logical volumes.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e719e50b_59e093d6",
+        "filename": "doc/crypto.md",
+        "patchSetId": 73
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "cryto \u003d\u003e crypto",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b881fd46_26924fd2",
+        "filename": "doc/driver_modules.md",
+        "patchSetId": 73
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "I would put crypto under bdev.md instead.  This file is meant to list SPDK polled mode drivers.  Info for bdev modules is in bdev.md.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69516a2c_67082816",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 73
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "Where does this get set to \"y\"?",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6921f5e7_087d001b",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 73
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "unrelated whitespace change",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5200c53_94098065",
+        "filename": "lib/bdev/crypto/Makefile",
+        "patchSetId": 73
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "Are both of these needed?  I guess ENV_CFLAGS is needed since this module calls DPDK functions directly.  But I think the SPDK_ROOT_DIR/lib/bdev one can be removed.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc8fdcab_ef9ad68f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "This number still seems really high.  If one iteration of the poller does 2048 operations, it will starve all other pollers running on this same core.  It would be better to let the poller do smaller batches at a time, which then allows backend NVMe I/O and frontend NVMe-oF/iSCSI/vhost I/O to be interspersed with crypto operations.  It could in some cases even cause network issues (i.e. 2048 operations take so long that we miss a TCP timer or something).\n\nI think even something like 64 or 128 would be better for now.  We can tweak it later once we get performance data with a real workload.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20ad8b51_13da9754",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "This is OK for now, but we will need to handle out-of-mbuf conditions with a queue, rather than increasing the size of the mbuf pool.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb7064ef_c7f1c208",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "I think we need to modify this before merging it.  We can\u0027t check in insecure debug hooks.  Maybe it\u0027s something that\u0027s only enabled by an ifdef that\u0027s always disabled and requires a developer to manually change.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23c41c4e_e808f7d6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "encrypt",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ef7eb8d_80c9e5fa",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "associated",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecd20f03_0db28a4f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "There are a ton of cases in here that return ENOMEM if there are not enough mbufs or crypto bufs available.  If we put this under stress (256 NVMe-oF connections, 32 QD each, 128KB per I/O), will this handle it gracefully?",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cef8abfe_10b988af",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "describe",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d876bea1_59fe4318",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 772,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "Should check return code here.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d6f5863_f072e4a6",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 73
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "I would suggest removing rte_kvargs from your list, and just move this ifeq ($(CONFIG_CRYPTO),y) check away from the rte_kvargs stuff.  That will simplify the if/else logic.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cfbe6ce_6e3c1c35",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 73
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "this part needs to be at the end of this file - we can\u0027t make IPSec until we\u0027ve installed nasm\n\nalso needs to check that the nasm version installed is capable of building IPSec before we try it",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6313915_9734adc1",
+        "filename": "test/unit/lib/bdev/crypto.c/Makefile",
+        "patchSetId": 73
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "is ENV_CFLAGS needed?  I see we have copies of some of the DPDK headers in this directory - wondering if we still need ENV_CFLAGS added then",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef9c3f59_825d6e10",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "should we have tests for unmap, flush, reset to make sure they truly get passed through as expected?  or is that overkill?",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31b68a58_f1254579",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "these should all have g_ prepended to make it clear they are globals",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3eed9284_30abbcce",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:08:39Z",
+      "side": 1,
+      "message": "overall these unit tests seem reasonable - there are a lot of functions in vbdev_crypto.c that aren\u0027t tested here, but I\u0027m assuming you\u0027ll be focusing component and system level tests on those",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
