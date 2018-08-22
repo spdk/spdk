@@ -493,10 +493,10 @@ if __name__ == "__main__":
             node_base=args.node_base,
             nop_timeout=args.nop_timeout,
             nop_in_interval=args.nop_in_interval,
-            no_discovery_auth=args.no_discovery_auth,
-            req_discovery_auth=args.req_discovery_auth,
-            req_discovery_auth_mutual=args.req_discovery_auth_mutual,
-            discovery_auth_group=args.discovery_auth_group,
+            disable_chap=args.disable_chap,
+            require_chap=args.require_chap,
+            mutual_chap=args.mutual_chap,
+            chap_group=args.chap_group,
             max_sessions=args.max_sessions,
             max_queue_depth=args.max_queue_depth,
             max_connections_per_session=args.max_connections_per_session,
@@ -512,12 +512,12 @@ if __name__ == "__main__":
     p.add_argument('-b', '--node-base', help='Prefix of the name of iSCSI target node')
     p.add_argument('-o', '--nop-timeout', help='Timeout in seconds to nop-in request to the initiator', type=int)
     p.add_argument('-n', '--nop-in-interval', help='Time interval in secs between nop-in requests by the target', type=int)
-    p.add_argument('-d', '--no-discovery-auth', help="""CHAP for discovery session should be disabled.
-    *** Mutually exclusive with --req-discovery-auth""", action='store_true')
-    p.add_argument('-r', '--req-discovery-auth', help="""CHAP for discovery session should be required.
-    *** Mutually exclusive with --no-discovery-auth""", action='store_true')
-    p.add_argument('-m', '--req-discovery-auth-mutual', help='CHAP for discovery session should be mutual', action='store_true')
-    p.add_argument('-g', '--discovery-auth-group', help="""Authentication group ID for discovery session.
+    p.add_argument('-d', '--disable-chap', help="""CHAP for discovery session should be disabled.
+    *** Mutually exclusive with --require-chap""", action='store_true')
+    p.add_argument('-r', '--require-chap', help="""CHAP for discovery session should be required.
+    *** Mutually exclusive with --disable-chap""", action='store_true')
+    p.add_argument('-m', '--mutual-chap', help='CHAP for discovery session should be mutual', action='store_true')
+    p.add_argument('-g', '--chap-group', help="""Authentication group ID for discovery session.
     *** Authentication group must be precreated ***""", type=int)
     p.add_argument('-a', '--max-sessions', help='Maximum number of sessions in the host.', type=int)
     p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/Os per queue.', type=int)

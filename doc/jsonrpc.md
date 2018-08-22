@@ -1775,10 +1775,10 @@ auth_file                   | string  | Path to CHAP shared secret file for disc
 node_base                   | string  | Prefix of the name of iSCSI target node (default: "iqn.2016-06.io.spdk")
 nop_timeout                 | number  | Timeout in seconds to nop-in request to the initiator (default: 60)
 nop_in_interval             | number  | Time interval in secs between nop-in requests by the target (default: 30)
-no_discovery_auth           | boolean | CHAP for discovery session should be disabled (default: `false`)
-req_discovery_auth          | boolean | CHAP for discovery session should be required (default: `false`)
-req_discovery_auth_mutual   | boolean | CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)
-discovery_auth_group        | number  | CHAP group ID for discovery session (default: 0)
+disable_chap                | boolean | CHAP for discovery session should be disabled (default: `false`)
+require_chap                | boolean | CHAP for discovery session should be required (default: `false`)
+mutual_chap                 | boolean | CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)
+chap_group                  | number  | CHAP group ID for discovery session (default: 0)
 max_sessions                | number  | Maximum number of sessions in the host (default: 128)
 max_queue_depth             | number  | Maximum number of outstanding I/Os per queue (default: 64)
 max_connections_per_session | number  | Session specific parameter, MaxConnections (default: 2)
@@ -1789,7 +1789,7 @@ error_recovery_level        | number  | Session specific parameter, ErrorRecover
 allow_duplicated_isid       | boolean | Allow duplicated initiator session ID (default: `false`)
 min_connections_per_core    | number  | Allocation unit of connections per core (default: 4)
 
-Parameters `no_discovery_auth` and `req_discovery_auth` are mutually exclusive.
+Parameters `disable_chap` and `require_chap` are mutually exclusive. Parameters `no_discovery_auth`, `req_discovery_auth`, `req_discovery_auth_mutual`, and `discovery_auth_group` are still available instead of `disable_chap`, `require_chap`, `mutual_chap`, and `chap_group`, respectivey but will be removed in future releases.
 
 ### Example
 
@@ -1806,7 +1806,7 @@ Example request:
     "nop_timeout": 30,
     "nop_in_interval": 30,
     "auth_file": "/usr/local/etc/spdk/auth.conf",
-    "no_discovery_auth": true,
+    "disable_chap": true,
     "default_time2wait": 2
   },
   "jsonrpc": "2.0",
@@ -1857,9 +1857,9 @@ Example response:
     "default_time2retain": 60,
     "immediate_data": true,
     "node_base": "iqn.2016-06.io.spdk",
-    "req_discovery_auth_mutual": false,
+    "mutual_chap": false,
     "nop_in_interval": 30,
-    "discovery_auth_group": 0,
+    "chap_group": 0,
     "max_connections_per_session": 2,
     "max_queue_depth": 64,
     "nop_timeout": 30,
@@ -1867,9 +1867,9 @@ Example response:
     "error_recovery_level": 0,
     "auth_file": "/usr/local/etc/spdk/auth.conf",
     "min_connections_per_core": 4,
-    "no_discovery_auth": true,
+    "disable_chap": true,
     "default_time2wait": 2,
-    "req_discovery_auth": false
+    "require_chap": false
   }
 }
 ~~~
