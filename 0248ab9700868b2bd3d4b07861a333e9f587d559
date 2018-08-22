@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bb33c9a6_bbd31862",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T19:16:15Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "cb68e645_bbbc48c2",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4bee85c2_9a2d72ad",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-22T17:46:26Z",
       "side": 1,
       "message": "same thing, maybe child instead of scratch?",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12211cae_2d5344f7",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T19:16:15Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "4bee85c2_9a2d72ad",
       "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2ddaa305_4b0e40c3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1064,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T19:16:15Z",
+      "side": 1,
+      "message": "WRITE_ZEROES, FLUSH and UNMAP all take almost the exact same code path, so I felt only UT for WRITE_ZEROES was sufficient.  But I added UTs for FLUSH and UNMAP based on your comment.",
+      "parentUuid": "f2acd443_0393b1ee",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5431d491_1f6d2f67",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "12b9109b_29d08a43",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1089,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T19:16:15Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "5431d491_1f6d2f67",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8ac4b5c7_df42a93a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -81,6 +153,24 @@
       "writtenOn": "2018-08-22T17:46:26Z",
       "side": 1,
       "message": "I don\u0027t believe the ability to queue here is tested but assume that we use this mechanism enough that we don\u0027t need to add tests for it everyone someone uses it in the bdev layer",
+      "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c61acab8_a83fb981",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T19:16:15Z",
+      "side": 1,
+      "message": "There aren\u0027t UT for this specific usage in my patch yet.  I have it on my todo list.",
+      "parentUuid": "8ac4b5c7_df42a93a",
       "revId": "0248ab9700868b2bd3d4b07861a333e9f587d559",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
