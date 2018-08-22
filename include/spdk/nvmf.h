@@ -61,6 +61,7 @@ struct spdk_nvmf_host;
 struct spdk_nvmf_listener;
 struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
+struct spdk_nvmf_transport;
 
 struct spdk_nvmf_tgt_opts {
 	uint16_t max_queue_depth;
@@ -70,6 +71,16 @@ struct spdk_nvmf_tgt_opts {
 	uint32_t max_subsystems;
 	uint32_t io_unit_size;
 };
+
+struct spdk_nvmf_transport_opts {
+	uint16_t max_queue_depth;
+	uint16_t max_qpairs_per_ctrlr;
+	uint32_t in_capsule_data_size;
+	uint32_t max_io_size;
+	uint32_t io_unit_size;
+	uint32_t max_aq_depth;
+};
+
 /**
  * Initialize the default value of opts.
  *
