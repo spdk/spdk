@@ -6,10 +6,10 @@ def set_iscsi_options(
         node_base=None,
         nop_timeout=None,
         nop_in_interval=None,
-        no_discovery_auth=None,
-        req_discovery_auth=None,
-        req_discovery_auth_mutual=None,
-        discovery_auth_group=None,
+        disable_chap=None,
+        require_chap=None,
+        mutual_chap=None,
+        chap_group=None,
         max_sessions=None,
         max_queue_depth=None,
         max_connections_per_session=None,
@@ -26,10 +26,10 @@ def set_iscsi_options(
         node_base: Prefix of the name of iSCSI target node (optional)
         nop_timeout: Timeout in seconds to nop-in request to the initiator (optional)
         nop_in_interval: Time interval in secs between nop-in requests by the target (optional)
-        no_discovery_auth: CHAP for discovery session should be disabled (optional)
-        req_discovery_auth: CHAP for discovery session should be required
-        req_discovery_auth_mutual: CHAP for discovery session should be mutual
-        discovery_auth_group: Authentication group ID for discovery session
+        disable_chap: CHAP for discovery session should be disabled (optional)
+        require_chap: CHAP for discovery session should be required
+        mutual_chap: CHAP for discovery session should be mutual
+        chap_group: Authentication group ID for discovery session
         max_sessions: Maximum number of sessions in the host
         max_queue_depth: Maximum number of outstanding I/Os per queue
         max_connections_per_session: Negotiated parameter, MaxConnections
@@ -53,14 +53,14 @@ def set_iscsi_options(
         params['nop_timeout'] = nop_timeout
     if nop_in_interval:
         params['nop_in_interval'] = nop_in_interval
-    if no_discovery_auth:
-        params['no_discovery_auth'] = no_discovery_auth
-    if req_discovery_auth:
-        params['req_discovery_auth'] = req_discovery_auth
-    if req_discovery_auth_mutual:
-        params['req_discovery_auth_mutual'] = req_discovery_auth_mutual
-    if discovery_auth_group:
-        params['discovery_auth_group'] = discovery_auth_group
+    if disable_chap:
+        params['disable_chap'] = disable_chap
+    if require_chap:
+        params['require_chap'] = require_chap
+    if mutual_chap:
+        params['mutual_chap'] = mutual_chap
+    if chap_group:
+        params['chap_group'] = chap_group
     if max_sessions:
         params['max_sessions'] = max_sessions
     if max_queue_depth:

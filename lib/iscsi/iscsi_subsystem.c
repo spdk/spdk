@@ -1038,10 +1038,10 @@ spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_int32(w, "nop_timeout", g_spdk_iscsi.timeout);
 	spdk_json_write_named_int32(w, "nop_in_interval", g_spdk_iscsi.nopininterval);
 
-	spdk_json_write_named_bool(w, "no_discovery_auth", g_spdk_iscsi.disable_chap);
-	spdk_json_write_named_bool(w, "req_discovery_auth", g_spdk_iscsi.require_chap);
-	spdk_json_write_named_bool(w, "req_discovery_auth_mutual", g_spdk_iscsi.mutual_chap);
-	spdk_json_write_named_int32(w, "discovery_auth_group", g_spdk_iscsi.chap_group);
+	spdk_json_write_named_bool(w, "disable_chap", g_spdk_iscsi.disable_chap);
+	spdk_json_write_named_bool(w, "require_chap", g_spdk_iscsi.require_chap);
+	spdk_json_write_named_bool(w, "mutual_chap", g_spdk_iscsi.mutual_chap);
+	spdk_json_write_named_int32(w, "chap_group", g_spdk_iscsi.chap_group);
 
 	spdk_json_write_named_uint32(w, "min_connections_per_core",
 				     spdk_iscsi_conn_get_min_per_core());

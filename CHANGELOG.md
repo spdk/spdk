@@ -22,6 +22,13 @@ does not at this time confer any SPDK ABI compatibility claims.
 
 spdk_bdev_alias_del_all() was added to delete all alias from block device.
 
+### iscsi
+
+Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
+method for CHAP authentication in discovery sessions have been changed to
+align with `construct_target_node` RPC method. Old names are still usable
+but will be removed in future release.
+
 ## v18.07:
 
 ### bdev
