@@ -689,9 +689,7 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 		ag_tag = -1;
 	}
 	if (ag_tag < 0) {
-		pthread_mutex_lock(&g_spdk_iscsi.mutex);
 		ag_tag = g_spdk_iscsi.chap_group;
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ag_tag=%d\n", ag_tag);
 
