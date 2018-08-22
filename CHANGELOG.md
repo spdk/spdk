@@ -29,6 +29,9 @@ method for CHAP authentication in discovery sessions have been changed to
 align with `construct_target_node` RPC method. Old names are still usable
 but will be removed in future release.
 
+`set_iscsi_discovery_auth` RPC method has been added to set CHAP authentication
+for discovery sessions dynamically.
+
 ## v18.07:
 
 ### bdev
