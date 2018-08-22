@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "104ea0b1_1347b47f",
+        "filename": "doc/Doxyfile",
+        "patchSetId": 9
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T21:17:41Z",
+      "side": 1,
+      "message": "This is a nit, but this one should be in alphabetical order after nvmf_tgt_pg.md.\n\nYou\u0027ll see ones before about.md not alphabetized - these are ones that show up in the Doxygen side bar and the order there is the order here.  The ones at about.md and after are all alphabetized just to make it easier to find a file you\u0027re looking for.\n\n(I keep meaning to add a comment here explaining this.)",
+      "revId": "9d05fc9cfcde47636f15921ad29bfb774615fec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbea9066_28337781",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T21:17:41Z",
+      "side": 1,
+      "message": "This seems to be specific to NVMe-oF - so NVMe-oF Target Tracepoints and #nvmf_tgt_tracepoints might be better.",
+      "revId": "9d05fc9cfcde47636f15921ad29bfb774615fec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08d0c92e_92306165",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T21:17:41Z",
+      "side": 1,
+      "message": "For NVMe-oF, it\u0027s 0x10 (bit 4).  You can find this from #define TRACE_GROUP_NVMF_RDMA.  For now, just say 0x10 - there\u0027s no easy way to look these up yet.  But your document is making it clear that we need to do some work here!",
+      "revId": "9d05fc9cfcde47636f15921ad29bfb774615fec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57516b29_15585f9c",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T21:17:41Z",
+      "side": 1,
+      "message": "I would just recommend people specify this on the command line using -e 0x10.",
+      "revId": "9d05fc9cfcde47636f15921ad29bfb774615fec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
