@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c79a2b2_f83a3e5e",
+        "filename": "scripts/fio.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-22T17:42:17Z",
+      "side": 1,
+      "message": "To be safe, I think you should add a --skip-alias flag to which.",
+      "revId": "69c02f996db52a95d6da966cb45f91aa555f72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
