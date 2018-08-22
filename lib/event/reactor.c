@@ -477,7 +477,7 @@ _spdk_reactor_run(void *arg)
 	struct spdk_reactor	*reactor = arg;
 	struct spdk_poller	*poller;
 	uint32_t		event_count;
-	uint64_t		idle_started, now;
+	uint64_t		now;
 	int			rc = -1;
 	char			thread_name[32];
 
@@ -491,7 +491,6 @@ _spdk_reactor_run(void *arg)
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);
 
-	idle_started = 0;
 	if (g_context_switch_monitor_enabled) {
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 	}
@@ -552,16 +551,7 @@ _spdk_reactor_run(void *arg)
 					}
 					_spdk_poller_insert_timer(reactor, poller, poller->next_run_tick);
 				}
-				took_action = true;
 			}
-		}
-
-		if (took_action) {
-			/* We were busy this loop iteration. Reset the idle timer. */
-			idle_started = 0;
-		} else if (idle_started == 0) {
-			/* We were previously busy, but this loop we took no actions. */
-			idle_started = spdk_get_ticks();
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
