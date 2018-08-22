@@ -234,14 +234,6 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 		tgt->opts = *opts;
 	}
 
-	if ((tgt->opts.max_io_size % tgt->opts.io_unit_size != 0) ||
-	    (tgt->opts.max_io_size / tgt->opts.io_unit_size > SPDK_NVMF_MAX_SGL_ENTRIES)) {
-		SPDK_ERRLOG("Unsupported IO size, MaxIO:%d, UnitIO:%d\n", tgt->opts.max_io_size,
-			    tgt->opts.io_unit_size);
-		free(tgt);
-		return NULL;
-	}
-
 	tgt->discovery_genctr = 0;
 	tgt->discovery_log_page = NULL;
 	tgt->discovery_log_page_size = 0;
@@ -257,14 +249,6 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 				spdk_nvmf_tgt_create_poll_group,
 				spdk_nvmf_tgt_destroy_poll_group,
 				sizeof(struct spdk_nvmf_poll_group));
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max Queue Pairs Per Controller: %d\n",
-		      tgt->opts.max_qpairs_per_ctrlr);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max Queue Depth: %d\n", tgt->opts.max_queue_depth);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max In Capsule Data: %d bytes\n",
-		      tgt->opts.in_capsule_data_size);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "I/O Unit Size: %d bytes\n", tgt->opts.io_unit_size);
 
 	return tgt;
 }
@@ -493,7 +477,7 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 
 	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trtype);
 	if (!transport) {
-		transport = spdk_nvmf_transport_create(tgt, trid->trtype);
+		transport = spdk_nvmf_transport_create(tgt, trid->trtype, NULL);
 		if (!transport) {
 			SPDK_ERRLOG("Transport initialization failed\n");
 			cb_fn(cb_arg, -EINVAL);

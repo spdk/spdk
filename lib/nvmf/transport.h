@@ -42,6 +42,7 @@
 struct spdk_nvmf_transport {
 	struct spdk_nvmf_tgt			*tgt;
 	const struct spdk_nvmf_transport_ops	*ops;
+	struct spdk_nvmf_transport_opts		opts;
 
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
 };
@@ -53,9 +54,9 @@ struct spdk_nvmf_transport_ops {
 	enum spdk_nvme_transport_type type;
 
 	/**
-	 * Create a transport for the given target
+	 * Create a transport for the given transport opts
 	 */
-	struct spdk_nvmf_transport *(*create)(struct spdk_nvmf_tgt *tgt);
+	struct spdk_nvmf_transport *(*create)(struct spdk_nvmf_transport_opts *opts);
 
 	/**
 	 * Destroy the transport
@@ -132,7 +133,9 @@ struct spdk_nvmf_transport_ops {
 };
 
 struct spdk_nvmf_transport *spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
-		enum spdk_nvme_transport_type type);
+		enum spdk_nvme_transport_type type,
+		struct spdk_nvmf_transport_opts *opts);
+
 int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport);
 
 int spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
