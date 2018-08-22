@@ -767,7 +767,7 @@ verify_raid_bdev_present(const char *name, bool presence)
 	bool   pbdev_found;
 
 	pbdev_found = false;
-	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, name) == 0) {
 			pbdev_found = true;
 			break;
@@ -822,7 +822,7 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 	uint64_t min_blockcnt = 0xFFFFFFFFFFFFFFFF;
 
 	pbdev_found = false;
-	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, r->name) == 0) {
 			pbdev_found = true;
 			if (presence == false) {
@@ -870,21 +870,21 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 	}
 	pbdev_found = false;
 	if (raid_state == RAID_BDEV_STATE_ONLINE) {
-		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_configured_list, link_specific_list) {
+		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_configured_list, state_link) {
 			if (strcmp(pbdev->bdev.name, r->name) == 0) {
 				pbdev_found = true;
 				break;
 			}
 		}
 	} else if (raid_state == RAID_BDEV_STATE_CONFIGURING) {
-		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_configuring_list, link_specific_list) {
+		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_configuring_list, state_link) {
 			if (strcmp(pbdev->bdev.name, r->name) == 0) {
 				pbdev_found = true;
 				break;
 			}
 		}
 	} else if (raid_state == RAID_BDEV_STATE_OFFLINE) {
-		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_offline_list, link_specific_list) {
+		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_offline_list, state_link) {
 			if (strcmp(pbdev->bdev.name, r->name) == 0) {
 				pbdev_found = true;
 				break;
@@ -1288,7 +1288,7 @@ test_io_channel(void)
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
 
-	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, req.name) == 0) {
 			break;
 		}
@@ -1348,7 +1348,7 @@ test_write_io(void)
 	CU_ASSERT(g_rpc_err == 0);
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
-	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, req.name) == 0) {
 			break;
 		}
@@ -1426,7 +1426,7 @@ test_read_io(void)
 	CU_ASSERT(g_rpc_err == 0);
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
-	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, req.name) == 0) {
 			break;
 		}
@@ -1505,7 +1505,7 @@ test_io_failure(void)
 	CU_ASSERT(g_rpc_err == 0);
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
-	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, req.name) == 0) {
 			break;
 		}
@@ -1604,7 +1604,7 @@ test_io_waitq(void)
 	CU_ASSERT(g_rpc_err == 0);
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
-	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, req.name) == 0) {
 			break;
 		}
@@ -1843,7 +1843,7 @@ test_multi_raid_with_io(void)
 		CU_ASSERT(g_rpc_err == 0);
 		verify_raid_config(&construct_req[i], true);
 		verify_raid_bdev(&construct_req[i], true, RAID_BDEV_STATE_ONLINE);
-		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 			if (strcmp(pbdev->bdev.name, construct_req[i].name) == 0) {
 				break;
 			}
@@ -1869,7 +1869,7 @@ test_multi_raid_with_io(void)
 		raid_random = rand() % g_max_raids;
 		ch_random = &ch[raid_random];
 		ch_ctx_random = spdk_io_channel_get_ctx(ch_random);
-		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 			if (strcmp(pbdev->bdev.name, construct_req[raid_random].name) == 0) {
 				break;
 			}
@@ -1885,7 +1885,7 @@ test_multi_raid_with_io(void)
 	}
 
 	for (i = 0; i < g_max_raids; i++) {
-		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+		TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 			if (strcmp(pbdev->bdev.name, construct_req[i].name) == 0) {
 				break;
 			}
@@ -2067,7 +2067,7 @@ test_raid_json_dump_info(void)
 	CU_ASSERT(g_rpc_err == 0);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
 
-	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, link_global_list) {
+	TAILQ_FOREACH(pbdev, &g_spdk_raid_bdev_list, global_link) {
 		if (strcmp(pbdev->bdev.name, req.name) == 0) {
 			break;
 		}

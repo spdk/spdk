@@ -166,13 +166,13 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 		      raid_bdev,
 		      raid_bdev->bdev.name, raid_bdev->state, raid_bdev->config);
 	if (raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
-		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
+		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
 	} else if (raid_bdev->state == RAID_BDEV_STATE_OFFLINE) {
-		TAILQ_REMOVE(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+		TAILQ_REMOVE(&g_spdk_raid_bdev_offline_list, raid_bdev, state_link);
 	} else {
 		assert(0);
 	}
-	TAILQ_REMOVE(&g_spdk_raid_bdev_list, raid_bdev, link_global_list);
+	TAILQ_REMOVE(&g_spdk_raid_bdev_list, raid_bdev, global_link);
 	free(raid_bdev->bdev.name);
 	raid_bdev->bdev.name = NULL;
 	assert(raid_bdev->base_bdev_info);
@@ -240,9 +240,9 @@ raid_bdev_destruct(void *ctxt)
 	}
 
 	if (g_shutdown_started) {
-		TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
+		TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, state_link);
 		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, state_link);
 		spdk_io_device_unregister(raid_bdev, NULL);
 	}
 
@@ -1221,8 +1221,8 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg, struct raid_bdev **_raid_bde
 	raid_bdev->strip_size = raid_cfg->strip_size;
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->config = raid_cfg;
-	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_list, raid_bdev, link_global_list);
+	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
+	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_list, raid_bdev, global_link);
 
 	*_raid_bdev = raid_bdev;
 
@@ -1351,8 +1351,8 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 			goto offline;
 		}
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev generic %p\n", raid_bdev_gen);
-		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
+		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
+		TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configured_list, raid_bdev, state_link);
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev is created with name %s, raid_bdev %p\n",
 			      raid_bdev_gen->name, raid_bdev);
 	}
@@ -1361,8 +1361,8 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 
 offline:
 	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-	TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, link_specific_list);
-	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+	TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
+	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, state_link);
 	return -1;
 }
 
@@ -1384,10 +1384,10 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev)
 	}
 
 	assert(raid_bdev->num_base_bdevs == raid_bdev->num_base_bdevs_discovered);
-	TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, link_specific_list);
+	TAILQ_REMOVE(&g_spdk_raid_bdev_configured_list, raid_bdev, state_link);
 	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
 	assert(raid_bdev->num_base_bdevs_discovered);
-	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, link_specific_list);
+	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, state_link);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev state chaning from online to offline\n");
 
 	spdk_io_device_unregister(raid_bdev, NULL);
@@ -1409,14 +1409,13 @@ raid_bdev_remove_base_bdev(void *ctx)
 {
 	struct    spdk_bdev       *base_bdev = ctx;
 	struct    raid_bdev       *raid_bdev;
-	struct    raid_bdev       *next_raid_bdev;
 	uint16_t                  i;
 	bool                      found = false;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_remove_base_bdev\n");
 
 	/* Find the raid_bdev which has claimed this base_bdev */
-	TAILQ_FOREACH_SAFE(raid_bdev, &g_spdk_raid_bdev_list, link_global_list, next_raid_bdev) {
+	TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_list, global_link) {
 		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 			if (raid_bdev->base_bdev_info[i].bdev == base_bdev) {
 				found = true;
