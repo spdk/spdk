@@ -850,6 +850,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		if (memcmp(tgtmd5, resmd5, SPDK_MD5DIGEST_LEN) != 0) {
 			/* not match */
 			//SPDK_ERRLOG("auth user or secret is missing\n");
+			SPDK_ERRLOG("tgtmd5=%s, resmd5=%s\n", tgtmd5, resmd5);
 			SPDK_ERRLOG("auth failed (user %.64s)\n", user);
 			goto error_return;
 		}
