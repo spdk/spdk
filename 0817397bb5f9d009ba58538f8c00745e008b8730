@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a73ee5cb_db4e8b0b",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-22T00:04:10Z",
+      "side": 1,
+      "message": "Better idea. Thank you.",
+      "parentUuid": "f8e8c8bf_9ed1d734",
+      "revId": "0817397bb5f9d009ba58538f8c00745e008b8730",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc678ee1_7424ac05",
         "filename": "lib/iscsi/iscsi_rpc.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-08T17:17:33Z",
       "side": 1,
       "message": "how about \"set_iscsi_discovery_auth\"?\n\nunfortunately we did not add \"iscsi\" (or \"nvmf\") to a lot of RPCs, but I think including iscsi in the name here makes it more clear and helps in case we have similar RPC for NVMe-oF in the future\n\nThis name is also more aligned to the C API - using the phrase \"discovery_auth\" instead of \"auth_for_discovery\"",
+      "revId": "0817397bb5f9d009ba58538f8c00745e008b8730",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afe76a62_7c3e7934",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1108,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-22T00:04:10Z",
+      "side": 1,
+      "message": "Sounds nice, I use \"iscsi\" in this case and will do gradually for other cases too.",
+      "parentUuid": "fc678ee1_7424ac05",
       "revId": "0817397bb5f9d009ba58538f8c00745e008b8730",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
