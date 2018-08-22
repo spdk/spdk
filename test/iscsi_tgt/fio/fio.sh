@@ -72,12 +72,15 @@ timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
-# "Malloc0:0" ==> use Malloc0 blockdev for LUN0
+# Create a RAID-0 bdev from two malloc bdevs
+malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
+malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+$rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$malloc_bdevs"
+# "raid0:0" ==> use raid0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
-$rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+$rpc_py construct_target_node Target3 Target3_alias 'raid0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
@@ -105,7 +108,10 @@ fio_pid=$!
 
 sleep 3
 set +e
+# Delete raid0, Malloc0, Malloc1 blockdevs
+$rpc_py destroy_raid_bdev 'raid0'
 $rpc_py delete_malloc_bdev 'Malloc0'
+$rpc_py delete_malloc_bdev 'Malloc1'
 
 wait $fio_pid
 fio_status=$?
