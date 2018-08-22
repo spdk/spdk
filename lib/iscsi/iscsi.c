@@ -795,6 +795,10 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		uint8_t tgtmd5[SPDK_MD5DIGEST_LEN];
 		struct spdk_md5ctx md5ctx;
 
+		memset(resmd5, 0, sizeof(resmd5));
+		memset(tgtmd5, 0, sizeof(tgtmd5));
+		memset(&md5ctx, 0, sizeof(md5ctx));
+
 		user = val;
 		if (conn->auth.chap_phase != ISCSI_CHAP_PHASE_WAIT_NR) {
 			SPDK_ERRLOG("CHAP sequence error\n");
@@ -850,6 +854,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		if (memcmp(tgtmd5, resmd5, SPDK_MD5DIGEST_LEN) != 0) {
 			/* not match */
 			//SPDK_ERRLOG("auth user or secret is missing\n");
+			SPDK_ERRLOG("user=%s, secret=%s\n", conn->auth.user, conn->auth.secret);
 			SPDK_ERRLOG("auth failed (user %.64s)\n", user);
 			goto error_return;
 		}
