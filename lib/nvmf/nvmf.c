@@ -234,14 +234,6 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 		tgt->opts = *opts;
 	}
 
-	if ((tgt->opts.max_io_size % tgt->opts.io_unit_size != 0) ||
-	    (tgt->opts.max_io_size / tgt->opts.io_unit_size > SPDK_NVMF_MAX_SGL_ENTRIES)) {
-		SPDK_ERRLOG("Unsupported IO size, MaxIO:%d, UnitIO:%d\n", tgt->opts.max_io_size,
-			    tgt->opts.io_unit_size);
-		free(tgt);
-		return NULL;
-	}
-
 	tgt->discovery_genctr = 0;
 	tgt->discovery_log_page = NULL;
 	tgt->discovery_log_page_size = 0;
@@ -257,14 +249,6 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 				spdk_nvmf_tgt_create_poll_group,
 				spdk_nvmf_tgt_destroy_poll_group,
 				sizeof(struct spdk_nvmf_poll_group));
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max Queue Pairs Per Controller: %d\n",
-		      tgt->opts.max_qpairs_per_ctrlr);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max Queue Depth: %d\n", tgt->opts.max_queue_depth);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max In Capsule Data: %d bytes\n",
-		      tgt->opts.in_capsule_data_size);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "I/O Unit Size: %d bytes\n", tgt->opts.io_unit_size);
 
 	return tgt;
 }
@@ -437,20 +421,34 @@ void
 spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_transport *transport, *tmp;
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "method", "set_nvmf_target_options");
 
 	spdk_json_write_named_object_begin(w, "params");
-	spdk_json_write_named_uint32(w, "max_queue_depth", tgt->opts.max_queue_depth);
-	spdk_json_write_named_uint32(w, "max_qpairs_per_ctrlr", tgt->opts.max_qpairs_per_ctrlr);
-	spdk_json_write_named_uint32(w, "in_capsule_data_size", tgt->opts.in_capsule_data_size);
-	spdk_json_write_named_uint32(w, "max_io_size", tgt->opts.max_io_size);
 	spdk_json_write_named_uint32(w, "max_subsystems", tgt->opts.max_subsystems);
-	spdk_json_write_named_uint32(w, "io_unit_size", tgt->opts.io_unit_size);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
+
+	/* write transports */
+	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "nvmf_transport_create");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "trtype", spdk_nvme_transport_id_trtype_str(transport->ops->type));
+		spdk_json_write_named_uint32(w, "max_queue_depth", transport->tprt_opts.max_queue_depth);
+		spdk_json_write_named_uint32(w, "max_qpairs_per_ctrlr", transport->tprt_opts.max_qpairs_per_ctrlr);
+		spdk_json_write_named_uint32(w, "in_capsule_data_size", transport->tprt_opts.in_capsule_data_size);
+		spdk_json_write_named_uint32(w, "max_io_size", transport->tprt_opts.max_io_size);
+		spdk_json_write_named_uint32(w, "io_unit_size", transport->tprt_opts.io_unit_size);
+		spdk_json_write_named_uint32(w, "max_aq_depth", transport->tprt_opts.max_aq_depth);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
 
 	subsystem = spdk_nvmf_subsystem_get_first(tgt);
 	while (subsystem) {
@@ -493,7 +491,7 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 
 	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trtype);
 	if (!transport) {
-		transport = spdk_nvmf_transport_create(tgt, trid->trtype);
+		transport = spdk_nvmf_transport_create(tgt, trid->trtype, NULL);
 		if (!transport) {
 			SPDK_ERRLOG("Transport initialization failed\n");
 			cb_fn(cb_arg, -EINVAL);
