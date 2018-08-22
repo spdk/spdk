@@ -74,73 +74,6 @@ layers. As an argument user should provide bdev name. This RPC command
 should be used only for debugging purpose. To remove a particular bdev please
 use the delete command specific to its bdev module.
 
-# Malloc bdev {#bdev_config_malloc}
-
-Malloc bdevs are ramdisks. Because of its nature they are volatile. They are created from hugepage memory given to SPDK
-application.
-
-# NVMe bdev {#bdev_config_nvme}
-
-There are two ways to create block device based on NVMe device in SPDK. First
-way is to connect local PCIe drive and second one is to connect NVMe-oF device.
-In both cases user should use `construct_nvme_bdev` RPC command to achieve that.
-
-Example commands
-
-`rpc.py construct_nvme_bdev -b NVMe1 -t PCIe -a 0000:01:00.0`
-
-This command will create NVMe bdev of physical device in the system.
-
-`rpc.py construct_nvme_bdev -b Nvme0 -t RDMA -a 192.168.100.1 -f IPv4 -s 4420 -n nqn.2016-06.io.spdk:cnode1`
-
-This command will create NVMe bdev of NVMe-oF resource.
-
-To remove a NVMe controller use the delete_nvme_controller command.
-
-`rpc.py delete_nvme_controller Nvme0`
-
-This command will remove NVMe controller named Nvme0.
-
-# Null {#bdev_config_null}
-
-The SPDK null bdev driver is a dummy block I/O target that discards all writes and returns undefined
-data for reads.  It is useful for benchmarking the rest of the bdev I/O stack with minimal block
-device overhead and for testing configurations that can't easily be created with the Malloc bdev.
-To create Null bdev RPC command `construct_null_bdev` should be used.
-
-Example command
-
-`rpc.py construct_null_bdev Null0 8589934592 4096`
-
-This command will create an 8 petabyte `Null0` device with block size 4096.
-
-To delete a null bdev use the delete_null_bdev command.
-
-`rpc.py delete_null_bdev Null0`
-
-# Linux AIO bdev {#bdev_config_aio}
-
-The SPDK AIO bdev driver provides SPDK block layer access to Linux kernel block
-devices or a file on a Linux filesystem via Linux AIO. Note that O_DIRECT is
-used and thus bypasses the Linux page cache. This mode is probably as close to
-a typical kernel based target as a user space target can get without using a
-user-space driver. To create AIO bdev RPC command `construct_aio_bdev` should be
-used.
-
-Example commands
-
-`rpc.py construct_aio_bdev /dev/sda aio0`
-
-This command will create `aio0` device from /dev/sda.
-
-`rpc.py construct_aio_bdev /tmp/file file 8192`
-
-This command will create `file` device with block size 8192 from /tmp/file.
-
-To delete an aio bdev use the delete_aio_bdev command.
-
-`rpc.py delete_aio_bdev aio0`
-
 # Ceph RBD {#bdev_config_rbd}
 
 The SPDK RBD bdev driver provides SPDK block layer access to Ceph RADOS block
@@ -213,6 +146,73 @@ rpc.py stop_nbd_disk /dev/nbd0
 # Nvme0n1p1 in SPDK applications.
 ~~~
 
+# Linux AIO bdev {#bdev_config_aio}
+
+The SPDK AIO bdev driver provides SPDK block layer access to Linux kernel block
+devices or a file on a Linux filesystem via Linux AIO. Note that O_DIRECT is
+used and thus bypasses the Linux page cache. This mode is probably as close to
+a typical kernel based target as a user space target can get without using a
+user-space driver. To create AIO bdev RPC command `construct_aio_bdev` should be
+used.
+
+Example commands
+
+`rpc.py construct_aio_bdev /dev/sda aio0`
+
+This command will create `aio0` device from /dev/sda.
+
+`rpc.py construct_aio_bdev /tmp/file file 8192`
+
+This command will create `file` device with block size 8192 from /tmp/file.
+
+To delete an aio bdev use the delete_aio_bdev command.
+
+`rpc.py delete_aio_bdev aio0`
+
+# Malloc bdev {#bdev_config_malloc}
+
+Malloc bdevs are ramdisks. Because of its nature they are volatile. They are created from hugepage memory given to SPDK
+application.
+
+# Null {#bdev_config_null}
+
+The SPDK null bdev driver is a dummy block I/O target that discards all writes and returns undefined
+data for reads.  It is useful for benchmarking the rest of the bdev I/O stack with minimal block
+device overhead and for testing configurations that can't easily be created with the Malloc bdev.
+To create Null bdev RPC command `construct_null_bdev` should be used.
+
+Example command
+
+`rpc.py construct_null_bdev Null0 8589934592 4096`
+
+This command will create an 8 petabyte `Null0` device with block size 4096.
+
+To delete a null bdev use the delete_null_bdev command.
+
+`rpc.py delete_null_bdev Null0`
+
+# NVMe bdev {#bdev_config_nvme}
+
+There are two ways to create block device based on NVMe device in SPDK. First
+way is to connect local PCIe drive and second one is to connect NVMe-oF device.
+In both cases user should use `construct_nvme_bdev` RPC command to achieve that.
+
+Example commands
+
+`rpc.py construct_nvme_bdev -b NVMe1 -t PCIe -a 0000:01:00.0`
+
+This command will create NVMe bdev of physical device in the system.
+
+`rpc.py construct_nvme_bdev -b Nvme0 -t RDMA -a 192.168.100.1 -f IPv4 -s 4420 -n nqn.2016-06.io.spdk:cnode1`
+
+This command will create NVMe bdev of NVMe-oF resource.
+
+To remove a NVMe controller use the delete_nvme_controller command.
+
+`rpc.py delete_nvme_controller Nvme0`
+
+This command will remove NVMe controller named Nvme0.
+
 # Logical volumes {#bdev_ug_logical_volumes}
 
 The Logical Volumes library is a flexible storage space management system. It allows
@@ -271,6 +271,18 @@ Example commands
 
 `rpc.py construct_lvol_bdev lvol2 25 -u 330a6ab2-f468-11e7-983e-001e67edf35d`
 
+# Passthru {#bdev_config_passthru}
+
+The SPDK Passthru virtual block device module serves as an example of how to write a
+virutal block device module. It implements the required functionality of a vbdev module
+and demonstrates some other basic features such as the use of per I/O context.
+
+Example commands
+
+`rpc.py construct_passthru_bdev -b aio -p pt`
+
+`rpc.py delete_passthru_bdev pt`
+
 # Pmem {#bdev_config_pmem}
 
 The SPDK pmem bdev driver uses pmemblk pool as the target for block I/O operations. For
@@ -308,6 +320,20 @@ To remove a block device representation use the delete_pmem_bdev command.
 
 `rpc.py delete_pmem_bdev pmem`
 
+# Virtio Block {#bdev_config_virtio_blk}
+
+The Virtio-Block driver can expose an SPDK bdev from a Virtio-Block device.
+
+Virtio-Block bdevs are constructed the same way as Virtio-SCSI ones.
+
+`rpc.py construct_virtio_user_blk_bdev /tmp/virtio.0 VirtioBlk0 --vq-count 2 --vq-size 512`
+
+`rpc.py construct_virtio_pci_blk_bdev 0000:01:00.0 VirtioBlk1`
+
+Virtio-BLK devices can be removed with the following command
+
+`rpc.py remove_virtio_bdev VirtioBlk0`
+
 # Virtio SCSI {#bdev_config_virtio_scsi}
 
 The Virtio-SCSI driver allows creating SPDK block devices from Virtio-SCSI LUNs.
@@ -333,17 +359,3 @@ Virtio-SCSI devices can be removed with the following command
 `rpc.py remove_virtio_bdev VirtioScsi0`
 
 Removing a Virtio-SCSI device will destroy all its bdevs.
-
-# Virtio Block {#bdev_config_virtio_blk}
-
-The Virtio-Block driver can expose an SPDK bdev from a Virtio-Block device.
-
-Virtio-Block bdevs are constructed the same way as Virtio-SCSI ones.
-
-`rpc.py construct_virtio_user_blk_bdev /tmp/virtio.0 VirtioBlk0 --vq-count 2 --vq-size 512`
-
-`rpc.py construct_virtio_pci_blk_bdev 0000:01:00.0 VirtioBlk1`
-
-Virtio-BLK devices can be removed with the following command
-
-`rpc.py remove_virtio_bdev VirtioBlk0`
