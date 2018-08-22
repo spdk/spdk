@@ -16,7 +16,7 @@ function migration_tc1_clean_vhost_config()
 
 function migration_tc1_configure_vhost()
 {
-	# Those are global intentionaly - they will be unset in cleanup handler
+	# Those are global intentionally - they will be unset in cleanup handler
 	incoming_vm=0
 	target_vm=1
 	incoming_vm_ctrlr=naa.Malloc0.$incoming_vm

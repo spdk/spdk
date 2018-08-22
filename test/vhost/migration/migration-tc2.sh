@@ -68,7 +68,7 @@ function migration_tc2_configure_vhost()
 {
 	timing_enter migration_tc2_configure_vhost
 
-	# Those are global intentionaly - they will be unset in cleanup handler
+	# Those are global intentionally - they will be unset in cleanup handler
 	nvmf_dir="$TEST_DIR/nvmf_tgt"
 
 	incoming_vm=1
@@ -103,7 +103,7 @@ function migration_tc2_configure_vhost()
 	timing_exit start_nvmf_tgt
 
 	spdk_vhost_run --memory=512 --vhost-num=0 --no-pci
-	# Those are global intentionaly
+	# Those are global intentionally
 	vhost_1_reactor_mask=0x2
 	vhost_1_master_core=1
 	spdk_vhost_run --memory=512 --vhost-num=1 --no-pci
