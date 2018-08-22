@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4fac45a6_22e0f4ce",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T21:30:05Z",
+      "side": 1,
+      "message": "these two echo statements should be tabbed instead of spaces",
+      "revId": "93cdd526f4090bead6be5d23fc4dfe417b44fbc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
