@@ -65,7 +65,12 @@ def main():
     print("Found devices: ", devices)
 
     configure_devices(devices)
-    fio_executable = '/usr/bin/fio'
+    try:
+            fio_executable = check_output("which --skip-alias fio", shell=True).split()[0]
+    except subprocess.CalledProcessError as e:
+            print(e)
+            print("Can't find the fio binary, please install it.")
+            sys.exit(1)
 
     device_paths = ['/dev/' + dev for dev in devices]
     sys.stdout.flush()
