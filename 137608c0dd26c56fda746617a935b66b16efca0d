@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "4cd81100_6690a55a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T00:13:48Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nNo - I think my code is correct here.  This code is still sending I/O to the RAID bdev - not a member disk bdev.  So we use the same desc (and ch) that the user originally passed to start the parent I/O.\n\n-Jim",
+      "parentUuid": "43491cb5_8561937a",
+      "range": {
+        "startLine": 1143,
+        "startChar": 48,
+        "endLine": 1143,
+        "endChar": 52
+      },
+      "revId": "137608c0dd26c56fda746617a935b66b16efca0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1a9650e_b7928e72",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
