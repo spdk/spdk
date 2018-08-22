@@ -789,7 +789,7 @@ INPUT                  = ../include/spdk \
                          prog_guides.md \
                          general.md \
                          misc.md \
-                         modules.md \
+                         driver_modules.md \
                          tools.md \
                          experimental_tools.md \
                          performance_reports.md \
