@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e0413f5_e0a34a69",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-22T17:50:32Z",
+      "side": 1,
+      "message": "I think you\u0027re missing part of this warning message",
+      "revId": "22e52e42f8c1cb6e2db393e11aabd018469d0119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67e94f17_f6267452",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-22T17:50:32Z",
+      "side": 1,
+      "message": "If the user isn\u0027t using the DPDK submodule or crypto, they may elect not to grab the git submodules at all. We should test that $rootdir/intel-ipsec-mb exists before doing a cd into it.",
+      "revId": "22e52e42f8c1cb6e2db393e11aabd018469d0119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
