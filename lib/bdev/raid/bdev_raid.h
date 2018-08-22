@@ -87,10 +87,10 @@ struct raid_bdev {
 	struct spdk_bdev            bdev;
 
 	/* link of raid bdev to link it to configured, configuring or offline list */
-	TAILQ_ENTRY(raid_bdev)      link_specific_list;
+	TAILQ_ENTRY(raid_bdev)      state_link;
 
 	/* link of raid bdev to link it to global raid bdev list */
-	TAILQ_ENTRY(raid_bdev)      link_global_list;
+	TAILQ_ENTRY(raid_bdev)      global_link;
 
 	/* pointer to config file entry */
 	struct raid_bdev_config     *config;
