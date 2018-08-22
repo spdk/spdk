@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe2cd877_6032e382",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-22T11:07:22Z",
+      "side": 1,
+      "message": "I am against adding this much sleep time.\nnvmfcleanup() is used at least a couple of times in sequentially run tests, so this sleep will add more than 3s to total execution time",
+      "range": {
+        "startLine": 136,
+        "startChar": 1,
+        "endLine": 136,
+        "endChar": 8
+      },
+      "revId": "2947cef1a681df72eefb15c3da54e7079ced9023",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
