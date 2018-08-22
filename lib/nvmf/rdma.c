@@ -67,6 +67,12 @@
 #define NVMF_DATA_BUFFER_ALIGNMENT	(1 << SHIFT_4KB)
 #define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1)
 
+/* In order to be sure that we aren't splitting a single io over multiple ibv_mrs,
+ * we must make sure it doesn't cross a 2 MB boundary.
+ */
+#define SHIFT_2MB		21
+#define NVMF_HUGEPAGE_MASK	((1 << SHIFT_2MB) -1)
+
 enum spdk_nvmf_rdma_request_state {
 	/* The request is not currently in use */
 	RDMA_REQUEST_STATE_FREE = 0,
@@ -1085,6 +1091,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	rdma_req->req.iovcnt = 0;
 	while (length) {
 		buf = spdk_mempool_get(rtransport->data_buf_pool);
+		assert(((uintptr_t)(buf) & ~NVMF_HUGEPAGE_MASK) == ((uintptr_t)(buf + rtransport->io_unit_size - 1)
+				& ~NVMF_HUGEPAGE_MASK));
 		if (!buf) {
 			goto nomem;
 		}
