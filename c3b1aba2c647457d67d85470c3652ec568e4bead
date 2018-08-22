@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53ec921c_392c1468",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-08-22T11:21:41Z",
+      "side": 1,
+      "message": "You can shorten that in a way that \"big\" cmd+\u003d is used just once:\ncmd+\u003d\"-device vhost-user-scsi-pci,etc.,etc.\"\nif [[ \"$disk\" \u003d\u003d \"$boot_from\" ]]; then\n    cmd+\u003d\",bootindex\u003d0\"\n    boot_disk_present\u003dtrue\nfi\ncmd+\u003d\" ${eol}\"",
+      "range": {
+        "startLine": 737,
+        "startChar": 4,
+        "endLine": 742,
+        "endChar": 6
+      },
+      "revId": "c3b1aba2c647457d67d85470c3652ec568e4bead",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
