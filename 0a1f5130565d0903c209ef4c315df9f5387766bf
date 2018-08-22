@@ -16,6 +16,24 @@
       "revId": "0a1f5130565d0903c209ef4c315df9f5387766bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab2dc836_e5aea1a7",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1040,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-22T20:30:15Z",
+      "side": 1,
+      "message": "I don\u0027t think it really matters in this case.  For it to break, someone would need to create a JSON file with SPDK 18.10 and try to import into an SPDK 18.07 app.  I really can\u0027t believe there\u0027s a single person who would be doing that.",
+      "parentUuid": "ee7c1aaf_62a5263a",
+      "revId": "0a1f5130565d0903c209ef4c315df9f5387766bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
