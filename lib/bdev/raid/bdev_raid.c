@@ -327,75 +327,58 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io,
 	uint64_t                      pd_lba;
 	uint64_t                      pd_blocks;
 	uint32_t                      pd_idx;
-	int                           ret;
+	int                           ret = 0;
 
-	for (uint64_t strip = cur_strip; strip <= end_strip; strip++) {
+	if (start_strip != end_strip) {
+		SPDK_ERRLOG("I/O spans strip boundary\n");
+		assert(false);
+	}
+
+	pd_strip = start_strip / raid_bdev->num_base_bdevs;
+	pd_idx = start_strip % raid_bdev->num_base_bdevs;
+	offset_in_strip = bdev_io->u.bdev.offset_blocks & (raid_bdev->strip_size - 1);
+	pd_lba = (pd_strip << raid_bdev->strip_size_shift) + offset_in_strip;
+	pd_blocks = bdev_io->u.bdev.num_blocks;
+	raid_io->splits_comp_outstanding++;
+	assert(raid_io->splits_pending);
+	raid_io->splits_pending--;
+	if (raid_bdev->base_bdev_info[pd_idx].desc == NULL) {
+		SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", pd_idx);
+		assert(0);
+	}
+
+	/*
+	 * Submit child io to bdev layer with using base bdev descriptors, base
+	 * bdev lba, base bdev child io length in blocks, buffer, completion
+	 * function and function callback context
+	 */
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
+					    raid_ch->base_channel[pd_idx],
+					    buf, pd_lba, pd_blocks, raid_bdev_io_completion,
+					    bdev_io);
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
+					     raid_ch->base_channel[pd_idx],
+					     buf, pd_lba, pd_blocks, raid_bdev_io_completion,
+					     bdev_io);
+	} else {
+		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
+		assert(0);
+	}
+	if (ret != 0) {
 		/*
-		 * For each strip of parent bdev io, process for each strip and submit
-		 * child io to bdev layer. Calculate base bdev level start lba, length
-		 * and buffer for this child io
+		 * If failed to submit child io to bdev layer then queue the parent
+		 * bdev io with current active split information in the wait queue
+		 * for that core. This will get resume from this point only. Assume
+		 * if 4 splits are required and 2 childs are submitted, then parent
+		 * io is queued to io waitq of this core and it will get resumed and
+		 * try to submit the remaining 3 and 4 childs
 		 */
-		pd_strip = strip / raid_bdev->num_base_bdevs;
-		pd_idx = strip % raid_bdev->num_base_bdevs;
-		if (strip == start_strip) {
-			offset_in_strip = bdev_io->u.bdev.offset_blocks & (raid_bdev->strip_size - 1);
-			pd_lba = (pd_strip << raid_bdev->strip_size_shift) + offset_in_strip;
-			if (strip == end_strip) {
-				pd_blocks = bdev_io->u.bdev.num_blocks;
-			} else {
-				pd_blocks = raid_bdev->strip_size - offset_in_strip;
-			}
-		} else if (strip == end_strip) {
-			pd_lba = pd_strip << raid_bdev->strip_size_shift;
-			pd_blocks = ((bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) &
-				     (raid_bdev->strip_size - 1)) + 1;
-		} else {
-			pd_lba = pd_strip << raid_bdev->strip_size_shift;
-			pd_blocks = raid_bdev->strip_size;
-		}
-		raid_io->splits_comp_outstanding++;
-		assert(raid_io->splits_pending);
-		raid_io->splits_pending--;
-		if (raid_bdev->base_bdev_info[pd_idx].desc == NULL) {
-			SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", pd_idx);
-			assert(0);
-		}
-
-		/*
-		 * Submit child io to bdev layer with using base bdev descriptors, base
-		 * bdev lba, base bdev child io length in blocks, buffer, completion
-		 * function and function callback context
-		 */
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
-						    raid_ch->base_channel[pd_idx],
-						    buf, pd_lba, pd_blocks, raid_bdev_io_completion,
-						    bdev_io);
-
-		} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
-						     raid_ch->base_channel[pd_idx],
-						     buf, pd_lba, pd_blocks, raid_bdev_io_completion,
-						     bdev_io);
-		} else {
-			SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
-			assert(0);
-		}
-		if (ret != 0) {
-			/*
-			 * If failed to submit child io to bdev layer then queue the parent
-			 * bdev io with current active split information in the wait queue
-			 * for that core. This will get resume from this point only. Assume
-			 * if 4 splits are required and 2 childs are submitted, then parent
-			 * io is queued to io waitq of this core and it will get resumed and
-			 * try to submit the remaining 3 and 4 childs
-			 */
-			raid_io->buf = buf;
-			raid_io->splits_comp_outstanding--;
-			raid_io->splits_pending++;
-			return ret;
-		}
-		buf += (pd_blocks << raid_bdev->blocklen_shift);
+		raid_io->buf = buf;
+		raid_io->splits_comp_outstanding--;
+		raid_io->splits_pending++;
+		return ret;
 	}
 
 	return 0;
@@ -1257,11 +1240,14 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	raid_bdev_gen = &raid_bdev->bdev;
 	raid_bdev_gen->write_cache = 0;
 	raid_bdev_gen->blocklen = blocklen;
-	raid_bdev_gen->optimal_io_boundary = 0;
-
+	raid_bdev_gen->ctxt = raid_bdev;
+	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
+	raid_bdev_gen->module = &g_raid_if;
 	raid_bdev->strip_size = (raid_bdev->strip_size * 1024) / blocklen;
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
 	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
+	raid_bdev_gen->optimal_io_boundary = raid_bdev->strip_size;
+	raid_bdev_gen->split_on_optimal_io_boundary = true;
 
 	/*
 	 * RAID bdev logic is for striping so take the minimum block count based
