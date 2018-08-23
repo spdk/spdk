@@ -16,6 +16,24 @@
       "revId": "2eae2a8ea88d1537efbe9b60fd506dc8cb9915a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52c0ff42_e519ad4c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 907,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-08-23T01:16:27Z",
+      "side": 1,
+      "message": "lvol-\u003ebdev will be free() in _vbdev_lvol_unregister_cb():\n_create_lvol_disk() --\u003e spdk_bdev_unregister() --\u003e spdk_bdev_fini() --\u003e spdk_bdev_destroy_cb()\n--\u003e vbdev_lvol_fn_table.destruct() (e.g. vbdev_lvol_unregister()) --\u003e _vbdev_lvol_unregister_cb(), and now lvol-\u003ebdev will be free()ed. \n\nBut the real problem is that _create_lvol_disk_failed_cb() cannot deal with _create_lvol_disk()\nin _vbdev_lvs_examine_finish(), so I mark the patch to WIP.",
+      "parentUuid": "72ce485d_c7a8d5fe",
+      "revId": "2eae2a8ea88d1537efbe9b60fd506dc8cb9915a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
