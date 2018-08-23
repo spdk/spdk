@@ -295,15 +295,15 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 static int
 raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip, uint8_t *buf)
 {
-	struct   raid_bdev_io         *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	struct   raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
-	struct   raid_bdev            *raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-	uint64_t                      pd_strip;
-	uint32_t                      offset_in_strip;
-	uint64_t                      pd_lba;
-	uint64_t                      pd_blocks;
-	uint32_t                      pd_idx;
-	int                           ret = 0;
+	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	struct raid_bdev_io_channel	*raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
+	struct raid_bdev		*raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+	uint64_t			pd_strip;
+	uint32_t			offset_in_strip;
+	uint64_t			pd_lba;
+	uint64_t			pd_blocks;
+	uint32_t			pd_idx;
+	int				ret = 0;
 
 	pd_strip = start_strip / raid_bdev->num_base_bdevs;
 	pd_idx = start_strip % raid_bdev->num_base_bdevs;
@@ -354,8 +354,8 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip, ui
 static uint8_t
 get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io *bdev_io;
-	uint64_t            start_strip;
+	struct spdk_bdev_io	*bdev_io;
+	uint64_t		start_strip;
 
 	bdev_io = SPDK_CONTAINEROF(raid_io, struct spdk_bdev_io, driver_ctx);
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
