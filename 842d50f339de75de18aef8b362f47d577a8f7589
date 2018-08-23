@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6b62a66_64057b37",
+        "filename": "doc/bdev.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-23T18:46:55Z",
+      "side": 1,
+      "message": "Why did you drop this to only two ~? According to the Doxygen Markdown documentation, a fenced code block requires at least 3 ~.\n\nhttps://www.stack.nl/~dimitri/doxygen/manual/markdown.html#md_fenced",
+      "revId": "842d50f339de75de18aef8b362f47d577a8f7589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
