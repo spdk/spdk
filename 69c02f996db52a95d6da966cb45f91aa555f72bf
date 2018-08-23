@@ -16,6 +16,24 @@
       "revId": "69c02f996db52a95d6da966cb45f91aa555f72bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da7c482b_53ff5aba",
+        "filename": "scripts/fio.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-08-23T01:22:56Z",
+      "side": 1,
+      "message": "Thanks for reviewing this patch.\nI have added the \"--skip-alias\" flag.",
+      "parentUuid": "8c79a2b2_f83a3e5e",
+      "revId": "69c02f996db52a95d6da966cb45f91aa555f72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
