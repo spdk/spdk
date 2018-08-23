@@ -863,7 +863,8 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 			CU_ASSERT(strcmp(pbdev->bdev.product_name, "Pooled Device") == 0);
 			CU_ASSERT(pbdev->bdev.write_cache == 0);
 			CU_ASSERT(pbdev->bdev.blocklen == g_block_len);
-			CU_ASSERT(pbdev->bdev.optimal_io_boundary == 0);
+			CU_ASSERT(pbdev->bdev.optimal_io_boundary == pbdev->strip_size);
+			CU_ASSERT(pbdev->bdev.split_on_optimal_io_boundary == true);
 			CU_ASSERT(pbdev->bdev.ctxt == pbdev);
 			CU_ASSERT(pbdev->bdev.fn_table == &g_raid_bdev_fn_table);
 			CU_ASSERT(pbdev->bdev.module == &g_raid_if);
@@ -1375,9 +1376,9 @@ test_write_io(void)
 	for (count = 0; count < g_max_qd; count++) {
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-		io_len = (rand() % g_max_io_size) + 1;
+		io_len = (rand() % g_strip_size) + 1;
 		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
-		lba += io_len;
+		lba += g_strip_size;
 		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_bdev_submit_request(ch, bdev_io);
@@ -1454,9 +1455,9 @@ test_read_io(void)
 	for (count = 0; count < g_max_qd; count++) {
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-		io_len = (rand() % g_max_io_size) + 1;
+		io_len = (rand() % g_strip_size) + 1;
 		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_READ);
-		lba += io_len;
+		lba += g_strip_size;
 		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_bdev_submit_request(ch, bdev_io);
@@ -1533,9 +1534,9 @@ test_io_failure(void)
 	for (count = 0; count < 1; count++) {
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-		io_len = (rand() % g_max_io_size) + 1;
+		io_len = (rand() % g_strip_size) + 1;
 		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_INVALID);
-		lba += io_len;
+		lba += g_strip_size;
 		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_bdev_submit_request(ch, bdev_io);
@@ -1551,9 +1552,9 @@ test_io_failure(void)
 	for (count = 0; count < 1; count++) {
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-		io_len = (rand() % g_max_io_size) + 1;
+		io_len = (rand() % g_strip_size) + 1;
 		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
-		lba += io_len;
+		lba += g_strip_size;
 		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_bdev_submit_request(ch, bdev_io);
@@ -1635,10 +1636,10 @@ test_io_waitq(void)
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 		TAILQ_INSERT_TAIL(&head_io, bdev_io, module_link);
-		io_len = (rand() % g_max_io_size) + 1;
+		io_len = (rand() % g_strip_size) + 1;
 		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
 		g_bdev_io_submit_status = -ENOMEM;
-		lba += io_len;
+		lba += g_strip_size;
 		raid_bdev_submit_request(ch, bdev_io);
 	}
 
@@ -1869,7 +1870,7 @@ test_multi_raid_with_io(void)
 	for (count = 0; count < g_max_qd; count++) {
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-		io_len = (rand() % g_max_io_size) + 1;
+		io_len = (rand() % g_strip_size) + 1;
 		iotype = (rand() % 2) ? SPDK_BDEV_IO_TYPE_WRITE : SPDK_BDEV_IO_TYPE_READ;
 		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
 		g_io_output_index = 0;
@@ -1882,7 +1883,7 @@ test_multi_raid_with_io(void)
 			}
 		}
 		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, iotype);
-		lba += io_len;
+		lba += g_strip_size;
 		CU_ASSERT(pbdev != NULL);
 		raid_bdev_submit_request(ch_random, bdev_io);
 		verify_io(bdev_io, g_max_base_drives, ch_ctx_random, pbdev,
