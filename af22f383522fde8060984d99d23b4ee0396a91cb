@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "612594d7_f4f92d00",
+        "filename": "doc/crypto.md",
+        "patchSetId": 73
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Been in the back of my mind but have had bigger fish to fry :) I\u0027ll spend some time on it this weekend and assuming there\u0027s no surprises can either tack it on here or make it a dependent patch. Any issue following the way of the PT driver for RPC support?",
+      "parentUuid": "efa5b4e4_210248f5",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e719e50b_59e093d6",
         "filename": "doc/crypto.md",
         "patchSetId": 73
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-22T20:08:39Z",
       "side": 1,
       "message": "cryto \u003d\u003e crypto",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "288465db_a7051793",
+        "filename": "doc/crypto.md",
+        "patchSetId": 73
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e719e50b_59e093d6",
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "b4d415e6_3bd99abb",
+        "filename": "doc/driver_modules.md",
+        "patchSetId": 73
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b881fd46_26924fd2",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "69516a2c_67082816",
         "filename": "dpdkbuild/Makefile",
         "patchSetId": 73
@@ -64,6 +118,24 @@
       "writtenOn": "2018-08-22T20:08:39Z",
       "side": 1,
       "message": "Where does this get set to \"y\"?",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63e206ee_96becf58",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 73
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "It doesn\u0027t because we don\u0027t support it yet. So right now it\u0027s N regardless",
+      "parentUuid": "69516a2c_67082816",
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "7b811a9d_e23e78e6",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 73
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6921f5e7_087d001b",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5200c53_94098065",
         "filename": "lib/bdev/crypto/Makefile",
         "patchSetId": 73
@@ -98,6 +188,24 @@
       "writtenOn": "2018-08-22T20:08:39Z",
       "side": 1,
       "message": "Are both of these needed?  I guess ENV_CFLAGS is needed since this module calls DPDK functions directly.  But I think the SPDK_ROOT_DIR/lib/bdev one can be removed.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bee1a6bf_80d40b37",
+        "filename": "lib/bdev/crypto/Makefile",
+        "patchSetId": 73
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Correct on both accounts (removed the include)",
+      "parentUuid": "c5200c53_94098065",
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "e6d9d209_c57f949f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "This is just a number for now, I can drop it to 64. Needs to be performance optimized as do many of these defines.  Also note in the comment that this is not \u0027one size fits all\u0027 either, will likely be different for SW vs QAT",
+      "parentUuid": "cc8fdcab_ef9ad68f",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "20ad8b51_13da9754",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 73
@@ -132,6 +258,24 @@
       "writtenOn": "2018-08-22T20:08:39Z",
       "side": 1,
       "message": "This is OK for now, but we will need to handle out-of-mbuf conditions with a queue, rather than increasing the size of the mbuf pool.",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3319bdb_9e1d2926",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Yeah, or when your split lands this can be decreased as well.",
+      "parentUuid": "20ad8b51_13da9754",
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "6e024f15_d5f038b3",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Yeah, we can do a #define override kinda thing and require RPC to set the key when its not set right?",
+      "parentUuid": "bb7064ef_c7f1c208",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "23c41c4e_e808f7d6",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 73
@@ -169,6 +331,24 @@
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86fd0031_e83ee65a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "23c41c4e_e808f7d6",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "8b2ca481_b31cc54d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7ef7eb8d_80c9e5fa",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ecd20f03_0db28a4f",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 73
@@ -200,6 +398,24 @@
       "writtenOn": "2018-08-22T20:08:39Z",
       "side": 1,
       "message": "There are a ton of cases in here that return ENOMEM if there are not enough mbufs or crypto bufs available.  If we put this under stress (256 NVMe-oF connections, 32 QD each, 128KB per I/O), will this handle it gracefully?",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e14d7f55_22cedaa9",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "I\u0027ve tested these manually with bdevperf and bdevio and when I run out the IO fails as coded.  Haven\u0027t done anything with NVME0oF yet",
+      "parentUuid": "ecd20f03_0db28a4f",
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -223,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "18ea6c34_7bca5fc4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cef8abfe_10b988af",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d876bea1_59fe4318",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 73
@@ -237,6 +471,24 @@
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e5e9149_8c5a2340",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 772,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d876bea1_59fe4318",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -257,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "86c5a52c_022e57ad",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 73
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d6f5863_f072e4a6",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0cfbe6ce_6e3c1c35",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 73
@@ -268,6 +538,24 @@
       "writtenOn": "2018-08-22T20:08:39Z",
       "side": 1,
       "message": "this part needs to be at the end of this file - we can\u0027t make IPSec until we\u0027ve installed nasm\n\nalso needs to check that the nasm version installed is capable of building IPSec before we try it",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1feb82bd_17db4733",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 73
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "ignore this, it will go away after the other patch lands and I rebase.",
+      "parentUuid": "0cfbe6ce_6e3c1c35",
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -291,6 +579,24 @@
     },
     {
       "key": {
+        "uuid": "f8d29fe5_6d71f09f",
+        "filename": "test/unit/lib/bdev/crypto.c/Makefile",
+        "patchSetId": 73
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Its still needed. I included stripped down versions of only the headers that I needed to mock functions.  It won\u0027t build w/o the ENV_CFLAGS",
+      "parentUuid": "f6313915_9734adc1",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ef9c3f59_825d6e10",
         "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
         "patchSetId": 73
@@ -302,6 +608,24 @@
       "writtenOn": "2018-08-22T20:08:39Z",
       "side": 1,
       "message": "should we have tests for unmap, flush, reset to make sure they truly get passed through as expected?  or is that overkill?",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a011cda_e9b4fd2b",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Can\u0027t hurt!",
+      "parentUuid": "ef9c3f59_825d6e10",
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -325,6 +649,24 @@
     },
     {
       "key": {
+        "uuid": "50650b34_d1ff17aa",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Note that some of them can\u0027t be changed as they\u0027re used in DPDK files.  Well, I guess I could go hack up more shit but that seems unnecessary for self-contained test code.  I\u0027ll update mine thought for sure",
+      "parentUuid": "31b68a58_f1254579",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3eed9284_30abbcce",
         "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
         "patchSetId": 73
@@ -336,6 +678,24 @@
       "writtenOn": "2018-08-22T20:08:39Z",
       "side": 1,
       "message": "overall these unit tests seem reasonable - there are a lot of functions in vbdev_crypto.c that aren\u0027t tested here, but I\u0027m assuming you\u0027ll be focusing component and system level tests on those",
+      "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5de2291c_f53a5372",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-08-23T16:56:03Z",
+      "side": 1,
+      "message": "Yeah, I need to review coverage for sure.",
+      "parentUuid": "3eed9284_30abbcce",
       "revId": "af22f383522fde8060984d99d23b4ee0396a91cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
