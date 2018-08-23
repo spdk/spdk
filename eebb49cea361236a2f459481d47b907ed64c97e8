@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "728dbfdc_d383c1a5",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 1936,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T18:26:30Z",
+      "side": 1,
+      "message": "should description mention that muser and msecret are optional?  maybe should have Optional column here, similar to Parameters tables",
+      "revId": "eebb49cea361236a2f459481d47b907ed64c97e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "694ddbe8_a1df78c2",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T18:26:30Z",
+      "side": 1,
+      "message": "jsonrpc.md says the array is required and must be non-empty - should the \u0027true\u0027 here be removed since it is not optional?",
+      "revId": "eebb49cea361236a2f459481d47b907ed64c97e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe2fe0e2_9e7b96e9",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T18:26:30Z",
+      "side": 1,
+      "message": "are secrets optional?  jsondoc.md says they are not",
+      "revId": "eebb49cea361236a2f459481d47b907ed64c97e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
