@@ -60,14 +60,6 @@ static int g_fs_count = 0;
 static pthread_mutex_t g_cache_init_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_spinlock_t g_caches_lock;
 
-static void
-__sem_post(void *arg, int bserrno)
-{
-	sem_t *sem = arg;
-
-	sem_post(sem);
-}
-
 void
 spdk_cache_buffer_free(struct cache_buffer *cache_buffer)
 {
@@ -463,6 +455,15 @@ fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 				sizeof(struct spdk_fs_channel));
 
 	return fs;
+}
+
+static void
+__wake_caller(void *arg, int fserrno)
+{
+	struct spdk_fs_cb_args *args = arg;
+
+	args->rc = fserrno;
+	sem_post(args->sem);
 }
 
 void
@@ -870,7 +871,7 @@ fs_create_blob_close_cb(void *ctx, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	args->fn.file_op(args->arg, bserrno);
+	args->fn.file_op(args->arg, args->rc);
 	free_fs_request(req);
 }
 
@@ -882,6 +883,12 @@ fs_create_blob_resize_cb(void *ctx, int bserrno)
 	struct spdk_file *f = args->file;
 	struct spdk_blob *blob = args->op.create.blob;
 	uint64_t length = 0;
+
+	if (bserrno) {
+		args->rc = bserrno;
+		spdk_blob_close(blob, fs_create_blob_close_cb, args);
+		return;
+	}
 
 	spdk_blob_set_xattr(blob, "name", f->name, strlen(f->name) + 1);
 	spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
@@ -895,6 +902,12 @@ fs_create_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
+	if (bserrno) {
+		args->fn.file_op(args->arg, bserrno);
+		free_fs_request(req);
+		return;
+	}
+
 	args->op.create.blob = blob;
 	spdk_blob_resize(blob, 1, fs_create_blob_resize_cb, req);
 }
@@ -905,6 +918,12 @@ fs_create_blob_create_cb(void *ctx, spdk_blob_id blobid, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *f = args->file;
+
+	if (bserrno) {
+		args->fn.file_op(args->arg, bserrno);
+		free_fs_request(req);
+		return;
+	}
 
 	f->blobid = blobid;
 	spdk_bs_open_blob(f->fs->bs, blobid, fs_create_blob_open_cb, req);
@@ -1101,8 +1120,7 @@ __fs_open_file_done(void *arg, struct spdk_file *file, int bserrno)
 	struct spdk_fs_cb_args *args = &req->args;
 
 	args->file = file;
-	args->rc = bserrno;
-	sem_post(args->sem);
+	__wake_caller(args, bserrno);
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", args->op.open.name);
 }
 
@@ -1244,8 +1262,7 @@ __fs_rename_file_done(void *arg, int fserrno)
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	args->rc = fserrno;
-	sem_post(args->sem);
+	__wake_caller(args, fserrno);
 }
 
 static void
@@ -1354,8 +1371,7 @@ __fs_delete_file_done(void *arg, int fserrno)
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	args->rc = fserrno;
-	sem_post(args->sem);
+	__wake_caller(args, fserrno);
 }
 
 static void
@@ -1447,6 +1463,12 @@ fs_truncate_resize_cb(void *ctx, int bserrno)
 	struct spdk_file *file = args->file;
 	uint64_t *length = &args->op.truncate.length;
 
+	if (bserrno) {
+		args->fn.file_op(args->arg, bserrno);
+		free_fs_request(req);
+		return;
+	}
+
 	spdk_blob_set_xattr(file->blob, "length", length, sizeof(*length));
 
 	file->length = *length;
@@ -1503,7 +1525,7 @@ __truncate(void *arg)
 	struct spdk_fs_cb_args *args = &req->args;
 
 	spdk_file_truncate_async(args->file, args->op.truncate.length,
-				 args->fn.file_op, args->arg);
+				 args->fn.file_op, args);
 }
 
 int
@@ -1513,6 +1535,7 @@ spdk_file_truncate(struct spdk_file *file, struct spdk_io_channel *_channel,
 	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
+	int rc;
 
 	req = alloc_fs_request(channel);
 	if (req == NULL) {
@@ -1523,14 +1546,15 @@ spdk_file_truncate(struct spdk_file *file, struct spdk_io_channel *_channel,
 
 	args->file = file;
 	args->op.truncate.length = length;
-	args->fn.file_op = __sem_post;
-	args->arg = &channel->sem;
+	args->fn.file_op = __wake_caller;
+	args->sem = &channel->sem;
 
 	channel->send_request(__truncate, req);
 	sem_wait(&channel->sem);
+	rc = args->rc;
 	free_fs_request(req);
 
-	return 0;
+	return rc;
 }
 
 static void
@@ -1838,17 +1862,12 @@ cache_append_buffer(struct spdk_file *file)
 	return last;
 }
 
-static void
-__wake_caller(struct spdk_fs_cb_args *args)
-{
-	sem_post(args->sem);
-}
-
 static void __check_sync_reqs(struct spdk_file *file);
 
 static void
-__file_cache_finish_sync(struct spdk_file *file)
+__file_cache_finish_sync(void *ctx, int bserrno)
 {
+	struct spdk_file *file = ctx;
 	struct spdk_fs_request *sync_req;
 	struct spdk_fs_cb_args *sync_args;
 
@@ -1860,20 +1879,12 @@ __file_cache_finish_sync(struct spdk_file *file)
 	TAILQ_REMOVE(&file->sync_requests, sync_req, args.op.sync.tailq);
 	pthread_spin_unlock(&file->lock);
 
-	sync_args->fn.file_op(sync_args->arg, 0);
+	sync_args->fn.file_op(sync_args->arg, bserrno);
 	__check_sync_reqs(file);
 
 	pthread_spin_lock(&file->lock);
 	free_fs_request(sync_req);
 	pthread_spin_unlock(&file->lock);
-}
-
-static void
-__file_cache_finish_sync_bs_cb(void *ctx, int bserrno)
-{
-	struct spdk_file *file = ctx;
-
-	__file_cache_finish_sync(file);
 }
 
 static void
@@ -1910,7 +1921,7 @@ __check_sync_reqs(struct spdk_file *file)
 				    sizeof(file->length_flushed));
 
 		pthread_spin_unlock(&file->lock);
-		spdk_blob_sync_md(file->blob, __file_cache_finish_sync_bs_cb, file);
+		spdk_blob_sync_md(file->blob, __file_cache_finish_sync, file);
 	} else {
 		pthread_spin_unlock(&file->lock);
 	}
@@ -2015,7 +2026,7 @@ __file_extend_done(void *arg, int bserrno)
 {
 	struct spdk_fs_cb_args *args = arg;
 
-	__wake_caller(args);
+	__wake_caller(args, bserrno);
 }
 
 static void
@@ -2023,6 +2034,11 @@ __file_extend_resize_cb(void *_args, int bserrno)
 {
 	struct spdk_fs_cb_args *args = _args;
 	struct spdk_file *file = args->file;
+
+	if (bserrno) {
+		__wake_caller(args, bserrno);
+		return;
+	}
 
 	spdk_blob_sync_md(file->blob, __file_extend_done, args);
 }
@@ -2041,7 +2057,7 @@ __rw_from_file_done(void *arg, int bserrno)
 {
 	struct spdk_fs_cb_args *args = arg;
 
-	__wake_caller(args);
+	__wake_caller(args, bserrno);
 	__free_args(args);
 }
 
@@ -2137,6 +2153,9 @@ spdk_file_write(struct spdk_file *file, struct spdk_io_channel *_channel,
 		pthread_spin_unlock(&file->lock);
 		file->fs->send_request(__file_extend_blob, &extend_args);
 		sem_wait(&channel->sem);
+		if (extend_args.rc) {
+			return extend_args.rc;
+		}
 	}
 
 	last = file->last;
@@ -2408,11 +2427,13 @@ int
 spdk_file_sync(struct spdk_file *file, struct spdk_io_channel *_channel)
 {
 	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_cb_args args = {};
 
-	_file_sync(file, channel, __sem_post, &channel->sem);
+	args.sem = &channel->sem;
+	_file_sync(file, channel, __wake_caller, &args);
 	sem_wait(&channel->sem);
 
-	return 0;
+	return args.rc;
 }
 
 void
