@@ -46,7 +46,6 @@
 struct io_output {
 	struct spdk_bdev_desc       *desc;
 	struct spdk_io_channel      *ch;
-	void                        *buf;
 	uint64_t                    offset_blocks;
 	uint64_t                    num_blocks;
 	spdk_bdev_io_completion_cb  cb;
@@ -204,9 +203,10 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 /* It will cache the split IOs for verification */
 int
-spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		       void *buf, uint64_t offset_blocks, uint64_t num_blocks,
-		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			struct iovec *iov, int iovcnt,
+			uint64_t offset_blocks, uint64_t num_blocks,
+			spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct io_output *p = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
@@ -223,7 +223,6 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	if (g_bdev_io_submit_status == 0) {
 		p->desc = desc;
 		p->ch = ch;
-		p->buf = buf;
 		p->offset_blocks = offset_blocks;
 		p->num_blocks = num_blocks;
 		p->cb = cb;
@@ -404,9 +403,10 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 
 /* It will cache split IOs for verification */
 int
-spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		      void *buf, uint64_t offset_blocks, uint64_t num_blocks,
-		      spdk_bdev_io_completion_cb cb, void *cb_arg)
+spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		       struct iovec *iov, int iovcnt,
+		       uint64_t offset_blocks, uint64_t num_blocks,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct io_output *p = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
@@ -419,7 +419,6 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	if (g_bdev_io_submit_status == 0) {
 		p->desc = desc;
 		p->ch = ch;
-		p->buf = buf;
 		p->offset_blocks = offset_blocks;
 		p->num_blocks = num_blocks;
 		p->cb = cb;
@@ -756,7 +755,6 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 		CU_ASSERT(pd_blocks == g_io_output[index].num_blocks);
 		CU_ASSERT(ch_ctx->base_channel[pd_idx] == g_io_output[index].ch);
 		CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].desc == g_io_output[index].desc);
-		CU_ASSERT(buf == g_io_output[index].buf);
 		CU_ASSERT(bdev_io->type == g_io_output[index].iotype);
 		buf += (pd_blocks << spdk_u32log2(g_block_len));
 	}
