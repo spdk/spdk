@@ -136,15 +136,6 @@ struct raid_bdev_io {
 
 	/* current buffer location, used in queueing logic */
 	uint8_t                         *buf;
-
-	/* outstanding child completions */
-	uint16_t                        splits_comp_outstanding;
-
-	/* pending splits yet to happen */
-	uint16_t                        splits_pending;
-
-	/* status of parent io */
-	bool                            status;
 };
 
 /*

@@ -270,54 +270,30 @@ static void
 raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io         *parent_io = cb_arg;
-	struct raid_bdev_io         *raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
 
-	assert(raid_io->splits_comp_outstanding);
-	raid_io->splits_comp_outstanding--;
-	if (raid_io->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-		/*
-		 * Store failure status if any of the child bdev io. If any of the child
-		 * fails, overall parent bdev_io is considered failed but parent bdev io
-		 * status is only communicated to above layers on all child completions
-		 */
-		raid_io->status = success;
-	}
-	/* Free child bdev io */
 	spdk_bdev_free_io(bdev_io);
 
-	if (!raid_io->splits_pending && !raid_io->splits_comp_outstanding) {
-		/*
-		 * If all childs are submitted and all childs are completed, process
-		 * parent bdev io completion and complete the parent bdev io with
-		 * appropriate status. If any of the child bdev io is failed, parent
-		 * bdev io is considered failed.
-		 */
-		if (raid_io->status) {
-			spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-		} else {
-			spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
+	if (success) {
+		spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
 /*
  * brief:
- * raid_bdev_submit_children function is used to split the parent io and submit
- * the childs to bdev layer. bdev layer redirects the childs to appropriate base
- * bdev nvme module
+ * raid_bdev_submit_children function is used to submit I/O to the correct
+ * member disk
  * params:
  * bdev_io - parent bdev io
  * start_strip - start strip number of this io
- * end_strip - end strip number of this io
- * cur_strip - current strip number of this io to start processing
  * buf - pointer to buffer for this io
  * returns:
  * 0 - success
  * non zero - failure
  */
 static int
-raid_bdev_submit_children(struct spdk_bdev_io *bdev_io,
-			  uint64_t start_strip, uint64_t end_strip, uint64_t cur_strip, uint8_t *buf)
+raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip, uint8_t *buf)
 {
 	struct   raid_bdev_io         *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct   raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
@@ -329,19 +305,11 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io,
 	uint32_t                      pd_idx;
 	int                           ret = 0;
 
-	if (start_strip != end_strip) {
-		SPDK_ERRLOG("I/O spans strip boundary\n");
-		assert(false);
-	}
-
 	pd_strip = start_strip / raid_bdev->num_base_bdevs;
 	pd_idx = start_strip % raid_bdev->num_base_bdevs;
 	offset_in_strip = bdev_io->u.bdev.offset_blocks & (raid_bdev->strip_size - 1);
 	pd_lba = (pd_strip << raid_bdev->strip_size_shift) + offset_in_strip;
 	pd_blocks = bdev_io->u.bdev.num_blocks;
-	raid_io->splits_comp_outstanding++;
-	assert(raid_io->splits_pending);
-	raid_io->splits_pending--;
 	if (raid_bdev->base_bdev_info[pd_idx].desc == NULL) {
 		SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", pd_idx);
 		assert(0);
@@ -367,17 +335,7 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io,
 		assert(0);
 	}
 	if (ret != 0) {
-		/*
-		 * If failed to submit child io to bdev layer then queue the parent
-		 * bdev io with current active split information in the wait queue
-		 * for that core. This will get resume from this point only. Assume
-		 * if 4 splits are required and 2 childs are submitted, then parent
-		 * io is queued to io waitq of this core and it will get resumed and
-		 * try to submit the remaining 3 and 4 childs
-		 */
 		raid_io->buf = buf;
-		raid_io->splits_comp_outstanding--;
-		raid_io->splits_pending++;
 		return ret;
 	}
 
@@ -387,7 +345,6 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io,
 /*
  * brief:
  * get_curr_base_bdev_index function calculates the base bdev index
- * which should be processed next based on splits_pending parameter
  * params:
  * raid_bdev - pointer to pooled bdev
  * raid_io - pointer to parent io context
@@ -399,23 +356,16 @@ get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_
 {
 	struct spdk_bdev_io *bdev_io;
 	uint64_t            start_strip;
-	uint64_t            end_strip;
-	uint64_t            cur_strip;
 
 	bdev_io = SPDK_CONTAINEROF(raid_io, struct spdk_bdev_io, driver_ctx);
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-		    raid_bdev->strip_size_shift;
-	cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_io->splits_pending);
 
-	return (cur_strip % raid_bdev->num_base_bdevs);
+	return (start_strip % raid_bdev->num_base_bdevs);
 }
 
 /*
  * brief:
- * raid_bdev_io_terminate function terminates the execution of the IO. If
- * any outstanding children are there it waits for completion, otherwise it
- * immediately completes the IO with failure.
+ * raid_bdev_io_terminate function terminates the execution of the IO.
  * params:
  * bdev_io - pointer to parent io
  * raid_io - pointer to parent io context
@@ -425,15 +375,7 @@ get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_
 static void
 raid_bdev_io_terminate(struct spdk_bdev_io *bdev_io, struct raid_bdev_io *raid_io)
 {
-	if (raid_io->splits_comp_outstanding == 0) {
-		/* If no children is outstanding, immediately fail the parent IO */
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	} else {
-		/* If any children is outstanding,
-		 * wait for them to complete but don't send further Ios */
-		raid_io->splits_pending = 0;
-		raid_io->status = SPDK_BDEV_IO_STATUS_FAILED;
-	}
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 /*
@@ -490,8 +432,6 @@ raid_bdev_waitq_io_process(void *ctx)
 	struct   raid_bdev            *raid_bdev;
 	int                           ret;
 	uint64_t                      start_strip;
-	uint64_t                      end_strip;
-	uint64_t                      cur_strip;
 
 	bdev_io = SPDK_CONTAINEROF(raid_io, struct spdk_bdev_io, driver_ctx);
 	/*
@@ -500,10 +440,7 @@ raid_bdev_waitq_io_process(void *ctx)
 	 */
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-		    raid_bdev->strip_size_shift;
-	cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_io->splits_pending);
-	ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, cur_strip, raid_io->buf);
+	ret = raid_bdev_submit_children(bdev_io, start_strip, raid_io->buf);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
@@ -543,14 +480,12 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
 	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
 		    raid_bdev->strip_size_shift;
-	/*
-	 * IO parameters used during io split and io completion
-	 */
-	raid_io->splits_pending = (end_strip - start_strip + 1);
-	raid_io->splits_comp_outstanding = 0;
-	raid_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, start_strip,
-					bdev_io->u.bdev.iovs->iov_base);
+	if (start_strip != end_strip) {
+		assert(false);
+		SPDK_ERRLOG("I/O spans strip boundary!\n");
+		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, -EINVAL);
+	}
+	ret = raid_bdev_submit_children(bdev_io, start_strip, bdev_io->u.bdev.iovs->iov_base);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
