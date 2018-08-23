@@ -1983,7 +1983,7 @@ spdk_nvmf_rdma_qpair_recover(struct spdk_nvmf_rdma_qpair *rqpair)
 		return;
 	}
 
-	state = spdk_nvmf_rdma_update_ibv_state(rqpair);
+	state = rqpair->ibv_attr.qp_state;
 	next_state = state;
 
 	SPDK_NOTICELOG("RDMA qpair %u is in state: %s\n",
@@ -2073,7 +2073,7 @@ _spdk_nvmf_rdma_qp_error(void *arg)
 	struct spdk_nvmf_rdma_qpair	*rqpair = arg;
 	enum ibv_qp_state		state;
 
-	state = spdk_nvmf_rdma_update_ibv_state(rqpair);
+	state = rqpair->ibv_attr.qp_state;
 	if (state != IBV_QPS_ERR) {
 		/* Error was already recovered */
 		return;
