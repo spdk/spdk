@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "168e4331_3d5ccf70",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2443,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-23T09:18:43Z",
+      "side": 1,
+      "message": "return args.rc？\nSince file_op callback could get the error code reported in _file_sync and further functions, maybe it\u0027s time to let file sync API return it.",
+      "range": {
+        "startLine": 2443,
+        "startChar": 0,
+        "endLine": 2443,
+        "endChar": 10
+      },
+      "revId": "f96b6da661f54baab26edf038950d40a331ce434",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
