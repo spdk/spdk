@@ -16,6 +16,23 @@
       "revId": "93cdd526f4090bead6be5d23fc4dfe417b44fbc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41badc5c_58e085e9",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-23T17:09:16Z",
+      "side": 1,
+      "message": "If the directory intel-ipsec-mb doesn\u0027t exist, then the user hasn\u0027t cloned the submodule so they can\u0027t follow this directions. Instead, the message needs to say something like:\n\n\"The intel-ipsec-mb submodule has not been cloned and will not be installed. To enable crypto, run \u0027git submodule update --init\u0027 and then run this script again.\"",
+      "revId": "93cdd526f4090bead6be5d23fc4dfe417b44fbc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
