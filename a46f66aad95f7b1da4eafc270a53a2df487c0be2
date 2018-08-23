@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d30788a8_d690925a",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-08-23T17:52:29Z",
+      "side": 1,
+      "message": "Please add a ramp_up time of 30 sec as well",
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "443041ca_ba41a6a4",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-08-23T17:52:29Z",
+      "side": 1,
+      "message": "Can we do 100% Reads, 70-30 Mix and then 100% Writes?",
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05cb5c0a_2795f41e",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-08-23T17:52:29Z",
+      "side": 1,
+      "message": "Is there a reason why IOdepth \u003d 256 and then 32 and then again 256? I think we should add more IOdepth values (1, 8, 32, 128, 256)",
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b65dbee_b7bf03a5",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-08-23T17:52:29Z",
+      "side": 1,
+      "message": "Suggest adding stddev and variance values for each run as well. Also, having p99 and p99.99 would be good.",
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
