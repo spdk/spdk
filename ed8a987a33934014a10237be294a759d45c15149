@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2643412a_2b118796",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T18:50:39Z",
+      "side": 1,
+      "message": "These are great tests Shuhei!  But I think these should go into a separate test script.  This initiator.sh script is really meant for testing the SPDK iSCSI initiator module.",
+      "revId": "ed8a987a33934014a10237be294a759d45c15149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20aad45e_373d68cf",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T18:50:39Z",
+      "side": 1,
+      "message": "Should we choose a different user/secret here, to differentiate from auth_group 1?",
+      "revId": "ed8a987a33934014a10237be294a759d45c15149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a43a1f91_df445986",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T18:50:39Z",
+      "side": 1,
+      "message": "Initiator",
+      "revId": "ed8a987a33934014a10237be294a759d45c15149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
