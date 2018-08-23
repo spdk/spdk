@@ -528,6 +528,7 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	if (bvdev->bdev) {
 		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
 		if (!bvdev->bdev_io_channel) {
+			free_task_pool(bvdev);
 			SPDK_ERRLOG("Controller %s: IO channel allocation failed\n", vdev->name);
 			rc = -1;
 			goto out;
