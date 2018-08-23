@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "53b0004f_8c21c7a5",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 887,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T17:08:11Z",
+      "side": 1,
+      "message": "I think in this case we should still close the blob since we opened it.  We should *not* set the name and length.  We need to make sure after it is closed, that we return the error code here (and not 0 from a successful close).",
+      "revId": "f96b6da661f54baab26edf038950d40a331ce434",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "168e4331_3d5ccf70",
         "filename": "lib/blobfs/blobfs.c",
         "patchSetId": 2
@@ -13,6 +30,30 @@
       "writtenOn": "2018-08-23T09:18:43Z",
       "side": 1,
       "message": "return args.rc？\nSince file_op callback could get the error code reported in _file_sync and further functions, maybe it\u0027s time to let file sync API return it.",
+      "range": {
+        "startLine": 2443,
+        "startChar": 0,
+        "endLine": 2443,
+        "endChar": 10
+      },
+      "revId": "f96b6da661f54baab26edf038950d40a331ce434",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6ae2d5c_870f6416",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2443,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T17:08:11Z",
+      "side": 1,
+      "message": "I think Xiaodong is right.  It is possible the sync operation could have a failure, for example, write I/O fails.",
+      "parentUuid": "168e4331_3d5ccf70",
       "range": {
         "startLine": 2443,
         "startChar": 0,
