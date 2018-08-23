@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84d78afd_85b51c5c",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T17:31:56Z",
+      "side": 1,
+      "message": "I would either remove this line, or increase the indent level on all of the modules.  I think we would want each of the bdev modules to appear as a subsection of this bdev_modules header.\n\nProbably for this patch, just remove this line.  We can add the bdev_modules section in a separate patch.",
+      "revId": "29f4f130cc99d439c6f57eab74bb8bb5b2ead1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
