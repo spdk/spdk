@@ -365,21 +365,6 @@ get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_
 
 /*
  * brief:
- * raid_bdev_io_terminate function terminates the execution of the IO.
- * params:
- * bdev_io - pointer to parent io
- * raid_io - pointer to parent io context
- * returns:
- * none
- */
-static void
-raid_bdev_io_terminate(struct spdk_bdev_io *bdev_io, struct raid_bdev_io *raid_io)
-{
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-}
-
-/*
- * brief:
  * raid_bdev_io_submit_fail_process function processes the IO which failed to submit.
  * It will try to queue the IOs after storing the context to bdev wait queue logic.
  * params:
@@ -397,7 +382,7 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 	uint8_t pd_idx;
 
 	if (ret != -ENOMEM) {
-		raid_bdev_io_terminate(bdev_io, raid_io);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else {
 		/* Queue the IO to bdev layer wait queue */
 		pd_idx = get_curr_base_bdev_index(raid_bdev, raid_io);
@@ -410,7 +395,7 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 					    &raid_io->waitq_entry) != 0) {
 			SPDK_ERRLOG("bdev io waitq error, it should not happen\n");
 			assert(0);
-			raid_bdev_io_terminate(bdev_io, raid_io);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
 }
@@ -483,7 +468,7 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 	if (start_strip != end_strip) {
 		assert(false);
 		SPDK_ERRLOG("I/O spans strip boundary!\n");
-		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, -EINVAL);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 	ret = raid_bdev_submit_children(bdev_io, start_strip, bdev_io->u.bdev.iovs->iov_base);
 	if (ret != 0) {
