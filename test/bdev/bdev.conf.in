@@ -29,3 +29,10 @@
   #
   # Assign 20000 IOPS for the Malloc0 block device
   Limit_IOPS Malloc0 20000
+
+[RAID0]
+  Name raid0
+  StripSize 64
+  NumDevices 2
+  RaidLevel 0
+  Devices Malloc4 Malloc5

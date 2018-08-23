@@ -84,11 +84,6 @@ timing_enter bounds
 $testdir/bdevio/bdevio -c $testdir/bdev.conf
 timing_exit bounds
 
-# RAID module doesn't support multi-iov yet, so bdevio test
-# would fail.  So wait to append the RAID configuration until
-# after bdevio has run.
-cat $testdir/raid.conf >> $testdir/bdev.conf
-
 timing_enter nbd_gpt
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
