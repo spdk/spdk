@@ -77,6 +77,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		10000
 #define SPDK_BDEV_QOS_MIN_BYTES_PER_SEC		(10 * 1024 * 1024)
 #define SPDK_BDEV_QOS_LIMIT_NOT_DEFINED		UINT64_MAX
+#define SPDK_BDEV_QOS_ITERATION_PER_SEC		(SPDK_SEC_TO_USEC / SPDK_BDEV_QOS_TIMESLICE_IN_USEC)
 
 static const char *qos_conf_type[] = {"Limit_IOPS", "Limit_Read_IOPS", "Limit_Write_IOPS",
 				      "Limit_BPS", "Limit_Read_BPS", "Limit_Write_BPS"
@@ -143,6 +144,9 @@ struct spdk_bdev_qos_limit {
 	/** Maximum allowed IOs or bytes to be issued in one timeslice (e.g., 1ms). */
 	uint32_t max_per_timeslice;
 
+	/** Complement of allowed IOs or bytes in one timeslice (e.g, 1ms). */
+	uint32_t limit_complement;
+
 	/** Function to check whether to count the IO. */
 	bool (*count_io)(bool);
 };
@@ -165,6 +169,9 @@ struct spdk_bdev_qos {
 
 	/** Timestamp of start of last timeslice. */
 	uint64_t last_timeslice;
+
+	/** Completed iterations of timeslice within one second. */
+	uint32_t iterations_of_timeslice;
 
 	/** Poller that processes queued I/O commands each time slice. */
 	struct spdk_poller *poller;
@@ -1577,13 +1584,17 @@ spdk_bdev_qos_update_max_quota_per_timeslice(struct spdk_bdev_qos *qos)
 			continue;
 		}
 
-		max_per_timeslice = qos->rate_limits[i].limit *
-				    SPDK_BDEV_QOS_TIMESLICE_IN_USEC / SPDK_SEC_TO_USEC;
+		max_per_timeslice = qos->rate_limits[i].limit /
+				    SPDK_BDEV_QOS_ITERATION_PER_SEC;
 
 		qos->rate_limits[i].max_per_timeslice = spdk_max(max_per_timeslice,
 							qos->rate_limits[i].min_per_timeslice);
 
 		qos->rate_limits[i].remaining_this_timeslice = qos->rate_limits[i].max_per_timeslice;
+
+		if (qos->rate_limits[i].limit_complement) {
+			qos->rate_limits[i].remaining_this_timeslice++;
+		}
 	}
 }
 
@@ -1620,7 +1631,24 @@ spdk_bdev_channel_poll_qos(void *arg)
 		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 			qos->rate_limits[i].remaining_this_timeslice +=
 				qos->rate_limits[i].max_per_timeslice;
+
+			if (qos->rate_limits[i].limit_complement) {
+				if (qos->rate_limits[i].limit_complement ==
+				    qos->iterations_of_timeslice) {
+					qos->rate_limits[i].remaining_this_timeslice--;
+				}
+			}
+
+			if (qos->iterations_of_timeslice == SPDK_BDEV_QOS_ITERATION_PER_SEC) {
+				/* Reset the complement for next second of rate limits. */
+				qos->iterations_of_timeslice = 0;
+				if (qos->rate_limits[i].limit_complement) {
+					qos->rate_limits[i].remaining_this_timeslice++;
+				}
+			}
 		}
+
+		qos->iterations_of_timeslice++;
 	}
 
 	_spdk_bdev_qos_io_submit(qos->ch);
@@ -1700,6 +1728,7 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 			qos->timeslice_size =
 				SPDK_BDEV_QOS_TIMESLICE_IN_USEC * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 			qos->last_timeslice = spdk_get_ticks();
+			qos->iterations_of_timeslice = 0;
 			qos->poller = spdk_poller_register(spdk_bdev_channel_poll_qos,
 							   qos,
 							   SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
@@ -3200,11 +3229,12 @@ _spdk_bdev_qos_config_limit(struct spdk_bdev *bdev, uint64_t *limits)
 			min_qos_set = SPDK_BDEV_QOS_MIN_BYTES_PER_SEC;
 		}
 
-		if (limits[i] == 0 || limits[i] % min_qos_set) {
-			SPDK_ERRLOG("Assigned limit %" PRIu64 " on bdev %s is not multiple of %" PRIu64 "\n",
-				    limits[i], bdev->name, min_qos_set);
-			SPDK_ERRLOG("Failed to enable QoS on this bdev %s\n", bdev->name);
-			return;
+		if (limits[i] < min_qos_set) {
+			SPDK_ERRLOG("Assigned limit %" PRIu64 " on bdev %s is too small\n",
+				    limits[i], bdev->name);
+			SPDK_ERRLOG("Enable QoS on bdev %s with minimum setting %" PRIu64 "\n",
+				    bdev->name, min_qos_set);
+			limits[i] = min_qos_set;
 		}
 	}
 
@@ -3218,7 +3248,9 @@ _spdk_bdev_qos_config_limit(struct spdk_bdev *bdev, uint64_t *limits)
 
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 		bdev->internal.qos->rate_limits[i].limit = limits[i];
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev:%s QoS type:%d set:%lu\n",
+		bdev->internal.qos->rate_limits[i].limit_complement = limits[i] %
+				SPDK_BDEV_QOS_TIMESLICE_IN_USEC;
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev:%s QoS type:%d limit:%lu\n",
 			      bdev->name, i, limits[i]);
 	}
 
@@ -3869,6 +3901,9 @@ _spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits)
 		if (limits[i] != SPDK_BDEV_QOS_LIMIT_NOT_DEFINED) {
 			bdev->internal.qos->rate_limits[i].limit = limits[i];
 
+			bdev->internal.qos->rate_limits[i].limit_complement = limits[i] %
+					SPDK_BDEV_QOS_TIMESLICE_IN_USEC;
+
 			if (limits[i] == 0) {
 				bdev->internal.qos->rate_limits[i].limit =
 					SPDK_BDEV_QOS_LIMIT_NOT_DEFINED;
@@ -3882,19 +3917,16 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 			      void (*cb_fn)(void *cb_arg, int status), void *cb_arg)
 {
 	struct set_qos_limit_ctx	*ctx;
-	uint32_t			limit_set_complement;
 	uint64_t			min_limit_per_sec;
 	int				i;
 	bool				disable_rate_limit = true;
 
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		if (limits[i] == SPDK_BDEV_QOS_LIMIT_NOT_DEFINED) {
+		if (limits[i] == SPDK_BDEV_QOS_LIMIT_NOT_DEFINED || limits[i] == 0) {
 			continue;
 		}
 
-		if (limits[i] > 0) {
-			disable_rate_limit = false;
-		}
+		disable_rate_limit = false;
 
 		if (_spdk_bdev_qos_is_iops_rate_limit(i) == true) {
 			min_limit_per_sec = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
@@ -3904,12 +3936,8 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 			min_limit_per_sec = SPDK_BDEV_QOS_MIN_BYTES_PER_SEC;
 		}
 
-		limit_set_complement = limits[i] % min_limit_per_sec;
-		if (limit_set_complement) {
-			SPDK_ERRLOG("Requested rate limit %" PRIu64 " is not a multiple of %" PRIu64 "\n",
-				    limits[i], min_limit_per_sec);
-			limits[i] += min_limit_per_sec - limit_set_complement;
-			SPDK_ERRLOG("Round up the rate limit to %" PRIu64 "\n", limits[i]);
+		if (limits[i] < min_limit_per_sec) {
+			limits[i] = min_limit_per_sec;
 		}
 	}
 
