@@ -297,7 +297,6 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct raid_bdev_io_channel	*raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
 	struct raid_bdev		*raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-	uint8_t				*buf = bdev_io->u.bdev.iovs->iov_base;
 	uint64_t			pd_strip;
 	uint32_t			offset_in_strip;
 	uint64_t			pd_lba;
@@ -321,15 +320,17 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 	 * function and function callback context
 	 */
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
-					    raid_ch->base_channel[pd_idx],
-					    buf, pd_lba, pd_blocks, raid_bdev_io_completion,
-					    bdev_io);
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
+		ret = spdk_bdev_readv_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
 					     raid_ch->base_channel[pd_idx],
-					     buf, pd_lba, pd_blocks, raid_bdev_io_completion,
+					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					     pd_lba, pd_blocks, raid_bdev_io_completion,
 					     bdev_io);
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		ret = spdk_bdev_writev_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
+					      raid_ch->base_channel[pd_idx],
+					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					      pd_lba, pd_blocks, raid_bdev_io_completion,
+					      bdev_io);
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 		assert(0);
@@ -446,15 +447,6 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 	uint64_t			end_strip = 0;
 	int				ret;
 
-	if (bdev_io->u.bdev.iovcnt != 1) {
-		SPDK_ERRLOG("iov vector count is not 1\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
-	}
-
-	/*
-	 * IO parameters used during io split and io completion
-	 */
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_io->ch = ch;
@@ -1299,8 +1291,14 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	raid_bdev->strip_size = (raid_bdev->strip_size * 1024) / blocklen;
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
 	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
-	raid_bdev_gen->optimal_io_boundary = raid_bdev->strip_size;
-	raid_bdev_gen->split_on_optimal_io_boundary = true;
+	if (raid_bdev->num_base_bdevs > 1) {
+		raid_bdev_gen->optimal_io_boundary = raid_bdev->strip_size;
+		raid_bdev_gen->split_on_optimal_io_boundary = true;
+	} else {
+		/* No need to split I/O for single-bdev RAID volumes */
+		raid_bdev_gen->optimal_io_boundary = 0;
+		raid_bdev_gen->split_on_optimal_io_boundary = false;
+	}
 
 	/*
 	 * RAID bdev logic is for striping so take the minimum block count based
