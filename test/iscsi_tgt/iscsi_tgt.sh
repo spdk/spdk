@@ -68,6 +68,7 @@ fi
 
 if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/initiator/initiator.sh
+	run_test suite ./test/iscsi_tgt/bdev_io_wait/bdev_io_wait.sh
 fi
 
 cleanup_veth_interfaces $TEST_TYPE
