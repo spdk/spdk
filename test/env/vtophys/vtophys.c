@@ -145,6 +145,38 @@ mem_map_test(void)
 	return 0;
 }
 
+#define _2MB_OFFSET(ptr)	(((uintptr_t)(ptr)) &  (0x200000 - 1))
+
+static int
+test_mempool_page_contig(void)
+{
+	struct spdk_mempool *mp;
+	uintptr_t vaddr;
+	int count = 64, size = 300 * 1024;
+	int i;
+
+	mp = spdk_mempool_create_page_contig("mp_ut", count, size, 0, SPDK_ENV_SOCKET_ID_ANY);
+	if (mp == NULL) {
+		return 1;
+	}
+
+	i = 0;
+	while (i < count) {
+		vaddr = (uintptr_t)spdk_mempool_get(mp);
+		if ((size_t)size > 0x200000 - _2MB_OFFSET(vaddr)) {
+			printf("Err: mempool element crossing page boundary\n");
+		}
+		i++;
+	}
+
+	if (spdk_mempool_get(mp) != NULL) {
+		printf("Err:  too many available elements in mempool\n");
+		return 1;
+	}
+
+	spdk_mempool_free(mp);
+	return 0;
+}
 
 int
 main(int argc, char **argv)
@@ -172,5 +204,10 @@ main(int argc, char **argv)
 	}
 
 	rc = mem_map_test();
+	if (rc < 0) {
+		return rc;
+	}
+
+	rc = test_mempool_page_contig();
 	return rc;
 }

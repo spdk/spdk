@@ -228,13 +228,83 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 	return (struct spdk_mempool *)mp;
 }
 
-
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
 		    size_t ele_size, size_t cache_size, int socket_id)
 {
 	return spdk_mempool_create_ctor(name, count, ele_size, cache_size, socket_id,
 					NULL, NULL);
+}
+
+#define SHIFT_2MB	21 /* (1 << 21) == 2MB */
+#define VALUE_2MB	(1 << SHIFT_2MB)
+
+struct spdk_mempool *
+spdk_mempool_create_page_contig(const char *name, size_t count,
+				size_t ele_size, size_t cache_size, int socket_id)
+{
+	struct rte_mempool *mp;
+	size_t tmp, total_elt_sz, obj_per_page, pg_num;
+	void *buf;
+	int rc;
+
+	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
+		socket_id = SOCKET_ID_ANY;
+	}
+
+	/* No more than half of all elements can be in cache */
+	tmp = (count / 2) / rte_lcore_count();
+	if (cache_size > tmp) {
+		cache_size = tmp;
+	}
+
+	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE) {
+		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
+	}
+
+	mp = rte_mempool_create_empty(name, count, ele_size, cache_size,
+				      sizeof(void *), socket_id, 0);
+	if (mp == NULL) {
+		return NULL;
+	}
+
+	rc = rte_mempool_set_ops_byname(mp, "ring_mp_mc", NULL);
+	if (rc) {
+		rte_mempool_free(mp);
+		return NULL;
+	}
+
+	total_elt_sz = mp->header_size + mp->elt_size + mp->trailer_size;
+	obj_per_page = VALUE_2MB / total_elt_sz;
+	if (obj_per_page == 0) {
+		rte_mempool_free(mp);
+		return NULL;
+	}
+
+	pg_num = (count + obj_per_page - 1) / obj_per_page;
+
+	buf = rte_malloc(NULL, pg_num << SHIFT_2MB, VALUE_2MB);
+	if (buf == NULL) {
+		rte_mempool_free(mp);
+		return NULL;
+	}
+	memcpy(rte_mempool_get_priv(mp), buf, sizeof(void *));
+
+	tmp = pg_num;
+	while (tmp > 0) {
+		rc = rte_mempool_populate_iova(mp, buf, spdk_vtophys(buf),
+					       VALUE_2MB, NULL, NULL);
+		if (rc <= 0) {
+			rte_free(buf);
+			rte_mempool_free(mp);
+			return NULL;
+		}
+
+		buf += VALUE_2MB;
+		tmp--;
+	}
+
+	return (struct spdk_mempool *)mp;
 }
 
 char *
@@ -244,10 +314,15 @@ spdk_mempool_get_name(struct spdk_mempool *mp)
 }
 
 void
-spdk_mempool_free(struct spdk_mempool *mp)
+spdk_mempool_free(struct spdk_mempool *_mp)
 {
 #if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 1)
-	rte_mempool_free((struct rte_mempool *)mp);
+	struct rte_mempool *mp = (struct rte_mempool *)_mp;
+
+	if (mp->private_data_size == sizeof(void *)) {
+		rte_free(rte_mempool_get_priv(mp));
+	}
+	rte_mempool_free(mp);
 #endif
 }
 
