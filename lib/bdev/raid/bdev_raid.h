@@ -129,13 +129,10 @@ struct raid_bdev {
  */
 struct raid_bdev_io {
 	/* WaitQ entry, used only in waitq logic */
-	struct spdk_bdev_io_wait_entry  waitq_entry;
+	struct spdk_bdev_io_wait_entry	waitq_entry;
 
 	/* Original channel for this IO, used in queuing logic */
-	struct spdk_io_channel          *ch;
-
-	/* current buffer location, used in queueing logic */
-	uint8_t                         *buf;
+	struct spdk_io_channel		*ch;
 };
 
 /*

@@ -287,17 +287,17 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
  * params:
  * bdev_io - parent bdev io
  * start_strip - start strip number of this io
- * buf - pointer to buffer for this io
  * returns:
  * 0 - success
  * non zero - failure
  */
 static int
-raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip, uint8_t *buf)
+raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 {
 	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct raid_bdev_io_channel	*raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
 	struct raid_bdev		*raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+	uint8_t				*buf = bdev_io->u.bdev.iovs->iov_base;
 	uint64_t			pd_strip;
 	uint32_t			offset_in_strip;
 	uint64_t			pd_lba;
@@ -334,12 +334,8 @@ raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip, ui
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 		assert(0);
 	}
-	if (ret != 0) {
-		raid_io->buf = buf;
-		return ret;
-	}
 
-	return 0;
+	return ret;
 }
 
 /*
@@ -425,7 +421,7 @@ raid_bdev_waitq_io_process(void *ctx)
 	 */
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	ret = raid_bdev_submit_children(bdev_io, start_strip, raid_io->buf);
+	ret = raid_bdev_submit_children(bdev_io, start_strip);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
@@ -470,7 +466,7 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 		SPDK_ERRLOG("I/O spans strip boundary!\n");
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
-	ret = raid_bdev_submit_children(bdev_io, start_strip, bdev_io->u.bdev.iovs->iov_base);
+	ret = raid_bdev_submit_children(bdev_io, start_strip);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
