@@ -883,6 +883,12 @@ fs_create_blob_resize_cb(void *ctx, int bserrno)
 	struct spdk_blob *blob = args->op.create.blob;
 	uint64_t length = 0;
 
+	if (bserrno) {
+		args->fn.file_op(args->arg, bserrno);
+		free_fs_request(req);
+		return;
+	}
+
 	spdk_blob_set_xattr(blob, "name", f->name, strlen(f->name) + 1);
 	spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
 
@@ -895,6 +901,12 @@ fs_create_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
+	if (bserrno) {
+		args->fn.file_op(args->arg, bserrno);
+		free_fs_request(req);
+		return;
+	}
+
 	args->op.create.blob = blob;
 	spdk_blob_resize(blob, 1, fs_create_blob_resize_cb, req);
 }
@@ -905,6 +917,12 @@ fs_create_blob_create_cb(void *ctx, spdk_blob_id blobid, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *f = args->file;
+
+	if (bserrno) {
+		args->fn.file_op(args->arg, bserrno);
+		free_fs_request(req);
+		return;
+	}
 
 	f->blobid = blobid;
 	spdk_bs_open_blob(f->fs->bs, blobid, fs_create_blob_open_cb, req);
@@ -1446,6 +1464,12 @@ fs_truncate_resize_cb(void *ctx, int bserrno)
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *file = args->file;
 	uint64_t *length = &args->op.truncate.length;
+
+	if (bserrno) {
+		args->fn.file_op(args->arg, bserrno);
+		free_fs_request(req);
+		return;
+	}
 
 	spdk_blob_set_xattr(file->blob, "length", length, sizeof(*length));
 
@@ -2015,6 +2039,10 @@ __file_extend_done(void *arg, int bserrno)
 {
 	struct spdk_fs_cb_args *args = arg;
 
+	if (bserrno) {
+		args->rc = bserrno;
+	}
+
 	__wake_caller(args);
 }
 
@@ -2023,6 +2051,12 @@ __file_extend_resize_cb(void *_args, int bserrno)
 {
 	struct spdk_fs_cb_args *args = _args;
 	struct spdk_file *file = args->file;
+
+	if (bserrno) {
+		args->rc = bserrno;
+		__wake_caller(args);
+		return;
+	}
 
 	spdk_blob_sync_md(file->blob, __file_extend_done, args);
 }
@@ -2137,6 +2171,9 @@ spdk_file_write(struct spdk_file *file, struct spdk_io_channel *_channel,
 		pthread_spin_unlock(&file->lock);
 		file->fs->send_request(__file_extend_blob, &extend_args);
 		sem_wait(&channel->sem);
+		if (extend_args.rc) {
+			return extend_args.rc;
+		}
 	}
 
 	last = file->last;
