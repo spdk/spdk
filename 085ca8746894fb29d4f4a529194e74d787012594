@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a205b50_9bb1a325",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T17:22:38Z",
+      "side": 1,
+      "message": "the took_action stuff is actually still useful here - it allows us to save an rdtsc call every time through the loop - we just use the rdtsc from line 502/511\n\nbut everything related to took_action should be removed after this point",
+      "revId": "085ca8746894fb29d4f4a529194e74d787012594",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
