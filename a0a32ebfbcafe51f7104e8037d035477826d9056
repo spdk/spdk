@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6ee2e62_b6594952",
+        "filename": "test/iscsi_tgt/bdev_io_wait/bdev.conf.in",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T16:27:42Z",
+      "side": 1,
+      "message": "You can remove this file - Ioat is now disabled by default.",
+      "revId": "a0a32ebfbcafe51f7104e8037d035477826d9056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "161ccca1_1118d8f3",
+        "filename": "test/iscsi_tgt/bdev_io_wait/bdev_io_wait.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-23T16:27:42Z",
+      "side": 1,
+      "message": "you can remove this line since bdev.conf.in is not needed",
+      "revId": "a0a32ebfbcafe51f7104e8037d035477826d9056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
