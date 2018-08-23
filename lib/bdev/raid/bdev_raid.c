@@ -302,70 +302,6 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 /*
  * brief:
- * raid_bdev_send_passthru function sends the bdev_io to the underlying
- * base device by-passing the splitting logic. This is used for optimization
- * when the total number of base devices in a raid bdev is only 1.
- * params:
- * bdev_io - pointer to bdev_io
- * returns:
- * 0 - success
- * non-zero - error
- */
-static int
-raid_bdev_send_passthru(struct spdk_bdev_io *bdev_io)
-{
-	struct   raid_bdev_io_channel *raid_ch;
-	struct   raid_bdev_io         *raid_io;
-	struct   raid_bdev            *raid_bdev;
-	int                           ret;
-
-	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
-	raid_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-
-	if (raid_bdev->base_bdev_info[0].desc == NULL) {
-		SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", 0);
-		assert(0);
-	}
-	raid_io->splits_pending = 0;
-	raid_io->splits_comp_outstanding = 1;
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		ret = spdk_bdev_read_blocks(raid_bdev->base_bdev_info[0].desc,
-					    raid_ch->base_channel[0],
-					    bdev_io->u.bdev.iovs->iov_base,
-					    bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks, raid_bdev_io_completion,
-					    bdev_io);
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[0].desc,
-					     raid_ch->base_channel[0],
-					     bdev_io->u.bdev.iovs->iov_base,
-					     bdev_io->u.bdev.offset_blocks,
-					     bdev_io->u.bdev.num_blocks, raid_bdev_io_completion,
-					     bdev_io);
-	} else {
-		ret = -EINVAL;
-	}
-	if (ret != 0) {
-		/*
-		 * If failed to submit child io to bdev layer then queue the parent
-		 * bdev io with current active split information in the wait queue
-		 * for that core. This will get resume from this point only. Assume
-		 * if 4 splits are required and 2 childs are submitted, then parent
-		 * io is queued to io waitq of this core and it will get resumed and
-		 * try to submit the remaining 3 and 4 childs
-		 */
-		raid_io->splits_pending = 1;
-		raid_io->splits_comp_outstanding = 0;
-		return ret;
-	}
-
-	return 0;
-}
-
-/*
- * brief:
  * raid_bdev_submit_children function is used to split the parent io and submit
  * the childs to bdev layer. bdev layer redirects the childs to appropriate base
  * bdev nvme module
@@ -580,16 +516,11 @@ raid_bdev_waitq_io_process(void *ctx)
 	 * crunch then break the loop and don't try to process other queued IOs.
 	 */
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-	if (raid_bdev->num_base_bdevs > 1) {
-		start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-			    raid_bdev->strip_size_shift;
-		cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_io->splits_pending);
-		ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, cur_strip,
-						raid_io->buf);
-	} else {
-		ret = raid_bdev_send_passthru(bdev_io);
-	}
+	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
+	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+		    raid_bdev->strip_size_shift;
+	cur_strip = start_strip + ((end_strip - start_strip + 1) - raid_io->splits_pending);
+	ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, cur_strip, raid_io->buf);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
@@ -626,21 +557,17 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_io->ch = ch;
-	if (raid_bdev->num_base_bdevs > 1) {
-		start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-		end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-			    raid_bdev->strip_size_shift;
-		/*
-		 * IO parameters used during io split and io completion
-		 */
-		raid_io->splits_pending = (end_strip - start_strip + 1);
-		raid_io->splits_comp_outstanding = 0;
-		raid_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, start_strip,
-						bdev_io->u.bdev.iovs->iov_base);
-	} else {
-		ret = raid_bdev_send_passthru(bdev_io);
-	}
+	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
+	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+		    raid_bdev->strip_size_shift;
+	/*
+	 * IO parameters used during io split and io completion
+	 */
+	raid_io->splits_pending = (end_strip - start_strip + 1);
+	raid_io->splits_comp_outstanding = 0;
+	raid_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	ret = raid_bdev_submit_children(bdev_io, start_strip, end_strip, start_strip,
+					bdev_io->u.bdev.iovs->iov_base);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
