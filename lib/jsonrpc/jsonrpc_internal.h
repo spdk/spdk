@@ -64,6 +64,18 @@ struct spdk_jsonrpc_request {
 
 	uint8_t *send_buf;
 
+	int batch_request_count;
+
+	struct spdk_jsonrpc_request *parent_request;
+
+	pthread_spinlock_t batch_request_lock;
+
+	/* Points to the first child */
+	TAILQ_HEAD(, spdk_jsonrpc_request) children;
+
+	/* Points to the next node in the child list */
+	TAILQ_ENTRY(spdk_jsonrpc_request) child_tailq;
+
 	STAILQ_ENTRY(spdk_jsonrpc_request) link;
 };
 
@@ -108,5 +120,5 @@ int spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json
 
 /* Must be called only from server poll thread */
 void spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request);
-
+void spdk_jsonrpc_free_child_request(struct spdk_jsonrpc_request *child_request);
 #endif
