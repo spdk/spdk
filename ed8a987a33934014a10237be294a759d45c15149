@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7faca2be_7cafa036",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T08:21:55Z",
+      "side": 1,
+      "message": "I moved the whole tests into test/iscsi_tgt/chap/chap.sh.",
+      "parentUuid": "2643412a_2b118796",
+      "revId": "ed8a987a33934014a10237be294a759d45c15149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20aad45e_373d68cf",
         "filename": "test/iscsi_tgt/initiator/initiator.sh",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "c1f7f4d8_fa261e6c",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T08:21:55Z",
+      "side": 1,
+      "message": "Thank you for nice idea. That avoids error.",
+      "parentUuid": "20aad45e_373d68cf",
+      "revId": "ed8a987a33934014a10237be294a759d45c15149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a43a1f91_df445986",
         "filename": "test/iscsi_tgt/initiator/initiator.sh",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2018-08-23T18:50:39Z",
       "side": 1,
       "message": "Initiator",
+      "revId": "ed8a987a33934014a10237be294a759d45c15149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "373ed889_5806bcba",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T08:21:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a43a1f91_df445986",
       "revId": "ed8a987a33934014a10237be294a759d45c15149",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
