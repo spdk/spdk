@@ -424,6 +424,30 @@
     },
     {
       "key": {
+        "uuid": "857edeac_29ec46d8",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-24T08:37:55Z",
+      "side": 1,
+      "message": "\u003e If allocation had failed for \"send_buf\" for any child_request then without this check it leads to segfault.\n\nHmm... you can pass NULL to free() so don\u0027t think this sentence is true. If you have segfault it is somhere else. You can compile SPDK with ASAN (see ./configure --help) to debug this issue.",
+      "parentUuid": "2eb51245_d58bd3df",
+      "range": {
+        "startLine": 376,
+        "startChar": 1,
+        "endLine": 376,
+        "endChar": 25
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15050226_3b9bfc77",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
