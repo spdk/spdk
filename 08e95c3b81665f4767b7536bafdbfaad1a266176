@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d2b0c09_68b81ccd",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T00:14:18Z",
+      "side": 1,
+      "message": "this can be removed too.",
+      "range": {
+        "startLine": 488,
+        "startChar": 1,
+        "endLine": 488,
+        "endChar": 47
+      },
+      "revId": "08e95c3b81665f4767b7536bafdbfaad1a266176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67b14610_a7797aee",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T00:14:18Z",
+      "side": 1,
+      "message": "this is not used anymore too.",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 40
+      },
+      "revId": "08e95c3b81665f4767b7536bafdbfaad1a266176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
