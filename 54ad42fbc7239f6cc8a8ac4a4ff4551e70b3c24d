@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e16754c1_8849a227",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-24T09:45:16Z",
+      "side": 1,
+      "message": "How about instead of having multiple resubmits, since they are doing the same thing, have a single one ?\nThis would be similar to how other modules interact with bdev and have single function with task as argument.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 48
+      },
+      "revId": "54ad42fbc7239f6cc8a8ac4a4ff4551e70b3c24d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a392846_1bb4d159",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-24T09:45:16Z",
+      "side": 1,
+      "message": "I don\u0027t think new line is needed here.",
+      "revId": "54ad42fbc7239f6cc8a8ac4a4ff4551e70b3c24d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecbfe10d_d35a128d",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-24T09:45:16Z",
+      "side": 1,
+      "message": "return missing",
+      "revId": "54ad42fbc7239f6cc8a8ac4a4ff4551e70b3c24d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff32510a_c829717c",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-24T09:45:16Z",
+      "side": 1,
+      "message": "formatting",
+      "range": {
+        "startLine": 114,
+        "startChar": 21,
+        "endLine": 115,
+        "endChar": 21
+      },
+      "revId": "54ad42fbc7239f6cc8a8ac4a4ff4551e70b3c24d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "151a4959_845f25bd",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-24T09:45:16Z",
+      "side": 1,
+      "message": "Remove new line",
+      "revId": "54ad42fbc7239f6cc8a8ac4a4ff4551e70b3c24d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
