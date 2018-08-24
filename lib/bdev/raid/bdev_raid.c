@@ -474,6 +474,105 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 
 /*
  * brief:
+ * raid_bdev_reset_completion is the completion callback for member disk resets
+ * params:
+ * bdev_io - pointer to member disk reset bdev_io
+ * success - true if reset was successful, false if unsuccessful
+ * cb_arg - callback argument (parent reset bdev_io)
+ * returns:
+ * none
+ */
+static void
+raid_bdev_reset_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *parent_io = cb_arg;
+	struct raid_bdev *raid_bdev = (struct raid_bdev *)parent_io->bdev->ctxt;
+	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		raid_io->base_bdev_reset_status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	raid_io->base_bdev_reset_completed++;
+	if (raid_io->base_bdev_reset_completed == raid_bdev->num_base_bdevs) {
+		spdk_bdev_io_complete(parent_io, raid_io->base_bdev_reset_status);
+	}
+}
+
+/*
+ * brief:
+ * _raid_bdev_submit_reset_request_next function submits the next batch of reset requests
+ * to member disks; it will submit as many as possible unless a reset fails with -ENOMEM, in
+ * which case it will queue it for later submission
+ * params:
+ * bdev_io - pointer to parent bdev_io on raid bdev device
+ * returns:
+ * none
+ */
+static void
+_raid_bdev_submit_reset_request_next(void *_bdev_io)
+{
+	struct spdk_bdev_io		*bdev_io = _bdev_io;
+	struct raid_bdev_io		*raid_io;
+	struct raid_bdev		*raid_bdev;
+	struct raid_bdev_io_channel	*raid_ch;
+	int				ret;
+	uint8_t				i;
+
+	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
+
+	while (raid_io->base_bdev_reset_submitted < raid_bdev->num_base_bdevs) {
+		i = raid_io->base_bdev_reset_submitted;
+		ret = spdk_bdev_reset(raid_bdev->base_bdev_info[i].desc,
+				      raid_ch->base_channel[i],
+				      raid_bdev_reset_completion, bdev_io);
+		if (ret == 0) {
+			raid_io->base_bdev_reset_submitted++;
+		} else if (ret == -ENOMEM) {
+			raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[i].bdev;
+			raid_io->waitq_entry.cb_fn = _raid_bdev_submit_reset_request_next;
+			raid_io->waitq_entry.cb_arg = bdev_io;
+			spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[i].bdev,
+						raid_ch->base_channel[i],
+						&raid_io->waitq_entry);
+			return;
+		} else {
+			assert(false);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			return;
+		}
+	}
+}
+
+/*
+ * brief:
+ * _raid_bdev_submit_reset_request function is the submit_request function for
+ * reset requests
+ * params:
+ * ch - pointer to raid bdev io channel
+ * bdev_io - pointer to parent bdev_io on raid bdev device
+ * returns:
+ * none
+ */
+static void
+_raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct raid_bdev_io		*raid_io;
+
+	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	raid_io->ch = ch;
+	raid_io->base_bdev_reset_submitted = 0;
+	raid_io->base_bdev_reset_completed = 0;
+	raid_io->base_bdev_reset_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	_raid_bdev_submit_reset_request_next(bdev_io);
+}
+
+/*
+ * brief:
  * raid_bdev_submit_request function is the submit_request function pointer of
  * raid bdev function table. This is used to submit the io on raid_bdev to below
  * layers.
@@ -505,6 +604,10 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		break;
 
+	case SPDK_BDEV_IO_TYPE_RESET:
+		_raid_bdev_submit_reset_request(ch, bdev_io);
+		break;
+
 	default:
 		SPDK_ERRLOG("submit request, invalid io type %u\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -532,6 +635,7 @@ raid_bdev_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
 	default:
 		return false;

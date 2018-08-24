@@ -217,6 +217,13 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return g_bdev_io_submit_status;
 }
 
+int
+spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return 0;
+}
+
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
