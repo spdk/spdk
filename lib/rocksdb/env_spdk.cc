@@ -133,12 +133,17 @@ SpdkSequentialFile::~SpdkSequentialFile(void)
 Status
 SpdkSequentialFile::Read(size_t n, Slice *result, char *scratch)
 {
-	uint64_t ret;
+	int64_t ret;
 
 	ret = spdk_file_read(mFile, g_sync_args.channel, scratch, mOffset, n);
-	mOffset += ret;
-	*result = Slice(scratch, ret);
-	return Status::OK();
+	if (ret >= 0) {
+		mOffset += ret;
+		*result = Slice(scratch, ret);
+		return Status::OK();
+	} else {
+		errno = -ret;
+		return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
+	}
 }
 
 Status
@@ -173,9 +178,16 @@ SpdkRandomAccessFile::~SpdkRandomAccessFile(void)
 Status
 SpdkRandomAccessFile::Read(uint64_t offset, size_t n, Slice *result, char *scratch) const
 {
-	spdk_file_read(mFile, g_sync_args.channel, scratch, offset, n);
-	*result = Slice(scratch, n);
-	return Status::OK();
+	int64_t rc;
+
+	rc = spdk_file_read(mFile, g_sync_args.channel, scratch, offset, n);
+	if (rc >= 0) {
+		*result = Slice(scratch, n);
+		return Status::OK();
+	} else {
+		errno = -rc;
+		return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
+	}
 }
 
 Status
@@ -230,13 +242,27 @@ public:
 	}
 	virtual Status Sync() override
 	{
-		spdk_file_sync(mFile, g_sync_args.channel);
-		return Status::OK();
+		int rc;
+
+		rc = spdk_file_sync(mFile, g_sync_args.channel);
+		if (!rc) {
+			return Status::OK();
+		} else {
+			errno = -rc;
+			return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
+		}
 	}
 	virtual Status Fsync() override
 	{
-		spdk_file_sync(mFile, g_sync_args.channel);
-		return Status::OK();
+		int rc;
+
+		rc = spdk_file_sync(mFile, g_sync_args.channel);
+		if (!rc) {
+			return Status::OK();
+		} else {
+			errno = -rc;
+			return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
+		}
 	}
 	virtual bool IsSyncThreadSafe() const override
 	{
@@ -264,12 +290,19 @@ public:
 	}
 	virtual Status RangeSync(uint64_t offset, uint64_t nbytes) override
 	{
+		int rc;
+
 		/*
 		 * SPDK BlobFS does not have a range sync operation yet, so just sync
 		 *  the whole file.
 		 */
-		spdk_file_sync(mFile, g_sync_args.channel);
-		return Status::OK();
+		rc = spdk_file_sync(mFile, g_sync_args.channel);
+		if (!rc) {
+			return Status::OK();
+		} else {
+			errno = -rc;
+			return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
+		}
 	}
 	virtual size_t GetUniqueId(char *id, size_t max_size) const override
 	{
@@ -280,10 +313,16 @@ public:
 Status
 SpdkWritableFile::Append(const Slice &data)
 {
-	spdk_file_write(mFile, g_sync_args.channel, (void *)data.data(), mSize, data.size());
-	mSize += data.size();
+	int64_t rc;
 
-	return Status::OK();
+	rc = spdk_file_write(mFile, g_sync_args.channel, (void *)data.data(), mSize, data.size());
+	if (rc >= 0) {
+		mSize += data.size();
+		return Status::OK();
+	} else {
+		errno = -rc;
+		return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
+	}
 }
 
 class SpdkDirectory : public Directory
@@ -461,10 +500,16 @@ public:
 	virtual Status LockFile(const std::string &fname, FileLock **lock) override
 	{
 		std::string name = sanitize_path(fname, mDirectory);
+		int64_t rc;
 
-		spdk_fs_open_file(g_fs, g_sync_args.channel, name.c_str(),
-				  SPDK_BLOBFS_OPEN_CREATE, (struct spdk_file **)lock);
-		return Status::OK();
+		rc = spdk_fs_open_file(g_fs, g_sync_args.channel, name.c_str(),
+				       SPDK_BLOBFS_OPEN_CREATE, (struct spdk_file **)lock);
+		if (!rc) {
+			return Status::OK();
+		} else {
+			errno = -rc;
+			return Status::IOError(name, strerror(errno));
+		}
 	}
 	virtual Status UnlockFile(FileLock *lock) override
 	{
