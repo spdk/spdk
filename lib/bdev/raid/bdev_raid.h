@@ -133,6 +133,11 @@ struct raid_bdev_io {
 
 	/* Original channel for this IO, used in queuing logic */
 	struct spdk_io_channel		*ch;
+
+	/* Used for tracking progress on resets sent to member disks. */
+	uint8_t				base_bdev_reset_submitted;
+	uint8_t				base_bdev_reset_completed;
+	uint8_t				base_bdev_reset_status;
 };
 
 /*
