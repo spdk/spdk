@@ -140,7 +140,7 @@ struct spdk_blob {
 	struct spdk_bs_dev *back_bs_dev;
 
 	/* TODO: The xattrs are mutable, but we don't want to be
-	 * copying them unecessarily. Figure this out.
+	 * copying them unnecessarily. Figure this out.
 	 */
 	struct spdk_xattr_tailq xattrs;
 	struct spdk_xattr_tailq xattrs_internal;

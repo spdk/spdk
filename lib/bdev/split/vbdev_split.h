@@ -52,7 +52,7 @@ int create_vbdev_split(const char *base_bdev_name, unsigned split_count, uint64_
  * Remove all created split bdevs and split config.
  *
  * \param base_bdev_name base bdev name
- * \return 0 on succes or negative errno value.
+ * \return 0 on success or negative errno value.
  */
 int spdk_vbdev_split_destruct(const char *base_bdev_name);
 

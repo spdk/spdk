@@ -232,7 +232,7 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 }
 
 /* We'll just call the base bdev and let it answer however if we were more
- * restrictive for some reason (or less) we could get the repsonse back
+ * restrictive for some reason (or less) we could get the response back
  * and modify according to our purposes.
  */
 static bool
@@ -256,7 +256,7 @@ vbdev_passthru_get_io_channel(void *ctx)
 	struct spdk_io_channel *pt_ch = NULL;
 
 	/* The IO channel code will allocate a channel for us which consists of
-	 * the SPDK cahnnel structure plus the size of our pt_io_channel struct
+	 * the SPDK channel structure plus the size of our pt_io_channel struct
 	 * that we passed in when we registered our IO device. It will then call
 	 * our channel create callback to populate any elements that we need to
 	 * update.
@@ -448,7 +448,7 @@ vbdev_passthru_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_
 	spdk_json_write_object_end(w);
 }
 
-/* When we regsiter our bdev this is how we specify our entry points. */
+/* When we register our bdev this is how we specify our entry points. */
 static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.destruct		= vbdev_passthru_destruct,
 	.submit_request		= vbdev_passthru_submit_request,
@@ -507,7 +507,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		}
 		pt_node->pt_bdev.product_name = "passthru";
 
-		/* Copy some properties from the underying base bdev. */
+		/* Copy some properties from the underlying base bdev. */
 		pt_node->pt_bdev.write_cache = bdev->write_cache;
 		pt_node->pt_bdev.need_aligned_buffer = bdev->need_aligned_buffer;
 		pt_node->pt_bdev.optimal_io_boundary = bdev->optimal_io_boundary;

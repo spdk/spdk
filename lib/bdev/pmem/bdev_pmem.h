@@ -46,7 +46,7 @@ typedef void (*spdk_delete_pmem_complete)(void *cb_arg, int bdeverrno);
  * \param bdev output parameter for bdev when operation is successful.
  * \return 0 on success.
  *         -EIO if pool check failed
- *         -EINVAL if input paramteres check failed
+ *         -EINVAL if input parameters check failed
  *         -ENOMEM if buffer cannot be allocated
  */
 int spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev **bdev);

@@ -1699,7 +1699,7 @@ spdk_iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 }
 
 /*
- * The function which is used to initalize the internal response data
+ * The function which is used to initialize the internal response data
  * structure of iscsi login function.
  * return:
  * 0, success;
@@ -3914,7 +3914,7 @@ spdk_iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	return rc;
 }
 
-/* This fucntion is used to refree the pdu when it is acknowledged */
+/* This function is used to refree the pdu when it is acknowledged */
 static void
 spdk_remove_acked_pdu(struct spdk_iscsi_conn *conn,
 		      uint32_t ExpStatSN)
