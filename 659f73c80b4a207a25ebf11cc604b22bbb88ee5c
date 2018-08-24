@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2536bcca_7709693a",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-24T22:02:16Z",
+      "side": 1,
+      "message": "I think this ends up working out, but the third parameter here is supposed to be the current time, and the next expiration time is calculated by _spdk_poller_insert_timer. It would probably make more sense to put the while loop inside _spdk_poller_insert_timer instead.",
+      "revId": "659f73c80b4a207a25ebf11cc604b22bbb88ee5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
