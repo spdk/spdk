@@ -34,6 +34,24 @@
       "revId": "2eae2a8ea88d1537efbe9b60fd506dc8cb9915a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d72e7ec2_ad129c51",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 907,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-24T21:25:53Z",
+      "side": 1,
+      "message": "Oh - you are right.  Thanks for spelling this out for me.\n\nI think this patch is still an improvement as-is over what is there today.  It is not exactly clear to me what we should do if we cannot _create_lvol_disk() fails during the examine process.  Probably when bdev \u003d\u003d NULL it should goto end - then at least we can move forward with whatever lvols we were able to create bdevs for.",
+      "parentUuid": "52c0ff42_e519ad4c",
+      "revId": "2eae2a8ea88d1537efbe9b60fd506dc8cb9915a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
