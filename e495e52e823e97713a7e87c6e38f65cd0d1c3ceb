@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cc09691_1d7e4c6d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3236,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-24T20:55:56Z",
+      "side": 1,
+      "message": "I think this just shifts the problem elsewhere. If all of the descriptors get closed before this callback executes, the bdev could have been freed. That likely means whatever desc-\u003eremove_ctx was pointing at is also invalid, and the user isn\u0027t expecting to get notified of a removal after having closed the descriptor.\n\nIn spdk_bdev_close(), if desc-\u003eremove_scheduled is true, don\u0027t remove it from the open_descs list or free the memory. Instead, mark a new flag on the descriptor named \u0027closed\u0027 equal to true. Then when _remove_notify actually executes, set desc-\u003eremove_scheduled back to false and if closed is true, call spdk_bdev_close().\n\nI think that will work out all of the race conditions.",
+      "revId": "e495e52e823e97713a7e87c6e38f65cd0d1c3ceb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
