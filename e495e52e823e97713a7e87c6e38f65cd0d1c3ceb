@@ -16,6 +16,24 @@
       "revId": "e495e52e823e97713a7e87c6e38f65cd0d1c3ceb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef432a90_58506fbe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3236,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-24T21:13:50Z",
+      "side": 1,
+      "message": "This is a great catch.  Ben and I just chatted on this.  I agree if the user has closed the descriptor, we *must* not notify the user of a hotplug.\n\nBut I think we should still remove the descriptor from the list here - just don\u0027t free it.  Add and set the \"closed\" flag like Ben suggested.  Then in _remove_notify:\n\nif (desc-\u003eclosed) {\n  free(desc);\nelse {\n  desc-\u003eremove_cb(desc-\u003eremove_ctx);\n}",
+      "parentUuid": "3cc09691_1d7e4c6d",
+      "revId": "e495e52e823e97713a7e87c6e38f65cd0d1c3ceb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
