@@ -58,7 +58,7 @@
 #define NVME_RDMA_RW_BUFFER_SIZE 131072
 
 /*
-NVME RDMA qpair Resource Defaults
+NVME RDMA qpair Resouce Defaults
  */
 #define NVME_RDMA_DEFAULT_TX_SGE		2
 #define NVME_RDMA_DEFAULT_RX_SGE		1
@@ -1137,7 +1137,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 
 	nvme_ctrlr_init_cap(&rctrlr->ctrlr, &cap, &vs);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "successfully initialized the nvmf ctrlr\n");
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "succesully initialized the nvmf ctrlr\n");
 	return &rctrlr->ctrlr;
 }
 

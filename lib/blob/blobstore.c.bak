@@ -2678,7 +2678,7 @@ _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 		 * This case needs to be looked at further.  Same problem
 		 *  exists with applications that rely on explicit blob
 		 *  iteration.  We should just skip the blob that failed
-		 *  to load and continue on to the next one.
+		 *  to load and coontinue on to the next one.
 		 */
 		SPDK_ERRLOG("Error in iterating blobs\n");
 	}
@@ -3223,7 +3223,7 @@ _spdk_bs_dump_finish(spdk_bs_sequence_t *seq, struct spdk_bs_dump_ctx *ctx, int 
 
 	/*
 	 * We need to defer calling spdk_bs_call_cpl() until after
-	 * dev destruction, so tuck these away for later use.
+	 * dev destuction, so tuck these away for later use.
 	 */
 	ctx->bs->unload_err = bserrno;
 	memcpy(&ctx->bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));
@@ -3760,7 +3760,7 @@ _spdk_bs_unload_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 
 	/*
 	 * We need to defer calling spdk_bs_call_cpl() until after
-	 * dev destruction, so tuck these away for later use.
+	 * dev destuction, so tuck these away for later use.
 	 */
 	ctx->bs->unload_err = bserrno;
 	memcpy(&ctx->bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));

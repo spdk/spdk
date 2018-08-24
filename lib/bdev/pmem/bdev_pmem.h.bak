@@ -31,38 +31,34 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_VBDEV_SPLIT_H
-#define SPDK_VBDEV_SPLIT_H
+#ifndef SPDK_BDEV_PMEM_H
+#define SPDK_BDEV_PMEM_H
 
-#include "spdk/bdev_module.h"
+#include "spdk/bdev.h"
 
-/**
- * Add given disk name to split config. If bdev with \c base_bdev_name name
- * exist the split bdevs will be created right away, if not the split bdevs will
- * be created when base bdev became be available (during examination process).
- *
- * \param base_bdev_name Base bdev name
- * \param split_count number of splits to be created.
- * \param split_size_mb size of each bdev. If 0 use base bdev size / split_count
- * \return value >= 0 - number of splits create. Negative errno code on error.
- */
-int create_vbdev_split(const char *base_bdev_name, unsigned split_count, uint64_t split_size_mb);
+typedef void (*spdk_delete_pmem_complete)(void *cb_arg, int bdeverrno);
 
 /**
- * Remove all created split bdevs and split config.
+ * Create new pmem bdev.
  *
- * \param base_bdev_name base bdev name
- * \return 0 on success or negative errno value.
+ * \param pmem_file Pointer to pmem pool file.
+ * \param name Bdev name.
+ * \param bdev output parameter for bdev when operation is successful.
+ * \return 0 on success.
+ *         -EIO if pool check failed
+ *         -EINVAL if input paramteres check failed
+ *         -ENOMEM if buffer cannot be allocated
  */
-int spdk_vbdev_split_destruct(const char *base_bdev_name);
+int spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev **bdev);
 
 /**
- * Get the spdk_bdev_part_base associated with the given split base_bdev.
+ * Delete pmem bdev.
  *
- * \param base_bdev Bdev to get the part_base from
- * \return pointer to the associated spdk_bdev_part_base
- * \return NULL if the base_bdev is not being split by the split module
+ * \param bdev Pointer to pmem bdev.
+ * \param cb_fn Function to call after deletion.
+ * \param cb_arg Argument to pass to cb_fn.
  */
-struct spdk_bdev_part_base *spdk_vbdev_split_get_part_base(struct spdk_bdev *base_bdev);
+void spdk_delete_pmem_disk(struct spdk_bdev *bdev, spdk_delete_pmem_complete cb_fn,
+			   void *cb_arg);
 
-#endif // SPDK_VBDEV_SPLIT_H
+#endif /* SPDK_BDEV_PMEM_H */

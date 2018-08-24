@@ -147,7 +147,7 @@ struct spdk_bdev_qos {
 	/** Submitted byte in one timeslice (e.g., 1ms) */
 	uint64_t byte_submitted_this_timeslice;
 
-	/** Poller that processes queued I/O commands each time slice. */
+	/** Polller that processes queued I/O commands each time slice. */
 	struct spdk_poller *poller;
 };
 
@@ -172,7 +172,7 @@ struct spdk_bdev_mgmt_channel {
 
 /*
  * Per-module (or per-io_device) data. Multiple bdevs built on the same io_device
- * will queue here their IO that awaits retry. It makes it possible to retry sending
+ * will queue here their IO that awaits retry. It makes it posible to retry sending
  * IO to one bdev after IO from other bdev completes.
  */
 struct spdk_bdev_shared_resource {

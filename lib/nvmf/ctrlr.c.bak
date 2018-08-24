@@ -866,7 +866,7 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 		      req->cmd->nvme_cmd.cdw11);
 
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
-	/* verify that the controller is ready to process commands */
+	/* verify that the contoller is ready to process commands */
 	if (count > 1) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Queue pairs already active!\n");
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;

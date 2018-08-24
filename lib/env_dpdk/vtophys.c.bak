@@ -389,7 +389,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 					}
 				}
 			}
-			/* Since PCI paddr can break the 2MiB physical alignment skip this check for that. */
+			/* Since PCI paddr can break the 2MiB physical alginment skip this check for that. */
 			if (!pci_phys && (paddr & MASK_2MB)) {
 				DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
 				return -EINVAL;

@@ -344,7 +344,7 @@ nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 		}
 	case SPDK_NVME_SCT_PATH:
 		/*
-		 * Per NVMe TP 4028 (Path and Transport Error Enhancements), retries should be
+		 * Per NVMe TP 4028 (Path and Transport Error Enhancments), retries should be
 		 * based on the setting of the DNR bit for Internal Path Error
 		 */
 		switch ((int)cpl->status.sc) {
