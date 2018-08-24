@@ -2060,20 +2060,30 @@ error:
 	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 }
 
+/* Clean up only the states that can be aborted at any time */
 static void
-_spdk_nvmf_rdma_qp_cleanup_all_states(struct spdk_nvmf_rdma_qpair *rqpair)
+_spdk_nvmf_rdma_qp_cleanup_safe_states(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
 
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_NEW);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING);
-
-	/* First wipe the requests waiting for buffer from the global list */
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[RDMA_REQUEST_STATE_NEED_BUFFER], link, req_tmp) {
 		TAILQ_REMOVE(&rqpair->ch->pending_data_buf_queue, rdma_req, link);
 	}
-	/* Then drain the requests through the rdma queue */
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_NEED_BUFFER);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_READY_TO_EXECUTE);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_EXECUTED);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_READY_TO_COMPLETE);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_COMPLETED);
+}
+
+/* This cleans up all memory. It is only safe to use if the rest of the software stack
+ * has been shut down */
+static void
+_spdk_nvmf_rdma_qp_cleanup_all_states(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	_spdk_nvmf_rdma_qp_cleanup_safe_states(rqpair);
 
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_EXECUTING);
 	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
@@ -2096,7 +2106,34 @@ _spdk_nvmf_rdma_qp_error(void *arg)
 	if (spdk_nvmf_qpair_is_admin_queue(&rqpair->qpair)) {
 		spdk_nvmf_ctrlr_abort_aer(rqpair->qpair.ctrlr);
 	}
-	_spdk_nvmf_rdma_qp_cleanup_all_states(rqpair);
+
+	_spdk_nvmf_rdma_qp_cleanup_safe_states(rqpair);
+
+	/* Attempt recovery. This will exit without recovering if I/O requests
+	 * are still outstanding */
+	spdk_nvmf_rdma_qpair_recover(rqpair);
+}
+
+static void
+_spdk_nvmf_rdma_qp_last_wqe(void *arg)
+{
+	struct spdk_nvmf_rdma_qpair	*rqpair = arg;
+	enum ibv_qp_state		state;
+
+	state = rqpair->ibv_attr.qp_state;
+	if (state != IBV_QPS_ERR) {
+		/* Error was already recovered */
+		return;
+	}
+
+	/* Clear out the states that are safe to clear any time, plus the
+	 * RDMA data transfer states. */
+	_spdk_nvmf_rdma_qp_cleanup_safe_states(rqpair);
+
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
+	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_COMPLETING);
+
 	spdk_nvmf_rdma_qpair_recover(rqpair);
 }
 
@@ -2123,11 +2160,12 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
-	case IBV_EVENT_QP_LAST_WQE_REACHED:
-		/* This call is thread-safe. Immediately update the IBV state on error notification. */
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
-
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
+		break;
+	case IBV_EVENT_QP_LAST_WQE_REACHED:
+		spdk_nvmf_rdma_update_ibv_state(rqpair);
+		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_last_wqe, rqpair);
 		break;
 	case IBV_EVENT_SQ_DRAINED:
 		/* This event occurs frequently in both error and non-error states.
