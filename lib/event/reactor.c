@@ -534,22 +534,26 @@ _spdk_reactor_run(void *arg)
 			}
 
 			if (now >= poller->next_run_tick) {
-				uint64_t tmp_timer_tsc;
-
 				TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
 				poller->state = SPDK_POLLER_STATE_RUNNING;
 				rc = poller->fn(poller->arg);
-				/* Save the tsc value from before poller->fn was executed. We want to
-				 * use the current time for idle/busy tsc value accounting, but want to
-				 * use the older time to reinsert to the timer poller below. */
-				tmp_timer_tsc = now;
 				now = spdk_get_ticks();
 				spdk_reactor_add_tsc_stats(reactor, rc, now);
 				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 					free(poller);
 				} else {
 					poller->state = SPDK_POLLER_STATE_WAITING;
-					_spdk_poller_insert_timer(reactor, poller, tmp_timer_tsc);
+					/*
+					 * Use poller->next_run_tick to ensure the timer gets scheduled
+					 *  at the expected frequency.  Add a check to ensure the timer
+					 *  we aren't a full timer period behind though.
+					 */
+					if (poller->next_run_tick + poller->period_ticks < now) {
+						SPDK_ERRLOG("poller with period_ticks %" PRIu64
+							    " is late - skipping one period\n", poller->period_ticks);
+						poller->next_run_tick += poller_period_ticks;
+					}
+					_spdk_poller_insert_timer(reactor, poller, poller->next_run_tick);
 				}
 				took_action = true;
 			}
