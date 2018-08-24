@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "feb9fe3b_71d9dfbf",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-24T20:27:07Z",
+      "side": 1,
+      "message": "set_state",
+      "revId": "59975807864d13d98a0ab540342fd3e9eefae820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
