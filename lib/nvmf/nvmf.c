@@ -80,6 +80,16 @@ struct nvmf_qpair_disconnect_many_ctx {
 	void *cpl_ctx;
 };
 
+static void
+spdk_nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair,
+			    enum spdk_nvmf_qpair_state state)
+{
+	assert(qpair != NULL);
+	assert(qpair->group->thread == spdk_get_thread());
+
+	qpair->state = state;
+}
+
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 {
@@ -615,7 +625,7 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 
 	TAILQ_INIT(&qpair->outstanding);
 	qpair->group = group;
-	qpair->state = SPDK_NVMF_QPAIR_ACTIVATING;
+	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ACTIVATING);
 
 	TAILQ_INSERT_TAIL(&group->qpairs, qpair, link);
 
@@ -627,9 +637,9 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	}
 
 	if (rc == 0) {
-		qpair->state = SPDK_NVMF_QPAIR_ACTIVE;
+		spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ACTIVE);
 	} else {
-		qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
+		spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_INACTIVE);
 	}
 
 	return rc;
@@ -671,12 +681,12 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
+	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
+	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_INACTIVE);
+	qpair_ctx->qid = qpair->qid;
+
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
 	qpair->group = NULL;
-
-	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
-	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
-	qpair_ctx->qid = qpair->qid;
 
 	spdk_nvmf_transport_qpair_fini(qpair);
 
@@ -712,7 +722,7 @@ _spdk_nvmf_qpair_deactivate(void *ctx)
 	}
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
-	qpair->state = SPDK_NVMF_QPAIR_DEACTIVATING;
+	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_DEACTIVATING);
 
 	/* Check for outstanding I/O */
 	if (!TAILQ_EMPTY(&qpair->outstanding)) {
