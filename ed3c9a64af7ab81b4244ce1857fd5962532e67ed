@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3e9e1b9_5af252da",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-24T08:12:07Z",
+      "side": 1,
+      "message": "Add one additional check? like \"args-\u003erc ? args-\u003erc : bserrno\"\n\n\nIf there is no error in fs_create_blob_resize_cb, but spdk_blob_close has, the bserrno would be missing.",
+      "revId": "ed3c9a64af7ab81b4244ce1857fd5962532e67ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
