@@ -1243,6 +1243,12 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 	assert(rdma_req->state != RDMA_REQUEST_STATE_FREE);
 
+	/* If the queue pair is in an error state, force the request to the completed state
+	 * to release resources. */
+	if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR) {
+		rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+	}
+
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
 		prev_state = rdma_req->state;
