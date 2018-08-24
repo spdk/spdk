@@ -243,6 +243,8 @@ struct spdk_bdev_desc {
 	void				*remove_ctx;
 	bool				remove_scheduled;
 	bool				write;
+	bool				closed;
+	bool				from_remove_notify;
 	TAILQ_ENTRY(spdk_bdev_desc)	link;
 };
 
@@ -3201,7 +3203,12 @@ _remove_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
 
-	desc->remove_cb(desc->remove_ctx);
+	if (desc->closed) {
+		spdk_bdev_close(desc);
+	} else {
+		desc->from_remove_notify = true;
+		desc->remove_cb(desc->remove_ctx);
+	}
 }
 
 void
@@ -3305,8 +3312,14 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 
-	TAILQ_REMOVE(&bdev->internal.open_descs, desc, link);
-	free(desc);
+	if (!desc->remove_scheduled || desc->closed || desc->from_remove_notify) {
+		TAILQ_REMOVE(&bdev->internal.open_descs, desc, link);
+		free(desc);
+	} else {
+		desc->closed = true;
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		return;
+	}
 
 	/* If no more descriptors, kill QoS channel */
 	if (bdev->internal.qos && TAILQ_EMPTY(&bdev->internal.open_descs)) {
