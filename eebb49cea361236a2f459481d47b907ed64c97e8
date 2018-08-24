@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f4e5ed47_36d90912",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 1928,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T00:36:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9733d21d_55049cf8",
+      "revId": "eebb49cea361236a2f459481d47b907ed64c97e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "728dbfdc_d383c1a5",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 12
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "7b7fffdf_d7f7e199",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 1936,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T00:36:21Z",
+      "side": 1,
+      "message": "I add optional column.",
+      "parentUuid": "728dbfdc_d383c1a5",
+      "revId": "eebb49cea361236a2f459481d47b907ed64c97e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "694ddbe8_a1df78c2",
         "filename": "lib/iscsi/iscsi_rpc.c",
         "patchSetId": 12
@@ -47,6 +83,52 @@
       "writtenOn": "2018-08-23T18:26:30Z",
       "side": 1,
       "message": "jsonrpc.md says the array is required and must be non-empty - should the \u0027true\u0027 here be removed since it is not optional?",
+      "revId": "eebb49cea361236a2f459481d47b907ed64c97e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53fa0c72_5195c3fe",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T00:36:21Z",
+      "side": 1,
+      "message": "change to \u0027-c\u0027, \u0027--secrets\u0027",
+      "range": {
+        "startLine": 561,
+        "startChar": 19,
+        "endLine": 561,
+        "endChar": 28
+      },
+      "revId": "eebb49cea361236a2f459481d47b907ed64c97e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0b9d8e2_899f2550",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T00:36:21Z",
+      "side": 1,
+      "message": "add required\u003dFalse.",
+      "range": {
+        "startLine": 563,
+        "startChar": 92,
+        "endLine": 563,
+        "endChar": 93
+      },
       "revId": "eebb49cea361236a2f459481d47b907ed64c97e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
