@@ -497,6 +497,8 @@ _spdk_reactor_run(void *arg)
 	now = spdk_get_ticks();
 	reactor->tsc_last = now;
 
+	SPDK_ERRLOG("max_delay_us = %d\n", (int)reactor->max_delay_us);
+
 	while (1) {
 		bool took_action = false;
 

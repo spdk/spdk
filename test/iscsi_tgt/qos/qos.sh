@@ -10,7 +10,7 @@ function check_qos_works_well() {
 	local iops_limit=$2/1000
 	local retval=0
 
-	$fio_py 8192 64 randread 5 > fio.txt
+	taskset 0x2 $fio_py 8192 64 randread 5 > fio.txt
 
 	local read_iops=$(cat fio.txt | grep "\(read: IOPS=\|write: IOPS=\)" |
 		awk -F, '{print $1}' | awk -F= '{print $2}' | tr -d [k])
