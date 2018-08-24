@@ -2477,10 +2477,40 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 
 	for (i = 0; i < reaped; i++) {
+		/* Handle error conditions */
 		if (wc[i].status) {
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on CQ %p, Request 0x%lu (%d): %s\n",
 				      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
+
+			switch (wc[i].opcode) {
+			case IBV_WC_SEND:
+			case IBV_WC_RDMA_WRITE:
+			case IBV_WC_RDMA_READ:
+				rdma_req = get_rdma_req_from_wc(&wc[i]);
+				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+				/* We're going to kill the connection, so force the request into
+				 * the completed state. */
+				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
+				break;
+			case IBV_WC_RECV:
+				rdma_recv = get_rdma_recv_from_wc(&wc[i]);
+				rqpair = rdma_recv->qpair;
+
+				/* Dump this into the incoming queue. This gets cleaned up when
+				 * the queue pair disconnects. */
+				TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
+			default:
+				SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
+				continue;
+			}
+
+			/* Begin disconnecting the qpair. This is ok to call multiple times if lots of
+			 * errors occur on the same qpair in the same ibv_poll_cq batch. */
+			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+
 			continue;
 		}
 
@@ -2490,6 +2520,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			assert(spdk_nvmf_rdma_req_is_completing(rdma_req));
+
 			spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
 			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 
