@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3889331_6b3b9cc3",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-24T21:04:18Z",
+      "side": 0,
+      "message": "Hi Kunal,\n\nAfter this patch series goes in, I will run some benchmarks with a single disk RAID-0 and see if we need to add back in a special case for it.  I really need to remove this function here though to simplify the rest of this patch series.\n\nThanks,\n\n-Jim",
+      "revId": "6fa48bbf6212157a6fd5a925de13a53846c02844",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
