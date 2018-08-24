@@ -497,6 +497,8 @@ _spdk_reactor_run(void *arg)
 	now = spdk_get_ticks();
 	reactor->tsc_last = now;
 
+	SPDK_ERRLOG("max_delay_us = %d\n", (int)reactor->max_delay_us);
+
 	while (1) {
 		bool took_action = false;
 
@@ -547,6 +549,7 @@ _spdk_reactor_run(void *arg)
 					 */
 					while (poller->next_run_tick + poller->period_ticks < now) {
 						poller->missed_periods++;
+						SPDK_ERRLOG("missed a timer period %ju\n", poller->period_ticks);
 						poller->next_run_tick += poller->period_ticks;
 					}
 					_spdk_poller_insert_timer(reactor, poller, poller->next_run_tick);
