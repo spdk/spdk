@@ -70,6 +70,8 @@ if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/initiator/initiator.sh
 fi
 
+run_test suite ./test/iscsi_tgt/chap/chap.sh
+
 cleanup_veth_interfaces $TEST_TYPE
 trap - SIGINT SIGTERM EXIT
 timing_exit iscsi_tgt
