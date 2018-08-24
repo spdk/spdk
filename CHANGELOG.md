@@ -22,6 +22,9 @@ does not at this time confer any SPDK ABI compatibility claims.
 
 spdk_bdev_alias_del_all() was added to delete all alias from block device.
 
+Add the restriction that spdk_bdev_open() and spdk_bdev_close() must be
+called on the same thread.
+
 ### iscsi
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
