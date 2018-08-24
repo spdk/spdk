@@ -343,8 +343,8 @@ function killprocess() {
 
 function iscsicleanup() {
 	echo "Cleaning up iSCSI connection"
-	iscsiadm -m node --logout || true
-	iscsiadm -m node -o delete || true
+	iscsiadm -m node --logout -d 8 || true
+	iscsiadm -m node -o delete -d 8 || true
 }
 
 function stop_iscsi_service() {
