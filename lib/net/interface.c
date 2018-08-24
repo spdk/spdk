@@ -351,7 +351,7 @@ static int netlink_addr_msg(uint32_t ifc_idx, uint32_t ip_address, uint32_t crea
 	la.nl_pid = getpid();
 	bind(fd, (struct sockaddr *) &la, sizeof(la));
 
-	/* initalize RTNETLINK request buffer. */
+	/* initialize RTNETLINK request buffer. */
 	bzero(&req, sizeof(req));
 
 	/* compute the initial length of the service request. */

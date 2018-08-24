@@ -51,7 +51,7 @@
 #include "spdk_internal/log.h"
 
 /*
- RDMA Connection Resouce Defaults
+ RDMA Connection Resource Defaults
  */
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2

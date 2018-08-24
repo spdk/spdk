@@ -503,7 +503,7 @@ static const char *target_declarative_params[] = {
 	NULL,
 };
 
-/* This function is used to contruct the data from the special param (e.g.,
+/* This function is used to construct the data from the special param (e.g.,
  * MaxRecvDataSegmentLength)
  * return:
  * normal: the total len of the data
@@ -598,7 +598,7 @@ spdk_iscsi_special_param_construction(struct spdk_iscsi_conn *conn,
 /**
  * spdk_iscsi_construct_data_from_param:
  * To construct the data which will be returned to the initiator
- * return: length of the negotiated data, -1 inidicates error;
+ * return: length of the negotiated data, -1 indicates error;
  */
 static int
 spdk_iscsi_construct_data_from_param(struct iscsi_param *param, char *new_val,

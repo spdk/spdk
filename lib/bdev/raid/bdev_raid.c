@@ -557,7 +557,7 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 /*
  * brief:
  * raid_bdev_waitq_io_process function is the callback function
- * registerd by raid bdev module to bdev when bdev_io was unavailable.
+ * registered by raid bdev module to bdev when bdev_io was unavailable.
  * params:
  * ctx - pointer to raid_bdev_io
  * returns:
