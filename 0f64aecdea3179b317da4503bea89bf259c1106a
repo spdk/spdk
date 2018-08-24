@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c73bd2c_4781628b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T13:33:05Z",
+      "side": 1,
+      "message": "Oops, I forgot to remove this... I\u0027ll do next monday.",
+      "range": {
+        "startLine": 531,
+        "startChar": 4,
+        "endLine": 531,
+        "endChar": 111
+      },
+      "revId": "0f64aecdea3179b317da4503bea89bf259c1106a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a13fea21_5928954a",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-24T13:33:05Z",
+      "side": 1,
+      "message": "I forgot to remove this... I\u0027ll do next monday.",
+      "range": {
+        "startLine": 43,
+        "startChar": 7,
+        "endLine": 43,
+        "endChar": 61
+      },
+      "revId": "0f64aecdea3179b317da4503bea89bf259c1106a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
