@@ -243,9 +243,12 @@ struct spdk_bdev_channel {
 
 struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
+	struct spdk_thread		*thread;
 	spdk_bdev_remove_cb_t		remove_cb;
 	void				*remove_ctx;
 	bool				remove_scheduled;
+	bool				remove_notified;
+	bool				closed;
 	bool				write;
 	TAILQ_ENTRY(spdk_bdev_desc)	link;
 };
@@ -3185,7 +3188,12 @@ _remove_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
 
-	desc->remove_cb(desc->remove_ctx);
+	if (desc->closed) {
+		free(desc);
+	} else {
+		desc->remove_notified = true;
+		desc->remove_cb(desc->remove_ctx);
+	}
 }
 
 void
@@ -3193,18 +3201,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 {
 	struct spdk_bdev_desc	*desc, *tmp;
 	bool			do_destruct = true;
-	struct spdk_thread	*thread;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
-
-	thread = spdk_get_thread();
-	if (!thread) {
-		/* The user called this from a non-SPDK thread. */
-		if (cb_fn != NULL) {
-			cb_fn(cb_arg, -ENOTSUP);
-		}
-		return;
-	}
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 
@@ -3217,14 +3215,14 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 			do_destruct = false;
 			/*
 			 * Defer invocation of the remove_cb to a separate message that will
-			 *  run later on this thread.  This ensures this context unwinds and
+			 *  run later on its thread.  This ensures this context unwinds and
 			 *  we don't recursively unregister this bdev again if the remove_cb
 			 *  immediately closes its descriptor.
 			 */
 			if (!desc->remove_scheduled) {
 				/* Avoid scheduling removal of the same descriptor multiple times. */
 				desc->remove_scheduled = true;
-				spdk_thread_send_msg(thread, _remove_notify, desc);
+				spdk_thread_send_msg(desc->thread, _remove_notify, desc);
 			}
 		}
 	}
@@ -3271,6 +3269,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	desc->remove_cb = remove_cb;
 	desc->remove_ctx = remove_ctx;
 	desc->write = write;
+	desc->thread = spdk_get_thread();
 	*_desc = desc;
 
 	pthread_mutex_unlock(&bdev->internal.mutex);
@@ -3289,8 +3288,16 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 
+	if (desc->thread) {
+		assert(spdk_get_thread() == desc->thread);
+	}
+
 	TAILQ_REMOVE(&bdev->internal.open_descs, desc, link);
-	free(desc);
+	if (desc->remove_scheduled && !desc->remove_notified) {
+		desc->closed = true;
+	} else {
+		free(desc);
+	}
 
 	/* If no more descriptors, kill QoS channel */
 	if (bdev->internal.qos && TAILQ_EMPTY(&bdev->internal.open_descs)) {
