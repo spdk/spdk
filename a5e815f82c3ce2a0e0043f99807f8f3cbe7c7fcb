@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0462460c_06583035",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-24T21:50:40Z",
+      "side": 1,
+      "message": "You can actually go much larger than 2 here to support more scattered memory on the host system. When sending in-capsule data the RDMA NIC will gather it and transmit it over the wire immediately following the command, so the NVMe command in the NVMe-oF capsule will only end up needing a single SGL element.",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a1d751a_adbb884d",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-24T21:50:40Z",
+      "side": 1,
+      "message": "return -EINVAL",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c045b35_92d60ffe",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-24T21:50:40Z",
+      "side": 1,
+      "message": "This initiator needs to be able to connect to other targets than SPDK, so we\u0027ll have to appropriately handle ICDOFF. One way to do it for now is to not send in-capsule data if ICDOFF is greater than 0.",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "744cfad4_e55deb10",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-24T21:50:40Z",
+      "side": 1,
+      "message": "The maximum in-capsule data size is available in ctrlr-\u003ecdata.nvmf_specific.ioccsz.\n\nYou can actually do an in-capsule data send for both of the payload types (NVME_PAYLOAD_TYPE_CONTIG and NVME_PAYLOAD_TYPE_SGL) if the total size of the data is smaller than the maximum in capsule data size allowed. The payload type is describing the layout of memory on the host (initiator) system. That will determine how many RDMA SGL elements you\u0027ll need in order to do an ibv_post_send(). Since you\u0027d be sending the data in-capsule, the resulting NVMe-oF command will always just contain a single SGL element describing the data, which appears in its entirety right after the command when the target receives it.",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4524f70c_e74ba697",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1445,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-24T21:50:40Z",
+      "side": 1,
+      "message": "You don\u0027t need to change this value - it can remain 1. There are two layers of scatter gather lists involved. There\u0027s the RDMA scatter gather lists and the NVMe-oF scatter gather lists. To support in-capsule data we\u0027ll need to use an RDMA sgl with two elements (command and payload) to do an ibv_post_send(). However, at the NVMe-oF level the command arrives in an RDMA recv and then contains only 1 SGL element describing the location of the data. This number is the number in the NVMe-oF command, so can remain 1.",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
