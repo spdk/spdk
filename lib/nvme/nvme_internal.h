@@ -107,6 +107,13 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_QUIRK_OCSSD 0x80
 
+/*
+ * The controller has an Intel vendor ID but does not support Intel vendor-specific
+ * log pages.  This is primarily for QEMU emulated SSDs which report an Intel vendor
+ * ID but do not support these log pages.
+ */
+#define NVME_INTEL_QUIRK_NO_LOG_PAGES 0x100
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)
