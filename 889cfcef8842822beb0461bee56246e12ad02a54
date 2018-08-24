@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "fdc0b852_a274596d",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55522d29_f8a40ad8",
+      "range": {
+        "startLine": 201,
+        "startChar": 3,
+        "endLine": 201,
+        "endChar": 19
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "349ab694_44f1fe94",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
@@ -94,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "3aae645e_64ddc8fa",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e14935fc_67238c02",
+      "range": {
+        "startLine": 209,
+        "startChar": 3,
+        "endLine": 214,
+        "endChar": 4
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb5b0bde_a30e43b9",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
@@ -105,6 +153,30 @@
       "writtenOn": "2018-08-13T15:10:32Z",
       "side": 1,
       "message": "This is use-after-free error. Please use this scheme (along with spdk_jsonrpc_free_request() comment).\n\n  while(!TAILQ_EMPTY(...)) {\n    spdk_jsonrpc_free_request(TAILQ_FIRST(\u0026request-\u003echildren));\n  }",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 4
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2f957f1_44ede56f",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eb5b0bde_a30e43b9",
       "range": {
         "startLine": 230,
         "startChar": 0,
@@ -140,6 +212,30 @@
     },
     {
       "key": {
+        "uuid": "f4cd32fd_007c0f4d",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bcf1c33d_9dc65826",
+      "range": {
+        "startLine": 307,
+        "startChar": 0,
+        "endLine": 310,
+        "endChar": 2
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc3b8315_cc6473f3",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
@@ -151,6 +247,30 @@
       "writtenOn": "2018-08-13T15:10:32Z",
       "side": 1,
       "message": "This function don\u0027t need to take parent_request as request have it inside.",
+      "range": {
+        "startLine": 313,
+        "startChar": 26,
+        "endLine": 314,
+        "endChar": 42
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af33abc2_01b5ab91",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fc3b8315_cc6473f3",
       "range": {
         "startLine": 313,
         "startChar": 26,
@@ -186,6 +306,30 @@
     },
     {
       "key": {
+        "uuid": "3515a342_6deaff2a",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "38272d47_3d3aa05a",
+      "range": {
+        "startLine": 349,
+        "startChar": 1,
+        "endLine": 349,
+        "endChar": 71
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb0d80a2_a01acfdb",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
@@ -197,6 +341,30 @@
       "writtenOn": "2018-08-13T15:10:32Z",
       "side": 1,
       "message": "} else {\n   TAILQ_REMOVE(\u0026request-\u003eparent_request, request, child_tailq);\n}",
+      "range": {
+        "startLine": 375,
+        "startChar": 1,
+        "endLine": 375,
+        "endChar": 2
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fdb446a_267b6c7d",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fb0d80a2_a01acfdb",
       "range": {
         "startLine": 375,
         "startChar": 1,
@@ -232,6 +400,30 @@
     },
     {
       "key": {
+        "uuid": "2eb51245_d58bd3df",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "We are trying to allocate memory for all child requests and its \"send_buf\" initially before processing each. If allocation had failed for \"send_buf\" for any child_request then without this check it leads to segfault.",
+      "parentUuid": "ecac9f91_88c8e929",
+      "range": {
+        "startLine": 376,
+        "startChar": 1,
+        "endLine": 376,
+        "endChar": 25
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15050226_3b9bfc77",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
@@ -243,6 +435,30 @@
       "writtenOn": "2018-08-13T15:10:32Z",
       "side": 1,
       "message": "^",
+      "range": {
+        "startLine": 379,
+        "startChar": 1,
+        "endLine": 379,
+        "endChar": 15
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de3e4c6a_8f7c23ee",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "15050226_3b9bfc77",
       "range": {
         "startLine": 379,
         "startChar": 1,
@@ -278,6 +494,30 @@
     },
     {
       "key": {
+        "uuid": "3a883e6c_e22cca0e",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a12d179_58d1efa2",
+      "range": {
+        "startLine": 407,
+        "startChar": 0,
+        "endLine": 408,
+        "endChar": 35
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1c4925d_762251c2",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
@@ -289,6 +529,30 @@
       "writtenOn": "2018-08-13T15:10:32Z",
       "side": 1,
       "message": "There was no ERRLOG before so I think it isn\u0027t needed now. \n\nAlso please rebase on https://review.gerrithub.io/#/c/spdk/spdk/+/422124/ so changing this part won\u0027t be needed.",
+      "range": {
+        "startLine": 444,
+        "startChar": 3,
+        "endLine": 445,
+        "endChar": 35
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f76a521_c85b26f4",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-08-24T06:20:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d1c4925d_762251c2",
       "range": {
         "startLine": 444,
         "startChar": 3,
