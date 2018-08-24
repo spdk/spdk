@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from subprocess import check_call, call, check_output, Popen, PIPE
+from subprocess import check_call, call, check_output, Popen, PIPE, CalledProcessError
 import re
 import sys
 import signal
@@ -66,10 +66,10 @@ def main():
 
     # configure_devices(devices)
     try:
-            fio_executable = check_output("which --skip-alias fio", shell=True).split()[0]
-    except subprocess.CalledProcessError as e:
-            print(e)
-            print("Can't find the fio binary, please install it.")
+            fio_executable = check_output("which fio", shell=True).split()[0]
+    except CalledProcessError as e:
+            sys.stderr.write(str(e))
+            sys.stderr.write("\nCan't find the fio binary, please install it.\n")
             sys.exit(1)
 
     device_paths = ['/dev/' + dev for dev in devices]
