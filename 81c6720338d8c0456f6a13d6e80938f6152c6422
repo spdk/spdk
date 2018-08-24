@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0517667c_505fecc3",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-24T23:55:10Z",
+      "side": 1,
+      "message": "Could you add this:\n\nstruct spdk_nvmf_transport *transport;\n\nThen later,\n\ntransport \u003d req-\u003eqpair-\u003etransport;\n\nThis will simplify the changes here, especially the ones that required line wraps.",
+      "revId": "81c6720338d8c0456f6a13d6e80938f6152c6422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec6b501d_04543ebe",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-24T23:55:10Z",
+      "side": 1,
+      "message": "I would suggest adding this in the appropriate places here:\n\nstruct spdk_nvmf_transport *transport;\n\ntransport \u003d \u0026rtransport-\u003etransport;\n\nThis, along with shortening tprt_ops to ops, should simplify the changes here.",
+      "revId": "81c6720338d8c0456f6a13d6e80938f6152c6422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5519d0ab_6ba74b56",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-24T23:55:10Z",
+      "side": 1,
+      "message": "I think you can just change this to \"opts\".  Since it\u0027s part of spdk_nvmf_transport, I think the \"tprt\" can be dropped and be similar to the ops member just above it.",
+      "revId": "81c6720338d8c0456f6a13d6e80938f6152c6422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
