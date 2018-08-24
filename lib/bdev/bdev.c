@@ -3197,14 +3197,6 @@ spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
 	}
 }
 
-static void
-_remove_notify(void *arg)
-{
-	struct spdk_bdev_desc *desc = arg;
-
-	desc->remove_cb(desc->remove_ctx);
-}
-
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
@@ -3241,7 +3233,11 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 			if (!desc->remove_scheduled) {
 				/* Avoid scheduling removal of the same descriptor multiple times. */
 				desc->remove_scheduled = true;
-				spdk_thread_send_msg(thread, _remove_notify, desc);
+				/*
+				 * FIXME: Based on fact that the type of spdk_bdev_remove_cb_t
+				 * and spdk_thread_fn are same.
+				 */
+				spdk_thread_send_msg(thread, desc->remove_cb, desc->remove_ctx);
 			}
 		}
 	}
