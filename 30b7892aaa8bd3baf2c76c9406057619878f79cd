@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9b1ef49_f627ce61",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-24T20:08:36Z",
+      "side": 1,
+      "message": "This needs to be a while loop to handle the worst case.",
+      "revId": "30b7892aaa8bd3baf2c76c9406057619878f79cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
