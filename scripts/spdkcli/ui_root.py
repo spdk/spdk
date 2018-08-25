@@ -1,4 +1,5 @@
 from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
+from .ui_node_nvmf import UINVMf
 import rpc.client
 import rpc
 from functools import wraps
@@ -13,6 +14,7 @@ class UIRoot(UINode):
         self.current_bdevs = []
         self.current_lvol_stores = []
         self.current_vhost_ctrls = []
+        self.current_nvmf_subsystems = []
         self.set_rpc_target(s)
         self.verbose = False
         self.is_init = self.check_init()
@@ -34,6 +36,7 @@ class UIRoot(UINode):
         UIBdevs(self)
         UILvolStores(self)
         UIVhosts(self)
+        UINVMf(self)
 
     def set_rpc_target(self, s):
         self.client = rpc.client.JSONRPCClient(s)
@@ -248,6 +251,56 @@ class UIRoot(UINode):
     def set_vhost_controller_coalescing(self, **kwargs):
         rpc.vhost.set_vhost_controller_coalescing(self.client, **kwargs)
 
+    def list_nvmf_subsystems(self):
+        if self.is_init:
+            self.current_nvmf_subsystems = rpc.nvmf.get_nvmf_subsystems(self.client)
+
+    def get_nvmf_subsystems(self):
+        if self.is_init:
+            self.list_nvmf_subsystems()
+            for subsystem in self.current_nvmf_subsystems:
+                yield NvmfSubsystem(subsystem)
+
+    @verbose
+    def create_nvmf_subsystem(self, **kwargs):
+        rpc.nvmf.nvmf_subsystem_create(self.client, **kwargs)
+
+    @verbose
+    def delete_nvmf_subsystem(self, **kwargs):
+        rpc.nvmf.delete_nvmf_subsystem(self.client, **kwargs)
+
+    @verbose
+    def nvmf_subsystem_add_listener(self, **kwargs):
+        rpc.nvmf.nvmf_subsystem_add_listener(self.client, **kwargs)
+
+    @verbose
+    def nvmf_subsystem_remove_listener(self, **kwargs):
+        rpc.nvmf.nvmf_subsystem_remove_listener(self.client, **kwargs)
+
+    @verbose
+    def nvmf_subsystem_add_host(self, **kwargs):
+        rpc.nvmf.nvmf_subsystem_add_host(self.client, **kwargs)
+
+    @verbose
+    def nvmf_subsystem_remove_host(self, **kwargs):
+        rpc.nvmf.nvmf_subsystem_remove_host(self.client, **kwargs)
+
+    @verbose
+    def nvmf_subsystem_allow_any_host(self, **kwargs):
+        rpc.nvmf.nvmf_subsystem_allow_any_host(self.client, **kwargs)
+
+    @verbose
+    def nvmf_subsystem_add_ns(self, **kwargs):
+        rpc.nvmf.nvmf_subsystem_add_ns(self.client, **kwargs)
+
+    @verbose
+    def nvmf_subsystem_remove_ns(self, **kwargs):
+        rpc.nvmf.nvmf_subsystem_remove_ns(self.client, **kwargs)
+
+    @verbose
+    def nvmf_subsystem_allow_any_host(self, **kwargs):
+        rpc.nvmf.nvmf_subsystem_allow_any_host(self.client, **kwargs)
+
 
 class Bdev(object):
     def __init__(self, bdev_info):
@@ -283,3 +336,15 @@ class VhostCtrlr(object):
         """
         for i in list(ctrlr_info.keys()):
             setattr(self, i, ctrlr_info[i])
+
+
+class NvmfSubsystem(object):
+    def __init__(self, subsystem_info):
+        """
+        All class attributes are set based on what information is received
+        from get_nvmf_subsystem RPC call.
+        # TODO: Document in docstring parameters which describe bdevs.
+        # TODO: Possible improvement: JSON schema might be used here in future
+        """
+        for i in subsystem_info.keys():
+            setattr(self, i, subsystem_info[i])
