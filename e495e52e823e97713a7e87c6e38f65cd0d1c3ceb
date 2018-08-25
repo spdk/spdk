@@ -34,6 +34,24 @@
       "revId": "e495e52e823e97713a7e87c6e38f65cd0d1c3ceb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81f95778_fcbd6c72",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3236,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-08-25T04:18:26Z",
+      "side": 1,
+      "message": "In multi-thread process, what if spdk_bdev_close() modifies desc after _remove_notify() check it?",
+      "parentUuid": "ef432a90_58506fbe",
+      "revId": "e495e52e823e97713a7e87c6e38f65cd0d1c3ceb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
