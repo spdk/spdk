@@ -44,7 +44,7 @@
 extern "C" {
 #endif
 
-#ifdef static_assert
+#if defined static_assert && __GNUC__ >=4 && __GNUC_MINOR__ >= 6
 #define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
 #else
 /**
