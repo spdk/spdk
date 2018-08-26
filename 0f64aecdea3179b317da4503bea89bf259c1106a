@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "5419cdd2_df908c24",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 1791,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-26T23:15:23Z",
+      "side": 1,
+      "message": "this must be removed too.",
+      "revId": "0f64aecdea3179b317da4503bea89bf259c1106a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c73bd2c_4781628b",
         "filename": "scripts/rpc.py",
         "patchSetId": 12
