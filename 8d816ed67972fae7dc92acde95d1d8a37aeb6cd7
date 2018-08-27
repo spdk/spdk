@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "fc0874ea_d127c23e",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-27T18:01:00Z",
+      "side": 1,
+      "message": "req I think",
+      "parentUuid": "670ee4f9_404b47ab",
+      "range": {
+        "startLine": 109,
+        "startChar": 13,
+        "endLine": 109,
+        "endChar": 17
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec801ecc_93864665",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 18
@@ -117,6 +141,23 @@
     },
     {
       "key": {
+        "uuid": "658d27bb_f8c74a4b",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-27T18:01:00Z",
+      "side": 1,
+      "message": "Try using spdk_json_decode_string here to get a direct pointer without a memory allocation.",
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2896dbb_42b14879",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 18
@@ -163,6 +204,23 @@
     },
     {
       "key": {
+        "uuid": "07c07c3b_e134d7c1",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-27T18:01:00Z",
+      "side": 1,
+      "message": "I believe you can just use spdk_json_decode_string here to get a pointer to the string without making a copy.",
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "058c2170_b454510b",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 18
@@ -186,6 +244,23 @@
     },
     {
       "key": {
+        "uuid": "c85efffc_1c829244",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-27T18:01:00Z",
+      "side": 1,
+      "message": "You should probably add a function that does this lookup in bdev_nvme.c - that way you don\u0027t need to make g_nvme_ctrlrs publicly visible. This function is likely useful elsewhere in the future too.",
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5aab6098_4563a488",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 18
@@ -203,6 +278,23 @@
         "endLine": 526,
         "endChar": 3
       },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9810705_07599192",
+        "filename": "scripts/rpc/nvme.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-27T18:01:00Z",
+      "side": 1,
+      "message": "Send one NVMe command",
       "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
