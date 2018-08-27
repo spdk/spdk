@@ -797,7 +797,7 @@ verify_raid_config(struct rpc_construct_raid_bdev *r, bool presence)
 			CU_ASSERT(raid_cfg->raid_level == r->raid_level);
 			if (raid_cfg->base_bdev != NULL) {
 				for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-					val = strcmp(raid_cfg->base_bdev[i].bdev_name, r->base_bdevs.base_bdevs[i]);
+					val = strcmp(raid_cfg->base_bdev[i].name, r->base_bdevs.base_bdevs[i]);
 					CU_ASSERT(val == 0);
 				}
 			}
