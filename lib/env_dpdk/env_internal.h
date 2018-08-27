@@ -88,16 +88,21 @@ int spdk_mem_map_init(void);
 int spdk_vtophys_init(void);
 
 /**
+ *  Prepare a DMA-capable PCI device to be mapped with rte_pci_map_device().
+ */
+void spdk_vtophys_pci_device_preinit(struct rte_pci_device *pci_device);
+
+/**
  * Report a DMA-capable PCI device to the vtophys translation code.
  * Increases the refcount of active DMA-capable devices managed by SPDK.
- * This must be called after a `rte_pci_device` is created.
+ * This must be called after rte_pci_map_device().
  */
 void spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device);
 
 /**
  * Report the removal of a DMA-capable PCI device to the vtophys translation code.
  * Decreases the refcount of active DMA-capable devices managed by SPDK.
- * This must be called before a `rte_pci_device` is destroyed.
+ * This must be called before rte_pci_unmap_device().
  */
 void spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device);
 

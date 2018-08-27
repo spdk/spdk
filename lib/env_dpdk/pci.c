@@ -48,15 +48,18 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 	int rc;
 
 	if (!ctx->cb_fn) {
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-		rte_pci_unmap_device(device);
-#elif RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
-		rte_eal_pci_unmap_device(device);
-#endif
-
 		/* Return a positive value to indicate that this device does not belong to this driver, but
 		 * this isn't an error. */
 		return 1;
+	}
+
+	/* We must preinit the device before letting DPDK to map it */
+	assert((driver->drv_flags & RTE_PCI_DRV_NEED_MAPPING) == 0);
+
+	spdk_vtophys_pci_device_preinit(device);
+	rc = rte_pci_map_device(device);
+	if (rc != 0) {
+		return rc;
 	}
 
 	if (device->kdrv == RTE_KDRV_VFIO) {
@@ -71,6 +74,11 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 	rc = ctx->cb_fn(ctx->cb_arg, (struct spdk_pci_device *)device);
 	if (rc != 0) {
 		spdk_vtophys_pci_device_removed(device);
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+		rte_pci_unmap_device(device);
+#elif RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
+		rte_eal_pci_unmap_device(device);
+#endif
 		return rc;
 	}
 
@@ -81,6 +89,11 @@ int
 spdk_pci_device_fini(struct rte_pci_device *device)
 {
 	spdk_vtophys_pci_device_removed(device);
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	rte_pci_unmap_device(device);
+#elif RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
+	rte_eal_pci_unmap_device(device);
+#endif
 	return 0;
 }
 

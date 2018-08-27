@@ -90,7 +90,7 @@ static struct rte_pci_id ioat_driver_id[] = {
 
 static struct spdk_pci_enum_ctx g_ioat_pci_drv = {
 	.driver = {
-		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING,
+		.drv_flags	= 0,
 		.id_table	= ioat_driver_id,
 #if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 		.probe		= spdk_pci_device_init,

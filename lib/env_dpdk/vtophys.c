@@ -353,30 +353,30 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	}
 
 	while (len > 0) {
-		/* Get the physical address from the DPDK memsegs */
-		paddr = vtophys_get_paddr_memseg((uint64_t)vaddr);
-
 		switch (action) {
 		case SPDK_MEM_MAP_NOTIFY_REGISTER:
-			if (paddr == SPDK_VTOPHYS_ERROR) {
-				/* This is not an address that DPDK is managing. */
 #if SPDK_VFIO_ENABLED
-				if (g_vfio.enabled) {
-					/* We'll use the virtual address as the iova. DPDK
-					 * currently uses physical addresses as the iovas (or counts
-					 * up from 0 if it can't get physical addresses), so
-					 * the range of user space virtual addresses and physical
-					 * addresses will never overlap.
-					 */
-					paddr = (uint64_t)vaddr;
-					rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
-					if (rc) {
-						return -EFAULT;
-					}
-				} else
+			if (g_vfio.enabled) {
+				/* We'll use the virtual address as the iova. DPDK
+				 * currently uses physical addresses as the iovas (or counts
+				 * up from 0 if it can't get physical addresses), so
+				 * the range of user space virtual addresses and physical
+				 * addresses will never overlap.
+				 */
+				paddr = (uint64_t)vaddr;
+				rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
+				if (rc) {
+					return -EFAULT;
+				}
+			} else
 #endif
-				{
-					/* Get the physical address from /proc/self/pagemap. */
+			{
+				/* Get the physical address from the DPDK memsegs */
+				paddr = vtophys_get_paddr_memseg((uint64_t)vaddr);
+				if (paddr == SPDK_VTOPHYS_ERROR) {
+					/* This is not an address that DPDK is managing.
+					 * Get the physical address from /proc/self/pagemap.
+					 */
 					paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
 					if (paddr == SPDK_VTOPHYS_ERROR) {
 						/* Get the physical address from PCI devices */
@@ -399,17 +399,11 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 			break;
 		case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
 #if SPDK_VFIO_ENABLED
-			if (paddr == SPDK_VTOPHYS_ERROR) {
-				/*
-				 * This is not an address that DPDK is managing. If vfio is enabled,
-				 * we need to unmap the range from the IOMMU
-				 */
-				if (g_vfio.enabled) {
-					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, VALUE_2MB);
-					rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
-					if (rc) {
-						return -EFAULT;
-					}
+			if (g_vfio.enabled) {
+				paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, VALUE_2MB);
+				rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
+				if (rc) {
+					return -EFAULT;
 				}
 			}
 #endif
@@ -444,16 +438,17 @@ spdk_vfio_enabled(void)
 static void
 spdk_vtophys_iommu_init(void)
 {
+#if 0
 	char proc_fd_path[PATH_MAX + 1];
 	char link_path[PATH_MAX + 1];
 	const char vfio_path[] = "/dev/vfio/vfio";
 	DIR *dir;
 	struct dirent *d;
-
+#endif
 	if (!spdk_vfio_enabled()) {
 		return;
 	}
-
+#if 0
 	dir = opendir("/proc/self/fd");
 	if (!dir) {
 		DEBUG_PRINT("Failed to open /proc/self/fd (%d)\n", errno);
@@ -477,7 +472,13 @@ spdk_vtophys_iommu_init(void)
 	}
 
 	closedir(dir);
-
+#else
+	g_vfio.fd = rte_vfio_container_create();
+	if (g_vfio.fd < 0) {
+		DEBUG_PRINT("Failed to create a vfio container.\n");
+		return;
+	}
+#endif
 	if (g_vfio.fd < 0) {
 		DEBUG_PRINT("Failed to discover DPDK VFIO container fd.\n");
 		return;
@@ -488,6 +489,36 @@ spdk_vtophys_iommu_init(void)
 	return;
 }
 #endif
+
+void
+spdk_vtophys_pci_device_preinit(struct rte_pci_device *pci_device)
+{
+#if SPDK_VFIO_ENABLED
+	char devname[RTE_DEV_NAME_MAX_LEN] = {0};
+	int iommu_group_num;
+	int fd, rc;
+
+	if (!g_vfio.enabled) {
+		return;
+	}
+
+	rte_pci_device_name(&pci_device->addr, devname, RTE_DEV_NAME_MAX_LEN);
+	rc = rte_vfio_get_group_num(rte_pci_get_sysfs_path(), devname,
+				    &iommu_group_num);
+	if (rc <= 0) {
+		DEBUG_PRINT("Unable to find %s IOMMU group", devname);
+		return;
+	}
+
+	/* Bind the group to our vfio container so that DPDK won't attempt
+	 * setting any DMA mappings for it - it will be our responsibility now.
+	 */
+	fd = rte_vfio_container_group_bind(g_vfio.fd, iommu_group_num);
+	if (fd < 0) {
+		DEBUG_PRINT("Failed to rebind IOMMU group %d\n", iommu_group_num);
+	}
+#endif
+}
 
 void
 spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device)
