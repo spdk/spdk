@@ -50,7 +50,6 @@
 
 #define SPDK_ISCSI_BUILD_ETC "/usr/local/etc/spdk"
 #define SPDK_ISCSI_DEFAULT_CONFIG SPDK_ISCSI_BUILD_ETC "/iscsi.conf"
-#define SPDK_ISCSI_DEFAULT_AUTHFILE SPDK_ISCSI_BUILD_ETC "/auth.conf"
 #define SPDK_ISCSI_DEFAULT_NODEBASE "iqn.2016-06.io.spdk"
 
 #define DEFAULT_MAXR2T 4
