@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87c4dcbf_38793771",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-27T21:13:11Z",
+      "side": 1,
+      "message": "I think you can add a new CHANGELOG entry that says:\n\nThe SPDK iSCSI target supports an AuthFile which can be used to load CHAP shared secrets when the iSCSI target starts.  SPDK previously provided a default location for this file (/usr/local/etc/spdk/auth.conf) if none was specified.  This default has been removed.  Users must now explicitly specify the location of this file to load CHAP shared secrets from a file, or use the related iSCSI RPCs to add them at runtime.",
+      "revId": "88031c20cb64872e89e61347065484a380ee30f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bdeaf11_44ae52aa",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-27T21:13:11Z",
+      "side": 1,
+      "message": "I think this needs to be modified to %s %s\\n.\n\nThen in spdk_iscsi_globals_config_text, change g_spdk_iscsi.authfile to something like:\n\ng_spdk_iscsi.authfile ? \"AuthFile\" : \"\", g_spdk_iscsi.authfile ? g_spdk_iscsi.authfile : \"\",",
+      "revId": "88031c20cb64872e89e61347065484a380ee30f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ca92628_370ee687",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-27T21:13:11Z",
+      "side": 1,
+      "message": "Suggest printing \"(none)\" if authfile \u003d\u003d NULL.",
+      "revId": "88031c20cb64872e89e61347065484a380ee30f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
