@@ -18,9 +18,6 @@
   AIO /dev/ram0 AIO0
   AIO /tmp/aiofile AIO1 2048
 
-[Ioat]
-  Enable No
-
 [QoS]
   # QoS section defines limitation on performance
   # metric like IOPS
