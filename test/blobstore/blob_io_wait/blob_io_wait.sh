@@ -23,8 +23,6 @@ lvol=`$rpc_py construct_lvol_bdev -l lvs0 lvol0 100`
 
 killprocess $bdev_svc_pid
 
-
-
 # Minimal number of bdev io pool (5) and cache (1)
 echo "[Bdev]" > $testdir/bdevperf.conf
 echo "BdevIoPoolSize 5" >> $testdir/bdevperf.conf
