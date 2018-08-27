@@ -209,3 +209,20 @@ spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
 {
 	return qpair->transport->ops->qpair_is_idle(qpair);
 }
+
+bool
+spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
+			      struct spdk_nvmf_transport_opts *opts)
+{
+	const struct spdk_nvmf_transport_ops *ops;
+
+	ops = spdk_nvmf_get_transport_ops(type);
+	if (!ops) {
+		SPDK_ERRLOG("Transport type %s unavailable.\n",
+			    spdk_nvme_transport_id_trtype_str(type));
+		return false;
+	}
+
+	ops->opts_init(opts);
+	return true;
+}
