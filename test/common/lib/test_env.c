@@ -354,7 +354,7 @@ spdk_get_ticks_hz(void)
 void
 spdk_delay_us(unsigned int us)
 {
-	ut_spdk_get_ticks += us;
+	ut_spdk_get_ticks += (us * 1000);
 }
 
 DEFINE_RETURN_MOCK(spdk_pci_addr_parse, int);
