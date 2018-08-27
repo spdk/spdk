@@ -201,4 +201,4 @@ object.
 Further, RDMA NICs expose different queue depths for READ/WRITE operations
 than they do for SEND/RECV operations. The RDMA transport reports available
 queue depth based on SEND/RECV operation limits and will queue in software as
-necessary to accomodate (usually lower) limits on READ/WRITE operations.
+necessary to accommodate (usually lower) limits on READ/WRITE operations.

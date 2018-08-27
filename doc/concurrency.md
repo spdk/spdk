@@ -153,7 +153,7 @@ Don't split these functions up - keep them as a nice unit that can be read from 
 
 For more complex callback chains, especially ones that have logical branches
 or loops, it's best to write out a state machine. It turns out that higher
-level langauges that support futures and promises are just generating state
+level languages that support futures and promises are just generating state
 machines at compile time, so even though we don't have the ability to generate
 them in C we can still write them out by hand. As an example, here's a
 callback chain that performs `foo` 5 times and then calls `bar` - effectively

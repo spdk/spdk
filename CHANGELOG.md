@@ -265,7 +265,7 @@ A new `destroy_lvol_bdev` RPC method to delete logical volumes has been added.
 
 Lvols now have their own UUIDs which replace previous LvolStoreUUID_BlobID combination.
 
-New Snapshot and Clone funtionalities have been added. User may create Snapshots of existing Lvols
+New Snapshot and Clone functionalities have been added. User may create Snapshots of existing Lvols
 and Clones of existing Snapshots.
 See the [lvol snapshots](http://www.spdk.io/doc/logical_volumes.html#lvol_snapshots) documentation
 for more details.
@@ -414,7 +414,7 @@ See the [GPT](http://www.spdk.io/doc/bdev.html#bdev_config_gpt) documentation fo
 
 ### FIO plugin
 
-SPDK `fio_plugin` now suports FIO 3.3. The support for previous FIO 2.21 has been dropped,
+SPDK `fio_plugin` now supports FIO 3.3. The support for previous FIO 2.21 has been dropped,
 although it still remains to work for now. The new FIO contains huge amount of bugfixes and
 it's recommended to do an update.
 

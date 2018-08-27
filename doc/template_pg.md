@@ -24,7 +24,7 @@ sequences will be discussed. For the latest source code reference refer to the [
 Provide some high level description of what this component is, what it does and maybe why it exists. This shouldn't be
 a lengthy tutorial or commentary on storage in general or the goodness of SPDK but provide enough information to
 set the stage for someone about to write an application to integrate with this component.  They won't be totally
-starting from scratch if they're at this point, they are by defintion a storage applicaiton developer if they are
+starting from scratch if they're at this point, they are by definition a storage application developer if they are
 reading this guide.
 
 ## Theory of Operation {#componentname_pg_theory}
@@ -69,9 +69,9 @@ design docs as part of SPDK, the overhead and maintenance is too much for open s
 to provide some level of insight into the codebase to promote getting more people involved and understanding
 of what the design is all about.  The PG is meant to help a developer write their own application but we
 can use this section, per module, to test out a way to build out some internal design info as well. I see
-this as including an overview of key structures, concepts, etc., of the module itself. So, intersting info
+this as including an overview of key structures, concepts, etc., of the module itself. So, interesting info
 not required to write an application using the module but maybe just enough to provide the next level of
-detail into what's behind the scenes to get someone more intertested in becoming a community contributor.
+detail into what's behind the scenes to get someone more interested in becoming a community contributor.
 
 ## Sequences {#componentname_pg_sequences}
 

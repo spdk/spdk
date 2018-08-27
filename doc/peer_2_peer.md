@@ -52,7 +52,7 @@ DMA buffer.
   provided by Broadcom or Microsemi) as that is know to provide good
   performance.
 * Even with a PCIe switch there may be occasions where peer-2-peer
-  DMAs fail to work. This is probaby due to PCIe Access Control
+  DMAs fail to work. This is probably due to PCIe Access Control
   Services (ACS) being enabled by the BIOS and/or OS. You can disable
   ACS using setpci or via out of tree kernel patches that can be found
   on the internet.

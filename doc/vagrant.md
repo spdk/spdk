@@ -59,7 +59,7 @@ By default, the VM created is configured with:
 
 Currently VirtualBox & libvirt provider are supported.
 
-For libvirt currently there is only centos 7 image avaiable.
+For libvirt currently there is only centos 7 image available.
 
 To run with libvirt:
 

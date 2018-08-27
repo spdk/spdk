@@ -107,7 +107,7 @@ app/nvmf_tgt/nvmf_tgt -c /path/to/nvmf.conf
 ### Subsystem Configuration {#nvmf_config_subsystem}
 
 The `[Subsystem]` section in the configuration file is used to configure
-subysystems for the NVMe-oF target.
+subsystems for the NVMe-oF target.
 
 This example shows two local PCIe NVMe devices exposed as separate NVMe-oF target subsystems:
 
@@ -196,7 +196,7 @@ alphabetic hex digits in their NQNs.
 SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
 to gain access to hardware resources such as huge memory pages and CPU core(s). DPDK EAL provides
 functions to assign threads to specific cores.
-To ensure the SPDK NVMe-oF target has the best performance, configure the RNICs and NVMe devices to
+To ensure the SPDK NVMe-oF target has the best performance, configure the NICs and NVMe devices to
 be located on the same NUMA node.
 
 The `-m` core mask option specifies a bit mask of the CPU cores that
