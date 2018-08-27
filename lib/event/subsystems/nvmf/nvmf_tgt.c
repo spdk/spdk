@@ -306,6 +306,23 @@ nvmf_tgt_destroy_done(void *ctx, int status)
 }
 
 static void
+nvmf_tgt_parse_conf_done(int status)
+{
+	g_tgt_state = (status == 0) ? NVMF_TGT_INIT_CREATE_POLL_GROUPS : NVMF_TGT_ERROR;
+	nvmf_tgt_advance_state();
+}
+
+static void
+nvmf_tgt_parse_conf_start(void *ctx)
+{
+	if (spdk_nvmf_parse_conf(nvmf_tgt_parse_conf_done)) {
+		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
+		g_tgt_state = NVMF_TGT_ERROR;
+		nvmf_tgt_advance_state();
+	}
+}
+
+static void
 nvmf_tgt_advance_state(void)
 {
 	enum nvmf_tgt_state prev_state;
@@ -333,14 +350,10 @@ nvmf_tgt_advance_state(void)
 			break;
 		}
 		case NVMF_TGT_INIT_PARSE_CONFIG:
-			rc = spdk_nvmf_parse_conf();
-			if (rc < 0) {
-				SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
-				g_tgt_state = NVMF_TGT_ERROR;
-				rc = -EINVAL;
-				break;
-			}
-			g_tgt_state = NVMF_TGT_INIT_CREATE_POLL_GROUPS;
+			/* Send message to self to call parse conf func.
+			 * Prevents it from possibly performing cb before getting
+			 * out of this function, which causes problems. */
+			spdk_thread_send_msg(spdk_get_thread(), nvmf_tgt_parse_conf_start, NULL);
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
 			/* Send a message to each thread and create a poll group */

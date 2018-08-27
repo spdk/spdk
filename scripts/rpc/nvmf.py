@@ -58,6 +58,46 @@ def set_nvmf_target_config(client,
     return client.call('set_nvmf_target_config', params)
 
 
+def nvmf_create_transport(client,
+                          trtype,
+                          max_queue_depth=None,
+                          max_qpairs_per_ctrlr=None,
+                          in_capsule_data_size=None,
+                          max_io_size=None,
+                          io_unit_size=None,
+                          max_aq_depth=None):
+    """NVMf Transport Create options.
+
+    Args:
+        trtype: Transport type (ex. RDMA)
+        max_queue_depth: Max number of outstanding I/O per queue (optional)
+        max_qpairs_per_ctrlr: Max number of SQ and CQ per controller (optional)
+        in_capsule_data_size: Maximum in-capsule data size in bytes (optional)
+        max_io_size: Maximum I/O data size in bytes (optional)
+        io_unit_size: I/O unit size in bytes (optional)
+        max_aq_depth: Max size admin quque per controller (optional)
+
+    Returns:
+        True or False
+    """
+    params = {}
+
+    params['trtype'] = trtype
+    if max_queue_depth:
+        params['max_queue_depth'] = max_queue_depth
+    if max_qpairs_per_ctrlr:
+        params['max_qpairs_per_ctrlr'] = max_qpairs_per_ctrlr
+    if in_capsule_data_size:
+        params['in_capsule_data_size'] = in_capsule_data_size
+    if max_io_size:
+        params['max_io_size'] = max_io_size
+    if io_unit_size:
+        params['io_unit_size'] = io_unit_size
+    if max_aq_depth:
+        params['max_aq_depth'] = max_aq_depth
+    return client.call('nvmf_create_transport', params)
+
+
 def get_nvmf_subsystems(client):
     """Get list of NVMe-oF subsystems.
 

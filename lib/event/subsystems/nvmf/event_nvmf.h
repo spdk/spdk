@@ -60,6 +60,8 @@ extern struct spdk_nvmf_tgt_conf *g_spdk_nvmf_tgt_conf;
 
 extern struct spdk_nvmf_tgt *g_spdk_nvmf_tgt;
 
-int spdk_nvmf_parse_conf(void);
+typedef void (*spdk_nvmf_parse_conf_done_fn)(int status);
+
+int spdk_nvmf_parse_conf(spdk_nvmf_parse_conf_done_fn cb_fn);
 
 #endif

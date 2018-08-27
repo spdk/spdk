@@ -32,6 +32,7 @@ fi
 run_test suite test/nvmf/lvol/nvmf_lvol.sh
 run_test suite test/nvmf/shutdown/shutdown.sh
 run_test suite test/nvmf/bdev_io_wait/bdev_io_wait.sh
+run_test suite test/nvmf/create_transport/create_transport.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test suite test/nvmf/multiconnection/multiconnection.sh
