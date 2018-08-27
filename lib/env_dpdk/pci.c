@@ -67,12 +67,13 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 		usleep(500 * 1000);
 	}
 
+	spdk_vtophys_pci_device_added(device);
 	rc = ctx->cb_fn(ctx->cb_arg, (struct spdk_pci_device *)device);
 	if (rc != 0) {
+		spdk_vtophys_pci_device_removed(device);
 		return rc;
 	}
 
-	spdk_vtophys_pci_device_added(device);
 	return 0;
 }
 
