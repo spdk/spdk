@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "98ee6b7c_abd19b4a",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-27T05:58:21Z",
+      "side": 1,
+      "message": "Yes. This looks like consistent with existing parameters\u0027 setting. Thanks to point this out.",
+      "parentUuid": "77203e06_23f83664",
+      "range": {
+        "startLine": 550,
+        "startChar": 0,
+        "endLine": 560,
+        "endChar": 2
+      },
+      "revId": "9bfc6508cbd8ef0ace7e98bd1f969e262b3ab528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "105dd9cc_2e56c5f2",
         "filename": "scripts/rpc/iscsi.py",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2018-08-24T13:37:56Z",
       "side": 1,
       "message": "user should be able to set any value as same as others.\n\nValue should be verified in spdk_iscsi_opts_verify.",
+      "range": {
+        "startLine": 76,
+        "startChar": 7,
+        "endLine": 76,
+        "endChar": 33
+      },
+      "revId": "9bfc6508cbd8ef0ace7e98bd1f969e262b3ab528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85a3643c_61a5e8e2",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-27T05:58:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "105dd9cc_2e56c5f2",
       "range": {
         "startLine": 76,
         "startChar": 7,
