@@ -308,10 +308,16 @@ public:
 			return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
 		}
 	}
-	virtual size_t GetUniqueId(__attribute__((unused)) char *id,
-				   __attribute__((unused)) size_t max_size) const override
+	virtual size_t GetUniqueId(char *id, size_t max_size) const override
 	{
-		return 0;
+		int rc;
+
+		rc = spdk_file_get_id(mFile, id, max_size);
+		if (rc < 0) {
+			return 0;
+		} else {
+			return rc;
+		}
 	}
 };
 
