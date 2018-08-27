@@ -1,0 +1,31 @@
+{
+    "version": "2.0.0",
+    "windows": {
+        "options": {
+            "shell": {
+                "executable": "C:\\Program Files\\Git\\usr\\bin\\ssh.exe",
+                "args": [ "10.102.17.111" ]
+            },
+        }
+    },
+    "tasks": [
+        {
+            "label": "make",
+            "type": "shell",
+            "command": "cd git/spdk && make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "make clean",
+            "type": "shell",
+            "command": "cd git/spdk && make clean"
+        }
+    ]
+}
