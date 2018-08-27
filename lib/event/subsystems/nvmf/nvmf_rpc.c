@@ -1422,3 +1422,141 @@ nvmf_rpc_subsystem_set_tgt_conf(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("set_nvmf_target_config", nvmf_rpc_subsystem_set_tgt_conf, SPDK_RPC_STARTUP)
+
+struct nvmf_rpc_create_transport_ctx {
+	char				*trtype;
+	struct spdk_nvmf_transport_opts opts;
+	struct spdk_jsonrpc_request	*request;
+};
+
+static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[] = {
+	{	"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
+	{
+		"max_queue_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_queue_depth),
+		spdk_json_decode_uint16, true
+	},
+	{
+		"max_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_qpairs_per_ctrlr),
+		spdk_json_decode_uint16, true
+	},
+	{
+		"in_capsule_data_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.in_capsule_data_size),
+		spdk_json_decode_uint32, true
+	},
+	{
+		"max_io_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_io_size),
+		spdk_json_decode_uint32, true
+	},
+	{
+		"io_unit_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.io_unit_size),
+		spdk_json_decode_uint32, true
+	},
+	{
+		"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_aq_depth),
+		spdk_json_decode_uint32, true
+	},
+};
+
+static void
+nvmf_rpc_create_transport_ctx_free(struct nvmf_rpc_create_transport_ctx *ctx)
+{
+	free(ctx->trtype);
+	free(ctx);
+}
+
+static void
+nvmf_rpc_tgt_add_transport_done(void *cb_arg, int status)
+{
+	struct nvmf_rpc_create_transport_ctx *ctx = cb_arg;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+
+	request = ctx->request;
+	nvmf_rpc_create_transport_ctx_free(ctx);
+
+	if (status) {
+		SPDK_ERRLOG("Failed to add transport to tgt.(%d)\n", status);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Failed to add transport to tgt.(%d)\n",
+						     status);
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+nvmf_rpc_create_transport(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct nvmf_rpc_create_transport_ctx *ctx;
+	enum spdk_nvme_transport_type trtype;
+	struct spdk_nvmf_transport *transport;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	/* Decode parameters the first time to get the transport type */
+	if (spdk_json_decode_object(params, nvmf_rpc_create_transport_decoder,
+				    SPDK_COUNTOF(nvmf_rpc_create_transport_decoder),
+				    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		nvmf_rpc_create_transport_ctx_free(ctx);
+		return;
+	}
+
+	if (spdk_nvme_transport_id_parse_trtype(&trtype, ctx->trtype)) {
+		SPDK_ERRLOG("Invalid transport type '%s'\n", ctx->trtype);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid transport type '%s'\n", ctx->trtype);
+		nvmf_rpc_create_transport_ctx_free(ctx);
+		return;
+	}
+
+	/* Initialize all the transport options (based on transport type) and decode the
+	 * parameters again to update any options passed in rpc create transport call.
+	 */
+	spdk_nvmf_transport_opts_init(trtype, &ctx->opts);
+	if (spdk_json_decode_object(params, nvmf_rpc_create_transport_decoder,
+				    SPDK_COUNTOF(nvmf_rpc_create_transport_decoder),
+				    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		nvmf_rpc_create_transport_ctx_free(ctx);
+		return;
+	}
+
+	if (spdk_nvmf_tgt_get_transport(g_spdk_nvmf_tgt, trtype)) {
+		SPDK_ERRLOG("Transport type '%s' already exists\n", ctx->trtype);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Transport type '%s' already exists\n", ctx->trtype);
+		nvmf_rpc_create_transport_ctx_free(ctx);
+		return;
+	}
+
+	transport = spdk_nvmf_transport_create(trtype, &ctx->opts);
+
+	if (!transport) {
+		SPDK_ERRLOG("Transport type '%s' create failed\n", ctx->trtype);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Transport type '%s' create failed\n", ctx->trtype);
+		nvmf_rpc_create_transport_ctx_free(ctx);
+		return;
+	}
+
+	/* add transport to target */
+	ctx->request = request;
+	spdk_nvmf_tgt_add_transport(g_spdk_nvmf_tgt, transport, nvmf_rpc_tgt_add_transport_done, ctx);
+}
+
+SPDK_RPC_REGISTER("nvmf_create_transport", nvmf_rpc_create_transport, SPDK_RPC_RUNTIME)

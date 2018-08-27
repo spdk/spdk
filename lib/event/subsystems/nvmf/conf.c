@@ -424,10 +424,152 @@ spdk_nvmf_parse_subsystems(void)
 	return 0;
 }
 
+struct spdk_nvmf_parse_transport_ctx {
+	struct spdk_conf_section *sp;
+	spdk_nvmf_parse_conf_done_fn cb_fn;
+};
+
+static void spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx);
+
+static void
+spdk_nvmf_tgt_add_transport_done(void *cb_arg, int status)
+{
+	struct spdk_nvmf_parse_transport_ctx *ctx = cb_arg;
+	int rc;
+
+	if (status < 0) {
+		SPDK_ERRLOG("Add transport to target failed (%d).\n", status);
+		ctx->cb_fn(status);
+		free(ctx);
+		return;
+	}
+
+	/* find next transport */
+	ctx->sp = spdk_conf_next_section(ctx->sp);
+	while (ctx->sp) {
+		if (spdk_conf_section_match_prefix(ctx->sp, "Transport")) {
+			spdk_nvmf_parse_transport(ctx);
+			return;
+		}
+		ctx->sp = spdk_conf_next_section(ctx->sp);
+	}
+
+	/* done with transports, parse Subsystem sections */
+	rc = spdk_nvmf_parse_subsystems();
+
+	ctx->cb_fn(rc);
+	free(ctx);
+}
+
+static void
+spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
+{
+	const char *type;
+	struct spdk_nvmf_transport_opts opts = { 0 };
+	enum spdk_nvme_transport_type trtype;
+	struct spdk_nvmf_transport *transport;
+	int val;
+
+	type = spdk_conf_section_get_val(ctx->sp, "Type");
+	if (type == NULL) {
+		SPDK_ERRLOG("Transport missing Type\n");
+		ctx->cb_fn(-1);
+		free(ctx);
+		return;
+	}
+
+	if (spdk_nvme_transport_id_parse_trtype(&trtype, type)) {
+		SPDK_ERRLOG("Invalid transport type '%s'\n", type);
+		ctx->cb_fn(-1);
+		free(ctx);
+		return;
+	}
+
+	if (spdk_nvmf_tgt_get_transport(g_spdk_nvmf_tgt, trtype)) {
+		SPDK_ERRLOG("Duplicate transport type '%s'\n", type);
+		ctx->cb_fn(-1);
+		free(ctx);
+		return;
+	}
+
+	if (!spdk_nvmf_transport_opts_init(trtype, &opts)) {
+		ctx->cb_fn(-1);
+		free(ctx);
+		return;
+	}
+
+	val = spdk_conf_section_get_intval(ctx->sp, "MaxQueueDepth");
+	if (val >= 0) {
+		opts.max_queue_depth = val;
+	}
+	val = spdk_conf_section_get_intval(ctx->sp, "MaxQueuesPerSession");
+	if (val >= 0) {
+		opts.max_qpairs_per_ctrlr = val;
+	}
+	val = spdk_conf_section_get_intval(ctx->sp, "InCapsuleDataSize");
+	if (val >= 0) {
+		opts.in_capsule_data_size = val;
+	}
+	val = spdk_conf_section_get_intval(ctx->sp, "MaxIOSize");
+	if (val >= 0) {
+		opts.max_io_size = val;
+	}
+	val = spdk_conf_section_get_intval(ctx->sp, "IOUnitSize");
+	if (val >= 0) {
+		opts.io_unit_size = val;
+	}
+	val = spdk_conf_section_get_intval(ctx->sp, "MaxAQDepth");
+	if (val >= 0) {
+		opts.max_aq_depth = val;
+	}
+
+	transport = spdk_nvmf_transport_create(trtype, &opts);
+	if (transport) {
+		spdk_nvmf_tgt_add_transport(g_spdk_nvmf_tgt, transport, spdk_nvmf_tgt_add_transport_done, ctx);
+	} else {
+		ctx->cb_fn(-1);
+		free(ctx);
+		return;
+	}
+}
+
+static int
+spdk_nvmf_parse_transports(spdk_nvmf_parse_conf_done_fn cb_fn)
+{
+	struct spdk_nvmf_parse_transport_ctx *ctx;
+
+	ctx = calloc(1, sizeof(struct spdk_nvmf_parse_transport_ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Failed alloc of context memory for parse transports\n");
+		return -ENOMEM;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->sp = spdk_conf_first_section(NULL);
+	while (ctx->sp != NULL) {
+		if (spdk_conf_section_match_prefix(ctx->sp, "Transport")) {
+			spdk_nvmf_parse_transport(ctx);
+			return 0;
+		}
+		ctx->sp = spdk_conf_next_section(ctx->sp);
+	}
+
+	/* if we get here, there are no transports defined in conf file */
+	free(ctx);
+	cb_fn(spdk_nvmf_parse_subsystems());
+
+	return 0;
+}
+
 int
-spdk_nvmf_parse_conf(void)
+spdk_nvmf_parse_conf(spdk_nvmf_parse_conf_done_fn cb_fn)
 {
 	int rc;
+
+	if (cb_fn == NULL) {
+		SPDK_ERRLOG("Callback function is NULL\n");
+		return -1;
+	}
 
 	/* NVMf section */
 	rc = spdk_nvmf_parse_nvmf_tgt();
@@ -435,8 +577,8 @@ spdk_nvmf_parse_conf(void)
 		return rc;
 	}
 
-	/* Subsystem sections */
-	rc = spdk_nvmf_parse_subsystems();
+	/* Transport sections */
+	rc = spdk_nvmf_parse_transports(cb_fn);
 	if (rc < 0) {
 		return rc;
 	}

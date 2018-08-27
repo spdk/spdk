@@ -62,24 +62,11 @@ spdk_nvmf_get_transport_ops(enum spdk_nvme_transport_type type)
 }
 
 struct spdk_nvmf_transport *
-spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
-			   enum spdk_nvme_transport_type type,
+spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 			   struct spdk_nvmf_transport_opts *opts)
 {
 	const struct spdk_nvmf_transport_ops *ops = NULL;
 	struct spdk_nvmf_transport *transport;
-	struct spdk_nvmf_transport_opts tgt_opts;
-
-	if (opts == NULL) {
-		/* get transport opts from global target opts */
-		tgt_opts.max_queue_depth = tgt->opts.max_queue_depth;
-		tgt_opts.max_qpairs_per_ctrlr = tgt->opts.max_qpairs_per_ctrlr;
-		tgt_opts.in_capsule_data_size = tgt->opts.in_capsule_data_size;
-		tgt_opts.max_io_size = tgt->opts.max_io_size;
-		tgt_opts.io_unit_size = tgt->opts.io_unit_size;
-		tgt_opts.max_aq_depth = tgt->opts.max_queue_depth;
-		opts = &tgt_opts;
-	}
 
 	if ((opts->max_io_size % opts->io_unit_size != 0) ||
 	    (opts->max_io_size / opts->io_unit_size >
@@ -106,7 +93,6 @@ spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
-	transport->tgt = tgt;
 	transport->ops = ops;
 	transport->opts = *opts;
 
@@ -229,4 +215,21 @@ spdk_nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 		struct spdk_nvme_transport_id *trid)
 {
 	return qpair->transport->ops->qpair_get_listen_trid(qpair, trid);
+}
+
+bool
+spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
+			      struct spdk_nvmf_transport_opts *opts)
+{
+	const struct spdk_nvmf_transport_ops *ops;
+
+	ops = spdk_nvmf_get_transport_ops(type);
+	if (!ops) {
+		SPDK_ERRLOG("Transport type %s unavailable.\n",
+			    spdk_nvme_transport_id_trtype_str(type));
+		return false;
+	}
+
+	ops->opts_init(opts);
+	return true;
 }
