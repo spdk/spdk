@@ -170,6 +170,7 @@ void
 increment_time(uint64_t time_in_us)
 {
 	g_current_time_in_us += time_in_us;
+	spdk_delay_us(time_in_us);
 }
 
 static void
