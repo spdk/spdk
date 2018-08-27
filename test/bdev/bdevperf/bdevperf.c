@@ -1000,7 +1000,7 @@ main(int argc, char **argv)
 	}
 
 	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
-		printf("I/O size of %d is greather than zero copy threshold (%d).\n",
+		printf("I/O size of %d is greater than zero copy threshold (%d).\n",
 		       g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
 		printf("Zero copy mechanism will not be used.\n");
 		g_zcopy = false;

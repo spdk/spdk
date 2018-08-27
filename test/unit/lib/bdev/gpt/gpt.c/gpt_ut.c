@@ -154,7 +154,7 @@ test_read_partitions(void)
 	memset(a, 'a', sizeof(a));
 	gpt->buf = &a[0];
 
-	/* Set num_partition_entries exceeds Max vaule of entries GPT supported */
+	/* Set num_partition_entries exceeds Max value of entries GPT supported */
 	gpt->sector_size = 512;
 	head = (struct spdk_gpt_header *)(gpt->buf + GPT_PRIMARY_PARTITION_TABLE_LBA * gpt->sector_size);
 	gpt->header = head;
@@ -162,7 +162,7 @@ test_read_partitions(void)
 	re = spdk_gpt_read_partitions(gpt);
 	CU_ASSERT(re == -1);
 
-	/* Set num_partition_entries within Max vaule, size_of_partition_entry mismatch */
+	/* Set num_partition_entries within Max value, size_of_partition_entry mismatch */
 	to_le32(&head->header_crc32, 0x573857BE);
 	to_le32(&head->num_partition_entries, 0x40);
 	to_le32(&head->size_of_partition_entry, 0x0);

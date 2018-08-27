@@ -1881,7 +1881,7 @@ blob_unmap(void)
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
-	/* Confirm that only 'allocated' clusters were unmaped */
+	/* Confirm that only 'allocated' clusters were unmapped */
 	for (i = 1; i < 11; i++) {
 		switch (i) {
 		case 2:

@@ -133,7 +133,7 @@ op_login_check_target_test(void)
 	struct spdk_iscsi_tgt_node *target;
 	int rc;
 
-	/* expect sucess */
+	/* expect success */
 	snprintf(conn.initiator_name, sizeof(conn.initiator_name),
 		 "%s", UT_INITIATOR_NAME1);
 
@@ -216,7 +216,7 @@ maxburstlength_test(void)
 	SPDK_CU_ASSERT_FATAL(response_pdu != NULL);
 
 	/*
-	 * Confirm that a correct R2T reply was sent in reponse to the
+	 * Confirm that a correct R2T reply was sent in response to the
 	 *  SCSI request.
 	 */
 	TAILQ_REMOVE(&g_write_pdu_list, response_pdu, tailq);
