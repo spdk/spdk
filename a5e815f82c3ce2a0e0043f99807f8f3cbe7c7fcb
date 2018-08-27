@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7cbed2ef_3522d8d4",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-08-27T14:57:45Z",
+      "side": 1,
+      "message": "Yes, I left it to 2 as spdk uses larger huge page memory which can actually fit the 4k or 8k inline data in one SGE, where the other would be the nvme command itself. If necessary I will increment it further to 4 or max_send_sge of the rdma device, in my v2.",
+      "parentUuid": "0462460c_06583035",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a1d751a_adbb884d",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cee1166e_fe91f0ac",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-08-27T14:57:45Z",
+      "side": 1,
+      "message": "Will do in v2, But most of the code is actually returning -1 irrespective of the errno.",
+      "parentUuid": "2a1d751a_adbb884d",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "74c59ed0_b246017c",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-08-27T14:57:45Z",
+      "side": 1,
+      "message": "yes,That makes sense. What if instead of checking for 0, fill the sgl1.address with ctrlr-\u003e()-\u003eicdoff?",
+      "parentUuid": "7c045b35_92d60ffe",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "744cfad4_e55deb10",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 1
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "fb89dd85_bc7f0665",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-08-27T14:57:45Z",
+      "side": 1,
+      "message": "got it. I have SGL part in my todo. I am testing the code with fio, fio is always using CONTIG type. For this though code wise it is the same for both contig type and sgl type, I would like to use two different fuctions for future changes.\nlookslike iocsz is combined size of capsule in terms of dwords, shall add a small function to gat the size in bytes.",
+      "parentUuid": "744cfad4_e55deb10",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4524f70c_e74ba697",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 1
@@ -81,6 +153,24 @@
       "writtenOn": "2018-08-24T21:50:40Z",
       "side": 1,
       "message": "You don\u0027t need to change this value - it can remain 1. There are two layers of scatter gather lists involved. There\u0027s the RDMA scatter gather lists and the NVMe-oF scatter gather lists. To support in-capsule data we\u0027ll need to use an RDMA sgl with two elements (command and payload) to do an ibv_post_send(). However, at the NVMe-oF level the command arrives in an RDMA recv and then contains only 1 SGL element describing the location of the data. This number is the number in the NVMe-oF command, so can remain 1.",
+      "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adfac282_a7fe6af6",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1445,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-08-27T14:57:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4524f70c_e74ba697",
       "revId": "a5e815f82c3ce2a0e0043f99807f8f3cbe7c7fcb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
