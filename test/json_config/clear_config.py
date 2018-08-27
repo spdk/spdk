@@ -83,7 +83,8 @@ def clear_bdev_subsystem(args, bdev_config):
 def get_nvmf_destroy_method(nvmf):
     destroy_method_map = {'construct_nvmf_subsystem': "delete_nvmf_subsystem",
                           'set_nvmf_target_config': None,
-                          'set_nvmf_target_options': None
+                          'set_nvmf_target_options': None,
+                          'nvmf_create_transport': None
                           }
     return destroy_method_map[nvmf['method']]
 
