@@ -132,6 +132,12 @@ struct spdk_bdev_qos {
 	/** Queue of I/O waiting to be issued. */
 	bdev_io_tailq_t queued;
 
+	/** Size of a timeslice in tsc ticks. */
+	uint64_t timeslice_size;
+
+	/** Timestamp of start of last timeslice. */
+	uint64_t last_timeslice;
+
 	/** Maximum allowed IOs to be issued in one timeslice (e.g., 1ms) and
 	 *  only valid for the master channel which manages the outstanding IOs. */
 	uint64_t max_ios_per_timeslice;
@@ -1436,10 +1442,19 @@ static int
 spdk_bdev_channel_poll_qos(void *arg)
 {
 	struct spdk_bdev_qos *qos = arg;
+	uint64_t now = spdk_get_ticks();
+
+	if (now < (qos->last_timeslice + qos->timeslice_size)) {
+		/* We received our callback earlier than expected - return
+		 *  immediately and wait to do accounting until at least one
+		 *  timeslice has actually expired.  This should never happen
+		 *  with a well-behaved timer implementation.
+		 */
+		return 0;
+	}
 
 	/* Reset for next round of rate limiting */
-	qos->io_remaining_this_timeslice = qos->max_ios_per_timeslice;
-
+	qos->io_remaining_this_timeslice = 0;
 	/* We may have allowed the bytes to slightly overrun in the last timeslice.
 	 * byte_remaining_this_timeslice is signed, so if it's negative here, we'll
 	 * account for the overrun so that the next timeslice will be appropriately
@@ -1448,7 +1463,12 @@ spdk_bdev_channel_poll_qos(void *arg)
 	if (qos->byte_remaining_this_timeslice > 0) {
 		qos->byte_remaining_this_timeslice = 0;
 	}
-	qos->byte_remaining_this_timeslice += qos->max_byte_per_timeslice;
+
+	while (now >= (qos->last_timeslice + qos->timeslice_size)) {
+		qos->last_timeslice += qos->timeslice_size;
+		qos->io_remaining_this_timeslice += qos->max_ios_per_timeslice;
+		qos->byte_remaining_this_timeslice += qos->max_byte_per_timeslice;
+	}
 
 	_spdk_bdev_qos_io_submit(qos->ch);
 
@@ -1510,7 +1530,9 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 			spdk_bdev_qos_update_max_quota_per_timeslice(qos);
 			qos->io_remaining_this_timeslice = qos->max_ios_per_timeslice;
 			qos->byte_remaining_this_timeslice = qos->max_byte_per_timeslice;
-
+			qos->timeslice_size =
+				SPDK_BDEV_QOS_TIMESLICE_IN_USEC * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+			qos->last_timeslice = spdk_get_ticks();
 			qos->poller = spdk_poller_register(spdk_bdev_channel_poll_qos,
 							   qos,
 							   SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
