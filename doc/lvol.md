@@ -63,7 +63,7 @@ Blobs can be inflated to copy data from backing devices (e.g. snapshots) and all
 
 ## Decoupling {#lvol_decoupling}
 
-Blobs can be decoupled from all dependencies by copying data from backing devices (e.g. snapshots) for all allocated clusters. Remainig unallocated clusters are kept thin provisioned.
+Blobs can be decoupled from all dependencies by copying data from backing devices (e.g. snapshots) for all allocated clusters. Remaining unallocated clusters are kept thin provisioned.
 
 # Configuring Logical Volumes
 
@@ -80,7 +80,7 @@ construct_lvol_store [-h] [-c CLUSTER_SZ] bdev_name lvs_name
     erased. Then original bdev is claimed by
     SPDK, but no additional spdk bdevs are created.
     Returns uuid of created lvolstore.
-    Optional paramters:
+    Optional parameters:
     -h  show help
     -c  CLUSTER_SZ Specifies the size of cluster. By default its 4MiB.
 destroy_lvol_store [-h] [-u UUID] [-l LVS_NAME]

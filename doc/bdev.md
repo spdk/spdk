@@ -101,7 +101,7 @@ possibly multiple virtual bdevs.
 The SPDK partition type GUID is `7c5222bd-8f5d-4087-9c00-bf9843c7b58c`. Existing SPDK bdevs
 can be exposed as Linux block devices via NBD and then ca be partitioned with
 standard partitioning tools. After partitioning, the bdevs will need to be deleted and
-attached again fot the GPT bdev module to see any changes. NBD kernel module must be
+attached again for the GPT bdev module to see any changes. NBD kernel module must be
 loaded first. To create NBD bdev user should use `start_nbd_disk` RPC command.
 
 Example command
@@ -224,7 +224,7 @@ please refer to @ref lvol.
 
 Before creating any logical volumes (lvols), an lvol store has to be created first on
 selected block device. Lvol store is lvols vessel responsible for managing underlying
-bdev space assigment to lvol bdevs and storing metadata. To create lvol store user
+bdev space assignment to lvol bdevs and storing metadata. To create lvol store user
 should use using `construct_lvol_store` RPC command.
 
 Example command
@@ -274,7 +274,7 @@ Example commands
 # Passthru {#bdev_config_passthru}
 
 The SPDK Passthru virtual block device module serves as an example of how to write a
-virutal block device module. It implements the required functionality of a vbdev module
+virtual block device module. It implements the required functionality of a vbdev module
 and demonstrates some other basic features such as the use of per I/O context.
 
 Example commands

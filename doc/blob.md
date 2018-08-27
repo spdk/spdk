@@ -314,7 +314,7 @@ Cluster 0 is special and has the following format, where page 0 is the first pag
 
 The super block is a single page located at the beginning of the partition. It contains basic information about
 the Blobstore. The metadata region is the remainder of cluster 0 and may extend to additional clusters. Refer
-to the latest srouce code for complete structural details of the super block and metadata region.
+to the latest source code for complete structural details of the super block and metadata region.
 
 Each blob is allocated a non-contiguous set of pages inside the metadata region for its metadata. These pages
 form a linked list. The first page in the list will be written in place on update, while all other pages will

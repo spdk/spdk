@@ -22,7 +22,7 @@ Package dependencies at the moment include:
 
 ### Run SPDK CLI
 
-Spdkcli should be run with the same priviliges as SPDK application.
+Spdkcli should be run with the same privileges as SPDK application.
 In order to use SPDK CLI in interactive mode please use:
 ~~~{.sh}
 scripts/spdkcli.py
@@ -49,7 +49,7 @@ virtualenv-3 ./venv
 source ./venv/bin/activate
 ~~~
 
-Then install the dependencies using pip. That way depedencies will be
+Then install the dependencies using pip. That way dependencies will be
 installed only inside the virtual environment.
 ~~~{.sh}
 (venv) pip install configshell-fb

@@ -372,7 +372,7 @@ name                    | Required | string      | SPDK subsystem name
 
 ### Response
 
-The response is current configuration of the specfied SPDK subsystem.
+The response is current configuration of the specified SPDK subsystem.
 Null is returned if it is not retrievable by the get_subsystem_config method and empty array is returned if it is empty.
 
 ### Example
@@ -1349,7 +1349,7 @@ Example response:
 
 ## pmem_pool_info {#rpc_pmem_pool_info}
 
-Retrive basic information about PMDK memory pool.
+Retrieve basic information about PMDK memory pool.
 
 This method is available only if SPDK was built with PMDK support.
 

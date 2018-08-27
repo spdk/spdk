@@ -84,7 +84,7 @@ the Master and the Slave exposes a list of their implemented features and
 upon negotiation they choose a common set of those. Most of these features are
 implementation-related, but also regard e.g. multiqueue support or live migration.
 
-After the negotiatiation, the Vhost-user driver shares its memory, so that the vhost
+After the negotiation, the Vhost-user driver shares its memory, so that the vhost
 device (SPDK) can access it directly. The memory can be fragmented into multiple
 physically-discontiguous regions and Vhost-user specification puts a limit on
 their number - currently 8. The driver sends a single message for each region with

@@ -77,7 +77,7 @@ For more details see @ref jsonrpc documentation.
 ### Create just one hugetlbfs file {#cmd_arg_single_file_segments}
 
 Instead of creating one hugetlbfs file per page, this option makes SPDK create
-one file per hugepagesz per socket. This is needed for @ref virtio to be used
+one file per hugepages per socket. This is needed for @ref virtio to be used
 with more than 8 hugepages. See @ref virtio_2mb.
 
 ### Multi process mode {#cmd_arg_multi_process}
