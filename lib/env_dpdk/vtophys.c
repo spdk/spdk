@@ -634,3 +634,45 @@ spdk_vtophys(void *buf)
 		return paddr_2mb + ((uint64_t)buf & MASK_2MB);
 	}
 }
+
+static int
+spdk_bus_scan(void)
+{
+	return 0;
+}
+
+static int
+spdk_bus_probe(void)
+{
+	return 0;
+}
+
+static struct rte_device *
+spdk_bus_find_device(const struct rte_device *start,
+		     rte_dev_cmp_t cmp, const void *data)
+{
+	return NULL;
+}
+
+static enum rte_iova_mode
+spdk_bus_get_iommu_class(void) {
+	/* Since we register our PCI drivers after EAL init, we have no chance
+	 * of switching into RTE_IOVA_VA (virtual addresses as iova) iommu
+	 * class. DPDK uses RTE_IOVA_PA by default because for some platforms
+	 * it's the only supported mode, but then SPDK does not support those
+	 * platforms and doesn't mind defaulting to RTE_IOVA_VA. The rte_pci bus
+	 * will force RTE_IOVA_PA if RTE_IOVA_VA simply can not be used
+	 * (i.e. at least one device on the system is bound to uio_pci_generic),
+	 * so we simply return RTE_IOVA_VA here.
+	 */
+	return RTE_IOVA_VA;
+}
+
+struct rte_bus spdk_bus = {
+	.scan = spdk_bus_scan,
+	.probe = spdk_bus_probe,
+	.find_device = spdk_bus_find_device,
+	.get_iommu_class = spdk_bus_get_iommu_class,
+};
+
+RTE_REGISTER_BUS(spdk, spdk_bus);
