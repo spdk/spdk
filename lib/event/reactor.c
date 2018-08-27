@@ -41,6 +41,7 @@
 #include "spdk/thread.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/histogram_data.h"
 
 #define SPDK_MAX_SOCKET		64
 
@@ -117,6 +118,9 @@ struct spdk_reactor {
 	struct spdk_mempool				*event_mempool;
 
 	uint64_t					max_delay_us;
+
+	struct spdk_histogram_data			*histogram;
+	struct spdk_poller				*histogram_reset_poller;
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor *g_reactors;
@@ -430,6 +434,7 @@ spdk_reactor_add_tsc_stats(void *arg, int rc, uint64_t now)
 		tsc_stats->unknown_tsc += now - reactor->tsc_last;
 	}
 
+	spdk_histogram_data_tally(reactor->histogram, now - reactor->tsc_last);
 	reactor->tsc_last = now;
 }
 
@@ -446,6 +451,28 @@ spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t co
 	*tsc_stats = reactor->tsc_stats;
 
 	return 0;
+}
+
+static void
+print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count, uint64_t total,
+	     uint64_t so_far)
+{
+	if (count == 0) {
+		return;
+	}
+
+	printf("%ju - %ju: %ju\n", start, end, count);
+}
+
+static int
+reset_histogram(void *_reactor)
+{
+	struct spdk_reactor *reactor = _reactor;
+
+	spdk_histogram_data_reset(reactor->histogram);
+	spdk_poller_unregister(&reactor->histogram_reset_poller);
+
+	return 1;
 }
 
 /**
@@ -499,6 +526,8 @@ _spdk_reactor_run(void *arg)
 	}
 	now = spdk_get_ticks();
 	reactor->tsc_last = now;
+	reactor->histogram = spdk_histogram_data_alloc();
+	reactor->histogram_reset_poller = spdk_poller_register(reset_histogram, reactor, 1000000);
 
 	while (1) {
 		bool took_action = false;
@@ -596,6 +625,8 @@ _spdk_reactor_run(void *arg)
 	}
 
 	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
+	spdk_histogram_data_iterate(reactor->histogram, print_bucket, NULL);
+	spdk_histogram_data_free(reactor->histogram);
 	spdk_free_thread();
 	return 0;
 }
