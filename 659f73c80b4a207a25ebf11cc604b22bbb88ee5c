@@ -16,6 +16,24 @@
       "revId": "659f73c80b4a207a25ebf11cc604b22bbb88ee5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02c425be_c46f38e9",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-27T03:21:41Z",
+      "side": 1,
+      "message": "I think code is duplicated too. Putting the while loop in _spdk_poller_insert_timer() may not be necessary for first insertion because now is read just once and now is not re-read after updating next_run_tick.\n\nI propose a slightly different implementation as an alternative one.\n\n_spdk_poller_start_timer(reactor, poller, now):\n  poller-\u003enext_run_tick \u003d now + poller-\u003eperiod_ticks;\n  insert poller to timer queue;\n\n_spdk_poller_update_timer(reactor, poller, now):\n  while (poller-\u003enext_run_tick + poller-\u003eperiod_ticks \u003c now) {\n    poller-\u003emissed_periods++;\n    poller-\u003enext_run_tick +\u003d poller-\u003eperiod_ticks;\n  }\n  insert poller to timer queue;",
+      "parentUuid": "2536bcca_7709693a",
+      "revId": "659f73c80b4a207a25ebf11cc604b22bbb88ee5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
