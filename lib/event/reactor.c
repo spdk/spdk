@@ -44,7 +44,6 @@
 
 #define SPDK_MAX_SOCKET		64
 
-#define SPDK_REACTOR_SPIN_TIME_USEC	1000
 #define SPDK_EVENT_BATCH_SIZE		8
 #define SPDK_SEC_TO_USEC		1000000ULL
 
@@ -464,7 +463,7 @@ spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t co
  *	if (first timer poller has expired)
  *		run the first timer poller and reinsert it in the timer list
  *
- *	if (idle for at least SPDK_REACTOR_SPIN_TIME_USEC)
+ *	if (no action taken and sleep enabled)
  *		sleep until next timer poller is scheduled to expire
  * \endcode
  *
@@ -475,8 +474,8 @@ _spdk_reactor_run(void *arg)
 	struct spdk_reactor	*reactor = arg;
 	struct spdk_poller	*poller;
 	uint32_t		event_count;
-	uint64_t		idle_started, now;
-	uint64_t		spin_cycles, sleep_cycles;
+	uint64_t		now;
+	uint64_t		sleep_cycles;
 	uint32_t		sleep_us;
 	int			rc = -1;
 	char			thread_name[32];
@@ -491,9 +490,7 @@ _spdk_reactor_run(void *arg)
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);
 
-	spin_cycles = SPDK_REACTOR_SPIN_TIME_USEC * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
-	idle_started = 0;
 	if (g_context_switch_monitor_enabled) {
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 	}
@@ -555,38 +552,27 @@ _spdk_reactor_run(void *arg)
 			}
 		}
 
-		if (took_action) {
-			/* We were busy this loop iteration. Reset the idle timer. */
-			idle_started = 0;
-		} else if (idle_started == 0) {
-			/* We were previously busy, but this loop we took no actions. */
-			idle_started = spdk_get_ticks();
-		}
-
 		/* Determine if the thread can sleep */
-		if (sleep_cycles && idle_started) {
+		if (sleep_cycles && !took_action) {
 			now = spdk_get_ticks();
-			if (now >= (idle_started + spin_cycles)) {
-				sleep_us = reactor->max_delay_us;
+			sleep_us = reactor->max_delay_us;
 
-				poller = TAILQ_FIRST(&reactor->timer_pollers);
-				if (poller) {
-					/* There are timers registered, so don't sleep beyond
-					 * when the next timer should fire */
-					if (poller->next_run_tick < (now + sleep_cycles)) {
-						if (poller->next_run_tick <= now) {
-							sleep_us = 0;
-						} else {
-							sleep_us = ((poller->next_run_tick - now) *
-								    SPDK_SEC_TO_USEC) / spdk_get_ticks_hz();
-						}
+			poller = TAILQ_FIRST(&reactor->timer_pollers);
+			if (poller) {
+				/* There are timers registered, so don't sleep beyond
+				 * when the next timer should fire */
+				if (poller->next_run_tick < (now + sleep_cycles)) {
+					if (poller->next_run_tick <= now) {
+						sleep_us = 0;
+					} else {
+						sleep_us = ((poller->next_run_tick - now) *
+							    SPDK_SEC_TO_USEC) / spdk_get_ticks_hz();
 					}
 				}
+			}
 
-				if (sleep_us > 0) {
-					usleep(sleep_us);
-				}
-
+			if (sleep_us > 0) {
+				usleep(sleep_us);
 			}
 		}
 
