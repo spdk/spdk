@@ -354,6 +354,7 @@ spdk_get_ticks_hz(void)
 void
 spdk_delay_us(unsigned int us)
 {
+	/* spdk_get_ticks_hz is 1000000, meaning 1 tick per us. */
 	ut_spdk_get_ticks += us;
 }
 
