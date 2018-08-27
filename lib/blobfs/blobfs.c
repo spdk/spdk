@@ -2576,6 +2576,20 @@ spdk_file_close(struct spdk_file *file, struct spdk_io_channel *_channel)
 	return args->rc;
 }
 
+int
+spdk_file_get_id(struct spdk_file *file, void *id, size_t size)
+{
+	spdk_blob_id *blobid = (spdk_blob_id *)id;
+
+	if (size < sizeof(*blobid)) {
+		return -EINVAL;
+	}
+
+	*blobid = file->blobid;
+
+	return sizeof(*blobid);
+}
+
 static void
 cache_free_buffers(struct spdk_file *file)
 {
