@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "720d10b6_bd054caa",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-27T18:02:41Z",
+      "side": 1,
+      "message": "RNICs are actually a thing (RDMA NIC), but now that TCP is coming using the word NIC is better.",
+      "revId": "63b689ec78c3633585bd5afe555a2b039f27becd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
