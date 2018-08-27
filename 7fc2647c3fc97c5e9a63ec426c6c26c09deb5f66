@@ -22,6 +22,30 @@
       "revId": "7fc2647c3fc97c5e9a63ec426c6c26c09deb5f66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36ddcc98_e9d68c85",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-08-27T13:09:19Z",
+      "side": 1,
+      "message": "Good point, it\u0027s not required at all. I just sent it to /dev/null.",
+      "parentUuid": "44725c46_b4825ffb",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 75
+      },
+      "revId": "7fc2647c3fc97c5e9a63ec426c6c26c09deb5f66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
