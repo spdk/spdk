@@ -33,10 +33,12 @@ but will be removed in future release.
 been added to set CHAP authentication for discovery sessions and existing
 target nodes, respectively.
 
-CHAP shared secret file is now loaded only once at startup. During run time
-CHAP shared secrets can be configured by new JSON RPCs `add_iscsi_auth_group`,
-`delete_iscsi_auth_group`, `add_secret_to_iscsi_auth_group`, and
-`delete_secret_from_iscsi_auth_group` instead.
+The SPDK iSCSI target supports an AuthFile which can be used to load CHAP
+shared secrets when the iSCSI target starts. SPDK previously provided a
+default location for this file (`/usr/local/etc/spdk/auth.conf`) if none was
+specified. This default has been removed. Users must now explicitly specify
+the location of this file to load CHAP shared secrets from a file, or use
+the related iSCSI RPC methods to add them at runtime.
 
 ## v18.07:
 
