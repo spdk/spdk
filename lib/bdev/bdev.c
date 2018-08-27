@@ -140,11 +140,15 @@ struct spdk_bdev_qos {
 	 *  only valid for the master channel which manages the outstanding IOs. */
 	uint64_t max_byte_per_timeslice;
 
-	/** Submitted IO in one timeslice (e.g., 1ms) */
-	uint64_t io_submitted_this_timeslice;
+	/** Remaining IO allowed in current timeslice (e.g., 1ms) */
+	uint64_t io_remaining_this_timeslice;
 
-	/** Submitted byte in one timeslice (e.g., 1ms) */
-	uint64_t byte_submitted_this_timeslice;
+	/** Remaining bytes allowed in current timeslice (e.g., 1ms).
+	 *  Allowed to run negative if an I/O is submitted when some bytes are remaining,
+	 *  but the I/O is bigger than that amount.  The excess will be deducted from the
+	 *  next timeslice.
+	 */
+	int64_t byte_remaining_this_timeslice;
 
 	/** Poller that processes queued I/O commands each time slice. */
 	struct spdk_poller *poller;
@@ -1026,20 +1030,18 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 
 	while (!TAILQ_EMPTY(&qos->queued)) {
-		if (qos->max_ios_per_timeslice > 0 &&
-		    qos->io_submitted_this_timeslice >= qos->max_ios_per_timeslice) {
+		if (qos->max_ios_per_timeslice > 0 && qos->io_remaining_this_timeslice == 0) {
 			break;
 		}
 
-		if (qos->max_byte_per_timeslice > 0 &&
-		    qos->byte_submitted_this_timeslice >= qos->max_byte_per_timeslice) {
+		if (qos->max_byte_per_timeslice > 0 && qos->byte_remaining_this_timeslice <= 0) {
 			break;
 		}
 
 		bdev_io = TAILQ_FIRST(&qos->queued);
 		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
-		qos->io_submitted_this_timeslice++;
-		qos->byte_submitted_this_timeslice += _spdk_bdev_get_io_size_in_byte(bdev_io);
+		qos->io_remaining_this_timeslice--;
+		qos->byte_remaining_this_timeslice -= _spdk_bdev_get_io_size_in_byte(bdev_io);
 		ch->io_outstanding++;
 		shared_resource->io_outstanding++;
 		bdev->fn_table->submit_request(ch->channel, bdev_io);
@@ -1434,14 +1436,17 @@ spdk_bdev_channel_poll_qos(void *arg)
 	struct spdk_bdev_qos *qos = arg;
 
 	/* Reset for next round of rate limiting */
-	qos->io_submitted_this_timeslice = 0;
+	qos->io_remaining_this_timeslice = qos->max_ios_per_timeslice;
 
-	/* More bytes sent in the last timeslice, allow less in this timeslice */
-	if (qos->byte_submitted_this_timeslice > qos->max_byte_per_timeslice) {
-		qos->byte_submitted_this_timeslice -= qos->max_byte_per_timeslice;
-	} else {
-		qos->byte_submitted_this_timeslice = 0;
+	/* We may have allowed the bytes to slightly overrun in the last timeslice.
+	 * byte_remaining_this_timeslice is signed, so if it's negative here, we'll
+	 * account for the overrun so that the next timeslice will be appropriately
+	 * reduced.
+	 */
+	if (qos->byte_remaining_this_timeslice > 0) {
+		qos->byte_remaining_this_timeslice = 0;
 	}
+	qos->byte_remaining_this_timeslice += qos->max_byte_per_timeslice;
 
 	_spdk_bdev_qos_io_submit(qos->ch);
 
@@ -1501,8 +1506,8 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 
 			TAILQ_INIT(&qos->queued);
 			spdk_bdev_qos_update_max_quota_per_timeslice(qos);
-			qos->io_submitted_this_timeslice = 0;
-			qos->byte_submitted_this_timeslice = 0;
+			qos->io_remaining_this_timeslice = qos->max_ios_per_timeslice;
+			qos->byte_remaining_this_timeslice = qos->max_byte_per_timeslice;
 
 			qos->poller = spdk_poller_register(spdk_bdev_channel_poll_qos,
 							   qos,
@@ -1685,8 +1690,8 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 	new_qos->thread = NULL;
 	new_qos->max_ios_per_timeslice = 0;
 	new_qos->max_byte_per_timeslice = 0;
-	new_qos->io_submitted_this_timeslice = 0;
-	new_qos->byte_submitted_this_timeslice = 0;
+	new_qos->io_remaining_this_timeslice = 0;
+	new_qos->byte_remaining_this_timeslice = 0;
 	new_qos->poller = NULL;
 	TAILQ_INIT(&new_qos->queued);
 
