@@ -29,17 +29,10 @@ cd rocksdb
 make db_bench SPDK_DIR=path/to/spdk
 ~~~
 
-Copy `etc/spdk/rocksdb.conf.in` from the SPDK repository to `/usr/local/etc/spdk/rocksdb.conf`.
+Create an NVMe section in the configuration file using SPDK's `gen_nvme.sh` script.
 
 ~~~{.sh}
-cd ../spdk
-cp etc/spdk/rocksdb.conf.in /usr/local/etc/spdk/rocksdb.conf
-~~~
-
-Append an NVMe section to the configuration file using SPDK's `gen_nvme.sh` script.
-
-~~~{.sh}
-scripts/gen_nvme.sh >> /usr/local/etc/spdk/rocksdb.conf
+scripts/gen_nvme.sh > /usr/local/etc/spdk/rocksdb.conf
 ~~~
 
 Verify the configuration file has specified the correct NVMe SSD.
