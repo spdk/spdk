@@ -253,7 +253,7 @@ static void build_io_request_9(struct io_request *req)
 {
 	/*
 	 * Check if mixed PRP complaint and not complaint requests are handled
-	 * properly by spliting them into subrequests.
+	 * properly by splitting them into subrequests.
 	 * Construct buffers with following theme:
 	 */
 	const size_t req_len[] = {  2048, 4096, 2048,  4096,  2048,  1024 };

@@ -195,7 +195,7 @@ get_changed_ns_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl
 	}
 
 	if (!found) {
-		printf("%s: Error: Cann't find expected NSID %u\n", dev->name, expected_ns_test);
+		printf("%s: Error: Can't find expected NSID %u\n", dev->name, expected_ns_test);
 		failed = 1;
 	}
 

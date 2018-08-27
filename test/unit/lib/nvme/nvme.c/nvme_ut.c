@@ -396,7 +396,7 @@ test_nvme_driver_init(void)
 	rc = nvme_driver_init();
 	CU_ASSERT(rc == 0);
 
-	/* process is not primary, mem is reserved but not intiialized */
+	/* process is not primary, mem is reserved but not initialized */
 	/* and times out */
 	MOCK_SET(spdk_process_is_primary, false);
 	MOCK_SET(spdk_memzone_reserve, (void *)&dummy);
@@ -453,7 +453,7 @@ test_spdk_nvme_detach(void)
 	 * Controllers are ref counted so mock the function that returns
 	 * the ref count so that detach will actually call the destruct
 	 * function which we've mocked simply to verify that it gets
-	 * called (we aren't testing what the real destuct function does
+	 * called (we aren't testing what the real destruct function does
 	 * here.)
 	 */
 	MOCK_SET(nvme_ctrlr_get_ref_count, 0);

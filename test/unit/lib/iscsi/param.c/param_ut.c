@@ -378,7 +378,7 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "param negotiation test",
 			    param_negotiation_test) == NULL ||
-		CU_add_test(suite, "list negotation test",
+		CU_add_test(suite, "list negotiation test",
 			    list_negotiation_test) == NULL ||
 		CU_add_test(suite, "parse valid test",
 			    parse_valid_test) == NULL ||

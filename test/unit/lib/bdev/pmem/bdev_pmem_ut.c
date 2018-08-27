@@ -522,7 +522,7 @@ ut_pmem_write_read(void)
 	CU_ASSERT_EQUAL(rc, SPDK_BDEV_IO_STATUS_FAILED);
 
 	/*
-	 * Write with insuficient IOV buffers length.
+	 * Write with insufficient IOV buffers length.
 	 */
 	rc = bdev_submit_request(bdev, SPDK_BDEV_IO_TYPE_WRITE, 0, g_pool_ok.nblock, &iov[0], 2);
 	CU_ASSERT_EQUAL(rc, SPDK_BDEV_IO_STATUS_FAILED);
@@ -588,7 +588,7 @@ ut_pmem_write_read(void)
 	CU_ASSERT_EQUAL(rc, SPDK_BDEV_IO_STATUS_FAILED);
 
 	/*
-	 * Read with insuficient IOV buffers length.
+	 * Read with insufficient IOV buffers length.
 	 */
 	rc = bdev_submit_request(bdev, SPDK_BDEV_IO_TYPE_READ, 0, g_pool_ok.nblock, &iov[0], 2);
 	CU_ASSERT_EQUAL(rc, SPDK_BDEV_IO_STATUS_FAILED);
