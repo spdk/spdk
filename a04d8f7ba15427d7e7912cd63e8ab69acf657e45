@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dacc9349_7d840c3a",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-27T00:20:56Z",
+      "side": 1,
+      "message": "if",
+      "range": {
+        "startLine": 480,
+        "startChar": 49,
+        "endLine": 480,
+        "endChar": 51
+      },
+      "revId": "a04d8f7ba15427d7e7912cd63e8ab69acf657e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6424fb77_3255f3fd",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-27T00:20:56Z",
+      "side": 1,
+      "message": "should be int8_t or enum_spdk_bdev_io_status ? \n\nSPDK_BDEV_IO_STATUS_FAILED \u003d -1 and the type of spdk_bdev_io.internal.status is int8_t.",
+      "range": {
+        "startLine": 140,
+        "startChar": 1,
+        "endLine": 140,
+        "endChar": 8
+      },
+      "revId": "a04d8f7ba15427d7e7912cd63e8ab69acf657e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
