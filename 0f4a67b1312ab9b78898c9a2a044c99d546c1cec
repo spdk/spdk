@@ -42,6 +42,75 @@
     },
     {
       "key": {
+        "uuid": "8b9628e2_373c3faa",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:19:27Z",
+      "side": 1,
+      "message": "Change all these *_method_order to list and use [].index(elem) to get the index.",
+      "range": {
+        "startLine": 95,
+        "startChar": 21,
+        "endLine": 95,
+        "endChar": 38
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16bc12de_f256fab5",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:19:27Z",
+      "side": 1,
+      "message": "Can you introduce SpdkConfigParser that will overload optionxform embedding proper regexp (or something similar) to get rid of this ugly for loop bellow?\n\nAll sections in SPDK config file match: \u0027(Nvme|VirtioBlk|...)(\\d*)\u0027 So you can define this regexp an map re.match().group(1) to proper Config-to-JSON converting function. This should cut down number of line in this file.\n\nAlso I think flow should be like\n\n  for name in \u003c\u003clist of sections\u003e\u003e:\n    s \u003d config.section(name)\n    \u003c\u003c s is known - convert s to json and remove section from config \u003e\u003e\n  \n  if config.sections():\n    \u003c\u003c print warning and all unknown sections\u003e\u003e\n\nThis way you avoid tons of warnings during configuration parsing.",
+      "range": {
+        "startLine": 170,
+        "startChar": 8,
+        "endLine": 173,
+        "endChar": 32
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46295427_68cb7827",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:19:27Z",
+      "side": 1,
+      "message": "Why? Missing sections mean that there is no configuration so you can skip them.",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 39
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4266550_5a018878",
         "filename": "scripts/config_converter.py",
         "patchSetId": 48
