@@ -388,6 +388,17 @@ void spdk_file_set_priority(struct spdk_file *file, uint32_t priority);
  */
 int spdk_file_sync(struct spdk_file *file, struct spdk_io_channel *channel);
 
+/**
+ * Get the unique ID for the file.
+ *
+ * \param file File to get the ID.
+ * \param id ID buffer.
+ * \param size Size of the ID buffer.
+ *
+ * \return the length of ID on success.
+ */
+int spdk_file_get_id(struct spdk_file *file, void *id, size_t size);
+
 #ifdef __cplusplus
 }
 #endif
