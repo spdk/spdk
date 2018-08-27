@@ -11,7 +11,7 @@ function check_qos_works_well() {
 	local retval=0
 
 	start_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].num_read_ops')
-	$fio_py 8192 64 randread 5
+	$fio_py 512 64 randread 5
 	end_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].num_read_ops')
 
 	read_iops=$(((end_io_count-start_io_count)/5))
@@ -44,7 +44,7 @@ fi
 timing_enter qos
 
 MALLOC_BDEV_SIZE=64
-MALLOC_BLOCK_SIZE=4096
+MALLOC_BLOCK_SIZE=512
 IOPS_LIMIT=20000
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
