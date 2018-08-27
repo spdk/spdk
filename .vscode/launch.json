@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "gdb",
+            "request": "launch",
+            "name": "blob_ut",
+            "target": "./test/unit/lib/blob/blob.c/blob_ut",
+            "cwd": "${workspaceRoot}",
+            "ssh": {
+                "host": "10.102.17.111",
+                "cwd": "/home/<user>/git/spdk",
+                "keyfile": "C:/Users/<user>/.ssh/id_rsa",
+                "user": "<user>"
+            },
+        },
+        {
+            "type": "gdb",
+            "request": "launch",
+            "name": "lvol_ut",
+            "target": "test/unit/lib/lvol/lvol.c/lvol_ut",
+            "cwd": "${workspaceRoot}",
+            "ssh": {
+                "host": "10.102.17.111",
+                "cwd": "/home/<user>/git/spdk",
+                "keyfile": "C:/Users/<user>/.ssh/id_rsa",
+                "user": "<user>"
+            },
+        }
+    ]
+}
