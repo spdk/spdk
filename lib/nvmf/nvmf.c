@@ -431,6 +431,7 @@ void
 spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_transport *transport, *tmp;
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "method", "set_nvmf_target_options");
@@ -445,6 +446,24 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
+
+	/* write transports */
+	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "nvmf_transport_create");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "trtype", spdk_nvme_transport_id_trtype_str(transport->ops->type));
+		spdk_json_write_named_uint32(w, "max_queue_depth", transport->opts.max_queue_depth);
+		spdk_json_write_named_uint32(w, "max_qpairs_per_ctrlr", transport->opts.max_qpairs_per_ctrlr);
+		spdk_json_write_named_uint32(w, "in_capsule_data_size", transport->opts.in_capsule_data_size);
+		spdk_json_write_named_uint32(w, "max_io_size", transport->opts.max_io_size);
+		spdk_json_write_named_uint32(w, "io_unit_size", transport->opts.io_unit_size);
+		spdk_json_write_named_uint32(w, "max_aq_depth", transport->opts.max_aq_depth);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
 
 	subsystem = spdk_nvmf_subsystem_get_first(tgt);
 	while (subsystem) {
@@ -487,12 +506,23 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 
 	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trtype);
 	if (!transport) {
-		transport = spdk_nvmf_transport_create(tgt, trid->trtype, NULL);
+		struct spdk_nvmf_transport_opts opts;
+
+		opts.max_queue_depth = tgt->opts.max_queue_depth;
+		opts.max_qpairs_per_ctrlr = tgt->opts.max_qpairs_per_ctrlr;
+		opts.in_capsule_data_size = tgt->opts.in_capsule_data_size;
+		opts.max_io_size = tgt->opts.max_io_size;
+		opts.io_unit_size = tgt->opts.io_unit_size;
+		opts.max_aq_depth = tgt->opts.max_queue_depth;
+
+		transport = spdk_nvmf_transport_create(trid->trtype, &opts);
 		if (!transport) {
 			SPDK_ERRLOG("Transport initialization failed\n");
 			cb_fn(cb_arg, -EINVAL);
 			return;
 		}
+
+		transport->tgt = tgt;
 		TAILQ_INSERT_TAIL(&tgt->transports, transport, link);
 
 		propagate = true;
@@ -529,6 +559,66 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 	} else {
 		cb_fn(cb_arg, 0);
 	}
+}
+
+struct spdk_nvmf_tgt_add_transport_ctx {
+	struct spdk_nvmf_tgt *tgt;
+	struct spdk_nvmf_transport *transport;
+	spdk_nvmf_tgt_listen_done_fn cb_fn;
+	void *cb_arg;
+};
+
+static void
+_spdk_nvmf_tgt_add_transport_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_tgt_add_transport_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->cb_fn(ctx->cb_arg, status);
+	free(ctx);
+}
+
+static void
+_spdk_nvmf_tgt_add_transport(struct spdk_io_channel_iter *i)
+{
+	struct spdk_nvmf_tgt_add_transport_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	rc = spdk_nvmf_poll_group_add_transport(group, ctx->transport);
+	spdk_for_each_channel_continue(i, rc);
+}
+
+void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
+				 struct spdk_nvmf_transport *transport,
+				 spdk_nvmf_tgt_add_transport_done_fn cb_fn,
+				 void *cb_arg)
+{
+	struct spdk_nvmf_tgt_add_transport_ctx *ctx;
+
+	if (spdk_nvmf_tgt_get_transport(tgt, transport->ops->type)) {
+		cb_fn(cb_arg, -EEXIST);
+		return; /* transport already created */
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	transport->tgt = tgt;
+	TAILQ_INSERT_TAIL(&tgt->transports, transport, link);
+
+	ctx->tgt = tgt;
+	ctx->transport = transport;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(tgt,
+			      _spdk_nvmf_tgt_add_transport,
+			      ctx,
+			      _spdk_nvmf_tgt_add_transport_done);
 }
 
 struct spdk_nvmf_subsystem *
