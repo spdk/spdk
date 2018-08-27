@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "260a7c41_ce54d463",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:45:28Z",
+      "side": 1,
+      "message": "can this be NULL?",
+      "range": {
+        "startLine": 96,
+        "startChar": 1,
+        "endLine": 96,
+        "endChar": 11
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "670ee4f9_404b47ab",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:45:28Z",
+      "side": 1,
+      "message": "-\u003e resp?",
+      "range": {
+        "startLine": 109,
+        "startChar": 13,
+        "endLine": 109,
+        "endChar": 17
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec801ecc_93864665",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:45:28Z",
+      "side": 1,
+      "message": "spdk_json_write_named_string()",
+      "range": {
+        "startLine": 160,
+        "startChar": 1,
+        "endLine": 161,
+        "endChar": 47
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32eda777_0424acd0",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:45:28Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 164,
+        "startChar": 2,
+        "endLine": 165,
+        "endChar": 49
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a905c17c_7ffca57d",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:45:28Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 169,
+        "startChar": 2,
+        "endLine": 170,
+        "endChar": 47
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2896dbb_42b14879",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:45:28Z",
+      "side": 1,
+      "message": "return val-\u003etype \u003d\u003d SPDK_JSON_STRING ? -ENOMEM : -EINVAL;",
+      "range": {
+        "startLine": 245,
+        "startChar": 9,
+        "endLine": 245,
+        "endChar": 11
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9f15cc9_c8a46d7d",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:45:28Z",
+      "side": 1,
+      "message": "return val-\u003etype \u003d\u003d SPDK_JSON_STRING ? -ENOMEM : -EINVAL;",
+      "range": {
+        "startLine": 282,
+        "startChar": 9,
+        "endLine": 282,
+        "endChar": 11
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "058c2170_b454510b",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:45:28Z",
+      "side": 1,
+      "message": "I think this loop can be removed if you add a check for strlen(name) \u003d\u003d strlen(_nvme_ctrlr-\u003ename) in next loop.",
+      "range": {
+        "startLine": 503,
+        "startChar": 1,
+        "endLine": 511,
+        "endChar": 2
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5aab6098_4563a488",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-27T13:45:28Z",
+      "side": 1,
+      "message": "Can you invert these conditions to remove unneeded indentations.",
+      "range": {
+        "startLine": 516,
+        "startChar": 2,
+        "endLine": 526,
+        "endChar": 3
+      },
+      "revId": "8d816ed67972fae7dc92acde95d1d8a37aeb6cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
