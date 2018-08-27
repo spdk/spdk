@@ -154,7 +154,8 @@ SpdkSequentialFile::Skip(uint64_t n)
 }
 
 Status
-SpdkSequentialFile::InvalidateCache(size_t offset, size_t length)
+SpdkSequentialFile::InvalidateCache(__attribute__((unused)) size_t offset,
+				    __attribute__((unused)) size_t length)
 {
 	return Status::OK();
 }
@@ -191,7 +192,8 @@ SpdkRandomAccessFile::Read(uint64_t offset, size_t n, Slice *result, char *scrat
 }
 
 Status
-SpdkRandomAccessFile::InvalidateCache(size_t offset, size_t length)
+SpdkRandomAccessFile::InvalidateCache(__attribute__((unused)) size_t offset,
+				      __attribute__((unused)) size_t length)
 {
 	return Status::OK();
 }
@@ -272,7 +274,8 @@ public:
 	{
 		return mSize;
 	}
-	virtual Status InvalidateCache(size_t offset, size_t length) override
+	virtual Status InvalidateCache(__attribute__((unused)) size_t offset,
+				       __attribute__((unused)) size_t length) override
 	{
 		return Status::OK();
 	}
@@ -288,7 +291,8 @@ public:
 			return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
 		}
 	}
-	virtual Status RangeSync(uint64_t offset, uint64_t nbytes) override
+	virtual Status RangeSync(__attribute__((unused)) uint64_t offset,
+				 __attribute__((unused)) uint64_t nbytes) override
 	{
 		int rc;
 
@@ -304,7 +308,8 @@ public:
 			return Status::IOError(spdk_file_get_name(mFile), strerror(errno));
 		}
 	}
-	virtual size_t GetUniqueId(char *id, size_t max_size) const override
+	virtual size_t GetUniqueId(__attribute__((unused)) char *id,
+				   __attribute__((unused)) size_t max_size) const override
 	{
 		return 0;
 	}
@@ -437,7 +442,7 @@ public:
 		return EnvWrapper::ReuseWritableFile(fname, old_fname, result, options);
 	}
 
-	virtual Status NewDirectory(const std::string &name,
+	virtual Status NewDirectory(__attribute__((unused)) const std::string &name,
 				    unique_ptr<Directory> *result) override
 	{
 		result->reset(new SpdkDirectory());
@@ -468,7 +473,8 @@ public:
 		}
 		return Status::OK();
 	}
-	virtual Status LinkFile(const std::string &src, const std::string &t) override
+	virtual Status LinkFile(__attribute__((unused)) const std::string &src,
+				__attribute__((unused)) const std::string &t) override
 	{
 		return Status::NotSupported("SpdkEnv does not support LinkFile");
 	}
@@ -566,7 +572,9 @@ public:
 };
 
 static void
-_spdk_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+_spdk_send_msg(__attribute__((unused)) spdk_thread_fn fn,
+	       __attribute__((unused)) void *ctx,
+	       __attribute__((unused)) void *thread_ctx)
 {
 	/* Not supported */
 	assert(false);
@@ -604,7 +612,8 @@ void SpdkEnv::StartThread(void (*function)(void *arg), void *arg)
 }
 
 static void
-fs_load_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
+fs_load_cb(__attribute__((unused)) void *ctx,
+	   struct spdk_filesystem *fs, int fserrno)
 {
 	if (fserrno == 0) {
 		g_fs = fs;
@@ -613,7 +622,8 @@ fs_load_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
 }
 
 static void
-spdk_rocksdb_run(void *arg1, void *arg2)
+spdk_rocksdb_run(__attribute__((unused)) void *arg1,
+		 __attribute__((unused)) void *arg2)
 {
 	struct spdk_bdev *bdev;
 
@@ -632,7 +642,8 @@ spdk_rocksdb_run(void *arg1, void *arg2)
 }
 
 static void
-fs_unload_cb(void *ctx, int fserrno)
+fs_unload_cb(__attribute__((unused)) void *ctx,
+	     __attribute__((unused)) int fserrno)
 {
 	assert(fserrno == 0);
 
