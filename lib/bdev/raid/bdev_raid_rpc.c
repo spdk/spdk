@@ -492,7 +492,7 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 
 	/* Remove all the base bdevs from this raid bdev before destroying the raid bdev */
 	for (uint32_t i = 0; i < raid_cfg->num_base_bdevs; i++) {
-		base_bdev = spdk_bdev_get_by_name(raid_cfg->base_bdev[i].bdev_name);
+		base_bdev = spdk_bdev_get_by_name(raid_cfg->base_bdev[i].name);
 		if (base_bdev != NULL) {
 			raid_bdev_remove_base_bdev(base_bdev);
 		}

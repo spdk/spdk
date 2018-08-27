@@ -800,7 +800,7 @@ raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
 
 	if (raid_cfg->base_bdev) {
 		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-			free(raid_cfg->base_bdev[i].bdev_name);
+			free(raid_cfg->base_bdev[i].name);
 		}
 		free(raid_cfg->base_bdev);
 	}
@@ -922,8 +922,8 @@ raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg, const char *ba
 
 	TAILQ_FOREACH(tmp, &g_spdk_raid_config.raid_bdev_config_head, link) {
 		for (i = 0; i < tmp->num_base_bdevs; i++) {
-			if (tmp->base_bdev[i].bdev_name != NULL) {
-				if (!strcmp(tmp->base_bdev[i].bdev_name, base_bdev_name)) {
+			if (tmp->base_bdev[i].name != NULL) {
+				if (!strcmp(tmp->base_bdev[i].name, base_bdev_name)) {
 					SPDK_ERRLOG("duplicate base bdev name %s mentioned\n",
 						    base_bdev_name);
 					return -EEXIST;
@@ -932,8 +932,8 @@ raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg, const char *ba
 		}
 	}
 
-	raid_cfg->base_bdev[slot].bdev_name = strdup(base_bdev_name);
-	if (raid_cfg->base_bdev[slot].bdev_name == NULL) {
+	raid_cfg->base_bdev[slot].name = strdup(base_bdev_name);
+	if (raid_cfg->base_bdev[slot].name == NULL) {
 		SPDK_ERRLOG("unable to allocate memory\n");
 		return -ENOMEM;
 	}
@@ -1130,7 +1130,7 @@ raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **_raid_
 			 * If match is found then return true and the slot information where
 			 * this base bdev should be inserted in raid bdev
 			 */
-			if (!strcmp(bdev_name, raid_cfg->base_bdev[i].bdev_name)) {
+			if (!strcmp(bdev_name, raid_cfg->base_bdev[i].name)) {
 				*_raid_cfg = raid_cfg;
 				*base_bdev_slot = i;
 				rv = true;

@@ -153,7 +153,7 @@ struct raid_bdev_io {
  */
 struct raid_base_bdev_config {
 	/* base bdev name from config file */
-	char                        *bdev_name;
+	char				*name;
 };
 
 /*
