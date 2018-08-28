@@ -272,7 +272,8 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_raid_bdev_decoders,
 				    SPDK_COUNTOF(rpc_construct_raid_bdev_decoders),
 				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
 		free_rpc_construct_raid_bdev(&req);
 		return;
 	}
@@ -280,7 +281,9 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	rc = raid_bdev_config_add(req.name, req.strip_size, req.base_bdevs.num_base_bdevs, req.raid_level,
 				  &raid_cfg);
 	if (rc != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Failed to add RAID bdev config %s: %s",
+						     req.name, spdk_strerror(-rc));
 		free_rpc_construct_raid_bdev(&req);
 		return;
 	}
@@ -289,7 +292,10 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		rc = raid_bdev_config_add_base_bdev(raid_cfg, req.base_bdevs.base_bdevs[i], i);
 		if (rc != 0) {
 			raid_bdev_config_cleanup(raid_cfg);
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Failed to add base bdev %s to RAID bdev config %s: %s",
+							     req.base_bdevs.base_bdevs[i], req.name,
+							     spdk_strerror(-rc));
 			free_rpc_construct_raid_bdev(&req);
 			return;
 		}
@@ -301,7 +307,9 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		if (base_bdev == NULL) {
 			check_and_remove_raid_bdev(raid_cfg);
 			raid_bdev_config_cleanup(raid_cfg);
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "base bdev not found");
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "base bdev %s not found",
+							     req.base_bdevs.base_bdevs[i]);
 			free_rpc_construct_raid_bdev(&req);
 			return;
 		}
@@ -311,11 +319,14 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		 * command. This might be because this base_bdev may already be claimed
 		 * by some other module
 		 */
-		if (raid_bdev_add_base_device(raid_cfg, base_bdev, i)) {
+		rc = raid_bdev_add_base_device(raid_cfg, base_bdev, i);
+		if (rc != 0) {
 			check_and_remove_raid_bdev(raid_cfg);
 			raid_bdev_config_cleanup(raid_cfg);
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "base bdev can't be added because of either memory allocation failed or not able to claim");
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Failed to add base bdev %s to RAID bdev %s: %s",
+							     req.base_bdevs.base_bdevs[i], req.name,
+							     spdk_strerror(-rc));
 			free_rpc_construct_raid_bdev(&req);
 			return;
 		}
@@ -436,7 +447,8 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 	if (spdk_json_decode_object(params, rpc_destroy_raid_bdev_decoders,
 				    SPDK_COUNTOF(rpc_destroy_raid_bdev_decoders),
 				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
 		free_rpc_destroy_raid_bdev(&req);
 		return;
 	}
@@ -449,8 +461,8 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 	}
 
 	if (raid_cfg == NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "raid bdev name not found");
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "raid bdev %s is not found in config", req.name);
 		free_rpc_destroy_raid_bdev(&req);
 		return;
 	}

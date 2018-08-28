@@ -591,6 +591,13 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 }
 
 void
+spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
+				     int error_code, const char *fmt, ...)
+{
+	g_rpc_err = 1;
+}
+
+void
 spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_write_ctx *w)
 {
 }
