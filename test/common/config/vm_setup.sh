@@ -281,6 +281,23 @@ cd ~
 
 if echo $CONF | grep -q vpp; then
     # Vector packet processing (VPP) is installed for use with iSCSI tests.
+    if [ -d vpp_setup]; then
+        echo "vpp setup already done."
+    else
+        sudo dnf install perl-generators
+        mkdir -p ~/vpp_setup/src/rpm
+        cd ~/vpp_setup/src/rpm
+        mkdir -p BUILD RPMS SOURCES SPECS SRPMS
+        dnf download --source redhat-rpm-config
+        rpm -ivh redhat-rpm-config*
+        sed -i s/"Requires: (annobin if gcc)"//g SPECS/redhat-rpm-config.spec
+        rpmbuild -ba SPECS/*.spec
+        sudo dnf remove --noautoremove redhat-rpm-config
+        sudo rpm -Uvh RPMS/noarch/*
+        cd -
+    fi
+
+    mkdir -p BUILD RPMS SOURCES SPECS SRPMS
     if [ -d vpp ]; then
         echo "vpp already cloned."
         if [ ! -d vpp/build-root ]; then
