@@ -2532,15 +2532,6 @@ spdk_file_close_async(struct spdk_file *file, spdk_file_op_complete cb_fn, void 
 }
 
 static void
-__file_close_done(void *arg, int fserrno)
-{
-	struct spdk_fs_cb_args *args = arg;
-
-	args->rc = fserrno;
-	sem_post(args->sem);
-}
-
-static void
 __file_close(void *arg)
 {
 	struct spdk_fs_request *req = arg;
@@ -2568,7 +2559,7 @@ spdk_file_close(struct spdk_file *file, struct spdk_io_channel *_channel)
 	BLOBFS_TRACE(file, "name=%s\n", file->name);
 	args->file = file;
 	args->sem = &channel->sem;
-	args->fn.file_op = __file_close_done;
+	args->fn.file_op = __wake_caller;
 	args->arg = req;
 	channel->send_request(__file_close, req);
 	sem_wait(&channel->sem);
