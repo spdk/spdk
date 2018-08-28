@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ffe506a_15de0633",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-28T22:21:56Z",
+      "side": 1,
+      "message": "I think we should ignore NVME commands for purposes of QoS.  SPDK_NVME_OPC_READ is an I/O command only (not valid for NVME_ADMIN).  Just checking OPC_READ for I/O commands is not really enough - it can never account for vendor-specific commands for example.\n\nI think we just document that SPDK_BDEV_IO_TYPE_NVME_* commands are not governed by QoS at all.",
+      "revId": "e52090a118d4912f133d000c5c3fdf2b19b1e028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17e8e3a5_621e308e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-28T22:21:56Z",
+      "side": 1,
+      "message": "Could we make this function pointer based?  For example, something like this:\n\nif (qos-\u003erate_limits[i].submit_io(bdev_io) \u003d\u003d false) {\n  return false;\n}\n\nThen each metric can have their own function for determining if an I/O should be submitted or not.",
+      "revId": "e52090a118d4912f133d000c5c3fdf2b19b1e028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29f6cb91_2a9c575c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-28T22:21:56Z",
+      "side": 1,
+      "message": "similar to above, but maybe a function pointer called \"count_io\" (meaning it should count this IO since it was submitted)",
+      "revId": "e52090a118d4912f133d000c5c3fdf2b19b1e028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
