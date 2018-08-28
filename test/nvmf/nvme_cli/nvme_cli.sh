@@ -70,18 +70,17 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode2" || true
 
 if [ -d  $spdk_nvme_cli ]; then
-	# Test spdk/nvme-cli NVMe-oF commands: discover, connect and disconnet
+	# Test spdk/nvme-cli NVMe-oF commands: discover, connect and disconnect
 	cd $spdk_nvme_cli
 	./nvme discover -t rdma -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 	nvme_num_before_connection=$(nvme list |grep "/dev/nvme*"|awk '{print $1}'|wc -l)
 	./nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	sleep 1
 	nvme_num=$(nvme list |grep "/dev/nvme*"|awk '{print $1}'|wc -l)
 	./nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
-	sed -i 's/spdk=1/spdk=0/g' spdk.conf
-	sed -i 's/shm_id=0/shm_id=1/g' spdk.conf
 	if [ $nvme_num -le $nvme_num_before_connection ]; then
 		echo "spdk/nvme-cli connect target devices failed"
-		kill SIGINT
+		exit 1
 	fi
 fi
 
