@@ -138,7 +138,7 @@ function nvmfcleanup()
 
 function nvmftestinit()
 {
-	if [ $1 == "iso" ]; then
+	if [ "$1" == "iso" ]; then
 		$rootdir/scripts/setup.sh
 		rdma_device_init
 	fi
@@ -146,7 +146,7 @@ function nvmftestinit()
 
 function nvmftestfini()
 {
-	if [ $1 == "iso" ]; then
+	if [ "$1" == "iso" ]; then
 		$rootdir/scripts/setup.sh reset
 		rdma_device_init
 	fi
