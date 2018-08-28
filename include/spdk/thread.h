@@ -204,6 +204,18 @@ struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 void spdk_free_thread(void);
 
 /**
+ * Perform one iteration worth of processing on the thread. Currently only
+ * executes outstanding messages.
+ *
+ * \param thread The thread to process
+ * \param max_msgs The maximum number of messages that will be processed.
+ *                   Use 0 to process all pending messages.
+ *
+ * \return 1 if work was done. 0 if no work was done. -1 if unknown.
+ */
+int spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs);
+
+/**
  * Get count of allocated threads.
  */
 uint32_t spdk_thread_get_count(void);

@@ -211,27 +211,6 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 }
 
 static void
-_spdk_reactor_msg_passed(void *arg1, void *arg2)
-{
-	spdk_thread_fn fn = arg1;
-
-	fn(arg2);
-}
-
-static void
-_spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	struct spdk_event *event;
-	struct spdk_reactor *reactor;
-
-	reactor = thread_ctx;
-
-	event = spdk_event_allocate(reactor->lcore, _spdk_reactor_msg_passed, fn, ctx);
-
-	spdk_event_call(event);
-}
-
-static void
 _spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poller, uint64_t now)
 {
 	struct spdk_poller *iter;
@@ -471,6 +450,7 @@ static int
 _spdk_reactor_run(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
+	struct spdk_thread	*thread;
 	struct spdk_poller	*poller;
 	uint32_t		event_count;
 	uint64_t		now;
@@ -480,10 +460,11 @@ _spdk_reactor_run(void *arg)
 	char			thread_name[32];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-	if (spdk_allocate_thread(_spdk_reactor_send_msg,
-				 _spdk_reactor_start_poller,
-				 _spdk_reactor_stop_poller,
-				 reactor, thread_name) == NULL) {
+	thread = spdk_allocate_thread(NULL,
+				      _spdk_reactor_start_poller,
+				      _spdk_reactor_stop_poller,
+				      reactor, thread_name);
+	if (!thread) {
 		return -1;
 	}
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
@@ -498,6 +479,13 @@ _spdk_reactor_run(void *arg)
 
 	while (1) {
 		bool took_action = false;
+
+		rc = spdk_thread_poll(thread, 0);
+		if (rc > 0) {
+			now = spdk_get_ticks();
+			spdk_reactor_add_tsc_stats(reactor, rc, now);
+			took_action = true;
+		}
 
 		event_count = _spdk_event_queue_run_batch(reactor);
 		if (event_count > 0) {
