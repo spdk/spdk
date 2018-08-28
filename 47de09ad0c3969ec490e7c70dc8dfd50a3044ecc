@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "936c71f2_e1a30f6d",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-28T20:56:09Z",
+      "side": 1,
+      "message": "Thanks Liang.  Seth said he ran into this issue too.\n\nCould you add a comment here though:\n\n# Newer kernels do not have the ib_ucm module",
+      "revId": "47de09ad0c3969ec490e7c70dc8dfd50a3044ecc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
