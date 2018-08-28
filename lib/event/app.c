@@ -77,8 +77,8 @@ spdk_app_get_shm_id(void)
 static struct option g_cmdline_options[SPDK_APP_MAX_CMDLINE_OPTIONS + 1] = {
 #define CONFIG_FILE_OPT_IDX	'c'
 	{"config",			required_argument,	NULL, CONFIG_FILE_OPT_IDX},
-#define DISABLE_COREDUMP_OPT_IDX 'd'
-	{"disable-coredump",		no_argument,		NULL, DISABLE_COREDUMP_OPT_IDX},
+#define LIMIT_COREDUMP_OPT_IDX 'd'
+	{"limit-coredump",		no_argument,		NULL, LIMIT_COREDUMP_OPT_IDX},
 #define TPOINT_GROUP_MASK_OPT_IDX 'e'
 	{"tpoint-group-mask",		required_argument,	NULL, TPOINT_GROUP_MASK_OPT_IDX},
 #define SINGLE_FILE_SEGMENTS_OPT_IDX 'g'
@@ -781,7 +781,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case CONFIG_FILE_OPT_IDX:
 			opts->config_file = optarg;
 			break;
-		case DISABLE_COREDUMP_OPT_IDX:
+		case LIMIT_COREDUMP_OPT_IDX:
 			opts->enable_coredump = false;
 			break;
 		case TPOINT_GROUP_MASK_OPT_IDX:
