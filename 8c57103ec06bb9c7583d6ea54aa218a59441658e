@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33d15b0b_aec0c84d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1133,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-28T21:08:35Z",
+      "side": 1,
+      "message": "I missed this before. This needs to be both shared and DMA safe.",
+      "revId": "8c57103ec06bb9c7583d6ea54aa218a59441658e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
