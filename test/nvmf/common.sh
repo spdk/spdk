@@ -20,7 +20,7 @@ function load_ib_rdma_modules()
 
 	modprobe ib_cm
 	modprobe ib_core
-	modprobe ib_ucm
+#	modprobe ib_ucm
 	modprobe ib_umad
 	modprobe ib_uverbs
 	modprobe iw_cm

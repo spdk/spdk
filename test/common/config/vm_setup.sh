@@ -281,6 +281,26 @@ cd ~
 
 if echo $CONF | grep -q vpp; then
     # Vector packet processing (VPP) is installed for use with iSCSI tests.
+    # At least on fedora 28, the yum setup that vpp uses is deprecated and fails.
+    # The actions taken under the vpp_setup script are necessary to fix this issue.
+    if [ -d vpp_setup ]; then
+        echo "vpp setup already done."
+    else
+        echo "%_topdir  ~/vpp_setup/src/rpm" >> ~/.rpmmacros
+        sudo dnf install perl-generators
+        mkdir -p ~/vpp_setup/src/rpm
+        cd ~/vpp_setup/src/rpm
+        mkdir -p BUILD RPMS SOURCES SPECS SRPMS
+        dnf download --source redhat-rpm-config
+        rpm -ivh redhat-rpm-config*
+        sed -i s/"Requires: (annobin if gcc)"//g SPECS/redhat-rpm-config.spec
+        rpmbuild -ba SPECS/*.spec
+        sudo dnf remove -y --noautoremove redhat-rpm-config
+        sudo rpm -Uvh RPMS/noarch/*
+        cd -
+    fi
+
+    mkdir -p BUILD RPMS SOURCES SPECS SRPMS
     if [ -d vpp ]; then
         echo "vpp already cloned."
         if [ ! -d vpp/build-root ]; then
