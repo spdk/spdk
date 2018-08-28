@@ -1247,8 +1247,11 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 	/* If the queue pair is in an error state, force the request to the completed state
 	 * to release resources. */
-	if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR) {
-		rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+	if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
+		if (rdma_req->state == RDMA_REQUEST_STATE_NEED_BUFFER) {
+			TAILQ_REMOVE(&rqpair->ch->pending_data_buf_queue, rdma_req, link);
+		}
+		spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
 	}
 
 	/* The loop here is to allow for several back-to-back state changes. */
@@ -1271,11 +1274,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			memset(rdma_req->req.rsp, 0, sizeof(*rdma_req->req.rsp));
 
 			TAILQ_REMOVE(&rqpair->incoming_queue, rdma_recv, link);
-
-			if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
-				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
-				break;
-			}
 
 			if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR) {
 				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
