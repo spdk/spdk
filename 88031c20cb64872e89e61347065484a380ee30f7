@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3ad64ca2_d3f2cf3e",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-28T00:11:58Z",
+      "side": 1,
+      "message": "Thank you. I replaced the whole block by this.",
+      "parentUuid": "87c4dcbf_38793771",
+      "revId": "88031c20cb64872e89e61347065484a380ee30f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6bdeaf11_44ae52aa",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 13
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a0b5ffa3_954813c4",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-28T00:11:58Z",
+      "side": 1,
+      "message": "Good point. Thank you.",
+      "parentUuid": "6bdeaf11_44ae52aa",
+      "revId": "88031c20cb64872e89e61347065484a380ee30f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8ca92628_370ee687",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 13
@@ -47,6 +83,24 @@
       "writtenOn": "2018-08-27T21:13:11Z",
       "side": 1,
       "message": "Suggest printing \"(none)\" if authfile \u003d\u003d NULL.",
+      "revId": "88031c20cb64872e89e61347065484a380ee30f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a08859ba_fef85a83",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-28T00:11:58Z",
+      "side": 1,
+      "message": "Nice suggestion. Thank you.",
+      "parentUuid": "8ca92628_370ee687",
       "revId": "88031c20cb64872e89e61347065484a380ee30f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
