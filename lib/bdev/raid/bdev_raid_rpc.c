@@ -300,13 +300,9 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		/* Check if base_bdev exists already, if not fail the command */
 		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[i]);
 		if (base_bdev == NULL) {
-			check_and_remove_raid_bdev(raid_cfg);
-			raid_bdev_config_cleanup(raid_cfg);
-			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							     "base bdev %s not found",
-							     req.base_bdevs.base_bdevs[i]);
-			free_rpc_construct_raid_bdev(&req);
-			return;
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "base bdev %s doesn't exist now\n",
+				      req.base_bdevs.base_bdevs[i]);
+			continue;
 		}
 
 		/*
@@ -317,7 +313,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		rc = raid_bdev_add_base_device(raid_cfg, base_bdev, i);
 		if (rc != 0) {
 			check_and_remove_raid_bdev(raid_cfg);
-			raid_bdev_config_cleanup(raid_cfg);
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							     "Failed to add base bdev %s to RAID bdev %s: %s",
 							     req.base_bdevs.base_bdevs[i], req.name,
