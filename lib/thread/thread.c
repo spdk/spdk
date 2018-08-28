@@ -107,6 +107,17 @@ _set_thread_name(const char *thread_name)
 #endif
 }
 
+int
+spdk_thread_lib_init(void)
+{
+	return 0;
+}
+
+void
+spdk_thread_lib_fini(void)
+{
+}
+
 struct spdk_thread *
 spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		     spdk_start_poller start_poller_fn,

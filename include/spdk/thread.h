@@ -163,6 +163,18 @@ struct spdk_io_channel {
 };
 
 /**
+ * Initialize the threading library. Must be called once prior to allocating any threads.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_thread_lib_init(void);
+
+/**
+ * Release all resources associated with this library.
+ */
+void spdk_thread_lib_fini(void);
+
+/**
  * Initializes the calling thread for I/O channel allocation.
  *
  * \param msg_fn A function that may be called from any thread and is passed a function
