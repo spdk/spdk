@@ -46,31 +46,6 @@ static void raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg);
 SPDK_LOG_REGISTER_COMPONENT("raidrpc", SPDK_LOG_RAID_RPC)
 
 /*
- * brief:
- * check_raid_bdev_present function tells if the raid bdev with given name already
- * exists or not.
- * params:
- * name - raid bdev name
- * returns:
- * NULL - raid bdev not present
- * non NULL - raid bdev present, returns raid_bdev
- */
-static struct raid_bdev *
-check_raid_bdev_present(char *raid_bdev_name)
-{
-	struct raid_bdev       *raid_bdev;
-
-	TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_list, global_link) {
-		if (strcmp(raid_bdev->bdev.name, raid_bdev_name) == 0) {
-			/* raid bdev found */
-			return raid_bdev;
-		}
-	}
-
-	return NULL;
-}
-
-/*
  * Input structure for get_raid_bdevs RPC
  */
 struct rpc_get_raid_bdevs {
@@ -291,7 +266,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_raid_bdev req = {};
 	struct spdk_json_write_ctx     *w;
 	struct raid_bdev_config        *raid_cfg;
-	struct raid_bdev               *raid_bdev;
 	struct spdk_bdev               *base_bdev;
 	int			       rc;
 
@@ -299,15 +273,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_construct_raid_bdev_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		free_rpc_construct_raid_bdev(&req);
-		return;
-	}
-
-	/* Fail the command if raid bdev is already present */
-	raid_bdev = check_raid_bdev_present(req.name);
-	if (raid_bdev != NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "raid bdev already present");
 		free_rpc_construct_raid_bdev(&req);
 		return;
 	}
