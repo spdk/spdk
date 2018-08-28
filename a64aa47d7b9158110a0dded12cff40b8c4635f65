@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a29d4e52_5806ce8d",
+        "filename": "include/spdk/assert.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-28T17:57:46Z",
+      "side": 1,
+      "message": "Will this work on FreeBSD, which uses clang?\n\nI think it would still be better to keep the new __clang__ check as in version 7 of this patch.",
+      "revId": "a64aa47d7b9158110a0dded12cff40b8c4635f65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
