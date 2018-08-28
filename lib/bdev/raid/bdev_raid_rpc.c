@@ -311,7 +311,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		 * command. This might be because this base_bdev may already be claimed
 		 * by some other module
 		 */
-		if (raid_bdev_add_base_device(base_bdev)) {
+		if (raid_bdev_add_base_device(raid_cfg, base_bdev, i)) {
 			check_and_remove_raid_bdev(raid_cfg);
 			raid_bdev_config_cleanup(raid_cfg);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
