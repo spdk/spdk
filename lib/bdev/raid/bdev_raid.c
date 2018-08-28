@@ -96,7 +96,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 				       sizeof(struct spdk_io_channel *));
 	if (!raid_ch->base_channel) {
 		SPDK_ERRLOG("Unable to allocate base bdevs io channel\n");
-		return -1;
+		return -ENOMEM;
 	}
 	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/*
@@ -112,7 +112,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 			}
 			free(raid_ch->base_channel);
 			SPDK_ERRLOG("Unable to create io channel for base bdev\n");
-			return -1;
+			return -ENOMEM;
 		}
 	}
 
@@ -979,7 +979,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	raid_name = spdk_conf_section_get_val(conf_section, "Name");
 	if (raid_name == NULL) {
 		SPDK_ERRLOG("raid_name %s is null\n", raid_name);
-		return -1;
+		return -EINVAL;
 	}
 
 	strip_size = spdk_conf_section_get_intval(conf_section, "StripSize");
@@ -1004,7 +1004,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		if (i >= num_base_bdevs) {
 			raid_bdev_config_cleanup(raid_cfg);
 			SPDK_ERRLOG("Number of devices mentioned is more than count\n");
-			return -1;
+			return -EINVAL;
 		}
 
 		rc = raid_bdev_config_add_base_bdev(raid_cfg, base_bdev_name, i);
@@ -1018,7 +1018,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	if (i != raid_cfg->num_base_bdevs) {
 		raid_bdev_config_cleanup(raid_cfg);
 		SPDK_ERRLOG("Number of devices mentioned is less than count\n");
-		return -1;
+		return -EINVAL;
 	}
 
 	return 0;
@@ -1245,16 +1245,19 @@ raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, struct spdk_bdev
 				   uint32_t base_bdev_slot)
 {
 	struct spdk_bdev_desc *desc;
+	int rc;
 
-	if (spdk_bdev_open(bdev, true, raid_bdev_remove_base_bdev, bdev, &desc)) {
+	rc = spdk_bdev_open(bdev, true, raid_bdev_remove_base_bdev, bdev, &desc);
+	if (rc != 0) {
 		SPDK_ERRLOG("Unable to create desc on bdev '%s'\n", bdev->name);
-		return -1;
+		return rc;
 	}
 
-	if (spdk_bdev_module_claim_bdev(bdev, NULL, &g_raid_if)) {
+	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &g_raid_if);
+	if (rc != 0) {
 		SPDK_ERRLOG("Unable to claim this bdev as it is already claimed\n");
 		spdk_bdev_close(desc);
-		return -1;
+		return rc;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "bdev %s is claimed\n", bdev->name);
@@ -1287,6 +1290,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	uint32_t		blocklen;
 	uint64_t		min_blockcnt;
 	struct spdk_bdev	*raid_bdev_gen;
+	int rc = 0;
 
 	blocklen = raid_bdev->base_bdev_info[0].bdev->blocklen;
 	min_blockcnt = raid_bdev->base_bdev_info[0].bdev->blockcnt;
@@ -1303,6 +1307,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 			 * have same blocklen
 			 */
 			SPDK_ERRLOG("Blocklen of various bdevs not matching\n");
+			rc = -EINVAL;
 			goto offline;
 		}
 	}
@@ -1311,6 +1316,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	raid_bdev_gen->name = strdup(raid_bdev->config->name);
 	if (!raid_bdev_gen->name) {
 		SPDK_ERRLOG("Unable to allocate name for raid\n");
+		rc = -ENOMEM;
 		goto offline;
 	}
 	raid_bdev_gen->product_name = "Pooled Device";
@@ -1341,7 +1347,8 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		raid_bdev->state = RAID_BDEV_STATE_ONLINE;
 		spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
 					sizeof(struct raid_bdev_io_channel));
-		if (spdk_bdev_register(raid_bdev_gen)) {
+		rc = spdk_bdev_register(raid_bdev_gen);
+		if (rc != 0) {
 			/*
 			 * If failed to register raid bdev to bdev layer, make raid bdev offline
 			 * and add to offline list
@@ -1363,7 +1370,7 @@ offline:
 	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
 	TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
 	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, state_link);
-	return -1;
+	return rc;
 }
 
 /*
@@ -1485,7 +1492,7 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 		rc = raid_bdev_create(raid_cfg, &raid_bdev);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to create raid bdev for bdev '%s'\n", bdev->name);
-			return -1;
+			return rc;
 		}
 		raid_cfg->raid_bdev = raid_bdev;
 	}
@@ -1494,7 +1501,7 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to allocate resource for bdev '%s'\n", bdev->name);
 		raid_bdev_cleanup(raid_bdev);
-		return -1;
+		return rc;
 	}
 
 	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
@@ -1503,7 +1510,7 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 		rc = raid_bdev_configure(raid_bdev);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to configure raid bdev\n");
-			return -1;
+			return rc;
 		}
 	}
 
