@@ -739,6 +739,15 @@ unload_cb(void *ctx, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_filesystem *fs = args->fs;
+	struct spdk_file *file, *tmp;
+
+	TAILQ_FOREACH_SAFE(file, &fs->files, tailq, tmp) {
+		TAILQ_REMOVE(&fs->files, file, tailq);
+		cache_free_buffers(file);
+		free(file->name);
+		free(file->tree);
+		free(file);
+	}
 
 	pthread_mutex_lock(&g_cache_init_lock);
 	g_fs_count--;
