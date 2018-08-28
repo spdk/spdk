@@ -48,14 +48,14 @@ to gain access to hardware resources such as huge memory pages and CPU core(s). 
 functions to assign threads to specific cores.
 To ensure the SPDK iSCSI target has the best performance, place the NICs and the NVMe devices on the
 same NUMA node and configure the target to run on CPU cores associated with that node. The following
-parameters in the configuration file are used to configure SPDK iSCSI target:
+command line option is used to configure the SPDK iSCSI target:
 
-**ReactorMask:** A hexadecimal bit mask of the CPU cores that SPDK is allowed to execute work
-items on. The ReactorMask is located in the [Global] section of the configuration file. For example,
-to assign lcores 24,25,26 and 27 to iSCSI target work items, set the ReactorMask to:
-~~~{.sh}
-ReactorMask 0xF000000
 ~~~
+-m 0xF000000
+~~~
+
+This is a hexadecimal bit mask of the CPU cores where the iSCSI target will start polling threads.
+In this example, CPU cores 24, 25, 26 and 27 would be used.
 
 ### Configuring a LUN in the iSCSI Target {#iscsi_lun}
 

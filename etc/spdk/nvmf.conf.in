@@ -10,11 +10,6 @@
 # Bracketed ([]) names define sections
 
 [Global]
-  # Users can restrict work items to only run on certain cores by
-  #  specifying a ReactorMask.  Default ReactorMask mask is defined as
-  #  -c option in the 'ealargs' setting at beginning of file nvmf_tgt.c.
-  #ReactorMask 0x00FF
-
   # Tracepoint group mask for spdk trace buffers
   # Default: 0x0 (all tracepoint groups disabled)
   # Set to 0xFFFF to enable all tracepoint groups.

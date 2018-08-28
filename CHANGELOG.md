@@ -40,6 +40,12 @@ specified. This default has been removed. Users must now explicitly specify
 the location of this file to load CHAP shared secrets from a file, or use
 the related iSCSI RPC methods to add them at runtime.
 
+### Miscellaneous
+
+The ReactorMask config file parameter has been deprecated.  Users should
+use the -m or --cpumask command line option to specify the CPU core mask
+for the application.
+
 ## v18.07:
 
 ### bdev

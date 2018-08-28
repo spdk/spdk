@@ -415,6 +415,8 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 
 	if (opts->reactor_mask == NULL) {
 		if (sp && spdk_conf_section_get_val(sp, "ReactorMask")) {
+			SPDK_ERRLOG("ReactorMask config option is deprecated.  Use -m/--cpumask\n"
+				    "command line parameter instead.\n");
 			opts->reactor_mask = spdk_conf_section_get_val(sp, "ReactorMask");
 		} else {
 			opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;

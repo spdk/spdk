@@ -11,10 +11,6 @@
 # Number of section key is used as a tag number.
 #  Ex. [TargetNode1] = TargetNode section key with tag number 1
 [Global]
-  # Users can restrict work items to only run on certain cores by
-  #  specifying a ReactorMask.  Default is to allow work items to run
-  #  on all cores.
-  #ReactorMask 0x1
 
 [Ioat]
   Enable No

@@ -14,11 +14,6 @@
   # Default: <the process PID>
   #SharedMemoryID 0
 
-  # Users can restrict work items to only run on certain cores by
-  #  specifying a ReactorMask.  Default is to allow work items to run
-  #  on core 0.
-  #ReactorMask 0xFFFF
-
   # Disable PCI access. PCI is enabled by default. Setting this
   # option will hide any PCI device from all SPDK modules, making
   # SPDK act as if they don't exist.
