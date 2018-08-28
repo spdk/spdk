@@ -1119,7 +1119,6 @@ static bool
 raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **_raid_cfg,
 			 uint32_t *base_bdev_slot)
 {
-	bool rv = false;
 	struct raid_bdev_config *raid_cfg;
 	uint32_t i;
 
@@ -1133,13 +1132,12 @@ raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **_raid_
 			if (!strcmp(bdev_name, raid_cfg->base_bdev[i].name)) {
 				*_raid_cfg = raid_cfg;
 				*base_bdev_slot = i;
-				rv = true;
-				break;;
+				return true;
 			}
 		}
 	}
 
-	return rv;
+	return false;
 }
 
 
@@ -1463,29 +1461,19 @@ raid_bdev_remove_base_bdev(void *ctx)
  * the nvme base device to existing raid bdev or create a new raid bdev. It also claims
  * the base device and keep the open descriptor.
  * params:
+ * raid_cfg - pointer to raid bdev config
  * bdev - pointer to base bdev
+ * base_bdev_slot - position to add base bdev
  * returns:
  * 0 - success
  * non zero - failure
  */
 int
-raid_bdev_add_base_device(struct spdk_bdev *bdev)
+raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, struct spdk_bdev *bdev,
+			  uint32_t base_bdev_slot)
 {
-	struct raid_bdev_config	*raid_cfg = NULL;
 	struct raid_bdev	*raid_bdev;
-	uint32_t		base_bdev_slot;
-	bool			can_claim;
 	int			rc;
-
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_examine %p\n", bdev);
-
-	can_claim = raid_bdev_can_claim_bdev(bdev->name, &raid_cfg, &base_bdev_slot);
-
-	if (!can_claim) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "bdev %s can't be claimed\n", bdev->name);
-		return -1;
-	}
-	assert(raid_cfg);
 
 	raid_bdev = raid_cfg->raid_bdev;
 	if (!raid_bdev) {
@@ -1529,7 +1517,16 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 static void
 raid_bdev_examine(struct spdk_bdev *bdev)
 {
-	raid_bdev_add_base_device(bdev);
+	struct raid_bdev_config	*raid_cfg;
+	uint32_t		base_bdev_slot;
+
+	if (raid_bdev_can_claim_bdev(bdev->name, &raid_cfg, &base_bdev_slot)) {
+		raid_bdev_add_base_device(raid_cfg, bdev, base_bdev_slot);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "bdev %s can't be claimed\n",
+			      bdev->name);
+	}
+
 	spdk_bdev_module_examine_done(&g_raid_if);
 }
 
