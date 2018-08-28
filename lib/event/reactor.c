@@ -173,27 +173,6 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 	return count;
 }
 
-static void
-_spdk_reactor_msg_passed(void *arg1, void *arg2)
-{
-	spdk_thread_fn fn = arg1;
-
-	fn(arg2);
-}
-
-static void
-_spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	struct spdk_event *event;
-	struct spdk_reactor *reactor;
-
-	reactor = thread_ctx;
-
-	event = spdk_event_allocate(reactor->lcore, _spdk_reactor_msg_passed, fn, ctx);
-
-	spdk_event_call(event);
-}
-
 static int
 get_rusage(void *arg)
 {
@@ -329,7 +308,7 @@ _spdk_reactor_run(void *arg)
 	char			thread_name[32];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-	thread = spdk_allocate_thread(_spdk_reactor_send_msg, NULL, NULL, reactor, thread_name);
+	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, thread_name);
 	if (!thread) {
 		return -1;
 	}
@@ -354,7 +333,7 @@ _spdk_reactor_run(void *arg)
 			took_action = true;
 		}
 
-		rc = spdk_thread_poll(thread);
+		rc = spdk_thread_poll(thread, 0);
 		if (rc != 0) {
 			now = spdk_get_ticks();
 			spdk_reactor_add_tsc_stats(reactor, rc, now);

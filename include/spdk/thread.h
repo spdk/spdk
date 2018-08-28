@@ -181,6 +181,7 @@ void spdk_thread_lib_fini(void);
  * \param msg_fn A function that may be called from any thread and is passed a function
  * pointer (spdk_thread_fn) that must be called on the same thread that spdk_allocate_thread
  * was called from.
+ * DEPRECATED. Only used in tests. Pass NULL for this parameter.
  * \param start_poller_fn Function to be called to start a poller for the thread.
  * DEPRECATED. Only used in tests. Pass NULL for this parameter.
  * \param stop_poller_fn Function to be called to stop a poller for the thread.
@@ -208,14 +209,16 @@ struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 void spdk_free_thread(void);
 
 /**
- * Perform one iteration worth of processing on the thread. This currently only
- * executes pollers.
+ * Perform one iteration worth of processing on the thread. This includes
+ * both expired and continuous pollers as well as messages.
  *
  * \param thread The thread to process
+ * \param max_msgs The maximum number of messages that will be processed.
+ *                 Use 0 to process all pending messages.
  *
  * \return 1 if work was done. 0 if no work was done. -1 if unknown.
  */
-int spdk_thread_poll(struct spdk_thread *thread);
+int spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs);
 
 /**
  * Return the number of ticks until the next timed poller
