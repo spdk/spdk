@@ -162,15 +162,34 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		return;
 	}
 
-	/* Check if the subsystem is paused (if there is a subsystem) */
 	if (qpair->ctrlr) {
 		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+		/*
+		 * The subsystem is in inactive state due to some internal error.
+		 * Complete the request immediately instead of queuing it.
+		 */
+		if (sgroup->state == SPDK_NVMF_SUBSYSTEM_INACTIVE) {
+			SPDK_ERRLOG("Inactive subsystem existing.\n");
+			if (qpair->qid > 0) {
+				/* No IO request can be handled at this moment */
+				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
+				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ACCESS_DENIED;
+			} else {
+				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+			}
+			/* Place the request on the outstanding list so we can keep track of it */
+			TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+			spdk_nvmf_request_complete(req);
+			return;
+		}
+
+		/* Check if the subsystem is paused (if there is a subsystem) */
 		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
 			/* The subsystem is not currently active. Queue this request. */
 			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
 			return;
 		}
-
 	}
 
 	/* Place the request on the outstanding list so we can keep track of it */
