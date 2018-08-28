@@ -953,10 +953,6 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 
 	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 
-	/* The qpair memory is guaranteed to exist until this event is
-	 * acknowledged. */
-	rdma_ack_cm_event(evt);
-
 	return 0;
 }
 
@@ -1033,7 +1029,7 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 					SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
 					break;
 				}
-				continue;
+				break;
 			case RDMA_CM_EVENT_MULTICAST_JOIN:
 			case RDMA_CM_EVENT_MULTICAST_ERROR:
 				/* Multicast is not used */
