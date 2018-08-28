@@ -947,13 +947,15 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 		SPDK_ERRLOG("disconnect request: no active connection\n");
 		return -1;
 	}
-	/* ack the disconnect event before rdma_destroy_id */
-	rdma_ack_cm_event(evt);
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	spdk_nvmf_rdma_update_ibv_state(rqpair);
 
 	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+
+	/* The qpair memory is guaranteed to exist until this event is
+	 * acknowledged. */
+	rdma_ack_cm_event(evt);
 
 	return 0;
 }
