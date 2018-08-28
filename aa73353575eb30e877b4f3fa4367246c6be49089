@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "848b14c4_2b9cf8e1",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-28T11:31:41Z",
+      "side": 1,
+      "message": "Then, I would have to declare:\nbdev_blob_readv\nbdev_blob_read\nbdev_blob_writev\nbdev_blob_write\nbdev_blob_write_zeroes\nbdev_blob_unmap",
+      "parentUuid": "52da3488_6923175c",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 39
+      },
+      "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "990d56ca_5d7767b9",
         "filename": "lib/blob/bdev/blob_bdev.c",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "ccd6ba47_0f79aba2",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-28T11:31:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "990d56ca_5d7767b9",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 102,
+        "endChar": 19
+      },
+      "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b772b233_5ef4dab9",
         "filename": "lib/blob/bdev/blob_bdev.c",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2018-08-28T07:31:51Z",
       "side": 1,
       "message": "\u003e Remove new line",
+      "range": {
+        "startLine": 120,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 15
+      },
+      "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2fa8624_1de6c63c",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-08-28T11:31:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b772b233_5ef4dab9",
       "range": {
         "startLine": 120,
         "startChar": 0,
