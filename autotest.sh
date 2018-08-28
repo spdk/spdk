@@ -144,6 +144,7 @@ fi
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	run_test suite ./test/nvmf/nvmf.sh
 	run_test suite ./test/nvmf/nvmfjson/json_config.sh
+	run_test suite ./test/spdkcli/nvmf.sh
 fi
 
 if [ $SPDK_TEST_VHOST -eq 1 ]; then
