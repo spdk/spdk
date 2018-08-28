@@ -27,8 +27,8 @@ applications that use it. Specific applications may implement additional flags.
 Param    | Long Param             | Type     | Default                | Description
 -------- | ---------------------- | -------- | ---------------------- | -----------
 -c       | --config               | string   |                        | @ref cmd_arg_config_file
--d       | --limit-coredump       | flag     |                        | .
--e       | --tpoint-group-mask    | integer  | 0x0                    | .
+-d       | --limit-coredump       | flag     | false                  | @ref cmd_arg_limit_coredump
+-e       | --tpoint-group-mask    | integer  | 0x0                    | @ref cmd_arg_limit_tpoint_group_mask
 -g       | --single-file-segments | flag     |                        | @ref cmd_arg_single_file_segments
 -h       | --help                 | flag     |                        | show all available parameters and exit
 -i       | --shm-id               | integer  |                        | @ref cmd_arg_multi_process
@@ -53,6 +53,20 @@ This is still supported, but is considered deprecated in favor of JSON RPC
 configuration. See @ref jsonrpc for details.
 
 Note that `--config` and `--wait-for-rpc` cannot be used at the same time.
+
+### Limit coredump {#cmd_arg_limit_coredump}
+
+By default, an SPDK application will set resource limits for core file sizes
+to RLIM_INFINITY.  Specifying `--limit-coredump` will not set the resource limits.
+
+### Tracepoint group mask {#cmd_arg_limit_tpoint_group_mask}
+
+SPDK has an experimental low overhead tracing framework.  Tracepoints in this
+framework are organized into tracepoint groups.  By default, all tracepoint
+groups are disabled.  `--tpoint-group-mask` can be used to enable a specific
+subset of tracepoint groups in the application.
+
+Note: Additional documentation on the tracepoint framework is in progress.
 
 ### Deferred initialization {#cmd_arg_deferred_initialization}
 
