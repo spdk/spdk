@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5307634_216e6636",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-28T20:55:10Z",
+      "side": 1,
+      "message": "unrelated",
+      "revId": "f41ba5badb13422ccccf7cb2e55f464dacdd808a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
