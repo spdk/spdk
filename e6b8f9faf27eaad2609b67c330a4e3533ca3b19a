@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34514b80_a84c2ee0",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-28T08:28:22Z",
+      "side": 1,
+      "message": "\\return the length of ID on success, 0 otherwise ?",
+      "revId": "e6b8f9faf27eaad2609b67c330a4e3533ca3b19a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de547505_3dc8ab10",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2585,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-28T08:28:22Z",
+      "side": 1,
+      "message": "should be 0 ?\n\nrocksdb/env.h says\n\n  // Furthermore, it tries to make this ID at most \"max_size\" bytes. If such an\n  // ID can be created this function returns the length of the ID and places it\n  // in \"id\"; otherwise, this function returns 0, in which case \"id\"\n  // may not have been modified.",
+      "range": {
+        "startLine": 2585,
+        "startChar": 9,
+        "endLine": 2585,
+        "endChar": 16
+      },
+      "revId": "e6b8f9faf27eaad2609b67c330a4e3533ca3b19a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
