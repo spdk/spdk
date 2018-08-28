@@ -1932,6 +1932,9 @@ test_create_raid_from_config(void)
 	struct rpc_construct_raid_bdev req;
 	struct spdk_bdev *bdev;
 	struct rpc_destroy_raid_bdev destroy_req;
+	bool can_claim;
+	struct raid_bdev_config *raid_cfg;
+	uint32_t base_bdev_slot;
 
 	set_globals();
 	create_test_req(&req, "raid1", 0, true);
@@ -1948,13 +1951,8 @@ test_create_raid_from_config(void)
 		raid_bdev_examine(bdev);
 	}
 
-	bdev = calloc(1, sizeof(struct spdk_bdev));
-	SPDK_CU_ASSERT_FATAL(bdev != NULL);
-	bdev->name = strdup("Invalid");
-	SPDK_CU_ASSERT_FATAL(bdev->name != NULL);
-	CU_ASSERT(raid_bdev_add_base_device(bdev) != 0);
-	free(bdev->name);
-	free(bdev);
+	can_claim = raid_bdev_can_claim_bdev("Invalid", &raid_cfg, &base_bdev_slot);
+	CU_ASSERT(can_claim == false);
 
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
