@@ -606,6 +606,18 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 {
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
+	uint32_t sid;
+
+	for (sid = 0; sid < group->num_sgroups; sid++) {
+		if (group->sgroups[sid].num_channels > 0) {
+			break;
+		}
+	}
+
+	/* Not to add the qpair without valid channels from this group */
+	if (sid == group->num_sgroups) {
+		return rc;
+	}
 
 	TAILQ_INIT(&qpair->outstanding);
 	qpair->group = group;
@@ -884,7 +896,7 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {
-		sgroup->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
+		spdk_nvmf_poll_group_remove_subsystem(group, subsystem, NULL, NULL);
 		goto fini;
 	}
 

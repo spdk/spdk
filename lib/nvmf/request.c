@@ -170,7 +170,6 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
 			return;
 		}
-
 	}
 
 	/* Place the request on the outstanding list so we can keep track of it */

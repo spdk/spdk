@@ -72,6 +72,7 @@ static size_t g_active_poll_groups = 0;
 static struct spdk_poller *g_acceptor_poller = NULL;
 
 static void nvmf_tgt_advance_state(void);
+static void new_qpair(struct spdk_nvmf_qpair *qpair);
 
 static void
 _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
@@ -108,7 +109,10 @@ nvmf_tgt_poll_group_add(void *arg1, void *arg2)
 	struct spdk_nvmf_qpair *qpair = arg1;
 	struct nvmf_tgt_poll_group *pg = arg2;
 
-	spdk_nvmf_poll_group_add(pg->group, qpair);
+	/* Failed to add qpair to required group, find next group */
+	if (spdk_nvmf_poll_group_add(pg->group, qpair) != 0) {
+		new_qpair(qpair);
+	}
 }
 
 static void
