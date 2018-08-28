@@ -345,7 +345,8 @@ if [[ "$CONFIG_CRYPTO" = "y" ]]; then
 	set -e
 	if [[ $nasm_ver -lt "21202" ]]; then
 		echo Crypto requires NASM version 2.12.02 or newer.  Please install
-		echo or upgrade then re-run this scrip.
+		echo or upgrade then re-run this script.
+		exit 1
         else
 		if [[ "$ipsec" == "" ]]; then
 			echo "To enable crypto you must first go to the intel-ipsec-mb directory and "
