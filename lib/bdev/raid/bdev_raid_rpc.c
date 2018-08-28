@@ -234,11 +234,6 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_cfg)
 		return;
 	}
 
-	/*
-	 * raid should be in configuring state as this function is used to cleanup
-	 * the raid during unsuccessful construction of raid
-	 */
-	assert(raid_bdev->state == RAID_BDEV_STATE_CONFIGURING);
 	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		assert(raid_bdev->base_bdev_info != NULL);
 		if (raid_bdev->base_bdev_info[i].bdev) {
