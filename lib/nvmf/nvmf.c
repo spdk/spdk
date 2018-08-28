@@ -57,6 +57,7 @@ SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 #define SPDK_NVMF_DEFAULT_IO_UNIT_SIZE 131072
 
 typedef void (*nvmf_qpair_disconnect_cpl)(void *ctx, int status);
+static void spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf);
 
 /* supplied to a single call to nvmf_qpair_disconnect */
 struct nvmf_qpair_disconnect_ctx {
@@ -149,7 +150,10 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 			continue;
 		}
 
-		spdk_nvmf_poll_group_add_subsystem(group, subsystem, NULL, NULL);
+		if (spdk_nvmf_poll_group_add_subsystem(group, subsystem, NULL, NULL) != 0) {
+			spdk_nvmf_tgt_destroy_poll_group(io_device, ctx_buf);
+			return -1;
+		}
 	}
 
 	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
@@ -607,6 +611,18 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 {
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
+	uint32_t sid;
+
+	for (sid = 0; sid < group->num_sgroups; sid++) {
+		if (group->sgroups[sid].num_channels > 0) {
+			break;
+		}
+	}
+
+	/* Not to add the qpair without valid channels from this group */
+	if (sid == group->num_sgroups) {
+		return rc;
+	}
 
 	TAILQ_INIT(&qpair->outstanding);
 	qpair->group = group;
@@ -891,7 +907,7 @@ spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	return poll_group_update_subsystem(group, subsystem);
 }
 
-void
+int
 spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 				   struct spdk_nvmf_subsystem *subsystem,
 				   spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
@@ -903,7 +919,7 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {
-		sgroup->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
+		spdk_nvmf_poll_group_remove_subsystem(group, subsystem, NULL, NULL);
 		goto fini;
 	}
 
@@ -912,6 +928,8 @@ fini:
 	if (cb_fn) {
 		cb_fn(cb_arg, rc);
 	}
+
+	return rc;
 }
 
 static void

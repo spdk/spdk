@@ -84,6 +84,7 @@ static size_t g_active_poll_groups = 0;
 static struct spdk_poller *g_acceptor_poller = NULL;
 
 static void nvmf_tgt_advance_state(void);
+static void new_qpair(struct spdk_nvmf_qpair *qpair);
 
 static void
 _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
@@ -120,7 +121,10 @@ nvmf_tgt_poll_group_add(void *arg1, void *arg2)
 	struct spdk_nvmf_qpair *qpair = arg1;
 	struct nvmf_tgt_poll_group *pg = arg2;
 
-	spdk_nvmf_poll_group_add(pg->group, qpair);
+	/* Failed to add qpair to required group, find next group */
+	if (spdk_nvmf_poll_group_add(pg->group, qpair) != 0) {
+		new_qpair(qpair);
+	}
 }
 
 /* Round robin selection of cores */
@@ -191,6 +195,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	struct spdk_event *event;
 	struct nvmf_tgt_poll_group *pg;
 	uint32_t core;
+	size_t num_poll_groups = 0;
 
 	if (g_tgt_state != NVMF_TGT_RUNNING) {
 		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
@@ -199,8 +204,26 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 
 	core = nvmf_tgt_get_qpair_core(qpair);
 
+	assert(g_num_poll_groups > 0);
 	pg = &g_poll_groups[core];
+
+	/*
+	 * Check whether poll group is created.
+	 * If not, pick next available core associated poll group.
+	 */
+	while (!pg->group) {
+		/* Return if no available poll group. */
+		if (num_poll_groups == g_num_poll_groups) {
+			SPDK_ERRLOG("Poll group has not been created.\n");
+			return;
+		}
+
+		core = spdk_nvmf_get_core_rr();
+		pg = &g_poll_groups[core];
+		num_poll_groups++;
+	}
 	assert(pg != NULL);
+	assert(pg->group != NULL);
 
 	event = spdk_event_allocate(core, nvmf_tgt_poll_group_add, qpair, pg);
 	spdk_event_call(event);
@@ -231,8 +254,10 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 	pg = &g_poll_groups[spdk_env_get_current_core()];
 	assert(pg != NULL);
 
-	spdk_nvmf_poll_group_destroy(pg->group);
-	pg->group = NULL;
+	if (pg->group) {
+		spdk_nvmf_poll_group_destroy(pg->group);
+		pg->group = NULL;
+	}
 
 	assert(g_active_poll_groups > 0);
 	g_active_poll_groups--;
@@ -254,9 +279,9 @@ nvmf_tgt_create_poll_group(void *ctx)
 	assert(pg != NULL);
 
 	pg->group = spdk_nvmf_poll_group_create(g_spdk_nvmf_tgt);
-	assert(pg->group != NULL);
-
-	g_active_poll_groups++;
+	if (pg->group) {
+		g_active_poll_groups++;
+	}
 }
 
 static void
