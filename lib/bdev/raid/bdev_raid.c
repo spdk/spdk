@@ -1200,6 +1200,7 @@ static int
 raid_bdev_create(struct raid_bdev_config *raid_cfg, struct raid_bdev **_raid_bdev)
 {
 	struct raid_bdev *raid_bdev;
+	struct spdk_bdev *raid_bdev_gen;
 
 	raid_bdev = calloc(1, sizeof(*raid_bdev));
 	if (!raid_bdev) {
@@ -1219,6 +1220,22 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg, struct raid_bdev **_raid_bde
 	raid_bdev->strip_size = raid_cfg->strip_size;
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->config = raid_cfg;
+
+	raid_bdev_gen = &raid_bdev->bdev;
+
+	raid_bdev_gen->name = strdup(raid_cfg->name);
+	if (!raid_bdev_gen->name) {
+		SPDK_ERRLOG("Unable to allocate name for raid\n");
+		free(raid_bdev->base_bdev_info);
+		free(raid_bdev);
+		return -ENOMEM;
+	}
+
+	raid_bdev_gen->product_name = "Pooled Device";
+	raid_bdev_gen->ctxt = raid_bdev;
+	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
+	raid_bdev_gen->module = &g_raid_if;
+
 	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
 	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_list, raid_bdev, global_link);
 
@@ -1311,19 +1328,10 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	}
 
 	raid_bdev_gen = &raid_bdev->bdev;
-	raid_bdev_gen->name = strdup(raid_bdev->config->name);
-	if (!raid_bdev_gen->name) {
-		SPDK_ERRLOG("Unable to allocate name for raid\n");
-		rc = -ENOMEM;
-		goto offline;
-	}
-	raid_bdev_gen->product_name = "Pooled Device";
 	raid_bdev_gen->write_cache = 0;
 	raid_bdev_gen->blocklen = blocklen;
 	raid_bdev_gen->optimal_io_boundary = 0;
-	raid_bdev_gen->ctxt = raid_bdev;
-	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
-	raid_bdev_gen->module = &g_raid_if;
+
 	raid_bdev->strip_size = (raid_bdev->strip_size * 1024) / blocklen;
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
 	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
