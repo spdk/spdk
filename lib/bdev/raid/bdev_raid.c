@@ -1427,7 +1427,6 @@ raid_bdev_add_base_device(struct spdk_bdev *bdev)
 	rc = raid_bdev_alloc_base_bdev_resource(raid_bdev, bdev, base_bdev_slot);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to allocate resource for bdev '%s'\n", bdev->name);
-		raid_bdev_cleanup(raid_bdev);
 		return rc;
 	}
 
