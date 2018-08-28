@@ -49,6 +49,8 @@
 #include <pthread_np.h>
 #endif
 
+#define SPDK_MSG_BATCH_SIZE		8
+
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct io_device {
@@ -68,6 +70,13 @@ struct io_device {
 };
 
 static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
+
+struct spdk_msg {
+	spdk_thread_fn		fn;
+	void			*arg;
+};
+
+static struct spdk_mempool *g_spdk_msg_mempool = NULL;
 
 enum spdk_poller_state {
 	/* The poller is registered with a thread but not currently executing its fn. */
@@ -114,6 +123,8 @@ struct spdk_thread {
 	 * Contains pollers running on this thread with a periodic timer.
 	 */
 	TAILQ_HEAD(timer_pollers_head, spdk_poller) timer_pollers;
+
+	struct spdk_ring		*messages;
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
@@ -149,9 +160,40 @@ _set_thread_name(const char *thread_name)
 #endif
 }
 
+static size_t
+_spdk_thread_lib_get_max_msg_cnt(uint8_t socket_count)
+{
+	size_t cnt;
+
+	/* Try to make message ring fill at most 2MB of memory,
+	 * as some ring implementations may require physical address
+	 * contingency. We don't want to introduce a requirement of
+	 * at least 2 physically contiguous 2MB hugepages.
+	 */
+	cnt = spdk_min(262144 / socket_count, 262144 / 2);
+	/* Take into account one extra element required by
+	 * some ring implementations.
+	 */
+	cnt -= 1;
+	return cnt;
+}
+
 int
 spdk_thread_lib_init(void)
 {
+	char mempool_name[SPDK_MAX_MEMZONE_NAME_LEN];
+
+	snprintf(mempool_name, sizeof(mempool_name), "msgpool_%d", getpid());
+	g_spdk_msg_mempool = spdk_mempool_create(mempool_name,
+			     _spdk_thread_lib_get_max_msg_cnt(1),
+			     sizeof(struct spdk_msg),
+			     SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+			     SPDK_ENV_SOCKET_ID_ANY);
+
+	if (!g_spdk_msg_mempool) {
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -162,6 +204,10 @@ spdk_thread_lib_fini(void)
 
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		SPDK_ERRLOG("io_device %s not unregistered\n", dev->name);
+	}
+
+	if (g_spdk_msg_mempool) {
+		spdk_mempool_free(g_spdk_msg_mempool);
 	}
 }
 
@@ -206,6 +252,14 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	TAILQ_INIT(&thread->active_pollers);
 	TAILQ_INIT(&thread->timer_pollers);
 
+	thread->messages = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
+	if (!thread->messages) {
+		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
+		free(thread);
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return NULL;
+	}
+
 	g_thread_count++;
 	if (name) {
 		_set_thread_name(name);
@@ -247,9 +301,52 @@ spdk_free_thread(void)
 	g_thread_count--;
 	TAILQ_REMOVE(&g_threads, thread, tailq);
 	free(thread->name);
+
+	if (thread->messages) {
+		spdk_ring_free(thread->messages);
+	}
+
 	free(thread);
 
 	pthread_mutex_unlock(&g_devlist_mutex);
+}
+
+static inline uint32_t
+_spdk_msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
+{
+	unsigned count, i;
+	void *messages[SPDK_MSG_BATCH_SIZE];
+
+#ifdef DEBUG
+	/*
+	 * spdk_ring_dequeue() fills messages and returns how many entries it wrote,
+	 * so we will never actually read uninitialized data from events, but just to be sure
+	 * (and to silence a static analyzer false positive), initialize the array to NULL pointers.
+	 */
+	memset(messages, 0, sizeof(messages));
+#endif
+
+	if (max_msgs > 0) {
+		max_msgs = spdk_min(max_msgs, SPDK_MSG_BATCH_SIZE);
+	} else {
+		max_msgs = SPDK_MSG_BATCH_SIZE;
+	}
+
+	count = spdk_ring_dequeue(thread->messages, messages, max_msgs);
+	if (count == 0) {
+		return 0;
+	}
+
+	for (i = 0; i < count; i++) {
+		struct spdk_msg *msg = messages[i];
+
+		assert(msg != NULL);
+		msg->fn(msg->arg);
+	}
+
+	spdk_mempool_put_bulk(g_spdk_msg_mempool, messages, count);
+
+	return count;
 }
 
 static void
@@ -275,16 +372,24 @@ _spdk_poller_insert_timer(struct spdk_thread *thread, struct spdk_poller *poller
 }
 
 int
-spdk_thread_poll(struct spdk_thread *thread)
+spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 {
+	uint32_t msg_count;
 	struct spdk_poller *poller;
 	int rc = 0;
 
+	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
+	if (msg_count) {
+		rc = 1;
+	}
+
 	poller = TAILQ_FIRST(&thread->active_pollers);
 	if (poller) {
+		int poller_rc;
+
 		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		poller->state = SPDK_POLLER_STATE_RUNNING;
-		rc = poller->fn(poller->arg);
+		poller_rc = poller->fn(poller->arg);
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			free(poller);
 		} else {
@@ -297,6 +402,10 @@ spdk_thread_poll(struct spdk_thread *thread)
 			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Poller %p returned -1\n", poller);
 		}
 #endif
+
+		if (poller_rc > rc) {
+			rc = poller_rc;
+		}
 	}
 
 	poller = TAILQ_FIRST(&thread->timer_pollers);
@@ -382,9 +491,35 @@ spdk_thread_get_name(const struct spdk_thread *thread)
 void
 spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
 {
-	thread->msg_fn(fn, ctx, thread->thread_ctx);
-}
+	struct spdk_msg *msg;
+	int rc;
 
+	if (!thread) {
+		assert(false);
+		return;
+	}
+
+	if (thread->msg_fn) {
+		thread->msg_fn(fn, ctx, thread->thread_ctx);
+		return;
+	}
+
+	msg = spdk_mempool_get(g_spdk_msg_mempool);
+	if (!msg) {
+		assert(false);
+		return;
+	}
+
+	msg->fn = fn;
+	msg->arg = ctx;
+
+	rc = spdk_ring_enqueue(thread->messages, (void **)&msg, 1);
+	if (rc != 1) {
+		assert(false);
+		spdk_mempool_put(g_spdk_msg_mempool, msg);
+		return;
+	}
+}
 
 struct spdk_poller *
 spdk_poller_register(spdk_poller_fn fn,
