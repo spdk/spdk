@@ -319,22 +319,43 @@ spdk_vhost_vq_used_is_event_needed(struct spdk_vhost_virtqueue *virtqueue)
 	} else if (virtqueue->used_event != NULL) {
 		old_idx = virtqueue->vring.last_used_idx - virtqueue->used_req_cnt;
 
-		/* Using used_event_shadow to number of acces to event_idx. There are 3 cases when we need
-		 * to access real used_event value:
-		 * 1) vring_need_event() on shadow value report event is needed.
+		/* We use shadow event idx to avoid reading possibly cache-incoherent
+		 * event_idx that's continuously updated by a different CPU.
 		 */
 		need_event = vring_need_event(virtqueue->used_event_shadow, virtqueue->vring.last_used_idx,
 					      old_idx);
-		/* 2) old_idx passed shadow used_event value - vring_need_event() will be always false so need to update used_event_shadow */
-		need_event |= virtqueue->used_event_shadow < old_idx;
-
-		/* 3) or last_used_idx overflows but used_event_shadow does not yet. */
-		need_event |= virtqueue->used_event_shadow - virtqueue->vring.last_used_idx > virtqueue->vring.size;
 		if (spdk_likely(need_event == 0)) {
-			return need_event;
+			return 0;
 		}
 
 		virtqueue->used_event_shadow = *virtqueue->used_event;
+		if ((uint16_t)(virtqueue->vring.last_used_idx - virtqueue->used_event_shadow) <= virtqueue->vring.size) {
+			/* We have read a stale event idx value. It could have been
+			 * crossed either just now or possibly a couple of iterations
+			 * ago. A proper value will be probably set by the driver in
+			 * a few ticks from now. Set our shadow idx to the last used
+			 * idx so that the next I/O will always cross it and will
+			 * read the actual event idx again. Normally we would read it
+			 * from inside of the interrupt handler, but for poll-mode
+			 * we'll have to simply poll it.
+			 *
+			 * Note: An event idx that's more than `vring.size` entries
+			 * behind is not achievable with a properly written interrupt-
+			 * based driver. We use it as a sign of a poll-mode driver,
+			 * which sets an unreachable event idx on purpose.
+			 */
+			virtqueue->used_event_shadow = virtqueue->vring.last_used_idx;
+
+			/* Still, we did cross the shadow event_idx and since the real
+			 * event_idx didn't point to anything newer, we have to
+			 * interrupt now.
+			 */
+			return 1;
+		}
+
+		/* We did cross the shadow event_idx, but the actual event_idx
+		 * pointed to a newer location, so check vring_need_event() again.
+		 */
 		return vring_need_event(virtqueue->used_event_shadow, virtqueue->vring.last_used_idx, old_idx);
 	} else {
 		return !(virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
