@@ -21,15 +21,15 @@ function get_disks(){
 	if [ "$1" = "nvme" ]; then
 		echo $(iter_pci_class_code 01 08 02)
 	elif [ "$1" = "bdev" ]; then
-		bdevs=$(discover_bdevs $rootdir $BASE_DIR/bdev.conf)
+		local bdevs=$(discover_bdevs $rootdir $BASE_DIR/bdev.conf)
 		echo $(jq -r '.[].name' <<< $bdevs)
 	fi
 }
 
 function get_filename(){
-	disk_no=$1
-	devs=($3)
-	filename=""
+	local disk_no=$1
+	local devs=($3)
+	local filename=""
 	if [ "$2" = "nvme" ]; then
 		for (( i=0; i < $disk_no; i++ ))
 		do
@@ -47,8 +47,8 @@ function get_filename(){
 }
 
 function preconditioning(){
-	dev_name=""
-	filename=""
+	local dev_name=""
+	local filename=""
 	for (( i=0; i < $DISKNO; i++ ))
 	do
 		dev_name='trtype=PCIe traddr='${disks[i]//:/.}' ns=1'
@@ -66,11 +66,11 @@ function preconditioning(){
 function get_value(){
 	#If current workload is 70% READ and 30% WRITE, latencies are average values of writes and reads
 	case "$1" in
-		iops) iops=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.iops + .write.iops)')
+		iops) local iops=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.iops + .write.iops)')
 		iops=${iops%.*}
 		echo $iops
 		;;
-		mean_lat) mean_lat=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.clat_ns.mean + .write.clat_ns.mean)')
+		mean_lat) local mean_lat=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.clat_ns.mean + .write.clat_ns.mean)')
 		mean_lat=${mean_lat%.*}
 		if [ "$2" = "70" ]; then
 			echo $(($mean_lat/2))
@@ -78,7 +78,7 @@ function get_value(){
 			echo $mean_lat
 		fi
 		;;
-		p99_lat) p99_lat=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.clat_ns.percentile."99.000000" + .write.clat_ns.percentile."99.000000")')
+		p99_lat) local p99_lat=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.clat_ns.percentile."99.000000" + .write.clat_ns.percentile."99.000000")')
 		p99_lat=${p99_lat%.*}
 		if [ "$2" = "70" ]; then
 			echo $(($p99_lat/2))
@@ -86,7 +86,7 @@ function get_value(){
 			echo $p99_lat
 		fi
 		;;
-		p99_99_lat) p99_99_lat=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.clat_ns.percentile."99.990000" + .write.clat_ns.percentile."99.990000")')
+		p99_99_lat) local p99_99_lat=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.clat_ns.percentile."99.990000" + .write.clat_ns.percentile."99.990000")')
 		p99_99_lat=${p99_99_lat%.*}
 		if [ "$2" = "70" ]; then
 			echo $(($p99_99_lat/2))
@@ -94,7 +94,7 @@ function get_value(){
 			echo $p99_99_lat
 		fi
 		;;
-		stdev) stdev=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.clat_ns.stddev + .write.clat_ns.stddev)')
+		stdev) local stdev=$(cat $nvme_fio_results | jq -r '.jobs[] | (.read.clat_ns.stddev + .write.clat_ns.stddev)')
 		stdev=${stdev%.*}
 		if [ "$2" = "70" ]; then
 			echo $(($stdev/2))
