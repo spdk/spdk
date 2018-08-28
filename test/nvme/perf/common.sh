@@ -20,8 +20,7 @@ MIX=(100 70 0)
 TYPE=("randread" "randrw" "randwrite")
 IODEPTH=(256 256 32)
 DISKNO=1
-CPU_MASKS=(0x02 0x06 0x1E 0x7E 0x1FE 0x7FE)
-CPUs=(1 2 4 6 8 10)
+CPUS=(1 2 4 6 8 10)
 
 function get_numa_node(){
 	local plugin=$1
@@ -106,6 +105,38 @@ function create_fio_filename(){
 	echo $filename
 }
 
+function create_cpu_mask(){
+	local no_cpu=$1
+	local cpus_per_numa=$(( $no_cpu/2 ))
+	local i
+	local total_cpu=$(nproc)
+	local cpu_mask="0x0"
+
+	if [ $no_cpu = "1" ]; then
+		echo 0x02
+		return
+	fi
+
+	for (( i=0; i<2; i++ ))
+	do
+		n=0
+		j=1
+		while [ "$n" -lt "$cpus_per_numa" ]; do
+			if [ "$(lscpu -p=cpu,node | grep "^$j\b" | awk -F ',' '{print $2}')" = "$i" ]; then
+				cpu_mask=$(( $cpu_mask | ((1<<$j)) ))
+				n=$(($n+1))
+			fi
+			j=$(($j+1))
+			if [ "$j" -gt "$total_cpu" ]; then
+				echo "error: There is no sufficient cores on numa node $i"
+				exit 1
+				break
+			fi
+		done
+	done
+	printf '0x%X' "$cpu_mask"
+}
+
 function preconditioning(){
 	local dev_name=""
 	local filename=""
@@ -178,6 +209,8 @@ function run_spdk_nvme_fio(){
 
 	sleep 1
 }
+
+
 
 function usage()
 {
