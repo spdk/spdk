@@ -1769,26 +1769,26 @@ This RPC may only be called before SPDK subsystems have been initialized. This R
 
 ### Parameters
 
-Name                        | Type    | Description
---------------------------- | --------| -----------
-auth_file                   | string  | Path to CHAP shared secret file (default: "")
-node_base                   | string  | Prefix of the name of iSCSI target node (default: "iqn.2016-06.io.spdk")
-nop_timeout                 | number  | Timeout in seconds to nop-in request to the initiator (default: 60)
-nop_in_interval             | number  | Time interval in secs between nop-in requests by the target (default: 30)
-disable_chap                | boolean | CHAP for discovery session should be disabled (default: `false`)
-require_chap                | boolean | CHAP for discovery session should be required (default: `false`)
-mutual_chap                 | boolean | CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)
-chap_group                  | number  | CHAP group ID for discovery session (default: 0)
-max_sessions                | number  | Maximum number of sessions in the host (default: 128)
-max_queue_depth             | number  | Maximum number of outstanding I/Os per queue (default: 64)
-max_connections_per_session | number  | Session specific parameter, MaxConnections (default: 2)
-default_time2wait           | number  | Session specific parameter, DefaultTime2Wait (default: 2)
-default_time2retain         | number  | Session specific parameter, DefaultTime2Retain (default: 20)
-first_burst_length          | number  | Session specific parameter, FirstBurstLength (default: 8192)
-immediate_data              | boolean | Session specific parameter, ImmediateData (default: `true`)
-error_recovery_level        | number  | Session specific parameter, ErrorRecoveryLevel (default: 0)
-allow_duplicated_isid       | boolean | Allow duplicated initiator session ID (default: `false`)
-min_connections_per_core    | number  | Allocation unit of connections per core (default: 4)
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | ------- | -----------
+auth_file                   | Optional | string  | Path to CHAP shared secret file (default: "")
+node_base                   | Optional | string  | Prefix of the name of iSCSI target node (default: "iqn.2016-06.io.spdk")
+nop_timeout                 | Optional | number  | Timeout in seconds to nop-in request to the initiator (default: 60)
+nop_in_interval             | Optional | number  | Time interval in secs between nop-in requests by the target (default: 30)
+disable_chap                | Optional | boolean | CHAP for discovery session should be disabled (default: `false`)
+require_chap                | Optional | boolean | CHAP for discovery session should be required (default: `false`)
+mutual_chap                 | Optional | boolean | CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)
+chap_group                  | Optional | number  | CHAP group ID for discovery session (default: 0)
+max_sessions                | Optional | number  | Maximum number of sessions in the host (default: 128)
+max_queue_depth             | Optional | number  | Maximum number of outstanding I/Os per queue (default: 64)
+max_connections_per_session | Optional | number  | Session specific parameter, MaxConnections (default: 2)
+default_time2wait           | Optional | number  | Session specific parameter, DefaultTime2Wait (default: 2)
+default_time2retain         | Optional | number  | Session specific parameter, DefaultTime2Retain (default: 20)
+first_burst_length          | Optional | number  | Session specific parameter, FirstBurstLength (default: 8192)
+immediate_data              | Optional | boolean | Session specific parameter, ImmediateData (default: `true`)
+error_recovery_level        | Optional | number  | Session specific parameter, ErrorRecoveryLevel (default: 0)
+allow_duplicated_isid       | Optional | boolean | Allow duplicated initiator session ID (default: `false`)
+min_connections_per_core    | Optional | number  | Allocation unit of connections per core (default: 4)
 
 To load CHAP shared secret file, its path is required to specify explicitly in the parameter `auth_file`.
 
