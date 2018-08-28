@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "8cc39045_7c6f180e",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-08-28T21:27:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1246e1c_9ec6cc0d",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 17
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b9628e2_373c3faa",
         "filename": "scripts/config_converter.py",
         "patchSetId": 48
@@ -53,6 +77,30 @@
       "writtenOn": "2018-08-27T13:19:27Z",
       "side": 1,
       "message": "Change all these *_method_order to list and use [].index(elem) to get the index.",
+      "range": {
+        "startLine": 95,
+        "startChar": 21,
+        "endLine": 95,
+        "endChar": 38
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f877a92_ae90f643",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-08-28T21:27:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b9628e2_373c3faa",
       "range": {
         "startLine": 95,
         "startChar": 21,
@@ -111,6 +159,30 @@
     },
     {
       "key": {
+        "uuid": "ecf41f16_a24bded4",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-08-28T21:27:06Z",
+      "side": 1,
+      "message": "Need to generate default configurations.",
+      "parentUuid": "46295427_68cb7827",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 39
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4266550_5a018878",
         "filename": "scripts/config_converter.py",
         "patchSetId": 48
@@ -122,6 +194,30 @@
       "writtenOn": "2018-08-27T02:47:11Z",
       "side": 1,
       "message": "is this necessary?",
+      "range": {
+        "startLine": 184,
+        "startChar": 8,
+        "endLine": 184,
+        "endChar": 33
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9dda451_bca63bdd",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-08-28T21:27:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f4266550_5a018878",
       "range": {
         "startLine": 184,
         "startChar": 8,
@@ -157,6 +253,30 @@
     },
     {
       "key": {
+        "uuid": "d01ec7ab_25ef148c",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-08-28T21:27:06Z",
+      "side": 1,
+      "message": "But I get error in tests, as spdk return json config with this variable equals to 1.",
+      "parentUuid": "64ead789_86bc1d1e",
+      "range": {
+        "startLine": 473,
+        "startChar": 17,
+        "endLine": 473,
+        "endChar": 18
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ce2f80ea_d7265402",
         "filename": "scripts/config_converter.py",
         "patchSetId": 48
@@ -180,6 +300,30 @@
     },
     {
       "key": {
+        "uuid": "656c59c0_3a8d0ba7",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-08-28T21:27:06Z",
+      "side": 1,
+      "message": "Because in old config TargetAlias is defined e.g. \"Data Disk1\" with quotation marks. Spdk return this value in json without this marks.",
+      "parentUuid": "ce2f80ea_d7265402",
+      "range": {
+        "startLine": 485,
+        "startChar": 25,
+        "endLine": 485,
+        "endChar": 48
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c431f066_d372e4b2",
         "filename": "scripts/config_converter.py",
         "patchSetId": 48
@@ -191,6 +335,30 @@
       "writtenOn": "2018-08-27T02:47:11Z",
       "side": 1,
       "message": "this will be changed in later patch?",
+      "range": {
+        "startLine": 495,
+        "startChar": 12,
+        "endLine": 495,
+        "endChar": 16
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3101d3b_9658fb18",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-08-28T21:27:06Z",
+      "side": 1,
+      "message": "Could you please define how this three options(AuthMethod, AuthGroup, UseDigest) should be parsed?",
+      "parentUuid": "c431f066_d372e4b2",
       "range": {
         "startLine": 495,
         "startChar": 12,
@@ -237,6 +405,30 @@
       "writtenOn": "2018-08-27T02:47:11Z",
       "side": 1,
       "message": "This may not work for IPv6?\n\nFor example the string will be [2001:ad6:1234::]:3260@1 when IPv6.\n\nSeparate patch is OK but TODO or TBD comment \"TODO: Support IPv6\" should be added here if fixed in separate patch.",
+      "range": {
+        "startLine": 537,
+        "startChar": 34,
+        "endLine": 537,
+        "endChar": 56
+      },
+      "revId": "0f4a67b1312ab9b78898c9a2a044c99d546c1cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36b344d5_b2961a92",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-08-28T21:27:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "63121d6a_9db15b87",
       "range": {
         "startLine": 537,
         "startChar": 34,
