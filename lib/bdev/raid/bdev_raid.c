@@ -1525,7 +1525,7 @@ raid_bdev_examine(struct spdk_bdev *bdev)
 			      bdev->name);
 		return;
 	}
- 
+
 	raid_bdev_add_base_device(raid_cfg, bdev, base_bdev_slot);
 
 	spdk_bdev_module_examine_done(&g_raid_if);
