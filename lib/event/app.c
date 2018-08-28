@@ -38,6 +38,7 @@
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/conf.h"
+#include "spdk/thread.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/rpc.h"
@@ -592,6 +593,8 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
+	spdk_thread_lib_init();
+
 	/*
 	 * If mask not specified on command line or in configuration file,
 	 *  reactor_mask will be 0x1 which will enable core 0 to run one
@@ -657,6 +660,7 @@ spdk_app_fini(void)
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_log_close();
+	spdk_thread_lib_fini();
 }
 
 static void
