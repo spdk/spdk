@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a8856a4_ffc76eef",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2588,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-28T16:33:28Z",
+      "side": 1,
+      "message": "I think we should use a memcpy here, in case \"id\" is not aligned.",
+      "revId": "66f24fa6e493baca70e6e9184e521b07bc6c4f62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
