@@ -66,6 +66,10 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
 
+# If we attempt to do the clean up (which removes the nvme-rdma module) too quickly
+# it will fail. Give the kernel a moment to clean up internally.
+sleep 1
+
 nvmfcleanup
 nvmftestfini $1
 timing_exit shutdown
