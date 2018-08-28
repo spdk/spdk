@@ -38,6 +38,12 @@ CHAP shared secrets can be configured by new JSON RPCs `add_iscsi_auth_group`,
 `delete_iscsi_auth_group`, `add_secret_to_iscsi_auth_group`, and
 `delete_secret_from_iscsi_auth_group` instead.
 
+### Miscellaneous
+
+The ReactorMask config file parameter has been deprecated.  Users should
+use the -m or --cpumask command line option to specify the CPU core mask
+for the application.
+
 ## v18.07:
 
 ### bdev
