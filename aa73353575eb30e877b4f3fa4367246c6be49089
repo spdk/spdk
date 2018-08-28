@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52da3488_6923175c",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-28T07:31:51Z",
+      "side": 1,
+      "message": "There won\u0027t be need to declare this function here, if bdev_blob_resubmit() would be put just above bdev_blob_queue_io()",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 39
+      },
+      "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "990d56ca_5d7767b9",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-28T07:31:51Z",
+      "side": 1,
+      "message": "\u003e I don\u0027t think new line is needed here.",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 102,
+        "endChar": 19
+      },
+      "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b772b233_5ef4dab9",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-08-28T07:31:51Z",
+      "side": 1,
+      "message": "\u003e Remove new line",
+      "range": {
+        "startLine": 120,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 15
+      },
+      "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
