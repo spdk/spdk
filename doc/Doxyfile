@@ -782,7 +782,11 @@ WARN_LOGFILE           =
 
 INPUT                  = ../include/spdk \
                          index.md \
-                         \
+
+# This list contains the top level pages listed in index.md.  This list should
+# remaining in the same order as the contents of index.md.  The order here also
+# is used to show these sections in the left-side navigation bar.
+INPUT                  += \
                          intro.md \
                          concepts.md \
                          user_guides.md \
@@ -793,30 +797,32 @@ INPUT                  = ../include/spdk \
                          tools.md \
                          experimental_tools.md \
                          performance_reports.md \
-                         \
+
+# All remaining pages are listed here in alphabetical order by filename.
+INPUT                  += \
                          about.md \
                          applications.md \
-                         changelog.md \
-                         concurrency.md \
-                         directory_structure.md \
-                         getting_started.md \
-                         memory.md \
-                         porting.md \
                          bdev.md \
                          bdev_module.md \
                          bdev_pg.md \
                          blob.md \
                          blobfs.md \
+                         changelog.md \
+                         concurrency.md \
+                         directory_structure.md \
                          event.md \
+                         getting_started.md \
                          ioat.md \
                          iscsi.md \
                          jsonrpc.md \
                          lvol.md \
+                         memory.md \
                          nvme.md \
                          nvme-cli.md \
                          nvmf.md \
                          nvmf_tgt_pg.md \
                          peer_2_peer.md \
+                         porting.md \
                          spdkcli.md \
                          ssd_internals.md \
                          userspace.md \
