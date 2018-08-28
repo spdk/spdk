@@ -133,7 +133,20 @@ function get_ip_address()
 function nvmfcleanup()
 {
 	sync
-	rmmod nvme-rdma
+	set +e
+	for i in {1..20}; do
+		modprobe -v -r nvme-rdma nvme-fabrics
+		if [ $? -eq 0 ]; then
+			set -e
+			return
+		fi
+		sleep 1
+	done
+	set -e
+
+	# So far unable to remove the kernel modules. Try
+	# one more time and let it fail.
+	modprobe -v -r nvme-rdma nvme-fabrics
 }
 
 function nvmftestinit()
