@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56cad7d9_a18e4b37",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1445,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-29T01:48:14Z",
+      "side": 1,
+      "message": "This can be just:\n\nuint64_t now \u003d spdk_get_ticks();",
+      "range": {
+        "startLine": 1443,
+        "startChar": 1,
+        "endLine": 1445,
+        "endChar": 24
+      },
+      "revId": "1f212d99c0121be08a44ee5fd537045f188b1448",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
