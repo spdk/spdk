@@ -604,7 +604,7 @@ alias_add_del_test(void)
 
 	/* Trying to del all alias from empty alias list */
 	spdk_bdev_alias_del_all(bdev[2]);
-	CU_ASSERT(TAILQ_EMPTY(&bdev[2]->aliases));
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&bdev[2]->aliases));
 
 	/* Trying to del all alias from non-empty alias list */
 	rc = spdk_bdev_alias_add(bdev[2], "alias0");
