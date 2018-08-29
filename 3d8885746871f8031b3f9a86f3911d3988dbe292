@@ -16,6 +16,24 @@
       "revId": "3d8885746871f8031b3f9a86f3911d3988dbe292",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8706ca13_a85afd75",
+        "filename": "test/unit/lib/bdev/part.c/part_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-29T20:51:47Z",
+      "side": 1,
+      "message": "The error it was complaining about was an invalid memory free.\nIn spdk_bdev_part_construct, it makes a call to spdk_bdev_module_claim_bdev. In the event that this function returns an error, we try to free part-\u003einternal.bdev.name which points to the name argument we pass in.\nScan-build was complaining because we didn\u0027t allocate these names on the heap.\nSo I allocated them with malloc to silence the first error, and then check the return code to make sure that we don\u0027t free them twice.",
+      "parentUuid": "7c0434c3_4aa16b49",
+      "revId": "3d8885746871f8031b3f9a86f3911d3988dbe292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
