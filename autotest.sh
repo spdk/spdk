@@ -213,6 +213,7 @@ if [ $SPDK_TEST_LVOL -eq 1 ]; then
 	test_cases+="700,701,702,750,751,752,753,754,755,756,757,758,759,"
 	test_cases+="800,801,802,803,804,10000"
 	run_test suite ./test/lvol/lvol.sh --test-cases=$test_cases
+	run_test suite ./test/blobstore/blob_io_wait/blob_io_wait.sh
 	report_test_completion "lvol"
 	timing_exit lvol
 fi
