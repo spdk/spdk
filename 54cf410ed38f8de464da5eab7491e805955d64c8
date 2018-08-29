@@ -1,0 +1,406 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ee126df_e343bf24",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "g_session_get_lock unlock?",
+      "range": {
+        "startLine": 168,
+        "startChar": 2,
+        "endLine": 168,
+        "endChar": 14
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a520e12_86428ea1",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 188,
+        "startChar": 2,
+        "endLine": 188,
+        "endChar": 14
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e27f7416_385114f0",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "xD",
+      "range": {
+        "startLine": 226,
+        "startChar": 9,
+        "endLine": 226,
+        "endChar": 12
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38db9424_be311f67",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "ETIMEDOUT",
+      "range": {
+        "startLine": 357,
+        "startChar": 11,
+        "endLine": 357,
+        "endChar": 13
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21640e52_2a61b4c7",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 396,
+        "startChar": 11,
+        "endLine": 396,
+        "endChar": 13
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "374215f9_287d0394",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "?",
+      "range": {
+        "startLine": 412,
+        "startChar": 36,
+        "endLine": 412,
+        "endChar": 44
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd72bca4_95839e2d",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "some usleep() or sched_yield() would be good here to give other threads chance to run. Or you can use semaptore and sem_timedwait?",
+      "range": {
+        "startLine": 488,
+        "startChar": 1,
+        "endLine": 488,
+        "endChar": 34
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c5840fe_bb3e8b9e",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "ETIMEDOUT\n\nBTW errno is always \u003e\u003d 0",
+      "range": {
+        "startLine": 500,
+        "startChar": 9,
+        "endLine": 500,
+        "endChar": 11
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b5b1266_c8ffca0b",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "And the reason/errno is?",
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfe93ffd_945447bb",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 715,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "The same comment as before about sleep or yield",
+      "range": {
+        "startLine": 715,
+        "startChar": 1,
+        "endLine": 715,
+        "endChar": 34
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "354fb782_710a1960",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 717,
+        "startChar": 11,
+        "endLine": 717,
+        "endChar": 13
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "febfc7d8_39b55782",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 727,
+        "startChar": 9,
+        "endLine": 727,
+        "endChar": 11
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a654cb9_8f23e06a",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 912,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "errno is never \u003c 0",
+      "range": {
+        "startLine": 912,
+        "startChar": 10,
+        "endLine": 912,
+        "endChar": 12
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8215dd6_50b9cac9",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 940,
+        "startChar": 12,
+        "endLine": 940,
+        "endChar": 13
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c36fd08_6afc3ad6",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "errno \u003d ENOMEM?",
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9892795f_464da751",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "true",
+      "range": {
+        "startLine": 1045,
+        "startChar": 9,
+        "endLine": 1045,
+        "endChar": 10
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5c3a68d_eb7c6ea0",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "Just blind shot but lists a quite performance unfriendly in IO path. Converting socks to (resizable) array could spare some CPU cycles here and there.",
+      "range": {
+        "startLine": 1069,
+        "startChar": 1,
+        "endLine": 1069,
+        "endChar": 42
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "118d4847_a65eb5d3",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-29T22:42:58Z",
+      "side": 1,
+      "message": "do you need to poll for rest of these events?",
+      "range": {
+        "startLine": 1072,
+        "startChar": 3,
+        "endLine": 1072,
+        "endChar": 31
+      },
+      "revId": "54cf410ed38f8de464da5eab7491e805955d64c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
