@@ -202,20 +202,6 @@ void spdk_bs_batch_unmap_dev(spdk_bs_batch_t *batch,
 void spdk_bs_batch_write_zeroes_dev(spdk_bs_batch_t *batch,
 				    uint64_t lba, uint32_t lba_count);
 
-void spdk_bs_batch_read_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
-			     void *payload, uint64_t offset, uint64_t length);
-
-void spdk_bs_batch_write_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
-			      void *payload, uint64_t offset, uint64_t length);
-
-void spdk_bs_batch_unmap_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
-			      uint64_t offset, uint64_t length);
-
-void spdk_bs_batch_write_zeroes_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
-				     uint64_t offset, uint64_t length);
-
-void spdk_bs_batch_set_errno(spdk_bs_batch_t *batch, int bserrno);
-
 void spdk_bs_batch_close(spdk_bs_batch_t *batch);
 
 spdk_bs_batch_t *spdk_bs_sequence_to_batch(spdk_bs_sequence_t *seq,
