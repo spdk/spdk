@@ -900,9 +900,12 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 		process_read_task_completion(conn, task, primary);
 	} else {
 		primary->bytes_completed += task->scsi.length;
-		if ((task != primary) &&
-		    (task->scsi.status != SPDK_SCSI_STATUS_GOOD)) {
-			spdk_scsi_task_copy_status(&primary->scsi, &task->scsi);
+		if (task != primary) {
+			if (task->scsi.status == SPDK_SCSI_STATUS_GOOD) {
+				primary->scsi.data_transferred += task->scsi.data_transferred;
+			} else {
+				spdk_scsi_task_copy_status(&primary->scsi, &task->scsi);
+			}
 		}
 
 		if (primary->bytes_completed == primary->scsi.transfer_len) {
