@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9cb22f5_7b5cb984",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T17:20:13Z",
+      "side": 1,
+      "message": "I think this is still racy.  _remove_notify could be running on thread A and spdk_bdev_close could be running on thread B simultaneously.\n\nRather than trying to acquire the lock here, we can do the following:\n\n1) add struct spdk_thread * to spdk_bdev_desc\n2) add bool closed to spdk_bdev_desc\n3) desc-\u003ethread \u003d spdk_get_thread() in spdk_bdev_open\n4) assert(spdk_get_thread() \u003d\u003d desc-\u003ethread) in spdk_bdev_close\n5) in spdk_bdev_unregister, call spdk_thread_send_msg() with desc-\u003ethread\n6) in spdk_bdev_close, do not free desc if remove_scheduled \u003d\u003d true, but set closed \u003d true\n7) in _remove_notify, if closed \u003d\u003d true, free(desc)\n\nWe should also add documentation to spdk_bdev_open and spdk_bdev_close saying that:\n1) spdk_bdev_close must be called on same thread as spdk_bdev_open\n2) the remove_cb will always be called on the same thread as the descriptor was opened",
+      "revId": "b02402fdc7038688f7bb7d7b8dd346a2337a761a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
