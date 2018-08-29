@@ -349,12 +349,12 @@ thread_name(void)
 	struct spdk_thread *thread;
 	const char *name;
 
-	/* Create thread with no name */
+	/* Create thread with no name, which automatically generates one */
 	spdk_allocate_thread(_send_msg, NULL, NULL, NULL, NULL);
 	thread = spdk_get_thread();
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	name = spdk_thread_get_name(thread);
-	CU_ASSERT(name == NULL);
+	CU_ASSERT(name != NULL);
 	spdk_free_thread();
 
 	/* Create thread named "test_thread" */
