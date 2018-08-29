@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "c3a66841_3a38ca20",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-08-29T05:10:23Z",
+      "side": 1,
+      "message": "Hi Jim, Before submitting reset do we need to check if any IO is outstanding on that disk or not? I mean any outstanding IO already submitted but not completed to disk OR any IO waiting in the bdev wait queue which is yet to be submitted?\nMay be it is already handled at some other layer (like bdev or bdev_nvme)?",
+      "revId": "a04d8f7ba15427d7e7912cd63e8ab69acf657e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6424fb77_3255f3fd",
         "filename": "lib/bdev/raid/bdev_raid.h",
         "patchSetId": 1
