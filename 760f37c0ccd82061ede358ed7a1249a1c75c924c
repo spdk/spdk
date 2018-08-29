@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b03dd0a8_486585d7",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1235,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-08-29T05:16:09Z",
+      "side": 1,
+      "message": "Does above layers like LVS/LVOL also accept optimal_io_boundary or bdev layer if it receives any IO splits it to strip boundary for any IO before submitting to RAID module?\n\nI mean if LVS claims this raid bdev so does it make sure to send IO in boundary or it is bdev subsystem layer?\n\nAlso if raid bdev is directly claimed by NVMf subsystem, host sends IO across strips, so here also bdev layer takes care of splitting?",
+      "revId": "760f37c0ccd82061ede358ed7a1249a1c75c924c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
