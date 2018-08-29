@@ -579,11 +579,8 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
 	if (val != NULL) {
 		if (strcasecmp(val, "CHAP") == 0) {
-			opts->disable_chap = false;
 			opts->require_chap = true;
-			opts->mutual_chap = false;
 		} else if (strcasecmp(val, "Mutual") == 0) {
-			opts->disable_chap = false;
 			opts->require_chap = true;
 			opts->mutual_chap = true;
 		} else if (strcasecmp(val, "Auto") == 0) {
