@@ -46,17 +46,18 @@ extern "C" {
 #endif
 
 enum spdk_json_val_type {
-	SPDK_JSON_VAL_INVALID,
-	SPDK_JSON_VAL_NULL,
-	SPDK_JSON_VAL_TRUE,
-	SPDK_JSON_VAL_FALSE,
-	SPDK_JSON_VAL_NUMBER,
-	SPDK_JSON_VAL_STRING,
-	SPDK_JSON_VAL_ARRAY_BEGIN,
-	SPDK_JSON_VAL_ARRAY_END,
-	SPDK_JSON_VAL_OBJECT_BEGIN,
-	SPDK_JSON_VAL_OBJECT_END,
-	SPDK_JSON_VAL_NAME,
+	SPDK_JSON_VAL_INVALID = 0,
+#define SPDK_JSON_VAL_ANY SPDK_JSON_VAL_INVALID
+	SPDK_JSON_VAL_NULL = 1U << 1,
+	SPDK_JSON_VAL_TRUE = 1U << 2,
+	SPDK_JSON_VAL_FALSE = 1U << 3,
+	SPDK_JSON_VAL_NUMBER = 1U << 4,
+	SPDK_JSON_VAL_STRING = 1U << 5,
+	SPDK_JSON_VAL_ARRAY_BEGIN = 1U << 6,
+	SPDK_JSON_VAL_ARRAY_END = 1U << 7,
+	SPDK_JSON_VAL_OBJECT_BEGIN = 1U << 8,
+	SPDK_JSON_VAL_OBJECT_END = 1U << 9,
+	SPDK_JSON_VAL_NAME = 1U << 10,
 };
 
 struct spdk_json_val {
@@ -260,6 +261,74 @@ int spdk_json_write_named_string_fmt_v(struct spdk_json_write_ctx *w, const char
 
 int spdk_json_write_named_array_begin(struct spdk_json_write_ctx *w, const char *name);
 int spdk_json_write_named_object_begin(struct spdk_json_write_ctx *w, const char *name);
+
+/**
+ * Return JSON value asociated with key \c key_name. Subobjects won't be searched.
+ *
+ * \param object JSON object to be examined
+ * \param key_name name of the key
+ * \param key optional, will be set with found key
+ * \param val optional, will be set with value of the key
+ * \param type search for specific value type. Pass SPDK_JSON_VAL_ANY to match any type.
+ * \return 0 if found or negative error code:
+ * -EINVAL - json object is invalid
+ * -ENOENT - key not found
+ * -EDOM - key exists but value type mismatch.
+ */
+int spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_json_val **key,
+		   struct spdk_json_val **val, enum spdk_json_val_type type);
+
+/**
+ * The same as calling \c spdk_json_find() function with \c type set to \c SPDK_JSON_VAL_STRING
+ *
+ * \param object JSON object to be examined
+ * \param key_name name of the key
+ * \param key optional, will be set with found key
+ * \param val optional, will be set with value of the key
+ * \return See \c spdk_json_find
+ */
+
+int spdk_json_find_string(struct spdk_json_val *object, const char *key_name,
+			  struct spdk_json_val **key, struct spdk_json_val **val);
+
+/**
+ * The same as calling \c spdk_json_key() function with \c type set to \c SPDK_JSON_VAL_ARRAY_BEGIN
+ *
+ * \param object JSON object to be examined
+ * \param key_name name of the key
+ * \param key optional, will be set with found key
+ * \param value optional, will be set with key value
+ * \return See \c spdk_json_find
+ */
+int spdk_json_find_array(struct spdk_json_val *object, const char *key_name,
+			 struct spdk_json_val **key, struct spdk_json_val **value);
+
+/**
+ * Return first JSON value in given JSON object.
+ *
+ * \param object pointer to JSON object begin
+ * \return Pointer to first object or NULL if object is empty or is not an JSON object
+ */
+struct spdk_json_val *spdk_json_object_first(struct spdk_json_val *object);
+
+/**
+ * Return first JSON value in array.
+ *
+ * \param array_begin pointer to JSON array begin
+ * \return Pointer to first JSON value or NULL if array is empty or is not an JSON array.
+ */
+
+struct spdk_json_val *spdk_json_array_first(struct spdk_json_val *array_begin);
+
+/**
+ * Advance to the next JSON value in JSON object or array.
+ *
+ * \warning if \c pos is not JSON key or JSON array element behaviour is undefined.
+ *
+ * \param pos pointer to JSON key if iterating over JSON object or array element
+ * \return next JSON value or NULL if there is no more objects or array elements
+ */
+struct spdk_json_val *spdk_json_next(struct spdk_json_val *pos);
 
 #ifdef __cplusplus
 }
