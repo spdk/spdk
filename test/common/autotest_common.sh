@@ -439,6 +439,9 @@ function run_test() {
 }
 
 function print_backtrace() {
+	# if errexit is not enabled, don't print a backtrace
+	[[ "$-" =~ e ]] || return 0
+
 	local shell_options="$-"
 	set +x
 	echo "========== Backtrace start: =========="
