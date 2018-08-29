@@ -766,7 +766,7 @@ ut_lvol_snapshot(void)
 	g_lvolerrno = -1;
 	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	CU_ASSERT(g_lvol != NULL);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
 	lvol = g_lvol;
