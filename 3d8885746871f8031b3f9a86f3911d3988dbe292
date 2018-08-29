@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c0434c3_4aa16b49",
+        "filename": "test/unit/lib/bdev/part.c/part_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T20:26:51Z",
+      "side": 1,
+      "message": "What\u0027s the static analysis error being returned here? I think how it was written before is right (minus maybe checking the return code).",
+      "revId": "3d8885746871f8031b3f9a86f3911d3988dbe292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
