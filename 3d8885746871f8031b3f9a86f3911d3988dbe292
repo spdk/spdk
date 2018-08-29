@@ -34,6 +34,24 @@
       "revId": "3d8885746871f8031b3f9a86f3911d3988dbe292",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92840362_4c0aef9e",
+        "filename": "test/unit/lib/bdev/part.c/part_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T23:01:19Z",
+      "side": 1,
+      "message": "spdk_bdev_part_construct should either make a copy of the string and then release it appropriately, or the memory should belong to the user of the function and spdk_bdev_part_construct shouldn\u0027t be freeing it. I prefer the former to the latter.",
+      "parentUuid": "8706ca13_a85afd75",
+      "revId": "3d8885746871f8031b3f9a86f3911d3988dbe292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
