@@ -47,31 +47,31 @@
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct io_device {
-	void			*io_device;
-	spdk_io_channel_create_cb create_cb;
-	spdk_io_channel_destroy_cb destroy_cb;
-	spdk_io_device_unregister_cb unregister_cb;
-	struct spdk_thread	*unregister_thread;
-	uint32_t		ctx_size;
-	uint32_t		for_each_count;
-	TAILQ_ENTRY(io_device)	tailq;
+	void				*io_device;
+	spdk_io_channel_create_cb	create_cb;
+	spdk_io_channel_destroy_cb	destroy_cb;
+	spdk_io_device_unregister_cb	unregister_cb;
+	struct spdk_thread		*unregister_thread;
+	uint32_t			ctx_size;
+	uint32_t			for_each_count;
+	TAILQ_ENTRY(io_device)		tailq;
 
-	uint32_t		refcnt;
+	uint32_t			refcnt;
 
-	bool			unregistered;
+	bool				unregistered;
 };
 
 static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
 
 struct spdk_thread {
-	pthread_t thread_id;
-	spdk_thread_pass_msg msg_fn;
-	spdk_start_poller start_poller_fn;
-	spdk_stop_poller stop_poller_fn;
-	void *thread_ctx;
-	TAILQ_HEAD(, spdk_io_channel) io_channels;
-	TAILQ_ENTRY(spdk_thread) tailq;
-	char *name;
+	pthread_t			thread_id;
+	spdk_thread_pass_msg		msg_fn;
+	spdk_start_poller		start_poller_fn;
+	spdk_stop_poller		stop_poller_fn;
+	void				*thread_ctx;
+	TAILQ_HEAD(, spdk_io_channel)	io_channels;
+	TAILQ_ENTRY(spdk_thread)	tailq;
+	char				*name;
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
