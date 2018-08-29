@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh -e
 
 # create_vbox.sh
 #
@@ -172,7 +172,7 @@ fi
 if [ ${DRY_RUN} != 1 ]; then
 	mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}"
 	cp ${DIR}/Vagrantfile ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}
-	pushd "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}"
+	cd "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}"
 	if [ ! -z "${http_proxy}" ]; then
 		export http_proxy
 		export https_proxy
