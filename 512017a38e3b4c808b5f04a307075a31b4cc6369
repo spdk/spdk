@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "c8893a04_a233258d",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T16:51:39Z",
+      "side": 1,
+      "message": "Why do you check for qid \u003e 0 here? Why exclude the admin queue pair? This needs a comment.",
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd877eb0_82ceeefd",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T16:51:39Z",
+      "side": 1,
+      "message": "There is a generic status type and an internal error code I believe. This doesn\u0027t seem like a privilege issue, which is what you are indicating with this error code.",
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f269b5e_96018b6b",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 3
