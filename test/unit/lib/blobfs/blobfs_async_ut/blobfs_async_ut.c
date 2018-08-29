@@ -90,7 +90,7 @@ fs_init(void)
 	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
-	CU_ASSERT(g_fs != NULL);
+	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
 
@@ -134,7 +134,7 @@ fs_open(void)
 	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
-	CU_ASSERT(g_fs != NULL);
+	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
 
