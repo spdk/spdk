@@ -16,6 +16,24 @@
       "revId": "760f37c0ccd82061ede358ed7a1249a1c75c924c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3f2ce6e_ef3c71c8",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1235,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T15:09:55Z",
+      "side": 1,
+      "message": "Hi Kunal,\n\nGood questions.  I will try to answer them one-by-one.\n\nLVS will not do any splitting on strip boundaries.  It will just submit I/O to the underlying bdev (i.e. the RAID volume).  The bdev layer will look at these I/O, see that the split_on_optimal_io_boundary is set, and check if each I/O spans the boundary.\n\nSame for when raid bdev is claimed by NVMf subsystem.  NVMf does not worry about the IO boundaries.  It just submits the I/O to the bdev layer.  The bdev layer will check if it spans an I/O boundary, and split it before calling the raid module\u0027s submit_request function pointer.\n\n-Jim",
+      "parentUuid": "b03dd0a8_486585d7",
+      "revId": "760f37c0ccd82061ede358ed7a1249a1c75c924c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
