@@ -386,7 +386,7 @@ underflow_for_request_sense_test(void)
 	struct spdk_iscsi_sess sess;
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_task task;
-	struct spdk_iscsi_pdu *pdu;
+	struct spdk_iscsi_pdu *pdu1, *pdu2;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_data_in *datah;
 	struct iscsi_bhs_scsi_resp *resph;
@@ -403,13 +403,13 @@ underflow_for_request_sense_test(void)
 	conn.sess = &sess;
 	conn.MaxRecvDataSegmentLength = 8192;
 
-	pdu = spdk_get_pdu();
-	SPDK_CU_ASSERT_FATAL(pdu != NULL);
+	pdu1 = spdk_get_pdu();
+	SPDK_CU_ASSERT_FATAL(pdu1 != NULL);
 
-	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
+	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu1->bhs;
 	scsi_req->read_bit = 1;
 
-	spdk_iscsi_task_set_pdu(&task, pdu);
+	spdk_iscsi_task_set_pdu(&task, pdu1);
 	task.parent = NULL;
 
 	task.scsi.iovs = &task.scsi.iov;
@@ -423,7 +423,7 @@ underflow_for_request_sense_test(void)
 	task.scsi.status = SPDK_SCSI_STATUS_GOOD;
 
 	spdk_iscsi_task_response(&conn, &task);
-	spdk_put_pdu(pdu);
+	spdk_put_pdu(pdu1);
 
 	/*
 	 * In this case, a SCSI Data-In PDU and a SCSI Response PDU are returned.
@@ -435,12 +435,12 @@ underflow_for_request_sense_test(void)
 	 */
 	to_be32(&residual_count, 494);
 
-	pdu = TAILQ_FIRST(&g_write_pdu_list);
-	SPDK_CU_ASSERT_FATAL(pdu != NULL);
+	pdu1 = TAILQ_FIRST(&g_write_pdu_list);
+	SPDK_CU_ASSERT_FATAL(pdu1 != NULL);
 
-	CU_ASSERT(pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN);
+	CU_ASSERT(pdu1->bhs.opcode == ISCSI_OP_SCSI_DATAIN);
 
-	datah = (struct iscsi_bhs_data_in *)&pdu->bhs;
+	datah = (struct iscsi_bhs_data_in *)&pdu1->bhs;
 
 	CU_ASSERT(datah->flags == ISCSI_FLAG_FINAL);
 
@@ -448,15 +448,17 @@ underflow_for_request_sense_test(void)
 	CU_ASSERT(data_segment_len == 18);
 	CU_ASSERT(datah->res_cnt == 0);
 
-	TAILQ_REMOVE(&g_write_pdu_list, pdu, tailq);
-	spdk_put_pdu(pdu);
+	TAILQ_REMOVE(&g_write_pdu_list, pdu1, tailq);
+	spdk_put_pdu(pdu1);
 
-	pdu = TAILQ_FIRST(&g_write_pdu_list);
-	SPDK_CU_ASSERT_FATAL(pdu != NULL);
+	pdu2 = TAILQ_FIRST(&g_write_pdu_list);
+	/* inform scan-build (clang 6) that these pointers are not the same */
+	SPDK_CU_ASSERT_FATAL(pdu1 != pdu2);
+	SPDK_CU_ASSERT_FATAL(pdu2 != NULL);
 
-	CU_ASSERT(pdu->bhs.opcode == ISCSI_OP_SCSI_RSP);
+	CU_ASSERT(pdu2->bhs.opcode == ISCSI_OP_SCSI_RSP);
 
-	resph = (struct iscsi_bhs_scsi_resp *)&pdu->bhs;
+	resph = (struct iscsi_bhs_scsi_resp *)&pdu2->bhs;
 
 	CU_ASSERT(resph->flags == (ISCSI_SCSI_UNDERFLOW | 0x80));
 
@@ -464,8 +466,8 @@ underflow_for_request_sense_test(void)
 	CU_ASSERT(data_segment_len == task.scsi.sense_data_len + 2);
 	CU_ASSERT(resph->res_cnt == residual_count);
 
-	TAILQ_REMOVE(&g_write_pdu_list, pdu, tailq);
-	spdk_put_pdu(pdu);
+	TAILQ_REMOVE(&g_write_pdu_list, pdu2, tailq);
+	spdk_put_pdu(pdu2);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_write_pdu_list));
 }
