@@ -33,8 +33,10 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/string.h"
 #include "spdk/thread.h"
-#include "spdk/log.h"
+
+#include "spdk_internal/log.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -153,7 +155,11 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	if (name) {
 		_set_thread_name(name);
 		thread->name = strdup(name);
+	} else {
+		thread->name = spdk_sprintf_alloc("%p", thread);
 	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Allocating new thread %s\n", thread->name);
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
@@ -173,6 +179,8 @@ spdk_free_thread(void)
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Freeing thread %s\n", thread->name);
 
 	assert(g_thread_count > 0);
 	g_thread_count--;
@@ -295,9 +303,14 @@ spdk_on_thread(void *ctx)
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (!ct->cur_thread) {
+		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Completed thread iteration");
+
 		spdk_thread_send_msg(ct->orig_thread, ct->cpl, ct->ctx);
 		free(ctx);
 	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Continuing thread iteration to %s\n",
+			      ct->cur_thread->name);
+
 		spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ctx);
 	}
 }
@@ -322,6 +335,9 @@ spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 	ct->orig_thread = _get_thread();
 	ct->cur_thread = TAILQ_FIRST(&g_threads);
 	pthread_mutex_unlock(&g_devlist_mutex);
+
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Starting thread iteration from %s\n",
+		      ct->orig_thread->name);
 
 	spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
 }
@@ -351,6 +367,9 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev->unregistered = false;
 	dev->refcnt = 0;
 
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Registering io_device %p on thread %s\n",
+		      dev, spdk_get_thread()->name);
+
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device == io_device) {
@@ -369,6 +388,9 @@ _finish_unregister(void *arg)
 {
 	struct io_device *dev = arg;
 
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Finishing unregistration of io_device %p on thread %s\n",
+		      dev, dev->unregister_thread->name);
+
 	dev->unregister_cb(dev->io_device);
 	free(dev);
 }
@@ -380,6 +402,8 @@ _spdk_io_device_free(struct io_device *dev)
 		free(dev);
 	} else {
 		assert(dev->unregister_thread != NULL);
+		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "io_device %p needs to unregister from thread %s\n",
+			      dev, dev->unregister_thread->name);
 		spdk_thread_send_msg(dev->unregister_thread, _finish_unregister, dev);
 	}
 }
@@ -420,6 +444,9 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregister_thread = thread;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Unregistering io_device %p from thread %s\n",
+		      dev, thread->name);
+
 	if (refcnt > 0) {
 		/* defer deletion */
 		return;
@@ -458,6 +485,10 @@ spdk_get_io_channel(void *io_device)
 	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 		if (ch->dev == dev) {
 			ch->ref++;
+
+			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %p on thread %s refcnt %u\n",
+				      ch, dev, thread->name, ch->ref);
+
 			/*
 			 * An I/O channel already exists for this device on this
 			 *  thread, so return it.
@@ -479,6 +510,9 @@ spdk_get_io_channel(void *io_device)
 	ch->thread = thread;
 	ch->ref = 1;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
+
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %p on thread %s refcnt %u\n",
+		      ch, dev, thread->name, ch->ref);
 
 	dev->refcnt++;
 
@@ -502,6 +536,10 @@ _spdk_put_io_channel(void *arg)
 {
 	struct spdk_io_channel *ch = arg;
 	bool do_remove_dev = true;
+
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD,
+		      "Releasing io_channel %p for io_device %p. Channel thread %p. Current thread %s\n",
+		      ch, ch->dev, ch->thread, spdk_get_thread()->name);
 
 	assert(ch->thread == spdk_get_thread());
 
@@ -543,6 +581,9 @@ _spdk_put_io_channel(void *arg)
 void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Putting io_channel %p for io_device %p on thread %s refcnt %u\n",
+		      ch, ch->dev, ch->thread->name, ch->ref);
+
 	ch->ref--;
 
 	if (ch->ref == 0) {
@@ -707,3 +748,6 @@ end:
 
 	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
+
+
+SPDK_LOG_REGISTER_COMPONENT("thread", SPDK_LOG_THREAD)
