@@ -3059,6 +3059,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	/* response PDU */
 	rsp_pdu = spdk_get_pdu();
 	rsph = (struct iscsi_bhs_scsi_resp *)&rsp_pdu->bhs;
+	assert(rsp_pdu->sense.data != NULL);
 	assert(task->scsi.sense_data_len <= sizeof(rsp_pdu->sense.data));
 	memcpy(rsp_pdu->sense.data, task->scsi.sense_data, task->scsi.sense_data_len);
 	to_be16(&rsp_pdu->sense.length, task->scsi.sense_data_len);
