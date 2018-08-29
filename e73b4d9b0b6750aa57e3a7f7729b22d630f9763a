@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf50b6c4_e438cba0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 2004,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "This function could use some better documentation about what the parameters are for. Is the output here the hookctx? If so, the user can\u0027t set it with this function signature. You\u0027d need to pass a pointer to a pointer. You could also consider making the function return the hook_ctx to be used instead.",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0651e1d5_1e46632d",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 2020,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "The documentation needs to be updated",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "098795f3_da9f38ed",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 2022,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "You can actually drop the #ifdef here. This will allow users to write code that sets the hooks and have it compile even if RDMA isn\u0027t enabled.",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f62560f_5807b0a4",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "you can move the #ifdef inside this function, such that the function does nothing if RDMA is not available.",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb1160e7_22266843",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "You don\u0027t need the extra parens here",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "834b93ab_6e24943e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "Extra parens",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a34f9723_0d894196",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "The first argument is the \"default\" translation, for when spdk_mem_map_translate is called on an address that isn\u0027t in the map. I think you want to leave this as 0.\n\nAlso, the check on line 677 should not be modified.",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f8f3ef0_5aa6b24f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "Is it not possible for this function to always return the ibv_mr? That would eliminate a code path.",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2adf615_c60a94a7",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1166,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "Extra parens",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f4df9d3_63319e48",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1448,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T18:24:57Z",
+      "side": 1,
+      "message": "extra space before hooks",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
