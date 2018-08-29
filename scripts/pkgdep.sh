@@ -32,7 +32,7 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
 		git astyle pep8 lcov clang uuid-dev sg3-utils libiscsi-dev pciutils
 	# Additional (optional) dependencies for showing backtrace in logs
-	apt-get install libunwind-dev
+	apt-get install -y libunwind-dev
 	# Additional dependencies for NVMe over Fabrics
 	apt-get install -y libibverbs-dev librdmacm-dev
 	# Additional dependencies for DPDK
@@ -69,13 +69,13 @@ fi
 # Only crypto needs nasm and this lib but because the lib requires root to
 # install we do it here.
 nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
-if [[ $nasm_ver -lt "21202" ]]; then
+if [ $nasm_ver -lt "21202" ]; then
 		echo Crypto requires NASM version 2.12.02 or newer.  Please install
 		echo or upgrade and re-run this script if you are going to use Crypto.
 else
 	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
-	if [[ "$ipsec" == "" ]]; then
-		if [[ -d "$rootdir/intel-ipsec-mb" ]]; then
+	if [ "$ipsec" == "" ]; then
+		if [ -d "$rootdir/intel-ipsec-mb" ]; then
 			cd $rootdir/intel-ipsec-mb
 			make
 			make install
