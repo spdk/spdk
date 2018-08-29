@@ -73,6 +73,23 @@
     },
     {
       "key": {
+        "uuid": "7c566ecd_6e094c3d",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T21:53:19Z",
+      "side": 1,
+      "message": "I was hoping we could do this without having to do a calloc.  The idea behind bdev_io_wait is that even though we couldn\u0027t allocate a bdev_io, we don\u0027t have to worry about another failure allocating the blob_resubmit structure.\n\nBut I\u0027m looking at this further, and doing this without doing a calloc here is going to be a TON of work.\n\nThe main problems are blobstore batches.  For a batch, we use a single spdk_bs_request_set object, and just count how many operations need to be completed before the batch is done.  This is used for things like unmapping a bunch of clusters in parallel when a blob is truncated/deleted.  If a blob has 200 clusters, we do 200 unmap operations in parallel.\n\nSo what if 100 of these operations fail because of -ENOMEM from the bdev layer?  We would need 100 spdk_bdev_io_wait structures.  That defeats the whole purpose of the batch.\n\nSo then we would need to go back and rework how we do batches.  We would effectively need to stop submitting a batch part way through (when we get an -ENOMEM) and then restart it when we get the bdev_io_wait callback.  But of course all of this has to be abstracted so that we don\u0027t pollute blobstore.c with bdev_io_wait details.\n\nI\u0027ve talked about this with Ben, and for now, we think this approach is definitely way better than nothing.",
+      "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "990d56ca_5d7767b9",
         "filename": "lib/blob/bdev/blob_bdev.c",
         "patchSetId": 3
@@ -161,6 +178,40 @@
         "endLine": 122,
         "endChar": 15
       },
+      "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b27f465_d0fb3fac",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T21:53:19Z",
+      "side": 1,
+      "message": "Qeueue \u003d\u003e Queue",
+      "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb5b8951_57da903b",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T21:53:19Z",
+      "side": 1,
+      "message": "You should also put an assert(false) here.\n\nspdk_bdev_queue_io_wait will only return error if there is a programming error:\n\n1) bdev parameter does not match bdev_io_wait_entry-\u003ebdev\n2) there are bdev io available in the per thread cache\n\nYou\u0027ve already done #1.  #2 will never happen because you call this function immediately after getting -ENOMEM from a bdev call.",
       "revId": "aa73353575eb30e877b4f3fa4367246c6be49089",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
