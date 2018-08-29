@@ -102,6 +102,7 @@ part_test(void)
 	struct spdk_bdev		bdev_base = {};
 	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
 	int rc;
+	char *name1, *name2;
 
 	bdev_base.name = "base";
 	bdev_base.fn_table = &base_fn_table;
@@ -114,13 +115,22 @@ part_test(void)
 
 	SPDK_CU_ASSERT_FATAL(base != NULL);
 
-	spdk_bdev_part_construct(&part1, base, "test1", 0, 100, "test");
-	spdk_bdev_part_construct(&part2, base, "test2", 100, 100, "test");
+	name1 = malloc(6 * sizeof(char));
+	name2 = malloc(6 * sizeof(char));
+	assert(name1 != NULL && name2 != NULL);
+	snprintf(name1, 6, "test1");
+	snprintf(name2, 6, "test2");
+	rc = spdk_bdev_part_construct(&part1, base, name1, 0, 100, "test");
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	rc = spdk_bdev_part_construct(&part2, base, name2, 100, 100, "test");
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	spdk_bdev_part_base_hotremove(&bdev_base, &tailq);
 
 	spdk_bdev_part_base_free(base);
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
+	free(name1);
+	free(name2);
 }
 
 int
