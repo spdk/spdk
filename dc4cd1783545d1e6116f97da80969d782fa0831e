@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5db533c0_d36af53f",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3062,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T23:59:29Z",
+      "side": 1,
+      "message": "rsp_pdu-\u003esense.data could never be NULL.  I think you mean assert(rsp_pdu !\u003d NULL).  And I would put it right after the spdk_get_pdu() call.\n\nrsp_pdu-\u003esense.data is an array of bytes in the spdk_iscsi_pdu structure.  Even if spdk_get_pdu() returned NULL, rsp_pdu-\u003esense.data would return something like 0x80 - still a bad address, but it\u0027s not NULL.",
+      "revId": "dc4cd1783545d1e6116f97da80969d782fa0831e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7c919a4_85a8a56b",
+        "filename": "test/unit/lib/iscsi/common.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T23:59:29Z",
+      "side": 1,
+      "message": "I think you can remove the comment here.  It\u0027s perfectly fine to have this kind of assert.  You may even want to make it an SPDK_CU_ASSERT_FATAL instead.",
+      "revId": "dc4cd1783545d1e6116f97da80969d782fa0831e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30055c25_066bb46a",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T23:59:29Z",
+      "side": 1,
+      "message": "This one I totally don\u0027t understand.  Could you point me to the scan-build error log?",
+      "revId": "dc4cd1783545d1e6116f97da80969d782fa0831e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
