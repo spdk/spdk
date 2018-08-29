@@ -117,12 +117,13 @@ test_spdk_app_parse_args(void)
 						       };
 
 	/* Test valid arguments. Expected result: PASS */
-	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, "", NULL, NULL, NULL);
+	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, "", NULL, unittest_parse_args, NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_SUCCESS);
 	optind = 1;
 
 	/* Test invalid short option Expected result: FAIL */
-	rc = spdk_app_parse_args(test_argc, argv_added_short_opt, &opts, "", NULL, NULL, NULL);
+	rc = spdk_app_parse_args(test_argc, argv_added_short_opt, &opts, "", NULL, unittest_parse_args,
+				 NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 
@@ -133,7 +134,8 @@ test_spdk_app_parse_args(void)
 	optind = 1;
 
 	/* Test invalid long option Expected result: FAIL */
-	rc = spdk_app_parse_args(test_argc, argv_added_long_opt, &opts, "", NULL, NULL, NULL);
+	rc = spdk_app_parse_args(test_argc, argv_added_long_opt, &opts, "", NULL, unittest_parse_args,
+				 NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 
@@ -145,7 +147,8 @@ test_spdk_app_parse_args(void)
 	optind = 1;
 
 	/* Test overlapping global and local options. Expected result: FAIL */
-	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, SPDK_APP_GETOPT_STRING, NULL, NULL, NULL);
+	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, SPDK_APP_GETOPT_STRING, NULL,
+				 unittest_parse_args, NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 
@@ -153,17 +156,18 @@ test_spdk_app_parse_args(void)
 	for (i = 0; i < SPDK_APP_MAX_CMDLINE_OPTIONS; i++) {
 		my_options[i].name = name_teaser;
 	}
-	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, "", my_options, NULL, NULL);
+	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, "", my_options, unittest_parse_args, NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 
 	/* Specify -B and -W options at the same time. Expected result: FAIL */
-	rc = spdk_app_parse_args(test_argc, invalid_argv_BW, &opts, "", NULL, NULL, NULL);
+	rc = spdk_app_parse_args(test_argc, invalid_argv_BW, &opts, "", NULL, unittest_parse_args, NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 
 	/* Omit necessary argument to option */
-	rc = spdk_app_parse_args(test_argc, invalid_argv_missing_option, &opts, "", NULL, NULL, NULL);
+	rc = spdk_app_parse_args(test_argc, invalid_argv_missing_option, &opts, "", NULL,
+				 unittest_parse_args, NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 }
