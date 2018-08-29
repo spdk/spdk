@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c081570_78c7fcda",
+        "filename": "test/unit/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T23:50:41Z",
+      "side": 1,
+      "message": "I think this should be moved up to just after line 319 to make it more clear when g_file should be valid.",
+      "revId": "2520b7e4aaf66e98354e7cf87a2d07c89ae863c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
