@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13564a37_e98980bb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 53
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T16:46:59Z",
+      "side": 1,
+      "message": "Can you add a more detailed description here? This is converting from the old config format to the new JSON format?\n\nAlso, this patch needs to add an update to CHANGELOG.md.",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
