@@ -231,6 +231,7 @@ SPDK_SUBSYSTEM_DEPEND(subsystem3, subsystem4)
 static void
 subsystem_sort_test_missing_dependency(void)
 {
+	struct spdk_event *app_start_event;
 	/*
 	 * A depends on B, but B is missing
 	 */
@@ -241,10 +242,10 @@ subsystem_sort_test_missing_dependency(void)
 
 	set_up_depends(&g_ut_subsystem_deps[0], "A", "B");
 	spdk_add_subsystem_depend(&g_ut_subsystem_deps[0]);
-
+	app_start_event = spdk_event_allocate(0, ut_event_fn, NULL, NULL);
 	global_rc = -1;
-	spdk_subsystem_init(NULL);
-	CU_ASSERT(global_rc != 0);
+	spdk_subsystem_init(app_start_event);
+	SPDK_CU_ASSERT_FATAL(global_rc != 0);
 
 	/*
 	 * Dependency from C to A is defined, but C is missing
@@ -258,9 +259,9 @@ subsystem_sort_test_missing_dependency(void)
 	spdk_add_subsystem_depend(&g_ut_subsystem_deps[0]);
 
 	global_rc = -1;
-	spdk_subsystem_init(NULL);
-	CU_ASSERT(global_rc != 0);
-
+	spdk_subsystem_init(app_start_event);
+	SPDK_CU_ASSERT_FATAL(global_rc != 0);
+	free(app_start_event);
 }
 
 int
