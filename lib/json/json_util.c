@@ -34,6 +34,9 @@
 #include "spdk/json.h"
 
 #include "spdk_internal/utf.h"
+#include "spdk_internal/log.h"
+
+#define SPDK_JSON_DEBUG(...) SPDK_DEBUGLOG(SPDK_LOG_JSON_UTIL, __VA_ARGS__)
 
 size_t
 spdk_json_val_len(const struct spdk_json_val *val)
@@ -452,3 +455,196 @@ spdk_json_decode_string(const struct spdk_json_val *val, void *out)
 		return -1;
 	}
 }
+
+static struct spdk_json_val *
+spdk_json_first(struct spdk_json_val *object, enum spdk_json_val_type type)
+{
+	/* 'object' must be JSON object or array. 'type' might be combination of these two. */
+	assert((type & (SPDK_JSON_VAL_ARRAY_BEGIN | SPDK_JSON_VAL_OBJECT_BEGIN)) != 0);
+
+	assert(object != NULL);
+
+	if ((object->type & type) == 0) {
+		return NULL;
+	}
+
+	object++;
+	if (object->len == 0) {
+		return NULL;
+	}
+
+	return object;
+}
+
+static struct spdk_json_val *
+spdk_json_value(struct spdk_json_val *key)
+{
+	return key->type == SPDK_JSON_VAL_NAME ? key + 1 : NULL;
+}
+
+int
+spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_json_val **key,
+	       struct spdk_json_val **val, enum spdk_json_val_type type)
+{
+	struct spdk_json_val *_key = NULL;
+	struct spdk_json_val *_val = NULL;
+	struct spdk_json_val *it;
+
+	assert(object != NULL);
+
+	for (it = spdk_json_first(object, SPDK_JSON_VAL_ARRAY_BEGIN | SPDK_JSON_VAL_OBJECT_BEGIN);
+	     it != NULL;
+	     it = spdk_json_next(it)) {
+		if (it->type != SPDK_JSON_VAL_NAME) {
+			continue;
+		}
+
+		if (spdk_json_strequal(it, key_name) != true) {
+			continue;
+		}
+
+		if (_key) {
+			SPDK_JSON_DEBUG("Duplicate key '%s'", key_name);
+			return -EINVAL;
+		}
+
+		_key = it;
+		_val = spdk_json_value(_key);
+
+		if (type != SPDK_JSON_VAL_INVALID && (_val->type & type) == 0) {
+			SPDK_JSON_DEBUG("key '%s' type is %#x but expected one of %#x\n", key_name, _val->type, type);
+			return -EDOM;
+		}
+	}
+
+	if (key) {
+		*key = _key;
+	}
+
+	if (val) {
+		*val = _val;
+	}
+
+	return _val ? 0 : -ENOENT;
+}
+
+int
+spdk_json_find_string(struct spdk_json_val *object, const char *key_name,
+		      struct spdk_json_val **key, struct spdk_json_val **val)
+{
+	return spdk_json_find(object, key_name, key, val, SPDK_JSON_VAL_STRING);
+}
+
+int
+spdk_json_find_array(struct spdk_json_val *object, const char *key_name,
+		     struct spdk_json_val **key, struct spdk_json_val **val)
+{
+	return spdk_json_find(object, key_name, key, val, SPDK_JSON_VAL_ARRAY_BEGIN);
+}
+
+struct spdk_json_val *
+spdk_json_object_first(struct spdk_json_val *object)
+{
+	struct spdk_json_val *first = spdk_json_first(object, SPDK_JSON_VAL_OBJECT_BEGIN);
+
+	/* Empty object? */
+	return first && first->type != SPDK_JSON_VAL_OBJECT_END ? first : NULL;
+}
+
+struct spdk_json_val *
+spdk_json_array_first(struct spdk_json_val *array_begin)
+{
+	struct spdk_json_val *first = spdk_json_first(array_begin, SPDK_JSON_VAL_ARRAY_BEGIN);
+
+	/* Empty array? */
+	return first && first->type != SPDK_JSON_VAL_ARRAY_END ? first : NULL;
+}
+
+static struct spdk_json_val *
+spdk_json_skip_object_or_array(struct spdk_json_val *val)
+{
+	unsigned lvl;
+	enum spdk_json_val_type end_type;
+	struct spdk_json_val *it;
+
+	if (val->type == SPDK_JSON_VAL_OBJECT_BEGIN) {
+		end_type = SPDK_JSON_VAL_OBJECT_END;
+	} else if (val->type == SPDK_JSON_VAL_ARRAY_BEGIN) {
+		end_type = SPDK_JSON_VAL_ARRAY_END;
+	} else {
+		SPDK_JSON_DEBUG("Expected JSON object (%#x) or array (%#x) but got %#x\n",
+				SPDK_JSON_VAL_OBJECT_BEGIN, SPDK_JSON_VAL_ARRAY_END, val->type);
+		return NULL;
+	}
+
+	lvl = 1;
+	for (it = val + 1; it->type != SPDK_JSON_VAL_INVALID && lvl != 0; it++) {
+		if (it->type == val->type) {
+			lvl++;
+		} else if (it->type == end_type) {
+			lvl--;
+		}
+	}
+
+	/* if lvl != 0 we have invalid JSON object */
+	if (lvl != 0) {
+		SPDK_JSON_DEBUG("Can't find end of object (type: %#x): lvl (%u) != 0)\n", val->type, lvl);
+		it = NULL;
+	}
+
+	return it;
+}
+
+struct spdk_json_val *
+spdk_json_next(struct spdk_json_val *it)
+{
+	struct spdk_json_val *val, *next;
+
+	switch (it->type) {
+	case SPDK_JSON_VAL_NAME:
+		val = spdk_json_value(it);
+		next = spdk_json_next(val);
+		break;
+
+	/* We are in the middle of an array - get to next entry */
+	case SPDK_JSON_VAL_NULL:
+	case SPDK_JSON_VAL_TRUE:
+	case SPDK_JSON_VAL_FALSE:
+	case SPDK_JSON_VAL_NUMBER:
+	case SPDK_JSON_VAL_STRING:
+		val = it + 1;
+		return val;
+
+	case SPDK_JSON_VAL_ARRAY_BEGIN:
+	case SPDK_JSON_VAL_OBJECT_BEGIN:
+		next = spdk_json_skip_object_or_array(it);
+		break;
+
+	/* Can't go to the next object if started from the end of array or object */
+	case SPDK_JSON_VAL_ARRAY_END:
+	case SPDK_JSON_VAL_OBJECT_END:
+	case SPDK_JSON_VAL_INVALID:
+		return NULL;
+	default:
+		assert(false);
+		return NULL;
+
+	}
+
+	/* EOF ? */
+	if (next == NULL) {
+		return NULL;
+	}
+
+	switch (next->type) {
+	case SPDK_JSON_VAL_ARRAY_END:
+	case SPDK_JSON_VAL_OBJECT_END:
+	case SPDK_JSON_VAL_INVALID:
+		return NULL;
+	default:
+		/* Next value */
+		return next;
+	}
+}
+
+SPDK_LOG_REGISTER_COMPONENT("json_util", SPDK_LOG_JSON_UTIL)

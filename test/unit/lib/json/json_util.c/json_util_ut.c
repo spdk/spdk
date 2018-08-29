@@ -37,6 +37,9 @@
 
 #include "json/json_util.c"
 
+/* For spdk_json_parse() */
+#include "json/json_parse.c"
+
 #define NUM_SETUP(x) \
 	snprintf(buf, sizeof(buf), "%s", x); \
 	v.type = SPDK_JSON_VAL_NUMBER; \
@@ -763,6 +766,158 @@ test_decode_string(void)
 	free(value);
 }
 
+char ut_json_text[] =
+	"{"
+	"	\"string\": \"Some string data\","
+	"	\"object\": { "
+	"		\"another_string\": \"Yet anoter string data\","
+	"		\"array name with space\": [1, [], {} ]"
+	"	},"
+	"	\"array\": [ \"Text\", 2, {} ]"
+	"}"
+	;
+
+static void
+test_find(void)
+{
+	struct spdk_json_val *values, *key, *val, *key2, *val2;
+	ssize_t values_cnt;
+	ssize_t rc;
+
+	values_cnt = spdk_json_parse(ut_json_text, strlen(ut_json_text), NULL, 0, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt > 0);
+
+	values = calloc(values_cnt, sizeof(struct spdk_json_val));
+	SPDK_CU_ASSERT_FATAL(values != NULL);
+
+	rc = spdk_json_parse(ut_json_text, strlen(ut_json_text), values, values_cnt, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt == rc);
+
+	key = val = NULL;
+	rc = spdk_json_find(values, "string", &key, &val, SPDK_JSON_VAL_STRING);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(key != NULL && spdk_json_strequal(key, "string") == true);
+	CU_ASSERT(val != NULL && spdk_json_strequal(val, "Some string data") == true)
+
+	key = val = NULL;
+	rc = spdk_json_find(values, "object", &key, &val, SPDK_JSON_VAL_OBJECT_BEGIN);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(key != NULL && spdk_json_strequal(key, "object") == true);
+
+	/* Find key in "object" by passing SPDK_JSON_VAL_ANY to match any type */
+	key2 = val2 = NULL;
+	rc = spdk_json_find(val, "array name with space", &key2, &val2, SPDK_JSON_VAL_ANY);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(key2 != NULL && spdk_json_strequal(key2, "array name with space") == true);
+	CU_ASSERT(val2 != NULL && val2->type == SPDK_JSON_VAL_ARRAY_BEGIN);
+
+	/* Find the "array" key in "object" by passing SPDK_JSON_VAL_ARRAY_BEGIN to match only array */
+	key2 = val2 = NULL;
+	rc = spdk_json_find(val, "array name with space", &key2, &val2, SPDK_JSON_VAL_ARRAY_BEGIN);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(key2 != NULL && spdk_json_strequal(key2, "array name with space") == true);
+	CU_ASSERT(val2 != NULL && val2->type == SPDK_JSON_VAL_ARRAY_BEGIN);
+
+	/* Negative test - key doesn't exist */
+	key2 = val2 = NULL;
+	rc = spdk_json_find(val, "this_key_does_not_exist", &key2, &val2, SPDK_JSON_VAL_ANY);
+	CU_ASSERT(rc == -ENOENT);
+
+	/* Negative test - key type doesn't match */
+	key2 = val2 = NULL;
+	rc = spdk_json_find(val, "another_string", &key2, &val2, SPDK_JSON_VAL_ARRAY_BEGIN);
+	CU_ASSERT(rc == -EDOM);
+
+	free(values);
+}
+
+static void
+test_iterating(void)
+{
+	struct spdk_json_val *values;
+	struct spdk_json_val *string_key;
+	struct spdk_json_val *object_key, *object_val;
+	struct spdk_json_val *array_key, *array_val;
+	struct spdk_json_val *another_string_key;
+	struct spdk_json_val *array_name_with_space_key, *array_name_with_space_val;
+	struct spdk_json_val *it;
+	ssize_t values_cnt;
+	ssize_t rc;
+
+	values_cnt = spdk_json_parse(ut_json_text, strlen(ut_json_text), NULL, 0, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt > 0);
+
+	values = calloc(values_cnt, sizeof(struct spdk_json_val));
+	SPDK_CU_ASSERT_FATAL(values != NULL);
+
+	rc = spdk_json_parse(ut_json_text, strlen(ut_json_text), values, values_cnt, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt == rc);
+
+	/* Iterate over object keys. JSON spec doesn't guarantee order of keys in object but
+	 * SPDK implementation implicitly does.
+	 */
+	string_key = spdk_json_object_first(values);
+	CU_ASSERT(spdk_json_strequal(string_key, "string") == true);
+
+	object_key = spdk_json_next(string_key);
+	object_val = spdk_json_value(object_key);
+	CU_ASSERT(spdk_json_strequal(object_key, "object") == true);
+
+	array_key = spdk_json_next(object_key);
+	array_val = spdk_json_value(array_key);
+	CU_ASSERT(spdk_json_strequal(array_key, "array") == true);
+
+	/* NULL '}' */
+	CU_ASSERT(spdk_json_next(array_key) == NULL);
+
+	/* Iterate over subobjects */
+	another_string_key = spdk_json_object_first(object_val);
+	CU_ASSERT(spdk_json_strequal(another_string_key, "another_string") == true);
+
+	array_name_with_space_key = spdk_json_next(another_string_key);
+	array_name_with_space_val = spdk_json_value(array_name_with_space_key);
+	CU_ASSERT(spdk_json_strequal(array_name_with_space_key, "array name with space") == true);
+
+	CU_ASSERT(spdk_json_next(array_name_with_space_key) == NULL);
+
+	/* Iterate over array in subobject */
+	it = spdk_json_array_first(array_name_with_space_val);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_NUMBER);
+
+	it = spdk_json_next(it);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_ARRAY_BEGIN);
+
+	it = spdk_json_next(it);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_OBJECT_BEGIN);
+
+	it = spdk_json_next(it);
+	CU_ASSERT(it == NULL);
+
+	/* Iterate over array in root object */
+	it = spdk_json_array_first(array_val);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_STRING);
+
+	it = spdk_json_next(it);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_NUMBER);
+
+	it = spdk_json_next(it);
+	SPDK_CU_ASSERT_FATAL(it != NULL);
+	CU_ASSERT(it->type == SPDK_JSON_VAL_OBJECT_BEGIN);
+
+	/* Array end */
+	it = spdk_json_next(it);
+	CU_ASSERT(it == NULL);
+
+	free(values);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -790,7 +945,9 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
 		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL ||
 		CU_add_test(suite, "decode_uint64", test_decode_uint64) == NULL ||
-		CU_add_test(suite, "decode_string", test_decode_string) == NULL) {
+		CU_add_test(suite, "decode_string", test_decode_string) == NULL ||
+		CU_add_test(suite, "find_object", test_find) == NULL ||
+		CU_add_test(suite, "iterating", test_iterating) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
