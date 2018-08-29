@@ -121,6 +121,24 @@
     },
     {
       "key": {
+        "uuid": "7b7cc633_9477d59a",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-29T20:23:58Z",
+      "side": 1,
+      "message": "Now that I look at this more, I think the assumption is that the user will provide their own implementation of this function when they rewrite their environment abstraction library. That ties the use of these hooks to also reimplementing the env layer. I think we can actually avoid that by changing the strategy just a bit.\n\nIf you examine the hooks inside the function nvme_rdma_mr_map_notify, and set the translation to either a new MR that is created if no hooks are set, or to the result of the get_rkey hook if a hook is present, then I think everything works out without the user being required to provide an alternate env implementation of this function.",
+      "parentUuid": "a34f9723_0d894196",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f8f3ef0_5aa6b24f",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 13
