@@ -75,8 +75,12 @@ spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
 
 void spdk_event_call(struct spdk_event *event)
 {
-	event->fn(event->arg1, event->arg2);
-	free(event);
+	if (event != NULL) {
+		if (event->fn != NULL) {
+			event->fn(event->arg1, event->arg2);
+		}
+		free(event);
+	}
 }
 
 static void
