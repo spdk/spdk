@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "286913db_b84cd071",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-29T15:14:06Z",
+      "side": 1,
+      "message": "Hi Kunal,\n\nIO waiting in the queue will be handled by the bdev layer, before sending the reset command to the bdev module.\n\nThe bdev layer does not check if there are outstanding I/O before sending the reset.  This is an optimization that could be made, but is not done currently.\n\n-Jim",
+      "parentUuid": "c3a66841_3a38ca20",
+      "revId": "a04d8f7ba15427d7e7912cd63e8ab69acf657e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6424fb77_3255f3fd",
         "filename": "lib/bdev/raid/bdev_raid.h",
         "patchSetId": 1
