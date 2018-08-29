@@ -153,7 +153,8 @@ Following VM initializtion you must:
 
 ```
   $ sudo scripts/setup.sh
-  $ sudo examples/bdev/hello_world/hello_bdev
+  $ cd examples/bdev/hello_world
+  $ sudo ./hello_bdev
 ```
 
 ## Additional Setup for Fedora 26
