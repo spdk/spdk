@@ -16,6 +16,24 @@
       "revId": "a64aa47d7b9158110a0dded12cff40b8c4635f65",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "417bc2f6_4b928fb6",
+        "filename": "include/spdk/assert.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1014787
+      },
+      "writtenOn": "2018-08-29T08:23:24Z",
+      "side": 1,
+      "message": "the patch passed CI， so it worked on FreeBSD.\n__GNUC__ \u0026\u0026 __GNC_MINOR__ is common macro in GCC.",
+      "parentUuid": "a29d4e52_5806ce8d",
+      "revId": "a64aa47d7b9158110a0dded12cff40b8c4635f65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
