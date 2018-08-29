@@ -29,3 +29,12 @@
 
 # Performance Reports
 @copydoc performance_reports
+
+# Modules
+@copydoc modules
+
+# Data Structures
+@copydoc data_structures
+
+# Files
+@copydoc files
