@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f269b5e_96018b6b",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-29T05:39:39Z",
+      "side": 1,
+      "message": "When returning this error, the initiator side like kernel nvme host will display as following and handle this situation properly.\n\n[Wed Aug 29 13:16:54 2018] nvme nvme0: creating 3 I/O queues.\n[Wed Aug 29 13:16:54 2018] nvme nvme0: new ctrl: NQN \"nqn.2016-06.io.spdk:cnode1\", addr 192.168.89.11:4420\n[Wed Aug 29 13:16:54 2018] nvme nvme1: creating 3 I/O queues.\n[Wed Aug 29 13:16:54 2018] nvme nvme1: new ctrl: NQN \"nqn.2016-06.io.spdk:cnode2\", addr 192.168.89.11:4420\n[Wed Aug 29 13:16:54 2018] nvme nvme2: creating 3 I/O queues.\n[Wed Aug 29 13:16:54 2018] nvme nvme2: new ctrl: NQN \"nqn.2016-06.io.spdk:cnode3\", addr 192.168.89.11:4420\n[Wed Aug 29 13:16:54 2018] nvme nvme3: creating 3 I/O queues.\n[Wed Aug 29 13:16:54 2018] nvme nvme3: new ctrl: NQN \"nqn.2016-06.io.spdk:cnode4\", addr 192.168.89.11:4420\n[Wed Aug 29 13:16:54 2018] print_req_error: critical medium error, dev nvme3c33n1, sector 3125627392\n[Wed Aug 29 13:16:54 2018] print_req_error: critical medium error, dev nvme3c33n1, sector 3125627392\n[Wed Aug 29 13:16:54 2018] Buffer I/O error on dev nvme3n1, logical block 390703424, async page read\n[Wed Aug 29 13:16:54 2018] nvme nvme4: creating 3 I/O queues.\n[Wed Aug 29 13:16:54 2018] nvme nvme4: new ctrl: NQN \"nqn.2016-06.io.spdk:cnode5\", addr 192.168.89.11:4420\n[Wed Aug 29 13:16:54 2018] nvme nvme5: creating 3 I/O queues.\n[Wed Aug 29 13:16:54 2018] nvme nvme5: new ctrl: NQN \"nqn.2016-06.io.spdk:cnode6\", addr 192.168.89.11:4420",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 61
+      },
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
