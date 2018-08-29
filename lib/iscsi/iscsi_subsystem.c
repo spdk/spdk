@@ -499,6 +499,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	int min_conn_per_core = 0;
 	const char *ag_tag;
 	int ag_tag_i;
+	int i;
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
@@ -578,24 +579,31 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	}
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
 	if (val != NULL) {
-		if (strcasecmp(val, "CHAP") == 0) {
-			opts->disable_chap = false;
-			opts->require_chap = true;
-			opts->mutual_chap = false;
-		} else if (strcasecmp(val, "Mutual") == 0) {
-			opts->disable_chap = false;
-			opts->require_chap = true;
-			opts->mutual_chap = true;
-		} else if (strcasecmp(val, "Auto") == 0) {
-			opts->disable_chap = false;
-			opts->require_chap = false;
-			opts->mutual_chap = false;
-		} else if (strcasecmp(val, "None") == 0) {
-			opts->disable_chap = true;
-			opts->require_chap = false;
-			opts->mutual_chap = false;
-		} else {
-			SPDK_ERRLOG("unknown auth %s, ignoring\n", val);
+		for (i = 0; ; i++) {
+			val = spdk_conf_section_get_nmval(sp, "DiscoveryAuthMethod", 0, i);
+			if (val == NULL) {
+				break;
+			}
+			if (strcasecmp(val, "CHAP") == 0) {
+				opts->require_chap = true;
+			} else if (strcasecmp(val, "Mutual") == 0) {
+				opts->require_chap = true;
+				opts->mutual_chap = true;
+			} else if (strcasecmp(val, "Auto") == 0) {
+				opts->disable_chap = false;
+				opts->require_chap = false;
+				opts->mutual_chap = false;
+			} else if (strcasecmp(val, "None") == 0) {
+				opts->disable_chap = true;
+				opts->require_chap = false;
+				opts->mutual_chap = false;
+			} else {
+				SPDK_ERRLOG("unknown CHAP mode %s\n", val);
+			}
+		}
+		if (opts->mutual_chap && !opts->require_chap) {
+			SPDK_ERRLOG("CHAP must set to be required when using mutual CHAP.\n");
+			return -EINVAL;
 		}
 	}
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthGroup");
