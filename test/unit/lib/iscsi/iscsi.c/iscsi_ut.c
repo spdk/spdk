@@ -386,7 +386,7 @@ underflow_for_request_sense_test(void)
 	struct spdk_iscsi_sess sess;
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_task task;
-	struct spdk_iscsi_pdu *pdu;
+	struct spdk_iscsi_pdu *pdu, *pdu_orig;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_data_in *datah;
 	struct iscsi_bhs_scsi_resp *resph;
@@ -449,9 +449,16 @@ underflow_for_request_sense_test(void)
 	CU_ASSERT(datah->res_cnt == 0);
 
 	TAILQ_REMOVE(&g_write_pdu_list, pdu, tailq);
+	pdu_orig = pdu;
 	spdk_put_pdu(pdu);
 
 	pdu = TAILQ_FIRST(&g_write_pdu_list);
+	/**
+	 * Scan-build does not recognize that the pdu pointer
+	 * changes here so we have to prove to it that we aren't
+	 * using our recently freed pointer.
+	 */
+	SPDK_CU_ASSERT_FATAL(pdu_orig != pdu);
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
 
 	CU_ASSERT(pdu->bhs.opcode == ISCSI_OP_SCSI_RSP);
