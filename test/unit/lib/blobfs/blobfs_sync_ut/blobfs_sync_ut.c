@@ -320,6 +320,7 @@ fs_delete_file_without_close(void)
 
 	rc = spdk_fs_delete_file(g_fs, channel, "testfile");
 	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
 	CU_ASSERT(g_file->ref_count != 0);
 	CU_ASSERT(g_file->is_deleted == true);
 
