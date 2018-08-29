@@ -135,6 +135,7 @@ fi
 if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 	run_test suite ./test/blobfs/rocksdb/rocksdb.sh
 	run_test suite ./test/blobstore/blobstore.sh
+	run_test suite ./test/blobstore/blob_io_wait/blob_io_wait.sh
 fi
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
