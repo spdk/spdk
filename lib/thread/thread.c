@@ -519,6 +519,7 @@ spdk_get_io_channel(void *io_device)
 	ch->destroy_cb = dev->destroy_cb;
 	ch->thread = thread;
 	ch->ref = 1;
+	ch->destroy_ref = 0;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %s on thread %s refcnt %u\n",
@@ -552,6 +553,8 @@ _spdk_put_io_channel(void *arg)
 		      ch, ch->dev->name, ch->thread, spdk_get_thread()->name);
 
 	assert(ch->thread == spdk_get_thread());
+
+	ch->destroy_ref--;
 
 	if (ch->ref > 0) {
 		/*
@@ -596,7 +599,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 
 	ch->ref--;
 
-	if (ch->ref == 0) {
+	if (ch->ref == 0 && ch->destroy_ref == 0) {
 		spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
 	}
 }
