@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9e09a0c_0f24a680",
+        "filename": "autopackage.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-30T22:07:50Z",
+      "side": 1,
+      "message": "Where do these get used?  Line 40 creates the DPDK tarball.  I don\u0027t see where the IPSEC tarball gets created.",
+      "revId": "dd330227c85127be90917d2d0e94c6b751c43f6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
