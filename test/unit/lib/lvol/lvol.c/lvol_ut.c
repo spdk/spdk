@@ -1851,6 +1851,7 @@ static void lvol_refcnt(void)
 {
 	struct lvol_ut_bs_dev dev;
 	struct spdk_lvs_opts opts;
+	struct spdk_lvol *lvol;
 	int rc = 0;
 
 	init_dev(&dev);
@@ -1872,24 +1873,26 @@ static void lvol_refcnt(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	CU_ASSERT(g_lvol->ref_count == 1);
 
+	lvol = g_lvol;
 	spdk_lvol_open(g_lvol, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(g_lvol->ref_count == 2);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	CU_ASSERT(lvol->ref_count == 2);
 
 	/* Trying to destroy lvol while its open should fail */
-	spdk_lvol_destroy(g_lvol, lvol_op_complete, NULL);
+	spdk_lvol_destroy(lvol, lvol_op_complete, NULL);
 	CU_ASSERT(g_lvolerrno != 0);
 
-	spdk_lvol_close(g_lvol, lvol_op_complete, NULL);
-	CU_ASSERT(g_lvol->ref_count == 1);
+	spdk_lvol_close(lvol, lvol_op_complete, NULL);
+	CU_ASSERT(lvol->ref_count == 1);
 	CU_ASSERT(g_lvolerrno == 0);
 
-	spdk_lvol_close(g_lvol, lvol_op_complete, NULL);
-	CU_ASSERT(g_lvol->ref_count == 0);
+	spdk_lvol_close(lvol, lvol_op_complete, NULL);
+	CU_ASSERT(lvol->ref_count == 0);
 	CU_ASSERT(g_lvolerrno == 0);
 
 	/* Try to close already closed lvol */
-	spdk_lvol_close(g_lvol, lvol_op_complete, NULL);
-	CU_ASSERT(g_lvol->ref_count == 0);
+	spdk_lvol_close(lvol, lvol_op_complete, NULL);
+	CU_ASSERT(lvol->ref_count == 0);
 	CU_ASSERT(g_lvolerrno != 0);
 
 	g_lvserrno = -1;
