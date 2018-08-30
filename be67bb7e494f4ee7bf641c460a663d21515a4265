@@ -16,6 +16,24 @@
       "revId": "be67bb7e494f4ee7bf641c460a663d21515a4265",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a1ebde5_b7b06805",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3062,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-30T18:04:05Z",
+      "side": 1,
+      "message": "Good call thanks, looks a lot more sane that way.",
+      "parentUuid": "fe72db1a_06ee59ae",
+      "revId": "be67bb7e494f4ee7bf641c460a663d21515a4265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
