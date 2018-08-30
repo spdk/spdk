@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "11810192_e8a14ebd",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-08-30T20:29:17Z",
+      "side": 1,
+      "message": "I will modify the code so the API can be called the \"right\" way now and in the future.",
+      "parentUuid": "a2422dc7_f1c452d1",
+      "revId": "2b0d9a58bbdce474cff445adcea8ae6deda07f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "266af14b_745f894f",
         "filename": "include/spdk/nvmf.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-30T18:58:47Z",
       "side": 1,
       "message": "This function should appear above spdk_nvmf_transport_create, because you have to call it before that. We try to follow that paradigm, where if you read the public header from top to bottom it\u0027s mostly in order of how you need to call the functions.\n\nIn fact, this whole new set of functions should probably appear near the top.",
+      "revId": "2b0d9a58bbdce474cff445adcea8ae6deda07f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa07b0f0_fe4c44eb",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-08-30T20:29:17Z",
+      "side": 1,
+      "message": "I can do that. I was not aware of this paradigm.",
+      "parentUuid": "266af14b_745f894f",
       "revId": "2b0d9a58bbdce474cff445adcea8ae6deda07f1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
