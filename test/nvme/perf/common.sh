@@ -41,6 +41,11 @@ function get_filename(){
 		do
 			filename+=$(printf %s":" "${devs[$i]}")
 		done
+	elif [ "$2" = "kernel" ]; then
+		for (( i=0; i < $disk_no; i++ ))
+		do
+			filename+=$(printf /dev/nvme%sn1: $i)
+		done
 	fi
 
 	echo $filename
@@ -49,16 +54,26 @@ function get_filename(){
 function preconditioning(){
 	local dev_name=""
 	local filename=""
+	if [ -b "/dev/nvme0n1" ]; then
+		fio_func=run_nvme_fio
+	else
+		fio_func=run_spdk_nvme_fio
+	fi
+
 	for (( i=0; i < $DISKNO; i++ ))
 	do
-		dev_name='trtype=PCIe traddr='${disks[i]//:/.}' ns=1'
-		filename+=$(printf %s":" "$dev_name")
+		if [ -b "/dev/nvme0n1" ]; then
+			filename+=$(printf /dev/nvme%sn1: $i)
+		else
+			dev_name='trtype=PCIe traddr='${disks[i]//:/.}' ns=1'
+			filename+=$(printf %s":" "$dev_name")
+		fi
 	done
 	if [ "$1" = "--write" ]; then
-		run_spdk_nvme_fio --filename="$filename" "--runtime=5400" "--bs=4096"\
+		$fio_func --filename="$filename" "--runtime=5400" "--bs=4096"\
 		 "--rw=randwrite" "--iodepth=32"
 	else
-		run_spdk_nvme_fio --filename="$filename" "--runtime=1200" "--bs=131072"\
+		$fio_func --filename="$filename" "--runtime=1200" "--bs=131072"\
 		 "--rw=write" "--iodepth=32"
 	fi
 }
@@ -114,5 +129,10 @@ function run_spdk_nvme_fio(){
 		 "$@" --ioengine=spdk_bdev --spdk_conf=$BASE_DIR/bdev.conf --spdk_mem=1024
 	fi
 
+	sleep 1
+}
+
+function run_nvme_fio(){
+	$FIO_BIN $BASE_DIR/config.fio --output-format=json --ioengine=pvsync2 --hipri=100 --cpus_allowed=28 "$@"
 	sleep 1
 }
