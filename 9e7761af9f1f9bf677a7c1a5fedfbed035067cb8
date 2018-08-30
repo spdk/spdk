@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6fea15d_4216242b",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-30T22:16:43Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI don\u0027t think this will work either.  This only parses the first word after DiscoveryAuthMethod - so if user specifies \"CHAP Mutual\", it will only process \"CHAP\".\n\nBut spdk_iscsi_parse_tgt_node, has a for loop around the AuthMethod entries.  So it would process both \"CHAP\" and \"Mutual\".\n\n-Jim",
+      "revId": "9e7761af9f1f9bf677a7c1a5fedfbed035067cb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
