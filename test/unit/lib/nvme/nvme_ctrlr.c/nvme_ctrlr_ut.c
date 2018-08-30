@@ -1607,6 +1607,7 @@ test_spdk_nvme_ctrlr_doorbell_buffer_config(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	int ret = -1;
 
+	preclear_malloc_macros();
 	ctrlr.cdata.oacs.doorbell_buffer_config = 1;
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	ctrlr.page_size = 0x1000;

@@ -114,4 +114,6 @@ DECLARE_WRAPPER(pthread_mutexattr_init, int,
 
 DECLARE_WRAPPER(pthread_self, pthread_t, (void));
 
+void preclear_malloc_macros(void);
+
 #endif /* SPDK_INTERNAL_MOCK_H */

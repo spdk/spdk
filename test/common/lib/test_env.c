@@ -442,3 +442,16 @@ spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr
 
 	return 0;
 }
+
+/**
+ * This function is used to combat erroneous scan-build errors introduced
+ * in scan-build with clang 6.
+ */
+void
+preclear_malloc_macros(void)
+{
+	MOCK_SET(spdk_dma_malloc, NULL);
+	MOCK_SET(spdk_dma_zmalloc, NULL);
+	MOCK_CLEAR(spdk_dma_malloc);
+	MOCK_CLEAR(spdk_dma_zmalloc);
+}
