@@ -64,6 +64,9 @@ extern "C" {
 struct spdk_jsonrpc_server;
 struct spdk_jsonrpc_request;
 
+struct spdk_jsonrpc_client;
+struct spdk_jsonrpc_client_request;
+
 /**
  * User callback to handle a single JSON-RPC request.
  *
@@ -78,6 +81,16 @@ typedef void (*spdk_jsonrpc_handle_request_fn)(
 	struct spdk_jsonrpc_request *request,
 	const struct spdk_json_val *method,
 	const struct spdk_json_val *params);
+
+/**
+ * Function for specific RPC method response parsing handlers.
+ *
+ * \param parser_ctx context where analysis are put.
+ * \param result json values responsed to this method.
+ */
+typedef int (*spdk_jsonrpc_client_response_parser)(
+	void *parser_ctx,
+	const struct spdk_json_val *result);
 
 /**
  * Create a JSON-RPC server listening on the required address.
@@ -159,6 +172,89 @@ void spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 void spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 		int error_code, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 
+/**
+ * Begin building a JSON-RPC request.
+ *
+ * If this function returns non-NULL, the user must call spdk_jsonrpc_end_request()
+ * on the request after writing the desired request object to the spdk_json_write_ctx.
+ *
+ * \param request JSON-RPC request.
+ * \param method Name of the RPC method.
+ * \param id ID index for the request.
+ *
+ * \return JSON write context to write the parameter object to, or NULL if no
+ * parameter is necessary.
+ */
+struct spdk_json_write_ctx *spdk_jsonrpc_begin_request(
+	struct spdk_jsonrpc_client_request *request,
+	const char *method,
+	int32_t id);
+
+/**
+ * Complete a JSON-RPC request.
+ *
+ * \param request JSON-RPC request.
+ * \param w JSON write context returned from spdk_jsonrpc_begin_request().
+ */
+void spdk_jsonrpc_end_request(struct spdk_jsonrpc_client_request *request,
+			      struct spdk_json_write_ctx *w);
+
+/**
+ * Connect to the specified RPC server.
+ *
+ * \param rpc_sock_addr RPC socket address.
+ * \param addr_family Protocol families of address.
+ *
+ * \return JSON-RPC client on success, NULL on failure.
+ */
+struct spdk_jsonrpc_client *spdk_jsonrpc_client_connect(const char *rpc_sock_addr,
+		int addr_family);
+
+/**
+ * Close the JSON-RPC client.
+ *
+ * \param client JSON-RPC client.
+ */
+void spdk_jsonrpc_client_close(struct spdk_jsonrpc_client *client);
+
+/**
+ * Create one JSON-RPC request
+ *
+ * \return Created JSON-RPC request.
+ */
+struct spdk_jsonrpc_client_request *spdk_jsonrpc_client_create_request(void);
+
+/**
+ * free one JSON-RPC request
+ *
+ * \param req Created JSON-RPC request.
+ */
+void spdk_jsonrpc_client_free_request(
+	struct spdk_jsonrpc_client_request *req);
+
+/**
+ * Send the JSON-RPC request in JSON-RPC client.
+ *
+ * \param client JSON-RPC client.
+ * \param req JSON-RPC request.
+ *
+ * \return 0 on success.
+ */
+int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
+				     struct spdk_jsonrpc_client_request *req);
+
+/**
+ * Receive the JSON-RPC response in JSON-RPC client.
+ *
+ * \param client JSON-RPC client.
+ * \param parser_fn Specific function used to parse the result inside response.
+ * \param parser_ctx Parameter for parser_fn.
+ *
+ * \return 0 on success.
+ */
+int spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client,
+				      spdk_jsonrpc_client_response_parser parser_fn,
+				      void *parser_ctx);
 
 #ifdef __cplusplus
 }
