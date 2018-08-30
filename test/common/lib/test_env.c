@@ -65,7 +65,7 @@ spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
 	return malloc(len);
 }
 
-DEFINE_RETURN_MOCK(spdk_dma_malloc, void *);
+DEFINE_RETURN_MOCK_P(spdk_dma_malloc, void *);
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
@@ -82,7 +82,7 @@ spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 	return buf;
 }
 
-DEFINE_RETURN_MOCK(spdk_dma_zmalloc, void *);
+DEFINE_RETURN_MOCK_P(spdk_dma_zmalloc, void *);
 void *
 spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
