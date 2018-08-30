@@ -258,7 +258,8 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	spdk_io_device_register(tgt,
 				spdk_nvmf_tgt_create_poll_group,
 				spdk_nvmf_tgt_destroy_poll_group,
-				sizeof(struct spdk_nvmf_poll_group));
+				sizeof(struct spdk_nvmf_poll_group),
+				"nvmf_tgt");
 
 	return tgt;
 }

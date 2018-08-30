@@ -455,7 +455,8 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 
 	spdk_io_device_register(bvdev, bdev_virtio_blk_ch_create_cb,
 				bdev_virtio_blk_ch_destroy_cb,
-				sizeof(struct bdev_virtio_blk_io_channel));
+				sizeof(struct bdev_virtio_blk_io_channel),
+				vdev->name);
 
 	rc = spdk_bdev_register(bdev);
 	if (rc) {
