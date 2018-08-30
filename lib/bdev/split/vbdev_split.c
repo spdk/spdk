@@ -228,6 +228,7 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 
 		rc = spdk_bdev_part_construct(d, cfg->split_base, name, offset_blocks, split_size_blocks,
 					      "Split Disk");
+		free(name);
 		if (rc) {
 			SPDK_ERRLOG("could not construct bdev part\n");
 			/* spdk_bdev_part_construct will free name if it fails */

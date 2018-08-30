@@ -289,6 +289,7 @@ _spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 
 	rc = spdk_bdev_part_construct(&disk->part, base, name, 0, base_bdev->blockcnt,
 				      "Error Injection Disk");
+	free(name);
 	if (rc) {
 		SPDK_ERRLOG("could not construct part for bdev %s\n", spdk_bdev_get_name(base_bdev));
 		/* spdk_bdev_part_construct will free name on failure */
