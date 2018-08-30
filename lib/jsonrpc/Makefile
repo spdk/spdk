@@ -36,5 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 LIBNAME = jsonrpc
 C_SRCS = jsonrpc_server.c jsonrpc_server_tcp.c
+C_SRCS += jsonrpc_client.c jsonrpc_client_tcp.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
