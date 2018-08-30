@@ -63,7 +63,7 @@ function run_nvme_remote() {
 timing_enter nvme_remote
 
 # Start the NVMf target
-NVMF_APP="$rootdir/app/nvmf_tgt/nvmf_tgt"
+NVMF_APP="$rootdir/app/nvmf_tgt/nvmf_tgt -L thread"
 $NVMF_APP -m 0x2 -p 1 -s 512 --wait-for-rpc &
 nvmfpid=$!
 echo "NVMf target launched. pid: $nvmfpid"

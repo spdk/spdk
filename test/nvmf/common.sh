@@ -5,7 +5,7 @@ NVMF_IP_PREFIX="192.168.100"
 NVMF_IP_LEAST_ADDR=8
 
 if [ -z "$NVMF_APP" ]; then
-	NVMF_APP=./app/nvmf_tgt/nvmf_tgt
+	NVMF_APP="./app/nvmf_tgt/nvmf_tgt -L thread"
 fi
 
 if [ -z "$NVMF_TEST_CORE_MASK" ]; then
