@@ -546,6 +546,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	struct spdk_conf	*config = NULL;
 	int			rc;
 	struct spdk_event	*rpc_start_event;
+	char			*tty;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -557,9 +558,11 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		return 1;
 	}
 
+	tty = ttyname(STDERR_FILENO);
 	if (opts->print_level > SPDK_LOG_WARN &&
 	    isatty(STDERR_FILENO) &&
-	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
+	    tty &&
+	    !strncmp(tty, "/dev/tty", strlen("/dev/tty"))) {
 		printf("Warning: printing stderr to console terminal without -q option specified.\n");
 		printf("Suggest using --silence-noticelog to disable logging to stderr and\n");
 		printf("monitor syslog, or redirect stderr to a file.\n");
