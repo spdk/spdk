@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 # These directories contain tests.
-TESTDIRS = app bdev blobfs cpp_headers env event nvme unit
+TESTDIRS = app bdev blobfs cpp_headers env event nvme unit rpc_client
 
 DIRS-y = $(TESTDIRS)
 
