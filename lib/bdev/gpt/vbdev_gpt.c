@@ -273,6 +273,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 
 		rc = spdk_bdev_part_construct(&d->part, gpt_base->part_base, name,
 					      lba_start, lba_end - lba_start, "GPT Disk");
+		free(name);
 		if (rc) {
 			SPDK_ERRLOG("could not construct bdev part\n");
 			/* spdk_bdev_part_construct will free name on failure */

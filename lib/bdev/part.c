@@ -114,6 +114,7 @@ spdk_bdev_part_free_cb(void *io_device)
 
 	spdk_bdev_destruct_done(&part->internal.bdev, 0);
 	free(part->internal.bdev.name);
+	free(part->internal.bdev.product_name);
 	free(part);
 }
 
@@ -321,17 +322,33 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 			 char *name, uint64_t offset_blocks, uint64_t num_blocks,
 			 char *product_name)
 {
-	part->internal.bdev.name = name;
+	uint32_t bdev_name_len = strlen(name) + 1;
+	uint32_t prod_name_len = strlen(product_name) + 1;
+
 	part->internal.bdev.blocklen = base->bdev->blocklen;
 	part->internal.bdev.blockcnt = num_blocks;
 	part->internal.offset_blocks = offset_blocks;
 
 	part->internal.bdev.write_cache = base->bdev->write_cache;
 	part->internal.bdev.need_aligned_buffer = base->bdev->need_aligned_buffer;
-	part->internal.bdev.product_name = product_name;
 	part->internal.bdev.ctxt = part;
 	part->internal.bdev.module = base->module;
 	part->internal.bdev.fn_table = base->fn_table;
+
+	part->internal.bdev.name = calloc(bdev_name_len, sizeof(char));
+	part->internal.bdev.product_name = calloc(prod_name_len, sizeof(char));
+
+	if (part->internal.bdev.name == NULL) {
+		SPDK_ERRLOG("Failed to allocate name for new part of bdev %s\n", spdk_bdev_get_name(base->bdev));
+		return -1;
+	} else if (part->internal.bdev.product_name == NULL) {
+		free(part->internal.bdev.name);
+		SPDK_ERRLOG("Failed to allocate product name for new part of bdev %s\n",
+			    spdk_bdev_get_name(base->bdev));
+		return -1;
+	}
+	snprintf(part->internal.bdev.name, bdev_name_len, "%s", name);
+	snprintf(part->internal.bdev.product_name, prod_name_len, "%s", product_name);
 
 	__sync_fetch_and_add(&base->ref, 1);
 	part->internal.base = base;
@@ -343,6 +360,7 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 		if (rc) {
 			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base->bdev));
 			free(part->internal.bdev.name);
+			free(part->internal.bdev.product_name);
 			return -1;
 		}
 		base->claimed = true;
