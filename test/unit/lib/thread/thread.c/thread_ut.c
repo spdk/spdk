@@ -280,6 +280,7 @@ unreg_ch_done(struct spdk_io_channel_iter *i)
 
 	ctx->ch_done = true;
 
+	SPDK_CU_ASSERT_FATAL(i->cur_thread != NULL);
 	spdk_for_each_channel_continue(i, 0);
 }
 

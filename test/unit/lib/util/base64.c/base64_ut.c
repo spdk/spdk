@@ -192,7 +192,7 @@ test_base64_urlsafe_decode(void)
 {
 	char raw_buf[100];
 	void *raw = (void *)raw_buf;
-	size_t raw_len;
+	size_t raw_len = 0;
 	int ret;
 
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_A);
