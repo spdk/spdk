@@ -124,6 +124,7 @@ if [ $SPDK_TEST_NVME -eq 1 ]; then
 fi
 
 run_test suite test/env/env.sh
+run_test suite test/rpc_client/rpc_client.sh
 
 if [ $SPDK_TEST_IOAT -eq 1 ]; then
 	run_test suite test/ioat/ioat.sh
