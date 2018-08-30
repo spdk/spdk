@@ -1056,20 +1056,21 @@ _spdk_bdev_io_type_can_split(uint8_t type)
 	assert(type != SPDK_BDEV_IO_TYPE_INVALID);
 	assert(type < SPDK_BDEV_NUM_IO_TYPES);
 
-	switch (type) {
-	case SPDK_BDEV_IO_TYPE_RESET:
-	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
-	case SPDK_BDEV_IO_TYPE_NVME_IO:
-	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
-		/* These types of bdev_io do not specify an LBA offset/length. */
-		return false;
-	default:
+	/* Only split READ and WRITE I/O.  Theoretically other types of I/O like
+	 * UNMAP could be split, but these types of I/O are typically much larger
+	 * in size (sometimes the size of the entire block device), and the bdev
+	 * module can more efficiently split these types of I/O.  Plus those types
+	 * of I/O do not have a payload, which makes the splitting process simpler.
+	 */
+	if (type == SPDK_BDEV_IO_TYPE_READ || type == SPDK_BDEV_IO_TYPE_WRITE) {
 		return true;
+	} else {
+		return false;
 	}
 }
 
 static bool
-_spdk_bdev_io_spans_boundary(struct spdk_bdev_io *bdev_io)
+_spdk_bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 {
 	uint64_t start_stripe, end_stripe;
 	uint32_t io_boundary = bdev_io->bdev->optimal_io_boundary;
@@ -1181,51 +1182,6 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 }
 
 static void
-_spdk_bdev_io_split_no_payload(void *_bdev_io)
-{
-	struct spdk_bdev_io *bdev_io = _bdev_io;
-	uint64_t current_offset, remaining;
-	uint32_t to_next_boundary;
-	int rc;
-
-	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
-	current_offset = bdev_io->u.bdev.split_current_offset_blocks;
-
-	to_next_boundary = _to_next_boundary(current_offset, bdev_io->bdev->optimal_io_boundary);
-	to_next_boundary = spdk_min(remaining, to_next_boundary);
-
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP) {
-		rc = spdk_bdev_unmap_blocks(bdev_io->internal.desc,
-					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
-					    current_offset, to_next_boundary,
-					    _spdk_bdev_io_split_done, bdev_io);
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE_ZEROES) {
-		rc = spdk_bdev_write_zeroes_blocks(bdev_io->internal.desc,
-						   spdk_io_channel_from_ctx(bdev_io->internal.ch),
-						   current_offset, to_next_boundary,
-						   _spdk_bdev_io_split_done, bdev_io);
-	} else {
-		assert(bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH);
-		rc = spdk_bdev_flush_blocks(bdev_io->internal.desc,
-					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
-					    current_offset, to_next_boundary,
-					    _spdk_bdev_io_split_done, bdev_io);
-	}
-
-	if (rc == 0) {
-		bdev_io->u.bdev.split_current_offset_blocks += to_next_boundary;
-		bdev_io->u.bdev.split_remaining_num_blocks -= to_next_boundary;
-	} else {
-		assert(rc == -ENOMEM);
-		bdev_io->internal.waitq_entry.bdev = bdev_io->bdev;
-		bdev_io->internal.waitq_entry.cb_fn = _spdk_bdev_io_split_with_payload;
-		bdev_io->internal.waitq_entry.cb_arg = bdev_io;
-		spdk_bdev_queue_io_wait(bdev_io->bdev, spdk_io_channel_from_ctx(bdev_io->internal.ch),
-					&bdev_io->internal.waitq_entry);
-	}
-}
-
-static void
 _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
@@ -1248,11 +1204,7 @@ _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	 * Continue with the splitting process.  This function will complete the parent I/O if the
 	 * splitting is done.
 	 */
-	if (parent_io->type == SPDK_BDEV_IO_TYPE_READ || parent_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		_spdk_bdev_io_split_with_payload(parent_io);
-	} else {
-		_spdk_bdev_io_split_no_payload(parent_io);
-	}
+	_spdk_bdev_io_split_with_payload(parent_io);
 }
 
 static void
@@ -1263,11 +1215,7 @@ _spdk_bdev_io_split(struct spdk_bdev_io *bdev_io)
 	bdev_io->u.bdev.split_current_offset_blocks = bdev_io->u.bdev.offset_blocks;
 	bdev_io->u.bdev.split_remaining_num_blocks = bdev_io->u.bdev.num_blocks;
 
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ || bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		_spdk_bdev_io_split_with_payload(bdev_io);
-	} else {
-		_spdk_bdev_io_split_no_payload(bdev_io);
-	}
+	_spdk_bdev_io_split_with_payload(bdev_io);
 }
 
 static void
@@ -1314,7 +1262,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	assert(thread != NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
-	if (bdev->split_on_optimal_io_boundary && _spdk_bdev_io_spans_boundary(bdev_io)) {
+	if (bdev->split_on_optimal_io_boundary && _spdk_bdev_io_should_split(bdev_io)) {
 		_spdk_bdev_io_split(bdev_io);
 		return;
 	}
