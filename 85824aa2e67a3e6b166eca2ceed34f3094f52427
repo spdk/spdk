@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dfe801c8_5aaccd42",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1534,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-30T21:32:43Z",
+      "side": 1,
+      "message": "Definitely - good catch.",
+      "parentUuid": "53a8c124_91925af8",
+      "range": {
+        "startLine": 1534,
+        "startChar": 60,
+        "endLine": 1534,
+        "endChar": 73
+      },
+      "revId": "85824aa2e67a3e6b166eca2ceed34f3094f52427",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "126f469d_07c9dffd",
         "filename": "test/common/lib/test_env.c",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "89e7b4db_cfbf0ce2",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-30T21:32:43Z",
+      "side": 1,
+      "message": "Correct.  This is just a fake rate made up for unit tests.",
+      "parentUuid": "126f469d_07c9dffd",
+      "range": {
+        "startLine": 351,
+        "startChar": 8,
+        "endLine": 351,
+        "endChar": 15
+      },
+      "revId": "85824aa2e67a3e6b166eca2ceed34f3094f52427",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5fdc8d32_a950dc48",
         "filename": "test/common/lib/test_env.c",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2018-08-28T09:00:55Z",
       "side": 1,
       "message": "Please ignore me if I\u0027m wrong.\n\n1000 counts \u003d 1msec\n1000 * 1000 counts \u003d 1sec ?\n\nIf so, current implementation is correct ?\n\n1 counts \u003d 1usec ?",
+      "range": {
+        "startLine": 357,
+        "startChar": 22,
+        "endLine": 357,
+        "endChar": 33
+      },
+      "revId": "85824aa2e67a3e6b166eca2ceed34f3094f52427",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5487ad17_9e847bbc",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-30T21:32:43Z",
+      "side": 1,
+      "message": "Oh yes - you are right of course!  Thanks for catching this.",
+      "parentUuid": "5fdc8d32_a950dc48",
       "range": {
         "startLine": 357,
         "startChar": 22,
