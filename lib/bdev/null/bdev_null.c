@@ -291,7 +291,8 @@ bdev_null_initialize(void)
 	 *  address of the global tailq.
 	 */
 	spdk_io_device_register(&g_null_bdev_head, null_bdev_create_cb, null_bdev_destroy_cb,
-				sizeof(struct null_io_channel));
+				sizeof(struct null_io_channel),
+				"null_bdev");
 
 	if (sp == NULL) {
 		goto end;

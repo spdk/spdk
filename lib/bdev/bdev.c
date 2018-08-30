@@ -813,7 +813,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	spdk_io_device_register(&g_bdev_mgr, spdk_bdev_mgmt_channel_create,
 				spdk_bdev_mgmt_channel_destroy,
-				sizeof(struct spdk_bdev_mgmt_channel));
+				sizeof(struct spdk_bdev_mgmt_channel),
+				"bdev_mgr");
 
 	rc = spdk_bdev_modules_init();
 	if (rc != 0) {
@@ -3036,6 +3037,8 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 static int
 spdk_bdev_init(struct spdk_bdev *bdev)
 {
+	char *bdev_name;
+
 	assert(bdev->module != NULL);
 
 	if (!bdev->name) {
@@ -3046,6 +3049,14 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 	if (spdk_bdev_get_by_name(bdev->name)) {
 		SPDK_ERRLOG("Bdev name:%s already exists\n", bdev->name);
 		return -EEXIST;
+	}
+
+	/* Users often register their own I/O devices using the bdev name. In
+	 * order to avoid conflicts, prepend bdev_. */
+	bdev_name = spdk_sprintf_alloc("bdev_%s", bdev->name);
+	if (!bdev_name) {
+		SPDK_ERRLOG("Unable to allocate memory for internal bdev name.\n");
+		return -ENOMEM;
 	}
 
 	bdev->internal.status = SPDK_BDEV_STATUS_READY;
@@ -3061,7 +3072,10 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 
 	spdk_io_device_register(__bdev_to_io_dev(bdev),
 				spdk_bdev_channel_create, spdk_bdev_channel_destroy,
-				sizeof(struct spdk_bdev_channel));
+				sizeof(struct spdk_bdev_channel),
+				bdev_name);
+
+	free(bdev_name);
 
 	pthread_mutex_init(&bdev->internal.mutex, NULL);
 	return 0;

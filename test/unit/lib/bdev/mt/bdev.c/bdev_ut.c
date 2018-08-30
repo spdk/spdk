@@ -258,7 +258,7 @@ setup_test(void)
 	allocate_threads(BDEV_UT_NUM_THREADS);
 	spdk_bdev_initialize(bdev_init_cb, &done);
 	spdk_io_device_register(&g_io_device, stub_create_ch, stub_destroy_ch,
-				sizeof(struct ut_bdev_channel));
+				sizeof(struct ut_bdev_channel), NULL);
 	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
 	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &g_desc);
 }
@@ -1011,7 +1011,7 @@ enomem_multi_io_target(void)
 
 	/* Create new io_target and a second bdev using it */
 	spdk_io_device_register(&new_io_device, stub_create_ch, stub_destroy_ch,
-				sizeof(struct ut_bdev_channel));
+				sizeof(struct ut_bdev_channel), NULL);
 	second_bdev = calloc(1, sizeof(*second_bdev));
 	SPDK_CU_ASSERT_FATAL(second_bdev != NULL);
 	register_bdev(second_bdev, "ut_bdev2", &new_io_device);

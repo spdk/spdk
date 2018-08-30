@@ -295,7 +295,8 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 
 	spdk_io_device_register(svdev, bdev_virtio_scsi_ch_create_cb,
 				bdev_virtio_scsi_ch_destroy_cb,
-				sizeof(struct bdev_virtio_io_channel));
+				sizeof(struct bdev_virtio_io_channel),
+				svdev->vdev.name);
 
 	pthread_mutex_lock(&g_virtio_scsi_mutex);
 	TAILQ_INSERT_TAIL(&g_virtio_scsi_devs, svdev, tailq);
