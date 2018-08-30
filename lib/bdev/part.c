@@ -37,6 +37,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/log.h"
+#include "spdk/string.h"
 
 #include "spdk/bdev_module.h"
 
@@ -363,7 +364,9 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 
 	spdk_io_device_register(part, spdk_bdev_part_channel_create_cb,
 				spdk_bdev_part_channel_destroy_cb,
-				base->channel_size);
+				base->channel_size,
+				name);
+
 	spdk_vbdev_register(&part->internal.bdev, &base->bdev, 1);
 	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
 

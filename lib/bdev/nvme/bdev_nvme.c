@@ -970,7 +970,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
-				sizeof(struct nvme_io_channel));
+				sizeof(struct nvme_io_channel),
+				name);
 
 	if (nvme_ctrlr_create_bdevs(nvme_ctrlr) != 0) {
 		spdk_io_device_unregister(ctrlr, bdev_nvme_unregister_cb);

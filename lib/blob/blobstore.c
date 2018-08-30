@@ -2479,7 +2479,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_b
 	pthread_mutex_init(&bs->used_clusters_mutex, NULL);
 
 	spdk_io_device_register(bs, _spdk_bs_channel_create, _spdk_bs_channel_destroy,
-				sizeof(struct spdk_bs_channel));
+				sizeof(struct spdk_bs_channel), "blobstore");
 	rc = spdk_bs_register_md_thread(bs);
 	if (rc == -1) {
 		spdk_io_device_unregister(bs, NULL);
