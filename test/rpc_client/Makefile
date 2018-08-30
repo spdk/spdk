@@ -31,17 +31,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-# These directories contain tests.
-TESTDIRS = app bdev blobfs cpp_headers env event nvme unit rpc_client
+APP = rpc_client_test
 
-DIRS-y = $(TESTDIRS)
+C_SRCS := rpc_client_test.c
 
-.PHONY: all clean $(DIRS-y)
+SPDK_LIB_LIST = jsonrpc json log util
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all : $(APP)
+	@:
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
