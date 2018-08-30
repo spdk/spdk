@@ -16,6 +16,24 @@
       "revId": "78248675da7d509c1096247b84439e95877fc2e4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e58fd776_11337878",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-30T23:10:13Z",
+      "side": 1,
+      "message": "Hi Kunal,\n\nThank you so much for your feedback. Both of your feedback should be taken.\n\n#1, thank you for very nice proposal. Your idea looks very reasonable to me. I will take yours and update this patch.\n\n#2, skipping base bdev and failing to add base bdev are the same from the viewpoint of the raid bdev. Hence as you say, I think we can remove check_and_remove_raid_bdev() and I\u0027ll do it.\n\nThanks,\nShuhei",
+      "parentUuid": "9a00a153_1a93eb5c",
+      "revId": "78248675da7d509c1096247b84439e95877fc2e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
