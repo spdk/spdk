@@ -12,16 +12,17 @@ NVME_FIO_RESULTS=$BASE_DIR/result.json
 PRECONDITIONING=true
 FIO_BIN="/usr/src/fio/fio"
 RUNTIME=600
-PLUGIN="nvme"
+DRIVER="nvme"
 RAMP_TIME=30
 BLK_SIZE=4096
 RW=randrw
 MIX=100
-TYPE=("randread" "randrw" "randwrite")
 IODEPTH=256
 DISKNO=1
 ONEWORKLOAD=false
 CPUS_ALLOWED=1
+NUMJOBS=1
+REPEAT_NO=3
 
 function get_cores(){
 	local cpu_list="$1"
@@ -53,6 +54,10 @@ function get_numa_node(){
 			local bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme.pci_address" <<< $bdevs)
 			echo $(cat /sys/bus/pci/devices/$bdev_bdf/numa_node)
 		done
+	else
+		for bdf in $(iter_pci_class_code 01 08 02); do
+				echo $(cat /sys/bus/pci/devices/$bdf/numa_node)
+		done
 	fi
 }
 
@@ -68,6 +73,10 @@ function get_disks(){
 	elif [ "$plugin" = "bdev" ]; then
 		local bdevs=$(discover_bdevs $ROOTDIR $BASE_DIR/bdev.conf)
 		echo $(jq -r '.[].name' <<< $bdevs)
+	else
+		for bdf in $(iter_pci_class_code 01 08 02); do
+			echo $(ls -l /sys/block/ | grep $bdf |awk '{print $9}')
+		done
 	fi
 }
 
@@ -126,6 +135,8 @@ function create_fio_config(){
 					filename='trtype=PCIe traddr='${disks[$n]//:/.}' ns=1'
 				elif [ "$plugin" = "bdev" ]; then
 					filename=${disks[$n]}
+				else
+					filename="/dev/${disks[$n]}"
 				fi
 				sed -i -e "\$afilename=$filename" $BASE_DIR/config.fio
 				#Mark numa of n'th disk as "x" to mark it as claimed
@@ -150,12 +161,11 @@ function preconditioning(){
 	local filename=""
 	local i
 	sed -i -e "\$a[preconditioning]" $BASE_DIR/config.fio
-	for (( i=0; i < $DISKNO; i++ ))
-	do
-		dev_name='trtype=PCIe traddr='${disks[i]//:/.}' ns=1'
+	for bdf in $(iter_pci_class_code 01 08 02); do
+		dev_name='trtype=PCIe traddr='${bdf//:/.}' ns=1'
 		filename+=$(printf %s":" "$dev_name")
 	done
-	run_spdk_nvme_fio "nvme" --filename="$filename" --size=100% --loops=2 --bs=1M\
+	run_spdk_nvme_fio "nvme" --filename="$filename" --size=1% --loops=2 --bs=1M\
 		--rw=write --iodepth=32
 }
 
@@ -175,7 +185,7 @@ function get_results(){
 		echo $(( $mean_lat/100000 ))
 		;;
 		p99_lat)
-			p99_lat=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\" * $reads_pct + .write.clat_ns.percentile.\"99.000000\" * $writes_pct)")
+		p99_lat=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\" * $reads_pct + .write.clat_ns.percentile.\"99.000000\" * $writes_pct)")
 		p99_lat=${p99_lat%.*}
 		echo $(( $p99_lat/100000 ))
 		;;
@@ -188,6 +198,16 @@ function get_results(){
 		stdev=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)")
 		stdev=${stdev%.*}
 		echo $(( $stdev/100000 ))
+		;;
+		mean_slat)
+		mean_lat=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)")
+		mean_lat=${mean_lat%.*}
+		echo $(( $mean_lat/100000 ))
+		;;
+		mean_clat)
+		mean_lat=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)")
+		mean_lat=${mean_lat%.*}
+		echo $(( $mean_lat/100000 ))
 		;;
 	esac
 }
@@ -205,6 +225,11 @@ function run_spdk_nvme_fio(){
 	sleep 1
 }
 
+function run_nvme_fio(){
+	$FIO_BIN $BASE_DIR/config.fio --output-format=json "$@"
+	sleep 1
+}
+
 function usage()
 {
 	set +x
@@ -215,12 +240,16 @@ function usage()
 	echo "    --run-time=TIME[s]    Tell fio to terminate processing after the specified period of time. [default=$RUNTIME]"
 	echo "    --ramp-time=TIME[s]   Fio will run the specified workload for this amount of time before logging any performance numbers. [default=$RAMP_TIME]"
 	echo "    --fio-bin=PATH        Path to fio binary. [default=$FIO_BIN]"
-	echo "    --fio-plugin=STR      Use bdev or nvme fio_plugin. [default=$PLUGIN]"
+	echo "    --driver=STR          Use 'bdev' or 'nvme' for spdk driver with fio_plugin,"
+	echo "                          'kernel-default', kernel-classic' or kernel-hybrid' for kernel driver. [default=$DRIVER]"
 	echo "    --max-disk=INT,ALL    Number of disks to test on, this will run multiple workloads with increasing number of disk each run, if =ALL then test on all found disk. [default=$DISKNO]"
 	echo "    --disk-no=INT,ALL     Number of disks to test on, this will run one workload on selected number od disks, it discards max-disk setting, if =ALL then test on all found disk"
 	echo "    --rwmixread=INT       Percentage of a mixed workload that should be reads. [default=$MIX]"
 	echo "    --iodepth=INT         Number of I/O units to keep in flight against the file. [default=$IODEPTH]"
+	echo "    --block-size=INT      The  block  size  in  bytes  used for I/O units. [default=$BLK_SIZE]"
+	echo "    --numjobs=INT         Create the specified number of clones of this job. [default=$NUMJOBS]"
 	echo "    --cpu-allowed=INT     Cpu cores to run test in separated by coma. [default=$CPUS_ALLOWED]"
+	echo "    --repeat-no=INT       How many times ot repeat each workload. [default=$REPEAT_NO]"
 	echo "    --no-preconditioning  Skip preconditioning"
 	set -x
 }
@@ -235,11 +264,14 @@ while getopts 'h-:' optchar; do
 			fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
 			max-disk=*) DISKNO="${OPTARG#*=}" ;;
 			disk-no=*) DISKNO="${OPTARG#*=}"; ONEWORKLOAD=true ;;
-			fio-plugin=*) PLUGIN="${OPTARG#*=}" ;;
+			driver=*) DRIVER="${OPTARG#*=}" ;;
 			rwmixread=*) MIX="${OPTARG#*=}" ;;
 			iodepth=*) IODEPTH="${OPTARG#*=}" ;;
+			block-size=*) BLK_SIZE="${OPTARG#*=}" ;;
 			no-preconditioning) PRECONDITIONING=false ;;
 			cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
+			numjobs=*) NUMJOBS="${OPTARG#*=}" ;;
+			repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'"; exit 1 ;;
 		esac
 		;;
@@ -251,7 +283,11 @@ done
 trap 'rm -f *.state $BASE_DIR/bdev.conf; print_backtrace' ERR SIGTERM SIGABRT
 mkdir -p $BASE_DIR/results
 date="$(date +'%m_%d_%Y_%H%M%S')"
-disks=($(get_disks nvme))
+if [ $DRIVER = "bdev" ]; then
+	$ROOTDIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
+fi
+
+disks=($(get_disks $DRIVER))
 if [[ $DISKNO == "ALL" ]] || [[ $DISKNO == "all" ]]; then
 	DISKNO=${#disks[@]}
 elif [[ $DISKNO -gt ${#disks[@]} ]] || [[ ! $DISKNO =~ ^[0-9]+$ ]]; then
