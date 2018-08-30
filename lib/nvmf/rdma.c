@@ -1543,7 +1543,8 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 	spdk_io_device_register(rtransport, spdk_nvmf_rdma_mgmt_channel_create,
 				spdk_nvmf_rdma_mgmt_channel_destroy,
-				sizeof(struct spdk_nvmf_rdma_mgmt_channel));
+				sizeof(struct spdk_nvmf_rdma_mgmt_channel),
+				"rdma_transport");
 
 	TAILQ_INIT(&rtransport->devices);
 	TAILQ_INIT(&rtransport->ports);

@@ -37,6 +37,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/log.h"
+#include "spdk/string.h"
 
 #include "spdk/bdev_module.h"
 
@@ -322,6 +323,8 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 			 char *name, uint64_t offset_blocks, uint64_t num_blocks,
 			 char *product_name)
 {
+	char *part_name;
+
 	part->internal.bdev.blocklen = base->bdev->blocklen;
 	part->internal.bdev.blockcnt = num_blocks;
 	part->internal.offset_blocks = offset_blocks;
@@ -361,9 +364,21 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 		base->claimed = true;
 	}
 
+	part_name = spdk_sprintf_alloc("part_%s", name);
+	if (!part_name) {
+		SPDK_ERRLOG("Could not allocate memory for bdev_part name\n");
+		free(part->internal.bdev.name);
+		free(part->internal.bdev.product_name);
+		return -ENOMEM;
+	}
+
 	spdk_io_device_register(part, spdk_bdev_part_channel_create_cb,
 				spdk_bdev_part_channel_destroy_cb,
-				base->channel_size);
+				base->channel_size,
+				part_name);
+
+	free(part_name);
+
 	spdk_vbdev_register(&part->internal.bdev, &base->bdev, 1);
 	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
 

@@ -50,6 +50,7 @@ static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct io_device {
 	void				*io_device;
+	char				*name;
 	spdk_io_channel_create_cb	create_cb;
 	spdk_io_channel_destroy_cb	destroy_cb;
 	spdk_io_device_unregister_cb	unregister_cb;
@@ -344,7 +345,8 @@ spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 
 void
 spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
-			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size)
+			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size,
+			const char *name)
 {
 	struct io_device *dev, *tmp;
 
@@ -359,6 +361,11 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	}
 
 	dev->io_device = io_device;
+	if (name) {
+		dev->name = strdup(name);
+	} else {
+		dev->name = spdk_sprintf_alloc("%p", dev);
+	}
 	dev->create_cb = create_cb;
 	dev->destroy_cb = destroy_cb;
 	dev->unregister_cb = NULL;
@@ -367,13 +374,14 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev->unregistered = false;
 	dev->refcnt = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Registering io_device %p on thread %s\n",
-		      dev, spdk_get_thread()->name);
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Registering io_device %s (%p) on thread %s\n",
+		      dev->name, dev->io_device, spdk_get_thread()->name);
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device == io_device) {
 			SPDK_ERRLOG("io_device %p already registered\n", io_device);
+			free(dev->name);
 			free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
 			return;
@@ -388,10 +396,11 @@ _finish_unregister(void *arg)
 {
 	struct io_device *dev = arg;
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Finishing unregistration of io_device %p on thread %s\n",
-		      dev, dev->unregister_thread->name);
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Finishing unregistration of io_device %s (%p) on thread %s\n",
+		      dev->name, dev->io_device, dev->unregister_thread->name);
 
 	dev->unregister_cb(dev->io_device);
+	free(dev->name);
 	free(dev);
 }
 
@@ -399,11 +408,12 @@ static void
 _spdk_io_device_free(struct io_device *dev)
 {
 	if (dev->unregister_cb == NULL) {
+		free(dev->name);
 		free(dev);
 	} else {
 		assert(dev->unregister_thread != NULL);
-		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "io_device %p needs to unregister from thread %s\n",
-			      dev, dev->unregister_thread->name);
+		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "io_device %s (%p) needs to unregister from thread %s\n",
+			      dev->name, dev->io_device, dev->unregister_thread->name);
 		spdk_thread_send_msg(dev->unregister_thread, _finish_unregister, dev);
 	}
 }
@@ -444,8 +454,8 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregister_thread = thread;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Unregistering io_device %p from thread %s\n",
-		      dev, thread->name);
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Unregistering io_device %s (%p) from thread %s\n",
+		      dev->name, dev->io_device, thread->name);
 
 	if (refcnt > 0) {
 		/* defer deletion */
@@ -486,8 +496,8 @@ spdk_get_io_channel(void *io_device)
 		if (ch->dev == dev) {
 			ch->ref++;
 
-			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %p on thread %s refcnt %u\n",
-				      ch, dev, thread->name, ch->ref);
+			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
+				      ch, dev->name, dev->io_device, thread->name, ch->ref);
 
 			/*
 			 * An I/O channel already exists for this device on this
@@ -511,8 +521,8 @@ spdk_get_io_channel(void *io_device)
 	ch->ref = 1;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %p on thread %s refcnt %u\n",
-		      ch, dev, thread->name, ch->ref);
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
+		      ch, dev->name, dev->io_device, thread->name, ch->ref);
 
 	dev->refcnt++;
 
@@ -538,8 +548,8 @@ _spdk_put_io_channel(void *arg)
 	bool do_remove_dev = true;
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD,
-		      "Releasing io_channel %p for io_device %p. Channel thread %p. Current thread %s\n",
-		      ch, ch->dev, ch->thread, spdk_get_thread()->name);
+		      "Releasing io_channel %p for io_device %s (%p). Channel thread %p. Current thread %s\n",
+		      ch, ch->dev->name, ch->dev->io_device, ch->thread, spdk_get_thread()->name);
 
 	assert(ch->thread == spdk_get_thread());
 
@@ -581,8 +591,9 @@ _spdk_put_io_channel(void *arg)
 void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Putting io_channel %p for io_device %p on thread %s refcnt %u\n",
-		      ch, ch->dev, ch->thread->name, ch->ref);
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD,
+		      "Putting io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
+		      ch, ch->dev->name, ch->dev->io_device, ch->thread->name, ch->ref);
 
 	ch->ref--;
 
