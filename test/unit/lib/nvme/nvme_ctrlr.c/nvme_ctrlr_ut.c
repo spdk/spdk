@@ -1607,6 +1607,11 @@ test_spdk_nvme_ctrlr_doorbell_buffer_config(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	int ret = -1;
 
+	/* Ensure scan-build knows that we are not mocking out malloc or zmalloc here */
+	MOCK_SET(spdk_dma_malloc, NULL);
+	MOCK_CLEAR(spdk_dma_malloc);
+	MOCK_SET(spdk_dma_zmalloc, NULL);
+	MOCK_CLEAR(spdk_dma_zmalloc);
 	ctrlr.cdata.oacs.doorbell_buffer_config = 1;
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	ctrlr.page_size = 0x1000;
