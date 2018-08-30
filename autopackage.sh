@@ -24,8 +24,10 @@ spdk_pv=spdk-$(date +%Y_%m_%d)
 spdk_tarball=${spdk_pv}.tar
 dpdk_pv=dpdk-$(date +%Y_%m_%d)
 dpdk_tarball=${dpdk_pv}.tar
+ipsec_pv=ipsec-$(date +%Y_%m_%d)
+ipsec_tarball=${ipsec_pv}.tar
 
-find . -iname "spdk-*.tar* dpdk-*.tar*" -delete
+find . -iname "spdk-*.tar* dpdk-*.tar* ipsec-*.tar*" -delete
 git archive HEAD^{tree} --prefix=${spdk_pv}/ -o ${spdk_tarball}
 
 # Build from packaged source
