@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a940cfd2_05f46251",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1054,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-30T18:04:18Z",
+      "side": 1,
+      "message": "_spdk_lvs_verify_lvol_name actually checks\nif (lvs \u003d\u003d NULL) {\n    return -ENODEV\n} \nSo we will never reach this assert, but scan-build doesn\u0027t know that. I placed this in there as a sanity check so that scan-build would recognize that we are failing this on purpose, while still getting the coverage that we want. An alternative fix would be moving the above check out of _spdk_lvs_verify_lvol_name and into this function.",
+      "parentUuid": "11ae103d_3d3b414a",
+      "revId": "f4c379fb4ca57744c7a9a4ecfab55c31ebcc7db1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36661580_db66e974",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 1
