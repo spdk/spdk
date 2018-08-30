@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c7088fcc_fa01fad4",
+        "filename": "lib/bdev/nvme/Makefile",
+        "patchSetId": 21
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-30T08:53:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef45e8e5_ff636ae1",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 20
+      },
+      "revId": "98e534b8f1d0a2edc59025cc3b6ca04830f705f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dbd93553_dcae5266",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 21
@@ -36,6 +60,30 @@
       "writtenOn": "2018-08-29T13:43:02Z",
       "side": 1,
       "message": "is there something import in maintainig this as \u0027void *\u0027. If you change this into\n\n  struct nvme_ctrlr *nvme_ctrlr;\n  struct nvme_bdev *nvme_bdev;\n  \nthe is no more need for \u0027enum spdk_nvme_dev_type\u0027.",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 77,
+        "endChar": 10
+      },
+      "revId": "98e534b8f1d0a2edc59025cc3b6ca04830f705f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9b20d84_687ae672",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-30T08:53:45Z",
+      "side": 1,
+      "message": "I didn\u0027t see obivous benefit thought this change.\nif changed, additional checking on nvme_ctrlr and nvme_bdev with NULL is still necessary.",
+      "parentUuid": "dbd93553_dcae5266",
       "range": {
         "startLine": 77,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5bf26e23_5ea16c6d",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-30T08:53:45Z",
+      "side": 1,
+      "message": "Yes, putting should be added.\nwill putting the io-channel in the nvme cmd callback function, even it is not an elegant way.",
+      "parentUuid": "853719d9_3c30116a",
+      "range": {
+        "startLine": 481,
+        "startChar": 12,
+        "endLine": 481,
+        "endChar": 39
+      },
+      "revId": "98e534b8f1d0a2edc59025cc3b6ca04830f705f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "acdbe552_fa078481",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 21
@@ -82,6 +154,30 @@
       "writtenOn": "2018-08-29T13:43:02Z",
       "side": 1,
       "message": "If you apply comment from line 77 you can easly inline these functions.",
+      "range": {
+        "startLine": 444,
+        "startChar": 0,
+        "endLine": 489,
+        "endChar": 1
+      },
+      "revId": "98e534b8f1d0a2edc59025cc3b6ca04830f705f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "326ef5c5_d0abbfa2",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-30T08:53:45Z",
+      "side": 1,
+      "message": "how about keeping current functions\u0027 partition from combining them together.",
+      "parentUuid": "acdbe552_fa078481",
       "range": {
         "startLine": 444,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "2673371f_8745db6a",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-30T08:53:45Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9c90f5d3_7635b7d4",
+      "range": {
+        "startLine": 492,
+        "startChar": 0,
+        "endLine": 492,
+        "endChar": 29
+      },
+      "revId": "98e534b8f1d0a2edc59025cc3b6ca04830f705f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90c58b74_78baec13",
         "filename": "scripts/rpc.py",
         "patchSetId": 21
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "26e815f5_20dc46a6",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-30T08:53:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "90c58b74_78baec13",
+      "range": {
+        "startLine": 1681,
+        "startChar": 47,
+        "endLine": 1681,
+        "endChar": 70
+      },
+      "revId": "98e534b8f1d0a2edc59025cc3b6ca04830f705f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c826c10_9ed42642",
         "filename": "scripts/rpc/nvme.py",
         "patchSetId": 21
@@ -151,6 +295,30 @@
       "writtenOn": "2018-08-29T13:43:02Z",
       "side": 1,
       "message": "-\u003e _ ?",
+      "range": {
+        "startLine": 12,
+        "startChar": 12,
+        "endLine": 12,
+        "endChar": 13
+      },
+      "revId": "98e534b8f1d0a2edc59025cc3b6ca04830f705f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "deedea22_3caa8760",
+        "filename": "scripts/rpc/nvme.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-30T08:53:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7c826c10_9ed42642",
       "range": {
         "startLine": 12,
         "startChar": 12,
@@ -243,6 +411,30 @@
       "writtenOn": "2018-08-29T13:43:02Z",
       "side": 1,
       "message": "encoded?",
+      "range": {
+        "startLine": 21,
+        "startChar": 64,
+        "endLine": 21,
+        "endChar": 65
+      },
+      "revId": "98e534b8f1d0a2edc59025cc3b6ca04830f705f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac63dd2e_2ced40a9",
+        "filename": "scripts/rpc/nvme.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-30T08:53:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d73ec57a_8b848682",
       "range": {
         "startLine": 21,
         "startChar": 64,

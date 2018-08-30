@@ -22,6 +22,30 @@
       "revId": "65a7dbedadb71fa60567fd9c9769066a0761a8d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c61b62d9_d4b95d6c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 4101,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-08-30T08:53:45Z",
+      "side": 1,
+      "message": "and forgot removing...",
+      "parentUuid": "4000cf8f_e0d55de9",
+      "range": {
+        "startLine": 4094,
+        "startChar": 0,
+        "endLine": 4101,
+        "endChar": 1
+      },
+      "revId": "65a7dbedadb71fa60567fd9c9769066a0761a8d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
