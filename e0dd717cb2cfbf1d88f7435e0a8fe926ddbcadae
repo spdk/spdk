@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8dbbdd99_154ad879",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1854,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-30T21:55:59Z",
+      "side": 1,
+      "message": "you can just name this \"lvol\" - that\u0027s the naming we use for similar unit tests (where we get a value from the global set in the callback and save it in a local variable)\n\nmy concern is that the \"l_\" prefix will confuse later readers of the code - they\u0027ll wonder what the \"l_\" is supposed to stand for",
+      "revId": "e0dd717cb2cfbf1d88f7435e0a8fe926ddbcadae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
