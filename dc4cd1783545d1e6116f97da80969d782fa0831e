@@ -50,6 +50,24 @@
       "revId": "dc4cd1783545d1e6116f97da80969d782fa0831e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "366a17fa_009ac4a5",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-30T14:40:49Z",
+      "side": 1,
+      "message": "Yeah, it really confused me as well. I can show you in the lab today.",
+      "parentUuid": "30055c25_066bb46a",
+      "revId": "dc4cd1783545d1e6116f97da80969d782fa0831e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
