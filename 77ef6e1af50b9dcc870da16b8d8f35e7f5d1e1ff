@@ -16,6 +16,24 @@
       "revId": "77ef6e1af50b9dcc870da16b8d8f35e7f5d1e1ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8c47e5c_cd9a34ad",
+        "filename": "include/spdk_internal/mock.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-30T22:48:42Z",
+      "side": 1,
+      "message": "I think that I implemented it properly in patchset 5, but it didn\u0027t actually clear the scan-build errors - which is inexplicable to me. \nI can only assume there is something scan-build doesn\u0027t understand about including the C file test_env.c directly. Because my previous fix was essentially doing the same thing.",
+      "parentUuid": "20072fa5_6555a2c9",
+      "revId": "77ef6e1af50b9dcc870da16b8d8f35e7f5d1e1ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
