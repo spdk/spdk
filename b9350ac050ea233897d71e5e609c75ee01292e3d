@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc4fcf1c_4d0ecc55",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 23
+      },
+      "lineNbr": 4102,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-30T16:52:50Z",
+      "side": 1,
+      "message": "Your example here has data_len \u003e 0, but no actual data field. That\u0027s an error right?",
+      "revId": "b9350ac050ea233897d71e5e609c75ee01292e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
