@@ -151,6 +151,7 @@ struct spdk_io_channel {
 	struct spdk_thread		*thread;
 	struct io_device		*dev;
 	uint32_t			ref;
+	uint32_t			destroy_ref;
 	TAILQ_ENTRY(spdk_io_channel)	tailq;
 	spdk_io_channel_destroy_cb	destroy_cb;
 
