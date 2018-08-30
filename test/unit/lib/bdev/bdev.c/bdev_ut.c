@@ -747,25 +747,25 @@ bdev_io_spans_boundary_test(void)
 	bdev_io.bdev = &bdev;
 
 	/* bdev has no optimal_io_boundary set - so this should return false. */
-	CU_ASSERT(_spdk_bdev_io_spans_boundary(&bdev_io) == false);
+	CU_ASSERT(_spdk_bdev_io_should_split(&bdev_io) == false);
 
 	bdev.optimal_io_boundary = 32;
 	bdev_io.type = SPDK_BDEV_IO_TYPE_RESET;
 
 	/* RESETs are not based on LBAs - so this should return false. */
-	CU_ASSERT(_spdk_bdev_io_spans_boundary(&bdev_io) == false);
+	CU_ASSERT(_spdk_bdev_io_should_split(&bdev_io) == false);
 
 	bdev_io.type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io.u.bdev.offset_blocks = 0;
 	bdev_io.u.bdev.num_blocks = 32;
 
 	/* This I/O run right up to, but does not cross, the boundary - so this should return false. */
-	CU_ASSERT(_spdk_bdev_io_spans_boundary(&bdev_io) == false);
+	CU_ASSERT(_spdk_bdev_io_should_split(&bdev_io) == false);
 
 	bdev_io.u.bdev.num_blocks = 33;
 
 	/* This I/O spans a boundary. */
-	CU_ASSERT(_spdk_bdev_io_spans_boundary(&bdev_io) == true);
+	CU_ASSERT(_spdk_bdev_io_should_split(&bdev_io) == true);
 }
 
 static void
@@ -907,81 +907,49 @@ bdev_io_split(void)
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
 
-	/* Test a WRITE_ZEROES that needs to be split.  This is an I/O type that does not have iovecs.
-	 * Have this I/O end right on a boundary.  Use a non-standard optimal_io_boundary to test the
-	 * non-power-of-2 path.
+	/* Test a WRITE_ZEROES that would span an I/O boundary.  WRITE_ZEROES should not be
+	 * split, so test that.
 	 */
 	bdev->optimal_io_boundary = 15;
 	g_io_done = false;
 	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
 	g_bdev_ut_channel->expected_offset = 9;
-	g_bdev_ut_channel->expected_length = 6;
+	g_bdev_ut_channel->expected_length = 36;
 	g_bdev_ut_channel->expected_iovcnt = 0;
 
 	rc = spdk_bdev_write_zeroes_blocks(desc, io_ch, 9, 36, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
-
-	g_bdev_ut_channel->expected_offset = 15;
-	g_bdev_ut_channel->expected_length = 15;
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
-	g_bdev_ut_channel->expected_offset = 30;
-	g_bdev_ut_channel->expected_length = 15;
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
 
-	/* Test an UNMAP that needs to be split.  This is an I/O type that does not have iovecs. */
+	/* Test an UNMAP.  This should also not be split. */
 	bdev->optimal_io_boundary = 16;
 	g_io_done = false;
 	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_UNMAP;
 	g_bdev_ut_channel->expected_offset = 15;
-	g_bdev_ut_channel->expected_length = 1;
+	g_bdev_ut_channel->expected_length = 2;
 	g_bdev_ut_channel->expected_iovcnt = 0;
 
 	rc = spdk_bdev_unmap_blocks(desc, io_ch, 15, 2, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
-
-	g_bdev_ut_channel->expected_offset = 16;
-	g_bdev_ut_channel->expected_length = 1;
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
 
-	/* Test an FLUSH that needs to be split.  This is an I/O type that does not have iovecs. */
+	/* Test a FLUSH.  This should also not be split. */
 	bdev->optimal_io_boundary = 16;
 	g_io_done = false;
 	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_FLUSH;
 	g_bdev_ut_channel->expected_offset = 15;
-	g_bdev_ut_channel->expected_length = 1;
+	g_bdev_ut_channel->expected_length = 2;
 	g_bdev_ut_channel->expected_iovcnt = 0;
 
 	rc = spdk_bdev_flush_blocks(desc, io_ch, 15, 2, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
-
-	g_bdev_ut_channel->expected_offset = 16;
-	g_bdev_ut_channel->expected_length = 1;
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
