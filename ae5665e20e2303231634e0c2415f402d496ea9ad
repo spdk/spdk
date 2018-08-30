@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c02f6ce_8b9addee",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1013512
+      },
+      "writtenOn": "2018-08-30T08:04:54Z",
+      "side": 1,
+      "message": "This memory is not freed as of now. I was thinking of adding a function, say remove_qpair_cb and pass it to spdk_nvmf_tgt_accept. This memory can be freed when the cb is called from the disconnect context. Please suggest.",
+      "revId": "ae5665e20e2303231634e0c2415f402d496ea9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
