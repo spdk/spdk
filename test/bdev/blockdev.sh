@@ -147,7 +147,9 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 
 # Run bdevperf with gpt
 $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+# This test is causing a lot of intermittent failures in the test pool.  Comment it out
+# while it is debugged further.
+#$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
 rm -f $testdir/bdev_gpt.conf
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
