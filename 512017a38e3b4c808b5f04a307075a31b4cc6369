@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "029e34c8_5f7f56db",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-30T00:29:47Z",
+      "side": 1,
+      "message": "Sure. Here its for the I/O operations so that needs to check the status of the subsystem. Admin requests like Set/Get Props can still be executed.",
+      "parentUuid": "c8893a04_a233258d",
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd877eb0_82ceeefd",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-29T16:51:39Z",
       "side": 1,
       "message": "There is a generic status type and an internal error code I believe. This doesn\u0027t seem like a privilege issue, which is what you are indicating with this error code.",
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a95eb2e_e8e6f8c0",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-30T00:29:47Z",
+      "side": 1,
+      "message": "I\u0027ve tried the Generic status and Internal error (and other possible errors). At the initiator side, when receiving this error, it could just queue the I/O and prevent other operations. So that return this error as the Subsystem is not ready and could not handle the required I/O operation.",
+      "parentUuid": "dd877eb0_82ceeefd",
       "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
