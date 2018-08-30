@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a00a153_1a93eb5c",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-08-30T16:31:53Z",
+      "side": 1,
+      "message": "1. If raid bdev config add is successful but all the base bdevs failed for raid_bdev_add_base_device, in this case we are making rpc successful but there is hanging configuration without raid_bdev created. We should create raid bdev in configuring state even if no base bdev is added, please check if it makes sense.\n\n\n2. Also, check_and_remove_raid_bdev() does this require to call? I think whatever base bdevs are added let it add and not remove. Anyway user can fire rpc delete",
+      "revId": "78248675da7d509c1096247b84439e95877fc2e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
