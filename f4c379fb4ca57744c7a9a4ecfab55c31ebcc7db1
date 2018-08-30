@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "ff4e57ff_49dcf9db",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1054,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-30T21:47:33Z",
+      "side": 1,
+      "message": "Yeah - remove the lvs \u003d\u003d NULL check from _spdk_lvs_verify_lvol_name, and put separate checks in each of the functions that call it instead (spdk_lvol_create, spdk_lvol_create_snapshot, spdk_lvol_create_clone).  Have each of them fail with -EINVAL if lvs is NULL.",
+      "parentUuid": "a940cfd2_05f46251",
+      "revId": "f4c379fb4ca57744c7a9a4ecfab55c31ebcc7db1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36661580_db66e974",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 1
