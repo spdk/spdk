@@ -961,7 +961,7 @@ spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_
 	ev_ctx = calloc(1, sizeof(*ev_ctx));
 	if (ev_ctx == NULL) {
 		SPDK_ERRLOG("Failed to alloc vhost event.\n");
-		return -ENOMEM;
+		assert(false);
 	}
 
 	ev_ctx->vdev = vdev;
