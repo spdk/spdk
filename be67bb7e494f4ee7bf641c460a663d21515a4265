@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe72db1a_06ee59ae",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3062,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-30T15:57:39Z",
+      "side": 1,
+      "message": "I would still move this up one line - right after we call spdk_get_pdu().",
+      "revId": "be67bb7e494f4ee7bf641c460a663d21515a4265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
