@@ -254,8 +254,11 @@ struct spdk_bdev {
 	/**
 	 * Specifies whether the optimal_io_boundary is mandatory or
 	 * only advisory.  If set to true, the bdev layer will split
-	 * I/O that span the optimal_io_boundary before submitting them
-	 * to the bdev module.
+	 * READ and WRITE I/O that span the optimal_io_boundary before
+	 * submitting them to the bdev module.
+	 *
+	 * Note that this field cannot be used to force splitting of
+	 * UNMAP, WRITE_ZEROES or FLUSH I/O.
 	 */
 	bool split_on_optimal_io_boundary;
 
