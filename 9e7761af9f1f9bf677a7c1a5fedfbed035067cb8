@@ -16,6 +16,24 @@
       "revId": "9e7761af9f1f9bf677a7c1a5fedfbed035067cb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab1f6464_c684f679",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-30T23:46:44Z",
+      "side": 1,
+      "message": "Thank you so much. Your are correct. \n\nI tested this patch again and nothing fixed. I wonder what I did.",
+      "parentUuid": "f6fea15d_4216242b",
+      "revId": "9e7761af9f1f9bf677a7c1a5fedfbed035067cb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
