@@ -1051,6 +1051,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		return rc;
 	}
 
+	assert(lvs != NULL);
 	bs = lvs->blobstore;
 
 	req = calloc(1, sizeof(*req));
