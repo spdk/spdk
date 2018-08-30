@@ -1288,7 +1288,10 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 		}
 	}
 
-	spdk_vhost_event_async_send(vdev, fn, arg, true);
+	if (spdk_vhost_event_async_send(vdev, fn, arg, true)) {
+		fn(NULL, arg);
+		return;
+	}
 }
 
 void
