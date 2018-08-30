@@ -442,7 +442,7 @@ bdev_pmem_initialize(void)
 		return -1;
 	}
 
-	spdk_io_device_register(&g_pmem_disks, bdev_pmem_create_cb, bdev_pmem_destroy_cb, 0);
+	spdk_io_device_register(&g_pmem_disks, bdev_pmem_create_cb, bdev_pmem_destroy_cb, 0, "pmem_bdev");
 
 	bdev_pmem_read_conf();
 
