@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f969ec17_923ffb93",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-30T17:01:03Z",
+      "side": 1,
+      "message": "Is there ever a cause where the subsystem is inactive and a valid command comes in? I don\u0027t believe there is. If the subsystem is inactive that means we just destroyed it.",
+      "parentUuid": "029e34c8_5f7f56db",
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd877eb0_82ceeefd",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 3
@@ -72,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "b042a560_fdb7d35b",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-30T17:01:03Z",
+      "side": 1,
+      "message": "I don\u0027t think this strategy is going to be robust, then. The kernel could change their handling of this status code at any time in the future. Especially since this particular status code doesn\u0027t mean what we want it to mean (it means the NAND went bad).",
+      "parentUuid": "0a95eb2e_e8e6f8c0",
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f269b5e_96018b6b",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 3
@@ -89,6 +125,23 @@
         "endLine": 175,
         "endChar": 61
       },
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "146e06d0_7600d43f",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-30T17:01:03Z",
+      "side": 1,
+      "message": "You still want to queue incoming requests on the admin queue while the subsystem is paused or we\u0027ll end up with race conditions where two threads are modifying the subsystem state at the same time.",
       "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
