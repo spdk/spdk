@@ -54,6 +54,13 @@ _part_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	fn(ctx);
 }
 
+static void
+_part_cleanup(struct spdk_bdev_part *part)
+{
+	free(part->internal.bdev.name);
+	free(part->internal.bdev.product_name);
+}
+
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			 int *sc, int *sk, int *asc, int *ascq)
@@ -120,6 +127,8 @@ part_test(void)
 	spdk_bdev_part_base_hotremove(&bdev_base, &tailq);
 
 	spdk_bdev_part_base_free(base);
+	_part_cleanup(&part1);
+	_part_cleanup(&part2);
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
 }
 
