@@ -24,8 +24,10 @@ spdk_pv=spdk-$(date +%Y_%m_%d)
 spdk_tarball=${spdk_pv}.tar
 dpdk_pv=dpdk-$(date +%Y_%m_%d)
 dpdk_tarball=${dpdk_pv}.tar
+ipsec_pv=ipsec-$(date +%Y_%m_%d)
+ipsec_tarball=${ipsec_pv}.tar
 
-find . -iname "spdk-*.tar* dpdk-*.tar*" -delete
+find . -iname "spdk-*.tar* dpdk-*.tar* ipsec-*.tar*" -delete
 git archive HEAD^{tree} --prefix=${spdk_pv}/ -o ${spdk_tarball}
 
 # Build from packaged source
@@ -38,6 +40,13 @@ if [ -z "$WITH_DPDK_DIR" ]; then
 	git archive HEAD^{tree} --prefix=dpdk/ -o ../${dpdk_tarball}
 	cd ..
 	tar -C "$tmpdir/${spdk_pv}" -xf $dpdk_tarball
+fi
+
+if [ -d "intel-ipsec-mb" ]; then
+	cd intel-ipsec-mb
+	git archive HEAD^{tree} --prefix=intel-ipsec-mb/ -o ../${ipsec_tarball}
+	cd ..
+	tar -C "$tmpdir/${spdk_pv}" -xf $ipsec_tarball
 fi
 
 (
