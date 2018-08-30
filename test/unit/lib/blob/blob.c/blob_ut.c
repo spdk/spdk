@@ -1832,7 +1832,7 @@ blob_operation_split_rw_iov(void)
 	struct iovec iov_read[2];
 	struct iovec iov_write[2];
 
-	uint64_t i;
+	uint64_t i, j;
 
 	dev = init_dev();
 
@@ -1858,7 +1858,13 @@ blob_operation_split_rw_iov(void)
 
 	/* Prepare random pattern to write */
 	for (i = 0; i < pages_per_payload; i++) {
-		*((uint64_t *)(payload_pattern + page_size * i)) = (i + 1);
+		for (j = 0; j < page_size / sizeof(uint64_t); j++) {
+			uint64_t *tmp;
+
+			tmp = (uint64_t *)payload_pattern;
+			tmp += ((page_size * i) / sizeof(uint64_t)) + j;
+			*tmp = i + 1;
+		}
 	}
 
 	channel = spdk_bs_alloc_io_channel(bs);
