@@ -691,6 +691,10 @@ test_nvme_allocate_request_user_copy(void)
 	/* put a dummy on the queue */
 	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
 
+	/* Make sure scan-build knows we aren't mocking out malloc here.*/
+	MOCK_SET(spdk_dma_malloc, NULL);
+	MOCK_CLEAR(spdk_dma_malloc);
+
 	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
 					      cb_arg, host_to_controller);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
