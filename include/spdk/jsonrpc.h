@@ -64,6 +64,37 @@ extern "C" {
 struct spdk_jsonrpc_server;
 struct spdk_jsonrpc_request;
 
+struct spdk_jsonrpc_client_conn;
+struct spdk_jsonrpc_client_request;
+
+/* Client library should use its own log functions */
+#ifndef DEBUG
+#define CLIENT_ERRLOG(...) do { } while (0)
+#define CLIENT_DEBUGLOG(...) do { } while (0)
+#else
+
+#define MAX_LOG_TMPBUF 1024
+
+static inline void
+spdk_client_log(int level, const char *file, const int line, const char *func,
+		const char *format, ...)
+{
+	char buf[MAX_LOG_TMPBUF];
+	va_list ap;
+
+	va_start(ap, format);
+	vsnprintf(buf, sizeof(buf), format, ap);
+	syslog(level, "%s:%4d:%s: %s", file, line, func, buf);
+	va_end(ap);
+}
+
+#define CLIENT_ERRLOG(...) \
+	spdk_client_log(LOG_ERR, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define CLIENT_DEBUGLOG(...) \
+	spdk_client_log(LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
+
+#endif
+
 /**
  * User callback to handle a single JSON-RPC request.
  *
@@ -78,6 +109,15 @@ typedef void (*spdk_jsonrpc_handle_request_fn)(
 	struct spdk_jsonrpc_request *request,
 	const struct spdk_json_val *method,
 	const struct spdk_json_val *params);
+/**
+ * Function for specific RPC method response parsing handlers.
+ *
+ * \param parser_ctx context where analysis are put.
+ * \param result json values responsed to this method.
+ */
+typedef int (*spdk_jsonrpc_client_response_parser)(
+	void *parser_ctx,
+	const struct spdk_json_val *result);
 
 /**
  * Create a JSON-RPC server listening on the required address.
@@ -159,6 +199,27 @@ void spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 void spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 		int error_code, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 
+//TODO: add function notes for below functions
+struct spdk_json_write_ctx *spdk_jsonrpc_begin_request(
+	struct spdk_jsonrpc_client_request *request,
+	const char *method);
+
+void spdk_jsonrpc_end_request(struct spdk_jsonrpc_client_request *request,
+			      struct spdk_json_write_ctx *w);
+
+struct spdk_jsonrpc_client_conn *spdk_jsonrpc_client_connect(int domain, int protocol,
+		struct sockaddr *server_addr, socklen_t addrlen);
+
+void spdk_jsonrpc_client_close(struct spdk_jsonrpc_client_conn *conn);
+
+struct spdk_jsonrpc_client_request *spdk_jsonrpc_client_get_request(
+	struct spdk_jsonrpc_client_conn *conn);
+
+int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client_conn *conn);
+
+int spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client_conn *conn,
+				      spdk_jsonrpc_client_response_parser parser_fn,
+				      void *parser_ctx);
 
 #ifdef __cplusplus
 }
