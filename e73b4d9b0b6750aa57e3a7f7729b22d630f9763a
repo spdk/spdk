@@ -139,6 +139,24 @@
     },
     {
       "key": {
+        "uuid": "d11acbd6_e6a2aa4b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2018-08-30T18:36:31Z",
+      "side": 1,
+      "message": "But how can I get ctrlr hooks in mr_map_notify call? In mem_map_alloc, i am storing ctrlr hooks in rqpair-\u003emr_map, which then I can use it in mem_map_translate to get rkey. But there is noway I can use ctrlr hook_ctx in mr_map_notify to get rkey there.",
+      "parentUuid": "7b7cc633_9477d59a",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f8f3ef0_5aa6b24f",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 13
@@ -150,6 +168,24 @@
       "writtenOn": "2018-08-29T18:24:57Z",
       "side": 1,
       "message": "Is it not possible for this function to always return the ibv_mr? That would eliminate a code path.",
+      "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7586de4_a996f2b7",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2018-08-30T18:36:31Z",
+      "side": 1,
+      "message": "No. In Oracle framework, we can not store mr and return it. So that\u0027s a reason that I returned key instead of mr here.",
+      "parentUuid": "3f8f3ef0_5aa6b24f",
       "revId": "e73b4d9b0b6750aa57e3a7f7729b22d630f9763a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
