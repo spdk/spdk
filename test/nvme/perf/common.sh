@@ -54,6 +54,11 @@ function create_fio_filename(){
 		do
 			filename+=$(printf %s":" "${devs[$i]}")
 		done
+	elif [ "$plugin" = "kernel" ]; then
+		for (( i=0; i < $disk_no; i++ ))
+		do
+			filename+=$(printf /dev/nvme%sn1: $i)
+		done
 	fi
 
 	echo $filename
@@ -65,11 +70,20 @@ function preconditioning(){
 	local i
 	for (( i=0; i < $DISKNO; i++ ))
 	do
-		dev_name='trtype=PCIe traddr='${disks[i]//:/.}' ns=1'
-		filename+=$(printf %s":" "$dev_name")
+		if [ -b "/dev/nvme0n1" ]; then
+			filename+=$(printf /dev/nvme%sn1: $i)
+		else
+			dev_name='trtype=PCIe traddr='${disks[i]//:/.}' ns=1'
+			filename+=$(printf %s":" "$dev_name")
+		fi
 	done
-	run_spdk_nvme_fio "nvme" --filename="$filename" --size=100% --loops=2 --bs=1M\
+	if [ -b "/dev/nvme0n1" ]; then
+		run_nvme_fio "nvme" --filename="$filename" --size=100% --loops=2 --bs=1M\
+		--rw=write --iodepth=32 -ioengine=libaio
+	else
+		run_spdk_nvme_fio "nvme" --filename="$filename" --size=100% --loops=2 --bs=1M\
 		--rw=write --iodepth=32
+	fi
 }
 
 function get_results(){
@@ -129,6 +143,11 @@ function run_spdk_nvme_fio(){
 		 "${@:2}" --ioengine=spdk_bdev --spdk_conf=$BASE_DIR/bdev.conf --spdk_mem=1024
 	fi
 
+	sleep 1
+}
+
+function run_nvme_fio(){
+	$FIO_BIN $BASE_DIR/config.fio --output-format=json --cpus_allowed=28 "$@"
 	sleep 1
 }
 
