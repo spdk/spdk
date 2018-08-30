@@ -227,7 +227,7 @@ for_each_channel_remove(void)
 	int count = 0;
 
 	allocate_threads(3);
-	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
 	set_thread(0);
 	ch0 = spdk_get_io_channel(&io_target);
 	set_thread(1);
@@ -301,7 +301,7 @@ for_each_channel_unreg(void)
 
 	allocate_threads(1);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
-	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
 	CU_ASSERT(!TAILQ_EMPTY(&g_io_devices));
 	dev = TAILQ_FIRST(&g_io_devices);
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
@@ -316,7 +316,7 @@ for_each_channel_unreg(void)
 	 *  have removed the device.
 	 */
 	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
-	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
 	/*
 	 * There is already a device registered at &io_target, so a new io_device should not
 	 *  have been added to g_io_devices.
@@ -417,8 +417,8 @@ channel(void)
 	void *ctx;
 
 	spdk_allocate_thread(_send_msg, NULL, NULL, NULL, "thread0");
-	spdk_io_device_register(&device1, create_cb_1, destroy_cb_1, sizeof(ctx1));
-	spdk_io_device_register(&device2, create_cb_2, destroy_cb_2, sizeof(ctx2));
+	spdk_io_device_register(&device1, create_cb_1, destroy_cb_1, sizeof(ctx1), NULL);
+	spdk_io_device_register(&device2, create_cb_2, destroy_cb_2, sizeof(ctx2), NULL);
 
 	g_create_cb_calls = 0;
 	ch1 = spdk_get_io_channel(&device1);

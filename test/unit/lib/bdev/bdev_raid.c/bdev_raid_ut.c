@@ -269,7 +269,8 @@ spdk_sprintf_alloc(const char *format, ...)
 
 void
 spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
-			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size)
+			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size,
+			const char *name)
 {
 }
 

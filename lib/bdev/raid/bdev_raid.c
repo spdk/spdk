@@ -1279,7 +1279,8 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	if (raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
 		raid_bdev->state = RAID_BDEV_STATE_ONLINE;
 		spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
-					sizeof(struct raid_bdev_io_channel));
+					sizeof(struct raid_bdev_io_channel),
+					raid_bdev->bdev.name);
 		rc = spdk_bdev_register(raid_bdev_gen);
 		if (rc != 0) {
 			/*

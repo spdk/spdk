@@ -797,7 +797,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	spdk_io_device_register(&g_bdev_mgr, spdk_bdev_mgmt_channel_create,
 				spdk_bdev_mgmt_channel_destroy,
-				sizeof(struct spdk_bdev_mgmt_channel));
+				sizeof(struct spdk_bdev_mgmt_channel),
+				"bdev_mgr");
 
 	rc = spdk_bdev_modules_init();
 	if (rc != 0) {
@@ -3074,7 +3075,8 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 
 	spdk_io_device_register(__bdev_to_io_dev(bdev),
 				spdk_bdev_channel_create, spdk_bdev_channel_destroy,
-				sizeof(struct spdk_bdev_channel));
+				sizeof(struct spdk_bdev_channel),
+				bdev->name);
 
 	pthread_mutex_init(&bdev->internal.mutex, NULL);
 	return 0;

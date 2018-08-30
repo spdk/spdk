@@ -386,7 +386,7 @@ copy_engine_ioat_init(void)
 	SPDK_INFOLOG(SPDK_LOG_COPY_IOAT, "Ioat Copy Engine Offload Enabled\n");
 	spdk_copy_engine_register(&ioat_copy_engine);
 	spdk_io_device_register(&ioat_copy_engine, ioat_create_cb, ioat_destroy_cb,
-				sizeof(struct ioat_io_channel));
+				sizeof(struct ioat_io_channel), "ioat_copy_engine");
 	return 0;
 }
 

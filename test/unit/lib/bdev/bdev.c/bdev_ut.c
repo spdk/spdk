@@ -190,7 +190,7 @@ static int
 bdev_ut_module_init(void)
 {
 	spdk_io_device_register(&g_bdev_ut_io_device, bdev_ut_create_ch, bdev_ut_destroy_ch,
-				sizeof(struct bdev_ut_channel));
+				sizeof(struct bdev_ut_channel), NULL);
 	return 0;
 }
 

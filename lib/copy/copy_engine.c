@@ -214,7 +214,8 @@ static int
 copy_engine_mem_init(void)
 {
 	spdk_memcpy_register(&memcpy_copy_engine);
-	spdk_io_device_register(&memcpy_copy_engine, memcpy_create_cb, memcpy_destroy_cb, 0);
+	spdk_io_device_register(&memcpy_copy_engine, memcpy_create_cb, memcpy_destroy_cb, 0,
+				"memcpy_engine");
 
 	return 0;
 }
@@ -238,7 +239,7 @@ spdk_copy_engine_initialize(void)
 	 *  spdk_copy_module_list address for this purpose.
 	 */
 	spdk_io_device_register(&spdk_copy_module_list, copy_create_cb, copy_destroy_cb,
-				sizeof(struct copy_io_channel));
+				sizeof(struct copy_io_channel), "copy_module");
 
 	return 0;
 }

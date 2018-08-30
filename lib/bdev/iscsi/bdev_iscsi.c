@@ -613,7 +613,8 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, 
 	lun->bdev.fn_table = &iscsi_fn_table;
 
 	spdk_io_device_register(lun, bdev_iscsi_create_cb, bdev_iscsi_destroy_cb,
-				sizeof(struct bdev_iscsi_io_channel));
+				sizeof(struct bdev_iscsi_io_channel),
+				name);
 	rc = spdk_bdev_register(&lun->bdev);
 	if (rc) {
 		spdk_io_device_unregister(lun, NULL);

@@ -440,19 +440,19 @@ fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 
 	fs->md_target.max_ops = 512;
 	spdk_io_device_register(&fs->md_target, _spdk_fs_md_channel_create, _spdk_fs_channel_destroy,
-				sizeof(struct spdk_fs_channel));
+				sizeof(struct spdk_fs_channel), "blobfs_md");
 	fs->md_target.md_io_channel = spdk_get_io_channel(&fs->md_target);
 	fs->md_target.md_fs_channel = spdk_io_channel_get_ctx(fs->md_target.md_io_channel);
 
 	fs->sync_target.max_ops = 512;
 	spdk_io_device_register(&fs->sync_target, _spdk_fs_sync_channel_create, _spdk_fs_channel_destroy,
-				sizeof(struct spdk_fs_channel));
+				sizeof(struct spdk_fs_channel), "blobfs_sync");
 	fs->sync_target.sync_io_channel = spdk_get_io_channel(&fs->sync_target);
 	fs->sync_target.sync_fs_channel = spdk_io_channel_get_ctx(fs->sync_target.sync_io_channel);
 
 	fs->io_target.max_ops = 512;
 	spdk_io_device_register(&fs->io_target, _spdk_fs_io_channel_create, _spdk_fs_channel_destroy,
-				sizeof(struct spdk_fs_channel));
+				sizeof(struct spdk_fs_channel), "blobfs_io");
 
 	return fs;
 }

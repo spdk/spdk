@@ -523,7 +523,8 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		TAILQ_INSERT_TAIL(&g_pt_nodes, pt_node, link);
 
 		spdk_io_device_register(pt_node, pt_bdev_ch_create_cb, pt_bdev_ch_destroy_cb,
-					sizeof(struct pt_io_channel));
+					sizeof(struct pt_io_channel),
+					name->bdev_name);
 		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
 
 		rc = spdk_bdev_open(bdev, true, vbdev_passthru_base_bdev_hotremove_cb,
