@@ -148,6 +148,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	request->send_buf = malloc(request->send_buf_size);
 	if (request->send_buf == NULL) {
 		SPDK_ERRLOG("Failed to allocate send_buf (%zu bytes)\n", request->send_buf_size);
+		conn->outstanding_requests--;
 		free(request);
 		return -1;
 	}
