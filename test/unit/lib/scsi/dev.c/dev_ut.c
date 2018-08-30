@@ -555,8 +555,9 @@ dev_add_lun_bdev_not_found(void)
 	int rc;
 	struct spdk_scsi_dev dev = {0};
 
-	rc = spdk_scsi_dev_add_lun(&dev, "malloc2", -1, NULL, NULL);
+	rc = spdk_scsi_dev_add_lun(&dev, "malloc2", 0, NULL, NULL);
 
+	SPDK_CU_ASSERT_FATAL(dev.lun[0] == NULL);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 }
 
