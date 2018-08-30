@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2422dc7_f1c452d1",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-30T18:58:47Z",
+      "side": 1,
+      "message": "There is definitely some extra complexity here as we try to maintain backward compatibility. I think in terms of public API design, we don\u0027t want to pass the tgt into this function. The transport becomes associated with a tgt only when spdk_nvmf_tgt_add_transport is called.\n\nFor the case where the transport is created implicitly for backward compatibility reasons, that code should explicitly construct an spdk_nvmf_transport_opts based on the global target opts, then call this function (without a target argument) all behind the scenes. That should allow us to design the API the \"right\" way here and later drop the implicit transport creation behavior at some future point without having to modify this API further.",
+      "revId": "2b0d9a58bbdce474cff445adcea8ae6deda07f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "266af14b_745f894f",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-30T18:58:47Z",
+      "side": 1,
+      "message": "This function should appear above spdk_nvmf_transport_create, because you have to call it before that. We try to follow that paradigm, where if you read the public header from top to bottom it\u0027s mostly in order of how you need to call the functions.\n\nIn fact, this whole new set of functions should probably appear near the top.",
+      "revId": "2b0d9a58bbdce474cff445adcea8ae6deda07f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
