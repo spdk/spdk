@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20072fa5_6555a2c9",
+        "filename": "include/spdk_internal/mock.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-30T22:08:34Z",
+      "side": 1,
+      "message": "let\u0027s do the DEFINE_RETURN_MOCK_P thing we talked about in the lab instead.",
+      "revId": "77ef6e1af50b9dcc870da16b8d8f35e7f5d1e1ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
