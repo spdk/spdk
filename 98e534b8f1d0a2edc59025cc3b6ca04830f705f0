@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "406f86fb_36dc0abd",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-08-30T10:17:37Z",
+      "side": 1,
+      "message": "Yes, but you only need to check for nvme_ctrlr !\u003d NULL in nvme_rpc_admin_cmd_bdev_nvme() and nvme_bdev !\u003d NULL in nvme_rpc_io_cmd_bdev_nvme(). Also artificial \u0027enum spdk_nvme_dev_type\u0027 can be removed. The nvme_rpc_dev_lookup_bdev_nvme() function can be simplified. \n\nAlso see line 456 - how you can enter else condition there?\n\nEach line of code that you don\u0027t have to write is a line of code you don\u0027t need to maintain.",
+      "parentUuid": "a9b20d84_687ae672",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 77,
+        "endChar": 10
+      },
+      "revId": "98e534b8f1d0a2edc59025cc3b6ca04830f705f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "853719d9_3c30116a",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 21
