@@ -847,6 +847,7 @@ _xfer_test(bool bdev_io_pool_full)
 	/* Read 1 block */
 	ut_init_task(&task);
 	task.lun = &lun;
+	task.lun->bdev_desc = NULL;
 	task.cdb = cdb;
 	memset(cdb, 0, sizeof(cdb));
 	cdb[0] = 0x88; /* READ (16) */
