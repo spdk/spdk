@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6e87cfa_1f35344e",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-31T16:03:21Z",
+      "side": 1,
+      "message": "So I think this works, but when you said add a ref count I thought it was going to be a real ref_count.  This is still effectively a bool (i.e. is a destroy outstanding).\n\nCould this instead just always increment the destroy_ref.  Then in _spdk_put_io_channel, decrement the destroy_ref, but return immediately if (ch-\u003eref \u003e 0 || ch-\u003edestroy_ref \u003e 0).\n\nThe code as you have it does eliminate the cost of sending the extra message though.",
+      "revId": "130d2d3755b9a03d88e8d98373fddfc6ba131a9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
