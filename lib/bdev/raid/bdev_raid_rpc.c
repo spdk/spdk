@@ -296,6 +296,16 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		}
 	}
 
+	rc = raid_bdev_create(raid_cfg);
+	if (rc != 0) {
+		raid_bdev_config_cleanup(raid_cfg);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Failed to create RAID bdev %s: %s",
+						     req.name, spdk_strerror(-rc));
+		free_rpc_construct_raid_bdev(&req);
+		return;
+	}
+
 	for (size_t i = 0; i < raid_cfg->num_base_bdevs; i++) {
 		/* Check if base_bdev exists already, if not fail the command */
 		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[i]);

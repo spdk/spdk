@@ -948,6 +948,13 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		return -EINVAL;
 	}
 
+	rc = raid_bdev_create(raid_cfg);
+	if (rc != 0) {
+		raid_bdev_config_cleanup(raid_cfg);
+		SPDK_ERRLOG("Failed to create raid bdev\n");
+		return rc;
+	}
+
 	return 0;
 }
 
@@ -1118,13 +1125,12 @@ raid_bdev_init(void)
  * raid_bdev_create allocates raid bdev based on passed configuration
  * params:
  * raid_cfg - configuration of raid bdev
- * _raid_bdev - pointer to created raid bdev
  * returns:
  * 0 - success
  * non zero - failure
  */
-static int
-raid_bdev_create(struct raid_bdev_config *raid_cfg, struct raid_bdev **_raid_bdev)
+int
+raid_bdev_create(struct raid_bdev_config *raid_cfg)
 {
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev *raid_bdev_gen;
@@ -1135,6 +1141,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg, struct raid_bdev **_raid_bde
 		return -ENOMEM;
 	}
 
+	assert(raid_cfg->num_base_bdevs != 0);
 	raid_bdev->num_base_bdevs = raid_cfg->num_base_bdevs;
 	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
 					   sizeof(struct raid_base_bdev_info));
@@ -1166,7 +1173,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg, struct raid_bdev **_raid_bde
 	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
 	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_list, raid_bdev, global_link);
 
-	*_raid_bdev = raid_bdev;
+	raid_cfg->raid_bdev = raid_bdev;
 
 	return 0;
 }
@@ -1412,12 +1419,8 @@ raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, struct spdk_bdev *b
 
 	raid_bdev = raid_cfg->raid_bdev;
 	if (!raid_bdev) {
-		rc = raid_bdev_create(raid_cfg, &raid_bdev);
-		if (rc != 0) {
-			SPDK_ERRLOG("Failed to create raid bdev for bdev '%s'\n", bdev->name);
-			return rc;
-		}
-		raid_cfg->raid_bdev = raid_bdev;
+		SPDK_ERRLOG("Raid bdev is not created yet '%s'\n", bdev->name);
+		return -ENODEV;
 	}
 
 	rc = raid_bdev_alloc_base_bdev_resource(raid_bdev, bdev, base_bdev_slot);
