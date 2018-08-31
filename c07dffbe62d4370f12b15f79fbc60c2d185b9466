@@ -16,6 +16,24 @@
       "revId": "c07dffbe62d4370f12b15f79fbc60c2d185b9466",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef66f486_d49f51b0",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-31T14:23:56Z",
+      "side": 1,
+      "message": "I thought about doing it that way as well, but spdk_vhost_event_async_send is attempting to call the callback from a different thread. \nI am pretty sure we need a thread specific context to perform the vdev configuration, otherwise we wouldn\u0027t need to call into spdk_vhost_event_async_send at all and could just do everything on the original reactor.\nspdk_vhost_event-async_send will only fail if it cannot allocate memory for the context, so we should just print the error message and bail. \nIt may be necessary to have better error handling later though.",
+      "parentUuid": "c2a82694_304f1fe2",
+      "revId": "c07dffbe62d4370f12b15f79fbc60c2d185b9466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
