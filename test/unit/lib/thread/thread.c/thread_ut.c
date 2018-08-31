@@ -463,6 +463,64 @@ channel(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
 
+static int
+create_cb(void *io_device, void *ctx_buf)
+{
+	uint64_t *refcnt = (uint64_t *)ctx_buf;
+
+	CU_ASSERT(*refcnt == 0);
+	*refcnt = 1;
+
+	return 0;
+}
+
+static void
+destroy_cb(void *io_device, void *ctx_buf)
+{
+	uint64_t *refcnt = (uint64_t *)ctx_buf;
+
+	CU_ASSERT(*refcnt == 1);
+	*refcnt = 0;
+}
+
+/**
+ * This test is checking for two critical behaviors. The first is that a sequence
+ * of get, put, get, put without allowing the deferred put operation to complete
+ * doesn't result in releasing the memory for the channel twice. The second is
+ * that this same sequence results in 1 channel creation callback followed by
+ * a channel destruction, followed by a channel creation, followed by a channel
+ * destruction, in specifically that order.
+ */
+static void
+channel_destroy_races(void)
+{
+	struct spdk_thread *thread;
+	uint64_t device;
+	struct spdk_io_channel *ch;
+
+	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "thread0");
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_io_device_register(&device, create_cb, destroy_cb, sizeof(uint64_t), NULL);
+
+	ch = spdk_get_io_channel(&device);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	spdk_put_io_channel(ch);
+
+	ch = spdk_get_io_channel(&device);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	spdk_put_io_channel(ch);
+	while (spdk_thread_poll(thread, 0) > 0) {}
+
+	spdk_io_device_unregister(&device, NULL);
+	while (spdk_thread_poll(thread, 0) > 0) {}
+
+	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+	spdk_free_thread();
+	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -487,7 +545,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove) == NULL ||
 		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
-		CU_add_test(suite, "channel", channel) == NULL
+		CU_add_test(suite, "channel", channel) == NULL ||
+		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
