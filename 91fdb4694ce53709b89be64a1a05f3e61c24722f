@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bfde44d_21a11fc9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3291,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-08-31T03:07:37Z",
+      "side": 1,
+      "message": "If remove this \"if\" statement, the unit test will failed because following assertion failed.\nIt seemed that the get_spdk_thread() return NULL in spdk_bdev_open(), but non-null in\nspdk_bdev_close(). Is it possible?",
+      "revId": "91fdb4694ce53709b89be64a1a05f3e61c24722f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
