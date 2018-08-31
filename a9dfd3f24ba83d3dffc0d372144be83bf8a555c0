@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fd02b33_ac4f8453",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-08-31T05:16:14Z",
+      "side": 1,
+      "message": "Since we are keeping the raid config if base bdevs are not added properly, so if first base bdev add failed, we should try adding other base bdevs also instead of returning on first failure.",
+      "revId": "a9dfd3f24ba83d3dffc0d372144be83bf8a555c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
