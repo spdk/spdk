@@ -654,6 +654,27 @@ raid_bdev_free(void)
 	}
 }
 
+/* brief
+ * raid_bdev_config_find_by_name is a helper function to find raid bdev config
+ * by name as key.
+ *
+ * params:
+ * raid_name - name for raid bdev.
+ */
+static struct raid_bdev_config *
+raid_bdev_config_find_by_name(const char *raid_name)
+{
+	struct raid_bdev_config *raid_cfg;
+
+	TAILQ_FOREACH(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link) {
+		if (!strcmp(raid_cfg->name, raid_name)) {
+			return raid_cfg;
+		}
+	}
+
+	return raid_cfg;
+}
+
 /*
  * brief
  * raid_bdev_config_add function adds config for newly created raid bdev.
@@ -671,12 +692,11 @@ raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
 {
 	struct raid_bdev_config *raid_cfg;
 
-	TAILQ_FOREACH(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link) {
-		if (!strcmp(raid_cfg->name, raid_name)) {
-			SPDK_ERRLOG("Duplicate raid bdev name found in config file %s\n",
-				    raid_name);
-			return -EEXIST;
-		}
+	raid_cfg = raid_bdev_config_find_by_name(raid_name);
+	if (raid_cfg != NULL) {
+		SPDK_ERRLOG("Duplicate raid bdev name found in config file %s\n",
+			    raid_name);
+		return -EEXIST;
 	}
 
 	if (spdk_u32_is_pow2(strip_size) == false) {
