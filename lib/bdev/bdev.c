@@ -44,6 +44,7 @@
 #include "spdk/nvme_spec.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/util.h"
+#include "spdk/trace.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -61,6 +62,15 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define BUF_LARGE_POOL_SIZE			1024
 #define NOMEM_THRESHOLD_COUNT			8
 #define ZERO_BUFFER_SIZE			0x100000
+
+#define OWNER_BDEV		0x2
+
+#define OBJECT_BDEV_IO		0x2
+
+#define TRACE_GROUP_BDEV	0x3
+#define TRACE_BDEV_IO_START	SPDK_TPOINT_ID(TRACE_GROUP_BDEV, 0x0)
+#define TRACE_BDEV_IO_DONE	SPDK_TPOINT_ID(TRACE_GROUP_BDEV, 0x1)
+
 #define SPDK_BDEV_QOS_TIMESLICE_IN_USEC		1000
 #define SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE	1
 #define SPDK_BDEV_QOS_MIN_BYTE_PER_TIMESLICE	512
@@ -1232,8 +1242,11 @@ _spdk_bdev_io_submit(void *ctx)
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 	struct spdk_io_channel *ch = bdev_ch->channel;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
+	uint64_t tsc;
 
-	bdev_io->internal.submit_tsc = spdk_get_ticks();
+	tsc = spdk_get_ticks();
+	bdev_io->internal.submit_tsc = tsc;
+	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_START, 0, 0, (uintptr_t)bdev_io, bdev_io->type);
 	bdev_ch->io_outstanding++;
 	shared_resource->io_outstanding++;
 	bdev_io->internal.in_submit_request = true;
@@ -2691,6 +2704,7 @@ static inline void
 _spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
+	uint64_t tsc;
 
 	if (spdk_unlikely(bdev_io->internal.in_submit_request || bdev_io->internal.io_submit_ch)) {
 		/*
@@ -2711,17 +2725,20 @@ _spdk_bdev_io_complete(void *ctx)
 		return;
 	}
 
+	tsc = spdk_get_ticks();
+	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io, 0);
+
 	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
 			bdev_io->internal.ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 			bdev_io->internal.ch->stat.num_read_ops++;
-			bdev_io->internal.ch->stat.read_latency_ticks += (spdk_get_ticks() - bdev_io->internal.submit_tsc);
+			bdev_io->internal.ch->stat.read_latency_ticks += (tsc - bdev_io->internal.submit_tsc);
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
 			bdev_io->internal.ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 			bdev_io->internal.ch->stat.num_write_ops++;
-			bdev_io->internal.ch->stat.write_latency_ticks += (spdk_get_ticks() - bdev_io->internal.submit_tsc);
+			bdev_io->internal.ch->stat.write_latency_ticks += (tsc - bdev_io->internal.submit_tsc);
 			break;
 		default:
 			break;
@@ -3631,3 +3648,13 @@ spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
+
+SPDK_TRACE_REGISTER_FN(bdev_trace)
+{
+	spdk_trace_register_owner(OWNER_BDEV, 'b');
+	spdk_trace_register_object(OBJECT_BDEV_IO, 'i');
+	spdk_trace_register_description("BDEV_IO_START", "", TRACE_BDEV_IO_START, OWNER_BDEV,
+					OBJECT_BDEV_IO, 1, 0, 0, "type:   ");
+	spdk_trace_register_description("BDEV_IO_DONE", "", TRACE_BDEV_IO_DONE, OWNER_BDEV,
+					OBJECT_BDEV_IO, 0, 0, 0, "");
+}
