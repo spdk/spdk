@@ -103,12 +103,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-int
-nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return 0;
-}
-
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
