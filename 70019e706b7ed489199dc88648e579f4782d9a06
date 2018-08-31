@@ -22,6 +22,30 @@
       "revId": "70019e706b7ed489199dc88648e579f4782d9a06",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce501341_bc88bf8f",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-31T02:50:18Z",
+      "side": 1,
+      "message": "Hi Pawel, \nThank you. Nice question. The intention was to factor out this iteration and apply to this function and parsing .INI config file. I reworked this patch.",
+      "parentUuid": "151626fc_f180f47c",
+      "range": {
+        "startLine": 302,
+        "startChar": 36,
+        "endLine": 302,
+        "endChar": 63
+      },
+      "revId": "70019e706b7ed489199dc88648e579f4782d9a06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
