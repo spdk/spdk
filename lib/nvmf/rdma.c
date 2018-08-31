@@ -126,6 +126,10 @@ enum spdk_nvmf_rdma_request_state {
 #define TRACE_RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x8)
 #define TRACE_RDMA_REQUEST_STATE_COMPLETING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x9)
 #define TRACE_RDMA_REQUEST_STATE_COMPLETED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xA)
+#define TRACE_RDMA_QP_CREATE						SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xB)
+#define TRACE_RDMA_QP_ASYNC_EVENT					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xC)
+#define TRACE_RDMA_ASYNC_EVENT						SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xD)
+#define TRACE_RDMA_QP_STATE_CHANGE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xE)
 
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
@@ -163,6 +167,19 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace)
 	spdk_trace_register_description("RDMA_REQ_COMPLETED", "",
 					TRACE_RDMA_REQUEST_STATE_COMPLETED,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, 0, "cmid:   ");
+
+	spdk_trace_register_description("RDMA_QP_CREATE", "",
+					TRACE_RDMA_QP_CREATE,
+					OWNER_NONE, OBJECT_NONE, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_QP_ASYNC_EVENT", "",
+					TRACE_RDMA_QP_ASYNC_EVENT,
+					OWNER_NONE, OBJECT_NONE, 0, 0, 0, "type:   ");
+	spdk_trace_register_description("RDMA_ASYNC_EVENT", "",
+					TRACE_RDMA_ASYNC_EVENT,
+					OWNER_NONE, OBJECT_NONE, 0, 0, 0, "type:   ");
+	spdk_trace_register_description("RDMA_QP_STATE_CHANGE", "",
+					TRACE_RDMA_QP_STATE_CHANGE,
+					OWNER_NONE, OBJECT_NONE, 0, 1, 0, "state:  ");
 }
 
 /* This structure holds commands as they are received off the wire.
@@ -342,6 +359,7 @@ static const char *str_ibv_qp_state[] = {
 
 static enum ibv_qp_state
 spdk_nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
+	enum ibv_qp_state old_state, new_state;
 	int rc;
 
 	/* All the attributes needed for recovery */
@@ -362,16 +380,21 @@ spdk_nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
 	IBV_QP_RNR_RETRY |
 	IBV_QP_MAX_QP_RD_ATOMIC;
 
+	old_state = rqpair->ibv_attr.qp_state;
 	rc = ibv_query_qp(rqpair->cm_id->qp, &rqpair->ibv_attr,
 			  spdk_nvmf_ibv_attr_mask, &rqpair->ibv_init_attr);
 
-	if (rc)
-	{
+	if (rc) {
 		SPDK_ERRLOG("Failed to get updated RDMA queue pair state!\n");
 		assert(false);
 	}
 
-	return rqpair->ibv_attr.qp_state;
+	new_state = rqpair->ibv_attr.qp_state;
+	if (old_state != new_state) {
+		spdk_trace_record(TRACE_RDMA_QP_STATE_CHANGE, 0, 0,
+				  (uintptr_t)rqpair->cm_id, new_state);
+	}
+	return new_state;
 }
 
 static int
@@ -572,6 +595,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		return -1;
 	}
 
+	spdk_trace_record(TRACE_RDMA_QP_CREATE, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "New RDMA Connection: %p\n", qpair);
 
 	rqpair->reqs = calloc(rqpair->max_queue_depth, sizeof(*rqpair->reqs));
@@ -2163,10 +2187,14 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
+		spdk_trace_record(TRACE_RDMA_QP_ASYNC_EVENT, 0, 0,
+				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
+		spdk_trace_record(TRACE_RDMA_QP_ASYNC_EVENT, 0, 0,
+				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_last_wqe, rqpair);
 		break;
@@ -2176,6 +2204,8 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		 * Note that we're not on the correct thread to access the qpair, but
 		 * the operations that the below calls make all happen to be thread
 		 * safe. */
+		spdk_trace_record(TRACE_RDMA_QP_ASYNC_EVENT, 0, 0,
+				  (uintptr_t)rqpair->cm_id, event.event_type);
 		state = spdk_nvmf_rdma_update_ibv_state(rqpair);
 		if (state == IBV_QPS_ERR) {
 			spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
@@ -2186,6 +2216,8 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	case IBV_EVENT_COMM_EST:
 	case IBV_EVENT_PATH_MIG:
 	case IBV_EVENT_PATH_MIG_ERR:
+		spdk_trace_record(TRACE_RDMA_QP_ASYNC_EVENT, 0, 0,
+				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
 		break;
 	case IBV_EVENT_CQ_ERR:
@@ -2200,6 +2232,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	case IBV_EVENT_CLIENT_REREGISTER:
 	case IBV_EVENT_GID_CHANGE:
 	default:
+		spdk_trace_record(TRACE_RDMA_ASYNC_EVENT, 0, 0, 0, event.event_type);
 		break;
 	}
 	ibv_ack_async_event(&event);
