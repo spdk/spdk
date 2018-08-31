@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "d961d765_ac8575c7",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-31T00:09:01Z",
+      "side": 1,
+      "message": "The case is for the NULL IO QPair where 32 cores are assigned. The subsystem will keep in the inactive state due to NULL IO QPair found. It\u0027s ok to handle the admin queue here also.",
+      "parentUuid": "f969ec17_923ffb93",
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd877eb0_82ceeefd",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 3
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "I don\u0027t think this strategy is going to be robust, then. The kernel could change their handling of this status code at any time in the future. Especially since this particular status code doesn\u0027t mean what we want it to mean (it means the NAND went bad).",
       "parentUuid": "0a95eb2e_e8e6f8c0",
+      "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5d6d764_9b9291d1",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-08-31T00:09:01Z",
+      "side": 1,
+      "message": "Agreed. This replies on how the initiator side handles the status. The problem here is that other status is not working and cause the \"nvme list\" \"nvme disconnect\" hanging at the initiator side and only reboot can help. So that I picked this status where the Subsystem is not ready to handle I/Os and somewhat to reflect the status of \"Access Denied\". \nOr we just keep it as original behavior to eventually timed out and let the Initiator side reset the controller which also looks like depends on how the Initiator handles.\n\nLet me know if there is any further suggestion.",
+      "parentUuid": "b042a560_fdb7d35b",
       "revId": "512017a38e3b4c808b5f04a307075a31b4cc6369",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
