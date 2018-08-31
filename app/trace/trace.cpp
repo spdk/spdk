@@ -290,11 +290,15 @@ static void usage(void)
 	fprintf(stderr, "usage:\n");
 	fprintf(stderr, "   %s <option> <lcore#>\n", exe_name);
 	fprintf(stderr, "        option = '-q' to disable verbose mode\n");
-	fprintf(stderr, "                 '-s' to specify spdk_trace shm name\n");
 	fprintf(stderr, "                 '-c' to display single lcore history\n");
+	fprintf(stderr, "                 '-s' to specify spdk_trace shm name for a\n");
+	fprintf(stderr, "                      currently running process\n");
 	fprintf(stderr, "                 '-i' to specify the shared memory ID\n");
 	fprintf(stderr, "                 '-p' to specify the trace PID\n");
-	fprintf(stderr, "                 (One of -i or -p must be specified)\n");
+	fprintf(stderr, "                      (If -s is specified, then one of\n");
+	fprintf(stderr, "                       -i or -p must be specified)\n");
+	fprintf(stderr, "                 '-f' to specify a tracepoint file name\n");
+	fprintf(stderr, "                      (-s and -f are mutually exclusive)\n");
 }
 
 int main(int argc, char **argv)
@@ -304,7 +308,8 @@ int main(int argc, char **argv)
 	int			fd, i;
 	int			lcore = SPDK_TRACE_MAX_LCORE;
 	uint64_t		tsc_offset;
-	const char		*app_name = "spdk";
+	const char		*app_name = NULL;
+	const char		*file_name = NULL;
 	int			op;
 	char			shm_name[64];
 	int			shm_id = -1, shm_pid = -1;
@@ -331,7 +336,20 @@ int main(int argc, char **argv)
 			verbose = 0;
 			break;
 		case 's':
+			if (file_name) {
+				fprintf(stderr, "-f and -s are mutually exclusive\n");
+				usage();
+				exit(1);
+			}
 			app_name = optarg;
+			break;
+		case 'f':
+			if (app_name) {
+				fprintf(stderr, "-f and -s are mutually exclusive\n");
+				usage();
+				exit(1);
+			}
+			file_name = optarg;
 			break;
 		default:
 			usage();
@@ -345,9 +363,13 @@ int main(int argc, char **argv)
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", app_name, shm_pid);
 	}
 
-	fd = shm_open(shm_name, O_RDONLY, 0600);
+	if (file_name) {
+		fd = open(file_name, O_RDONLY);
+	} else {
+		fd = shm_open(shm_name, O_RDONLY, 0600);
+	}
 	if (fd < 0) {
-		fprintf(stderr, "Could not open shm %s.\n", shm_name);
+		fprintf(stderr, "Could not open %s.\n", file_name ? file_name : shm_name);
 		usage();
 		exit(-1);
 	}
