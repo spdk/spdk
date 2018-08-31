@@ -661,12 +661,15 @@ spdk_bdev_rbd_create(const char *name, const char *pool_name, const char *rbd_na
 void
 spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn, void *cb_arg)
 {
+	struct bdev_rbd *rbd;
 	if (!bdev || bdev->module != &rbd_if) {
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
+	rbd = bdev->ctxt;
 
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	spdk_io_device_unregister(rbd, NULL);
 }
 
 static int
