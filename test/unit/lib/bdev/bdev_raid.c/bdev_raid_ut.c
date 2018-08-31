@@ -155,6 +155,27 @@ base_bdevs_cleanup(void)
 	}
 }
 
+static void
+check_and_remove_raid_bdev(struct raid_bdev_config *raid_cfg)
+{
+	struct raid_bdev       *raid_bdev;
+
+	/* Get the raid structured allocated if exists */
+	raid_bdev = raid_cfg->raid_bdev;
+	if (raid_bdev == NULL) {
+		return;
+	}
+
+	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		assert(raid_bdev->base_bdev_info != NULL);
+		if (raid_bdev->base_bdev_info[i].bdev) {
+			raid_bdev_free_base_bdev_resource(raid_bdev, i);
+		}
+	}
+	assert(raid_bdev->num_base_bdevs_discovered == 0);
+	raid_bdev_cleanup(raid_bdev);
+}
+
 /* Reset globals */
 static void
 reset_globals(void)
@@ -1090,6 +1111,7 @@ test_construct_raid_invalid_args(void)
 {
 	struct rpc_construct_raid_bdev req;
 	struct rpc_destroy_raid_bdev destroy_req;
+	struct raid_bdev_config *raid_cfg;
 
 	set_globals();
 	rpc_req = &req;
@@ -1175,10 +1197,14 @@ test_construct_raid_invalid_args(void)
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 1);
+	CU_ASSERT(g_rpc_err == 0);
 	free_test_req(&req);
-	verify_raid_config_present("raid2", false);
-	verify_raid_bdev_present("raid2", false);
+	verify_raid_config_present("raid2", true);
+	verify_raid_bdev_present("raid2", true);
+	raid_cfg = raid_bdev_config_find_by_name("raid2");
+	SPDK_CU_ASSERT_FATAL(raid_cfg != NULL);
+	check_and_remove_raid_bdev(raid_cfg);
+	raid_bdev_config_cleanup(raid_cfg);
 
 	create_test_req(&req, "raid2", g_max_base_drives, false);
 	g_rpc_err = 0;
