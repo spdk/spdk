@@ -1943,7 +1943,7 @@ test_create_raid_from_config(void)
 	g_config_level_create = 0;
 
 	verify_raid_config_present("raid1", true);
-	verify_raid_bdev_present("raid1", false);
+	verify_raid_bdev_present("raid1", true);
 
 	TAILQ_FOREACH(bdev, &g_bdev_list, internal.link) {
 		raid_bdev_examine(bdev);
