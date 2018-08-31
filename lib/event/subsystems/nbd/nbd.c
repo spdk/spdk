@@ -54,12 +54,20 @@ spdk_nbd_subsystem_fini(void)
 	spdk_subsystem_fini_next();
 }
 
+static void
+spdk_nbd_subsystem_write_config_json(struct spdk_json_write_ctx *w,
+				     struct spdk_event *done_ev)
+{
+	spdk_nbd_write_config_json(w);
+	spdk_event_call(done_ev);
+}
+
 static struct spdk_subsystem g_spdk_subsystem_nbd = {
 	.name = "nbd",
 	.init = spdk_nbd_subsystem_init,
 	.fini = spdk_nbd_subsystem_fini,
 	.config = NULL,
-	.write_config_json = spdk_nbd_write_config_json,
+	.write_config_json = spdk_nbd_subsystem_write_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_nbd);
