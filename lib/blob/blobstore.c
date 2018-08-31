@@ -2023,6 +2023,7 @@ _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 	iov = &ctx->iov[0];
 	iovcnt = 0;
 	while (byte_count > 0) {
+		assert(iovcnt < ctx->iovcnt);
 		iov->iov_len = spdk_min(byte_count, orig_iov->iov_len - orig_iovoff);
 		iov->iov_base = orig_iov->iov_base + orig_iovoff;
 		byte_count -= iov->iov_len;
