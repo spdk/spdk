@@ -2052,8 +2052,22 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 				 spdk_blob_op_complete cb_fn, void *cb_arg, bool read)
 {
 	struct spdk_bs_cpl	cpl;
+	struct iovec		*tmp;
+	int			i;
+	uint64_t		temp_len;
 
 	assert(blob != NULL);
+
+	tmp = iov;
+	for (i = 0; i < iovcnt; i++) {
+		temp_len += tmp->iov_len / sizeof(struct spdk_blob_md_page);
+		tmp++;
+	}
+
+	if (temp_len != length) {
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
 
 	if (!read && blob->data_ro) {
 		cb_fn(cb_arg, -EPERM);
