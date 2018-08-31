@@ -16,6 +16,24 @@
       "revId": "a9dfd3f24ba83d3dffc0d372144be83bf8a555c0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c934f19c_b1c25986",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-08-31T06:32:19Z",
+      "side": 1,
+      "message": "Thank you. Sounds reasonable. Holding the return value and use it after completion of iteration.\n\nPlease see https://review.gerrithub.io/#/c/spdk/spdk/+/423769/ together.",
+      "parentUuid": "3fd02b33_ac4f8453",
+      "revId": "a9dfd3f24ba83d3dffc0d372144be83bf8a555c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
