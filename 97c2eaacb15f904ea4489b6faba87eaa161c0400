@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7a678f0_05ef9ea7",
+        "filename": "include/spdk/jsonrpc_client_cmd.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-31T15:37:55Z",
+      "side": 1,
+      "message": "Can we just include these in include/spdk/jsonrpc.h?\n\nI\u0027m looking at lib/jsonrpc, and I think you can just add your new files directly to that library.  Or at least I would like to try to make that happen.  This would potentially make it easier to share code between the server and client implementations too.",
+      "revId": "97c2eaacb15f904ea4489b6faba87eaa161c0400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12bdedb2_3d5d5eb0",
+        "filename": "include/spdk/jsonrpc_client_cmd.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-31T15:37:55Z",
+      "side": 1,
+      "message": "Let\u0027s not put these in the public header.\n\nI think these belong in the test app instead - at least for now.\n\nMaybe in the future, we provide a separate library that knows details about SPDK RPCs.  But this library should just be generic to connect to any JSON RPC socket.",
+      "revId": "97c2eaacb15f904ea4489b6faba87eaa161c0400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bb771c4_1353cbce",
+        "filename": "lib/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-31T15:37:55Z",
+      "side": 1,
+      "message": "Let\u0027s see if we can just add all of this to the jsonrpc library directly.",
+      "revId": "97c2eaacb15f904ea4489b6faba87eaa161c0400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0eaf71d6_3606e147",
+        "filename": "lib/jsonrpc_client/jsonrpc_client_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-31T15:37:55Z",
+      "side": 1,
+      "message": "If you move this code to lib/jsonrpc directly, then you can reuse definitions from jsonrpc_internal.h.",
+      "revId": "97c2eaacb15f904ea4489b6faba87eaa161c0400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
