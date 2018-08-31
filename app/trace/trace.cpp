@@ -194,6 +194,8 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 		} else {
 			printf("id:    N/A");
 		}
+	} else if (e->object_id != 0) {
+		print_arg(true, "object: ", e->object_id);
 	}
 	printf("\n");
 }
