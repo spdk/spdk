@@ -883,18 +883,22 @@ main(int argc, char **argv)
 
 	if (g_queue_depth <= 0) {
 		spdk_app_usage();
+		bdevperf_usage();
 		exit(1);
 	}
 	if (g_io_size <= 0) {
 		spdk_app_usage();
+		bdevperf_usage();
 		exit(1);
 	}
 	if (!g_workload_type) {
 		spdk_app_usage();
+		bdevperf_usage();
 		exit(1);
 	}
 	if (g_time_in_sec <= 0) {
 		spdk_app_usage();
+		bdevperf_usage();
 		exit(1);
 	}
 	g_time_in_usec = g_time_in_sec * 1000000LL;
