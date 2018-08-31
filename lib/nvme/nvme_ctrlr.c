@@ -38,6 +38,16 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 
+typedef int (*spdk_nvme_pre_ready_fn)(struct spdk_nvme_ctrlr *);
+
+struct spdk_nvme_ctrlr_pre_ready_item {
+	spdk_nvme_pre_ready_fn fn_call;
+	bool is_async;
+};
+
+static struct spdk_nvme_ctrlr_pre_ready_item *
+nvme_ctrlr_get_next_item(struct spdk_nvme_ctrlr *ctrlr);
+
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 
@@ -606,8 +616,14 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "enable controller by writing CC.EN = 1";
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		return "wait for CSTS.RDY = 1";
+	case NVME_CTRLR_STATE_PRE_READY:
+		return "pre ready";
+	case NVME_CTRLR_STATE_PRE_READY_POLL:
+		return "pre ready, poll for Admin completion";
 	case NVME_CTRLR_STATE_READY:
 		return "ready";
+	case NVME_CTRLR_STATE_ERROR:
+		return "error";
 	}
 	return "unknown";
 };
@@ -727,6 +743,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
+	ctrlr->next_init_fn_idx = 0;
 
 	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
 		if (nvme_ctrlr_process_init(ctrlr) != 0) {
@@ -754,22 +771,14 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
-static int
-nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
+static void
+nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_completion_poll_status	status;
-	int					rc;
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
-	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
-				     &ctrlr->cdata, sizeof(ctrlr->cdata),
-				     nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		return rc;
-	}
-
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("nvme_identify_controller failed!\n");
-		return -ENXIO;
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
 	}
 
 	/*
@@ -801,9 +810,24 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-	return 0;
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_PRE_READY, NVME_TIMEOUT_INFINITE);
+	return;
 }
 
+static int
+nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int	rc;
+
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
+				     &ctrlr->cdata, sizeof(ctrlr->cdata),
+				     nvme_ctrlr_identify_done, ctrlr);
+	if (rc != 0) {
+		return rc;
+	}
+
+	return 0;
+}
 
 int
 nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
@@ -1521,6 +1545,11 @@ nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 /**
+ * 8 seconds shoule be long enough for Admin commands in initialization.
+ */
+#define ADMIN_TIMEOUT_IN_MS 8000
+
+/**
  * This function will be called repeatedly during initialization until the controller is ready.
  */
 int
@@ -1529,6 +1558,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_cc_register cc;
 	union spdk_nvme_csts_register csts;
 	uint32_t ready_timeout_in_ms;
+	struct spdk_nvme_ctrlr_pre_ready_item *item;
 	int rc;
 
 	/*
@@ -1647,17 +1677,43 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			SPDK_DEBUGLOG(SPDK_LOG_NVME, "CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
 			/*
 			 * The controller has been enabled.
-			 *  Perform the rest of initialization in nvme_ctrlr_start() serially.
+			 *  Perform the rest of initialization checklist serially.
 			 */
-			rc = nvme_ctrlr_start(ctrlr);
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
-			return rc;
+			nvme_transport_qpair_reset(ctrlr->adminq);
+			nvme_qpair_enable(ctrlr->adminq);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_PRE_READY, ADMIN_TIMEOUT_IN_MS);
 		}
+		break;
+
+	case NVME_CTRLR_STATE_PRE_READY:
+		item = nvme_ctrlr_get_next_item(ctrlr);
+		if (item) {
+			rc = item->fn_call(ctrlr);
+			if (rc < 0) {
+				return rc;
+			}
+
+			if (item->is_async) {
+				nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_PRE_READY_POLL, ADMIN_TIMEOUT_IN_MS);
+			}
+
+		} else {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+			return 0;
+		}
+		break;
+
+	case NVME_CTRLR_STATE_PRE_READY_POLL:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_READY:
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Ctrlr already in ready state\n");
 		return 0;
+
+	case NVME_CTRLR_STATE_ERROR:
+		SPDK_ERRLOG("Ctrlr %s is in error state\n", ctrlr->trid.traddr);
+		return -1;
 
 	default:
 		assert(0);
@@ -1676,17 +1732,9 @@ init_timeout:
 	return 0;
 }
 
-int
+static int
 nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_transport_qpair_reset(ctrlr->adminq);
-
-	nvme_qpair_enable(ctrlr->adminq);
-
-	if (nvme_ctrlr_identify(ctrlr) != 0) {
-		return -1;
-	}
-
 	if (nvme_ctrlr_set_num_qpairs(ctrlr) != 0) {
 		return -1;
 	}
@@ -1724,6 +1772,28 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	return 0;
+}
+
+/**
+ * Identify Controller should be the first entry in the list.
+ */
+static struct spdk_nvme_ctrlr_pre_ready_item g_pre_ready_list[] = {
+	{.fn_call = nvme_ctrlr_identify, .is_async = true},
+	{.fn_call = nvme_ctrlr_start, .is_async = false},
+};
+
+static struct spdk_nvme_ctrlr_pre_ready_item *
+nvme_ctrlr_get_next_item(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ctrlr_pre_ready_item *item;
+
+	if (ctrlr->next_init_fn_idx < SPDK_COUNTOF(g_pre_ready_list)) {
+		item = &g_pre_ready_list[ctrlr->next_init_fn_idx];
+		ctrlr->next_init_fn_idx++;
+		return item;
+	}
+
+	return NULL;
 }
 
 int
