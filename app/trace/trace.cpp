@@ -136,6 +136,7 @@ static void
 print_arg(bool arg_is_ptr, const char *arg_string, uint64_t arg)
 {
 	if (arg_string[0] == 0) {
+		printf("%24s", "");
 		return;
 	}
 
@@ -182,8 +183,8 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 	printf("%-*s ", (int)sizeof(d->name), d->name);
 	print_size(e->size);
 
+	print_arg(d->arg1_is_ptr, d->arg1_name, e->arg1);
 	if (d->new_object) {
-		print_arg(d->arg1_is_ptr, d->arg1_name, e->arg1);
 		print_object_id(d->object_type, stats->index[e->object_id]);
 	} else if (d->object_type != OBJECT_NONE) {
 		if (stats->start.find(e->object_id) != stats->start.end()) {
@@ -200,8 +201,6 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 		} else {
 			printf("id:    N/A");
 		}
-	} else {
-		print_arg(d->arg1_is_ptr, d->arg1_name, e->arg1);
 	}
 	printf("\n");
 }
