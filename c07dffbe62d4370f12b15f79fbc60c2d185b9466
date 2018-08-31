@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2a82694_304f1fe2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-08-31T04:29:14Z",
+      "side": 1,
+      "message": "I think fn(vdev, arg) is better for this case.",
+      "revId": "c07dffbe62d4370f12b15f79fbc60c2d185b9466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
