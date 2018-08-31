@@ -731,6 +731,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		    void (*app_usage)(void))
 {
 	int ch, rc, opt_idx, global_long_opts_len, app_long_opts_len;
+	enum spdk_app_parse_args_rvals retval = SPDK_APP_PARSE_ARGS_FAIL;
 
 	memcpy(&g_default_opts, opts, sizeof(g_default_opts));
 
@@ -755,7 +756,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			" (got %d, max %d)\n", __func__,
 			app_long_opts_len + global_long_opts_len,
 			SPDK_APP_MAX_CMDLINE_OPTIONS);
-		return SPDK_APP_PARSE_ARGS_FAIL;
+		goto out;
 	}
 
 	if (app_long_opts) {
@@ -768,7 +769,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		if (ch) {
 			fprintf(stderr, "Duplicated option '%c' between the generic and application specific spdk opts.\n",
 				ch);
-			return SPDK_APP_PARSE_ARGS_FAIL;
+			goto out;
 		}
 	}
 
@@ -794,10 +795,11 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case HELP_OPT_IDX:
 			usage(app_usage);
-			return SPDK_APP_PARSE_ARGS_HELP;
+			retval = SPDK_APP_PARSE_ARGS_HELP;
+			goto out;
 		case SHM_ID_OPT_IDX:
 			if (optarg == NULL) {
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			opts->shm_id = atoi(optarg);
 			break;
@@ -806,13 +808,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case MEM_CHANNELS_OPT_IDX:
 			if (optarg == NULL) {
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			opts->mem_channel = atoi(optarg);
 			break;
 		case MASTER_CORE_OPT_IDX:
 			if (optarg == NULL) {
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			opts->master_core = atoi(optarg);
 			break;
@@ -830,7 +832,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (rc != 0) {
 				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 
 			if (mem_size_has_prefix) {
@@ -843,7 +845,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (mem_size_mb > INT_MAX) {
 				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 
 			opts->mem_size = (int) mem_size_mb;
@@ -860,13 +862,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				free(opts->pci_whitelist);
 				fprintf(stderr, "-B and -W cannot be used at the same time\n");
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 
 			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_blacklist, optarg);
 			if (rc != 0) {
 				free(opts->pci_blacklist);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			break;
 		case TRACEFLAG_OPT_IDX:
@@ -874,13 +876,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -L flag\n",
 				argv[0]);
 			usage(app_usage);
-			return SPDK_APP_PARSE_ARGS_FAIL;
+			goto out;
 #else
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			opts->print_level = SPDK_LOG_DEBUG;
 			break;
@@ -893,13 +895,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				free(opts->pci_blacklist);
 				fprintf(stderr, "-B and -W cannot be used at the same time\n");
 				usage(app_usage);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 
 			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_whitelist, optarg);
 			if (rc != 0) {
 				free(opts->pci_whitelist);
-				return SPDK_APP_PARSE_ARGS_FAIL;
+				goto out;
 			}
 			break;
 		case '?':
@@ -909,7 +911,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			 * getopt() will return a '?' indicating failure.
 			 */
 			usage(app_usage);
-			return SPDK_APP_PARSE_ARGS_FAIL;
+			goto out;
 		default:
 			app_parse(ch, optarg);
 		}
@@ -922,7 +924,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			"- Please be careful one options might overwrite others.\n");
 	}
 
-	return SPDK_APP_PARSE_ARGS_SUCCESS;
+	retval = SPDK_APP_PARSE_ARGS_SUCCESS;
+out:
+	return retval;
 }
 
 void
