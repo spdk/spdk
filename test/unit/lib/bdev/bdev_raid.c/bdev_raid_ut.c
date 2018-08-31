@@ -703,42 +703,33 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 	SPDK_CU_ASSERT_FATAL(raid_bdev != NULL);
 	SPDK_CU_ASSERT_FATAL(num_base_drives != 0);
 
-	if (raid_bdev->num_base_bdevs > 1) {
-		CU_ASSERT(splits_reqd == g_io_output_index);
-		for (strip = start_strip; strip <= end_strip; strip++, index++) {
-			pd_strip = strip / num_base_drives;
-			pd_idx = strip % num_base_drives;
-			if (strip == start_strip) {
-				offset_in_strip = bdev_io->u.bdev.offset_blocks & (g_strip_size - 1);
-				pd_lba = (pd_strip << strip_shift) + offset_in_strip;
-				if (strip == end_strip) {
-					pd_blocks = bdev_io->u.bdev.num_blocks;
-				} else {
-					pd_blocks = g_strip_size - offset_in_strip;
-				}
-			} else if (strip == end_strip) {
-				pd_lba = pd_strip << strip_shift;
-				pd_blocks = ((bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) &
-					     (g_strip_size - 1)) + 1;
+	CU_ASSERT(splits_reqd == g_io_output_index);
+	for (strip = start_strip; strip <= end_strip; strip++, index++) {
+		pd_strip = strip / num_base_drives;
+		pd_idx = strip % num_base_drives;
+		if (strip == start_strip) {
+			offset_in_strip = bdev_io->u.bdev.offset_blocks & (g_strip_size - 1);
+			pd_lba = (pd_strip << strip_shift) + offset_in_strip;
+			if (strip == end_strip) {
+				pd_blocks = bdev_io->u.bdev.num_blocks;
 			} else {
-				pd_lba = pd_strip << raid_bdev->strip_size_shift;
-				pd_blocks = raid_bdev->strip_size;
+				pd_blocks = g_strip_size - offset_in_strip;
 			}
-			CU_ASSERT(pd_lba == g_io_output[index].offset_blocks);
-			CU_ASSERT(pd_blocks == g_io_output[index].num_blocks);
-			CU_ASSERT(ch_ctx->base_channel[pd_idx] == g_io_output[index].ch);
-			CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].desc == g_io_output[index].desc);
-			CU_ASSERT(buf == g_io_output[index].buf);
-			CU_ASSERT(bdev_io->type == g_io_output[index].iotype);
-			buf += (pd_blocks << spdk_u32log2(g_block_len));
+		} else if (strip == end_strip) {
+			pd_lba = pd_strip << strip_shift;
+			pd_blocks = ((bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) &
+				     (g_strip_size - 1)) + 1;
+		} else {
+			pd_lba = pd_strip << raid_bdev->strip_size_shift;
+			pd_blocks = raid_bdev->strip_size;
 		}
-	} else {
-		CU_ASSERT(g_io_output_index == 1);
-		CU_ASSERT(bdev_io->u.bdev.offset_blocks == g_io_output[0].offset_blocks);
-		CU_ASSERT(bdev_io->u.bdev.num_blocks == g_io_output[0].num_blocks);
-		CU_ASSERT(ch_ctx->base_channel[0] == g_io_output[0].ch);
-		CU_ASSERT(raid_bdev->base_bdev_info[0].desc == g_io_output[0].desc);
+		CU_ASSERT(pd_lba == g_io_output[index].offset_blocks);
+		CU_ASSERT(pd_blocks == g_io_output[index].num_blocks);
+		CU_ASSERT(ch_ctx->base_channel[pd_idx] == g_io_output[index].ch);
+		CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].desc == g_io_output[index].desc);
 		CU_ASSERT(buf == g_io_output[index].buf);
+		CU_ASSERT(bdev_io->type == g_io_output[index].iotype);
+		buf += (pd_blocks << spdk_u32log2(g_block_len));
 	}
 	CU_ASSERT(g_io_comp_status == io_status);
 }
