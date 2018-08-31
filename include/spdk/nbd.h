@@ -81,9 +81,8 @@ void spdk_nbd_stop(struct spdk_nbd_disk *nbd);
  * Write NBD subsystem configuration into provided JSON context.
  *
  * \param w JSON write context
- * \param done_ev call this event when done.
  */
-void spdk_nbd_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
+void spdk_nbd_write_config_json(struct spdk_json_write_ctx *w);
 
 #ifdef __cplusplus
 }

@@ -211,7 +211,7 @@ spdk_nbd_disk_get_bdev_name(struct spdk_nbd_disk *nbd)
 }
 
 void
-spdk_nbd_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
+spdk_nbd_write_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_nbd_disk *nbd;
 
@@ -231,7 +231,6 @@ spdk_nbd_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *don
 	}
 
 	spdk_json_write_array_end(w);
-	spdk_event_call(done_ev);
 }
 
 void
