@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "586d0551_0054e00a",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-31T15:56:16Z",
+      "side": 1,
+      "message": "this is the same name as the bdev\n\nmaybe the bdev io devices can prepend \"bdev\" or something to the io device name?\n\nI know we don\u0027t want to make all of these unique, but I think the important part of the debug will be to know for sure what *kind* of io device it is - for example, if there was some kind of problem here, we\u0027d want to be able to tell if it was the bdev io device, or the part module io device; maybe we can deduce that by looking at the address of the io_device (we add the +1 offset for the bdev) but that is a bit cryptic",
+      "revId": "e95db4176ec7182ceaeea333f8b46ec310775f92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51812c01_04c2fa5e",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-31T15:56:16Z",
+      "side": 1,
+      "message": "should we print out dev-\u003eio_device in all of these debug logs?  that would give us a rudimentary way of differentiating between different io_devices of the same \"type\"",
+      "revId": "e95db4176ec7182ceaeea333f8b46ec310775f92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
