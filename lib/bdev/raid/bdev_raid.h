@@ -214,7 +214,7 @@ extern struct spdk_raid_all_tailq           g_spdk_raid_bdev_list;
 extern struct spdk_raid_offline_tailq       g_spdk_raid_bdev_offline_list;
 extern struct raid_config                   g_spdk_raid_config;
 
-
+int raid_bdev_create(struct raid_bdev_config *raid_cfg);
 void raid_bdev_remove_base_bdev(void *ctx);
 int raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, struct spdk_bdev *bdev,
 			      uint32_t base_bdev_slot);
