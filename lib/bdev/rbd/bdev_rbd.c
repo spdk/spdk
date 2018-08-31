@@ -665,8 +665,10 @@ spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn, voi
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
+	struct bdev_rbd *rbd = bdev->ctxt;
 
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	spdk_io_device_unregister(rbd, NULL);
 }
 
 static int
