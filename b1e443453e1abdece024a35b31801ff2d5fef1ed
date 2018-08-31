@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5b87e6c_69920bc6",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1053,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-31T18:24:10Z",
+      "side": 1,
+      "message": "I think Jim pointed this out earlier, but this needs to go above line 1049 because that uses lvs.",
+      "revId": "b1e443453e1abdece024a35b31801ff2d5fef1ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbb48a21_406006eb",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1876,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-31T18:24:10Z",
+      "side": 1,
+      "message": "You\u0027ve already confirmed that g_lvol has been set by spdk_lvol_create, then you stash the known-good value in the local variable lvol. Why not use that local variable as the argument to spdk_lvol_open? Then you don\u0027t need to re-assert that g_lvol is not NULL.",
+      "revId": "b1e443453e1abdece024a35b31801ff2d5fef1ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
