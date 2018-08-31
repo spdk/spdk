@@ -43,12 +43,11 @@ static char g_shm_name[64];
 struct spdk_trace_histories *g_trace_histories;
 
 void
-_spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
+_spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 		   uint64_t object_id, uint64_t arg1)
 {
 	struct spdk_trace_history *lcore_history;
 	struct spdk_trace_entry *next_entry;
-	uint64_t tsc;
 	unsigned lcore;
 
 	lcore = spdk_env_get_current_core();
@@ -57,7 +56,9 @@ _spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 	}
 
 	lcore_history = &g_trace_histories->per_lcore_history[lcore];
-	tsc = spdk_get_ticks();
+	if (tsc == 0) {
+		tsc = spdk_get_ticks();
+	}
 
 	lcore_history->tpoint_count[tpoint_id]++;
 

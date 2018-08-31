@@ -130,13 +130,14 @@ struct spdk_trace_histories {
 	struct spdk_trace_history	per_lcore_history[SPDK_TRACE_MAX_LCORE];
 };
 
-void _spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id,
+void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 			uint32_t size, uint64_t object_id, uint64_t arg1);
 
 /**
  * Record the current trace state for tracing tpoints. Debug tool can read the
  * information from shared memory to post-process the tpoint entries and display
- * in a human-readable format.
+ * in a human-readable format. This function will call spdk_get_ticks() to get
+ * the current tsc to save in the tracepoint.
  *
  * \param tpoint_id Tracepoint id to record.
  * \param poller_id Poller id to record.
@@ -158,7 +159,36 @@ void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 		return;
 	}
 
-	_spdk_trace_record(tpoint_id, poller_id, size, object_id, arg1);
+	_spdk_trace_record(0, tpoint_id, poller_id, size, object_id, arg1);
+}
+
+/**
+ * Record the current trace state for tracing tpoints. Debug tool can read the
+ * information from shared memory to post-process the tpoint entries and display
+ * in a human-readable format.
+ *
+ * \param tsc Current tsc.
+ * \param tpoint_id Tracepoint id to record.
+ * \param poller_id Poller id to record.
+ * \param size Size to record.
+ * \param object_id Object id to record.
+ * \param arg1 Argument to record.
+ */
+static inline
+void spdk_trace_record_tsc(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
+			   uint32_t size, uint64_t object_id, uint64_t arg1)
+{
+	/*
+	 * Tracepoint group ID is encoded in the tpoint_id.  Lower 6 bits determine the tracepoint
+	 *  within the group, the remaining upper bits determine the tracepoint group.  Each
+	 *  tracepoint group has its own tracepoint mask.
+	 */
+	if (g_trace_histories == NULL ||
+	    !((1ULL << (tpoint_id & 0x3F)) & g_trace_histories->flags.tpoint_mask[tpoint_id >> 6])) {
+		return;
+	}
+
+	_spdk_trace_record(tsc, tpoint_id, poller_id, size, object_id, arg1);
 }
 
 /**
