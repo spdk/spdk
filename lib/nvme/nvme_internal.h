@@ -413,9 +413,25 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
 
 	/**
+	 * Controller has been enabled, there are a list of functions need to be executed
+	 * serially before ready.
+	 */
+	NVME_CTRLR_STATE_PRE_READY,
+
+	/**
+	 * Waiting for pending Admin commands to be completed.
+	 */
+	NVME_CTRLR_STATE_PRE_READY_POLL,
+
+	/**
 	 * Controller initialization has completed and the controller is ready.
 	 */
-	NVME_CTRLR_STATE_READY
+	NVME_CTRLR_STATE_READY,
+
+	/**
+	 * Controller inilialization has fatal error.
+	 */
+	NVME_CTRLR_STATE_ERROR
 };
 
 #define NVME_TIMEOUT_INFINITE	UINT64_MAX
@@ -490,6 +506,11 @@ struct spdk_nvme_ctrlr {
 
 	enum nvme_ctrlr_state		state;
 	uint64_t			state_timeout_tsc;
+
+	/** Batch functions need to be executed serially, this is function
+	 * index points to current funtion call of the checklist.
+	 */
+	uint32_t			next_init_fn_idx;
 
 	uint64_t			next_keep_alive_tick;
 	uint64_t			keep_alive_interval_ticks;
