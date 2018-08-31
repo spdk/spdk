@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "09d50104_96be395f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2061,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-31T17:51:38Z",
+      "side": 1,
+      "message": "Done,\nJust for future reference, when do we typically do asserts instead of a check that returns an error? I mean in functions that return void we obviously can\u0027t return anything, but are there times in the i/o path that even if the function could return an error we would rather assert something?",
+      "parentUuid": "1504ce46_c80a5d3b",
+      "revId": "63926ae4b1e760449f63dad3c76ac0c0f51b0310",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0fd54eba_b7d36da8",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-08-31T17:39:43Z",
       "side": 1,
       "message": "this could be done simpler by initializing temp_len \u003d 0, then just start at i\u003d0.\n\nnote also that this loop is assuming iov_len is an even multiple of spdk_blob_md_page - that is not necessarily the case\n\nfor example:\n\nlength \u003d 1\niovcnt \u003d 2\niov[0].iov_len \u003d 2048\niov[1].iov_len \u003d 2048\n\nlength \u003d 1, temp_len \u003d 0",
+      "revId": "63926ae4b1e760449f63dad3c76ac0c0f51b0310",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5b35eb7_36847b36",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2063,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-08-31T17:51:38Z",
+      "side": 1,
+      "message": "Good point, I hadn\u0027t thought about that case.",
+      "parentUuid": "0fd54eba_b7d36da8",
       "revId": "63926ae4b1e760449f63dad3c76ac0c0f51b0310",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
