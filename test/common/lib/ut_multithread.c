@@ -35,15 +35,14 @@
 #include "spdk/thread.h"
 #include "spdk_internal/mock.h"
 
+#include "common/lib/test_env.c"
+
 static uint32_t g_ut_num_threads;
-static uint64_t g_current_time_in_us = 0;
 
 int allocate_threads(int num_threads);
 void free_threads(void);
 void poll_threads(void);
-int poll_thread(uintptr_t thread_id);
-void increment_time(uint64_t time_in_us);
-void reset_time(void);
+bool poll_thread(uintptr_t thread_id);
 
 struct ut_msg {
 	spdk_thread_fn		fn;
@@ -54,61 +53,9 @@ struct ut_msg {
 struct ut_thread {
 	struct spdk_thread	*thread;
 	struct spdk_io_channel	*ch;
-	TAILQ_HEAD(, ut_msg)	msgs;
-	TAILQ_HEAD(, ut_poller)	pollers;
 };
 
 struct ut_thread *g_ut_threads;
-
-struct ut_poller {
-	spdk_poller_fn		fn;
-	void			*arg;
-	TAILQ_ENTRY(ut_poller)	tailq;
-	uint64_t		period_us;
-	uint64_t		next_expiration_in_us;
-};
-
-static void
-__send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	struct ut_thread *thread = thread_ctx;
-	struct ut_msg *msg;
-
-	msg = calloc(1, sizeof(*msg));
-	SPDK_CU_ASSERT_FATAL(msg != NULL);
-
-	msg->fn = fn;
-	msg->ctx = ctx;
-	TAILQ_INSERT_TAIL(&thread->msgs, msg, link);
-}
-
-static struct spdk_poller *
-__start_poller(void *thread_ctx, spdk_poller_fn fn, void *arg, uint64_t period_microseconds)
-{
-	struct ut_thread *thread = thread_ctx;
-	struct ut_poller *poller = calloc(1, sizeof(struct ut_poller));
-
-	SPDK_CU_ASSERT_FATAL(poller != NULL);
-
-	poller->fn = fn;
-	poller->arg = arg;
-	poller->period_us = period_microseconds;
-	poller->next_expiration_in_us = g_current_time_in_us + poller->period_us;
-
-	TAILQ_INSERT_TAIL(&thread->pollers, poller, tailq);
-
-	return (struct spdk_poller *)poller;
-}
-
-static void
-__stop_poller(struct spdk_poller *poller, void *thread_ctx)
-{
-	struct ut_thread *thread = thread_ctx;
-
-	TAILQ_REMOVE(&thread->pollers, (struct ut_poller *)poller, tailq);
-
-	free(poller);
-}
 
 #define INVALID_THREAD 0x1000
 
@@ -138,13 +85,9 @@ allocate_threads(int num_threads)
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
-		spdk_allocate_thread(__send_msg, __start_poller, __stop_poller,
-				     &g_ut_threads[i], NULL);
-		thread = spdk_get_thread();
+		thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 		SPDK_CU_ASSERT_FATAL(thread != NULL);
 		g_ut_threads[i].thread = thread;
-		TAILQ_INIT(&g_ut_threads[i].msgs);
-		TAILQ_INIT(&g_ut_threads[i].pollers);
 	}
 
 	set_thread(INVALID_THREAD);
@@ -166,51 +109,12 @@ free_threads(void)
 	g_ut_threads = NULL;
 }
 
-void
-increment_time(uint64_t time_in_us)
-{
-	g_current_time_in_us += time_in_us;
-	spdk_delay_us(time_in_us);
-}
-
-static void
-reset_pollers(void)
-{
-	uint32_t		i = 0;
-	struct ut_thread	*thread = NULL;
-	struct ut_poller	*poller = NULL;
-	uintptr_t		original_thread_id = g_thread_id;
-
-	CU_ASSERT(g_current_time_in_us == 0);
-
-	for (i = 0; i < g_ut_num_threads; i++) {
-		set_thread(i);
-		thread = &g_ut_threads[i];
-
-		TAILQ_FOREACH(poller, &thread->pollers, tailq) {
-			poller->next_expiration_in_us = g_current_time_in_us + poller->period_us;
-		}
-	}
-
-	set_thread(original_thread_id);
-}
-
-void
-reset_time(void)
-{
-	g_current_time_in_us = 0;
-	reset_pollers();
-}
-
-int
+bool
 poll_thread(uintptr_t thread_id)
 {
-	int count = 0;
+	bool busy = false;
 	struct ut_thread *thread = &g_ut_threads[thread_id];
-	struct ut_msg *msg;
-	struct ut_poller *poller;
 	uintptr_t original_thread_id;
-	TAILQ_HEAD(, ut_poller)	tmp_pollers;
 
 	CU_ASSERT(thread_id != (uintptr_t)INVALID_THREAD);
 	CU_ASSERT(thread_id < g_ut_num_threads);
@@ -218,60 +122,26 @@ poll_thread(uintptr_t thread_id)
 	original_thread_id = g_thread_id;
 	set_thread(thread_id);
 
-	while (!TAILQ_EMPTY(&thread->msgs)) {
-		msg = TAILQ_FIRST(&thread->msgs);
-		TAILQ_REMOVE(&thread->msgs, msg, link);
-
-		msg->fn(msg->ctx);
-		count++;
-		free(msg);
+	while (spdk_thread_poll(thread->thread, 0) > 0) {
+		busy = true;
 	}
-
-	TAILQ_INIT(&tmp_pollers);
-
-	while (!TAILQ_EMPTY(&thread->pollers)) {
-		poller = TAILQ_FIRST(&thread->pollers);
-		TAILQ_REMOVE(&thread->pollers, poller, tailq);
-
-		if (g_current_time_in_us >= poller->next_expiration_in_us) {
-			if (poller->fn) {
-				poller->fn(poller->arg);
-			}
-
-			if (poller->period_us == 0) {
-				break;
-			} else {
-				poller->next_expiration_in_us += poller->period_us;
-			}
-		}
-
-		TAILQ_INSERT_TAIL(&tmp_pollers, poller, tailq);
-	}
-
-	TAILQ_SWAP(&tmp_pollers, &thread->pollers, ut_poller, tailq);
 
 	set_thread(original_thread_id);
 
-	return count;
+	return busy;
 }
 
 void
 poll_threads(void)
 {
-	bool msg_processed;
-	uint32_t i, count;
-
 	while (true) {
-		msg_processed = false;
+		bool busy = false;
 
-		for (i = 0; i < g_ut_num_threads; i++) {
-			count = poll_thread(i);
-			if (count > 0) {
-				msg_processed = true;
-			}
+		for (uint32_t i = 0; i < g_ut_num_threads; i++) {
+			busy = busy || poll_thread(i);
 		}
 
-		if (!msg_processed) {
+		if (!busy) {
 			break;
 		}
 	}
