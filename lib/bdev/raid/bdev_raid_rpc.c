@@ -214,38 +214,6 @@ static const struct spdk_json_object_decoder rpc_construct_raid_bdev_decoders[] 
 
 /*
  * brief:
- * check_and_remove_raid_bdev function free base bdev descriptors, unclaim the base
- * bdevs and free the raid. This function is used to cleanup when raid is not
- * able to successfully create during constructing the raid via RPC
- * params:
- * raid_bdev_config - pointer to raid_bdev_config structure
- * returns:
- * NULL - raid not present
- * non NULL - raid present, returns raid_bdev
- */
-static void
-check_and_remove_raid_bdev(struct raid_bdev_config *raid_cfg)
-{
-	struct raid_bdev       *raid_bdev;
-
-	/* Get the raid structured allocated if exists */
-	raid_bdev = raid_cfg->raid_bdev;
-	if (raid_bdev == NULL) {
-		return;
-	}
-
-	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		assert(raid_bdev->base_bdev_info != NULL);
-		if (raid_bdev->base_bdev_info[i].bdev) {
-			raid_bdev_free_base_bdev_resource(raid_bdev, i);
-		}
-	}
-	assert(raid_bdev->num_base_bdevs_discovered == 0);
-	raid_bdev_cleanup(raid_bdev);
-}
-
-/*
- * brief:
  * spdk_rpc_construct_raid_bdev function is the RPC for construct_raids. It takes
  * input as raid bdev name, raid level, strip size in KB and list of base bdev names.
  * params:
@@ -310,13 +278,9 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		/* Check if base_bdev exists already, if not fail the command */
 		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[i]);
 		if (base_bdev == NULL) {
-			check_and_remove_raid_bdev(raid_cfg);
-			raid_bdev_config_cleanup(raid_cfg);
-			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							     "base bdev %s not found",
-							     req.base_bdevs.base_bdevs[i]);
-			free_rpc_construct_raid_bdev(&req);
-			return;
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "base bdev %s doesn't exist now\n",
+				      req.base_bdevs.base_bdevs[i]);
+			continue;
 		}
 
 		/*
@@ -326,8 +290,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		 */
 		rc = raid_bdev_add_base_device(raid_cfg, base_bdev, i);
 		if (rc != 0) {
-			check_and_remove_raid_bdev(raid_cfg);
-			raid_bdev_config_cleanup(raid_cfg);
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							     "Failed to add base bdev %s to RAID bdev %s: %s",
 							     req.base_bdevs.base_bdevs[i], req.name,
