@@ -40,26 +40,16 @@
 static int g_trace_fd = -1;
 static char g_shm_name[64];
 
-static struct spdk_trace_histories *g_trace_histories;
+struct spdk_trace_histories *g_trace_histories;
 
 void
-spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
-		  uint64_t object_id, uint64_t arg1)
+_spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
+		   uint64_t object_id, uint64_t arg1)
 {
 	struct spdk_trace_history *lcore_history;
 	struct spdk_trace_entry *next_entry;
 	uint64_t tsc;
 	unsigned lcore;
-
-	/*
-	 * Tracepoint group ID is encoded in the tpoint_id.  Lower 6 bits determine the tracepoint
-	 *  within the group, the remaining upper bits determine the tracepoint group.  Each
-	 *  tracepoint group has its own tracepoint mask.
-	 */
-	if (g_trace_histories == NULL ||
-	    !((1ULL << (tpoint_id & 0x3F)) & g_trace_histories->flags.tpoint_mask[tpoint_id >> 6])) {
-		return;
-	}
 
 	lcore = spdk_env_get_current_core();
 	if (lcore >= SPDK_TRACE_MAX_LCORE) {

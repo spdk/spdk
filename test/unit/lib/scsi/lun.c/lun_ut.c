@@ -71,8 +71,9 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *
 {
 }
 
-void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
-		       uint64_t object_id, uint64_t arg1)
+struct spdk_trace_histories *g_trace_histories;
+void _spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id,
+			uint32_t size, uint64_t object_id, uint64_t arg1)
 {
 }
 
