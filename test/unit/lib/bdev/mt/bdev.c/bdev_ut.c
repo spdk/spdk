@@ -33,7 +33,6 @@
 
 #include "spdk_cunit.h"
 
-#include "common/lib/test_env.c"
 #include "common/lib/ut_multithread.c"
 #include "unit/lib/json_mock.c"
 
@@ -717,7 +716,6 @@ io_during_qos_queue(void)
 	int rc;
 
 	setup_test();
-	reset_time();
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
@@ -771,7 +769,7 @@ io_during_qos_queue(void)
 	}
 
 	/* Advance in time by a millisecond */
-	increment_time(1000);
+	spdk_delay_us(1000);
 
 	/* Complete more I/O */
 	poll_threads();
@@ -805,7 +803,6 @@ io_during_qos_reset(void)
 	int rc;
 
 	setup_test();
-	reset_time();
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
@@ -1149,7 +1146,7 @@ qos_dynamic_enable(void)
 	int status, second_status, rc, i;
 
 	setup_test();
-	reset_time();
+	MOCK_SET(spdk_get_ticks, 0);
 
 	bdev = &g_bdev.bdev;
 
