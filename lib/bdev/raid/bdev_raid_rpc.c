@@ -394,13 +394,7 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 		return;
 	}
 
-	/* Find raid bdev config for this raid bdev */
-	TAILQ_FOREACH(raid_cfg, &g_spdk_raid_config.raid_bdev_config_head, link) {
-		if (strcmp(raid_cfg->name, req.name) == 0) {
-			break;
-		}
-	}
-
+	raid_cfg = raid_bdev_config_find_by_name(req.name);
 	if (raid_cfg == NULL) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "raid bdev %s is not found in config", req.name);
