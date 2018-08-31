@@ -48,6 +48,18 @@ DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
 DEFINE_STUB(spdk_conf_section_get_intval, int, (struct spdk_conf_section *sp, const char *key), -1);
 
+struct spdk_trace_histories *g_trace_histories;
+DEFINE_STUB_V(spdk_trace_add_register_fn, (struct spdk_trace_register_fn *reg_fn));
+DEFINE_STUB_V(spdk_trace_register_owner, (uint8_t type, char id_prefix));
+DEFINE_STUB_V(spdk_trace_register_object, (uint8_t type, char id_prefix));
+DEFINE_STUB_V(spdk_trace_register_description, (const char *name, const char *short_name,
+		uint16_t tpoint_id, uint8_t owner_type,
+		uint8_t object_type, uint8_t new_object,
+		uint8_t arg1_is_ptr, uint8_t arg1_is_alias,
+		const char *arg1_name));
+DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
+				   uint32_t size, uint64_t object_id, uint64_t arg1));
+
 static void
 _part_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
