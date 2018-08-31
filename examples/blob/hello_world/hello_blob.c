@@ -384,10 +384,9 @@ bs_init_complete(void *cb_arg, struct spdk_blob_store *bs,
 
 	/*
 	 * The blostore has been initialized, let's create a blob.
-	 * Note that we could allcoate an SPDK event and use
-	 * spdk_event_call() to schedule it if we wanted to keep
-	 * our events as limited as possible wrt the amount of
-	 * work that they do.
+	 * Note that we could pass a message back to ourselves using
+	 * spdk_thread_send_msg() if we wanted to keep our processing
+	 * time limited.
 	 */
 	create_blob(hello_context);
 }
