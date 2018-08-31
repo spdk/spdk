@@ -81,7 +81,6 @@ struct object_stats g_stats[SPDK_TRACE_MAX_OBJECT];
 
 static char *exe_name;
 static int verbose = 1;
-static int g_fudge_factor = 20;
 
 static uint64_t tsc_rate;
 static uint64_t first_tsc = 0x0;
@@ -245,12 +244,10 @@ populate_events(struct spdk_trace_history *history)
 			}
 		}
 
-		first += g_fudge_factor;
 		if (first >= num_entries) {
 			first -= num_entries;
 		}
 
-		last -= g_fudge_factor;
 		if (last < 0) {
 			last += num_entries;
 		}
@@ -295,8 +292,6 @@ static void usage(void)
 	fprintf(stderr, "        option = '-q' to disable verbose mode\n");
 	fprintf(stderr, "                 '-s' to specify spdk_trace shm name\n");
 	fprintf(stderr, "                 '-c' to display single lcore history\n");
-	fprintf(stderr, "                 '-f' to specify number of events to ignore at\n");
-	fprintf(stderr, "                      beginning and end of trace (default: 20)\n");
 	fprintf(stderr, "                 '-i' to specify the shared memory ID\n");
 	fprintf(stderr, "                 '-p' to specify the trace PID\n");
 	fprintf(stderr, "                 (One of -i or -p must be specified)\n");
@@ -325,9 +320,6 @@ int main(int argc, char **argv)
 					SPDK_TRACE_MAX_LCORE);
 				exit(1);
 			}
-			break;
-		case 'f':
-			g_fudge_factor = atoi(optarg);
 			break;
 		case 'i':
 			shm_id = atoi(optarg);
