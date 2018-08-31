@@ -234,8 +234,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		free_rpc_construct_raid_bdev(&req);
-		return;
+		goto error;
 	}
 
 	rc = raid_bdev_config_add(req.name, req.strip_size, req.base_bdevs.num_base_bdevs, req.raid_level,
@@ -244,8 +243,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Failed to add RAID bdev config %s: %s",
 						     req.name, spdk_strerror(-rc));
-		free_rpc_construct_raid_bdev(&req);
-		return;
+		goto error;
 	}
 
 	for (size_t i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
@@ -256,8 +254,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 							     "Failed to add base bdev %s to RAID bdev config %s: %s",
 							     req.base_bdevs.base_bdevs[i], req.name,
 							     spdk_strerror(-rc));
-			free_rpc_construct_raid_bdev(&req);
-			return;
+			goto error;
 		}
 	}
 
@@ -267,8 +264,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Failed to create RAID bdev %s: %s",
 						     req.name, spdk_strerror(-rc));
-		free_rpc_construct_raid_bdev(&req);
-		return;
+		goto error;
 	}
 
 	rc = raid_bdev_add_base_devices(raid_cfg);
@@ -276,8 +272,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Failed to add any base bdev to RAID bdev %s: %s",
 						     req.name, spdk_strerror(-rc));
-		free_rpc_construct_raid_bdev(&req);
-		return;
+		goto error;
 	}
 
 	free_rpc_construct_raid_bdev(&req);
@@ -289,6 +284,9 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
+
+error:
+	free_rpc_construct_raid_bdev(&req);
 }
 SPDK_RPC_REGISTER("construct_raid_bdev", spdk_rpc_construct_raid_bdev, SPDK_RPC_RUNTIME)
 
