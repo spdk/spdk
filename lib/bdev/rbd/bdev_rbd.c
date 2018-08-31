@@ -312,6 +312,8 @@ bdev_rbd_destruct(void *ctx)
 {
 	struct bdev_rbd *rbd = ctx;
 
+	spdk_io_device_unregister(rbd, NULL);
+
 	bdev_rbd_free(rbd);
 	return 0;
 }
