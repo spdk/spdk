@@ -227,8 +227,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_raid_bdev req = {};
 	struct spdk_json_write_ctx     *w;
 	struct raid_bdev_config        *raid_cfg;
-	struct spdk_bdev               *base_bdev;
-	int			       rc, _rc;
+	int			       rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_raid_bdev_decoders,
 				    SPDK_COUNTOF(rpc_construct_raid_bdev_decoders),
@@ -272,29 +271,13 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	for (size_t i = 0; i < raid_cfg->num_base_bdevs; i++) {
-		/* Check if base_bdev exists already, if not fail the command */
-		base_bdev = spdk_bdev_get_by_name(req.base_bdevs.base_bdevs[i]);
-		if (base_bdev == NULL) {
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "base bdev %s doesn't exist now\n",
-				      req.base_bdevs.base_bdevs[i]);
-			continue;
-		}
-
-		/*
-		 * Try to add base_bdev to this raid bdev, if not able to add fail the
-		 * command. This might be because this base_bdev may already be claimed
-		 * by some other module
-		 */
-		_rc = raid_bdev_add_base_device(raid_cfg, base_bdev, i);
-		if (_rc != 0) {
-			SPDK_ERRLOG("Failed to add base bdev %s to RAID bdev %s: %s\n",
-				    req.base_bdevs.base_bdevs[i], req.name,
-				    spdk_strerror(-_rc));
-			if (rc == 0) {
-				rc = _rc;
-			}
-		}
+	rc = raid_bdev_add_base_devices(raid_cfg);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Failed to add any base bdev to RAID bdev %s: %s",
+						     req.name, spdk_strerror(-rc));
+		free_rpc_construct_raid_bdev(&req);
+		return;
 	}
 
 	if (rc != 0) {
