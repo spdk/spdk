@@ -661,7 +661,7 @@ raid_bdev_free(void)
  * params:
  * raid_name - name for raid bdev.
  */
-static struct raid_bdev_config *
+struct raid_bdev_config *
 raid_bdev_config_find_by_name(const char *raid_name)
 {
 	struct raid_bdev_config *raid_cfg;

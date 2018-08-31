@@ -212,5 +212,6 @@ int raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bde
 int raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg,
 				   const char *base_bdev_name, uint32_t slot);
 void raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg);
+struct raid_bdev_config *raid_bdev_config_find_by_name(const char *raid_name);
 
 #endif // SPDK_BDEV_RAID_INTERNAL_H
