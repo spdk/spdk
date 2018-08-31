@@ -34,6 +34,24 @@
       "revId": "c07dffbe62d4370f12b15f79fbc60c2d185b9466",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f822cd9_ca139cba",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-31T15:12:34Z",
+      "side": 1,
+      "message": "I don\u0027t think either one looks especially good.\n\nIf we can\u0027t send the event, it means some vhost devices won\u0027t get processed which could cause all kinds of unexpected issues that would be impossible to debug.\n\nWhat if instead we added an assert(false) in spdk_vhost_event_async_send() if we cannot allocate the ev_ctx?  And then leave this function untouched.",
+      "parentUuid": "ef66f486_d49f51b0",
+      "revId": "c07dffbe62d4370f12b15f79fbc60c2d185b9466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
