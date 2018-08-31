@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03291daf_2b866496",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-31T21:26:44Z",
+      "side": 1,
+      "message": "I think you can call spdk_nvmf_tgt_add_transport here and eliminate a bunch of code.",
+      "revId": "03307d7757d5ff49be4915b64ff48e98a7e7512f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a574356_7723b91c",
+        "filename": "test/nvmf/cr_trprt/cr_trprt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-31T21:26:44Z",
+      "side": 1,
+      "message": "Is cr_trprt short for \"create_transport\"? I would rather just write the whole thing out.",
+      "revId": "03307d7757d5ff49be4915b64ff48e98a7e7512f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
