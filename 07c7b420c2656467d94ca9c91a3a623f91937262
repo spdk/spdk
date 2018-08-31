@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa795187_aa6b77ae",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-08-31T21:58:42Z",
+      "side": 1,
+      "message": "I think you should leave this one just as \"name\".  There are other bdev modules that are changed in this patch to use the same name for spdk_io_device_register as the name of the bdev that gets registered.  So I really think you need to add the \"bdev_\" prefix so that it covers everything.",
+      "revId": "07c7b420c2656467d94ca9c91a3a623f91937262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
