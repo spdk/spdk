@@ -128,10 +128,23 @@ trace_init_err:
 void
 spdk_trace_cleanup(void)
 {
-	if (g_trace_histories) {
-		munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
-		g_trace_histories = NULL;
-		close(g_trace_fd);
+	bool unlink;
+
+	if (g_trace_histories == NULL) {
+		return;
 	}
-	shm_unlink(g_shm_name);
+
+	/*
+	 * Only unlink the shm if there were no tracepoints enabled.  This ensures the file
+	 * can be used after this process exits/crashes for debugging.
+	 * Note that we have to calculate this value before g_trace_histories gets unmapped.
+	 */
+	unlink = spdk_mem_all_zero(g_trace_flags->tpoint_mask, sizeof(g_trace_flags->tpoint_mask));
+	munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
+	g_trace_histories = NULL;
+	close(g_trace_fd);
+
+	if (unlink) {
+		shm_unlink(g_shm_name);
+	}
 }
