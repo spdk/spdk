@@ -34,6 +34,24 @@
       "revId": "b9350ac050ea233897d71e5e609c75ee01292e3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4be17cf_07269ac1",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 23
+      },
+      "lineNbr": 4102,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-08-31T19:11:20Z",
+      "side": 1,
+      "message": "The actual length of data to be transferred on a c2h command is present in the command itself, so this data_len field isn\u0027t required in that case. In all cases, it\u0027s just for convenience so that code doesn\u0027t have to parse the command to know the length of the data. In the c2h case, I think the result should contain a data_len field, but the request does not need to.",
+      "parentUuid": "c8187420_a218a1e1",
+      "revId": "b9350ac050ea233897d71e5e609c75ee01292e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
