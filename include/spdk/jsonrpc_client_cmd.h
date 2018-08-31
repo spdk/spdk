@@ -39,6 +39,8 @@
 #ifndef SPDK_JSONRPC_CLIENT_CMD_H_
 #define SPDK_JSONRPC_CLIENT_CMD_H_
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -58,6 +60,40 @@ void spdk_jsonrpc_client_close(struct spdk_jsonrpc_client_conn *conn);
  */
 int spdk_rpc_client_get_rpc_methods(const char *rpc_sock_addr);
 int _spdk_rpc_client_get_rpc_methods(struct spdk_jsonrpc_client_conn *conn);
+
+enum spdk_rpc_nvme_cmd_type {
+	NVME_CMD_ADMIN = 0,
+	NVME_CMD_IO,
+};
+
+/**
+ * Send NVMe passthrough cmd
+ *
+ * \param rpc_sock_addr Connecting address.
+ * \param device_name Name of the operating NVMe devices
+ * \param cmd_type Type of nvme cmd. Valid values are: 0 for admin, 1 for io
+ * \param data_direction Direction of data transfer
+ * \param cmdbuf NVMe command buffer
+ * \param cmdbuf_len length of NVMe command buffer, should be 64
+ * \param data Data transferring between controller and host
+ * \param data_len length of data buffer
+ * \param metadata Metadata transferring between controller and host
+ * \param metadata_len length of metadata buffer
+ * \param timeout_ms Command execution timeout value, in milliseconds,  if 0, don't track timeout
+ * \param result CDW0 of nvme completion queue entry
+ *
+ * \return 0 on success.
+ */
+int spdk_rpc_client_nvme_cmd(const char *rpcsock_addr,
+			     const char *device_name, int cmd_type, int data_direction,
+			     const char *cmdbuf, size_t cmdbuf_len,
+			     char *data, size_t data_len, char *metadata, size_t metadata_len,
+			     uint32_t timeout_ms, uint32_t *result);
+int _spdk_rpc_client_nvme_cmd(struct spdk_jsonrpc_client_conn *conn,
+			      const char *device_name, int cmd_type, int data_direction,
+			      const char *cmdbuf, size_t cmdbuf_len,
+			      char *data, size_t data_len, char *metadata, size_t metadata_len,
+			      uint32_t timeout_ms, uint32_t *result);
 
 #ifdef __cplusplus
 }

@@ -36,5 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 LIBNAME = jsonrpc_client
 C_SRCS = jsonrpc_client.c jsonrpc_client_tcp.c rpc_client_get_rpc_methods.c
+C_SRCS += rpc_client_nvme_cmd.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
