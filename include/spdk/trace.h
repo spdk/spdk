@@ -122,12 +122,16 @@ struct spdk_trace_flags {
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
 };
 extern struct spdk_trace_flags *g_trace_flags;
+extern struct spdk_trace_histories *g_trace_histories;
 
 
 struct spdk_trace_histories {
 	struct spdk_trace_flags flags;
 	struct spdk_trace_history	per_lcore_history[SPDK_TRACE_MAX_LCORE];
 };
+
+void _spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id,
+			uint32_t size, uint64_t object_id, uint64_t arg1);
 
 /**
  * Record the current trace state for tracing tpoints. Debug tool can read the
@@ -140,8 +144,22 @@ struct spdk_trace_histories {
  * \param object_id Object id to record.
  * \param arg1 Argument to record.
  */
+static inline
 void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
-		       uint64_t object_id, uint64_t arg1);
+		       uint64_t object_id, uint64_t arg1)
+{
+	/*
+	 * Tracepoint group ID is encoded in the tpoint_id.  Lower 6 bits determine the tracepoint
+	 *  within the group, the remaining upper bits determine the tracepoint group.  Each
+	 *  tracepoint group has its own tracepoint mask.
+	 */
+	if (g_trace_histories == NULL ||
+	    !((1ULL << (tpoint_id & 0x3F)) & g_trace_histories->flags.tpoint_mask[tpoint_id >> 6])) {
+		return;
+	}
+
+	_spdk_trace_record(tpoint_id, poller_id, size, object_id, arg1);
+}
 
 /**
  * Get the current tpoint mask of the given tpoint group.
