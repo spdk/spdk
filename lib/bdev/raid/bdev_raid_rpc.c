@@ -41,8 +41,6 @@
 
 #define RPC_MAX_BASE_BDEVS 255
 
-static void raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg);
-
 SPDK_LOG_REGISTER_COMPONENT("raidrpc", SPDK_LOG_RAID_RPC)
 
 /*
@@ -342,45 +340,21 @@ static const struct spdk_json_object_decoder rpc_destroy_raid_bdev_decoders[] = 
  * none
  */
 static void
-raid_bdev_config_destroy_check_raid_bdev_exists(void *arg)
+raid_bdev_config_destroy(void *arg)
 {
-	struct raid_bdev_config  *raid_cfg = arg;
+	struct raid_bdev_config	*raid_cfg = arg;
 
-	assert(raid_cfg != NULL);
-	if (raid_cfg->raid_bdev != NULL) {
-		/* If raid bdev still exists, schedule event and come back later */
-		spdk_thread_send_msg(spdk_get_thread(), raid_bdev_config_destroy_check_raid_bdev_exists,
-				     raid_cfg);
-		return;
-	} else {
-		/* If raid bdev does not exist now, go for raid bdev config cleanup */
-		raid_bdev_config_destroy(raid_cfg);
-	}
-}
-
-/*
- * brief:
- * This function will destroy the raid bdev at given slot
- * params:
- * slot - slot number of raid bdev config to destroy
- * returns:
- * none
- */
-static void
-raid_bdev_config_destroy(struct raid_bdev_config *raid_cfg)
-{
 	assert(raid_cfg != NULL);
 	if (raid_cfg->raid_bdev != NULL) {
 		/*
 		 * If raid bdev exists for this config, wait for raid bdev to get
 		 * destroyed and come back later
 		 */
-		spdk_thread_send_msg(spdk_get_thread(), raid_bdev_config_destroy_check_raid_bdev_exists,
+		spdk_thread_send_msg(spdk_get_thread(), raid_bdev_config_destroy,
 				     raid_cfg);
-		return;
+	} else {
+		raid_bdev_config_cleanup(raid_cfg);
 	}
-
-	raid_bdev_config_cleanup(raid_cfg);
 }
 
 /*
@@ -433,10 +407,6 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 		}
 	}
 
-	/*
-	 * Call to destroy the raid bdev, but it will only destroy raid bdev if underlying
-	 * cleanup is done
-	 */
 	raid_bdev_config_destroy(raid_cfg);
 
 	free_rpc_destroy_raid_bdev(&req);
