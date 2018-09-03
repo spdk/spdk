@@ -102,6 +102,20 @@ spdk_trace_init(const char *shm_name)
 		goto trace_init_err;
 	}
 
+/* TODO: On FreeBSD, mlock on shm_open'd memory doesn't seem to work.  Docs say that kern.ipc.shm_use_phys=1
+ * should allow it, but forcing that doesn't seem to work either.  So for now just skip mlock on FreeBSD
+ * altogether.
+ */
+#if defined(__linux__)
+	if (mlock(g_trace_histories, sizeof(*g_trace_histories)) != 0) {
+		fprintf(stderr, "Could not mlock shm for tracing - %s.\n", spdk_strerror(errno));
+		if (errno == ENOMEM) {
+			fprintf(stderr, "Check /dev/shm for old tracing files that can be deleted.\n");
+		}
+		goto trace_init_err;
+	}
+#endif
+
 	memset(g_trace_histories, 0, sizeof(*g_trace_histories));
 
 	g_trace_flags = &g_trace_histories->flags;
@@ -117,9 +131,13 @@ spdk_trace_init(const char *shm_name)
 	return 0;
 
 trace_init_err:
+	if (g_trace_histories != MAP_FAILED) {
+		munmap(g_trace_histories, sizeof(*g_trace_histories));
+	}
 	close(g_trace_fd);
 	g_trace_fd = -1;
 	shm_unlink(shm_name);
+	g_trace_histories = NULL;
 
 	return 1;
 
