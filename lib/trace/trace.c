@@ -102,6 +102,16 @@ spdk_trace_init(const char *shm_name)
 		goto trace_init_err;
 	}
 
+	if (mlock(g_trace_histories, sizeof(*g_trace_histories) != 0)) {
+		fprintf(stderr, "Could not mlock shm for tracing - %s.\n", spdk_strerror(errno));
+#if defined(__linux__)
+		if (errno == ENOMEM) {
+			fprintf(stderr, "Check /dev/shm for old tracing files that can be deleted.\n");
+		}
+#endif
+		goto trace_init_err;
+	}
+
 	memset(g_trace_histories, 0, sizeof(*g_trace_histories));
 
 	g_trace_flags = &g_trace_histories->flags;
@@ -117,9 +127,13 @@ spdk_trace_init(const char *shm_name)
 	return 0;
 
 trace_init_err:
+	if (g_trace_histories != MAP_FAILED) {
+		munmap(g_trace_histories, sizeof(*g_trace_histories));
+	}
 	close(g_trace_fd);
 	g_trace_fd = -1;
 	shm_unlink(shm_name);
+	g_trace_histories = NULL;
 
 	return 1;
 
