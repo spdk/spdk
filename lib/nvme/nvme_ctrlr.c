@@ -1035,10 +1035,29 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-static int
-nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
+
+static void
+nvme_ctrlr_set_host_id_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_completion_poll_status status;
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		/*
+		 * Treat Set Features - Host ID failure as non-fatal, since the Host ID feature
+		 * is optional.
+		 */
+		SPDK_WARNLOG("Set Features - Host ID failed: SC 0x%x SCT 0x%x\n",
+			     cpl->status.sc, cpl->status.sct);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Set Features - Host ID was successful\n");
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_PRE_READY, NVME_TIMEOUT_INFINITE);
+}
+
+static int
+nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr, bool *need_poll)
+{
 	uint8_t *host_id;
 	uint32_t host_id_size;
 	int rc;
@@ -1071,23 +1090,13 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 
 	SPDK_TRACEDUMP(SPDK_LOG_NVME, "host_id", host_id, host_id_size);
 
-	rc = nvme_ctrlr_cmd_set_host_id(ctrlr, host_id, host_id_size, nvme_completion_poll_cb, &status);
+	rc = nvme_ctrlr_cmd_set_host_id(ctrlr, host_id, host_id_size, nvme_ctrlr_set_host_id_done, ctrlr);
 	if (rc != 0) {
 		SPDK_ERRLOG("Set Features - Host ID failed: %d\n", rc);
 		return rc;
 	}
+	*need_poll = true;
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_WARNLOG("Set Features - Host ID failed: SC 0x%x SCT 0x%x\n",
-			     status.cpl.status.sc, status.cpl.status.sct);
-		/*
-		 * Treat Set Features - Host ID failure as non-fatal, since the Host ID feature
-		 * is optional.
-		 */
-		return 0;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Set Features - Host ID was successful\n");
 	return 0;
 }
 
@@ -1794,11 +1803,6 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	rc = nvme_ctrlr_set_host_id(ctrlr);
-	if (rc) {
-		return rc;
-	}
-
 	return 0;
 }
 
@@ -1808,6 +1812,7 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 static struct spdk_nvme_ctrlr_pre_ready_item g_pre_ready_list[] = {
 	{.fn_call = nvme_ctrlr_identify},
 	{.fn_call = nvme_ctrlr_start},
+	{.fn_call = nvme_ctrlr_set_host_id},
 };
 
 static struct spdk_nvme_ctrlr_pre_ready_item *
