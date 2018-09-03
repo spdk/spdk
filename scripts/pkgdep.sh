@@ -16,16 +16,14 @@ if [ -s /etc/redhat-release ]; then
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 		git astyle python-pep8 lcov python clang-analyzer libuuid-devel \
 		sg3_utils libiscsi-devel pciutils
-	# Additional (optional) dependencies for showing backtrace in logs
-	yum install -y libunwind-devel
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for DPDK
 	yum install -y numactl-devel nasm
 	# Additional dependencies for building docs
 	yum install -y doxygen mscgen graphviz
-	# Additional dependencies for building pmem based backends
-	yum install -y libpmemblk-devel || true
+	# Additional (optional) dependencies for building pmem based backends and showing backtrace in logs
+	yum install -y libpmemblk-devel libunwind-devel || true
 	# Additional dependencies for SPDK CLI
 	yum install -y python-configshell python-pexpect python3-configshell python3-pexpect
 elif [ -f /etc/debian_version ]; then
@@ -47,14 +45,12 @@ elif [ -f /etc/debian_version ]; then
 elif [ -f /etc/SuSE-release ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pep8 libuuid-devel sg3_utils pciutils
-	# Additional (optional) dependencies for showing backtrace in logs
-	zypper install libunwind-devel
 	# Additional dependencies for NVMe over Fabrics
 	zypper install -y rdma-core-devel
 	# Additional dependencies for DPDK
 	zypper install -y libnuma-devel nasm
-	# Additional dependencies for building pmem based backends
-	zypper install -y libpmemblk-devel
+	# Additional optional dependencies for building pmem based backends and showing backtrace in logs
+	zypper install -y libpmemblk-devel libunwind-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
 elif [ $(uname -s) = "FreeBSD" ] ; then
