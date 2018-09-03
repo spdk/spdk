@@ -1058,6 +1058,7 @@ spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
+		free_rpc_get_lvol_stores(&req);
 		return;
 	}
 
