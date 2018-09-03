@@ -83,6 +83,7 @@ struct ns_entry {
 	uint16_t		apptag_mask;
 	uint16_t		apptag;
 	char			name[1024];
+	const struct spdk_nvme_ns_data	*nsdata;
 };
 
 static const double g_latency_cutoffs[] = {
@@ -266,6 +267,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	if (g_max_io_size_blocks < entry->io_size_blocks) {
 		g_max_io_size_blocks = entry->io_size_blocks;
 	}
+
+	entry->nsdata = spdk_nvme_ns_get_data(ns);
 
 	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
@@ -489,7 +492,6 @@ task_extended_lba_setup_pi(struct ns_entry *entry, struct perf_task *task, uint6
 	struct spdk_nvme_protection_info *pi;
 	uint32_t i, md_size, sector_size, pi_offset;
 	uint16_t crc16;
-	const struct spdk_nvme_ns_data *nsdata;
 
 	task->appmask = 0;
 	task->apptag = 0;
@@ -515,12 +517,11 @@ task_extended_lba_setup_pi(struct ns_entry *entry, struct perf_task *task, uint6
 
 	sector_size = spdk_nvme_ns_get_sector_size(entry->u.nvme.ns);
 	md_size = spdk_nvme_ns_get_md_size(entry->u.nvme.ns);
-	nsdata = spdk_nvme_ns_get_data(entry->u.nvme.ns);
 
 	/* PI locates at the first 8 bytes of metadata,
 	 * doesn't support now
 	 */
-	if (nsdata->dps.md_start) {
+	if (entry->nsdata->dps.md_start) {
 		return;
 	}
 
@@ -560,7 +561,6 @@ task_extended_lba_pi_verify(struct ns_entry *entry, struct perf_task *task,
 	struct spdk_nvme_protection_info *pi;
 	uint32_t i, md_size, sector_size, pi_offset, ref_tag;
 	uint16_t crc16, guard, app_tag;
-	const struct spdk_nvme_ns_data *nsdata;
 
 	if (spdk_nvme_ns_get_pi_type(entry->u.nvme.ns) ==
 	    SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
@@ -569,12 +569,11 @@ task_extended_lba_pi_verify(struct ns_entry *entry, struct perf_task *task,
 
 	sector_size = spdk_nvme_ns_get_sector_size(entry->u.nvme.ns);
 	md_size = spdk_nvme_ns_get_md_size(entry->u.nvme.ns);
-	nsdata = spdk_nvme_ns_get_data(entry->u.nvme.ns);
 
 	/* PI locates at the first 8 bytes of metadata,
 	 * doesn't support now
 	 */
-	if (nsdata->dps.md_start) {
+	if (entry->nsdata->dps.md_start) {
 		return;
 	}
 
