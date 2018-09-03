@@ -83,7 +83,7 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 	dev->removed = true;
 	lun_cnt = 0;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == NULL) {
 			continue;
 		}
@@ -96,6 +96,8 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 		lun_cnt++;
 	}
 
+	spdk_scsi_lun_destruct_virtual_lun(dev);
+
 	if (lun_cnt == 0) {
 		free_dev(dev);
 		return;
@@ -107,13 +109,32 @@ spdk_scsi_dev_find_lowest_free_lun_id(struct spdk_scsi_dev *dev)
 {
 	int i;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	// skip the lun 0
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == NULL) {
 			return i;
 		}
 	}
 
 	return -1;
+}
+
+void spdk_scsi_dev_add_virtual_lun(struct spdk_scsi_dev *dev)
+{
+	struct spdk_scsi_lun *lun;
+	lun = calloc(1, sizeof(*lun));
+	memset(lun, 0, sizeof(*lun));
+	lun->id = 0;
+	lun->dev = dev;
+	dev->lun[0] = lun;
+	lun->io_channel = NULL;
+	TAILQ_INIT(&lun->open_descs);
+	TAILQ_INIT(&lun->tasks);
+}
+
+void spdk_scsi_lun_destruct_virtual_lun(struct spdk_scsi_dev *dev)
+{
+	free(dev->lun[0]);
 }
 
 int
@@ -131,6 +152,10 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_
 		return -1;
 	}
 
+	if (lun_id == 0) {
+		SPDK_ERRLOG("bdev %s: LUN 0 is reserved\n", bdev_name);
+		return -1;
+	}
 	/* Search the lowest free LUN ID if LUN ID is default */
 	if (lun_id == -1) {
 		lun_id = spdk_scsi_dev_find_lowest_free_lun_id(dev);
@@ -158,7 +183,8 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 	int lun_cnt = 0;
 	int i;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	// skip lun 0
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == lun) {
 			dev->lun[i] = NULL;
 		}
@@ -209,8 +235,8 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 		}
 	}
 
-	if (!found_lun_0) {
-		SPDK_ERRLOG("device %s: no LUN 0 specified\n", name);
+	if (found_lun_0) {
+		SPDK_ERRLOG("device %s: LUN 0 is reserved for target\n", name);
 		return NULL;
 	}
 
@@ -232,6 +258,7 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 	dev->num_ports = 0;
 	dev->protocol_id = protocol_id;
 
+	spdk_scsi_dev_add_virtual_lun(dev);
 	for (i = 0; i < num_luns; i++) {
 		rc = spdk_scsi_dev_add_lun(dev, bdev_name_list[i], lun_id_list[i],
 					   hotremove_cb, hotremove_ctx);
@@ -351,7 +378,7 @@ spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev)
 {
 	int i;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == NULL) {
 			continue;
 		}
@@ -364,7 +391,7 @@ spdk_scsi_dev_allocate_io_channels(struct spdk_scsi_dev *dev)
 {
 	int i, rc;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == NULL) {
 			continue;
 		}
@@ -405,7 +432,7 @@ spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev)
 {
 	int i;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; ++i) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; ++i) {
 		if (dev->lun[i] && spdk_scsi_lun_has_pending_tasks(dev->lun[i])) {
 			return true;
 		}

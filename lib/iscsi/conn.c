@@ -602,7 +602,7 @@ spdk_iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
 {
 	int i;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		spdk_iscsi_conn_close_lun(conn, i);
 	}
 }
@@ -625,7 +625,7 @@ spdk_iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 	struct spdk_scsi_lun *lun;
 	struct spdk_scsi_desc *desc;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		lun = spdk_scsi_dev_get_lun(conn->dev, i);
 		if (lun == NULL) {
 			continue;

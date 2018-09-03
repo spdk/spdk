@@ -1150,7 +1150,7 @@ spdk_iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 
 	num_luns = 0;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		snprintf(buf, sizeof(buf), "LUN%d", i);
 		val = spdk_conf_section_get_val(sp, buf);
 		if (val == NULL) {
@@ -1178,7 +1178,7 @@ spdk_iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
 
 		if (lun) {
@@ -1258,7 +1258,8 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 	int i;
 	struct spdk_iscsi_task *task;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	// skip lun 0
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
 
 		if (!lun) {
@@ -1433,7 +1434,7 @@ spdk_iscsi_tgt_nodes_config_text(FILE *fp)
 		fprintf(fp, TARGET_NODE_AUTH_TMPL,
 			authmethod, authgroup, usedigest);
 
-		for (l = 0; l < SPDK_SCSI_DEV_MAX_LUN; l++) {
+		for (l = 1; l < SPDK_SCSI_DEV_MAX_LUN; l++) {
 			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(dev, l);
 
 			if (!lun) {
@@ -1478,7 +1479,7 @@ spdk_iscsi_tgt_node_info_json(struct spdk_iscsi_tgt_node *target,
 	spdk_json_write_array_end(w);
 
 	spdk_json_write_named_array_begin(w, "luns");
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
 
 		if (lun) {

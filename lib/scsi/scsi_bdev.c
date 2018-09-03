@@ -134,7 +134,7 @@ spdk_bdev_scsi_report_luns(struct spdk_scsi_lun *lun,
 
 	dev = lun->dev;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+	for (i = 1; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == NULL) {
 			continue;
 		}
@@ -197,9 +197,11 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	uint16_t len = 0;
 	int pc;
 	int pd;
+	int pq;
 	int evpd;
 	int i;
 	struct spdk_scsi_cdb_inquiry *inq = (struct spdk_scsi_cdb_inquiry *)cdb;
+	char *product_name = "Virtual LUN";
 
 	/* standard inquiry command at lease with 36 Bytes */
 	if (alloc_len < 0x24) {
@@ -210,7 +212,6 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	dev = lun->dev;
 	port = task->target_port;
 
-	pd = SPDK_SPC_PERIPHERAL_DEVICE_TYPE_DISK;
 	pc = inq->page_code;
 	evpd = inq->evpd & 0x1;
 
@@ -222,12 +223,19 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		return -1;
 	}
 
+	/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */
+	pd = SPDK_SPC_PERIPHERAL_DEVICE_TYPE_DISK;
+	if (lun->id == 0) {
+		pq = SPDK_SPC_PERIPHERAL_QUALIFIER_NOT_CONNECTED;
+		if (evpd && pc != SPDK_SPC_VPD_SUPPORTED_VPD_PAGES) { goto inq_error; }
+	} else {
+		pq = SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED;
+		product_name = spdk_bdev_get_name(bdev);
+	}
+
 	if (evpd) {
 		struct spdk_scsi_vpd_page *vpage = (struct spdk_scsi_vpd_page *)data;
 
-		/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */
-		vpage->peripheral_device_type = pd;
-		vpage->peripheral_qualifier = SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED;
 		/* PAGE CODE */
 		vpage->page_code = pc;
 
@@ -236,19 +244,24 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		case SPDK_SPC_VPD_SUPPORTED_VPD_PAGES:
 			hlen = 4;
 
-			vpage->params[0] = SPDK_SPC_VPD_SUPPORTED_VPD_PAGES;
-			vpage->params[1] = SPDK_SPC_VPD_UNIT_SERIAL_NUMBER;
-			vpage->params[2] = SPDK_SPC_VPD_DEVICE_IDENTIFICATION;
-			vpage->params[3] = SPDK_SPC_VPD_MANAGEMENT_NETWORK_ADDRESSES;
-			vpage->params[4] = SPDK_SPC_VPD_EXTENDED_INQUIRY_DATA;
-			vpage->params[5] = SPDK_SPC_VPD_MODE_PAGE_POLICY;
-			vpage->params[6] = SPDK_SPC_VPD_SCSI_PORTS;
-			vpage->params[7] = SPDK_SPC_VPD_BLOCK_LIMITS;
-			vpage->params[8] = SPDK_SPC_VPD_BLOCK_DEV_CHARS;
-			len = 9;
-			if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-				vpage->params[9] = SPDK_SPC_VPD_BLOCK_THIN_PROVISION;
+			if (lun->id == 0) {
+				vpage->params[0] = SPDK_SPC_VPD_SUPPORTED_VPD_PAGES;
 				len++;
+			} else {
+				vpage->params[0] = SPDK_SPC_VPD_SUPPORTED_VPD_PAGES;
+				vpage->params[1] = SPDK_SPC_VPD_UNIT_SERIAL_NUMBER;
+				vpage->params[2] = SPDK_SPC_VPD_DEVICE_IDENTIFICATION;
+				vpage->params[3] = SPDK_SPC_VPD_MANAGEMENT_NETWORK_ADDRESSES;
+				vpage->params[4] = SPDK_SPC_VPD_EXTENDED_INQUIRY_DATA;
+				vpage->params[5] = SPDK_SPC_VPD_MODE_PAGE_POLICY;
+				vpage->params[6] = SPDK_SPC_VPD_SCSI_PORTS;
+				vpage->params[7] = SPDK_SPC_VPD_BLOCK_LIMITS;
+				vpage->params[8] = SPDK_SPC_VPD_BLOCK_DEV_CHARS;
+				len = 9;
+				if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+					vpage->params[9] = SPDK_SPC_VPD_BLOCK_THIN_PROVISION;
+					len++;
+				}
 			}
 
 			/* PAGE LENGTH */
@@ -694,7 +707,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		/* Standard INQUIRY data */
 		/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */
 		inqdata->peripheral_device_type = pd;
-		inqdata->peripheral_qualifier = SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED;
+		inqdata->peripheral_qualifier = pq;
 
 		/* RMB(7) */
 		inqdata->rmb = 0;
@@ -724,7 +737,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		spdk_strcpy_pad(inqdata->t10_vendor_id, DEFAULT_DISK_VENDOR, 8, ' ');
 
 		/* PRODUCT IDENTIFICATION */
-		spdk_strcpy_pad(inqdata->product_id, spdk_bdev_get_product_name(bdev), 16, ' ');
+		spdk_strcpy_pad(inqdata->product_id, product_name, 16, ' ');
 
 		/* PRODUCT REVISION LEVEL */
 		spdk_strcpy_pad(inqdata->product_rev, DEFAULT_DISK_REVISION, 4, ' ');
@@ -1687,6 +1700,10 @@ spdk_bdev_scsi_process_block(struct spdk_scsi_task *task)
 	uint32_t len = 0;
 	uint8_t *cdb = task->cdb;
 
+	if (task->lun->id == 0) {
+		return SPDK_SCSI_TASK_UNKNOWN;
+	}
+
 	/* XXX: We need to support FUA bit for writes! */
 	switch (cdb[0]) {
 	case SPDK_SBC_READ_6:
@@ -1839,6 +1856,18 @@ spdk_bdev_scsi_process_primary(struct spdk_scsi_task *task)
 	int dbd, pc, page, subpage;
 	int cmd_parsed = 0;
 
+	// virtual lun 0 has limit support
+	if (lun->id == 0) {
+		switch (cdb[0]) {
+		case SPDK_SPC_INQUIRY:
+		case SPDK_SPC_REPORT_LUNS:
+		case SPDK_SPC_TEST_UNIT_READY:
+		case SPDK_SPC_REQUEST_SENSE:
+			break;
+		default:
+			return SPDK_SCSI_TASK_UNKNOWN;
+		};
+	}
 
 	switch (cdb[0]) {
 	case SPDK_SPC_INQUIRY:
