@@ -8,11 +8,22 @@ scriptsdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $scriptsdir/..)
 
 if [ -s /etc/redhat-release ]; then
-	# Includes Fedora, CentOS
-	if [ -f /etc/centos-release ]; then
-		# Add EPEL repository for CUnit-devel
-		yum --enablerepo=extras install -y epel-release
+	. /etc/os-release
+
+	# Includes Fedora, CentOS 7, RHEL 7
+	# Add EPEL repository for CUnit-devel and libunwind-devel
+	if echo "$ID $VERSION_ID" | egrep -q 'rhel 7|centos 7'; then
+		if ! rpm --quiet -q epel-release; then
+			yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+		fi
+
+		if [ $ID = 'rhel' ]; then
+			subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"
+		elif [ $ID = 'centos' ]; then
+			yum --enablerepo=extras install -y epel-release
+		fi
 	fi
+
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 		git astyle python-pep8 lcov python clang-analyzer libuuid-devel \
 		sg3_utils libiscsi-devel pciutils
