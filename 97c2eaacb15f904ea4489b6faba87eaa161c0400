@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6982c02d_5981eb83",
+        "filename": "include/spdk/jsonrpc_client_cmd.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-03T09:45:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7a678f0_05ef9ea7",
+      "revId": "97c2eaacb15f904ea4489b6faba87eaa161c0400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12bdedb2_3d5d5eb0",
         "filename": "include/spdk/jsonrpc_client_cmd.h",
         "patchSetId": 6
@@ -71,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c5173914_dafbe4bd",
+        "filename": "lib/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-03T09:45:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1bb771c4_1353cbce",
+      "revId": "97c2eaacb15f904ea4489b6faba87eaa161c0400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0eaf71d6_3606e147",
         "filename": "lib/jsonrpc_client/jsonrpc_client_internal.h",
         "patchSetId": 6
@@ -82,6 +118,24 @@
       "writtenOn": "2018-08-31T15:37:55Z",
       "side": 1,
       "message": "If you move this code to lib/jsonrpc directly, then you can reuse definitions from jsonrpc_internal.h.",
+      "revId": "97c2eaacb15f904ea4489b6faba87eaa161c0400",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "165acbc1_03f55efb",
+        "filename": "lib/jsonrpc_client/jsonrpc_client_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-03T09:45:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0eaf71d6_3606e147",
       "revId": "97c2eaacb15f904ea4489b6faba87eaa161c0400",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
