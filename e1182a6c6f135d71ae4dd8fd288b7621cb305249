@@ -16,6 +16,23 @@
       "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e0dd9b7_ad11d3a7",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 53
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T14:00:23Z",
+      "side": 1,
+      "message": "nitpicking: that\u0027s a separate dependency used for config converter, not for SPDK CLI.\nPlease move to separate line with a comment\n# Additional dependencies for config converter",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
