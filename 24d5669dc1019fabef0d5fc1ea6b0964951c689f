@@ -1,0 +1,556 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "984fa136_87de9d87",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "name should contain \"NVMf\" so that it is visible on first look what this class is used for",
+      "range": {
+        "startLine": 15,
+        "startChar": 6,
+        "endLine": 15,
+        "endChar": 18
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b28ece14_e227cb43",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "this should be evaluated later in code if really a number",
+      "range": {
+        "startLine": 25,
+        "startChar": 77,
+        "endLine": 25,
+        "endChar": 92
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b4ce3a3_7b329c8e",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "this should be evaluated if given value is really bool.\ncheck existing code for \"ui_eval_param\" for an example how (in UILvolBdev  for example)",
+      "range": {
+        "startLine": 26,
+        "startChar": 47,
+        "endLine": 26,
+        "endChar": 67
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2563061_736e7228",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "\u0027listen\u0027 is not optional.",
+      "range": {
+        "startLine": 33,
+        "startChar": 17,
+        "endLine": 33,
+        "endChar": 36
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "658fef44_8bba0707",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "\"hosts\" is not optional",
+      "range": {
+        "startLine": 35,
+        "startChar": 16,
+        "endLine": 35,
+        "endChar": 35
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "392bd82a_3f9af53c",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "parameter",
+      "range": {
+        "startLine": 39,
+        "startChar": 34,
+        "endLine": 39,
+        "endChar": 43
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e91a2c4b_7af45eda",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "question to listen and all other params - why do we split on \"\u003d\" sign?\nUsing \"listen\" param in create command would look like:\n\nlisten\u003d\"trtype:RDMA traddr:192.168.100.8 trsvcid:4420,\ntrtype:RDMA traddr:192.168.100.9 trsvcid:4420\"\n\nConfigshell parses the argument so that \"listen\u003d\" is not included in the final string, so we don\u0027t need to split anything on \"\u003d\" sign.",
+      "range": {
+        "startLine": 43,
+        "startChar": 12,
+        "endLine": 44,
+        "endChar": 77
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e05cac65_788d24d2",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "Not an optional argument. Remove \u003dNone",
+      "range": {
+        "startLine": 70,
+        "startChar": 45,
+        "endLine": 70,
+        "endChar": 50
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdf88fa7_65fa8d2e",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "this is not optional",
+      "range": {
+        "startLine": 75,
+        "startChar": 24,
+        "endLine": 75,
+        "endChar": 42
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3520cd3a_5b19fea7",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "These lines are not needed when we change nqn to required argument",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 59
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76fdde58_7631d689",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "Commented - remove?",
+      "range": {
+        "startLine": 84,
+        "startChar": 8,
+        "endLine": 84,
+        "endChar": 35
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c524d87_7305fc88",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "Originally this rpc command uses \"disable\". Let\u0027s not mix things up and use \"disable\" as well.",
+      "range": {
+        "startLine": 113,
+        "startChar": 8,
+        "endLine": 113,
+        "endChar": 50
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "accbf9b1_6dc6ce88",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "Move this to a separate line and check for true/false using ui_eval_param",
+      "range": {
+        "startLine": 123,
+        "startChar": 40,
+        "endLine": 123,
+        "endChar": 78
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d14d4640_3e480c6a",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "To avoid concatenating empty strings use filter().\nCheck summary() for UIVhostBlkCtrlObj for an example.",
+      "range": {
+        "startLine": 134,
+        "startChar": 12,
+        "endLine": 135,
+        "endChar": 28
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d9e7548_f64ff6da",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "previous two if\u0027s used \"hasattr\". Why is this one different?",
+      "range": {
+        "startLine": 137,
+        "startChar": 7,
+        "endLine": 137,
+        "endChar": 41
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76876cbd_cc60656d",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 138,
+        "startChar": 12,
+        "endLine": 139,
+        "endChar": 28
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "334a7394_44f83fa2",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "And please avoid concating using \"+\". Previous concatenations use join(), so let\u0027s please keep it that way.",
+      "range": {
+        "startLine": 140,
+        "startChar": 12,
+        "endLine": 140,
+        "endChar": 36
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f6d2979_50be88d8",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "all these params are mandatory ( they have no \"\u003dNone\", or \"\u003d123\", which makes them obligatory for configshell) so this if check is not needed.",
+      "range": {
+        "startLine": 171,
+        "startChar": 8,
+        "endLine": 173,
+        "endChar": 18
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d28debdc_182e2d89",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "This command actually takes more arguments:\nnqn (not needed in our case as we get it from the parent node)\ntrtype,\ntraddr,\ntrsvcid,\nadrfam.\n\nSo you\u0027d need 4, not 2 params for delete command here.\nIn original rpc.py/nvmf.py all of these 4 params are listed as \"optional\", but thats because of wrong use of argparse module.\n\nFirst 3 (trtype, traddr, trsvcid) are actually obligatory (take a look at rpc/nvmf.py:155)  and adrfam is optional.",
+      "range": {
+        "startLine": 183,
+        "startChar": 4,
+        "endLine": 183,
+        "endChar": 59
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f00dbdd_eb421057",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "This will not be needed if you apply previous comment - add all params to the method definition and make them obligatory/optional as described.",
+      "range": {
+        "startLine": 191,
+        "startChar": 0,
+        "endLine": 193,
+        "endChar": 18
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "304ae16f_a86a43c2",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "Host is not an optional param",
+      "range": {
+        "startLine": 260,
+        "startChar": 32,
+        "endLine": 260,
+        "endChar": 41
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75ac70da_a6f8d1bc",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "Host is not an optional param",
+      "range": {
+        "startLine": 265,
+        "startChar": 15,
+        "endLine": 265,
+        "endChar": 23
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f4b4d1d_26086149",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "get_vhost?",
+      "range": {
+        "startLine": 347,
+        "startChar": 13,
+        "endLine": 347,
+        "endChar": 34
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e2527ad_ee3ced90",
+        "filename": "test/spdkcli/match_files/spdkcli_vhost.test.match",
+        "patchSetId": 6
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-03T13:54:37Z",
+      "side": 1,
+      "message": "When we run spdkcli tests for vhost configuration then we don\u0027t do any nvmf configuration.\nSo why do we add checking fir subsystem here?",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 132
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
