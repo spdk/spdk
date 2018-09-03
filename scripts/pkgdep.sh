@@ -1,6 +1,8 @@
 #!/bin/sh
 # Please run this script as root.
 
+set -e
+trap 'set +e; trap - ERR; echo "Error!"; exit 1;' ERR
 
 scriptsdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $scriptsdir/..)
