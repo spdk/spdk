@@ -1,7 +1,6 @@
 #!/bin/sh
 # Please run this script as root.
 
-SYSTEM=`uname -s`
 
 scriptsdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $scriptsdir/..)
@@ -56,7 +55,7 @@ elif [ -f /etc/SuSE-release ]; then
 	zypper install -y libpmemblk-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
-elif [ $SYSTEM = "FreeBSD" ] ; then
+elif [ $(uname -s) = "FreeBSD" ] ; then
 	pkg install -y gmake cunit openssl git devel/astyle bash py27-pycodestyle \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	# Additional dependencies for building docs
