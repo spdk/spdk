@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "71261e11_779caa9b",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "b8d2ca2c_65b9aa82",
+      "range": {
+        "startLine": 676,
+        "startChar": 43,
+        "endLine": 676,
+        "endChar": 45
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a11a3e01_7041d8e9",
         "filename": "include/spdk/nvmf.h",
         "patchSetId": 5
@@ -36,6 +60,24 @@
       "writtenOn": "2018-09-04T02:32:45Z",
       "side": 1,
       "message": "Please add a line between the line 692 and 693.",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f741522_74ece68c",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "a11a3e01_7041d8e9",
       "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "a10e8ef2_6ca5550d",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "I was going to wait until I push up the rest of the FC transport code to add the FC transport configuration to the conf file.  But, if you want and you don\u0027t think it will be confusing, I can put in a commented sample for RPC.",
+      "parentUuid": "dfc69118_d7c4cb51",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "10a58430_b0ba51ee",
         "filename": "lib/event/subsystems/nvmf/conf.c",
         "patchSetId": 5
@@ -70,6 +130,30 @@
       "writtenOn": "2018-09-04T02:32:45Z",
       "side": 1,
       "message": "-ENOMEM",
+      "range": {
+        "startLine": 543,
+        "startChar": 9,
+        "endLine": 543,
+        "endChar": 11
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf1dea7f_05ed5c18",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "10a58430_b0ba51ee",
       "range": {
         "startLine": 543,
         "startChar": 9,
@@ -116,6 +200,24 @@
     },
     {
       "key": {
+        "uuid": "84ef3d79_3d0e3f6c",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1728,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "I can add this here, as well as the other places you made this comment. However, notice that no other RPC returned error in this file provides an error code.  Maybe it\u0027s not needed for them, but this change will be different from them.",
+      "parentUuid": "294ac8b3_8fceaa89",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e54de3b_a1136959",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 5
@@ -144,6 +246,24 @@
       "writtenOn": "2018-09-04T02:32:45Z",
       "side": 1,
       "message": "is it OK not to check the return code of spdk_json_decode_object() here?",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "816b8539_0a62390c",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1775,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "This is the second time ..decode_object() is called in this function.  The first time to get the transport type.  The second time after initializing the transport opts.  The assumption here is that if it didn\u0027t fail the first call, it won\u0027t fail the second call.",
+      "parentUuid": "e09569fe_37b08b91",
       "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -207,6 +327,30 @@
     },
     {
       "key": {
+        "uuid": "fe7f910a_ad3817ec",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1799,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "I\u0027m not sure what you are asking for here (and all the other places you made this comment).  The name I chose follows the name of the function in the nvmf library (spdk_nvmf_transport_create). So why do you want me to change it?  If it\u0027s changed for the RPC call, then it should also be changed for the library call to be consistent. However, note that I did not make up the library call name.  The function already existed prior to my changes.",
+      "parentUuid": "f01c583d_37cae27f",
+      "range": {
+        "startLine": 1799,
+        "startChar": 19,
+        "endLine": 1799,
+        "endChar": 40
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5d880e00_224a0428",
         "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
         "patchSetId": 5
@@ -218,6 +362,30 @@
       "writtenOn": "2018-09-04T02:32:45Z",
       "side": 1,
       "message": "Add a period \".\"",
+      "range": {
+        "startLine": 275,
+        "startChar": 46,
+        "endLine": 275,
+        "endChar": 50
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "869d7d25_600f3dfd",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "Nit picky, but I\u0027ll add it.",
+      "parentUuid": "5d880e00_224a0428",
       "range": {
         "startLine": 275,
         "startChar": 46,
@@ -253,6 +421,30 @@
     },
     {
       "key": {
+        "uuid": "cb621898_4857e890",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "5f19ad6a_f7b47f09",
+      "range": {
+        "startLine": 425,
+        "startChar": 38,
+        "endLine": 425,
+        "endChar": 44
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f277c32f_bdbccfb2",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 5
@@ -264,6 +456,30 @@
       "writtenOn": "2018-09-04T02:32:45Z",
       "side": 1,
       "message": "TAILQ_FOREACH() is OK because this call doesn\u0027t change the list tgt-\u003etransports.",
+      "range": {
+        "startLine": 442,
+        "startChar": 1,
+        "endLine": 442,
+        "endChar": 19
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7427e4a0_cf89a8ca",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "f277c32f_bdbccfb2",
       "range": {
         "startLine": 442,
         "startChar": 1,
@@ -299,6 +515,30 @@
     },
     {
       "key": {
+        "uuid": "786202f8_8426efc8",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "There is no max_aq_depth in the target opts, which will be deprecated.  I added max_aq_depth to the transport opts, because it\u0027s important for Fibre Channel.  For now (since this code will be deprecated), I\u0027m going to use the max_queue_depth, which for RDMA was already being done.",
+      "parentUuid": "d486030a_481f5898",
+      "range": {
+        "startLine": 485,
+        "startChar": 32,
+        "endLine": 485,
+        "endChar": 47
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb3a4f1a_e5fd7d0a",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 5
@@ -310,6 +550,30 @@
       "writtenOn": "2018-09-04T02:32:45Z",
       "side": 1,
       "message": "Is it OK not to cancel these two operations in failure cases?",
+      "range": {
+        "startLine": 554,
+        "startChar": 0,
+        "endLine": 555,
+        "endChar": 54
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "197b56f1_e40f96b5",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "I\u0027m following similar logic to the old way the transport was created in spdk_nvmf_tgt_listen().  In that function that was not done either.  If you remove the transport from the tgt\u0027s transports list, you lose it during cleanup when the tgt is destroyed.  So it\u0027s better to leave it in the list even if it might not be functional.",
+      "parentUuid": "eb3a4f1a_e5fd7d0a",
       "range": {
         "startLine": 554,
         "startChar": 0,
@@ -342,6 +606,30 @@
       "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ace83f9_185e6473",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "Why?  I\u0027m trying to keep it with the MAX_QUEUE_DEPTH, so it\u0027s obvious they can be different.",
+      "parentUuid": "c974cd88_0fb03924",
+      "range": {
+        "startLine": 1521,
+        "startChar": 0,
+        "endLine": 1521,
+        "endChar": 43
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -379,6 +667,30 @@
       "writtenOn": "2018-09-04T02:32:45Z",
       "side": 1,
       "message": "--max-aq-depth",
+      "range": {
+        "startLine": 1285,
+        "startChar": 26,
+        "endLine": 1285,
+        "endChar": 40
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71c68e81_81e8de51",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T17:29:40Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "d38240df_77f27899",
       "range": {
         "startLine": 1285,
         "startChar": 26,
