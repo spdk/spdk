@@ -2526,8 +2526,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	for (i = 0; i < reaped; i++) {
 		/* Handle error conditions */
 		if (wc[i].status) {
-			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			SPDK_WARNLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
+				     rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
 
 			switch (wc[i].opcode) {
