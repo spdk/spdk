@@ -39,7 +39,6 @@
 #include "spdk/vhost.h"
 
 
-#define SPDK_VHOST_DEFAULT_CONFIG "/usr/local/etc/spdk/vhost.conf"
 #define SPDK_VHOST_DEFAULT_MEM_SIZE 1024
 
 static const char *g_pid_path = NULL;
@@ -49,7 +48,6 @@ vhost_app_opts_init(struct spdk_app_opts *opts)
 {
 	spdk_app_opts_init(opts);
 	opts->name = "vhost";
-	opts->config_file = SPDK_VHOST_DEFAULT_CONFIG;
 	opts->mem_size = SPDK_VHOST_DEFAULT_MEM_SIZE;
 }
 

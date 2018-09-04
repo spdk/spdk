@@ -36,9 +36,6 @@
 #include "spdk/env.h"
 #include "spdk/event.h"
 
-#define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
-#define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
-
 static void
 nvmf_usage(void)
 {
@@ -67,7 +64,6 @@ main(int argc, char **argv)
 	/* default value in opts */
 	spdk_app_opts_init(&opts);
 	opts.name = "nvmf";
-	opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
 	opts.max_delay_us = 1000; /* 1 ms */
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
 				      nvmf_parse_arg, nvmf_usage)) !=
