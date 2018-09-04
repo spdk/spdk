@@ -858,6 +858,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case PCI_BLACKLIST_OPT_IDX:
 			if (opts->pci_whitelist) {
 				free(opts->pci_whitelist);
+				opts->pci_whitelist = NULL;
 				fprintf(stderr, "-B and -W cannot be used at the same time\n");
 				usage(app_usage);
 				goto out;
@@ -866,6 +867,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_blacklist, optarg);
 			if (rc != 0) {
 				free(opts->pci_blacklist);
+				opts->pci_blacklist = NULL;
 				goto out;
 			}
 			break;
@@ -891,6 +893,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case PCI_WHITELIST_OPT_IDX:
 			if (opts->pci_blacklist) {
 				free(opts->pci_blacklist);
+				opts->pci_blacklist = NULL;
 				fprintf(stderr, "-B and -W cannot be used at the same time\n");
 				usage(app_usage);
 				goto out;
@@ -899,6 +902,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_whitelist, optarg);
 			if (rc != 0) {
 				free(opts->pci_whitelist);
+				opts->pci_whitelist = NULL;
 				goto out;
 			}
 			break;
@@ -924,6 +928,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 
 	retval = SPDK_APP_PARSE_ARGS_SUCCESS;
 out:
+	if (retval != SPDK_APP_PARSE_ARGS_SUCCESS) {
+		if (opts->pci_blacklist) {
+			free(opts->pci_blacklist);
+		}
+		if (opts->pci_whitelist) {
+			free(opts->pci_whitelist);
+		}
+	}
 	free(cmdline_short_opts);
 	free(cmdline_options);
 	return retval;
