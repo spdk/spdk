@@ -22,6 +22,30 @@
       "revId": "edc625cbab35da8515e8beb64246a378f322fa99",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a39bad9f_9b6811c3",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T07:16:09Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nDid you say to change like the following? If so, this will match other parts.\n\nstruct bdev_rbd *rbd;\n\nif (!bdev || bdev-\u003emodule !\u003d \u0026rbd_if) {\n  cb_fn(cb_arg, -ENODEV);\n  return;\n}\n\nrbd \u003d bdev-\u003ectxt;\n\nspdk_bdev_unregister(bdev, cb_fn, cb_arg);\nspdk_io_device_unregister(rbd, NULL);",
+      "parentUuid": "aba44fe7_bf903b76",
+      "range": {
+        "startLine": 668,
+        "startChar": 1,
+        "endLine": 668,
+        "endChar": 21
+      },
+      "revId": "edc625cbab35da8515e8beb64246a378f322fa99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
