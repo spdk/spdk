@@ -119,6 +119,24 @@
     },
     {
       "key": {
+        "uuid": "fcf1b2fe_e649ef95",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T21:41:39Z",
+      "side": 1,
+      "message": "Your plan to do with fc is fine to me. Thank you.",
+      "parentUuid": "a10e8ef2_6ca5550d",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "10a58430_b0ba51ee",
         "filename": "lib/event/subsystems/nvmf/conf.c",
         "patchSetId": 5
@@ -218,6 +236,24 @@
     },
     {
       "key": {
+        "uuid": "39be5fe7_451ee1f5",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1728,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T21:41:39Z",
+      "side": 1,
+      "message": "I know there are not many places to use such error message yet. I\u0027m happy if you use it in case you need later. All of your messages are fine as this patch. Thank you.",
+      "parentUuid": "84ef3d79_3d0e3f6c",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e54de3b_a1136959",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 5
@@ -264,6 +300,24 @@
       "side": 1,
       "message": "This is the second time ..decode_object() is called in this function.  The first time to get the transport type.  The second time after initializing the transport opts.  The assumption here is that if it didn\u0027t fail the first call, it won\u0027t fail the second call.",
       "parentUuid": "e09569fe_37b08b91",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f77493c9_790410e9",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1775,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T21:41:39Z",
+      "side": 1,
+      "message": "trtype is a string and decoding it uses strdup. Strdup may fail. Hence decoding the object may fail even if the first call succeeded.",
+      "parentUuid": "816b8539_0a62390c",
       "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -339,6 +393,30 @@
       "side": 1,
       "message": "I\u0027m not sure what you are asking for here (and all the other places you made this comment).  The name I chose follows the name of the function in the nvmf library (spdk_nvmf_transport_create). So why do you want me to change it?  If it\u0027s changed for the RPC call, then it should also be changed for the library call to be consistent. However, note that I did not make up the library call name.  The function already existed prior to my changes.",
       "parentUuid": "f01c583d_37cae27f",
+      "range": {
+        "startLine": 1799,
+        "startChar": 19,
+        "endLine": 1799,
+        "endChar": 40
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a56a1d1_98fe8d98",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1799,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T21:41:39Z",
+      "side": 1,
+      "message": "Will you see spdk_rpc_construct_nvmf_subsystem and spdk_nvmf_subsystem_create in it for example? It looks that when single objective, it looks that function uses noun_verb but RPC uses verb_noun.  When manipulating the objective in the parent objective, it looks that noun_verb_noun naming rule.\n\nWhat you say is clear and current name is fine to me for all places I commented.\nBen will be able to provide better feedback.",
+      "parentUuid": "fe7f910a_ad3817ec",
       "range": {
         "startLine": 1799,
         "startChar": 19,
@@ -539,6 +617,30 @@
     },
     {
       "key": {
+        "uuid": "e4c23740_46e83451",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T21:41:39Z",
+      "side": 1,
+      "message": "Thank you for explaining why max_queue_depth is substituted here. I got it.",
+      "parentUuid": "786202f8_8426efc8",
+      "range": {
+        "startLine": 485,
+        "startChar": 32,
+        "endLine": 485,
+        "endChar": 47
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb3a4f1a_e5fd7d0a",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 5
@@ -586,6 +688,30 @@
     },
     {
       "key": {
+        "uuid": "dba9e4d0_cf383d9d",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T21:41:39Z",
+      "side": 1,
+      "message": "It looks that I was wrong and you are correct. Current code will be fine and I\u0027ll learn the logic more. Thank you.",
+      "parentUuid": "197b56f1_e40f96b5",
+      "range": {
+        "startLine": 554,
+        "startChar": 0,
+        "endLine": 555,
+        "endChar": 54
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c974cd88_0fb03924",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 5
@@ -621,6 +747,30 @@
       "side": 1,
       "message": "Why?  I\u0027m trying to keep it with the MAX_QUEUE_DEPTH, so it\u0027s obvious they can be different.",
       "parentUuid": "c974cd88_0fb03924",
+      "range": {
+        "startLine": 1521,
+        "startChar": 0,
+        "endLine": 1521,
+        "endChar": 43
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab05b933_e957eb7a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T21:41:39Z",
+      "side": 1,
+      "message": "Sorry, this comment was wrong. Thank you for checking this and this is fine.",
+      "parentUuid": "3ace83f9_185e6473",
       "range": {
         "startLine": 1521,
         "startChar": 0,
