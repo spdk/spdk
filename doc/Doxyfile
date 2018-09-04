@@ -826,6 +826,7 @@ INPUT                  += \
                          porting.md \
                          spdkcli.md \
                          ssd_internals.md \
+                         system_configuration.md \
                          userspace.md \
                          vagrant.md \
                          vhost.md \
