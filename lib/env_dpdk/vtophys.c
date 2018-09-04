@@ -654,6 +654,7 @@ spdk_bus_find_device(const struct rte_device *start,
 	return NULL;
 }
 
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 static enum rte_iova_mode
 spdk_bus_get_iommu_class(void) {
 	/* Since we register our PCI drivers after EAL init, we have no chance
@@ -667,12 +668,15 @@ spdk_bus_get_iommu_class(void) {
 	 */
 	return RTE_IOVA_VA;
 }
+#endif
 
 struct rte_bus spdk_bus = {
 	.scan = spdk_bus_scan,
 	.probe = spdk_bus_probe,
 	.find_device = spdk_bus_find_device,
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 	.get_iommu_class = spdk_bus_get_iommu_class,
+#endif
 };
 
 RTE_REGISTER_BUS(spdk, spdk_bus);
