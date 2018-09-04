@@ -961,6 +961,14 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	return 0;
 }
 
+static void
+_nvmf_rdma_disconnect(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+
+	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+}
+
 static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
@@ -982,7 +990,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 	spdk_nvmf_rdma_update_ibv_state(rqpair);
 
-	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+	spdk_thread_send_msg(qpair->group->thread, _nvmf_rdma_disconnect, qpair);
 
 	return 0;
 }
