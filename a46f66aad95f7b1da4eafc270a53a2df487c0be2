@@ -77,6 +77,24 @@
     },
     {
       "key": {
+        "uuid": "80ceb515_c47b67ec",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-09-04T18:41:55Z",
+      "side": 1,
+      "message": "Due to the pre-conditioning BKM from NSG. They recommended running 100% reads and then mixes and running 100% writes at the very end. Having 100% writes in the middle may cause 70-30 mix results to be inconsistent.",
+      "parentUuid": "c40ccf59_4e932c2a",
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "05cb5c0a_2795f41e",
         "filename": "test/nvme/perf/perf_tc1.sh",
         "patchSetId": 3
@@ -106,6 +124,24 @@
       "side": 1,
       "message": "I think Pawel used doc from John as a reference where only these QD\u0027s are mentioned.\nI think doc only mentions final QD\u0027s with highest IOPS, right? Because all other values are not described.",
       "parentUuid": "05cb5c0a_2795f41e",
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a55cb71_c4fc9fc7",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2018-09-04T18:41:55Z",
+      "side": 1,
+      "message": "John\u0027s doc maybe describing best results. But, while running performance tests we should run with more combinations and then pick best results while reporting. \nMaybe IOdepth \u003d (1 32 128 256)",
+      "parentUuid": "7917a0cd_b3428781",
       "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
