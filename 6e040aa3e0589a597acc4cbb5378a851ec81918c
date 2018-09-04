@@ -324,6 +324,24 @@
     },
     {
       "key": {
+        "uuid": "02a9d303_407f6468",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1775,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T23:04:34Z",
+      "side": 1,
+      "message": "You are correct. I will add the error check.",
+      "parentUuid": "f77493c9_790410e9",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2acf981a_b1ef4d5f",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 5
@@ -417,6 +435,30 @@
       "side": 1,
       "message": "Will you see spdk_rpc_construct_nvmf_subsystem and spdk_nvmf_subsystem_create in it for example? It looks that when single objective, it looks that function uses noun_verb but RPC uses verb_noun.  When manipulating the objective in the parent objective, it looks that noun_verb_noun naming rule.\n\nWhat you say is clear and current name is fine to me for all places I commented.\nBen will be able to provide better feedback.",
       "parentUuid": "fe7f910a_ad3817ec",
+      "range": {
+        "startLine": 1799,
+        "startChar": 19,
+        "endLine": 1799,
+        "endChar": 40
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a445036_df6a1cb2",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1799,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-04T23:04:34Z",
+      "side": 1,
+      "message": "I will await for Ben\u0027s input here.  I\u0027m ok with changing the name to something like \"nvmf_create_transport\" here, but would like to keep the original nvmf library name.",
+      "parentUuid": "9a56a1d1_98fe8d98",
       "range": {
         "startLine": 1799,
         "startChar": 19,
