@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59d2c8c1_9d3e9edd",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-04T17:28:38Z",
+      "side": 1,
+      "message": "Calling free on a NULL pointer is allowed, so you don\u0027t actually need this if (opts-\u003epci_blacklist) check here, but this seems fine.",
+      "revId": "2c8388a786590515cbc11bd690606a183a72ab74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
