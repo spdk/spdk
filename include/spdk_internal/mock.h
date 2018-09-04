@@ -43,6 +43,10 @@
 	bool ut_ ## fn ## _mocked = false; \
 	ret ut_ ## fn
 
+#define DEFINE_RETURN_MOCK_P(fn, ret) \
+	bool ut_ ## fn ## _mocked = false; \
+	ret ut_ ## fn = NULL
+
 /*
  * For controlling mocked function behavior, setting
  * and getting values from the stub, the _P macros are
