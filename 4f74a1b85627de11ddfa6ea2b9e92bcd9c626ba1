@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8a5f8701_977415d7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-04T17:29:27Z",
+      "side": 1,
+      "message": "OK",
+      "parentUuid": "a83788d5_fd37a550",
+      "revId": "4f74a1b85627de11ddfa6ea2b9e92bcd9c626ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a7e33802_e40db453",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 6
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "aa649628_ca193b0c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-04T17:29:27Z",
+      "side": 1,
+      "message": "OK",
+      "parentUuid": "a7e33802_e40db453",
+      "revId": "4f74a1b85627de11ddfa6ea2b9e92bcd9c626ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b53738a3_d9b3ff16",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 6
@@ -47,6 +83,24 @@
       "writtenOn": "2018-09-04T17:08:50Z",
       "side": 1,
       "message": "This disconnect event as written can be covered by the TRACE_RDMA_CM_EVENT above. However, there are other paths that lead to destroying a queue pair, so in order for this to match up exactly with the RDMA_QP_CREATE event you need to put this in spdk_nvmf_rdma_qpair_destroy.",
+      "revId": "4f74a1b85627de11ddfa6ea2b9e92bcd9c626ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7782e738_4c027944",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-04T17:29:27Z",
+      "side": 1,
+      "message": "But spdk_nvmf_process_cm_event doesn\u0027t get the rqpair context so would only print that there was some DISCONNECT event, but not which qpair it was for.\n\nSo I think I\u0027ll keep this DISCONNECT specific event, but add one for DESTROY too.",
+      "parentUuid": "b53738a3_d9b3ff16",
       "revId": "4f74a1b85627de11ddfa6ea2b9e92bcd9c626ba1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
