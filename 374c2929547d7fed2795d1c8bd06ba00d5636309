@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "beea717e_06827f1e",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1392,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-04T22:17:04Z",
+      "side": 1,
+      "message": "Remove this in follow up patch.",
+      "revId": "374c2929547d7fed2795d1c8bd06ba00d5636309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
