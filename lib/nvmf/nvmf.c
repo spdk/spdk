@@ -723,21 +723,25 @@ _spdk_nvmf_qpair_deactivate(void *ctx)
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
-	struct nvmf_qpair_disconnect_ctx *qpair_ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_ctx));
-
-	if (!qpair_ctx) {
-		SPDK_ERRLOG("Unable to allocate context for nvmf_qpair_disconnect\n");
-		return -ENOMEM;
-	}
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx;
 
 	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */
 	if (qpair->state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
-		free(qpair_ctx);
 		spdk_nvmf_transport_qpair_fini(qpair);
 		if (cb_fn) {
 			cb_fn(ctx);
 		}
 		return 0;
+	}
+
+	/* The queue pair must be disconnected from the thread that owns it */
+	assert(qpair->group->thread == spdk_get_thread());
+
+	qpair_ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_ctx));
+
+	if (!qpair_ctx) {
+		SPDK_ERRLOG("Unable to allocate context for nvmf_qpair_disconnect\n");
+		return -ENOMEM;
 	}
 
 	qpair_ctx->qpair = qpair;
