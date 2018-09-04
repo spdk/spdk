@@ -27,7 +27,7 @@
 
 [QoS]
   # QoS section defines limitation on performance
-  # metric like IOPS
+  # metric like IOPS and bandwidth
   #
   # Format: Limit_IOPS Bdev_Name IOPS_Limit_Value
   #
@@ -36,6 +36,12 @@
   #
   # Assign 20000 IOPS for the Malloc0 block device
   Limit_IOPS Malloc0 20000
+  #
+  # Bandwidth limit must be 10 (MB) or greater and be
+  # multiple of 10
+  # Assign 100 (MB) bandwidth for the Malloc3 block
+  # device
+  Limit_BPS Malloc3 100
 
 [RAID0]
   Name raid0
