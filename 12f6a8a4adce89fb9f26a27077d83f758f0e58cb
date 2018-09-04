@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54521ead_19fbaf8e",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-04T21:09:10Z",
+      "side": 1,
+      "message": "Thanks for the cleanup!  But this should go in bdev_rbd_destruct instead.\n\nWe cannot unregister the io_device until after the bdev layer has been able to notify upper layers that the bdev has been removed, and those layers close their descriptors.  That will happen asynchronously.  Once that is done, the bdev layer will call the bdev\u0027s destruct_fn (in this case, bdev_rbd_destruct) for final cleanup.",
+      "revId": "12f6a8a4adce89fb9f26a27077d83f758f0e58cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
