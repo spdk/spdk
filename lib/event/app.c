@@ -529,6 +529,9 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 				       opts->name,
 				       opts->shm_id >= 0 ? "-i" : "-p",
 				       opts->shm_id >= 0 ? opts->shm_id : getpid());
+#if defined(__linux__)
+			SPDK_NOTICELOG("Or copy /dev/shm%s for offline analysis/debug.\n", shm_name);
+#endif
 			spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
 		}
 	}
