@@ -54,8 +54,7 @@ DEFINE_STUB_V(spdk_trace_register_object, (uint8_t type, char id_prefix));
 DEFINE_STUB_V(spdk_trace_register_description, (const char *name, const char *short_name,
 		uint16_t tpoint_id, uint8_t owner_type,
 		uint8_t object_type, uint8_t new_object,
-		uint8_t arg1_is_ptr, uint8_t arg1_is_alias,
-		const char *arg1_name));
+		uint8_t arg1_is_ptr, const char *arg1_name));
 DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 				   uint32_t size, uint64_t object_id, uint64_t arg1));
 

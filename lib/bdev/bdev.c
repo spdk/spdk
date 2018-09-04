@@ -3668,7 +3668,7 @@ SPDK_TRACE_REGISTER_FN(bdev_trace)
 	spdk_trace_register_owner(OWNER_BDEV, 'b');
 	spdk_trace_register_object(OBJECT_BDEV_IO, 'i');
 	spdk_trace_register_description("BDEV_IO_START", "", TRACE_BDEV_IO_START, OWNER_BDEV,
-					OBJECT_BDEV_IO, 1, 0, 0, "type:   ");
+					OBJECT_BDEV_IO, 1, 0, "type:   ");
 	spdk_trace_register_description("BDEV_IO_DONE", "", TRACE_BDEV_IO_DONE, OWNER_BDEV,
-					OBJECT_BDEV_IO, 0, 0, 0, "");
+					OBJECT_BDEV_IO, 0, 0, "");
 }
