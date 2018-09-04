@@ -1,0 +1,439 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8d2ca2c_65b9aa82",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "if",
+      "range": {
+        "startLine": 676,
+        "startChar": 43,
+        "endLine": 676,
+        "endChar": 45
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a11a3e01_7041d8e9",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "Please add a line between the line 692 and 693.",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfc69118_d7c4cb51",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "Will you add a sample to etc/spdk/nvmf.conf.in if possible?",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10a58430_b0ba51ee",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "-ENOMEM",
+      "range": {
+        "startLine": 543,
+        "startChar": 9,
+        "endLine": 543,
+        "endChar": 11
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7a09c76_94ed5e62",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1709,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "free(NULL) is OK. just free(ctx-\u003etrtype);",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "294ac8b3_8fceaa89",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1728,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "You may be able to use more descriptive error message by using spdk_jsonrpc_send_error_response_fmt like\n\nspdk_jsonrpc_send_error_response_fmt(\n  request,\n  SPDK_JSONRPC_ERROR_INTERNAL_ERROR,\n  \"Failed to add transport to tgt (%d)\",\n  status);",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e54de3b_a1136959",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1765,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "spdk_jsonrpc_send_error_response_fmt can be used.",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e09569fe_37b08b91",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1775,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "is it OK not to check the return code of spdk_json_decode_object() here?",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2acf981a_b1ef4d5f",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1779,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "spdk_jsonrpc_send_error_response_fmt can be used.",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbc72261_4aa1ace4",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1789,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "spdk_jsonrpc_send_error_response_fmt can be used.",
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f01c583d_37cae27f",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1799,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "create_nvmf_transport may match other RPCs as name?",
+      "range": {
+        "startLine": 1799,
+        "startChar": 19,
+        "endLine": 1799,
+        "endChar": 40
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d880e00_224a0428",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "Add a period \".\"",
+      "range": {
+        "startLine": 275,
+        "startChar": 46,
+        "endLine": 275,
+        "endChar": 50
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f19ad6a_f7b47f09",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "you can remove.",
+      "range": {
+        "startLine": 425,
+        "startChar": 38,
+        "endLine": 425,
+        "endChar": 44
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f277c32f_bdbccfb2",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "TAILQ_FOREACH() is OK because this call doesn\u0027t change the list tgt-\u003etransports.",
+      "range": {
+        "startLine": 442,
+        "startChar": 1,
+        "endLine": 442,
+        "endChar": 19
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d486030a_481f5898",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "max_aq_depth?",
+      "range": {
+        "startLine": 485,
+        "startChar": 32,
+        "endLine": 485,
+        "endChar": 47
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb3a4f1a_e5fd7d0a",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "Is it OK not to cancel these two operations in failure cases?",
+      "range": {
+        "startLine": 554,
+        "startChar": 0,
+        "endLine": 555,
+        "endChar": 54
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c974cd88_0fb03924",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "This should be moved after DEFAULT_IO_UNIT_SIZE.",
+      "range": {
+        "startLine": 1521,
+        "startChar": 0,
+        "endLine": 1521,
+        "endChar": 43
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1878286_66cdf7d6",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1268,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "create_nvmf_transport may match other RPCs as name.",
+      "range": {
+        "startLine": 1268,
+        "startChar": 8,
+        "endLine": 1268,
+        "endChar": 29
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d38240df_77f27899",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "--max-aq-depth",
+      "range": {
+        "startLine": 1285,
+        "startChar": 26,
+        "endLine": 1285,
+        "endChar": 40
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51a53af1_d52584e7",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "create_nvmf_transport may match other RPCs.",
+      "range": {
+        "startLine": 56,
+        "startChar": 4,
+        "endLine": 56,
+        "endChar": 25
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38ad4a26_68a97a7a",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T02:32:45Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 93,
+        "startChar": 24,
+        "endLine": 93,
+        "endChar": 45
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
