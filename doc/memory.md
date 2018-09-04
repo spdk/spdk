@@ -116,3 +116,8 @@ operations into and out of a user space process and forms the long-term
 foundation for SPDK and DPDK's memory management strategy. We highly recommend
 that applications are deployed using vfio and the IOMMU enabled, which is fully
 supported today.
+
+If the devices must be charged by the `uio-pci` device driver in system, please
+make sure that the IOMMU is disabled. We can add `intel_iommu=off` or
+`amd_iommu=off` in `GRUB_CMDLINE_LINUX` in grub on x86_64 systems, we also can
+add `iommu.passthrough=1` on arm64 system, to disable the IOMMU in system.
