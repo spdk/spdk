@@ -219,6 +219,7 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 			struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_alias *tmp;
+	uint64_t qos_limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES];
 
 	spdk_json_write_object_begin(w);
 
@@ -250,8 +251,9 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_string(w, "uuid", uuid_str);
 	}
 
-	spdk_json_write_name(w, "qos_ios_per_sec");
-	spdk_json_write_uint64(w, spdk_bdev_get_qos_ios_per_sec(bdev));
+	spdk_bdev_get_qos_rate_limits(bdev, qos_limits);
+	spdk_json_write_name(w, spdk_bdev_get_qos_rpc_type(SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT));
+	spdk_json_write_uint64(w, qos_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT]);
 
 	spdk_json_write_name(w, "claimed");
 	spdk_json_write_bool(w, (bdev->internal.claim_module != NULL));
@@ -524,8 +526,9 @@ static void
 spdk_rpc_set_bdev_qos_limit_iops(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
-	struct rpc_set_bdev_qos_limit_iops req = {};
+	struct rpc_set_bdev_qos_limit_iops req = {NULL, UINT64_MAX};
 	struct spdk_bdev *bdev;
+	uint64_t limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES] = {UINT64_MAX, UINT64_MAX};
 
 	if (spdk_json_decode_object(params, rpc_set_bdev_qos_limit_iops_decoders,
 				    SPDK_COUNTOF(rpc_set_bdev_qos_limit_iops_decoders),
@@ -537,16 +540,27 @@ spdk_rpc_set_bdev_qos_limit_iops(struct spdk_jsonrpc_request *request,
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Bdev does not exist");
+		goto exit;
+	}
+
+	if (req.ios_per_sec == UINT64_MAX) {
+		SPDK_ERRLOG("invalid rate limits set\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid rate limits");
+		goto exit;
 	}
 
 	free_rpc_set_bdev_qos_limit_iops(&req);
-	spdk_bdev_set_qos_limit_iops(bdev, req.ios_per_sec,
-				     spdk_rpc_set_bdev_qos_limit_iops_complete, request);
+	limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT] = req.ios_per_sec;
+	spdk_bdev_set_qos_rate_limits(bdev, limits, spdk_rpc_set_bdev_qos_limit_iops_complete,
+				      request);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+exit:
 	free_rpc_set_bdev_qos_limit_iops(&req);
 }
 
