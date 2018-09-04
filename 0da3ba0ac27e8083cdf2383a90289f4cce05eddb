@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d32481b9_ab708f4b",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-04T16:48:05Z",
+      "side": 1,
+      "message": "SPDK\u0027s setup.sh script automatically selects vfio-pci when the IOMMU is enabled and uio_pci_generic when the IOMMU is disabled. Are you saying here that some devices do not work with vfio-pci and require uio_pci_generic instead? And for those devices, the IOMMU must be disabled?",
+      "revId": "0da3ba0ac27e8083cdf2383a90289f4cce05eddb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
