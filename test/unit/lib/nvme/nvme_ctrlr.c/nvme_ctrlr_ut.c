@@ -271,10 +271,11 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 int
-spdk_nvme_wait_for_completion_robust_lock(
+spdk_nvme_wait_for_completion_robust_lock_timeout(
 	struct spdk_nvme_qpair *qpair,
 	struct nvme_completion_poll_status *status,
-	pthread_mutex_t *robust_mutex)
+	pthread_mutex_t *robust_mutex,
+	uint64_t timeout_in_ms)
 {
 	status->done = true;
 	memset(&status->cpl, 0, sizeof(status->cpl));
@@ -286,10 +287,12 @@ spdk_nvme_wait_for_completion_robust_lock(
 }
 
 int
-spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
-			      struct nvme_completion_poll_status *status)
+spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
+				      struct nvme_completion_poll_status *status,
+				      uint64_t timeout_in_ms)
 {
-	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+	return spdk_nvme_wait_for_completion_robust_lock_timeout(qpair,
+			status, NULL, timeout_in_ms);
 }
 
 

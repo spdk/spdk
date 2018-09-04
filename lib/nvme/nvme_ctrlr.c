@@ -381,7 +381,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 					 log_page_directory, sizeof(struct spdk_nvme_intel_log_page_directory), 0,
 					 nvme_completion_poll_cb,
 					 &status);
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		spdk_free(log_page_directory);
 		SPDK_ERRLOG("nvme_ctrlr_cmd_get_log_page failed!\n");
 		return -ENXIO;
@@ -672,7 +672,7 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 		goto error;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		goto error;
 	}
 
@@ -767,7 +767,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
 		return -ENXIO;
 	}
@@ -839,7 +839,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 			if (rc != 0) {
 				goto fail;
 			}
-			if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+			if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 				SPDK_ERRLOG("nvme_ctrlr_cmd_identify_active_ns_list failed!\n");
 				rc = -ENXIO;
 				goto fail;
@@ -898,7 +898,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		SPDK_ERRLOG("Set Features - Number of Queues failed!\n");
 	}
 
@@ -908,7 +908,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		SPDK_ERRLOG("Get Features - Number of Queues failed!\n");
 		ctrlr->opts.num_io_queues = 0;
 	} else {
@@ -970,7 +970,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		SPDK_ERRLOG("Keep alive timeout Get Feature failed: SC %x SCT %x\n",
 			    status.cpl.status.sc, status.cpl.status.sct);
 		ctrlr->opts.keep_alive_timeout_ms = 0;
@@ -1040,7 +1040,7 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		SPDK_WARNLOG("Set Features - Host ID failed: SC 0x%x SCT 0x%x\n",
 			     status.cpl.status.sc, status.cpl.status.sct);
 		/*
@@ -1239,7 +1239,7 @@ _nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		return -ENXIO;
 	}
 
@@ -2063,7 +2063,8 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	if (res) {
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock)) {
+	if (spdk_nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq,
+			&status, &ctrlr->ctrlr_lock, 0)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_attach_ns failed!\n");
 		return -ENXIO;
 	}
@@ -2090,7 +2091,8 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	if (res) {
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock)) {
+	if (spdk_nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq,
+			&status, &ctrlr->ctrlr_lock, 0)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_detach_ns failed!\n");
 		return -ENXIO;
 	}
@@ -2119,7 +2121,8 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 	if (res) {
 		return 0;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock)) {
+	if (spdk_nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq,
+			&status, &ctrlr->ctrlr_lock, 0)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_create_ns failed!\n");
 		return 0;
 	}
@@ -2147,7 +2150,8 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	if (res) {
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock)) {
+	if (spdk_nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq,
+			&status, &ctrlr->ctrlr_lock, 0)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_delete_ns failed!\n");
 		return -ENXIO;
 	}
@@ -2175,7 +2179,8 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	if (res) {
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock)) {
+	if (spdk_nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq,
+			&status, &ctrlr->ctrlr_lock, 0)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_format failed!\n");
 		return -ENXIO;
 	}
@@ -2228,7 +2233,8 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 			return res;
 		}
 
-		if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock)) {
+		if (spdk_nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq,
+				&status, &ctrlr->ctrlr_lock, 0)) {
 			SPDK_ERRLOG("spdk_nvme_ctrlr_fw_image_download failed!\n");
 			return -ENXIO;
 		}
@@ -2248,7 +2254,8 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		return res;
 	}
 
-	res = spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock);
+	res = spdk_nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq,
+			&status, &ctrlr->ctrlr_lock, 0);
 
 	memcpy(completion_status, &status.cpl.status, sizeof(struct spdk_nvme_status));
 

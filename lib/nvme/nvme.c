@@ -105,6 +105,7 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
  * \param qpair queue to poll
  * \param status completion status
  * \param robust_mutex optional robust mutex to lock while polling qpair
+ * \param timeout_in_ms timeout in milliseconds for the command
  *
  * \return 0 if command completed without error, negative errno on failure
  *
@@ -112,13 +113,20 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
  * and status as the callback argument.
  */
 int
-spdk_nvme_wait_for_completion_robust_lock(
+spdk_nvme_wait_for_completion_robust_lock_timeout(
 	struct spdk_nvme_qpair *qpair,
 	struct nvme_completion_poll_status *status,
-	pthread_mutex_t *robust_mutex)
+	pthread_mutex_t *robust_mutex,
+	uint64_t timeout_in_ms)
 {
+	uint64_t timeout_tsc;
+
 	memset(&status->cpl, 0, sizeof(status->cpl));
 	status->done = false;
+
+	if (timeout_in_ms) {
+		timeout_tsc = spdk_get_ticks() + (timeout_in_ms * spdk_get_ticks_hz()) / 1000;
+	}
 
 	while (status->done == false) {
 		if (robust_mutex) {
@@ -130,16 +138,28 @@ spdk_nvme_wait_for_completion_robust_lock(
 		if (robust_mutex) {
 			nvme_robust_mutex_unlock(robust_mutex);
 		}
+
+		if (timeout_in_ms) {
+			if (spdk_get_ticks() > timeout_tsc) {
+				return -EIO;
+			}
+		}
+
+		if (qpair->ctrlr->is_failed) {
+			return -EIO;
+		}
 	}
 
 	return spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
 }
 
 int
-spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
-			      struct nvme_completion_poll_status *status)
+spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
+				      struct nvme_completion_poll_status *status,
+				      uint64_t timeout_in_ms)
 {
-	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+	return spdk_nvme_wait_for_completion_robust_lock_timeout(qpair, status,
+			NULL, timeout_in_ms);
 }
 
 static void

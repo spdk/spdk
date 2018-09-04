@@ -63,7 +63,7 @@ nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		SPDK_ERRLOG("Property Set failed\n");
 		return -1;
 	}
@@ -94,7 +94,7 @@ nvme_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		SPDK_ERRLOG("Property Get failed\n");
 		return -1;
 	}
@@ -212,7 +212,7 @@ nvme_fabric_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
 		return -1;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status, 0)) {
 		return -1;
 	}
 
@@ -323,7 +323,7 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(qpair, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(qpair, &status, 0)) {
 		SPDK_ERRLOG("Connect command failed\n");
 		spdk_dma_free(nvmf_data);
 		return -EIO;

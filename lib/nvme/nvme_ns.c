@@ -54,8 +54,8 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status,
-			&ns->ctrlr->ctrlr_lock)) {
+	if (spdk_nvme_wait_for_completion_robust_lock_timeout(ns->ctrlr->adminq,
+			&status, &ns->ctrlr->ctrlr_lock, 0)) {
 		/* This can occur if the namespace is not active. Simply zero the
 		 * namespace data and continue. */
 		nvme_ns_destruct(ns);
@@ -119,7 +119,8 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 					     ns->id_desc_list, sizeof(ns->id_desc_list),
 					     nvme_completion_poll_cb, &status);
 		if (rc == 0) {
-			rc = spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status, &ns->ctrlr->ctrlr_lock);
+			rc = spdk_nvme_wait_for_completion_robust_lock_timeout(ns->ctrlr->adminq,
+					&status, &ns->ctrlr->ctrlr_lock, 0);
 		}
 
 		if (rc != 0 || spdk_nvme_cpl_is_error(&status.cpl)) {

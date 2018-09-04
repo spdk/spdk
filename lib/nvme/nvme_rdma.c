@@ -1065,7 +1065,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(discovery_ctrlr->adminq, &status, 0)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
 		return -ENXIO;
 	}
