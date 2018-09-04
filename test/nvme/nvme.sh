@@ -165,6 +165,16 @@ if [ `uname` = Linux ]; then
 fi
 
 if [ `uname` = Linux ]; then
+	timing_enter multi_secondary
+	$rootdir/test/nvme/timeout/timeout -i 0 -c 0x1 -w reset &
+	pid0=$!
+	$rootdir/test/nvme/timeout/timeout -i 0 -c 0x2 -w abort
+	wait $pid0
+	report_test_completion "nvme_multi_secondary"
+	timing_exit multi_secondary
+fi
+
+if [ `uname` = Linux ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi
