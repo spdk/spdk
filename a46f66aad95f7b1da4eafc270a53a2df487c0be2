@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "7e1bb287_bf03b3b5",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-04T12:51:39Z",
+      "side": 1,
+      "message": "according to John\u0027s report document... shouldn\u0027t this be exaples/bdev/fio_plugin?",
+      "range": {
+        "startLine": 6,
+        "startChar": 16,
+        "endLine": 6,
+        "endChar": 49
+      },
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d30788a8_d690925a",
         "filename": "test/nvme/perf/perf_tc1.sh",
         "patchSetId": 3
@@ -36,6 +59,24 @@
     },
     {
       "key": {
+        "uuid": "c40ccf59_4e932c2a",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-04T12:51:39Z",
+      "side": 1,
+      "message": "Hi Vishal!\nCan you describe why?",
+      "parentUuid": "443041ca_ba41a6a4",
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "05cb5c0a_2795f41e",
         "filename": "test/nvme/perf/perf_tc1.sh",
         "patchSetId": 3
@@ -47,6 +88,24 @@
       "writtenOn": "2018-08-23T17:52:29Z",
       "side": 1,
       "message": "Is there a reason why IOdepth \u003d 256 and then 32 and then again 256? I think we should add more IOdepth values (1, 8, 32, 128, 256)",
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7917a0cd_b3428781",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-04T12:51:39Z",
+      "side": 1,
+      "message": "I think Pawel used doc from John as a reference where only these QD\u0027s are mentioned.\nI think doc only mentions final QD\u0027s with highest IOPS, right? Because all other values are not described.",
+      "parentUuid": "05cb5c0a_2795f41e",
       "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -67,6 +126,29 @@
       "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f45cf19c_0a774e9d",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-04T12:51:39Z",
+      "side": 1,
+      "message": "As previously discussed Pawel - there are already some high-level scripts in scripts/perf which could be for common perf scripts stuff.\nParsing JSON output could be made as on of these functions",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 46
+      },
+      "revId": "a46f66aad95f7b1da4eafc270a53a2df487c0be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
