@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aba44fe7_bf903b76",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-04T06:58:23Z",
+      "side": 1,
+      "message": "Shall remove this at the beginning of this function?",
+      "range": {
+        "startLine": 668,
+        "startChar": 1,
+        "endLine": 668,
+        "endChar": 21
+      },
+      "revId": "edc625cbab35da8515e8beb64246a378f322fa99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
