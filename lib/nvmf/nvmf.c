@@ -688,38 +688,6 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 
 }
 
-static void
-_spdk_nvmf_qpair_deactivate(void *ctx)
-{
-	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
-	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
-
-	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING ||
-	    qpair->state == SPDK_NVMF_QPAIR_INACTIVE) {
-		/* This can occur if the connection is killed by the target,
-		 * which results in a notification that the connection
-		 * died. */
-		if (qpair_ctx->cb_fn) {
-			spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
-		}
-		free(qpair_ctx);
-		return;
-	}
-
-	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
-	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_DEACTIVATING);
-
-	/* Check for outstanding I/O */
-	if (!TAILQ_EMPTY(&qpair->outstanding)) {
-		qpair->state_cb = _spdk_nvmf_qpair_destroy;
-		qpair->state_cb_arg = qpair_ctx;
-		spdk_nvmf_qpair_free_aer(qpair);
-		return;
-	}
-
-	_spdk_nvmf_qpair_destroy(qpair_ctx, 0);
-}
-
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
@@ -737,8 +705,24 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 	/* The queue pair must be disconnected from the thread that owns it */
 	assert(qpair->group->thread == spdk_get_thread());
 
-	qpair_ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_ctx));
+	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING ||
+	    qpair->state == SPDK_NVMF_QPAIR_INACTIVE) {
+		/* This can occur if the connection is killed by the target,
+		 * which results in a notification that the connection
+		 * died. Send a message to defer the processing of this
+		 * callback. This allows the stack to unwind in the case
+		 * where a bunch of connections are disconnected in
+		 * a loop. */
+		if (cb_fn) {
+			spdk_thread_send_msg(qpair->group->thread, cb_fn, ctx);
+		}
+		return 0;
+	}
 
+	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
+	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_DEACTIVATING);
+
+	qpair_ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_ctx));
 	if (!qpair_ctx) {
 		SPDK_ERRLOG("Unable to allocate context for nvmf_qpair_disconnect\n");
 		return -ENOMEM;
@@ -748,8 +732,17 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 	qpair_ctx->cb_fn = cb_fn;
 	qpair_ctx->thread = qpair->group->thread;
 	qpair_ctx->ctx = ctx;
-	/* Send a message to the thread that owns this qpair */
-	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_deactivate, qpair_ctx);
+
+	/* Check for outstanding I/O */
+	if (!TAILQ_EMPTY(&qpair->outstanding)) {
+		qpair->state_cb = _spdk_nvmf_qpair_destroy;
+		qpair->state_cb_arg = qpair_ctx;
+		spdk_nvmf_qpair_free_aer(qpair);
+		return 0;
+	}
+
+	_spdk_nvmf_qpair_destroy(qpair_ctx, 0);
+
 	return 0;
 }
 
