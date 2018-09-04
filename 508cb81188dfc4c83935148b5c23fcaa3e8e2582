@@ -22,6 +22,30 @@
       "revId": "508cb81188dfc4c83935148b5c23fcaa3e8e2582",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d801f9c5_eabea593",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-04T14:40:22Z",
+      "side": 1,
+      "message": "Of course.  :-)  This is what happens when I try to do a quick patch from home.",
+      "parentUuid": "2170e76d_bd4b21b6",
+      "range": {
+        "startLine": 105,
+        "startChar": 5,
+        "endLine": 105,
+        "endChar": 62
+      },
+      "revId": "508cb81188dfc4c83935148b5c23fcaa3e8e2582",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
