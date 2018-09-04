@@ -46,6 +46,10 @@ The ReactorMask config file parameter has been deprecated.  Users should
 use the -m or --cpumask command line option to specify the CPU core mask
 for the application.
 
+Default config file pathnames have been removed from iscsi_tgt, nvmf_tgt
+and vhost.  Config file pathnames may now only be specified using the
+-c command line option.
+
 ## v18.07:
 
 ### bdev

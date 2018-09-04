@@ -957,7 +957,6 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "bdevtest";
-	opts.config_file = "/usr/local/etc/spdk/iscsi.conf";
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = "0x7";
 	opts.mem_size = 1024;
