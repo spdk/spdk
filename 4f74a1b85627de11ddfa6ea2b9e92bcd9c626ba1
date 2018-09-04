@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a83788d5_fd37a550",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-04T17:08:50Z",
+      "side": 1,
+      "message": "I think this event should be TRACE_RDMA_IBV_ASYNC_EVENT and you should issue it every time spdk_nvmf_process_ib_event is called.",
+      "revId": "4f74a1b85627de11ddfa6ea2b9e92bcd9c626ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7e33802_e40db453",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-04T17:08:50Z",
+      "side": 1,
+      "message": "Similarly, this event should be TRACE_RDMA_CM_EVENT and you should issue it every time spdk_nvmf_process_cm_event is called.",
+      "revId": "4f74a1b85627de11ddfa6ea2b9e92bcd9c626ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b53738a3_d9b3ff16",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-04T17:08:50Z",
+      "side": 1,
+      "message": "This disconnect event as written can be covered by the TRACE_RDMA_CM_EVENT above. However, there are other paths that lead to destroying a queue pair, so in order for this to match up exactly with the RDMA_QP_CREATE event you need to put this in spdk_nvmf_rdma_qpair_destroy.",
+      "revId": "4f74a1b85627de11ddfa6ea2b9e92bcd9c626ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
