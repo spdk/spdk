@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfa7113a_16878aba",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-04T14:56:36Z",
+      "side": 1,
+      "message": "I think we can just remove this line entirely.  Then spdk_app_opts_init() will always initialize this to SPDK_DEFAULT_RPC_ADDR.  I don\u0027t see any downside to just enabling the RPC server by default.\n\nIf we just remove this line entirely, then the rest of this patch can be deleted.",
+      "revId": "e950ee7477e43ab4a56e30a3b9210d8176ba5b77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
