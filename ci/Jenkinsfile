@@ -13,4 +13,3 @@ node('master') {
 	def jjb_pipeFile = funcs.getProjFile("proj_pipeline.groovy")
 	evaluate(readFile("${jjb_pipeFile}"))
 }
-
