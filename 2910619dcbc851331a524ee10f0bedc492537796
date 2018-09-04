@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0250b4d_fecf4c30",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2235,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-04T15:15:34Z",
+      "side": 1,
+      "message": "There are actually 5 classes of async events, qp, cq, srq, port, and device. This function currently only distinguishes between qpair and other, so I think this is the right way to trace it for the time being, but I think that you gave me a good cleanup item for my to do list after this change is merged.",
+      "revId": "2910619dcbc851331a524ee10f0bedc492537796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
