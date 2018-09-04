@@ -164,12 +164,6 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 		stats->size[e->object_id] = e->size;
 	}
 
-	if (d->arg1_is_alias) {
-		stats->index[e->arg1] = stats->index[e->object_id];
-		stats->start[e->arg1] = stats->start[e->object_id];
-		stats->size[e->arg1] = stats->size[e->object_id];
-	}
-
 	us = get_us_from_tsc(e->tsc - tsc_offset, tsc_rate);
 
 	printf("%2d: %10.3f (%9ju) ", lcore, us, e->tsc - tsc_offset);
