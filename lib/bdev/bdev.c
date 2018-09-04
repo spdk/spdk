@@ -1373,10 +1373,6 @@ spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 
 	if (bdev->fn_table->write_config_json) {
 		bdev->fn_table->write_config_json(bdev, w);
-	} else {
-		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "name", bdev->name);
-		spdk_json_write_object_end(w);
 	}
 }
 
