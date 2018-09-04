@@ -19,6 +19,341 @@
     },
     {
       "key": {
+        "uuid": "96da185a_a92f68cd",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "Will you make the ordering of each part consistent?\n\ncopy, interface, net_framework, bdev, scsi, nvmf, nbd, vhost, iscsi is that ordering?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a18da003_29697865",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "Will you reorder the following to bdev, scsi, nvmf, vhost, iscsi?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a50f186_eac7d963",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "Will you reorder the following?\n\nThe following may be an example.\n\nget_bdev_options_json\nget_aio_bdev_json\nget_malloc_bdev_json\nget_nvme_bdev_json\nget_pmem_bdev_json\nget_split_bdev_json\n\nget_nvmf_params_json\nget_nvmf_subsystem_json\n\nget_vhost_blk_json\nget_vhost_nvme_json\nget_vhost_scsi_json\nget_virtio_user_json\n\nget_iscsi_options_json\nget_iscsi_initiator_group_json\nget_iscsi_portal_group_json\nget_iscsi_target_node_json",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5a4e5f7_5f49acc2",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_nvmf_subsystem_json may be better?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bf46f66_7bd362b3",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_nvmf_options_json may be better?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d755bbe7_fd24ee17",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_iscsi_target_node_json ? (I know the prefix iscsi is not attached to RPC now.)",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38932fe7_fa8cfcbb",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_iscsi_portal_group_json?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbc8fb4a_9e0cb6d2",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "we can remove this. (Please see the below comment.)",
+      "range": {
+        "startLine": 405,
+        "startChar": 4,
+        "endLine": 405,
+        "endChar": 19
+      },
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c66a554c_a071b6c7",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "Thank you for covering IPv6 as well.",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "969b933c_df8ec270",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "cpumask is optional. We can remove this if cpumask is not specified.",
+      "range": {
+        "startLine": 417,
+        "startChar": 20,
+        "endLine": 417,
+        "endChar": 47
+      },
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "433a160c_72cc4d5f",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_iscsi_initiator_group_json",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e0116a6_82696d76",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_bdev_options_json?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa8ed33f_0aa99cc1",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_pmem_bdev_json ?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e4e486b_fa1e5ec6",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_aio_bdev_json ?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d56b7162_669356af",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_nvme_bdev_json?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50d0742f_8a1c5b72",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_split_bdev_json?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b55dc8b9_7af06f48",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_malloc_bdev_json?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7995154_052186bf",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 616,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "get_iscsi_options_json?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06feffea_1326e170",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "Will you reorder this based on the above ordering?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e0dd9b7_ad11d3a7",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 53
@@ -30,6 +365,69 @@
       "writtenOn": "2018-09-03T14:00:23Z",
       "side": 1,
       "message": "nitpicking: that\u0027s a separate dependency used for config converter, not for SPDK CLI.\nPlease move to separate line with a comment\n# Additional dependencies for config converter",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d533e9ee_38203a94",
+        "filename": "test/config_converter/nvmf_test_converter.sh",
+        "patchSetId": 53
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "QEMU NVMe controller is created in this test?",
+      "range": {
+        "startLine": 10,
+        "startChar": 39,
+        "endLine": 10,
+        "endChar": 48
+      },
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7edb67b1_36332fcd",
+        "filename": "test/config_converter/test_converter.sh",
+        "patchSetId": 53
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "Please add a comment, e.g. \"get the pci address of a QEMU NVM Express controller\"?",
+      "range": {
+        "startLine": 9,
+        "startChar": 35,
+        "endLine": 9,
+        "endChar": 46
+      },
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3dd0162_0d29807b",
+        "filename": "test/config_converter/test_converter.sh",
+        "patchSetId": 53
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T01:39:14Z",
+      "side": 1,
+      "message": "Sorry for bothering you, but would you explain why any name/value pair which has \"uuid\" are removed from config.json?",
       "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
