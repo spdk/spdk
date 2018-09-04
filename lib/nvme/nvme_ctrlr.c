@@ -41,6 +41,8 @@
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 
+static int nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
+
 static int
 nvme_ctrlr_get_cc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc)
 {
@@ -646,9 +648,13 @@ nvme_ctrlr_free_doorbell_buffer(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int rc;
+	int rc = 0;
 	struct nvme_completion_poll_status status;
 	uint64_t prp1, prp2;
+
+	if (!ctrlr->cdata.oacs.doorbell_buffer_config) {
+		return 0;
+	}
 
 	if (ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		return 0;
@@ -658,11 +664,12 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size,
 				 &prp1);
 	if (ctrlr->shadow_doorbell == NULL) {
-		return -1;
+		return -ENOMEM;
 	}
 
 	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, &prp2);
 	if (ctrlr->eventidx == NULL) {
+		rc = -ENOMEM;
 		goto error;
 	}
 
@@ -673,6 +680,7 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+		SPDK_WARNLOG("Doorbell buffer config failed\n");
 		goto error;
 	}
 
@@ -683,7 +691,7 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 
 error:
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
-	return -1;
+	return rc;
 }
 
 int
@@ -1081,11 +1089,13 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
+	int rc;
 	uint32_t i, nn = ctrlr->cdata.nn;
 	struct spdk_nvme_ns_data *nsdata;
 
-	if (nvme_ctrlr_identify_active_ns(ctrlr)) {
-		return -1;
+	rc = nvme_ctrlr_identify_active_ns(ctrlr);
+	if (rc) {
+		return rc;
 	}
 
 	for (i = 0; i < nn; i++) {
@@ -1110,6 +1120,7 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
+	int rc = 0;
 	uint32_t nn = ctrlr->cdata.nn;
 	uint64_t phys_addr = 0;
 
@@ -1127,26 +1138,29 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
 					 &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->ns == NULL) {
+			rc = -ENOMEM;
 			goto fail;
 		}
 
 		ctrlr->nsdata = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
 					     &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
 		if (ctrlr->nsdata == NULL) {
+			rc = -ENOMEM;
 			goto fail;
 		}
 
 		ctrlr->num_ns = nn;
 	}
 
-	if (nvme_ctrlr_update_namespaces(ctrlr)) {
+	rc = nvme_ctrlr_update_namespaces(ctrlr);
+	if (rc) {
 		goto fail;
 	}
 	return 0;
 
 fail:
 	nvme_ctrlr_destruct_namespaces(ctrlr);
-	return -1;
+	return rc;
 }
 
 static void
@@ -1264,9 +1278,10 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 
 	for (i = 0; i < ctrlr->num_aers; i++) {
 		aer = &ctrlr->aer[i];
-		if (nvme_ctrlr_construct_and_submit_aer(ctrlr, aer)) {
+		rc = nvme_ctrlr_construct_and_submit_aer(ctrlr, aer);
+		if (rc) {
 			SPDK_ERRLOG("nvme_ctrlr_construct_and_submit_aer failed!\n");
-			return -1;
+			return rc;
 		}
 	}
 
@@ -1677,27 +1692,33 @@ init_timeout:
 	return 0;
 }
 
-int
+static int
 nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
+	int	rc;
+
 	nvme_transport_qpair_reset(ctrlr->adminq);
 
 	nvme_qpair_enable(ctrlr->adminq);
 
-	if (nvme_ctrlr_identify(ctrlr) != 0) {
-		return -1;
+	rc = nvme_ctrlr_identify(ctrlr);
+	if (rc) {
+		return rc;
 	}
 
-	if (nvme_ctrlr_set_num_qpairs(ctrlr) != 0) {
-		return -1;
+	rc = nvme_ctrlr_set_num_qpairs(ctrlr);
+	if (rc) {
+		return rc;
 	}
 
-	if (nvme_ctrlr_construct_namespaces(ctrlr) != 0) {
-		return -1;
+	rc = nvme_ctrlr_construct_namespaces(ctrlr);
+	if (rc) {
+		return rc;
 	}
 
-	if (nvme_ctrlr_configure_aer(ctrlr) != 0) {
-		return -1;
+	rc = nvme_ctrlr_configure_aer(ctrlr);
+	if (rc) {
+		return rc;
 	}
 
 	nvme_ctrlr_set_supported_log_pages(ctrlr);
@@ -1708,20 +1729,20 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
 	}
 
-	if (ctrlr->cdata.oacs.doorbell_buffer_config) {
-		if (nvme_ctrlr_set_doorbell_buffer_config(ctrlr)) {
-			SPDK_WARNLOG("Doorbell buffer config failed\n");
-		}
+	rc = nvme_ctrlr_set_doorbell_buffer_config(ctrlr);
+	if (rc) {
+		return rc;
 	}
 
-
-	if (nvme_ctrlr_set_keep_alive_timeout(ctrlr) != 0) {
+	rc = nvme_ctrlr_set_keep_alive_timeout(ctrlr);
+	if (rc) {
 		SPDK_ERRLOG("Setting keep alive timeout failed\n");
-		return -1;
+		return rc;
 	}
 
-	if (nvme_ctrlr_set_host_id(ctrlr) != 0) {
-		return -1;
+	rc = nvme_ctrlr_set_host_id(ctrlr);
+	if (rc) {
+		return rc;
 	}
 
 	return 0;
