@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f91575f_85f25633",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-04T22:14:03Z",
+      "side": 1,
+      "message": "I think this comment needs to be updated/removed.\n\nYou can do that in a separate patch though to avoid rebasing.",
+      "revId": "4828b207b4a836df3670c4f1a7d48641b36ce5b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
