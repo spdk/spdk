@@ -84,7 +84,7 @@ struct spdk_trace_tpoint {
 	uint8_t		object_type;
 	uint8_t		new_object;
 	uint8_t		arg1_is_ptr;
-	uint8_t		arg1_is_alias;
+	uint8_t		reserved;
 	char		arg1_name[8];
 };
 
@@ -281,14 +281,12 @@ void spdk_trace_register_object(uint8_t type, char id_prefix);
  * \param object_type Object type for the tpoint.
  * \param new_object New object for the tpoint.
  * \param arg1_is_ptr This argument indicates whether argument1 is a pointer.
- * \param arg1_is_alias This argument indicates whether argument1 is an alias.
  * \param arg1_name Name of argument.
  */
 void spdk_trace_register_description(const char *name, const char *short_name,
 				     uint16_t tpoint_id, uint8_t owner_type,
 				     uint8_t object_type, uint8_t new_object,
-				     uint8_t arg1_is_ptr, uint8_t arg1_is_alias,
-				     const char *arg1_name);
+				     uint8_t arg1_is_ptr, const char *arg1_name);
 
 struct spdk_trace_register_fn {
 	void (*reg_fn)(void);
