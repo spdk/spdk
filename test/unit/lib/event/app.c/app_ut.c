@@ -152,7 +152,7 @@ test_spdk_app_parse_args(void)
 
 	/* Specify -B and -W options at the same time. Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, invalid_argv_BW, &opts, "", NULL, unittest_parse_args, NULL);
-	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
+	SPDK_CU_ASSERT_FATAL(rc == SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 
 	/* Omit necessary argument to option */
