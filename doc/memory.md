@@ -116,3 +116,11 @@ operations into and out of a user space process and forms the long-term
 foundation for SPDK and DPDK's memory management strategy. We highly recommend
 that applications are deployed using vfio and the IOMMU enabled, which is fully
 supported today.
+
+If the devices must be charged by the `uio_pci_generic` kernel driver in system,
+please make sure that the IOMMU is disabled. Otherwise the device binding with
+`uio_pci_generic` driver will take the `virtual` address as `physical` address
+and launch data transmission. Obviously, the transmission is invalid. We can
+add `intel_iommu=off` or `amd_iommu=off` or `intel_iommu=on iommu=pt` in GRUB
+command line on x86_64 system, we also can add `iommu.passthrough=1` on arm64
+system, to disable the IOMMU in system.
