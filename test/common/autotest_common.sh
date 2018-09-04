@@ -56,6 +56,7 @@ fi
 : ${SPDK_TEST_LVOL=1}; export SPDK_TEST_LVOL
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
+: ${SPDK_RUN_INSTALLED_DPDK=1}; export SPDK_RUN_INSTALLED_DPDK
 
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
@@ -98,7 +99,7 @@ DEFAULT_RPC_ADDR=/var/tmp/spdk.sock
 case `uname` in
 	FreeBSD)
 		DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
-		if [ -d $DPDK_FREEBSD_DIR ]; then
+		if [ -d $DPDK_FREEBSD_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
 			WITH_DPDK_DIR=$DPDK_FREEBSD_DIR
 		fi
 		MAKE=gmake
@@ -107,8 +108,8 @@ case `uname` in
 		SPDK_RUN_UBSAN=0
 		;;
 	Linux)
-		DPDK_LINUX_DIR=/usr/local/share/dpdk/x86_64-native-linuxapp-gcc
-		if [ -d $DPDK_LINUX_DIR ]; then
+		DPDK_LINUX_DIR=/usr/share/dpdk/x86_64-default-linuxapp-gcc
+		if [ -d $DPDK_LINUX_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
 			WITH_DPDK_DIR=$DPDK_LINUX_DIR
 		fi
 		MAKE=make
