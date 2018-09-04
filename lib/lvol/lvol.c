@@ -1002,11 +1002,6 @@ _spdk_lvs_verify_lvol_name(struct spdk_lvol_store *lvs, const char *name)
 {
 	struct spdk_lvol *tmp;
 
-	if (lvs == NULL) {
-		SPDK_ERRLOG("lvol store does not exist\n");
-		return -ENODEV;
-	}
-
 	if (name == NULL || strnlen(name, SPDK_LVOL_NAME_MAX) == 0) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "lvol name not provided.\n");
 		return -EINVAL;
@@ -1046,12 +1041,16 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	char *xattr_names[] = {LVOL_NAME, "uuid"};
 	int rc;
 
+	if (lvs == NULL) {
+		SPDK_ERRLOG("lvol store does not exist\n");
+		return -EINVAL;
+	}
+
 	rc = _spdk_lvs_verify_lvol_name(lvs, name);
 	if (rc < 0) {
 		return rc;
 	}
 
-	assert(lvs != NULL);
 	bs = lvs->blobstore;
 
 	req = calloc(1, sizeof(*req));
@@ -1110,6 +1109,12 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 
 	origblob = origlvol->blob;
 	lvs = origlvol->lvol_store;
+	if (lvs == NULL) {
+		SPDK_ERRLOG("lvol store does not exist\n");
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
 	rc = _spdk_lvs_verify_lvol_name(lvs, snapshot_name);
 	if (rc < 0) {
 		cb_fn(cb_arg, NULL, rc);
@@ -1168,6 +1173,12 @@ spdk_lvol_create_clone(struct spdk_lvol *origlvol, const char *clone_name,
 
 	origblob = origlvol->blob;
 	lvs = origlvol->lvol_store;
+	if (lvs == NULL) {
+		SPDK_ERRLOG("lvol store does not exist\n");
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
 	rc = _spdk_lvs_verify_lvol_name(lvs, clone_name);
 	if (rc < 0) {
 		cb_fn(cb_arg, NULL, rc);
