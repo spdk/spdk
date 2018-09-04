@@ -61,9 +61,9 @@ SPDK_TRACE_REGISTER_FN(scsi_trace)
 	spdk_trace_register_owner(OWNER_SCSI_DEV, 'd');
 	spdk_trace_register_object(OBJECT_SCSI_TASK, 't');
 	spdk_trace_register_description("SCSI_TASK_DONE", "", TRACE_SCSI_TASK_DONE,
-					OWNER_SCSI_DEV, OBJECT_SCSI_TASK, 0, 0, 0, "");
+					OWNER_SCSI_DEV, OBJECT_SCSI_TASK, 0, 0, "");
 	spdk_trace_register_description("SCSI_TASK_START", "", TRACE_SCSI_TASK_START,
-					OWNER_SCSI_DEV, OBJECT_SCSI_TASK, 0, 0, 0, "");
+					OWNER_SCSI_DEV, OBJECT_SCSI_TASK, 0, 0, "");
 }
 
 SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
