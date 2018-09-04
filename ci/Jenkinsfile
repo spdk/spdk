@@ -4,8 +4,8 @@ node('master') {
 	deleteDir()
 	checkout scm
 	dir('swx_ci') {
-		checkout([$class: 'GitSCM', 
-				extensions: [[$class: 'CloneOption',  shallow: true]], 
+		checkout([$class: 'GitSCM',
+				extensions: [[$class: 'CloneOption',  shallow: true]],
 				userRemoteConfigs: [[ url: 'https://github.com/Mellanox/swx_ci']]
 				])
 	}
@@ -13,3 +13,4 @@ node('master') {
 	def jjb_pipeFile = funcs.getProjFile("proj_pipeline.groovy")
 	evaluate(readFile("${jjb_pipeFile}"))
 }
+
