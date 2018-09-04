@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ff457af_b7321327",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-04T18:34:54Z",
+      "side": 1,
+      "message": "I haven\u0027t been involved in the creation of this script much, but it looks like the pattern here is to do one line per logical grouping of dependencies. I think you should just add a || true to the libunwind-devel line instead to keep with that pattern.",
+      "revId": "57d838e7cdc45598b98644b599405e2929a202d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
