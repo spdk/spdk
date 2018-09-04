@@ -73,6 +73,7 @@ static bool g_run_failed = false;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
+static const char *g_rpc_addr;
 static unsigned g_master_core;
 static int g_time_in_sec;
 static bool g_mix_specified;
@@ -600,6 +601,7 @@ bdevperf_usage(void)
 	printf(" -P <num>                  number of moving average period\n");
 	printf("\t\t(If set to n, show weighted mean of the previous n IO/s in real time)\n");
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
+	printf("\t[-r [rpc socket name] Start RPC server at the default or specified socket]\n");
 	printf("\t\t(only valid with -S)\n");
 	printf(" -S                        show performance result in real time in seconds\n");
 }
@@ -845,6 +847,9 @@ bdevperf_parse_arg(int ch, char *arg)
 	case 'P':
 		g_show_performance_ema_period = atoi(optarg);
 		break;
+	case 'r':
+		g_rpc_addr = optarg ? optarg : SPDK_DEFAULT_RPC_ADDR;
+		break;
 	case 'S':
 		g_show_performance_real_time = 1;
 		g_show_performance_period_in_usec = atoi(optarg) * 1000000;
@@ -863,7 +868,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts);
 	opts.name = "bdevtest";
 	opts.config_file = "/usr/local/etc/spdk/iscsi.conf";
-	opts.rpc_addr = NULL;
+	opts.rpc_addr = g_rpc_addr ? g_rpc_addr : NULL;
 	opts.reactor_mask = NULL;
 	opts.mem_size = 1024;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
@@ -875,7 +880,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:r::S:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
