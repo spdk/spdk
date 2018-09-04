@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa58c5ad_7b3c2ea4",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T05:27:23Z",
+      "side": 1,
+      "message": "Please paste the actual output by using verbose option.",
+      "revId": "8ceef15d01ce2f5514405fe2e7990df10791bec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85c18f56_6b3b68f0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T05:27:23Z",
+      "side": 1,
+      "message": "comma should be added.",
+      "range": {
+        "startLine": 584,
+        "startChar": 21,
+        "endLine": 584,
+        "endChar": 23
+      },
+      "revId": "8ceef15d01ce2f5514405fe2e7990df10791bec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0ad4d6a_5296749b",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 586,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T05:27:23Z",
+      "side": 1,
+      "message": "comma \u0027,\u0027 should be added.",
+      "range": {
+        "startLine": 586,
+        "startChar": 23,
+        "endLine": 586,
+        "endChar": 24
+      },
+      "revId": "8ceef15d01ce2f5514405fe2e7990df10791bec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a279bd53_5709134a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-04T05:27:23Z",
+      "side": 1,
+      "message": "comma \u0027,\u0027 should be removed",
+      "range": {
+        "startLine": 592,
+        "startChar": 27,
+        "endLine": 592,
+        "endChar": 28
+      },
+      "revId": "8ceef15d01ce2f5514405fe2e7990df10791bec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
