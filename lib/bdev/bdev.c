@@ -537,7 +537,9 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 	}
 
 	TAILQ_FOREACH(bdev, &g_bdev_mgr.bdevs, internal.link) {
-		spdk_bdev_config_json(bdev, w);
+		if (bdev->fn_table->write_config_json) {
+			bdev->fn_table->write_config_json(bdev, w);
+		}
 	}
 
 	spdk_json_write_array_end(w);
@@ -1349,17 +1351,6 @@ spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 	}
 
 	return 0;
-}
-
-void
-spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
-{
-	assert(bdev != NULL);
-	assert(w != NULL);
-
-	if (bdev->fn_table->write_config_json) {
-		bdev->fn_table->write_config_json(bdev, w);
-	}
 }
 
 static void

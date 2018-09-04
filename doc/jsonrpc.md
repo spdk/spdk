@@ -231,7 +231,6 @@ Example response:
     "set_bdev_options",
     "set_bdev_qos_limit_iops",
     "delete_bdev",
-    "get_bdevs_config",
     "get_bdevs",
     "get_bdevs_iostat",
     "get_subsystem_config",

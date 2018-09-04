@@ -415,21 +415,6 @@ def get_bdevs(client, name=None):
     return client.call('get_bdevs', params)
 
 
-def get_bdevs_config(client, name=None):
-    """Get configuration for block devices.
-
-    Args:
-        name: bdev name to query (optional; if omitted, query all bdevs)
-
-    Returns:
-        List of RPC methods to reproduce the current bdev configuration.
-    """
-    params = {}
-    if name:
-        params['name'] = name
-    return client.call('get_bdevs_config', params)
-
-
 def get_bdevs_iostat(client, name=None):
     """Get I/O statistics for block devices.
 

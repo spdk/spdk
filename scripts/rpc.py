@@ -403,16 +403,6 @@ if __name__ == "__main__":
     p.set_defaults(func=get_bdevs)
 
     @call_cmd
-    def get_bdevs_config(args):
-        print_dict(rpc.bdev.get_bdevs_config(args.client,
-                                             name=args.name))
-
-    p = subparsers.add_parser(
-        'get_bdevs_config', help='Display current (live) blockdev configuration list or required blockdev')
-    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
-    p.set_defaults(func=get_bdevs_config)
-
-    @call_cmd
     def get_bdevs_iostat(args):
         print_dict(rpc.bdev.get_bdevs_iostat(args.client,
                                              name=args.name))

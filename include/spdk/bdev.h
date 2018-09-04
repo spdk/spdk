@@ -280,21 +280,6 @@ bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type 
 int spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 /**
- * Output bdev-specific configuration to a JSON stream.
- *
- * If supported, the object with following keys will be written:
- * method - name of the constructor method
- * params - parameters necessary to recreate this \c bdev
- *
- * If \c bdev does not support writing JSON configuration then object will be written
- * with only one key - the name of this bdev.
- *
- * \param bdev block device to query configuration.
- * \param w pointer to a JSON write context where \c bdev the configuration will be written.
- */
-void spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
-
-/**
  * Get block device name.
  *
  * \param bdev Block device to query.
