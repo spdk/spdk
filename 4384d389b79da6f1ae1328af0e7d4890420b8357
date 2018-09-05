@@ -189,6 +189,29 @@
     },
     {
       "key": {
+        "uuid": "9985cebc_fe625007",
+        "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-05T18:43:16Z",
+      "side": 1,
+      "message": "I think this function should be a part of test application not library code.\n\nIf you have a strong need to reflect \u0027get_rpc_methods\u0027 RPC method in library code you should provide spdk_rpc_client_get_rpc_methods() API function (note that \u0027get_rpc_methods\u0027 can can take one optional parameter). \n\nAnother thing would be to test this. I\u0027m afraid that amount of work to test all RPC methods in C will troumendous.\n\nFrom above two, I would rater vote for generic client RPC API  rather than reimplement every method.",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 88
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "210c75ce_76a7351c",
         "filename": "test/rpc_client/rpc_client_test.c",
         "patchSetId": 11
