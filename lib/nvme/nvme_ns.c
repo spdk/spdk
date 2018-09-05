@@ -214,7 +214,6 @@ spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns)
 const struct spdk_nvme_ns_data *
 spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
-	nvme_ns_identify_update(ns);
 	return _nvme_ns_get_data(ns);
 }
 
