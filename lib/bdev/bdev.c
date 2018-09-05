@@ -259,6 +259,7 @@ struct spdk_bdev_channel {
 
 struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
+	struct spdk_thread		*thread;
 	spdk_bdev_remove_cb_t		remove_cb;
 	void				*remove_ctx;
 	bool				remove_scheduled;
@@ -3205,14 +3206,14 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 			do_destruct = false;
 			/*
 			 * Defer invocation of the remove_cb to a separate message that will
-			 *  run later on this thread.  This ensures this context unwinds and
+			 *  run later on its thread.  This ensures this context unwinds and
 			 *  we don't recursively unregister this bdev again if the remove_cb
 			 *  immediately closes its descriptor.
 			 */
 			if (!desc->remove_scheduled) {
 				/* Avoid scheduling removal of the same descriptor multiple times. */
 				desc->remove_scheduled = true;
-				spdk_thread_send_msg(thread, _remove_notify, desc);
+				spdk_thread_send_msg(desc->thread, _remove_notify, desc);
 			}
 		}
 	}
@@ -3233,6 +3234,13 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	       void *remove_ctx, struct spdk_bdev_desc **_desc)
 {
 	struct spdk_bdev_desc *desc;
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("Cannot open bdev from non-SPDK thread.\n");
+		return -ENOTSUP;
+	}
 
 	desc = calloc(1, sizeof(*desc));
 	if (desc == NULL) {
@@ -3256,6 +3264,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	TAILQ_INSERT_TAIL(&bdev->internal.open_descs, desc, link);
 
 	desc->bdev = bdev;
+	desc->thread = thread;
 	desc->remove_cb = remove_cb;
 	desc->remove_ctx = remove_ctx;
 	desc->write = write;
@@ -3274,6 +3283,8 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
+
+	assert(desc->thread == spdk_get_thread());
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 

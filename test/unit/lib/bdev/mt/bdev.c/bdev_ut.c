@@ -255,6 +255,7 @@ setup_test(void)
 	bool done = false;
 
 	allocate_threads(BDEV_UT_NUM_THREADS);
+	set_thread(0);
 	spdk_bdev_initialize(bdev_init_cb, &done);
 	spdk_io_device_register(&g_io_device, stub_create_ch, stub_destroy_ch,
 				sizeof(struct ut_bdev_channel), NULL);
@@ -271,6 +272,7 @@ finish_cb(void *cb_arg)
 static void
 teardown_test(void)
 {
+	set_thread(0);
 	g_teardown_done = false;
 	spdk_bdev_close(g_desc);
 	g_desc = NULL;
