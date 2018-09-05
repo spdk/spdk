@@ -1,4 +1,5 @@
 from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
+from ui_node_iscsi import UIIScsi
 import rpc.client
 import rpc
 from functools import wraps
@@ -13,6 +14,7 @@ class UIRoot(UINode):
         self.current_bdevs = []
         self.current_lvol_stores = []
         self.current_vhost_ctrls = []
+        self.current_scsi_devices = []
         self.set_rpc_target(s)
         self.verbose = False
         self.is_init = self.check_init()
@@ -34,6 +36,7 @@ class UIRoot(UINode):
         UIBdevs(self)
         UILvolStores(self)
         UIVhosts(self)
+        UIIScsi(self)
 
     def set_rpc_target(self, s):
         self.client = rpc.client.JSONRPCClient(s)
@@ -250,6 +253,34 @@ class UIRoot(UINode):
     def set_vhost_controller_coalescing(self, **kwargs):
         rpc.vhost.set_vhost_controller_coalescing(self.client, **kwargs)
 
+    def list_scsi_devices(self):
+        if self.is_init:
+            self.current_scsi_devices = rpc.iscsi.get_scsi_devices(self.client)
+
+    def get_scsi_devices(self):
+        if self.is_init:
+            self.list_scsi_devices()
+            for device in self.current_scsi_devices:
+                yield ScsiObj(device)
+
+    @verbose
+    def construct_target_node(self, **kwargs):
+        rpc.iscsi.construct_target_node(self.client, **kwargs)
+
+    @verbose
+    def delete_target_node(self, **kwargs):
+        rpc.iscsi.delete_target_node(self.client, **kwargs)
+
+    def get_portal_groups(self):
+        if self.is_init:
+            for pg in rpc.iscsi.get_portal_groups(self.client):
+                yield ScsiObj(pg)
+
+    def get_initiator_groups(self):
+        if self.is_init:
+            for ig in rpc.iscsi.get_initiator_groups(self.client):
+                yield ScsiObj(ig)
+
 
 class Bdev(object):
     def __init__(self, bdev_info):
@@ -285,3 +316,16 @@ class VhostCtrlr(object):
         """
         for i in ctrlr_info.keys():
             setattr(self, i, ctrlr_info[i])
+
+
+class ScsiObj(object):
+    def __init__(self, device_info):
+        """
+        All class attributes are set based on what information is received
+        from get_vhost_controllers RPC call.
+        # TODO: Document in docstring parameters which describe bdevs.
+        # TODO: Possible improvement: JSON schema might be used here in future
+        """
+        for i in device_info.keys():
+            print ("%s %s" % (i, device_info[i]))
+            setattr(self, i, device_info[i])
