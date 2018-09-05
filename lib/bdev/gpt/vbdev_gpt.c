@@ -384,7 +384,10 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 {
 	int rc;
 
-	if (g_gpt_disabled) {
+	/* A bdev with fewer than 2 blocks cannot have a GPT. Block 0 has
+	 * the MBR and block 1 has the GPT header.
+	 */
+	if (g_gpt_disabled || spdk_bdev_get_num_blocks(bdev) < 2) {
 		spdk_bdev_module_examine_done(&gpt_if);
 		return;
 	}
