@@ -16,6 +16,24 @@
       "revId": "281da2fea155e5777e30cfb384f9950daa70e44f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40e9b406_48b528a8",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-05T19:27:22Z",
+      "side": 1,
+      "message": "I thought about that, but I think you still often want the stack to unwind before the callback is invoked, especially if you are disconnecting a list of qpairs in a loop.",
+      "parentUuid": "d666a075_344f3141",
+      "revId": "281da2fea155e5777e30cfb384f9950daa70e44f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
