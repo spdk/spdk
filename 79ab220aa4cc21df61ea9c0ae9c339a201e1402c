@@ -16,6 +16,24 @@
       "revId": "79ab220aa4cc21df61ea9c0ae9c339a201e1402c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44a89d2e_244142b7",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-05T22:59:10Z",
+      "side": 1,
+      "message": "Illegal combination will be checked at the line 695 in spdk_iscsi_opts_verify(). Hence I didn\u0027t add it here.",
+      "parentUuid": "a5a0430f_6755c438",
+      "revId": "79ab220aa4cc21df61ea9c0ae9c339a201e1402c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
