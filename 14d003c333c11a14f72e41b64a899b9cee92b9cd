@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3ecaa48_d34f056e",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T18:19:06Z",
+      "side": 1,
+      "message": "This should probably be \u003c 2 instead of \u003d\u003d 0.  Block 0 has to be the MBR and block 1 would have the GPT header.  So get_num_blocks() \u003d\u003d 1 is also invalid.\n\nCould you add a comment explaining this check?\n\n/* A bdev with fewer than 2 blocks cannot have a GPT.  Block 0 has the\n * MBR and block 1 has the GPT header.\n */",
+      "revId": "14d003c333c11a14f72e41b64a899b9cee92b9cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
