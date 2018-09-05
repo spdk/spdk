@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0050eff4_7baffc6f",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-05T20:03:12Z",
+      "side": 1,
+      "message": "I believe _nvme_ns_get_data only exists so that there was a function to return the cached ns data instead of sending a command. If this public API function is going to do that, you can remove _nvme_ns_get_data.",
+      "revId": "9f00284fc403049cf25f6cfe50bf65c3cefd6c6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
