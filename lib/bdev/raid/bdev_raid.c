@@ -1372,14 +1372,17 @@ raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, struct spdk_bdev *b
 
 /*
  * brief:
- * iterate the raid bdev config and add base bdevs to the raid bdev that
- * the config has. Skip nonexistent base bdev but stop iteration and
- * return failure if adding base bdev fails.
+ * Add base bdevs to the raid bdev one by one.  Skip any base bdev which doesn't
+ *  exist or fails to add. If all base bdevs are successfully added, the raid bdev
+ *  moves to the configured state and becomes available. Otherwise, the raid bdev
+ *  stays at the configuring state with added base bdevs.
  * params:
  * raid_cfg - pointer to raid bdev config
  * returns:
- * 0 - success
- * non zero - failure
+ * 0 - The raid bdev moves to the configured state or stays at the configuring
+ *     state with added base bdevs due to any nonexistent base bdev.
+ * non zero - Failed to add any base bdev and stays at the configuring state with
+ *            added base bdevs.
  */
 int
 raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg)
@@ -1389,7 +1392,6 @@ raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg)
 	int			rc = 0, _rc;
 
 	for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-		/* Check if base_bdev exists already, if not fail the command */
 		base_bdev = spdk_bdev_get_by_name(raid_cfg->base_bdev[i].name);
 		if (base_bdev == NULL) {
 			SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "base bdev %s doesn't exist now\n",
@@ -1397,11 +1399,6 @@ raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg)
 			continue;
 		}
 
-		/*
-		 * Try to add base_bdev to this raid bdev, if not able to add fail the
-		 * command. This might be because this base_bdev may already be claimed
-		 * by some other module
-		 */
 		_rc = raid_bdev_add_base_device(raid_cfg, base_bdev, i);
 		if (_rc != 0) {
 			SPDK_ERRLOG("Failed to add base bdev %s to RAID bdev %s: %s",
