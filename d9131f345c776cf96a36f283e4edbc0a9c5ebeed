@@ -16,6 +16,24 @@
       "revId": "d9131f345c776cf96a36f283e4edbc0a9c5ebeed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f95f34c4_18d3c600",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-05T19:41:50Z",
+      "side": 1,
+      "message": "You can loop over g_nvmf_tgt_host_trids and free them all in nvmf_tgt_destroy_done().",
+      "parentUuid": "3967803e_9c1f1f42",
+      "revId": "d9131f345c776cf96a36f283e4edbc0a9c5ebeed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
