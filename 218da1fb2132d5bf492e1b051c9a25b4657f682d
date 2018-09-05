@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d94e217_b8ba7628",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T21:53:51Z",
+      "side": 1,
+      "message": "Maybe this could be broken into a separate patch before this one?\n\nBasically create nvme_ctrlr_identify_done() like you have here, then have nvme_ctrlr_identify just do:\n\nrc \u003d nvme_ctrlr_cmd_identify(...)\nif (rc !\u003d 0) {\n  return rc;\n}\n\nif (spdk_nvme_wait_for_completion(ctrlr-\u003eadminq, \u0026status)) {\n  SPDK_ERRLOG(\"xxx\");\n  return -ENXIO;\n}\n\nnvme_ctrlr_identify_done(ctrlr, \u0026status.cpl);\n\nThis way we can separate refactoring code from the other code in this patch that changes how the completion callback for nvme_ctrlr_cmd_identify.",
+      "revId": "218da1fb2132d5bf492e1b051c9a25b4657f682d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70272241_38afcfff",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T21:53:51Z",
+      "side": 1,
+      "message": "Should the similar code in nvme_ctrlr_start() be removed, now that this code is here?\n\nMaybe this could be broken out into a separate patch.",
+      "revId": "218da1fb2132d5bf492e1b051c9a25b4657f682d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22e58ec5_80f05128",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 840,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T21:53:51Z",
+      "side": 1,
+      "message": "I\u0027m not sure we need this need_poll parameter.\n\nI think in the end, nvme_init_controllers() will stay the same.  It will poll until the g_nvme_init_ctrlrs TAILQ is empty.\n\nWe will want a new function, something like spdk_nvme_connect_async().  It will return an spdk_nvme_ctrlr *.  Then user calls spdk_nvme_ctrlr_connect_poll() on that object until it returns 0.  While it\u0027s busy, it can return -EAGAIN to indicate to user that it must still be polled.\n\nnvme_init_controllers can be modified to use spdk_nvme_ctrlr_connect_poll().  When it returns 0, it removes the ctrlr from g_nvme_init_ctrlrs.\n\nWe will also need spdk_nvme_ctrlr_reset_async.  We can discuss this one more later.",
+      "revId": "218da1fb2132d5bf492e1b051c9a25b4657f682d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fc6e01d_0ec34f3e",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1711,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T21:53:51Z",
+      "side": 1,
+      "message": "I would just create separate states for each sub-function in nvme_ctrlr_start.  We already have lots of states already, so I think more will not be too bad.  It will also make the code more clear I think.\n\nSo NVME_CTRLR_STATE_IDENTIFY, NVME_CTRLR_STATE_SET_NUM_QPAIRS, etc.",
+      "revId": "218da1fb2132d5bf492e1b051c9a25b4657f682d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
