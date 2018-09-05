@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "35fd2753_c1b262dd",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-05T01:15:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a740bc4e_2df6eaf4",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 10
+      },
+      "revId": "16f640e06ff2404b3c8b8ea829baaec0633724d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e9c7e1f6_0cabc13d",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 26
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-04T06:48:42Z",
       "side": 1,
       "message": "Could remove these extra lines",
+      "range": {
+        "startLine": 506,
+        "startChar": 0,
+        "endLine": 506,
+        "endChar": 0
+      },
+      "revId": "16f640e06ff2404b3c8b8ea829baaec0633724d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88df6a0d_d849db2e",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-05T01:15:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e9c7e1f6_0cabc13d",
       "range": {
         "startLine": 506,
         "startChar": 0,
