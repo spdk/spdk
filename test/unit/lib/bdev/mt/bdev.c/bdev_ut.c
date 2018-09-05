@@ -329,6 +329,65 @@ basic(void)
 }
 
 static void
+_bdev_removed(void *done)
+{
+	*(bool *)done = true;
+}
+
+static void
+_bdev_unregistered(void *done, int rc)
+{
+	CU_ASSERT(rc == 0);
+	*(bool *)done = true;
+}
+
+static void
+unregister_and_close(void)
+{
+	bool done, remove_notify;
+	struct spdk_bdev_desc *desc;
+
+	setup_test();
+	set_thread(0);
+
+	/* setup_test() automatically opens the bdev,
+	 * but this test needs to do that in a different
+	 * way. */
+	spdk_bdev_close(g_desc);
+	poll_threads();
+
+	remove_notify = false;
+	spdk_bdev_open(&g_bdev.bdev, true, _bdev_removed, &remove_notify, &desc);
+	CU_ASSERT(remove_notify == false);
+	CU_ASSERT(desc != NULL);
+
+	/* There is an open descriptor on the device. Unregister it,
+	 * which can't proceed until the descriptor is closed. */
+	done = false;
+	spdk_bdev_unregister(&g_bdev.bdev, _bdev_unregistered, &done);
+	/* No polling has occurred, so neither of these should execute */
+	CU_ASSERT(remove_notify == false);
+	CU_ASSERT(done == false);
+
+	/* Prior to the unregister completing, close the descriptor */
+	spdk_bdev_close(desc);
+
+	/* Poll the threads to allow all events to be processed */
+	poll_threads();
+
+	/* Remove notify should not have been called because the
+	 * descriptor is already closed. */
+	CU_ASSERT(remove_notify == false);
+
+	/* The unregister should have completed */
+	CU_ASSERT(done == true);
+
+	spdk_bdev_finish(finish_cb, NULL);
+	poll_threads();
+	free_threads();
+}
+
+static void
 reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	bool *done = cb_arg;
@@ -1244,6 +1303,7 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "basic", basic) == NULL ||
+		CU_add_test(suite, "unregister_and_close", unregister_and_close) == NULL ||
 		CU_add_test(suite, "basic_qos", basic_qos) == NULL ||
 		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
 		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
