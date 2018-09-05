@@ -16,6 +16,24 @@
       "revId": "374c2929547d7fed2795d1c8bd06ba00d5636309",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58555e61_ede9ee36",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1392,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-05T07:25:34Z",
+      "side": 1,
+      "message": "Please see the previous patch.",
+      "parentUuid": "beea717e_06827f1e",
+      "revId": "374c2929547d7fed2795d1c8bd06ba00d5636309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
