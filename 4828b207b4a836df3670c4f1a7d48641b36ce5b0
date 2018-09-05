@@ -16,6 +16,24 @@
       "revId": "4828b207b4a836df3670c4f1a7d48641b36ce5b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84b06383_a8d5acd4",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-05T07:24:49Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nThank you so much. Definitely I should update it.\nI extract this part as a function and move it to raid_bdev.c in the later patch. So I\u0027m happy if I can do after the patch set as you proposed.\n\nIt looks that I should update the comment from the line 287 to 289 too.\n\nI think I\u0027ll consolidate the comment to the following and locate it to the top of the function.\n\nAdd base bdevs to the raid bdev one by one.\nSkip any base bdev which doesn\u0027t exist or fails to add.\nIf all base bdevs are successfully added, the raid bdev moves to the configured state and becomes available.\nOtherwise, the raid bdev stays at the configuring state with added base bdevs.\n\nI\u0027m in business trip today and I\u0027ll submit tomorrow.\n\nThanks\nShuhei",
+      "parentUuid": "1f91575f_85f25633",
+      "revId": "4828b207b4a836df3670c4f1a7d48641b36ce5b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
