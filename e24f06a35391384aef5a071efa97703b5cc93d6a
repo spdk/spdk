@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b432578_f88b01ad",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 27
+      },
+      "lineNbr": 4064,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T23:10:53Z",
+      "side": 1,
+      "message": "Let\u0027s name this send_nvme_cmd.  Using the word \"send\" makes it an action - like \"construct\", \"destroy\", \"add\" etc for other RPC methods.",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c38d33e9_2a8a6094",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T23:10:53Z",
+      "side": 1,
+      "message": "Instead of size_t, you can just use uint32_t instead.\n\nThe size_t stuff is used in the bdev layer, but there\u0027s no need to use it here.",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f948917b_7534a40c",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T23:10:53Z",
+      "side": 1,
+      "message": "Code like this can be made simpler by doing:\n\nif (ctx \u003d\u003d NULL) {\n  return;\n}\n\nfree(ctx-\u003ereq.name);\netc.\n\nThen you don\u0027t have to indent so much code.",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d490b04b_5af6bf27",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T23:10:53Z",
+      "side": 1,
+      "message": "on",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34dd0d96_eed4d05e",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T23:10:53Z",
+      "side": 1,
+      "message": "This could all be on one line I think.",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "613100a2_42ae709b",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T23:10:53Z",
+      "side": 1,
+      "message": "We should probably check that raw_len \u003d\u003d sizeof(struct spdk_nvmd_cmd)) which is 64.  If it isn\u0027t, we should fail immediately.  NVMe commands must be 64 bytes in size.\n\nOh - I see that you check it down below.  But I still think it would be better to check it as soon as possible.",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34ac06bc_b6ebf184",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T23:10:53Z",
+      "side": 1,
+      "message": "if the length is not 64, -EINVAL is appropriate.  But if rc was not zero, then this will overwrite the return value with -EINVAL instead.\n\nSo I think this should only set rc \u003d -EINVAL if the wrong amount of data is decoded.  (More likely this check will go earlier in this function instead.)",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fcb9bfb_6736b44e",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T23:10:53Z",
+      "side": 1,
+      "message": "I feel like we should clarify this, such that ADMIN commands should specify i.e. Nvme0, and IO commands should specify i.e. Nvme0n1.  What do you think?\n\nIt is possible to have a controller with no namespaces.  So we have to be able to specify a controller name here instead of a namespace.",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
