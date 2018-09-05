@@ -384,7 +384,7 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 {
 	int rc;
 
-	if (g_gpt_disabled) {
+	if (g_gpt_disabled || spdk_bdev_get_num_blocks(bdev) == 0) {
 		spdk_bdev_module_examine_done(&gpt_if);
 		return;
 	}
