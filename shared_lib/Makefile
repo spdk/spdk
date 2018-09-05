@@ -95,13 +95,14 @@ $(COMBINED_SHARED_LIB): $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_
 	$(call spdk_build_realname_shared_lib,$(filter-out -Wl$(comma)--no-whole-archive,$(LIBS)),spdk.map,$(SYS_LIBS))
 
 $(COMBINED_LINKERNAME_LIB) : %.so : %.so.$(SO_SUFFIX_ALL)
-	$(BUILD_LINKERNAME_LIB)
+	$(Q)echo "  SYMLINK $(notdir $@)"; $(BUILD_LINKERNAME_LIB)
 
 $(SEP_REALNAME_LIBS) : %.so.$(SO_SUFFIX_ALL) : %.a spdk.map
+	$(Q)echo "  SO $(notdir $@)"; \
 	$(call spdk_build_realname_shared_lib,$(filter %.a,$^),spdk.map)
 
 $(SEP_LINKERNAME_LIBS) : %.so : %.so.$(SO_SUFFIX_ALL)
-	$(BUILD_LINKERNAME_LIB)
+	$(Q)echo "  SYMLINK $(notdir $@)"; $(BUILD_LINKERNAME_LIB)
 
 .PHONY: all clean $(DIRS-y)
 
