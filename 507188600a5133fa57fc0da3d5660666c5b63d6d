@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb3891ad_30bd6953",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1040,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T21:55:31Z",
+      "side": 1,
+      "message": "similar to comment on identify - I think we can break this into two functions in one patch, then have this patch change the completion callback routine\n\nThis is such a major feature to be added to SPDK NVMe driver, and changes a lot of the core functionality - I just want to make sure we break these patches up as much as possible so we can review them easier.\n\nThanks!",
+      "revId": "507188600a5133fa57fc0da3d5660666c5b63d6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
