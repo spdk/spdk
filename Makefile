@@ -52,6 +52,12 @@ endif
 endif
 endif
 
+ifeq ($(CONFIG_SHARED),y)
+LIB = shared_lib
+else
+LIB = lib
+endif
+
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
@@ -62,9 +68,9 @@ install: all
 
 shared_lib: lib
 lib: $(DPDKBUILD)
-app: lib
-test: lib
-examples: lib
+app: $(LIB)
+test: $(LIB)
+examples: $(LIB)
 pkgdep:
 	sh ./scripts/pkgdep.sh
 
