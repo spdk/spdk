@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b266569_58fbcd26",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 54
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T15:27:57Z",
+      "side": 1,
+      "message": "scripts: add config converter\n\nThe key directory/component here is scripts, not test/json.",
+      "revId": "ecbf699f6c6453565aed4702fca6fd68397267c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d1d7948_61993552",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 54
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T15:27:57Z",
+      "side": 1,
+      "message": "This commit message should be expanded to describe what this patch is doing.  If someone just read this commit message, it might indicate that old ini config format is no longer supported.  Something like:\n\nAdd a new script to enable converting old INI config files to the new JSON-RPC config file format.  This prepares for deprecating the INI config file file format in the future.",
+      "revId": "ecbf699f6c6453565aed4702fca6fd68397267c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26ee4ae1_0ff6df7e",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 54
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T15:27:57Z",
+      "side": 1,
+      "message": "Please rebase this patch.  There have been other changes to CHANGELOG.md that may conflict with these.\n\nInstead of adding a new section, I would an entry under the Miscellaneous section in the latest version of this file.\n\nChangelog entries need to be more descriptive.  Please take a look at the other entries in this file as examples.  A better entry would be something like:\n\nA Python script has been added to enable conversion of old INI config files to new JSON-RPC config file format.  This script can be found at \u003clocation of script in SPDK repo\u003e.",
+      "revId": "ecbf699f6c6453565aed4702fca6fd68397267c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dfc2249_b4e81cae",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 54
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T15:27:57Z",
+      "side": 1,
+      "message": "Capital",
+      "revId": "ecbf699f6c6453565aed4702fca6fd68397267c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
