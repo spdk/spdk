@@ -439,7 +439,8 @@ get_next_chan(void)
 	struct spdk_ioat_chan *chan;
 
 	if (g_next_device == NULL) {
-		fprintf(stderr, "Not enough ioat channels found. Check that ioatdma driver is unloaded.\n");
+		fprintf(stderr, "Not enough ioat channels found. Check that ioat channels are bound\n");
+		fprintf(stderr, "to uio_pci_generic or vfio-pci.  scripts/setup.sh can help with this.\n");
 		return NULL;
 	}
 
