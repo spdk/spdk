@@ -1,5 +1,6 @@
 from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
 from .ui_node_nvmf import UINVMf
+from .ui_node_iscsi import UIISCSI
 import rpc.client
 import rpc
 from functools import wraps
@@ -37,6 +38,7 @@ class UIRoot(UINode):
         UILvolStores(self)
         UIVhosts(self)
         UINVMf(self)
+        UIISCSI(self)
 
     def set_rpc_target(self, s):
         self.client = rpc.client.JSONRPCClient(s)
@@ -301,6 +303,108 @@ class UIRoot(UINode):
     def nvmf_subsystem_allow_any_host(self, **kwargs):
         rpc.nvmf.nvmf_subsystem_allow_any_host(self.client, **kwargs)
 
+    def get_scsi_devices(self):
+        if self.is_init:
+            for device in rpc.iscsi.get_scsi_devices(self.client):
+                yield ScsiObj(device)
+
+    def get_target_nodes(self):
+        if self.is_init:
+            for tg in rpc.iscsi.get_target_nodes(self.client):
+                yield tg
+
+    @verbose
+    def construct_target_node(self, **kwargs):
+        rpc.iscsi.construct_target_node(self.client, **kwargs)
+
+    @verbose
+    def delete_target_node(self, **kwargs):
+        rpc.iscsi.delete_target_node(self.client, **kwargs)
+
+    def get_portal_groups(self):
+        if self.is_init:
+            for pg in rpc.iscsi.get_portal_groups(self.client):
+                yield ScsiObj(pg)
+
+    def get_initiator_groups(self):
+        if self.is_init:
+            for ig in rpc.iscsi.get_initiator_groups(self.client):
+                yield ScsiObj(ig)
+
+    @verbose
+    def construct_portal_group(self, **kwargs):
+        rpc.iscsi.add_portal_group(self.client, **kwargs)
+
+    @verbose
+    def delete_portal_group(self, **kwargs):
+        rpc.iscsi.delete_portal_group(self.client, **kwargs)
+
+    @verbose
+    def construct_initiator_group(self, **kwargs):
+        rpc.iscsi.add_initiator_group(self.client, **kwargs)
+
+    @verbose
+    def delete_initiator_group(self, **kwargs):
+        rpc.iscsi.delete_initiator_group(self.client, **kwargs)
+
+    @verbose
+    def get_iscsi_connections(self, **kwargs):
+        if self.is_init:
+            for ic in rpc.iscsi.get_iscsi_connections(self.client, **kwargs):
+                yield ic
+
+    @verbose
+    def add_initiators_to_initiator_group(self, **kwargs):
+        rpc.iscsi.add_initiators_to_initiator_group(self.client, **kwargs)
+
+    @verbose
+    def delete_initiators_from_initiator_group(self, **kwargs):
+        rpc.iscsi.delete_initiators_from_initiator_group(self.client, **kwargs)
+
+    @verbose
+    def add_pg_ig_maps(self, **kwargs):
+        rpc.iscsi.add_pg_ig_maps(self.client, **kwargs)
+
+    @verbose
+    def delete_pg_ig_maps(self, **kwargs):
+        rpc.iscsi.delete_pg_ig_maps(self.client, **kwargs)
+
+    @verbose
+    def add_secret_to_iscsi_auth_group(self, **kwargs):
+        rpc.iscsi.add_secret_to_iscsi_auth_group(self.client, **kwargs)
+
+    @verbose
+    def delete_secret_from_iscsi_auth_group(self, **kwargs):
+        rpc.iscsi.delete_secret_from_iscsi_auth_group(self.client, **kwargs)
+
+    @verbose
+    def get_iscsi_auth_groups(self, **kwargs):
+        return rpc.iscsi.get_iscsi_auth_groups(self.client, **kwargs)
+
+    @verbose
+    def add_iscsi_auth_group(self, **kwargs):
+        rpc.iscsi.add_iscsi_auth_group(self.client, **kwargs)
+
+    @verbose
+    def delete_iscsi_auth_group(self, **kwargs):
+        rpc.iscsi.delete_iscsi_auth_group(self.client, **kwargs)
+
+    @verbose
+    def set_iscsi_target_node_auth(self, **kwargs):
+        rpc.iscsi.set_iscsi_target_node_auth(self.client, **kwargs)
+
+    @verbose
+    def target_node_add_lun(self, **kwargs):
+        rpc.iscsi.target_node_add_lun(self.client, **kwargs)
+
+    @verbose
+    def set_iscsi_discovery_auth(self, **kwargs):
+        rpc.iscsi.set_iscsi_discovery_auth(self.client, **kwargs)
+
+    @verbose
+    def get_iscsi_global_params(self, **kwargs):
+        return rpc.iscsi.get_iscsi_global_params(self.client, **kwargs)
+
 
 class Bdev(object):
     def __init__(self, bdev_info):
@@ -348,3 +452,15 @@ class NvmfSubsystem(object):
         """
         for i in subsystem_info.keys():
             setattr(self, i, subsystem_info[i])
+
+
+class ScsiObj(object):
+    def __init__(self, device_info):
+        """
+        All class attributes are set based on what information is received
+        from iscsi related RPC calls.
+        # TODO: Document in docstring parameters which describe bdevs.
+        # TODO: Possible improvement: JSON schema might be used here in future
+        """
+        for i in device_info.keys():
+            setattr(self, i, device_info[i])
