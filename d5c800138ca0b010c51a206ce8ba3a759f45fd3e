@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ee726ac_a8f6b9e4",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T15:59:08Z",
+      "side": 1,
+      "message": "I think this should be removed - guessing you had added it for debugging when writing this patch and forgot to remove it.",
+      "revId": "d5c800138ca0b010c51a206ce8ba3a759f45fd3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
