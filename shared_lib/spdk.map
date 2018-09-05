@@ -8,6 +8,8 @@
 	g_subsystems;
 	g_subsystems_deps;
 	g_spdk_iscsi_opts;
+	_spdk_trace_record;
+	g_trace_histories;
 
 	local: *;
 };
