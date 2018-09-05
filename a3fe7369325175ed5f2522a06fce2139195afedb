@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0db90013_172e7e5a",
+        "filename": "test/nvmf/nmic/nmic.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-09-05T05:39:09Z",
+      "side": 1,
+      "message": "As we know that there two cases, is it possible to add the test suite and test case in the log file.",
+      "revId": "a3fe7369325175ed5f2522a06fce2139195afedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
