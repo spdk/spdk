@@ -482,12 +482,13 @@ ut_pmem_write_read(void)
 	size_t i;
 	const uint64_t nblock_offset = 10;
 	uint64_t offset;
-	size_t io_size, nblock, total_io_size;
+	size_t io_size, nblock, total_io_size, bsize;
 
+	bsize = 4096;
 	struct iovec iov[] = {
-		{ 0, 2 * g_pool_ok.bsize },
-		{ 0, 3 * g_pool_ok.bsize },
-		{ 0, 4 * g_pool_ok.bsize },
+		{ 0, 2 * bsize },
+		{ 0, 3 * bsize },
+		{ 0, 4 * bsize },
 	};
 
 	rc = spdk_create_pmem_disk(g_pool_ok.name, g_bdev_name, &bdev);
