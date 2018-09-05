@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5a0430f_6755c438",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T22:24:36Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI think we need an error after the loop if mutual_chap \u0026\u0026 !require_chap.  Similar to the check that is in spdk_iscsi_parse_tgt_node().\n\n-Jim",
+      "revId": "79ab220aa4cc21df61ea9c0ae9c339a201e1402c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
