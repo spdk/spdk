@@ -28,6 +28,8 @@ if [ -s /etc/redhat-release ]; then
 	yum install -y libpmemblk-devel || true
 	# Additional dependencies for SPDK CLI
 	yum install -y python-configshell python-pexpect python3-configshell python3-pexpect
+	# Additional dependencies for autotest
+	yum install -y jq
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
@@ -44,6 +46,8 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y python-pip python3-pip
 	pip install configshell_fb pexpect
 	pip3 install configshell_fb pexpect
+	# Additional dependencies for autotest
+	apt-get install -y jq
 elif [ -f /etc/SuSE-release ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pep8 libuuid-devel sg3_utils pciutils
