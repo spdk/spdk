@@ -61,7 +61,7 @@ struct pmemblk {
 static const char *g_bdev_name = "pmem0";
 
 /* PMEMblkpool is a typedef of struct pmemblk */
-static PMEMblkpool g_pool_ok = {
+static const PMEMblkpool g_pool_ok = {
 	.name = "/pools/ok_pool",
 	.is_open = false,
 	.is_consistent = true,
@@ -69,7 +69,7 @@ static PMEMblkpool g_pool_ok = {
 	.nblock = 150
 };
 
-static PMEMblkpool g_pool_nblock_0 = {
+static const PMEMblkpool g_pool_nblock_0 = {
 	.name = "/pools/nblock_0",
 	.is_open = false,
 	.is_consistent = true,
@@ -77,7 +77,7 @@ static PMEMblkpool g_pool_nblock_0 = {
 	.nblock = 0
 };
 
-static PMEMblkpool g_pool_bsize_0 = {
+static const PMEMblkpool g_pool_bsize_0 = {
 	.name = "/pools/nblock_0",
 	.is_open = false,
 	.is_consistent = true,
@@ -85,7 +85,7 @@ static PMEMblkpool g_pool_bsize_0 = {
 	.nblock = 100
 };
 
-static PMEMblkpool g_pool_inconsistent = {
+static const PMEMblkpool g_pool_inconsistent = {
 	.name = "/pools/inconsistent",
 	.is_open = false,
 	.is_consistent = false,
