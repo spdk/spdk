@@ -37,6 +37,7 @@
 
 extern "C" {
 #include "spdk/trace.h"
+#include "spdk/util.h"
 }
 
 static struct spdk_trace_histories *g_histories;
@@ -84,7 +85,6 @@ static int g_verbose = 1;
 
 static uint64_t g_tsc_rate;
 static uint64_t g_first_tsc = 0x0;
-static uint64_t g_last_tsc = -1ULL;
 
 static float
 get_us_from_tsc(uint64_t tsc, uint64_t tsc_rate)
@@ -212,15 +212,13 @@ process_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 static int
 populate_events(struct spdk_trace_history *history)
 {
-	int i, entry_size, history_size, num_entries, num_entries_filled;
+	int i, num_entries, num_entries_filled;
 	struct spdk_trace_entry *e;
 	int first, last, lcore;
 
 	lcore = history->lcore;
 
-	entry_size = sizeof(history->entries[0]);
-	history_size = sizeof(history->entries);
-	num_entries = history_size / entry_size;
+	num_entries = SPDK_COUNTOF(history->entries);
 
 	e = history->entries;
 
@@ -239,31 +237,19 @@ populate_events(struct spdk_trace_history *history)
 				last = i;
 			}
 		}
-
-		if (first >= num_entries) {
-			first -= num_entries;
-		}
-
-		if (last < 0) {
-			last += num_entries;
-		}
 	} else {
 		first = 0;
 		last = num_entries_filled - 1;
 	}
 
 	/*
-	 * We keep track of the highest first TSC out of all reactors and
-	 *  the lowest last TSC out of all reactors.  We will ignore any
-	 *  events outside the range of these two TSC values.  This will
-	 *  ensure we only print data for the subset of time where we have
-	 *  data across all reactors.
+	 * We keep track of the highest first TSC out of all reactors.
+	 *  We will ignore any events that occured before this TSC on any
+	 *  other reactors.  This will ensure we only print data for the
+	 *  subset of time where we have data across all reactors.
 	 */
 	if (e[first].tsc > g_first_tsc) {
 		g_first_tsc = e[first].tsc;
-	}
-	if (e[last].tsc < g_last_tsc) {
-		g_last_tsc = e[last].tsc;
 	}
 
 	i = first;
@@ -416,7 +402,7 @@ int main(int argc, char **argv)
 
 	tsc_offset = g_first_tsc;
 	for (entry_map::iterator it = g_entry_map.begin(); it != g_entry_map.end(); it++) {
-		if (it->first.tsc < g_first_tsc || it->first.tsc > g_last_tsc) {
+		if (it->first.tsc < g_first_tsc) {
 			continue;
 		}
 		process_event(it->second, g_tsc_rate, tsc_offset, it->first.lcore);
