@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75e0fe92_ebae9917",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "should add a newline here before the comment starts",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7492ec99_a13e6b2a",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "let\u0027s add the documentation",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e47e0bf_58b7ca1a",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "Can we use specific types here?  like char * for version and result, and uint32_t for id.\n\nThis is how most (all?) of the other RPCs do it.  Then you use spdk_json_decode_string and spdk_json_decode_uint32 instead of defining your own capture_val.\n\nOr if this doesn\u0027t work for some reason, please let me know.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b970d798_6ae6ae7e",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "remove this TODO",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c47c6107_67e36867",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "I think you can just call this spdk_json_rpc_parse_response.  Then it is similar to spdk_json_parse_request on the server side.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d381f87f_ac1c1501",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "usually we try to avoid starting static function with spdk_.  Normally only public API functions start with spdk_.  So calling this _jsonrpc_client_write_cb makes it clear that this is a private function and not part of the public API.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be1ceb6f_dbcd6369",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "You can just include the begin_request contents directly here, since begin_request() is static and only called from this location.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5071fbb3_ada7e00d",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "You can just include the end_request contents directly here, since end_request() is static and only called from this location.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "856fe00a_ab2fbd50",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "no need to subtract response-\u003erecv_offset here since it is set to 0 on previous line",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd7d4f15_43d86fc7",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "I would suggest making this a bit more similar to spdk_jsonrpc_server_conn:\n\nMainly this would be putting the contents of spdk_json_rpc_client_response directly in spdk_jsonrpc_client_conn.  For example, spdk_jsonrpc_server_conn directly contains the recv_buf, recv_len and values arrays.\n\nThen spdk_jsonrpc_client_response can be removed.\n\nI\u0027m also not sure that recv_offset needs to be in this structure.  I think it can be a local variable in the function that uses it.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2739bff3_041e346f",
+        "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "Public APIs should not start with a _.  _ usually means it is a private static function.\n\nI think you can make this function the primary function, and remove spdk_rpc_client_check_rpc_method.  It is OK to require the caller to call spdk_rpc_client_connect/close directly.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "210c75ce_76a7351c",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-05T17:20:17Z",
+      "side": 1,
+      "message": "can y\u0010ou include spdk/event.h and use SPDK_DEFAULT_RPC_ADDR here instead?",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
