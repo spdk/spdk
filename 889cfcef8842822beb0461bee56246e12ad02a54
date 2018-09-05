@@ -448,6 +448,30 @@
     },
     {
       "key": {
+        "uuid": "691283b2_d11763bb",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1013920
+      },
+      "writtenOn": "2018-09-05T09:49:53Z",
+      "side": 1,
+      "message": "Modified as suggested.",
+      "parentUuid": "857edeac_29ec46d8",
+      "range": {
+        "startLine": 376,
+        "startChar": 1,
+        "endLine": 376,
+        "endChar": 25
+      },
+      "revId": "889cfcef8842822beb0461bee56246e12ad02a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15050226_3b9bfc77",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
