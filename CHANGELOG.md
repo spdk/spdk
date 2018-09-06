@@ -1,5 +1,32 @@
 # Changelog
 
+## v18.07.1:
+
+### NVMe
+
+Added a quirk to handle QEMU emulated NVMe SSDs, which report an Intel
+vendor ID but don't support Intel vendor-specific log pages.
+
+### Vagrant
+
+Now forcing scripts/vagrant/create_vbox.sh to run as a bash script, since
+it explicitly requires bash functionality.
+
+### bdev
+
+A fix for a bug that resulted in incorrect disk utilization reporting
+was resolved.
+
+A crash when the bdev layer ran out of free bdev I/O request objects
+was resolved.
+
+A race condition between closing the final bdev descriptor
+and unregistering the bdev was resolved.
+
+### DPDK
+
+DPDK was updated to 18.05.1.
+
 ## v18.07:
 
 ### bdev
