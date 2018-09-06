@@ -1001,6 +1001,14 @@ nvme_ctrlr_set_keep_alive_timeout_done(void *arg, const struct spdk_nvme_cpl *cp
 	uint32_t keep_alive_interval_ms;
 	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Keep alive timeout Get Feature failed: SC %x SCT %x\n",
+			    cpl->status.sc, cpl->status.sct);
+		ctrlr->opts.keep_alive_timeout_ms = 0;
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
 	if (ctrlr->opts.keep_alive_timeout_ms != cpl->cdw0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Controller adjusted keep alive timeout to %u ms\n",
 			      cpl->cdw0);
@@ -1018,12 +1026,12 @@ nvme_ctrlr_set_keep_alive_timeout_done(void *arg, const struct spdk_nvme_cpl *cp
 
 	/* Schedule the first Keep Alive to be sent as soon as possible. */
 	ctrlr->next_keep_alive_tick = spdk_get_ticks();
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID, NVME_TIMEOUT_INFINITE);
 }
 
 static int
-nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr, bool *need_poll)
 {
-	struct nvme_completion_poll_status status;
 	int rc;
 
 	if (ctrlr->opts.keep_alive_timeout_ms == 0) {
@@ -1038,20 +1046,13 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Retrieve actual keep alive timeout, since the controller may have adjusted it. */
 	rc = spdk_nvme_ctrlr_cmd_get_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER, 0, NULL, 0,
-					     nvme_completion_poll_cb, &status);
+					     nvme_ctrlr_set_keep_alive_timeout_done, ctrlr);
 	if (rc != 0) {
 		SPDK_ERRLOG("Keep alive timeout Get Feature failed: %d\n", rc);
 		ctrlr->opts.keep_alive_timeout_ms = 0;
 		return rc;
 	}
-
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("Keep alive timeout Get Feature failed: SC %x SCT %x\n",
-			    status.cpl.status.sc, status.cpl.status.sct);
-		ctrlr->opts.keep_alive_timeout_ms = 0;
-		return -ENXIO;
-	}
-	nvme_ctrlr_set_keep_alive_timeout_done(ctrlr, &status.cpl);
+	*need_poll = true;
 
 	return 0;
 }
@@ -1771,8 +1772,12 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 
 	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
-		rc = nvme_ctrlr_set_keep_alive_timeout(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID, NVME_TIMEOUT_INFINITE);
+		rc = nvme_ctrlr_set_keep_alive_timeout(ctrlr, &need_poll);
+		if (need_poll) {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_NEED_POLL, NVME_TIMEOUT_INFINITE);
+		} else {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID, NVME_TIMEOUT_INFINITE);
+		}
 		return rc;
 
 	case NVME_CTRLR_STATE_SET_HOST_ID:
