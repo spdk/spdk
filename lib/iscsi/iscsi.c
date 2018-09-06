@@ -492,7 +492,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	/* All data for this PDU has now been read from the socket. */
 	conn->pdu_in_progress = NULL;
 
-	spdk_trace_record(TRACE_READ_PDU, conn->id, pdu->data_valid_bytes,
+	spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
 			  (uintptr_t)pdu, pdu->bhs.opcode);
 
 	/* Data Segment */
@@ -2717,7 +2717,7 @@ static void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn,
 				  struct spdk_iscsi_task *task)
 {
 	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->id, task->scsi.length,
-			  (uintptr_t)task, (uintptr_t)task->pdu);
+			  (uintptr_t)task->pdu, (uintptr_t)task->pdu);
 	task->is_queued = true;
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
 }
