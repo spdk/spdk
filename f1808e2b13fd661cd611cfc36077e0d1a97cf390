@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52eb21aa_2327ecab",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1034,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-06T21:18:11Z",
+      "side": 1,
+      "message": "Contains the size of the memory region pointer to by vaddr. Updated with the size of the memory region that the translation is valid for.",
+      "revId": "f1808e2b13fd661cd611cfc36077e0d1a97cf390",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c782eb10_65b194dd",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-06T21:18:11Z",
+      "side": 1,
+      "message": "You can put this inside the scope started on line 410 so you don\u0027t need the extra #if",
+      "revId": "f1808e2b13fd661cd611cfc36077e0d1a97cf390",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
