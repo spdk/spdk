@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "01cc6bb3_440e861c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-06T14:27:11Z",
+      "side": 1,
+      "message": "Maybe we can just try \"best effort\" for the QoS control here. So that ignore the NVME_ADMIN is preferred. The OPC_READ as mentioned, it is for the I/O command.",
+      "parentUuid": "5ffe506a_15de0633",
+      "revId": "e52090a118d4912f133d000c5c3fdf2b19b1e028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17e8e3a5_621e308e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 37
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "7b92bf52_ad730cc1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-06T14:27:11Z",
+      "side": 1,
+      "message": "I will have a function for this logic. Thanks.",
+      "parentUuid": "17e8e3a5_621e308e",
+      "revId": "e52090a118d4912f133d000c5c3fdf2b19b1e028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "29f6cb91_2a9c575c",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 37
@@ -47,6 +83,24 @@
       "writtenOn": "2018-08-28T22:21:56Z",
       "side": 1,
       "message": "similar to above, but maybe a function pointer called \"count_io\" (meaning it should count this IO since it was submitted)",
+      "revId": "e52090a118d4912f133d000c5c3fdf2b19b1e028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57bd6168_4fdf0e8f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1106,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-06T14:27:11Z",
+      "side": 1,
+      "message": "I\u0027ve introduced a general helper function here. Thanks.",
+      "parentUuid": "29f6cb91_2a9c575c",
       "revId": "e52090a118d4912f133d000c5c3fdf2b19b1e028",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
