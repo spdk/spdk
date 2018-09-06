@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bae7b49c_f80311ff",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-06T19:46:20Z",
+      "side": 1,
+      "message": "I\u0027d like to do this a bit differently.\n\nI think the need_poll and POLL state are not needed.  Let\u0027s do this instead:\n\nChange IDENTIFY state to WAIT_FOR_IDENTIFY.\n\nThe previous patch that added these states is fine.  We can consider that a refactoring patch, which will get further refactored here.\n\nHere, instead of setting *need_poll, set state to WAIT_FOR_IDENTIFY.\n\nAlso if nvme_ctrlr_cmd_identify() returns rc !\u003d 0, set state to ERROR here directly.\n\nThen in nvme_ctrlr_process_init, if state is WAIT_FOR_IDENTIFY, call spdk_nvme_qpair_process_completions on the admin queue.\n\nI think this function can then return void.",
+      "revId": "8b06516b9795526d9e2b80ecd4a1ffb6a84c6569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c96cfb62_5807b316",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1714,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-06T19:46:20Z",
+      "side": 1,
+      "message": "based on previous comment, I think you can change this to:\n\n/* nvme_ctrlr_identify() will set the next state */\nnvme_ctrlr_identify(ctrlr);",
+      "revId": "8b06516b9795526d9e2b80ecd4a1ffb6a84c6569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0252e12_7a489f92",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1720,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-06T19:46:20Z",
+      "side": 1,
+      "message": "case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:\n  spdk_nvme_qpair_process_completions(ctrlr);\n  break;",
+      "revId": "8b06516b9795526d9e2b80ecd4a1ffb6a84c6569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
