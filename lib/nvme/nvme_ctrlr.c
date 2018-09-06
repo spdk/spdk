@@ -788,23 +788,10 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
-static int
-nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
+static void
+nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_completion_poll_status	status;
-	int					rc;
-
-	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
-				     &ctrlr->cdata, sizeof(ctrlr->cdata),
-				     nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		return rc;
-	}
-
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("nvme_identify_controller failed!\n");
-		return -ENXIO;
-	}
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
 	/*
 	 * Use MDTS to ensure our default max_xfer_size doesn't exceed what the
@@ -839,6 +826,27 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
 	}
+}
+
+static int
+nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_completion_poll_status	status;
+	int					rc;
+
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
+				     &ctrlr->cdata, sizeof(ctrlr->cdata),
+				     nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+		SPDK_ERRLOG("nvme_identify_controller failed!\n");
+		return -ENXIO;
+	}
+
+	nvme_ctrlr_identify_done(ctrlr, &status.cpl);
 
 	return 0;
 }
