@@ -595,6 +595,28 @@ nvme_rdma_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, 
 	return ret;
 }
 
+static uint64_t
+nvme_rdma_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
+{
+	uint64_t local_size;
+	uint64_t requested_size;
+	uint64_t first_mr_addr;
+
+	requested_size = *size;
+	first_mr_addr = spdk_mem_map_translate(map, vaddr);
+	local_size = SPDK_MEM_MAP_TRANSLATION_LEN;
+	vaddr += SPDK_MEM_MAP_TRANSLATION_LEN;
+	while (local_size < requested_size &&
+	       first_mr_addr == spdk_mem_map_translate(map, vaddr)) {
+		local_size += SPDK_MEM_MAP_TRANSLATION_LEN;
+		vaddr += SPDK_MEM_MAP_TRANSLATION_LEN;
+	}
+	if (requested_size > local_size) {
+		*size = local_size;
+	}
+	return first_mr_addr;
+}
+
 static int
 nvme_rdma_mr_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 			enum spdk_mem_map_notify_action action,
@@ -838,12 +860,16 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 {
 	void *payload = req->payload.contig_or_cb_arg + req->payload_offset;
 	struct ibv_mr *mr;
+	uint64_t desired_payload_size;
+
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload);
-	if (mr == NULL) {
+	desired_payload_size = req->payload_size;
+	mr = (struct ibv_mr *)nvme_rdma_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload,
+			&desired_payload_size);
+	if (mr == NULL || desired_payload_size < req->payload_size) {
 		return -1;
 	}
 
@@ -867,6 +893,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 	void *virt_addr;
 	struct ibv_mr *mr;
 	uint32_t length;
+	uint64_t desired_payload_size;
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
@@ -885,8 +912,10 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 		return -1;
 	}
 
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr);
-	if (mr == NULL) {
+	desired_payload_size = req->payload_size;
+	mr = (struct ibv_mr *)nvme_rdma_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
+			&desired_payload_size);
+	if (mr == NULL || desired_payload_size < req->payload_size) {
 		return -1;
 	}
 
