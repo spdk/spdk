@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e75f64b_33fca52e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 3180,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-06T16:30:44Z",
+      "side": 1,
+      "message": "If you instead set desc-\u003eremove_scheduled to false here, can you eliminate remove_notified?",
+      "revId": "4c6c094eff61b8dd48b135faa237f720bf3201e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
