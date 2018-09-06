@@ -392,6 +392,30 @@
     },
     {
       "key": {
+        "uuid": "158be958_cea7132d",
+        "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T05:10:40Z",
+      "side": 1,
+      "message": "hi, Pawel\nok, will move these code into the test application, since get_rpc_methods need to tedious process like dealing with a 2D string array and memory operation.\n\nI didn\u0027t get a clear understanding on your last sentence...\ndid you mean let user appliction themselves to construct request and parse the response by json/jsonrpc/rpc API?",
+      "parentUuid": "9985cebc_fe625007",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 88
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "210c75ce_76a7351c",
         "filename": "test/rpc_client/rpc_client_test.c",
         "patchSetId": 11
