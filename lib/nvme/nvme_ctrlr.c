@@ -1551,6 +1551,13 @@ nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 	return devhandle;
 }
 
+static void
+nvme_ctrlr_enable_admin_queue(struct spdk_nvme_ctrlr *ctrlr)
+{
+	nvme_transport_qpair_reset(ctrlr->adminq);
+	nvme_qpair_enable(ctrlr->adminq);
+}
+
 /**
  * This function will be called repeatedly during initialization until the controller is ready.
  */
@@ -1712,9 +1719,7 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int	rc;
 
-	nvme_transport_qpair_reset(ctrlr->adminq);
-
-	nvme_qpair_enable(ctrlr->adminq);
+	nvme_ctrlr_enable_admin_queue(ctrlr);
 
 	rc = nvme_ctrlr_identify(ctrlr);
 	if (rc) {
