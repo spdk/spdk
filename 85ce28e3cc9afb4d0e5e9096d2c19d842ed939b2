@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a6b4235_9d3ab59b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1698,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-06T21:38:05Z",
+      "side": 1,
+      "message": "These two functions should probably be put in a separate state named NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE",
+      "revId": "85ce28e3cc9afb4d0e5e9096d2c19d842ed939b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7ef5663_94c8cafb",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1708,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-06T21:38:05Z",
+      "side": 1,
+      "message": "I think for all of these cases you just want to break; - not return. You also want to check rc and if the operation failed, possibly go into an error state.",
+      "revId": "85ce28e3cc9afb4d0e5e9096d2c19d842ed939b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
