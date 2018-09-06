@@ -172,8 +172,12 @@ err:
 static void
 spdk_iscsi_poll_group_add_conn_sock(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	struct spdk_iscsi_poll_group *poll_group;
 	int rc;
+
+	assert(conn->lcore == spdk_env_get_current_core());
+
+	poll_group = &g_spdk_iscsi.poll_group[conn->lcore];
 
 	rc = spdk_sock_group_add_sock(poll_group->sock_group, conn->sock, spdk_iscsi_conn_sock_cb, conn);
 	if (rc < 0) {
@@ -184,8 +188,12 @@ spdk_iscsi_poll_group_add_conn_sock(struct spdk_iscsi_conn *conn)
 static void
 spdk_iscsi_poll_group_remove_conn_sock(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	struct spdk_iscsi_poll_group *poll_group;
 	int rc;
+
+	assert(conn->lcore == spdk_env_get_current_core());
+
+	poll_group = &g_spdk_iscsi.poll_group[conn->lcore];
 
 	rc = spdk_sock_group_remove_sock(poll_group->sock_group, conn->sock);
 	if (rc < 0) {
@@ -196,7 +204,11 @@ spdk_iscsi_poll_group_remove_conn_sock(struct spdk_iscsi_conn *conn)
 static void
 spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	struct spdk_iscsi_poll_group *poll_group;
+
+	assert(conn->lcore == spdk_env_get_current_core());
+
+	poll_group = &g_spdk_iscsi.poll_group[conn->lcore];
 
 	conn->is_stopped = false;
 	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
@@ -206,7 +218,11 @@ spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 static void
 spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	struct spdk_iscsi_poll_group *poll_group;
+
+	assert(conn->lcore == spdk_env_get_current_core());
+
+	poll_group = &g_spdk_iscsi.poll_group[conn->lcore];
 
 	conn->is_stopped = true;
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
@@ -670,7 +686,9 @@ spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 		spdk_iscsi_conn_close_luns(conn);
 	}
 
-	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
+	assert(conn->lcore == spdk_env_get_current_core());
+
+	__sync_fetch_and_sub(&g_num_connections[conn->lcore], 1);
 	spdk_iscsi_poll_group_remove_conn(conn);
 }
 
