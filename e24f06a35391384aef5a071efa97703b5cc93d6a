@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3cd4c1ed_624cd66c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 27
+      },
+      "lineNbr": 4064,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T02:28:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b432578_f88b01ad",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c38d33e9_2a8a6094",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 27
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "11d00aea_d28d5ac9",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T02:28:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c38d33e9_2a8a6094",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f948917b_7534a40c",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 27
@@ -47,6 +83,24 @@
       "writtenOn": "2018-09-05T23:10:53Z",
       "side": 1,
       "message": "Code like this can be made simpler by doing:\n\nif (ctx \u003d\u003d NULL) {\n  return;\n}\n\nfree(ctx-\u003ereq.name);\netc.\n\nThen you don\u0027t have to indent so much code.",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fc7b5b2_da27b2bd",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T02:28:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f948917b_7534a40c",
       "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -105,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "eb793322_f1b9c079",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T02:28:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34dd0d96_eed4d05e",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "613100a2_42ae709b",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 27
@@ -116,6 +188,24 @@
       "writtenOn": "2018-09-05T23:10:53Z",
       "side": 1,
       "message": "We should probably check that raw_len \u003d\u003d sizeof(struct spdk_nvmd_cmd)) which is 64.  If it isn\u0027t, we should fail immediately.  NVMe commands must be 64 bytes in size.\n\nOh - I see that you check it down below.  But I still think it would be better to check it as soon as possible.",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5156953f_7457a94f",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T02:28:54Z",
+      "side": 1,
+      "message": "Yes, Jim, it would be better to check it as soon as possible. But there is a trifle here.\n\nBase64 string may have one or two padding character \"\u003d\", the raw_len gotten through string length is a maximum possible value.\nFor example, a 64B binary buffer \u003d\u003e 88B base64 string, but 88B base64 string \u003d\u003e 66B binary buffer. So a 88B base64 string may be a binary buffer with 64B, 65B or 66B.\nAn actual raw_len can only be determined after checking the content of a base64 string.",
+      "parentUuid": "613100a2_42ae709b",
       "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -139,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "88d92bb9_7cd592d7",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T02:28:54Z",
+      "side": 1,
+      "message": "Done\nsplit this if.",
+      "parentUuid": "34ac06bc_b6ebf184",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fcb9bfb_6736b44e",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 27
@@ -150,6 +258,24 @@
       "writtenOn": "2018-09-05T23:10:53Z",
       "side": 1,
       "message": "I feel like we should clarify this, such that ADMIN commands should specify i.e. Nvme0, and IO commands should specify i.e. Nvme0n1.  What do you think?\n\nIt is possible to have a controller with no namespaces.  So we have to be able to specify a controller name here instead of a namespace.",
+      "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99cbe4b9_d5e47fd9",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T02:28:54Z",
+      "side": 1,
+      "message": "Sorry, Jim, maybe the name of this function confused you. name here can be bot\nnvme_rpc_dev_lookup_bdev_nvme means nvme_rpc_dev_lookup through bdev_nvme. so the \"bdev\" here is not meaning a bdev device.\nany suggestion on this name, or shall I remove the postfix \"bdev_nvme\"?",
+      "parentUuid": "7fcb9bfb_6736b44e",
       "revId": "e24f06a35391384aef5a071efa97703b5cc93d6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
