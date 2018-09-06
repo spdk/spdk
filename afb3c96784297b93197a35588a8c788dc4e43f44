@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61a80d7e_27b6bf6e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 28
+      },
+      "lineNbr": 4303,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-06T03:06:03Z",
+      "side": 1,
+      "message": "looks like we need to change this also: rpc_send_nvme_cmd",
+      "range": {
+        "startLine": 4303,
+        "startChar": 19,
+        "endLine": 4303,
+        "endChar": 31
+      },
+      "revId": "afb3c96784297b93197a35588a8c788dc4e43f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
