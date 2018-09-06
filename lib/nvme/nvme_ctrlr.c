@@ -368,6 +368,7 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 
 static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
+	int rc = 0;
 	uint64_t phys_addr = 0;
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_intel_log_page_directory *log_page_directory;
@@ -379,10 +380,15 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		return -ENXIO;
 	}
 
-	spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY, SPDK_NVME_GLOBAL_NS_TAG,
-					 log_page_directory, sizeof(struct spdk_nvme_intel_log_page_directory), 0,
-					 nvme_completion_poll_cb,
-					 &status);
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY,
+					      SPDK_NVME_GLOBAL_NS_TAG, log_page_directory,
+					      sizeof(struct spdk_nvme_intel_log_page_directory),
+					      0, nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		spdk_free(log_page_directory);
+		return rc;
+	}
+
 	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		spdk_free(log_page_directory);
 		SPDK_ERRLOG("nvme_ctrlr_cmd_get_log_page failed!\n");
@@ -394,9 +400,11 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-static void
+static int
 nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
+	int	rc = 0;
+
 	memset(ctrlr->log_page_supported, 0, sizeof(ctrlr->log_page_supported));
 	/* Mandatory pages */
 	ctrlr->log_page_supported[SPDK_NVME_LOG_ERROR] = true;
@@ -406,8 +414,10 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->log_page_supported[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG] = true;
 	}
 	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL && !(ctrlr->quirks & NVME_INTEL_QUIRK_NO_LOG_PAGES)) {
-		nvme_ctrlr_set_intel_support_log_pages(ctrlr);
+		rc = nvme_ctrlr_set_intel_support_log_pages(ctrlr);
 	}
+
+	return rc;
 }
 
 static void
@@ -1726,7 +1736,11 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	nvme_ctrlr_set_supported_log_pages(ctrlr);
+	rc = nvme_ctrlr_set_supported_log_pages(ctrlr);
+	if (rc) {
+		return rc;
+	}
+
 	nvme_ctrlr_set_supported_features(ctrlr);
 
 	rc = nvme_ctrlr_set_doorbell_buffer_config(ctrlr);
