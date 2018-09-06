@@ -930,7 +930,7 @@ enomem_multi_bdev(void)
 	enum spdk_bdev_io_status status[IO_ARRAY_SIZE];
 	uint32_t i;
 	struct ut_bdev *second_bdev;
-	struct spdk_bdev_desc *second_desc;
+	struct spdk_bdev_desc *second_desc = NULL;
 	struct spdk_bdev_channel *second_bdev_ch;
 	struct spdk_io_channel *second_ch;
 	int rc;
@@ -942,6 +942,7 @@ enomem_multi_bdev(void)
 	SPDK_CU_ASSERT_FATAL(second_bdev != NULL);
 	register_bdev(second_bdev, "ut_bdev2", g_bdev.io_target);
 	spdk_bdev_open(&second_bdev->bdev, true, NULL, NULL, &second_desc);
+	SPDK_CU_ASSERT_FATAL(second_desc != NULL);
 
 	set_thread(0);
 	io_ch = spdk_bdev_get_io_channel(g_desc);
