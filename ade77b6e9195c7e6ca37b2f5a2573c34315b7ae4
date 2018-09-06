@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0e776643_c6ef71ab",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:14:14Z",
+      "side": 1,
+      "message": "level ;)",
+      "parentUuid": "b7d6d392_fc4f443e",
+      "revId": "ade77b6e9195c7e6ca37b2f5a2573c34315b7ae4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0efe4be_bc43e2ba",
         "filename": "include/spdk/json.h",
         "patchSetId": 6
@@ -47,6 +65,24 @@
       "writtenOn": "2018-09-06T01:10:48Z",
       "side": 1,
       "message": "These helper functions are OK - but is there a big benefit to adding them?  Calling spdk_json_find with SPDK_JSON_VAL_STRING or SPDK_JSON_VAL_ARRAY seems fine.\n\nMy fear is that we end up with variants of these functions for every value type.",
+      "revId": "ade77b6e9195c7e6ca37b2f5a2573c34315b7ae4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2a8af5b_1e66a3d5",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:14:14Z",
+      "side": 1,
+      "message": "They are shorter when typing.",
+      "parentUuid": "57a62808_ad120718",
       "revId": "ade77b6e9195c7e6ca37b2f5a2573c34315b7ae4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
