@@ -908,6 +908,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	struct spdk_iscsi_task *primary;
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 	struct spdk_iscsi_conn *conn = task->conn;
+	struct spdk_iscsi_pdu *pdu = task->pdu;
 
 	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task, 0);
 
@@ -943,6 +944,9 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 			}
 		}
 		spdk_iscsi_task_put(task);
+	}
+	if (! task->parent) {
+		spdk_trace_record(TRACE_ISCSI_PDU_COMPLETED, 0, 0, (uintptr_t)pdu, 0);
 	}
 }
 
@@ -1229,6 +1233,7 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 			return rc;
 		}
 
+		spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
 		if (conn->is_stopped) {
 			break;
 		}
@@ -1393,8 +1398,8 @@ SPDK_TRACE_REGISTER_FN(iscsi_conn_trace)
 					OWNER_ISCSI_CONN, OBJECT_SCSI_TASK, 0, 0, "");
 	spdk_trace_register_description("ISCSI_TASK_QUEUE", "", TRACE_ISCSI_TASK_QUEUE,
 					OWNER_ISCSI_CONN, OBJECT_SCSI_TASK, 1, 1, "pdu:   ");
-	spdk_trace_register_description("ISCSI_CONN_ACTIVE", "", TRACE_ISCSI_CONN_ACTIVE,
-					OWNER_ISCSI_CONN, OBJECT_NONE, 0, 0, "");
-	spdk_trace_register_description("ISCSI_CONN_IDLE", "", TRACE_ISCSI_CONN_IDLE,
-					OWNER_ISCSI_CONN, OBJECT_NONE, 0, 0, "");
+	spdk_trace_register_description("ISCSI_TASK_EXECUTED", "", TRACE_ISCSI_TASK_EXECUTED,
+					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 0, 0, "");
+	spdk_trace_register_description("ISCSI_PDU_COMPLETED", "", TRACE_ISCSI_PDU_COMPLETED,
+					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 0, 0, "");
 }
