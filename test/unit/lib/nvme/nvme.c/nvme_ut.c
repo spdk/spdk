@@ -65,9 +65,6 @@ DEFINE_STUB(nvme_ctrlr_add_process, int,
 DEFINE_STUB(nvme_ctrlr_process_init, int,
 	    (struct spdk_nvme_ctrlr *ctrlr), 0)
 
-DEFINE_STUB(nvme_ctrlr_start, int,
-	    (struct spdk_nvme_ctrlr *ctrlr), 0)
-
 DEFINE_STUB(spdk_pci_device_get_addr, struct spdk_pci_addr,
 	    (struct spdk_pci_device *pci_dev), {0})
 
