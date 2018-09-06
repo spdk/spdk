@@ -340,6 +340,9 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 {
 	int rc = 0, pci_phys = 0;
 	uint64_t paddr;
+#if SPDK_VFIO_ENABLED
+	uint64_t buffer_len;
+#endif
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
@@ -405,7 +408,10 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				 * we need to unmap the range from the IOMMU
 				 */
 				if (g_vfio.enabled) {
-					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, VALUE_2MB);
+					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, &buffer_len);
+					if (buffer_len < VALUE_2MB) {
+						return -EINVAL;
+					}
 					rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
 					if (rc) {
 						return -EFAULT;
@@ -619,7 +625,7 @@ spdk_vtophys(void *buf)
 
 	vaddr = (uint64_t)buf;
 
-	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr, VALUE_2MB);
+	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr, NULL);
 
 	/*
 	 * SPDK_VTOPHYS_ERROR has all bits set, so if the lookup returned SPDK_VTOPHYS_ERROR,
