@@ -618,7 +618,7 @@ nvme_rdma_mr_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 		}
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, size);
+		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
 		rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
 		if (mr) {
 			ibv_dereg_mr(mr);
@@ -842,8 +842,9 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
+	desired_payload_size = req->payload_size;
 	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload,
-			req->payload_size);
+			NULL);
 	if (mr == NULL) {
 		return -1;
 	}
@@ -887,7 +888,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 	}
 
 	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
-			req->payload_size);
+			NULL);
 	if (mr == NULL) {
 		return -1;
 	}
