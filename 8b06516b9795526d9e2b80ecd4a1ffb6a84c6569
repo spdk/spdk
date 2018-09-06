@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "abd94bf5_fe161c44",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-06T22:55:48Z",
+      "side": 1,
+      "message": "Thanks for the comments, much more cleaner for now, I will rework for the following patches and add some more WAIT_FOR_* states here.",
+      "parentUuid": "f41ca41c_582a07fa",
+      "revId": "8b06516b9795526d9e2b80ecd4a1ffb6a84c6569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c96cfb62_5807b316",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 1
