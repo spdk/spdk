@@ -708,6 +708,30 @@
     },
     {
       "key": {
+        "uuid": "5802e52f_4a2c4321",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T13:05:50Z",
+      "side": 1,
+      "message": "I think I don\u0027t understand this statement :)\n\nI wanted to say that typeof(conn) \u003d\u003d typeof(spdk_rpc_client_connect(...)) \u003d\u003d struct spdk_jsonrpc_client_conn * so there is no need to add explicit casting here to the same type as this is NOP.",
+      "parentUuid": "3bf54c7b_b59bfbff",
+      "range": {
+        "startLine": 103,
+        "startChar": 8,
+        "endLine": 103,
+        "endChar": 39
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c964f447_3de570e4",
         "filename": "lib/rpc_client/rpc_client.c",
         "patchSetId": 11
@@ -873,6 +897,30 @@
       "side": 1,
       "message": "how about providing simple RPC functions in rpc_client.h, we may providing some frequently-used API here in the future. Then, users, who want to avoid jsonrpc constructing/parsing or don\u0027t want to explore jsonrpc details, may directly use the APIs here.\n\nFor SPDK skillful users or advanced rpc methods, they may construct request and parse the response by json/jsonrpc/rpc API by themselves.",
       "parentUuid": "9d6302be_92081df0",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 88
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf401534_b5082f90",
+        "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T13:05:50Z",
+      "side": 1,
+      "message": "\u003e how about providing simple RPC functions in rpc_client.h, we may providing some frequently-used API\n\nMany questions will arise - why only those function? Where are tests? These functions neither be simple nor won\u0027t be complete (won\u0027t reflect server side RPC methods).\n\nPut them in tools common directory for now and use them internally.",
+      "parentUuid": "6aa395c7_a2ba063b",
       "range": {
         "startLine": 56,
         "startChar": 0,
