@@ -797,6 +797,12 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("nvme_identify_controller failed!\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
 	/*
 	 * Use MDTS to ensure our default max_xfer_size doesn't exceed what the
 	 *  controller supports.
@@ -830,31 +836,25 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
 	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QPAIRS, NVME_TIMEOUT_INFINITE);
 }
 
 static int
-nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr, bool *need_poll)
 {
-	struct nvme_completion_poll_status	status;
-	int					rc;
+	int	rc;
 
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
 				     &ctrlr->cdata, sizeof(ctrlr->cdata),
-				     nvme_completion_poll_cb, &status);
+				     nvme_ctrlr_identify_done, ctrlr);
 	if (rc != 0) {
 		return rc;
 	}
-
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("nvme_identify_controller failed!\n");
-		return -ENXIO;
-	}
-
-	nvme_ctrlr_identify_done(ctrlr, &status.cpl);
+	*need_poll = true;
 
 	return 0;
 }
-
 
 int
 nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
@@ -1588,6 +1588,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_cc_register cc;
 	union spdk_nvme_csts_register csts;
 	uint32_t ready_timeout_in_ms;
+	bool need_poll = false;
 	int rc;
 
 	/*
@@ -1716,8 +1717,12 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY:
-		rc = nvme_ctrlr_identify(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QPAIRS, NVME_TIMEOUT_INFINITE);
+		rc = nvme_ctrlr_identify(ctrlr, &need_poll);
+		if (need_poll) {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_NEED_POLL, NVME_TIMEOUT_INFINITE);
+		} else {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QPAIRS, NVME_TIMEOUT_INFINITE);
+		}
 		return rc;
 
 	case NVME_CTRLR_STATE_SET_NUM_QPAIRS:

@@ -431,6 +431,7 @@ static void
 test_nvme_ctrlr_init_en_1_rdy_0(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
+	enum nvme_ctrlr_state old;
 
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
@@ -481,7 +482,11 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		old = ctrlr.state;
 		nvme_ctrlr_process_init(&ctrlr);
+		if (ctrlr.state == NVME_CTRLR_STATE_NEED_POLL) {
+			ctrlr.state = old + 1;
+		}
 	}
 
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
@@ -492,7 +497,7 @@ static void
 test_nvme_ctrlr_init_en_1_rdy_1(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
-
+	enum nvme_ctrlr_state old;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -535,7 +540,11 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		old = ctrlr.state;
 		nvme_ctrlr_process_init(&ctrlr);
+		if (ctrlr.state == NVME_CTRLR_STATE_NEED_POLL) {
+			ctrlr.state = old + 1;
+		}
 	}
 
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
@@ -546,6 +555,7 @@ static void
 test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
+	enum nvme_ctrlr_state old;
 
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
@@ -710,7 +720,11 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		old = ctrlr.state;
 		nvme_ctrlr_process_init(&ctrlr);
+		if (ctrlr.state == NVME_CTRLR_STATE_NEED_POLL) {
+			ctrlr.state = old + 1;
+		}
 	}
 
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
@@ -721,6 +735,7 @@ static void
 test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
+	enum nvme_ctrlr_state old;
 
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
@@ -887,7 +902,11 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		old = ctrlr.state;
 		nvme_ctrlr_process_init(&ctrlr);
+		if (ctrlr.state == NVME_CTRLR_STATE_NEED_POLL) {
+			ctrlr.state = old + 1;
+		}
 	}
 
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
@@ -897,6 +916,7 @@ static void
 test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
+	enum nvme_ctrlr_state old;
 
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
@@ -1063,7 +1083,11 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		old = ctrlr.state;
 		nvme_ctrlr_process_init(&ctrlr);
+		if (ctrlr.state == NVME_CTRLR_STATE_NEED_POLL) {
+			ctrlr.state = old + 1;
+		}
 	}
 
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
@@ -1074,6 +1098,7 @@ static void
 test_nvme_ctrlr_init_en_0_rdy_0(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
+	enum nvme_ctrlr_state old;
 
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
@@ -1109,7 +1134,11 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		old = ctrlr.state;
 		nvme_ctrlr_process_init(&ctrlr);
+		if (ctrlr.state == NVME_CTRLR_STATE_NEED_POLL) {
+			ctrlr.state = old + 1;
+		}
 	}
 
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
@@ -1120,6 +1149,7 @@ static void
 test_nvme_ctrlr_init_en_0_rdy_1(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
+	enum nvme_ctrlr_state old;
 
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
@@ -1161,7 +1191,11 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		old = ctrlr.state;
 		nvme_ctrlr_process_init(&ctrlr);
+		if (ctrlr.state == NVME_CTRLR_STATE_NEED_POLL) {
+			ctrlr.state = old + 1;
+		}
 	}
 
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
