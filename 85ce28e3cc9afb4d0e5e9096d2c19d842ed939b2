@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "88436d66_feb52bce",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1698,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-06T23:04:11Z",
+      "side": 1,
+      "message": "Good idea.",
+      "parentUuid": "3a6b4235_9d3ab59b",
+      "revId": "85ce28e3cc9afb4d0e5e9096d2c19d842ed939b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7ef5663_94c8cafb",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-06T21:38:05Z",
       "side": 1,
       "message": "I think for all of these cases you just want to break; - not return. You also want to check rc and if the operation failed, possibly go into an error state.",
+      "revId": "85ce28e3cc9afb4d0e5e9096d2c19d842ed939b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fad0f5ff_194c0395",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1708,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-06T23:04:11Z",
+      "side": 1,
+      "message": "Both break and return can work here, let\u0027s figure out error state is required or not to make the code more clear, for this patch, just return error code is more clear, set it to ERROR state will need another cycle.",
+      "parentUuid": "c7ef5663_94c8cafb",
       "revId": "85ce28e3cc9afb4d0e5e9096d2c19d842ed939b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
