@@ -50,6 +50,14 @@ Default config file pathnames have been removed from iscsi_tgt, nvmf_tgt
 and vhost.  Config file pathnames may now only be specified using the
 -c command line option.
 
+Users may no longer set DPDK_DIR in their environment to specify the
+location of the DPDK installation used to build SPDK.  Using DPDK_DIR
+has not been the documented nor recommended way to specify the DPDK
+location for several releases, but removing it ensures no unexpected
+surprises for users who may have DPDK_DIR defined for other reasons.
+Users should just use the "configure" script to specify the DPDK
+location before building SPDK.
+
 ## v18.07:
 
 ### bdev
