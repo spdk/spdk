@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f41ca41c_582a07fa",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-06T21:45:12Z",
+      "side": 1,
+      "message": "I think he can leave in the IDENTIFY state, but just add WAIT_FOR_IDENTIFY. The IDENTIFY state would just call nvme_ctrlr_identify and then nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY, ...) and break if it succeeds. The reason I like the extra state is that nvme_ctrlr_identify may fail immediately (I\u0027m really thinking of the other initialization commands, but let\u0027s stick with identify) and the correct way to handle that may differ depending on whether the command is really required or not. It\u0027s more verbose to have more states, but I think it\u0027s ultimately clearer.",
+      "parentUuid": "bae7b49c_f80311ff",
+      "revId": "8b06516b9795526d9e2b80ecd4a1ffb6a84c6569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c96cfb62_5807b316",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 1
