@@ -16,6 +16,24 @@
       "revId": "507188600a5133fa57fc0da3d5660666c5b63d6d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3805b628_4f017899",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1040,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-06T01:52:10Z",
+      "side": 1,
+      "message": "Actually this patch set should be added RFC prefix, I didn\u0027t finish all the features just want to make sure I understand the requirement correctly before it. :)",
+      "parentUuid": "fb3891ad_30bd6953",
+      "revId": "507188600a5133fa57fc0da3d5660666c5b63d6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
