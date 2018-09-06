@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6ea08e0c_bfa580c9",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75e0fe92_ebae9917",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7492ec99_a13e6b2a",
         "filename": "include/spdk/jsonrpc.h",
         "patchSetId": 11
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "fbcf1667_b926949c",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "fields of version and id can apply this change.\n\nBut, it\u0027s better to leave result unchanged, since only specific methods know what types, their results are.",
+      "parentUuid": "4e47e0bf_58b7ca1a",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b970d798_6ae6ae7e",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 11
@@ -64,6 +100,24 @@
       "writtenOn": "2018-09-05T17:20:17Z",
       "side": 1,
       "message": "remove this TODO",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "defbdbef_2895ea95",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b970d798_6ae6ae7e",
       "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "7ef6fb0c_0beb6647",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c47c6107_67e36867",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d381f87f_ac1c1501",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 11
@@ -98,6 +170,24 @@
       "writtenOn": "2018-09-05T17:20:17Z",
       "side": 1,
       "message": "usually we try to avoid starting static function with spdk_.  Normally only public API functions start with spdk_.  So calling this _jsonrpc_client_write_cb makes it clear that this is a private function and not part of the public API.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dec68a3c_95ba4994",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d381f87f_ac1c1501",
       "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +211,24 @@
     },
     {
       "key": {
+        "uuid": "f2048964_985f4873",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be1ceb6f_dbcd6369",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5071fbb3_ada7e00d",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 11
@@ -132,6 +240,24 @@
       "writtenOn": "2018-09-05T17:20:17Z",
       "side": 1,
       "message": "You can just include the end_request contents directly here, since end_request() is static and only called from this location.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abeda79d_bd53ce39",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5071fbb3_ada7e00d",
       "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -155,6 +281,24 @@
     },
     {
       "key": {
+        "uuid": "33336227_74f9fe25",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "856fe00a_ab2fbd50",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd7d4f15_43d86fc7",
         "filename": "lib/jsonrpc/jsonrpc_internal.h",
         "patchSetId": 11
@@ -166,6 +310,24 @@
       "writtenOn": "2018-09-05T17:20:17Z",
       "side": 1,
       "message": "I would suggest making this a bit more similar to spdk_jsonrpc_server_conn:\n\nMainly this would be putting the contents of spdk_json_rpc_client_response directly in spdk_jsonrpc_client_conn.  For example, spdk_jsonrpc_server_conn directly contains the recv_buf, recv_len and values arrays.\n\nThen spdk_jsonrpc_client_response can be removed.\n\nI\u0027m also not sure that recv_offset needs to be in this structure.  I think it can be a local variable in the function that uses it.",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a647da4_6b103fe2",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd7d4f15_43d86fc7",
       "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -212,6 +374,24 @@
     },
     {
       "key": {
+        "uuid": "5d1dddca_0bec2d6a",
+        "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "OK, will apply this.",
+      "parentUuid": "2739bff3_041e346f",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "210c75ce_76a7351c",
         "filename": "test/rpc_client/rpc_client_test.c",
         "patchSetId": 11
@@ -223,6 +403,24 @@
       "writtenOn": "2018-09-05T17:20:17Z",
       "side": 1,
       "message": "can y\u0010ou include spdk/event.h and use SPDK_DEFAULT_RPC_ADDR here instead?",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdf1cf7a_2111b7e1",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T04:33:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "210c75ce_76a7351c",
       "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
