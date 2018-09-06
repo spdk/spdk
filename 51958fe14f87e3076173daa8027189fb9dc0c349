@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af3c590d_f6a75166",
+        "filename": "autobuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-06T23:01:19Z",
+      "side": 1,
+      "message": "Putting this block here is a little confusing - maybe move it above line 32?",
+      "revId": "51958fe14f87e3076173daa8027189fb9dc0c349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b48810cb_6ab68271",
+        "filename": "autobuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-06T23:01:19Z",
+      "side": 1,
+      "message": "I think you want to do a make clean before the shared library build.",
+      "revId": "51958fe14f87e3076173daa8027189fb9dc0c349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
