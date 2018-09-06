@@ -420,7 +420,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 		tmp = STAILQ_FIRST(stailq);
 
 		aligned_buf = (void *)(((uintptr_t)buf + 511) & ~511UL);
-		spdk_bdev_io_set_buf(bdev_io, aligned_buf, tmp->internal.buf_len);
+		spdk_bdev_io_set_buf(tmp, aligned_buf, tmp->internal.buf_len);
 
 		STAILQ_REMOVE_HEAD(stailq, internal.buf_link);
 		tmp->internal.buf = buf;
