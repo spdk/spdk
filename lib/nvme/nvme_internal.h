@@ -413,6 +413,56 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
 
 	/**
+	 * Enable the Admin queue of the controller.
+	 */
+	NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE,
+
+	/**
+	 * Identify Controller command will be sent to then controller.
+	 */
+	NVME_CTRLR_STATE_IDENTIFY,
+
+	/**
+	 * Setup Number of Queues of the controller.
+	 */
+	NVME_CTRLR_STATE_SET_NUM_QPAIRS,
+
+	/**
+	 * Construct Namespaces of the controller.
+	 */
+	NVME_CTRLR_STATE_CONSTRUCT_NS,
+
+	/**
+	 * Configure AER of the controller.
+	 */
+	NVME_CTRLR_STATE_CONFIGURE_AER,
+
+	/**
+	 * Set supported log pages of the controller.
+	 */
+	NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
+
+	/**
+	 * Set supported features of the controller.
+	 */
+	NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES,
+
+	/**
+	 * Set Doorbell Buffer Config of the controller.
+	 */
+	NVME_CTRLR_STATE_SET_DB_BUF_CFG,
+
+	/**
+	 * Set Keep Alive Timeout of the controller.
+	 */
+	NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
+
+	/**
+	 * Set Host ID of the controller.
+	 */
+	NVME_CTRLR_STATE_SET_HOST_ID,
+
+	/**
 	 * Controller initialization has completed and the controller is ready.
 	 */
 	NVME_CTRLR_STATE_READY

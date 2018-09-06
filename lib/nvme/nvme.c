@@ -406,8 +406,8 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 	while (!TAILQ_EMPTY(&g_nvme_init_ctrlrs)) {
 		TAILQ_FOREACH_SAFE(ctrlr, &g_nvme_init_ctrlrs, tailq, ctrlr_tmp) {
 			/* Drop the driver lock while calling nvme_ctrlr_process_init()
-			 *  since it needs to acquire the driver lock internally when calling
-			 *  nvme_ctrlr_start().
+			 *  since it needs to acquire the driver lock internally when initializing
+			 *  controller.
 			 *
 			 * TODO: Rethink the locking - maybe reset should take the lock so that start() and
 			 *  the functions it calls (in particular nvme_ctrlr_set_num_qpairs())

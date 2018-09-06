@@ -41,8 +41,6 @@
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 
-static int nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
-
 static int
 nvme_ctrlr_get_cc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc)
 {
@@ -618,6 +616,26 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "enable controller by writing CC.EN = 1";
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		return "wait for CSTS.RDY = 1";
+	case NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE:
+		return "enable admin queue";
+	case NVME_CTRLR_STATE_IDENTIFY:
+		return "identify controller";
+	case NVME_CTRLR_STATE_SET_NUM_QPAIRS:
+		return "set number of queues";
+	case NVME_CTRLR_STATE_CONSTRUCT_NS:
+		return "construct namespaces";
+	case NVME_CTRLR_STATE_CONFIGURE_AER:
+		return "configure AER";
+	case NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES:
+		return "set supported log pages";
+	case NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES:
+		return "set supported features";
+	case NVME_CTRLR_STATE_SET_DB_BUF_CFG:
+		return "set doorbell buffer config";
+	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
+		return "set keep alive timeout";
+	case NVME_CTRLR_STATE_SET_HOST_ID:
+		return "set host ID";
 	case NVME_CTRLR_STATE_READY:
 		return "ready";
 	}
@@ -1567,7 +1585,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_cc_register cc;
 	union spdk_nvme_csts_register csts;
 	uint32_t ready_timeout_in_ms;
-	int rc;
+	int rc = 0;
 
 	/*
 	 * May need to avoid accessing any register on the target controller
@@ -1685,12 +1703,61 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			SPDK_DEBUGLOG(SPDK_LOG_NVME, "CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
 			/*
 			 * The controller has been enabled.
-			 *  Perform the rest of initialization in nvme_ctrlr_start() serially.
+			 *  Perform the rest of initialization serially.
 			 */
-			rc = nvme_ctrlr_start(ctrlr);
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
-			return rc;
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE, NVME_TIMEOUT_INFINITE);
+			return 0;
 		}
+		break;
+
+	case NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE:
+		nvme_ctrlr_enable_admin_queue(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_IDENTIFY:
+		rc = nvme_ctrlr_identify(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QPAIRS, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_SET_NUM_QPAIRS:
+		rc = nvme_ctrlr_set_num_qpairs(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONSTRUCT_NS, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_CONSTRUCT_NS:
+		rc = nvme_ctrlr_construct_namespaces(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_CONFIGURE_AER:
+		rc = nvme_ctrlr_configure_aer(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES:
+		rc = nvme_ctrlr_set_supported_log_pages(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES:
+		nvme_ctrlr_set_supported_features(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_DB_BUF_CFG, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_SET_DB_BUF_CFG:
+		rc = nvme_ctrlr_set_doorbell_buffer_config(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
+		rc = nvme_ctrlr_set_keep_alive_timeout(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_SET_HOST_ID:
+		rc = nvme_ctrlr_set_host_id(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
 		break;
 
 	case NVME_CTRLR_STATE_READY:
@@ -1711,60 +1778,7 @@ init_timeout:
 		return -1;
 	}
 
-	return 0;
-}
-
-static int
-nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
-{
-	int	rc;
-
-	nvme_ctrlr_enable_admin_queue(ctrlr);
-
-	rc = nvme_ctrlr_identify(ctrlr);
-	if (rc) {
-		return rc;
-	}
-
-	rc = nvme_ctrlr_set_num_qpairs(ctrlr);
-	if (rc) {
-		return rc;
-	}
-
-	rc = nvme_ctrlr_construct_namespaces(ctrlr);
-	if (rc) {
-		return rc;
-	}
-
-	rc = nvme_ctrlr_configure_aer(ctrlr);
-	if (rc) {
-		return rc;
-	}
-
-	rc = nvme_ctrlr_set_supported_log_pages(ctrlr);
-	if (rc) {
-		return rc;
-	}
-
-	nvme_ctrlr_set_supported_features(ctrlr);
-
-	rc = nvme_ctrlr_set_doorbell_buffer_config(ctrlr);
-	if (rc) {
-		return rc;
-	}
-
-	rc = nvme_ctrlr_set_keep_alive_timeout(ctrlr);
-	if (rc) {
-		SPDK_ERRLOG("Setting keep alive timeout failed\n");
-		return rc;
-	}
-
-	rc = nvme_ctrlr_set_host_id(ctrlr);
-	if (rc) {
-		return rc;
-	}
-
-	return 0;
+	return rc;
 }
 
 int
