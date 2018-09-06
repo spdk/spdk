@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "419c8b20_1b47a6c9",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "Connection shouldn\u0027t be tight to request/response. I think that spdk_jsonrpc_client_request should contain all fields from spdk_jsonrpc_client_response and connection should maintain linked list of these requests (if ID is provided). This way user will be able to issue more than one request at a time.",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 19
+      },
+      "revId": "af3fe1bb5fce7c989e07f28e8f5baafe840caf9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -124,6 +124,98 @@
     },
     {
       "key": {
+        "uuid": "b996bfee_192a35ec",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "Is this optional?",
+      "range": {
+        "startLine": 54,
+        "startChar": 70,
+        "endLine": 54,
+        "endChar": 74
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "485582d3_aa11aee6",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "I don\u0027t think this is optional in response.",
+      "range": {
+        "startLine": 56,
+        "startChar": 60,
+        "endLine": 56,
+        "endChar": 64
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d6df467_162ebdfc",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "I think you can just return here and in line 76",
+      "range": {
+        "startLine": 70,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 12
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dff01974_202315d8",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "ID should be checked here vs JSON RPC request ID.",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 2
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c47c6107_67e36867",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 11
@@ -188,6 +280,75 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "d381f87f_ac1c1501",
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07a4b102_b75e1822",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "spdk_json_write_named_string",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 34
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc4ad5ee_ef11e32e",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "spdk_json_write_named_int32\n\nrequest ID should be a parameter as there might be many simultaneous request on one connection.",
+      "range": {
+        "startLine": 182,
+        "startChar": 0,
+        "endLine": 183,
+        "endChar": 29
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3546e07_1ded0adb",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "is this new line necessary?",
+      "range": {
+        "startLine": 193,
+        "startChar": 0,
+        "endLine": 193,
+        "endChar": 48
+      },
       "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -334,6 +495,98 @@
     },
     {
       "key": {
+        "uuid": "26f6b7f3_98bf569c",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "Can you void this condition? There might be cases when buffer is shared or read only from other reasons.",
+      "range": {
+        "startLine": 150,
+        "startChar": 3,
+        "endLine": 150,
+        "endChar": 74
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f74f0e6f_7dd41006",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "Automagical discovery of sun_family is pitfall of RPC server that forbid providing address as relative path.\n\nDon\u0027t duplicate server shortcoming in client implementation and require from user to provide type of this address.",
+      "range": {
+        "startLine": 45,
+        "startChar": 5,
+        "endLine": 45,
+        "endChar": 28
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bed5a1a5_7eb4248b",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "this casting is not needed.",
+      "range": {
+        "startLine": 103,
+        "startChar": 8,
+        "endLine": 103,
+        "endChar": 39
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c964f447_3de570e4",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "this casting is not needed.",
+      "range": {
+        "startLine": 108,
+        "startChar": 27,
+        "endLine": 108,
+        "endChar": 62
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2739bff3_041e346f",
         "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
         "patchSetId": 11
@@ -404,6 +657,30 @@
       "side": 1,
       "message": "hi, Pawel\nok, will move these code into the test application, since get_rpc_methods need to tedious process like dealing with a 2D string array and memory operation.\n\nI didn\u0027t get a clear understanding on your last sentence...\ndid you mean let user appliction themselves to construct request and parse the response by json/jsonrpc/rpc API?",
       "parentUuid": "9985cebc_fe625007",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 88
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d6302be_92081df0",
+        "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-06T07:09:23Z",
+      "side": 1,
+      "message": "\u003e I didn\u0027t get a clear understanding on your last sentence... did you mean let user appliction themselves to construct request and parse the response by json/jsonrpc/rpc API?\n\nFor now, yes.",
+      "parentUuid": "158be958_cea7132d",
       "range": {
         "startLine": 56,
         "startChar": 0,
