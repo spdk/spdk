@@ -2717,7 +2717,7 @@ static void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn,
 				  struct spdk_iscsi_task *task)
 {
 	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->id, task->scsi.length,
-			  (uintptr_t)task, (uintptr_t)task->pdu);
+			  (uintptr_t)task->pdu, (uintptr_t)task->pdu);
 	task->is_queued = true;
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
 }
