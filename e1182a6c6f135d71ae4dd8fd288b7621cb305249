@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "4314f0a3_d318e270",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-06T23:19:52Z",
+      "side": 1,
+      "message": "I tried to summarize my fragmented feedback by this comment but I should not add this comment. Sorry for bothering you.\n\nYou got all points I hoped and fine to me.",
+      "parentUuid": "c0cef2ac_99185c58",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a18da003_29697865",
         "filename": "scripts/config_converter.py",
         "patchSetId": 53
