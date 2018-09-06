@@ -471,6 +471,30 @@
     },
     {
       "key": {
+        "uuid": "dd532d59_9113a7d9",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1799,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-09-06T15:56:01Z",
+      "side": 1,
+      "message": "I\u0027m going to go ahead and make the change to nvmf_create_transport to following verb_noun syntax of the other rpc calls.",
+      "parentUuid": "4a445036_df6a1cb2",
+      "range": {
+        "startLine": 1799,
+        "startChar": 19,
+        "endLine": 1799,
+        "endChar": 40
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d880e00_224a0428",
         "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
         "patchSetId": 5
