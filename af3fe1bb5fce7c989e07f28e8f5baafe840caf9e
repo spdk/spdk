@@ -22,6 +22,30 @@
       "revId": "af3fe1bb5fce7c989e07f28e8f5baafe840caf9e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fb3c943_c290e815",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T08:28:15Z",
+      "side": 1,
+      "message": "This is a good point!\nYes, if wanna issue a set of requests, the connection shouldn\u0027t be tight to request.\n\nI have considered whether this situation or even async mode should be supported. But my ending conclusion is that a brief sync-mode should be enough for most of the cases as a beginning.\nSet of requests or async-mode ability can be treated as better-to-have. they can be implemented like you said if requirements appeared.",
+      "parentUuid": "419c8b20_1b47a6c9",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 19
+      },
+      "revId": "af3fe1bb5fce7c989e07f28e8f5baafe840caf9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

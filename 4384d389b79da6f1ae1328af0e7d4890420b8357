@@ -309,6 +309,30 @@
     },
     {
       "key": {
+        "uuid": "8ff3ca17_3cc3ae4e",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T08:28:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07a4b102_b75e1822",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 34
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc4ad5ee_ef11e32e",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 11
@@ -332,6 +356,30 @@
     },
     {
       "key": {
+        "uuid": "4a30ed01_76b16c3c",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T08:28:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bc4ad5ee_ef11e32e",
+      "range": {
+        "startLine": 182,
+        "startChar": 0,
+        "endLine": 183,
+        "endChar": 29
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3546e07_1ded0adb",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 11
@@ -343,6 +391,30 @@
       "writtenOn": "2018-09-06T07:09:23Z",
       "side": 1,
       "message": "is this new line necessary?",
+      "range": {
+        "startLine": 193,
+        "startChar": 0,
+        "endLine": 193,
+        "endChar": 48
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da7a6feb_726bb87e",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T08:28:15Z",
+      "side": 1,
+      "message": "it is not necessary, and it doesn\u0027t matter whether have it or not.\nBut having a \u0027/n\u0027 is good to print.",
+      "parentUuid": "b3546e07_1ded0adb",
       "range": {
         "startLine": 193,
         "startChar": 0,
@@ -518,6 +590,30 @@
     },
     {
       "key": {
+        "uuid": "d4673f8f_f2d4060d",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T08:28:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "26f6b7f3_98bf569c",
+      "range": {
+        "startLine": 150,
+        "startChar": 3,
+        "endLine": 150,
+        "endChar": 74
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f74f0e6f_7dd41006",
         "filename": "lib/rpc_client/rpc_client.c",
         "patchSetId": 11
@@ -529,6 +625,30 @@
       "writtenOn": "2018-09-06T07:09:23Z",
       "side": 1,
       "message": "Automagical discovery of sun_family is pitfall of RPC server that forbid providing address as relative path.\n\nDon\u0027t duplicate server shortcoming in client implementation and require from user to provide type of this address.",
+      "range": {
+        "startLine": 45,
+        "startChar": 5,
+        "endLine": 45,
+        "endChar": 28
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "367eb281_a23f64f4",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T08:28:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f74f0e6f_7dd41006",
       "range": {
         "startLine": 45,
         "startChar": 5,
@@ -564,6 +684,30 @@
     },
     {
       "key": {
+        "uuid": "3bf54c7b_b59bfbff",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T08:28:15Z",
+      "side": 1,
+      "message": "struct spdk_rpc_client_conn is defined with an expectation that users can ignore the existance of jsonrpc and other internal details.\nI would like that reading and including rpc_client.h is enough to execute spdk rpc methods.",
+      "parentUuid": "bed5a1a5_7eb4248b",
+      "range": {
+        "startLine": 103,
+        "startChar": 8,
+        "endLine": 103,
+        "endChar": 39
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c964f447_3de570e4",
         "filename": "lib/rpc_client/rpc_client.c",
         "patchSetId": 11
@@ -575,6 +719,30 @@
       "writtenOn": "2018-09-06T07:09:23Z",
       "side": 1,
       "message": "this casting is not needed.",
+      "range": {
+        "startLine": 108,
+        "startChar": 27,
+        "endLine": 108,
+        "endChar": 62
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e26b92f_f8f5c8e6",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T08:28:15Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "c964f447_3de570e4",
       "range": {
         "startLine": 108,
         "startChar": 27,
@@ -681,6 +849,30 @@
       "side": 1,
       "message": "\u003e I didn\u0027t get a clear understanding on your last sentence... did you mean let user appliction themselves to construct request and parse the response by json/jsonrpc/rpc API?\n\nFor now, yes.",
       "parentUuid": "158be958_cea7132d",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 88
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6aa395c7_a2ba063b",
+        "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-06T08:28:15Z",
+      "side": 1,
+      "message": "how about providing simple RPC functions in rpc_client.h, we may providing some frequently-used API here in the future. Then, users, who want to avoid jsonrpc constructing/parsing or don\u0027t want to explore jsonrpc details, may directly use the APIs here.\n\nFor SPDK skillful users or advanced rpc methods, they may construct request and parse the response by json/jsonrpc/rpc API by themselves.",
+      "parentUuid": "9d6302be_92081df0",
       "range": {
         "startLine": 56,
         "startChar": 0,
