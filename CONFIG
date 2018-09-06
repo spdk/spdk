@@ -66,9 +66,7 @@ CONFIG_TESTS?=y
 CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env_dpdk
 
 # This directory should contain 'include' and 'lib' directories for your DPDK
-# installation. Alternatively you can specify this on the command line
-# with 'make DPDK_DIR=/path/to/dpdk'. This is only a valid entry
-# when using the default SPDK environment library.
+# installation.
 CONFIG_DPDK_DIR?=$(SPDK_ROOT_DIR)/dpdk/build
 
 # Build SPDK FIO plugin. Requires FIO_SOURCE_DIR set to a valid
