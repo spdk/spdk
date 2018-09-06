@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "c0cef2ac_99185c58",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Could you please clarify? I don\u0027t know exactly what you mean in this point.",
+      "parentUuid": "96da185a_a92f68cd",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a18da003_29697865",
         "filename": "scripts/config_converter.py",
         "patchSetId": 53
@@ -47,6 +65,24 @@
       "writtenOn": "2018-09-04T01:39:14Z",
       "side": 1,
       "message": "Will you reorder the following to bdev, scsi, nvmf, vhost, iscsi?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3d3da0_3c654d3a",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a18da003_29697865",
       "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "74d590ae_81d08b94",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a50f186_eac7d963",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5a4e5f7_5f49acc2",
         "filename": "scripts/config_converter.py",
         "patchSetId": 53
@@ -81,6 +135,24 @@
       "writtenOn": "2018-09-04T01:39:14Z",
       "side": 1,
       "message": "get_nvmf_subsystem_json may be better?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d0c6a2d_967f9420",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5a4e5f7_5f49acc2",
       "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "071953e0_9e593380",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1bf46f66_7bd362b3",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d755bbe7_fd24ee17",
         "filename": "scripts/config_converter.py",
         "patchSetId": 53
@@ -121,6 +211,24 @@
     },
     {
       "key": {
+        "uuid": "527e66ab_961416a7",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d755bbe7_fd24ee17",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38932fe7_fa8cfcbb",
         "filename": "scripts/config_converter.py",
         "patchSetId": 53
@@ -132,6 +240,24 @@
       "writtenOn": "2018-09-04T01:39:14Z",
       "side": 1,
       "message": "get_iscsi_portal_group_json?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c75e11e_2719be01",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "38932fe7_fa8cfcbb",
       "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -201,6 +327,30 @@
     },
     {
       "key": {
+        "uuid": "c6a0f985_9e202e26",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "969b933c_df8ec270",
+      "range": {
+        "startLine": 417,
+        "startChar": 20,
+        "endLine": 417,
+        "endChar": 47
+      },
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "433a160c_72cc4d5f",
         "filename": "scripts/config_converter.py",
         "patchSetId": 53
@@ -212,6 +362,24 @@
       "writtenOn": "2018-09-04T01:39:14Z",
       "side": 1,
       "message": "get_iscsi_initiator_group_json",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f1d38a2_b71f6b41",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "433a160c_72cc4d5f",
       "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -235,6 +403,24 @@
     },
     {
       "key": {
+        "uuid": "20d4e5b2_42b52529",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0e0116a6_82696d76",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aa8ed33f_0aa99cc1",
         "filename": "scripts/config_converter.py",
         "patchSetId": 53
@@ -246,6 +432,24 @@
       "writtenOn": "2018-09-04T01:39:14Z",
       "side": 1,
       "message": "get_pmem_bdev_json ?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24209ec5_efc32d5e",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aa8ed33f_0aa99cc1",
       "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -269,6 +473,24 @@
     },
     {
       "key": {
+        "uuid": "c2e955fd_8dc0d4aa",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3e4e486b_fa1e5ec6",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d56b7162_669356af",
         "filename": "scripts/config_converter.py",
         "patchSetId": 53
@@ -280,6 +502,24 @@
       "writtenOn": "2018-09-04T01:39:14Z",
       "side": 1,
       "message": "get_nvme_bdev_json?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0673eb6_77c4e9d7",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d56b7162_669356af",
       "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -303,6 +543,24 @@
     },
     {
       "key": {
+        "uuid": "006b68be_71541a84",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50d0742f_8a1c5b72",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b55dc8b9_7af06f48",
         "filename": "scripts/config_converter.py",
         "patchSetId": 53
@@ -314,6 +572,24 @@
       "writtenOn": "2018-09-04T01:39:14Z",
       "side": 1,
       "message": "get_malloc_bdev_json?",
+      "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "976b00f4_e1ec9c97",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-06T21:52:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b55dc8b9_7af06f48",
       "revId": "e1182a6c6f135d71ae4dd8fd288b7621cb305249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
