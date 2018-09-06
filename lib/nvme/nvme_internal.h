@@ -458,9 +458,19 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_SET_HOST_ID,
 
 	/**
+	 * Waiting for pending Admin commands to be completed.
+	 */
+	NVME_CTRLR_STATE_NEED_POLL,
+
+	/**
 	 * Controller initialization has completed and the controller is ready.
 	 */
-	NVME_CTRLR_STATE_READY
+	NVME_CTRLR_STATE_READY,
+
+	/**
+	 * Controller inilialization has an error.
+	 */
+	NVME_CTRLR_STATE_ERROR
 };
 
 #define NVME_TIMEOUT_INFINITE	UINT64_MAX
