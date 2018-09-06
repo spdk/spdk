@@ -809,6 +809,11 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+	if (ctrlr->cdata.sgls.supported) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
+		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
+	}
+
 	return 0;
 }
 
@@ -1723,11 +1728,6 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_set_supported_log_pages(ctrlr);
 	nvme_ctrlr_set_supported_features(ctrlr);
-
-	if (ctrlr->cdata.sgls.supported) {
-		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
-		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
-	}
 
 	rc = nvme_ctrlr_set_doorbell_buffer_config(ctrlr);
 	if (rc) {
