@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "16030efb_84f9c9a7",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-06T01:46:04Z",
+      "side": 1,
+      "message": "ok, will move this code to Identify callback in an separate patch.",
+      "parentUuid": "70272241_38afcfff",
+      "revId": "218da1fb2132d5bf492e1b051c9a25b4657f682d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22e58ec5_80f05128",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 8
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "539b39e3_62e88e63",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 840,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-06T01:46:04Z",
+      "side": 1,
+      "message": "Got it. I will modify the patch like you described here.",
+      "parentUuid": "22e58ec5_80f05128",
+      "revId": "218da1fb2132d5bf492e1b051c9a25b4657f682d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fc6e01d_0ec34f3e",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 8
@@ -64,6 +100,24 @@
       "writtenOn": "2018-09-05T21:53:51Z",
       "side": 1,
       "message": "I would just create separate states for each sub-function in nvme_ctrlr_start.  We already have lots of states already, so I think more will not be too bad.  It will also make the code more clear I think.\n\nSo NVME_CTRLR_STATE_IDENTIFY, NVME_CTRLR_STATE_SET_NUM_QPAIRS, etc.",
+      "revId": "218da1fb2132d5bf492e1b051c9a25b4657f682d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ac5035e_1b6c9d7e",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1711,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-06T01:46:04Z",
+      "side": 1,
+      "message": "ok, this is another way, I will change the patch using this method.",
+      "parentUuid": "7fc6e01d_0ec34f3e",
       "revId": "218da1fb2132d5bf492e1b051c9a25b4657f682d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
