@@ -44,7 +44,7 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 {
 	if (lun) {
 		TAILQ_REMOVE(&lun->tasks, task, scsi_link);
-		spdk_trace_record(TRACE_SCSI_TASK_DONE, lun->dev->id, 0, (uintptr_t)task, 0);
+		spdk_trace_record(TRACE_SCSI_TASK_DONE, 0, 0, 0, 0);
 	}
 	task->cpl_fn(task);
 }
@@ -156,7 +156,7 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 	int rc;
 
 	task->status = SPDK_SCSI_STATUS_GOOD;
-	spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
+	spdk_trace_record(TRACE_SCSI_TASK_START, 1, 0, 0, 0);
 	TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 	if (!lun->removed) {
 		rc = spdk_bdev_scsi_execute(task);

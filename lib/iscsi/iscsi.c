@@ -492,8 +492,10 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	/* All data for this PDU has now been read from the socket. */
 	conn->pdu_in_progress = NULL;
 
-	spdk_trace_record(TRACE_READ_PDU, conn->id, pdu->data_valid_bytes,
-			  (uintptr_t)pdu, pdu->bhs.opcode);
+
+	spdk_trace_record(TRACE_ISCSI_PDU_NEW, 0, 0,
+			  0, 0);
+
 
 	/* Data Segment */
 	if (data_len != 0) {
@@ -2716,8 +2718,8 @@ spdk_iscsi_compare_pdu_bhs_within_existed_r2t_tasks(struct spdk_iscsi_conn *conn
 static void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn,
 				  struct spdk_iscsi_task *task)
 {
-	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->id, task->scsi.length,
-			  (uintptr_t)task, (uintptr_t)task->pdu);
+	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, 0, 0,
+			  0, 0);
 	task->is_queued = true;
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
 }
