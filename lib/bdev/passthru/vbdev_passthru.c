@@ -195,7 +195,7 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		rc = spdk_bdev_writev_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
 					     bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-					     bdev_io->u.bdev.num_blocks, _pt_complete_io,
+					     bdev_io->u.bdev.num_blocks, NULL, _pt_complete_io,
 					     bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:

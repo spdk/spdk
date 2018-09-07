@@ -185,6 +185,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 int
 spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+		       struct spdk_bdev_io_opts *opts,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct io_output *p = &g_io_output[g_io_output_index];

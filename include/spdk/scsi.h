@@ -142,6 +142,9 @@ struct spdk_scsi_task {
 
 	uint32_t abort_id;
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
+
+	/** Indicate it is the primary task. */
+	bool is_primary_task;
 };
 
 struct spdk_scsi_port;
