@@ -620,6 +620,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "enable admin queue";
 	case NVME_CTRLR_STATE_IDENTIFY:
 		return "identify controller";
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
+		return "wait for identify controller";
 	case NVME_CTRLR_STATE_SET_NUM_QPAIRS:
 		return "set number of queues";
 	case NVME_CTRLR_STATE_CONSTRUCT_NS:
@@ -797,6 +799,12 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("nvme_identify_controller failed!\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
 	/*
 	 * Use MDTS to ensure our default max_xfer_size doesn't exceed what the
 	 *  controller supports.
@@ -830,31 +838,27 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
 	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QPAIRS, NVME_TIMEOUT_INFINITE);
 }
 
 static int
 nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_completion_poll_status	status;
-	int					rc;
+	int	rc;
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY, NVME_TIMEOUT_INFINITE);
 
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
 				     &ctrlr->cdata, sizeof(ctrlr->cdata),
-				     nvme_completion_poll_cb, &status);
+				     nvme_ctrlr_identify_done, ctrlr);
 	if (rc != 0) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("nvme_identify_controller failed!\n");
-		return -ENXIO;
-	}
-
-	nvme_ctrlr_identify_done(ctrlr, &status.cpl);
-
 	return 0;
 }
-
 
 int
 nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
@@ -1727,7 +1731,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_IDENTIFY:
 		rc = nvme_ctrlr_identify(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QPAIRS, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_SET_NUM_QPAIRS:
