@@ -888,7 +888,7 @@ bdev_io_split(void)
 	g_bdev_ut_channel->expected_iov[1].iov_base = (void *)0x20000;
 	g_bdev_ut_channel->expected_iov[1].iov_len = 512;
 
-	rc = spdk_bdev_writev_blocks(desc, io_ch, iov, 3, 14, 32, io_done, NULL);
+	rc = spdk_bdev_writev_blocks(desc, io_ch, iov, 3, 14, 32, NULL, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
 

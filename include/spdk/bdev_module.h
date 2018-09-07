@@ -474,6 +474,9 @@ struct spdk_bdev_io {
 		 */
 		bool in_submit_request;
 
+		/** Indicate to skip this I/O. */
+		bool skip_io;
+
 		/** Status for the IO */
 		int8_t status;
 

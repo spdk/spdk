@@ -465,7 +465,7 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 		break;
 	case NBD_CMD_WRITE:
 		rc = spdk_bdev_write(desc, ch, io->payload, from_be64(&io->req.from),
-				     io->payload_size, nbd_io_done, io);
+				     io->payload_size, NULL, nbd_io_done, io);
 		break;
 #ifdef NBD_FLAG_SEND_FLUSH
 	case NBD_CMD_FLUSH:

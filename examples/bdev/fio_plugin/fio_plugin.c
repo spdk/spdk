@@ -560,7 +560,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	case DDIR_WRITE:
 		rc = spdk_bdev_write(target->desc, target->ch,
 				     io_u->buf, io_u->offset, io_u->xfer_buflen,
-				     spdk_fio_completion_cb, fio_req);
+				     NULL, spdk_fio_completion_cb, fio_req);
 		break;
 	case DDIR_TRIM:
 		rc = spdk_bdev_unmap(target->desc, target->ch,
