@@ -233,6 +233,7 @@ struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_rdma_poller		*poller;
 
 	struct rdma_cm_id			*cm_id;
+	struct rdma_cm_id			*listen_id;
 
 	/* The maximum number of I/O outstanding on this connection at one time */
 	uint16_t				max_queue_depth;
@@ -951,6 +952,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	rqpair->max_queue_depth = max_queue_depth;
 	rqpair->max_rw_depth = max_rw_depth;
 	rqpair->cm_id = event->id;
+	rqpair->listen_id = event->listen_id;
 	rqpair->qpair.transport = transport;
 	rqpair->max_sge = spdk_min(port->device->attr.max_sge, SPDK_NVMF_MAX_SGL_ENTRIES);
 	TAILQ_INIT(&rqpair->incoming_queue);
@@ -2694,18 +2696,20 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 }
 
 static int
-spdk_nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
-				   struct spdk_nvme_transport_id *trid)
+spdk_nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
+			       struct spdk_nvme_transport_id *trid,
+			       bool peer)
 {
-	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct sockaddr *saddr;
 	uint16_t port;
 
-	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
 	trid->trtype = SPDK_NVME_TRANSPORT_RDMA;
 
-	saddr = rdma_get_peer_addr(rqpair->cm_id);
+	if (peer) {
+		saddr = rdma_get_peer_addr(id);
+	} else {
+		saddr = rdma_get_local_addr(id);
+	}
 	switch (saddr->sa_family) {
 	case AF_INET: {
 		struct sockaddr_in *saddr_in = (struct sockaddr_in *)saddr;
@@ -2713,7 +2717,11 @@ spdk_nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 		trid->adrfam = SPDK_NVMF_ADRFAM_IPV4;
 		inet_ntop(AF_INET, &saddr_in->sin_addr,
 			  trid->traddr, sizeof(trid->traddr));
-		port = ntohs(rdma_get_dst_port(rqpair->cm_id));
+		if (peer) {
+			port = ntohs(rdma_get_dst_port(id));
+		} else {
+			port = ntohs(rdma_get_src_port(id));
+		}
 		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", port);
 		break;
 	}
@@ -2722,7 +2730,11 @@ spdk_nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 		trid->adrfam = SPDK_NVMF_ADRFAM_IPV6;
 		inet_ntop(AF_INET6, &saddr_in->sin6_addr,
 			  trid->traddr, sizeof(trid->traddr));
-		port = ntohs(rdma_get_dst_port(rqpair->cm_id));
+		if (peer) {
+			port = ntohs(rdma_get_dst_port(id));
+		} else {
+			port = ntohs(rdma_get_src_port(id));
+		}
 		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", port);
 		break;
 	}
@@ -2732,6 +2744,28 @@ spdk_nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 	}
 
 	return 0;
+}
+
+static int
+spdk_nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
+				   struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	return spdk_nvmf_rdma_trid_from_cm_id(rqpair->cm_id, trid, true);
+}
+
+static int
+spdk_nvmf_rdma_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
+				     struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	return spdk_nvmf_rdma_trid_from_cm_id(rqpair->listen_id, trid, false);
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
@@ -2756,6 +2790,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.qpair_fini = spdk_nvmf_rdma_close_qpair,
 	.qpair_is_idle = spdk_nvmf_rdma_qpair_is_idle,
 	.qpair_get_peer_trid = spdk_nvmf_rdma_qpair_get_peer_trid,
+	.qpair_get_listen_trid = spdk_nvmf_rdma_qpair_get_listen_trid,
 
 };
 
