@@ -634,6 +634,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "set supported features";
 	case NVME_CTRLR_STATE_SET_DB_BUF_CFG:
 		return "set doorbell buffer config";
+	case NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG:
+		return "wait for doorbell buffer config";
 	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
 		return "set keep alive timeout";
 	case NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT:
@@ -681,18 +683,33 @@ nvme_ctrlr_free_doorbell_buffer(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
+static void
+nvme_ctrlr_set_doorbell_buffer_config_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_WARNLOG("Doorbell buffer config failed\n");
+	} else {
+		SPDK_INFOLOG(SPDK_LOG_NVME, "NVMe controller: %s doorbell buffer config enabled\n",
+			     ctrlr->trid.traddr);
+	}
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT, NVME_TIMEOUT_INFINITE);
+}
+
 static int
 nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
-	struct nvme_completion_poll_status status;
 	uint64_t prp1, prp2;
 
 	if (!ctrlr->cdata.oacs.doorbell_buffer_config) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT, NVME_TIMEOUT_INFINITE);
 		return 0;
 	}
 
 	if (ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT, NVME_TIMEOUT_INFINITE);
 		return 0;
 	}
 
@@ -700,7 +717,8 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size,
 				 &prp1);
 	if (ctrlr->shadow_doorbell == NULL) {
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto error;
 	}
 
 	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, &prp2);
@@ -709,23 +727,18 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 		goto error;
 	}
 
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG, NVME_TIMEOUT_INFINITE);
+
 	rc = nvme_ctrlr_cmd_doorbell_buffer_config(ctrlr, prp1, prp2,
-			nvme_completion_poll_cb, &status);
+			nvme_ctrlr_set_doorbell_buffer_config_done, ctrlr);
 	if (rc != 0) {
 		goto error;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_WARNLOG("Doorbell buffer config failed\n");
-		goto error;
-	}
-
-	SPDK_INFOLOG(SPDK_LOG_NVME, "NVMe controller: %s doorbell buffer config enabled\n",
-		     ctrlr->trid.traddr);
-
 	return 0;
 
 error:
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
 	return rc;
 }
@@ -1792,7 +1805,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_SET_DB_BUF_CFG:
 		rc = nvme_ctrlr_set_doorbell_buffer_config(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
