@@ -142,6 +142,9 @@ struct spdk_scsi_task {
 
 	uint32_t abort_id;
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
+
+	/** Indicate it is the active subtask. */
+	bool is_subtask;
 };
 
 struct spdk_scsi_port;

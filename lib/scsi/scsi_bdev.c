@@ -1364,6 +1364,7 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 	uint64_t offset;
 	uint64_t nbytes;
 	int rc;
+	struct spdk_bdev_io_opts opts;
 
 	blen = spdk_bdev_get_block_size(bdev);
 	offset = lba * blen;
@@ -1384,8 +1385,9 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 	}
 
 	offset += task->offset;
+	opts.count_io = task->is_subtask;
 	rc = spdk_bdev_writev(bdev_desc, bdev_ch, task->iovs,
-			      task->iovcnt, offset, task->length,
+			      task->iovcnt, offset, task->length, &opts,
 			      spdk_bdev_scsi_task_complete_cmd,
 			      task);
 

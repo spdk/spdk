@@ -2763,6 +2763,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 			spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
 			task->current_datain_offset += subtask->scsi.length;
 			conn->data_in_cnt++;
+			subtask->scsi.is_subtask = true;
 
 			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
 			if (task->scsi.lun == NULL) {
@@ -2864,6 +2865,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;
 	task->parent = NULL;
+	task->scsi.is_subtask = false;
 
 	if (task->scsi.lun == NULL) {
 		spdk_scsi_task_process_null_lun(&task->scsi);
@@ -3164,6 +3166,7 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->scsi.initiator_port = conn->initiator_port;
 	task->tag = task_tag;
 	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
+	task->scsi.is_subtask = false;
 
 	switch (function) {
 	/* abort task identified by Referenced Task Tag field */
@@ -4020,6 +4023,7 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	subtask->scsi.length = pdu->data_segment_len;
 	spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
 	spdk_iscsi_task_associate_pdu(subtask, pdu);
+	subtask->scsi.is_subtask = true;
 
 	if (task->next_expected_r2t_offset == transfer_len) {
 		task->acked_r2tsn++;

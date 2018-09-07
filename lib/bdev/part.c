@@ -213,7 +213,8 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		rc = spdk_bdev_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
 					     bdev_io->u.bdev.iovcnt, offset,
-					     bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
+					     bdev_io->u.bdev.num_blocks, NULL,
+					     spdk_bdev_part_complete_io,
 					     bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:

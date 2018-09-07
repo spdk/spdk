@@ -329,7 +329,7 @@ raid_bdev_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 		ret = spdk_bdev_writev_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
 					      raid_ch->base_channel[pd_idx],
 					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					      pd_lba, pd_blocks, raid_bdev_io_completion,
+					      pd_lba, pd_blocks, NULL, raid_bdev_io_completion,
 					      bdev_io);
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);

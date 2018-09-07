@@ -1208,9 +1208,14 @@ _spdk_bdev_qos_count_io(enum spdk_bdev_qos_rate_limit_type type, struct spdk_bde
 }
 
 static void
-_spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, bool is_read_io, uint64_t io_size_in_byte)
+_spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, bool is_read_io, uint64_t io_size_in_byte,
+			     bool skip_io)
 {
 	int i;
+
+	if (skip_io == true) {
+		return;
+	}
 
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 		if (qos->rate_limits[i].limit == UINT64_MAX || qos->rate_limits[i].limit == 0) {
@@ -1251,7 +1256,8 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 			shared_resource->io_outstanding++;
 			if (_spdk_bdev_qos_io_to_limit(bdev_io) == true) {
 				io_size_in_byte = _spdk_bdev_get_io_size_in_byte(bdev_io);
-				_spdk_bdev_qos_update_per_io(qos, read_io, io_size_in_byte);
+				_spdk_bdev_qos_update_per_io(qos, read_io, io_size_in_byte,
+							     bdev_io->internal.skip_io);
 			}
 			bdev->fn_table->submit_request(ch->channel, bdev_io);
 		} else if (read_io == true) {
@@ -1377,7 +1383,7 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 		rc = spdk_bdev_writev_blocks(bdev_io->internal.desc,
 					     spdk_io_channel_from_ctx(bdev_io->internal.ch),
 					     bdev_io->child_iov, child_iovcnt, current_offset, to_next_boundary,
-					     _spdk_bdev_io_split_done, bdev_io);
+					     NULL, _spdk_bdev_io_split_done, bdev_io);
 	}
 
 	if (rc == 0) {
@@ -1526,6 +1532,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.in_submit_request = false;
 	bdev_io->internal.buf = NULL;
 	bdev_io->internal.io_submit_ch = NULL;
+	bdev_io->internal.skip_io = false;
 }
 
 static bool
@@ -2348,6 +2355,7 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 int
 spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		void *buf, uint64_t offset, uint64_t nbytes,
+		struct spdk_bdev_io_opts *opts,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	uint64_t offset_blocks, num_blocks;
@@ -2356,12 +2364,13 @@ spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	return spdk_bdev_write_blocks(desc, ch, buf, offset_blocks, num_blocks, cb, cb_arg);
+	return spdk_bdev_write_blocks(desc, ch, buf, offset_blocks, num_blocks, opts, cb, cb_arg);
 }
 
 int
 spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+		       struct spdk_bdev_io_opts *opts,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
@@ -2400,6 +2409,7 @@ int
 spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		 struct iovec *iov, int iovcnt,
 		 uint64_t offset, uint64_t len,
+		 struct spdk_bdev_io_opts *opts,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	uint64_t offset_blocks, num_blocks;
@@ -2408,13 +2418,15 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	return spdk_bdev_writev_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg);
+	return spdk_bdev_writev_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks,
+				       opts, cb, cb_arg);
 }
 
 int
 spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			struct iovec *iov, int iovcnt,
 			uint64_t offset_blocks, uint64_t num_blocks,
+			struct spdk_bdev_io_opts *opts,
 			spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
@@ -2442,6 +2454,9 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+	if (opts) {
+		bdev_io->internal.skip_io = !opts->count_io;
+	}
 
 	spdk_bdev_io_submit(bdev_io);
 	return 0;
@@ -3722,7 +3737,7 @@ _spdk_bdev_write_zero_buffer_next(void *_bdev_io)
 				    spdk_io_channel_from_ctx(bdev_io->internal.ch),
 				    g_bdev_mgr.zero_buffer,
 				    bdev_io->u.bdev.split_current_offset_blocks, num_blocks,
-				    _spdk_bdev_write_zero_buffer_done, bdev_io);
+				    NULL, _spdk_bdev_write_zero_buffer_done, bdev_io);
 	if (rc == 0) {
 		bdev_io->u.bdev.split_remaining_num_blocks -= num_blocks;
 		bdev_io->u.bdev.split_current_offset_blocks += num_blocks;

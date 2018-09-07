@@ -248,7 +248,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 			task->used_len = sizeof(*task->status);
 			rc = spdk_bdev_writev(bvdev->bdev_desc, bvdev->bdev_io_channel,
 					      &task->iovs[1], task->iovcnt, req->sector * 512,
-					      payload_len, blk_request_complete_cb, task);
+					      payload_len, NULL, blk_request_complete_cb, task);
 		} else {
 			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Device is in read-only mode!\n");
 			rc = -1;

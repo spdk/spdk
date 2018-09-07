@@ -149,7 +149,7 @@ bdev_blob_write(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *
 	int rc;
 
 	rc = spdk_bdev_write_blocks(__get_desc(dev), channel, payload, lba,
-				    lba_count, bdev_blob_io_complete, cb_args);
+				    lba_count, NULL, bdev_blob_io_complete, cb_args);
 	if (rc == -ENOMEM) {
 		bdev_blob_queue_io(dev, channel, payload, 0, lba,
 				   lba_count, SPDK_BDEV_IO_TYPE_WRITE, cb_args);
@@ -183,7 +183,7 @@ bdev_blob_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	int rc;
 
 	rc = spdk_bdev_writev_blocks(__get_desc(dev), channel, iov, iovcnt, lba,
-				     lba_count, bdev_blob_io_complete, cb_args);
+				     lba_count, NULL, bdev_blob_io_complete, cb_args);
 	if (rc == -ENOMEM) {
 		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba,
 				   lba_count, SPDK_BDEV_IO_TYPE_WRITE, cb_args);

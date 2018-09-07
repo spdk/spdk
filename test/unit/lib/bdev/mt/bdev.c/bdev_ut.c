@@ -773,7 +773,7 @@ io_during_qos_queue(void)
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
 	/* Send one write I/O */
 	status2 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_write_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status2);
+	rc = spdk_bdev_write_blocks(g_desc, io_ch[0], NULL, 0, 1, NULL, io_during_io_done, &status2);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(status2 == SPDK_BDEV_IO_STATUS_PENDING);
 
@@ -866,11 +866,11 @@ io_during_qos_reset(void)
 
 	/* Send two I/O. One of these gets queued by QoS. The other is sitting at the disk. */
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_write_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status1);
+	rc = spdk_bdev_write_blocks(g_desc, io_ch[1], NULL, 0, 1, NULL, io_during_io_done, &status1);
 	CU_ASSERT(rc == 0);
 	set_thread(0);
 	status0 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_write_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status0);
+	rc = spdk_bdev_write_blocks(g_desc, io_ch[0], NULL, 0, 1, NULL, io_during_io_done, &status0);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
