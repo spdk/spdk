@@ -622,8 +622,10 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "identify controller";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
 		return "wait for identify controller";
-	case NVME_CTRLR_STATE_SET_NUM_QPAIRS:
+	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
 		return "set number of queues";
+	case NVME_CTRLR_STATE_GET_NUM_QUEUES:
+		return "get number of queues";
 	case NVME_CTRLR_STATE_CONSTRUCT_NS:
 		return "construct namespaces";
 	case NVME_CTRLR_STATE_CONFIGURE_AER:
@@ -856,7 +858,7 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
 	}
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QPAIRS, NVME_TIMEOUT_INFINITE);
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES, NVME_TIMEOUT_INFINITE);
 }
 
 static int
@@ -949,10 +951,9 @@ fail:
 }
 
 static int
-nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_set_num_queues(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_completion_poll_status	status;
-	uint32_t cq_allocated, sq_allocated, min_allocated, i;
 	int rc;
 
 	if (ctrlr->opts.num_io_queues > SPDK_NVME_MAX_IO_QUEUES) {
@@ -973,6 +974,16 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		SPDK_ERRLOG("Set Features - Number of Queues failed!\n");
 	}
+
+	return 0;
+}
+
+static int
+nvme_ctrlr_get_num_queues(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_completion_poll_status	status;
+	uint32_t cq_allocated, sq_allocated, min_allocated, i;
+	int rc;
 
 	/* Obtain the number of queues allocated using Get Features. */
 	rc = nvme_ctrlr_cmd_get_num_queues(ctrlr, nvme_completion_poll_cb, &status);
@@ -1778,8 +1789,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
-	case NVME_CTRLR_STATE_SET_NUM_QPAIRS:
-		rc = nvme_ctrlr_set_num_qpairs(ctrlr);
+	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
+		rc = nvme_ctrlr_set_num_queues(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_GET_NUM_QUEUES, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_GET_NUM_QUEUES:
+		rc = nvme_ctrlr_get_num_queues(ctrlr);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONSTRUCT_NS, NVME_TIMEOUT_INFINITE);
 		break;
 

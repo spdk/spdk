@@ -428,9 +428,14 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY,
 
 	/**
-	 * Setup Number of Queues of the controller.
+	 * Set Number of Queues of the controller.
 	 */
-	NVME_CTRLR_STATE_SET_NUM_QPAIRS,
+	NVME_CTRLR_STATE_SET_NUM_QUEUES,
+
+	/**
+	 * Get Number of Queues of the controller.
+	 */
+	NVME_CTRLR_STATE_GET_NUM_QUEUES,
 
 	/**
 	 * Construct Namespaces of the controller.
