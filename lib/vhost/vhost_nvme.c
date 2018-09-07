@@ -494,7 +494,7 @@ spdk_nvme_process_sq(struct spdk_vhost_nvme_dev *nvme, struct spdk_vhost_nvme_sq
 	case SPDK_NVME_OPC_WRITE:
 		ret = spdk_bdev_writev(ns->bdev_desc, ns->bdev_io_channel,
 				       task->iovs, task->iovcnt, slba * block_size,
-				       nlba * block_size, blk_request_complete_cb, task);
+				       nlba * block_size, NULL, blk_request_complete_cb, task);
 		break;
 	case SPDK_NVME_OPC_FLUSH:
 		ret = spdk_bdev_flush(ns->bdev_desc, ns->bdev_io_channel,

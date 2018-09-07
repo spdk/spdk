@@ -123,6 +123,20 @@ enum spdk_bdev_qos_rate_limit_type {
 	SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES
 };
 
+/** bdev IO priority */
+enum spdk_bdev_io_priority {
+	SPDK_BDEV_IO_NORMAL_PRIORITY = 0,
+	SPDK_BDEV_IO_URGENT_PRIORITY
+};
+
+/** bdev IO additional opts */
+struct spdk_bdev_io_opts {
+	/** User specified I/O priority */
+	enum spdk_bdev_io_priority	priority;
+	/** Indicate to count this I/O */
+	bool				count_io;
+};
+
 /**
  * Block device completion callback.
  *
@@ -650,6 +664,7 @@ int spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * \param buf Data buffer to written from.
  * \param offset_blocks The offset, in blocks, from the start of the block device.
  * \param num_blocks The number of blocks to write. buf must be greater than or equal to this size.
+ * \param opts Additional opts of the I/O.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
@@ -662,6 +677,7 @@ int spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  */
 int spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			   void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+			   struct spdk_bdev_io_opts *opts,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
@@ -679,6 +695,7 @@ int spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  * \param iovcnt The number of elements in iov.
  * \param offset The offset, in bytes, from the start of the block device.
  * \param len The size of data to write.
+ * \param opts Additional opts of the I/O.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
@@ -692,6 +709,7 @@ int spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		     struct iovec *iov, int iovcnt,
 		     uint64_t offset, uint64_t len,
+		     struct spdk_bdev_io_opts *opts,
 		     spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
@@ -709,6 +727,7 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * \param iovcnt The number of elements in iov.
  * \param offset_blocks The offset, in blocks, from the start of the block device.
  * \param num_blocks The number of blocks to write.
+ * \param opts Additional opts of the I/O.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
@@ -722,6 +741,7 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 int spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			    struct iovec *iov, int iovcnt,
 			    uint64_t offset_blocks, uint64_t num_blocks,
+			    struct spdk_bdev_io_opts *opts,
 			    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
