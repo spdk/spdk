@@ -427,7 +427,7 @@ bdevperf_submit_task(void *arg)
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
 		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
-					     target->io_size_blocks, cb_fn, task);
+					     target->io_size_blocks, NULL, cb_fn, task);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = spdk_bdev_flush_blocks(desc, ch, task->offset_blocks,
