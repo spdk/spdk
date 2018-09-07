@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8dbb978c_8aa546f8",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-07T17:16:37Z",
+      "side": 1,
+      "message": "This logic should be internal to spdk_mem_map_translate, such that it returns the MR and the total size (\u003c\u003d to the user requested size).",
+      "revId": "897199815a260a880864fb0768b1748a6969ac4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
