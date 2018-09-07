@@ -132,8 +132,10 @@ make CONFIG_RDMA=y
 ~~~
 
 Users may wish to use a version of DPDK different from the submodule included
-in the SPDK repository.  To specify an alternate DPDK installation, run
-configure with the --with-dpdk option.  For example:
+in the SPDK repository.  Note, this includes the ability to build not only
+from DPDK sources, but also just with the includes and libraries
+installed via the dpdk and dpdk-devel packages.  To specify an alternate DPDK
+installation, run configure with the --with-dpdk option.  For example:
 
 Linux:
 
