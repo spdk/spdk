@@ -468,6 +468,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_SET_HOST_ID,
 
 	/**
+	 * Waiting for Set Host ID to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_HOST_ID,
+
+	/**
 	 * Controller initialization has completed and the controller is ready.
 	 */
 	NVME_CTRLR_STATE_READY,
