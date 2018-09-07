@@ -33,6 +33,23 @@
       "revId": "51958fe14f87e3076173daa8027189fb9dc0c349",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef9fcb83_7bcae4eb",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-07T00:01:00Z",
+      "side": 1,
+      "message": "copy/paste error - should be export SPDK_BUILD_SHARED_OBJECT",
+      "revId": "51958fe14f87e3076173daa8027189fb9dc0c349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
