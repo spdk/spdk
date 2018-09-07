@@ -465,7 +465,12 @@ enum nvme_ctrlr_state {
 	/**
 	 * Controller initialization has completed and the controller is ready.
 	 */
-	NVME_CTRLR_STATE_READY
+	NVME_CTRLR_STATE_READY,
+
+	/**
+	 * Controller inilialization has an error.
+	 */
+	NVME_CTRLR_STATE_ERROR
 };
 
 #define NVME_TIMEOUT_INFINITE	UINT64_MAX

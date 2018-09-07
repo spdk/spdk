@@ -638,6 +638,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "set host ID";
 	case NVME_CTRLR_STATE_READY:
 		return "ready";
+	case NVME_CTRLR_STATE_ERROR:
+		return "error";
 	}
 	return "unknown";
 };
@@ -1771,6 +1773,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_READY:
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Ctrlr already in ready state\n");
 		return 0;
+
+	case NVME_CTRLR_STATE_ERROR:
+		SPDK_ERRLOG("Ctrlr %s is in error state\n", ctrlr->trid.traddr);
+		return -1;
 
 	default:
 		assert(0);
