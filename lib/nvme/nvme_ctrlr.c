@@ -638,6 +638,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "set keep alive timeout";
 	case NVME_CTRLR_STATE_SET_HOST_ID:
 		return "set host ID";
+	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
+		return "wait for set host ID";
 	case NVME_CTRLR_STATE_READY:
 		return "ready";
 	case NVME_CTRLR_STATE_ERROR:
@@ -1053,10 +1055,28 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+static void
+nvme_ctrlr_set_host_id_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		/*
+		 * Treat Set Features - Host ID failure as non-fatal, since the Host ID feature
+		 * is optional.
+		 */
+		SPDK_WARNLOG("Set Features - Host ID failed: SC 0x%x SCT 0x%x\n",
+			     cpl->status.sc, cpl->status.sct);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Set Features - Host ID was successful\n");
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+}
+
 static int
 nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_completion_poll_status status;
 	uint8_t *host_id;
 	uint32_t host_id_size;
 	int rc;
@@ -1067,6 +1087,7 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 		 * Set Features - Host Identifier after Connect, so we don't need to do anything here.
 		 */
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "NVMe-oF transport - not sending Set Features - Host ID\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
 		return 0;
 	}
 
@@ -1084,28 +1105,21 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 	if (spdk_mem_all_zero(host_id, host_id_size)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME,
 			      "User did not specify host ID - not sending Set Features - Host ID\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
 		return 0;
 	}
 
 	SPDK_TRACEDUMP(SPDK_LOG_NVME, "host_id", host_id, host_id_size);
 
-	rc = nvme_ctrlr_cmd_set_host_id(ctrlr, host_id, host_id_size, nvme_completion_poll_cb, &status);
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_HOST_ID, NVME_TIMEOUT_INFINITE);
+
+	rc = nvme_ctrlr_cmd_set_host_id(ctrlr, host_id, host_id_size, nvme_ctrlr_set_host_id_done, ctrlr);
 	if (rc != 0) {
 		SPDK_ERRLOG("Set Features - Host ID failed: %d\n", rc);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_WARNLOG("Set Features - Host ID failed: SC 0x%x SCT 0x%x\n",
-			     status.cpl.status.sc, status.cpl.status.sct);
-		/*
-		 * Treat Set Features - Host ID failure as non-fatal, since the Host ID feature
-		 * is optional.
-		 */
-		return 0;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Set Features - Host ID was successful\n");
 	return 0;
 }
 
@@ -1774,7 +1788,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_SET_HOST_ID:
 		rc = nvme_ctrlr_set_host_id(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_READY:
