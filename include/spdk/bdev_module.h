@@ -462,6 +462,9 @@ struct spdk_bdev_io {
 		STAILQ_ENTRY(spdk_bdev_io) buf_link;
 	} internal;
 
+	/** Indicate to skip this I/O. */
+	bool skip_io;
+
 	/**
 	 * Per I/O context for use by the bdev module.
 	 */

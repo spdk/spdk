@@ -202,7 +202,7 @@ hello_start(void *arg1, void *arg2)
 
 	SPDK_NOTICELOG("Writing to the bdev\n");
 	rc = spdk_bdev_write(hello_context->bdev_desc, hello_context->bdev_io_channel,
-			     hello_context->buff, 0, blk_size, write_complete, hello_context);
+			     hello_context->buff, 0, blk_size, NULL, write_complete, hello_context);
 	if (rc) {
 		SPDK_ERRLOG("%s error while writing to bdev: %d\n", spdk_strerror(-rc), rc);
 		spdk_bdev_close(hello_context->bdev_desc);
