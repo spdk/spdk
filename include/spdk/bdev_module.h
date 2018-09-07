@@ -395,6 +395,15 @@ struct spdk_bdev_io {
 
 			/** current offset of the split I/O in the bdev */
 			uint64_t split_current_offset_blocks;
+
+			/** count of oustanding batched split I/Os */
+			uint32_t split_outstanding;
+
+			/** current index of parent iovecs of the split I/O */
+			struct iovec *split_current_iov;
+
+			/** current offset in the current parent iovec of the split I/O */
+			uint64_t split_current_iov_offset;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */
