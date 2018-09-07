@@ -311,6 +311,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_subsystem *subsystem;
 	const char *subnqn, *hostnqn;
+	struct spdk_nvme_transport_id listen_trid = {};
 	void *end;
 
 	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
@@ -369,6 +370,22 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 
 	if (!spdk_nvmf_subsystem_host_allowed(subsystem, hostnqn)) {
 		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", subnqn, hostnqn);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (spdk_nvmf_qpair_get_listen_trid(qpair, &listen_trid)) {
+		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s' to connect at this address.\n", subnqn,
+			    hostnqn);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (!spdk_nvmf_subsystem_listener_allowed(subsystem, &listen_trid)) {
+		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s' to connect at this address.\n", subnqn,
+			    hostnqn);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
