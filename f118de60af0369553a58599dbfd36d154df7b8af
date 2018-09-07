@@ -16,6 +16,24 @@
       "revId": "f118de60af0369553a58599dbfd36d154df7b8af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a2e1393_a9ad1c6d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3178,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-07T16:24:35Z",
+      "side": 1,
+      "message": "Great question.\n\nI don\u0027t think this could cause a regression change, but the comments probably need to be updated.\n\nThis was originally added to handle bdev unregistrations during application shutdown.  When the application shuts down, bdev layer will unregister all existing bdevs to make sure resources are cleaned up.  But there used to be cases (for example, RAID) where unregistering a member disk would cause the RAID module to unregister the RAID bdev - and then the bdev layer would also try to unregister the same RAID bdev.\n\nBut we\u0027ve modified the bdev code now so that the RAID bdev would always get unregistered first during shutdown.\n\nWe probably need to add code to spdk_bdev_unregister() to check that bdev hasn\u0027t already been attempted to be unregistered.  And then just remove this comment that you mentioned here.",
+      "parentUuid": "7a0c6a7a_bdb42ac0",
+      "revId": "f118de60af0369553a58599dbfd36d154df7b8af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
