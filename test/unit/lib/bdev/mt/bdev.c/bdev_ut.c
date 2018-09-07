@@ -930,7 +930,7 @@ enomem_multi_bdev(void)
 	enum spdk_bdev_io_status status[IO_ARRAY_SIZE];
 	uint32_t i;
 	struct ut_bdev *second_bdev;
-	struct spdk_bdev_desc *second_desc;
+	struct spdk_bdev_desc *second_desc = { 0 };
 	struct spdk_bdev_channel *second_bdev_ch;
 	struct spdk_io_channel *second_ch;
 	int rc;
