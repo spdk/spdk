@@ -785,16 +785,13 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
-/*
- * TODO: this is the whitelist and will be called during connection setup
- */
 bool
 spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 				     struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_listener *listener;
 
-	if (TAILQ_EMPTY(&subsystem->listeners)) {
+	if (!strcmp(subsystem->subnqn, SPDK_NVMF_DISCOVERY_NQN)) {
 		return true;
 	}
 
