@@ -482,6 +482,7 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
 			ctrlr.state++;
 		}
@@ -540,6 +541,7 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
 			ctrlr.state++;
 		}
@@ -719,6 +721,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
 			ctrlr.state++;
 		}
@@ -900,6 +903,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
 			ctrlr.state++;
 		}
@@ -1080,6 +1084,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
 			ctrlr.state++;
 		}
@@ -1130,6 +1135,7 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
 			ctrlr.state++;
 		}
@@ -1186,6 +1192,7 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
 			ctrlr.state++;
 		}
