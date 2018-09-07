@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2d3b1776_b9cbb7fd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 29
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-07T05:20:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a07a62d1_e80a3abf",
+      "range": {
+        "startLine": 7,
+        "startChar": 28,
+        "endLine": 7,
+        "endChar": 36
+      },
+      "revId": "417c484886f6c6fa66835745149aae29b094b087",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2b9cc91_1521d1bd",
         "filename": "/COMMIT_MSG",
         "patchSetId": 29
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-07T00:57:08Z",
       "side": 1,
       "message": "same here.\n\nPlease check this patch whether other places need to reflect the change from \"nvme_cmd\" to \"send_nvme_cmd\"\n\nThanks.",
+      "range": {
+        "startLine": 9,
+        "startChar": 19,
+        "endLine": 9,
+        "endChar": 27
+      },
+      "revId": "417c484886f6c6fa66835745149aae29b094b087",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c77fbd39_f48d4a4a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 29
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-07T05:20:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e2b9cc91_1521d1bd",
       "range": {
         "startLine": 9,
         "startChar": 19,
