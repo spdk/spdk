@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a0c6a7a_bdb42ac0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3178,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-09-07T00:59:00Z",
+      "side": 1,
+      "message": "The comments in spdk_bdev_unregister() said that struct spdk_bdev_desc::remove_scheduled is use to avoid scheduling removal the same desc multiple times. If we set remove_scheduled to false here, does it cause a regression change?",
+      "revId": "f118de60af0369553a58599dbfd36d154df7b8af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
