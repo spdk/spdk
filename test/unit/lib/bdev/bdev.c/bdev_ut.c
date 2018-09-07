@@ -88,14 +88,19 @@ stub_destruct(void *ctx)
 	return 0;
 }
 
+struct ut_expected_io {
+	uint8_t				type;
+	uint64_t			offset;
+	uint64_t			length;
+	int				iovcnt;
+	struct iovec			iov[32];
+	TAILQ_ENTRY(ut_expected_io)	link;
+};
+
 struct bdev_ut_channel {
 	TAILQ_HEAD(, spdk_bdev_io)	outstanding_io;
 	uint32_t			outstanding_io_count;
-	uint8_t				expected_iotype;
-	uint64_t			expected_offset;
-	uint64_t			expected_length;
-	int				expected_iovcnt;
-	struct iovec			expected_iov[32];
+	TAILQ_HEAD(, ut_expected_io)	expected_io;
 };
 
 static bool g_io_done;
@@ -106,35 +111,46 @@ static void
 stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct bdev_ut_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct ut_expected_io *expected_io;
 	struct iovec *iov, *expected_iov;
 	int i;
 
 	TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
 	ch->outstanding_io_count++;
 
-	if (ch->expected_iotype != SPDK_BDEV_IO_TYPE_INVALID) {
-		CU_ASSERT(bdev_io->type == ch->expected_iotype);
+	expected_io = TAILQ_FIRST(&ch->expected_io);
+	if (expected_io == NULL) {
+		return;
+	}
+	TAILQ_REMOVE(&ch->expected_io, expected_io, link);
+
+	if (expected_io->type != SPDK_BDEV_IO_TYPE_INVALID) {
+		CU_ASSERT(bdev_io->type == expected_io->type);
 	}
 
-	if (ch->expected_length == 0) {
+	if (expected_io->length == 0) {
+		free(expected_io);
 		return;
 	}
 
-	CU_ASSERT(ch->expected_offset == bdev_io->u.bdev.offset_blocks);
-	CU_ASSERT(ch->expected_length = bdev_io->u.bdev.num_blocks);
+	CU_ASSERT(expected_io->offset == bdev_io->u.bdev.offset_blocks);
+	CU_ASSERT(expected_io->length = bdev_io->u.bdev.num_blocks);
 
-	if (ch->expected_iovcnt == 0) {
+	if (expected_io->iovcnt == 0) {
+		free(expected_io);
 		/* UNMAP, WRITE_ZEROES and FLUSH don't have iovs, so we can just return now. */
 		return;
 	}
 
-	CU_ASSERT(ch->expected_iovcnt == bdev_io->u.bdev.iovcnt);
-	for (i = 0; i < ch->expected_iovcnt; i++) {
+	CU_ASSERT(expected_io->iovcnt == bdev_io->u.bdev.iovcnt);
+	for (i = 0; i < expected_io->iovcnt; i++) {
 		iov = &bdev_io->u.bdev.iovs[i];
-		expected_iov = &ch->expected_iov[i];
+		expected_iov = &expected_io->iov[i];
 		CU_ASSERT(iov->iov_len == expected_iov->iov_len);
 		CU_ASSERT(iov->iov_base == expected_iov->iov_base);
 	}
+
+	free(expected_io);
 }
 
 static uint32_t
@@ -187,6 +203,8 @@ bdev_ut_create_ch(void *io_device, void *ctx_buf)
 
 	TAILQ_INIT(&ch->outstanding_io);
 	ch->outstanding_io_count = 0;
+	TAILQ_INIT(&ch->expected_io);
+
 	return 0;
 }
 
@@ -790,6 +808,7 @@ bdev_io_split(void)
 		.bdev_io_cache_size = 64,
 	};
 	struct iovec iov[4];
+	struct ut_expected_io *expected_io;
 	int rc;
 
 	rc = spdk_bdev_set_opts(&bdev_opts);
@@ -810,18 +829,21 @@ bdev_io_split(void)
 	g_io_done = false;
 
 	/* First test that the I/O does not get split if split_on_optimal_io_boundary == false. */
-	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_READ;
-	g_bdev_ut_channel->expected_offset = 14;
-	g_bdev_ut_channel->expected_length = 8;
-	g_bdev_ut_channel->expected_iovcnt = 1;
-	g_bdev_ut_channel->expected_iov[0].iov_base = (void *)0xF000;
-	g_bdev_ut_channel->expected_iov[0].iov_len = 8 * 512;
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+	expected_io->type = SPDK_BDEV_IO_TYPE_READ;
+	expected_io->offset = 14;
+	expected_io->length = 8;
+	expected_io->iovcnt = 1;
+	expected_io->iov[0].iov_base = (void *)0xF000;
+	expected_io->iov[0].iov_len = 8 * 512;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 14, 8, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
-
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
@@ -834,39 +856,37 @@ bdev_io_split(void)
 	 *  Child - Offset 16, length 6, payload 0xF000 + 2 * 512
 	 *
 	 * Set up the expected values before calling spdk_bdev_read_blocks, since this call
-	 * will submit the first child immediately.
+	 * will submit the first and the second child immediately.
 	 */
 	g_io_done = false;
-	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_READ;
-	g_bdev_ut_channel->expected_offset = 14;
-	g_bdev_ut_channel->expected_length = 2;
-	g_bdev_ut_channel->expected_iovcnt = 1;
-	g_bdev_ut_channel->expected_iov[0].iov_base = (void *)0xF000;
-	g_bdev_ut_channel->expected_iov[0].iov_len = 2 * 512;
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+	expected_io->type = SPDK_BDEV_IO_TYPE_READ;
+	expected_io->offset = 14;
+	expected_io->length = 2;
+	expected_io->iovcnt = 1;
+	expected_io->iov[0].iov_base = (void *)0xF000;
+	expected_io->iov[0].iov_len = 2 * 512;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+	expected_io->type = SPDK_BDEV_IO_TYPE_READ;
+	expected_io->offset = 16;
+	expected_io->length = 6;
+	expected_io->iovcnt = 1;
+	expected_io->iov[0].iov_base = (void *)(0xF000 + 2 * 512);
+	expected_io->iov[0].iov_len = 6 * 512;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 14, 8, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
 
-	/* Now set up the expected values for the second child.  The second child will
-	 * get submitted once the first child is completed by stub_complete_io().
-	 */
-	g_bdev_ut_channel->expected_offset = 16;
-	g_bdev_ut_channel->expected_length = 6;
-	g_bdev_ut_channel->expected_iovcnt = 1;
-	g_bdev_ut_channel->expected_iov[0].iov_base = (void *)(0xF000 + 2 * 512);
-	g_bdev_ut_channel->expected_iov[0].iov_len = 6 * 512;
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
-	/* Complete the second child I/O.  This should result in our callback getting
-	 * invoked since the parent I/O is now complete.
-	 */
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
 	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
 
 	/* Now set up a more complex, multi-vector command that needs to be split,
 	 *  including splitting iovecs.
@@ -879,43 +899,46 @@ bdev_io_split(void)
 	iov[2].iov_len = 11 * 512;
 
 	g_io_done = false;
-	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_WRITE;
-	g_bdev_ut_channel->expected_offset = 14;
-	g_bdev_ut_channel->expected_length = 2;
-	g_bdev_ut_channel->expected_iovcnt = 2;
-	g_bdev_ut_channel->expected_iov[0].iov_base = (void *)0x10000;
-	g_bdev_ut_channel->expected_iov[0].iov_len = 512;
-	g_bdev_ut_channel->expected_iov[1].iov_base = (void *)0x20000;
-	g_bdev_ut_channel->expected_iov[1].iov_len = 512;
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+	expected_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	expected_io->offset = 14;
+	expected_io->length = 2;
+	expected_io->iovcnt = 2;
+	expected_io->iov[0].iov_base = (void *)0x10000;
+	expected_io->iov[0].iov_len = 512;
+	expected_io->iov[1].iov_base = (void *)0x20000;
+	expected_io->iov[1].iov_len = 512;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+	expected_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	expected_io->offset = 16;
+	expected_io->length = 16;
+	expected_io->iovcnt = 1;
+	expected_io->iov[0].iov_base = (void *)(0x20000 + 512);
+	expected_io->iov[0].iov_len = 16 * 512;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+	expected_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	expected_io->offset = 32;
+	expected_io->length = 14;
+	expected_io->iovcnt = 2;
+	expected_io->iov[0].iov_base = (void *)(0x20000 + 17 * 512);
+	expected_io->iov[0].iov_len = 3 * 512;
+	expected_io->iov[1].iov_base = (void *)0x30000;
+	expected_io->iov[1].iov_len = 11 * 512;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_writev_blocks(desc, io_ch, iov, 3, 14, 32, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
 
-	g_bdev_ut_channel->expected_offset = 16;
-	g_bdev_ut_channel->expected_length = 16;
-	g_bdev_ut_channel->expected_iovcnt = 1;
-	g_bdev_ut_channel->expected_iov[0].iov_base = (void *)(0x20000 + 512);
-	g_bdev_ut_channel->expected_iov[0].iov_len = 16 * 512;
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
-	g_bdev_ut_channel->expected_offset = 32;
-	g_bdev_ut_channel->expected_length = 14;
-	g_bdev_ut_channel->expected_iovcnt = 2;
-	g_bdev_ut_channel->expected_iov[0].iov_base = (void *)(0x20000 + 17 * 512);
-	g_bdev_ut_channel->expected_iov[0].iov_len = 3 * 512;
-	g_bdev_ut_channel->expected_iov[1].iov_base = (void *)0x30000;
-	g_bdev_ut_channel->expected_iov[1].iov_len = 11 * 512;
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 3);
+	stub_complete_io(3);
 	CU_ASSERT(g_io_done == true);
 
 	/* Test a WRITE_ZEROES that would span an I/O boundary.  WRITE_ZEROES should not be
@@ -923,10 +946,13 @@ bdev_io_split(void)
 	 */
 	bdev->optimal_io_boundary = 15;
 	g_io_done = false;
-	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
-	g_bdev_ut_channel->expected_offset = 9;
-	g_bdev_ut_channel->expected_length = 36;
-	g_bdev_ut_channel->expected_iovcnt = 0;
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+	expected_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
+	expected_io->offset = 9;
+	expected_io->length = 36;
+	expected_io->iovcnt = 0;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_write_zeroes_blocks(desc, io_ch, 9, 36, io_done, NULL);
 	CU_ASSERT(rc == 0);
@@ -938,10 +964,13 @@ bdev_io_split(void)
 	/* Test an UNMAP.  This should also not be split. */
 	bdev->optimal_io_boundary = 16;
 	g_io_done = false;
-	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_UNMAP;
-	g_bdev_ut_channel->expected_offset = 15;
-	g_bdev_ut_channel->expected_length = 2;
-	g_bdev_ut_channel->expected_iovcnt = 0;
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+	expected_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
+	expected_io->offset = 15;
+	expected_io->length = 2;
+	expected_io->iovcnt = 0;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_unmap_blocks(desc, io_ch, 15, 2, io_done, NULL);
 	CU_ASSERT(rc == 0);
@@ -953,10 +982,13 @@ bdev_io_split(void)
 	/* Test a FLUSH.  This should also not be split. */
 	bdev->optimal_io_boundary = 16;
 	g_io_done = false;
-	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_FLUSH;
-	g_bdev_ut_channel->expected_offset = 15;
-	g_bdev_ut_channel->expected_length = 2;
-	g_bdev_ut_channel->expected_iovcnt = 0;
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+	expected_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
+	expected_io->offset = 15;
+	expected_io->length = 2;
+	expected_io->iovcnt = 0;
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_flush_blocks(desc, io_ch, 15, 2, io_done, NULL);
 	CU_ASSERT(rc == 0);
@@ -965,11 +997,8 @@ bdev_io_split(void)
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
 
-	/* Reset values so next test is not affected by leftover values. */
-	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_INVALID;
-	g_bdev_ut_channel->expected_offset = 0;
-	g_bdev_ut_channel->expected_length = 0;
-	g_bdev_ut_channel->expected_iovcnt = 0;
+	/* Check all expected_ios are removed not to affect the next test. */
+	CU_ASSERT(TAILQ_EMPTY(&g_bdev_ut_channel->expected_io));
 
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
