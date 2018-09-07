@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9610d9e9_13dfb78e",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-07T00:05:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9600e5fa_50bd125b",
+      "range": {
+        "startLine": 53,
+        "startChar": 83,
+        "endLine": 53,
+        "endChar": 87
+      },
+      "revId": "07a3aea3c0d2a8cc86ba8c68e25cafa15821dc66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1931ff9a_aa5be3dc",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 14
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "ce57cf26_4d727a46",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-07T00:05:32Z",
+      "side": 1,
+      "message": "It\u0027s a counterpart to the server version function spdk_jsonrpc_parse_request who also takes conn as first parameter.\nRemoving it will complicate parameters.",
+      "parentUuid": "1931ff9a_aa5be3dc",
+      "range": {
+        "startLine": 87,
+        "startChar": 28,
+        "endLine": 87,
+        "endChar": 65
+      },
+      "revId": "07a3aea3c0d2a8cc86ba8c68e25cafa15821dc66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65eb9435_99299283",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 14
@@ -59,6 +107,30 @@
       "writtenOn": "2018-09-06T13:05:50Z",
       "side": 1,
       "message": "request ID should be a parameter",
+      "range": {
+        "startLine": 179,
+        "startChar": 38,
+        "endLine": 179,
+        "endChar": 39
+      },
+      "revId": "07a3aea3c0d2a8cc86ba8c68e25cafa15821dc66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0c4d6f2_f3dbfb35",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-07T00:05:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65eb9435_99299283",
       "range": {
         "startLine": 179,
         "startChar": 38,

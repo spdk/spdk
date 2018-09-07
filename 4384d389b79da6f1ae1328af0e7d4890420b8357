@@ -732,6 +732,30 @@
     },
     {
       "key": {
+        "uuid": "9abc2197_8f1fbaba",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-07T00:05:32Z",
+      "side": 1,
+      "message": "Not really :)\nstruct spdk_rpc_client_conn doesn\u0027t have a real definition. It just have a statement in rpc_client.h, and not equal to spdk_jsonrpc_client_comm.\nSo without the casting, there will be a warning report.",
+      "parentUuid": "5802e52f_4a2c4321",
+      "range": {
+        "startLine": 103,
+        "startChar": 8,
+        "endLine": 103,
+        "endChar": 39
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c964f447_3de570e4",
         "filename": "lib/rpc_client/rpc_client.c",
         "patchSetId": 11
@@ -921,6 +945,30 @@
       "side": 1,
       "message": "\u003e how about providing simple RPC functions in rpc_client.h, we may providing some frequently-used API\n\nMany questions will arise - why only those function? Where are tests? These functions neither be simple nor won\u0027t be complete (won\u0027t reflect server side RPC methods).\n\nPut them in tools common directory for now and use them internally.",
       "parentUuid": "6aa395c7_a2ba063b",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 88
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2800fe07_166bfa4c",
+        "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-07T00:05:32Z",
+      "side": 1,
+      "message": "This is a logic between easy-to-use and fully-support. :)\nI would prefer easy-to-use, and will add C-api for spdk_rpc_client_nvme_cmd later. just thought if I were a outside user, one well defiend API was welcome. Another benefit is if we change code of json/jsonrpc or code of each server side rpc methods, user doesn\u0027t have to change their code.\n\nThe answer to these questions is \"they are not implemented yet, add it if require it\".",
+      "parentUuid": "cf401534_b5082f90",
       "range": {
         "startLine": 56,
         "startChar": 0,
