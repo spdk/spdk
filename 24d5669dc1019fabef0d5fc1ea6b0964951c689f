@@ -446,6 +446,30 @@
     },
     {
       "key": {
+        "uuid": "9d7f854b_d4d2e053",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "Actually I have to admit that there is a \"enable\" argument in rpc.py/allow_any_host command! ... but it\u0027s never used!:)",
+      "parentUuid": "7c524d87_7305fc88",
+      "range": {
+        "startLine": 113,
+        "startChar": 8,
+        "endLine": 113,
+        "endChar": 50
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "accbf9b1_6dc6ce88",
         "filename": "scripts/spdkcli/ui_node_nvmf.py",
         "patchSetId": 6
@@ -878,6 +902,30 @@
       "side": 1,
       "message": "Such subsystem exists in spdk when you run it.",
       "parentUuid": "6e2527ad_ee3ced90",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 132
+      },
+      "revId": "24d5669dc1019fabef0d5fc1ea6b0964951c689f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b169e240_cefa24b8",
+        "filename": "test/spdkcli/match_files/spdkcli_vhost.test.match",
+        "patchSetId": 6
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "Well, that is actually true:P My bad, I was convinced that subsystems were empty before",
+      "parentUuid": "8854289a_b2659fd0",
       "range": {
         "startLine": 31,
         "startChar": 0,

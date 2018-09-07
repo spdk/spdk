@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3af2837f_533278b0",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "According to rpc.py/construct_nvmf_subsystem 3 args are obligatory: nqn, listen, hosts. \nThese args can be empty strings but must be provided anyway. SO listen must NOT be listen\u003dNone, as it makes it optional.\n\nSerial number on the other hand is optional, so you can move it further down the params list, and make it optional.",
+      "range": {
+        "startLine": 25,
+        "startChar": 31,
+        "endLine": 25,
+        "endChar": 63
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89e63a25_3ba70f97",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "max_namespaces still not evaluated if its a number",
+      "range": {
+        "startLine": 26,
+        "startChar": 26,
+        "endLine": 26,
+        "endChar": 45
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36eeb99c_a91f1797",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "I think this should be \u003dFalse, rhather than \u003d\"false\".\nIn the latter form the type is string instead of bool",
+      "range": {
+        "startLine": 26,
+        "startChar": 47,
+        "endLine": 26,
+        "endChar": 69
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "857e6f9d_0499ced0",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "Serial is optional. Add this to description and move it down the list.",
+      "range": {
+        "startLine": 32,
+        "startChar": 24,
+        "endLine": 32,
+        "endChar": 54
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31bd9f43_915c5a0a",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "Listen is not optional. Can be empty string but must be provided.",
+      "range": {
+        "startLine": 33,
+        "startChar": 17,
+        "endLine": 33,
+        "endChar": 36
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c623045d_747659df",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "Hosts is not optional. Can be empty string but must be provided.",
+      "range": {
+        "startLine": 35,
+        "startChar": 16,
+        "endLine": 35,
+        "endChar": 35
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8264fd33_5ed77d62",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "Again, because you did not reply - why do you split on \"\u003d\"?",
+      "range": {
+        "startLine": 42,
+        "startChar": 8,
+        "endLine": 44,
+        "endChar": 77
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d3d390e_6c9d7fd4",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "Should be bool type \"False\" instead of string",
+      "range": {
+        "startLine": 109,
+        "startChar": 48,
+        "endLine": 109,
+        "endChar": 55
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0738c3b_4e90dabb",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "shouldn\u0027t you filter here as well?",
+      "range": {
+        "startLine": 131,
+        "startChar": 12,
+        "endLine": 131,
+        "endChar": 49
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13f8db7b_7cb50aba",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-07T09:26:55Z",
+      "side": 1,
+      "message": "wrong indentation? this should probably belong to \"if\" a line up",
+      "range": {
+        "startLine": 132,
+        "startChar": 8,
+        "endLine": 132,
+        "endChar": 50
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
