@@ -128,6 +128,16 @@ DEFINE_STUB(spdk_nvmf_request_free,
 	    (struct spdk_nvmf_request *req),
 	    -1);
 
+DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
+	    int,
+	    (struct spdk_nvmf_qpair *qpair, struct spdk_nvme_transport_id *trid),
+	    0);
+
+DEFINE_STUB(spdk_nvmf_subsystem_listener_allowed,
+	    bool,
+	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvme_transport_id *trid),
+	    true);
+
 static void
 ctrlr_ut_pass_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
