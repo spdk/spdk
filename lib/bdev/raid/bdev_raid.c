@@ -343,7 +343,7 @@ raid_bdev_send_passthru(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 					     raid_bdev_io_channel->base_bdevs_io_channel[0],
 					     bdev_io->u.bdev.iovs->iov_base,
 					     bdev_io->u.bdev.offset_blocks,
-					     bdev_io->u.bdev.num_blocks, raid_bdev_io_completion,
+					     bdev_io->u.bdev.num_blocks, NULL, raid_bdev_io_completion,
 					     bdev_io);
 	} else {
 		ret = -EINVAL;
@@ -442,8 +442,8 @@ raid_bdev_submit_children(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			ret = spdk_bdev_write_blocks(raid_bdev->base_bdev_info[pd_idx].base_bdev_desc,
 						     raid_bdev_io_channel->base_bdevs_io_channel[pd_idx],
-						     buf, pd_lba, pd_blocks, raid_bdev_io_completion,
-						     bdev_io);
+						     buf, pd_lba, pd_blocks, NULL,
+						     raid_bdev_io_completion, bdev_io);
 		} else {
 			SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 			assert(0);
