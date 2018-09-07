@@ -423,6 +423,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_IDENTIFY,
 
 	/**
+	 * Waiting for Identify Controller command be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY,
+
+	/**
 	 * Setup Number of Queues of the controller.
 	 */
 	NVME_CTRLR_STATE_SET_NUM_QPAIRS,
