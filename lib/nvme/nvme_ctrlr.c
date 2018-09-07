@@ -624,8 +624,12 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "wait for identify controller";
 	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
 		return "set number of queues";
+	case NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES:
+		return "wait for set number of queues";
 	case NVME_CTRLR_STATE_GET_NUM_QUEUES:
 		return "get number of queues";
+	case NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES:
+		return "wait for get number of queues";
 	case NVME_CTRLR_STATE_CONSTRUCT_NS:
 		return "construct namespaces";
 	case NVME_CTRLR_STATE_CONFIGURE_AER:
@@ -950,10 +954,20 @@ fail:
 	return rc;
 }
 
+static void
+nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Set Features - Number of Queues failed!\n");
+	}
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_GET_NUM_QUEUES, NVME_TIMEOUT_INFINITE);
+}
+
 static int
 nvme_ctrlr_set_num_queues(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_completion_poll_status	status;
 	int rc;
 
 	if (ctrlr->opts.num_io_queues > SPDK_NVME_MAX_IO_QUEUES) {
@@ -965,33 +979,25 @@ nvme_ctrlr_set_num_queues(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->opts.num_io_queues = 1;
 	}
 
-	rc = nvme_ctrlr_cmd_set_num_queues(ctrlr, ctrlr->opts.num_io_queues,
-					   nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		return rc;
-	}
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES, NVME_TIMEOUT_INFINITE);
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("Set Features - Number of Queues failed!\n");
+	rc = nvme_ctrlr_cmd_set_num_queues(ctrlr, ctrlr->opts.num_io_queues,
+					   nvme_ctrlr_set_num_queues_done, ctrlr);
+	if (rc != 0) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return rc;
 	}
 
 	return 0;
 }
 
-static int
-nvme_ctrlr_get_num_queues(struct spdk_nvme_ctrlr *ctrlr)
+static void
+nvme_ctrlr_get_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_completion_poll_status	status;
 	uint32_t cq_allocated, sq_allocated, min_allocated, i;
-	int rc;
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
-	/* Obtain the number of queues allocated using Get Features. */
-	rc = nvme_ctrlr_cmd_get_num_queues(ctrlr, nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		return rc;
-	}
-
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_cpl_is_error(cpl)) {
 		SPDK_ERRLOG("Get Features - Number of Queues failed!\n");
 		ctrlr->opts.num_io_queues = 0;
 	} else {
@@ -1000,8 +1006,8 @@ nvme_ctrlr_get_num_queues(struct spdk_nvme_ctrlr *ctrlr)
 		 * Lower 16-bits indicate number of submission queues allocated.
 		 * Upper 16-bits indicate number of completion queues allocated.
 		 */
-		sq_allocated = (status.cpl.cdw0 & 0xFFFF) + 1;
-		cq_allocated = (status.cpl.cdw0 >> 16) + 1;
+		sq_allocated = (cpl->cdw0 & 0xFFFF) + 1;
+		cq_allocated = (cpl->cdw0 >> 16) + 1;
 
 		/*
 		 * For 1:1 queue mapping, set number of allocated queues to be minimum of
@@ -1015,13 +1021,30 @@ nvme_ctrlr_get_num_queues(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->free_io_qids = spdk_bit_array_create(ctrlr->opts.num_io_queues + 1);
 	if (ctrlr->free_io_qids == NULL) {
-		return -ENOMEM;
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
 	}
 
 	/* Initialize list of free I/O queue IDs. QID 0 is the admin queue. */
 	spdk_bit_array_clear(ctrlr->free_io_qids, 0);
 	for (i = 1; i <= ctrlr->opts.num_io_queues; i++) {
 		spdk_bit_array_set(ctrlr->free_io_qids, i);
+	}
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONSTRUCT_NS, NVME_TIMEOUT_INFINITE);
+}
+
+static int
+nvme_ctrlr_get_num_queues(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES, NVME_TIMEOUT_INFINITE);
+
+	/* Obtain the number of queues allocated using Get Features. */
+	rc = nvme_ctrlr_cmd_get_num_queues(ctrlr, nvme_ctrlr_get_num_queues_done, ctrlr);
+	if (rc != 0) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return rc;
 	}
 
 	return 0;
@@ -1791,12 +1814,18 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
 		rc = nvme_ctrlr_set_num_queues(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_GET_NUM_QUEUES, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_GET_NUM_QUEUES:
 		rc = nvme_ctrlr_get_num_queues(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONSTRUCT_NS, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_CONSTRUCT_NS:
