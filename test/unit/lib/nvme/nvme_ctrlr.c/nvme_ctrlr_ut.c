@@ -481,6 +481,9 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY) {
+			ctrlr.state ++;
+		}
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
@@ -535,6 +538,9 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY) {
+			ctrlr.state ++;
+		}
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
@@ -710,6 +716,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY) {
+			ctrlr.state ++;
+		}
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
@@ -887,6 +896,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY) {
+			ctrlr.state ++;
+		}
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
@@ -1063,6 +1075,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY) {
+			ctrlr.state ++;
+		}
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
@@ -1109,6 +1124,9 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY) {
+			ctrlr.state ++;
+		}
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
@@ -1161,6 +1179,9 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 	 * Transition to READY.
 	 */
 	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY) {
+			ctrlr.state ++;
+		}
 		nvme_ctrlr_process_init(&ctrlr);
 	}
 
