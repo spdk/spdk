@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d543f78_e9bcc13a",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-07T17:27:48Z",
+      "side": 1,
+      "message": "I\u0027d move this set state call into the state machine right below nvme_ctrlr_identify. For the callbacks you\u0027ll have to call nvme_ctrl_set_state outside of the main state machine function, but where we can we should keep the calls to transition states within the state machine function for clarity.\n\nIn fact, this function is probably small enough that you can just inline the whole thing under NVME_CTRLR_STATE_IDENTIFY.",
+      "revId": "9e467cb5a6045296b8c2cf15db3844c2d63526a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a08df0f1_343dc7f1",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1777,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-07T17:27:48Z",
+      "side": 1,
+      "message": "This case should go right under NVME_CTRLR_STATE_IDENTIFY, so the state machine can be read from top to bottom in order of how the states progress.",
+      "revId": "9e467cb5a6045296b8c2cf15db3844c2d63526a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c0a5278_5535db22",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-07T17:27:48Z",
+      "side": 1,
+      "message": "nvme_ctrlr_cmd_identify is mocked up above and completes/calls its callback immediately which will jump the state machine into the next state. I don\u0027t think you need this ctrlr.state++ to progress.",
+      "revId": "9e467cb5a6045296b8c2cf15db3844c2d63526a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04ec084e_b6171e3d",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-07T17:27:48Z",
+      "side": 1,
+      "message": "Extra space before ++",
+      "revId": "9e467cb5a6045296b8c2cf15db3844c2d63526a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
