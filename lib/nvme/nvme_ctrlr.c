@@ -1001,11 +1001,35 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+static void
+nvme_ctrlr_set_keep_alive_timeout_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	uint32_t keep_alive_interval_ms;
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
+
+	if (ctrlr->opts.keep_alive_timeout_ms != cpl->cdw0) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Controller adjusted keep alive timeout to %u ms\n",
+			      cpl->cdw0);
+	}
+
+	ctrlr->opts.keep_alive_timeout_ms = cpl->cdw0;
+
+	keep_alive_interval_ms = ctrlr->opts.keep_alive_timeout_ms / 2;
+	if (keep_alive_interval_ms == 0) {
+		keep_alive_interval_ms = 1;
+	}
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Sending keep alive every %u ms\n", keep_alive_interval_ms);
+
+	ctrlr->keep_alive_interval_ticks = (keep_alive_interval_ms * spdk_get_ticks_hz()) / UINT64_C(1000);
+
+	/* Schedule the first Keep Alive to be sent as soon as possible. */
+	ctrlr->next_keep_alive_tick = spdk_get_ticks();
+}
+
 static int
 nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_completion_poll_status status;
-	uint32_t keep_alive_interval_ms;
 	int rc;
 
 	if (ctrlr->opts.keep_alive_timeout_ms == 0) {
@@ -1033,24 +1057,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->opts.keep_alive_timeout_ms = 0;
 		return -ENXIO;
 	}
-
-	if (ctrlr->opts.keep_alive_timeout_ms != status.cpl.cdw0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Controller adjusted keep alive timeout to %u ms\n",
-			      status.cpl.cdw0);
-	}
-
-	ctrlr->opts.keep_alive_timeout_ms = status.cpl.cdw0;
-
-	keep_alive_interval_ms = ctrlr->opts.keep_alive_timeout_ms / 2;
-	if (keep_alive_interval_ms == 0) {
-		keep_alive_interval_ms = 1;
-	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Sending keep alive every %u ms\n", keep_alive_interval_ms);
-
-	ctrlr->keep_alive_interval_ticks = (keep_alive_interval_ms * spdk_get_ticks_hz()) / UINT64_C(1000);
-
-	/* Schedule the first Keep Alive to be sent as soon as possible. */
-	ctrlr->next_keep_alive_tick = spdk_get_ticks();
+	nvme_ctrlr_set_keep_alive_timeout_done(ctrlr, &status.cpl);
 
 	return 0;
 }
