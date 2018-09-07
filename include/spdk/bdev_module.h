@@ -462,6 +462,9 @@ struct spdk_bdev_io {
 		STAILQ_ENTRY(spdk_bdev_io) buf_link;
 	} internal;
 
+	/** User requested I/O length in bytes. */
+	uint64_t requested_nbytes;
+
 	/**
 	 * Per I/O context for use by the bdev module.
 	 */

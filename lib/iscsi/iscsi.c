@@ -2874,6 +2874,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;
 	task->parent = NULL;
+	task->scsi.requested_transfer_len = pdu->data_segment_len;
 
 	if (task->scsi.lun == NULL) {
 		spdk_scsi_task_process_null_lun(&task->scsi);
@@ -2942,6 +2943,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			spdk_scsi_task_set_data(&task->scsi, pdu->data, transfer_len);
 			task->scsi.length = transfer_len;
 		}
+
 	} else {
 		/* neither R nor W bit set */
 		task->scsi.dxfer_dir = SPDK_SCSI_DIR_NONE;

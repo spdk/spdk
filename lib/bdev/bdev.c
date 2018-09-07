@@ -123,7 +123,7 @@ struct spdk_bdev_qos_limit {
 	/** IOs or bytes allowed per second (i.e., 1s). */
 	uint64_t limit;
 	/** Submitted IOs or bytes in one timeslice (e.g., 1ms). */
-	uint64_t submitted_this_timeslice;
+	int64_t submitted_this_timeslice;
 	/** Minimum allowed IOs or bytes to be issued in one timeslice (e.g., 1ms). */
 	uint32_t min_per_timeslice;
 	/** Maximum allowed IOs or bytes to be issued in one timeslice (e.g., 1ms). */
@@ -1068,8 +1068,6 @@ _spdk_bdev_qos_submit_io(struct spdk_bdev_qos *qos, bool read_io)
 static uint64_t
 _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev	*bdev = bdev_io->bdev;
-
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
@@ -1079,7 +1077,7 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		return bdev_io->u.bdev.num_blocks * bdev->blocklen;
+		return bdev_io->requested_nbytes;
 	default:
 		return 0;
 	}
@@ -1088,6 +1086,10 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 static bool
 _spdk_bdev_qos_io_to_limit(struct spdk_bdev_io *bdev_io)
 {
+	if (bdev_io->requested_nbytes == 0) {
+		return false;
+	}
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
@@ -1385,14 +1387,8 @@ spdk_bdev_channel_poll_qos(void *arg)
 
 	/* Reset for next round of rate limiting */
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		/* More sent in the last timeslice, allow less in this timeslice */
-		if (qos->rate_limits[i].submitted_this_timeslice >
-		    qos->rate_limits[i].max_per_timeslice) {
-			qos->rate_limits[i].submitted_this_timeslice -=
-				qos->rate_limits[i].max_per_timeslice;
-		} else {
-			qos->rate_limits[i].submitted_this_timeslice = 0;
-		}
+		qos->rate_limits[i].submitted_this_timeslice -=
+			qos->rate_limits[i].max_per_timeslice;
 
 		if (qos->rate_limits[i].limit_complement) {
 			if (qos->rate_limits[i].limit_complement == g_qos_iteration) {
@@ -2106,6 +2102,7 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
+
 	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
@@ -2165,6 +2162,7 @@ int
 spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		 struct iovec *iov, int iovcnt,
 		 uint64_t offset, uint64_t len,
+		 struct spdk_bdev_io_opts *opts,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	uint64_t offset_blocks, num_blocks;
@@ -2173,13 +2171,15 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	return spdk_bdev_writev_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg);
+	return spdk_bdev_writev_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks,
+				       opts, cb, cb_arg);
 }
 
 int
 spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			struct iovec *iov, int iovcnt,
 			uint64_t offset_blocks, uint64_t num_blocks,
+			struct spdk_bdev_io_opts *opts,
 			spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
@@ -2207,6 +2207,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+	bdev_io->requested_nbytes = opts->requested_nbytes;
 
 	spdk_bdev_io_submit(bdev_io);
 	return 0;

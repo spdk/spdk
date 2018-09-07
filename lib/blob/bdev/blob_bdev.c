@@ -117,7 +117,7 @@ bdev_blob_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	int rc;
 
 	rc = spdk_bdev_writev_blocks(__get_desc(dev), channel, iov, iovcnt, lba,
-				     lba_count, bdev_blob_io_complete, cb_args);
+				     lba_count, NULL, bdev_blob_io_complete, cb_args);
 	if (rc) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}

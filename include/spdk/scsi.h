@@ -107,6 +107,7 @@ struct spdk_scsi_task {
 
 	uint32_t ref;
 	uint32_t transfer_len;
+	uint32_t requested_transfer_len;
 	uint32_t dxfer_dir;
 	uint32_t length;
 
