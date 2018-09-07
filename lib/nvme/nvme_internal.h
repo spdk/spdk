@@ -458,6 +458,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_SET_DB_BUF_CFG,
 
 	/**
+	 * Waiting for Doorbell Buffer Config to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG,
+
+	/**
 	 * Set Keep Alive Timeout of the controller.
 	 */
 	NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
