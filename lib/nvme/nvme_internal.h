@@ -463,6 +463,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
 
 	/**
+	 * Waiting for Set Keep Alive Timeout to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT,
+
+	/**
 	 * Set Host ID of the controller.
 	 */
 	NVME_CTRLR_STATE_SET_HOST_ID,

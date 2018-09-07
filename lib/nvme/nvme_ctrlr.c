@@ -636,6 +636,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "set doorbell buffer config";
 	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
 		return "set keep alive timeout";
+	case NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT:
+		return "wait for set keep alive timeout";
 	case NVME_CTRLR_STATE_SET_HOST_ID:
 		return "set host ID";
 	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
@@ -1007,6 +1009,14 @@ nvme_ctrlr_set_keep_alive_timeout_done(void *arg, const struct spdk_nvme_cpl *cp
 	uint32_t keep_alive_interval_ms;
 	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Keep alive timeout Get Feature failed: SC %x SCT %x\n",
+			    cpl->status.sc, cpl->status.sct);
+		ctrlr->opts.keep_alive_timeout_ms = 0;
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
 	if (ctrlr->opts.keep_alive_timeout_ms != cpl->cdw0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Controller adjusted keep alive timeout to %u ms\n",
 			      cpl->cdw0);
@@ -1024,40 +1034,37 @@ nvme_ctrlr_set_keep_alive_timeout_done(void *arg, const struct spdk_nvme_cpl *cp
 
 	/* Schedule the first Keep Alive to be sent as soon as possible. */
 	ctrlr->next_keep_alive_tick = spdk_get_ticks();
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID, NVME_TIMEOUT_INFINITE);
 }
 
 static int
 nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_completion_poll_status status;
 	int rc;
 
 	if (ctrlr->opts.keep_alive_timeout_ms == 0) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID, NVME_TIMEOUT_INFINITE);
 		return 0;
 	}
 
 	if (ctrlr->cdata.kas == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Controller KAS is 0 - not enabling Keep Alive\n");
 		ctrlr->opts.keep_alive_timeout_ms = 0;
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID, NVME_TIMEOUT_INFINITE);
 		return 0;
 	}
 
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT, NVME_TIMEOUT_INFINITE);
+
 	/* Retrieve actual keep alive timeout, since the controller may have adjusted it. */
 	rc = spdk_nvme_ctrlr_cmd_get_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER, 0, NULL, 0,
-					     nvme_completion_poll_cb, &status);
+					     nvme_ctrlr_set_keep_alive_timeout_done, ctrlr);
 	if (rc != 0) {
 		SPDK_ERRLOG("Keep alive timeout Get Feature failed: %d\n", rc);
 		ctrlr->opts.keep_alive_timeout_ms = 0;
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return rc;
 	}
-
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("Keep alive timeout Get Feature failed: SC %x SCT %x\n",
-			    status.cpl.status.sc, status.cpl.status.sct);
-		ctrlr->opts.keep_alive_timeout_ms = 0;
-		return -ENXIO;
-	}
-	nvme_ctrlr_set_keep_alive_timeout_done(ctrlr, &status.cpl);
 
 	return 0;
 }
@@ -1790,7 +1797,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
 		rc = nvme_ctrlr_set_keep_alive_timeout(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_SET_HOST_ID:
