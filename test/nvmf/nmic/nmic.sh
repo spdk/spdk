@@ -39,20 +39,28 @@ timing_exit start_nvmf_tgt
 
 # Create subsystems
 bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -a -s SPDK1 -n "$bdevs"
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK1
+for bdev in $bdevs; do
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
+done
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 
 echo "test case1: single bdev can't be used in multiple subsystems"
 set +e
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode2 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -a -s SPDK2 -n "$bdevs"
-nmic_status=$?
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode2 -a -s SPDK2
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+for bdev in $bdevs; do
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 $bdev
+	nmic_status=$?
 
-if [ $nmic_status -eq 0 ]; then
-	echo " constructing nvmf subsystem passed - failure expected."
-	killprocess $pid
-	exit 1
-else
-	echo " constructing nvmf subsystem failed - expected result."
-fi
+	if [ $nmic_status -eq 0 ]; then
+		echo " Adding namespace passed - failure expected."
+		killprocess $pid
+		exit 1
+	else
+		echo " Adding namespace failed - expected result."
+	fi
+done
 set -e
 
 modprobe -v nvme-rdma
