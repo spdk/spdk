@@ -458,6 +458,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_CONFIGURE_AER,
 
 	/**
+	 * Waiting for the Configure AER to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER,
+
+	/**
 	 * Set supported log pages of the controller.
 	 */
 	NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
