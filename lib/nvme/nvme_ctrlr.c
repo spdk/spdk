@@ -634,6 +634,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "construct namespaces";
 	case NVME_CTRLR_STATE_CONFIGURE_AER:
 		return "configure AER";
+	case NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER:
+		return "wait for configure aer";
 	case NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES:
 		return "set supported log pages";
 	case NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES:
@@ -1344,11 +1346,39 @@ nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
+static void
+nvme_ctrlr_configure_aer_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_async_event_request		*aer;
+	int					rc;
+	uint32_t				i;
+	struct spdk_nvme_ctrlr *ctrlr =	(struct spdk_nvme_ctrlr *)arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_NOTICELOG("nvme_ctrlr_configure_aer failed!\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	/* aerl is a zero-based value, so we need to add 1 here. */
+	ctrlr->num_aers = spdk_min(NVME_MAX_ASYNC_EVENTS, (ctrlr->cdata.aerl + 1));
+
+	for (i = 0; i < ctrlr->num_aers; i++) {
+		aer = &ctrlr->aer[i];
+		rc = nvme_ctrlr_construct_and_submit_aer(ctrlr, aer);
+		if (rc) {
+			SPDK_ERRLOG("nvme_ctrlr_construct_and_submit_aer failed!\n");
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+			return;
+		}
+	}
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES, NVME_TIMEOUT_INFINITE);
+}
+
 static int
-_nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_feat_async_event_configuration	config;
-	struct nvme_completion_poll_status		status;
 	int						rc;
 
 	config.raw = 0;
@@ -1370,41 +1400,14 @@ _nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 		config.bits.telemetry_log_notice = 1;
 	}
 
-	rc = nvme_ctrlr_cmd_set_async_event_config(ctrlr, config, nvme_completion_poll_cb, &status);
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER, NVME_TIMEOUT_INFINITE);
+
+	rc = nvme_ctrlr_cmd_set_async_event_config(ctrlr, config,
+			nvme_ctrlr_configure_aer_done,
+			ctrlr);
 	if (rc != 0) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return rc;
-	}
-
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
-		return -ENXIO;
-	}
-
-	return 0;
-}
-
-static int
-nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
-{
-	struct nvme_async_event_request		*aer;
-	uint32_t				i;
-	int					rc;
-
-	rc = _nvme_ctrlr_configure_aer(ctrlr);
-	if (rc != 0) {
-		SPDK_NOTICELOG("nvme_ctrlr_configure_aer failed!\n");
-		return 0;
-	}
-
-	/* aerl is a zero-based value, so we need to add 1 here. */
-	ctrlr->num_aers = spdk_min(NVME_MAX_ASYNC_EVENTS, (ctrlr->cdata.aerl + 1));
-
-	for (i = 0; i < ctrlr->num_aers; i++) {
-		aer = &ctrlr->aer[i];
-		rc = nvme_ctrlr_construct_and_submit_aer(ctrlr, aer);
-		if (rc) {
-			SPDK_ERRLOG("nvme_ctrlr_construct_and_submit_aer failed!\n");
-			return rc;
-		}
 	}
 
 	return 0;
@@ -1835,7 +1838,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_CONFIGURE_AER:
 		rc = nvme_ctrlr_configure_aer(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES:
