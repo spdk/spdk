@@ -94,6 +94,6 @@ rm -f ./local-job2-2-verify.state
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
-nvmftestfini $1
 killprocess $nvmfpid
+nvmftestfini $1
 timing_exit fio
