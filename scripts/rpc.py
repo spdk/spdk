@@ -1354,7 +1354,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
     p.add_argument("-s", "--serial-number", help="""
     Format:  'sn' etc
-    Example: 'SPDK00000000000001'""", default='0000:00:01.0')
+    Example: 'SPDK00000000000001'""", default='00000000000000000000')
     p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces
     Format:  'bdev_name1[:nsid1] bdev_name2[:nsid2] bdev_name3[:nsid3]' etc
     Example: '1:Malloc0 2:Malloc1 3:Malloc2'
@@ -1375,7 +1375,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nqn', help='Subsystem NQN (ASCII)')
     p.add_argument("-s", "--serial-number", help="""
     Format:  'sn' etc
-    Example: 'SPDK00000000000001'""", default='0000:00:01.0')
+    Example: 'SPDK00000000000001'""", default='00000000000000000000')
     p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
     p.add_argument("-m", "--max-namespaces", help="Maximum number of namespaces allowed",
                    type=int, default=0)

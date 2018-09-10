@@ -289,6 +289,9 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		}
 	}
 
+	memset(subsystem->sn, '0', sizeof(subsystem->sn) - 1);
+	subsystem->sn[sizeof(subsystem->sn) - 1] = '\n';
+
 	tgt->subsystems[sid] = subsystem;
 	tgt->discovery_genctr++;
 
