@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f21f1e1_0e0906e2",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1800,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T22:02:56Z",
+      "side": 1,
+      "message": "Patch looks good - move this to just after SET_DB_BUF_CFG (similar to earlier patches)",
+      "revId": "0f78522c79069253752d4ed715a7853b7071750d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
