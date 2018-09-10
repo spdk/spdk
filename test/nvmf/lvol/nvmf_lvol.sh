@@ -44,10 +44,10 @@ fi
 timing_enter lvol_integrity
 timing_enter start_nvmf_tgt
 # Start up the NVMf target in another process
-$NVMF_APP -m 0xF --wait-for-rpc &
+$NVMF_APP -e 0xFFFF -m 0xF --wait-for-rpc &
 pid=$!
 
-trap "disconnect_nvmf; killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "disconnect_nvmf; killprocess $pid; nvmftestfini $1; process_shm $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_nvmf_target_options -u 8192 -p 4

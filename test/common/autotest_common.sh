@@ -263,6 +263,19 @@ function process_core() {
 	return $ret
 }
 
+function process_shm() {
+	pid=$1
+	shm_file=$(find /dev/shm -name "*${pid}" -printf "%f\n")
+
+	if [[ -z $shm_file ]]; then
+		echo "SHM File for PID ${pid} not found!"
+		return 1
+	fi
+
+	tar -cvzf /dev/shm/${shm_file} $output_dir/${pid}_shm.tar.gz
+	return 0
+}
+
 function waitforlisten() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
