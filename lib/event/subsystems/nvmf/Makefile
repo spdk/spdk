@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = conf.c nvmf_rpc.c nvmf_tgt.c
+C_SRCS = conf.c nvmf_rpc.c nvmf_rpc_deprecated.c nvmf_tgt.c
 LIBNAME = event_nvmf
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

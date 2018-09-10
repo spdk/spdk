@@ -2941,84 +2941,6 @@ Example response:
 }
 ~~~
 
-## construct_nvmf_subsystem method {#rpc_construct_nvmf_subsystem}
-
-Construct an NVMe over Fabrics target subsystem.
-
-### Parameters
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-nqn                     | Required | string      | Subsystem NQN
-listen_addresses        | Optional | array       | Array of @ref rpc_construct_nvmf_subsystem_listen_address objects
-hosts                   | Optional | array       | Array of strings containing allowed host NQNs. Default: No hosts allowed.
-allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`). Default: `false`.
-serial_number           | Required | string      | Serial number of virtual controller
-namespaces              | Optional | array       | Array of @ref rpc_construct_nvmf_subsystem_namespace objects. Default: No namespaces.
-max_namespaces          | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
-
-### listen_address {#rpc_construct_nvmf_subsystem_listen_address}
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-trtype                  | Required | string      | Transport type ("RDMA")
-adrfam                  | Required | string      | Address family ("IPv4", "IPv6", "IB", or "FC")
-traddr                  | Required | string      | Transport address
-trsvcid                 | Required | string      | Transport service ID
-
-### namespace {#rpc_construct_nvmf_subsystem_namespace}
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-nsid                    | Optional | number      | Namespace ID between 1 and 4294967294, inclusive. Default: Automatically assign NSID.
-bdev_name               | Required | string      | Name of bdev to expose as a namespace.
-nguid                   | Optional | string      | 16-byte namespace globally unique identifier in hexadecimal (e.g. "ABCDEF0123456789ABCDEF0123456789")
-eui64                   | Optional | string      | 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789")
-uuid                    | Optional | string      | RFC 4122 UUID (e.g. "ceccf520-691e-4b46-9546-34af789907c5")
-
-### Example
-
-Example request:
-
-~~~
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "construct_nvmf_subsystem",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "listen_addresses": [
-      {
-        "trtype": "RDMA",
-        "adrfam": "IPv4",
-        "traddr": "192.168.0.123",
-        "trsvcid: "4420"
-      }
-    ],
-    "hosts": [
-      "nqn.2016-06.io.spdk:host1",
-      "nqn.2016-06.io.spdk:host2"
-    ],
-    "allow_any_host": false,
-    "serial_number": "abcdef",
-    "namespaces": [
-      {"nsid": 1, "bdev_name": "Malloc2"},
-      {"nsid": 2, "bdev_name": "Nvme0n1"}
-    ]
-  }
-}
-~~~
-
-Example response:
-
-~~~
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
-}
-~~~
-
 ## nvmf_subsystem_create method {#rpc_nvmf_subsystem_create}
 
 Construct an NVMe over Fabrics target subsystem.
@@ -3103,7 +3025,16 @@ Add a new listen address to an NVMe-oF subsystem.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
-listen_address          | Required | object      | @ref rpc_construct_nvmf_subsystem_listen_address object
+listen_address          | Required | object      | @ref rpc_nvmf_listen_address object
+
+### listen_address {#rpc_nvmf_listen_address}
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+trtype                  | Required | string      | Transport type ("RDMA")
+adrfam                  | Required | string      | Address family ("IPv4", "IPv6", "IB", or "FC")
+traddr                  | Required | string      | Transport address
+trsvcid                 | Required | string      | Transport service ID
 
 ### Example
 
@@ -3145,7 +3076,17 @@ Add a namespace to a subsystem. The namespace ID is returned as the result.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
-namespace               | Required | object      | @ref rpc_construct_nvmf_subsystem_namespace object
+namespace               | Required | object      | @ref rpc_nvmf_namespace object
+
+### namespace {#rpc_nvmf_namespace}
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nsid                    | Optional | number      | Namespace ID between 1 and 4294967294, inclusive. Default: Automatically assign NSID.
+bdev_name               | Required | string      | Name of bdev to expose as a namespace.
+nguid                   | Optional | string      | 16-byte namespace globally unique identifier in hexadecimal (e.g. "ABCDEF0123456789ABCDEF0123456789")
+eui64                   | Optional | string      | 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789")
+uuid                    | Optional | string      | RFC 4122 UUID (e.g. "ceccf520-691e-4b46-9546-34af789907c5")
 
 ### Example
 
