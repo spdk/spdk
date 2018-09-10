@@ -1,4 +1,4 @@
-#!/bin/sh
+#! /usr/bin/env bash
 # Please run this script as root.
 
 set -e
