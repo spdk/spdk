@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "09eb5be7_4be07dac",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1715,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T21:44:11Z",
+      "side": 1,
+      "message": "I just talked with Ben.  Since nvme_ctrlr_set_host_id() has special cases, you must do a separate function, and then you must set state to WAIT_FOR_SET_HOST_ID in that function.\n\nI am concerned that inline this function here makes this code appear different.  It is not really different, but I think it might be more clear and consistent if we do make this a separate function.  Then these functions are always responsible for setting the WAIT_FOR_XXX state.\n\nSorry - I know we are going back and forth on this.  I think in the end the code will be clearer this way and that wasn\u0027t obviously until seeing your other patches.\n\nThanks,\n\n-Jim",
+      "parentUuid": "1d0d4bae_ffb4f250",
+      "revId": "88e71b19e46bb6f6f99f860cc813c2f90aff741c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a0b5e788_bdf6ba7c",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 3
