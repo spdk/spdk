@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "78c36dec_13c404b1",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1013512
+      },
+      "writtenOn": "2018-09-10T11:43:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "774b762d_b1897233",
+      "range": {
+        "startLine": 299,
+        "startChar": 20,
+        "endLine": 299,
+        "endChar": 28
+      },
+      "revId": "7191e58b41876ac019e43a48f8b75d5329008e79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f25d57f_5e51d143",
         "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-10T10:40:30Z",
       "side": 1,
       "message": "How this might be possible? I think returning default value is better than NULL. Or you can skip \"conn_sched\" at all if the configuration is invalid.\n\nAlso the nvmf_tgt_get_qpair_core() defaults to RR sched if sched !\u003d CONNECT_SCHED_HOST_IP. You can do here the same.",
+      "range": {
+        "startLine": 422,
+        "startChar": 2,
+        "endLine": 425,
+        "endChar": 2
+      },
+      "revId": "7191e58b41876ac019e43a48f8b75d5329008e79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1dac0a50_b97bae7b",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1013512
+      },
+      "writtenOn": "2018-09-10T11:43:31Z",
+      "side": 1,
+      "message": "Yes. It cannot be NULL here. Default string will be roundrobin",
+      "parentUuid": "9f25d57f_5e51d143",
       "range": {
         "startLine": 422,
         "startChar": 2,
