@@ -52,6 +52,24 @@
       "revId": "d9131f345c776cf96a36f283e4edbc0a9c5ebeed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "154addb3_887199c0",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1013512
+      },
+      "writtenOn": "2018-09-10T04:20:28Z",
+      "side": 1,
+      "message": "The memory is freed in nvmf_tgt_destroy_done()",
+      "parentUuid": "4561ddd4_a13a5752",
+      "revId": "d9131f345c776cf96a36f283e4edbc0a9c5ebeed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
