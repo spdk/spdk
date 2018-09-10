@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6c70483f_e95e16c7",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-10T04:12:08Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "6d543f78_e9bcc13a",
+      "revId": "9e467cb5a6045296b8c2cf15db3844c2d63526a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a08df0f1_343dc7f1",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-07T17:27:48Z",
       "side": 1,
       "message": "This case should go right under NVME_CTRLR_STATE_IDENTIFY, so the state machine can be read from top to bottom in order of how the states progress.",
+      "revId": "9e467cb5a6045296b8c2cf15db3844c2d63526a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0ffdff6_a60db544",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1777,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-10T04:12:08Z",
+      "side": 1,
+      "message": "There are several other WAIT_FOR_* states also poll the completion queue here, so we can use:\ncase NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:\ncase NVME_CTRLR_STATE_WAIT_FOR_AER:\netc... at the same block.",
+      "parentUuid": "a08df0f1_343dc7f1",
       "revId": "9e467cb5a6045296b8c2cf15db3844c2d63526a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
