@@ -39,7 +39,7 @@ echo "Process pid: $pid"
 trap "killprocess $pid; delete_tmp_conf_files; exit 1 " SIGINT SIGTERM EXIT
 
 waitforlisten $pid
-$rpc_py load_subsystem_config -f $testdir/iscsi.json
+$rpc_py load_subsystem_config < $testdir/iscsi.json
 $rpc_py start_subsystem_init
 echo "iscsi_tgt is listening. Running tests..."
 

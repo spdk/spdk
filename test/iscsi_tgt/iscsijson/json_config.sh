@@ -18,7 +18,7 @@ $rpc_py add_portal_group $PORTAL_TAG 127.0.0.1:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_malloc_bdev 64 4096 --name Malloc0
 $rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
-$rpc_py save_config -f $base_iscsi_config
+$rpc_py save_config > $base_iscsi_config
 timing_exit iscsi_json_config_create_setup
 
 timing_enter iscsi_json_config_test
@@ -29,8 +29,8 @@ timing_enter iscsi_json_config_restart_spdk
 $clear_config_py clear_config
 kill_targets
 run_spdk_tgt
-$rpc_py load_config -f $base_iscsi_config
-$rpc_py save_config -f $last_iscsi_config
+$rpc_py load_config < $base_iscsi_config
+$rpc_py save_config > $last_iscsi_config
 timing_exit iscsi_json_config_restart_spdk
 
 diff $base_iscsi_config $last_iscsi_config

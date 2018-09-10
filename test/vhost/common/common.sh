@@ -184,8 +184,7 @@ function spdk_vhost_run()
 	fi
 
 	if [[ -n "$vhost_json_path" ]]; then
-		$SPDK_BUILD_DIR/scripts/rpc.py -s $vhost_dir/rpc.sock load_config\
-		 --filename "$vhost_json_path/conf.json"
+		$SPDK_BUILD_DIR/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_path/conf.json"
 	fi
 
 	notice "vhost started - pid=$vhost_pid"

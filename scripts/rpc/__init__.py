@@ -34,39 +34,20 @@ def get_rpc_methods(client, current=None):
     return client.call('get_rpc_methods', params)
 
 
-def _json_dump(config, filename, indent):
-    if filename is None:
-        if indent is None:
-            indent = 2
-        elif indent < 0:
-            indent = None
-        json.dump(config, sys.stdout, indent=indent)
-        sys.stdout.write('\n')
-    else:
-        if indent is None or indent < 0:
-            indent = None
-        with open(filename, 'w') as file:
-            json.dump(config, file, indent=indent)
-            file.write('\n')
+def _json_dump(config, indent):
+    if indent is None:
+        indent = 2
+    elif indent < 0:
+        indent = None
+    json.dump(config, sys.stdout, indent=indent)
+    sys.stdout.write('\n')
 
 
-def _json_load(filename):
-    if not filename or filename == '-':
-        return json.load(sys.stdin)
-
-    else:
-        with open(filename, 'r') as file:
-            return json.load(file)
-
-
-def save_config(client, filename=None, indent=2):
-    """Write current (live) configuration of SPDK subsystems and targets.
+def save_config(client, indent=2):
+    """Write current (live) configuration of SPDK subsystems and targets to stdout.
     Args:
-        filename: File where to save JSON configuration to.
-            Print to stdout if not provided.
         indent: Indent level. Value less than 0 mean compact mode.
-            If filename is not given default then indent level is 2.
-            If writing to file of filename is '-' then default is compact mode.
+            Default indent level is 2.
     """
     config = {
         'subsystems': []
@@ -79,16 +60,15 @@ def save_config(client, filename=None, indent=2):
         }
         config['subsystems'].append(cfg)
 
-    _json_dump(config, filename, indent)
+    _json_dump(config, indent)
 
 
-def load_config(client, filename=None):
-    """Configure SPDK subsystems and tagets using JSON RPC.
+def load_config(client):
+    """Configure SPDK subsystems and targets using JSON RPC read from stdin.
     Args:
-        filename: JSON Configuration file location.
-            If no file path is provided or file is '-' then read configuration from stdin.
+        none
     """
-    json_config = _json_load(filename)
+    json_config = json.load(sys.stdin)
 
     # remove subsystems with no config
     subsystems = json_config['subsystems']
@@ -132,30 +112,26 @@ def load_config(client, filename=None):
         print("Some configs were skipped because the RPC state that can call them passed over.")
 
 
-def save_subsystem_config(client, filename=None, indent=2, name=None):
-    """Write current (live) configuration of SPDK subsystem.
+def save_subsystem_config(client, indent=2, name=None):
+    """Write current (live) configuration of SPDK subsystem to stdout.
     Args:
-        filename: File where to save JSON configuration to.
-            Print to stdout if not provided.
         indent: Indent level. Value less than 0 mean compact mode.
-            If filename is not given default then indent level is 2.
-            If writing to file of filename is '-' then default is compact mode.
+            Default is indent level 2.
     """
     cfg = {
         'subsystem': name,
         'config': client.call('get_subsystem_config', {"name": name})
     }
 
-    _json_dump(cfg, filename, indent)
+    _json_dump(cfg, indent)
 
 
-def load_subsystem_config(client, filename=None):
-    """Configure SPDK subsystem using JSON RPC.
+def load_subsystem_config(client):
+    """Configure SPDK subsystem using JSON RPC read from stdin.
     Args:
-        filename: JSON Configuration file location.
-            If no file path is provided or file is '-' then read configuration from stdin.
+        none
     """
-    subsystem = _json_load(filename)
+    subsystem = json.load(sys.stdin)
 
     if not subsystem['config']:
         return
