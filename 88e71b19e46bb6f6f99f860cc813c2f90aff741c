@@ -19,6 +19,41 @@
     },
     {
       "key": {
+        "uuid": "ceafc7a2_2040b438",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1715,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T20:57:15Z",
+      "side": 1,
+      "message": "If nvme_ctrlr_set_host_id() is one or two lines of code, then inline it. If it has any complex logic, you can leave it as a function.",
+      "parentUuid": "065fdef0_b547274d",
+      "revId": "88e71b19e46bb6f6f99f860cc813c2f90aff741c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0b5e788_bdf6ba7c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1718,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T20:57:15Z",
+      "side": 1,
+      "message": "Move the call to transition to the error state here instead of inside nvme_ctrlr_cmd_identify.",
+      "revId": "88e71b19e46bb6f6f99f860cc813c2f90aff741c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff6650a9_b21fa02c",
         "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
         "patchSetId": 3

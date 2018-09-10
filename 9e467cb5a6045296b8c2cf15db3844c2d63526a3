@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "eb1cc7a4_28cacc6c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1777,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T20:57:15Z",
+      "side": 1,
+      "message": "These could definitely all fall through to the same spdk_nvme_qpair_process_completions call to avoid repeating the code. However, my gut tells me that it\u0027s better in this case to be more verbose and write out the state machine in the order the states will occur in, repeating these calls throughout. I\u0027d like to see what everyone else thinks is most readable and/or understandable here.",
+      "parentUuid": "f0ffdff6_a60db544",
+      "revId": "9e467cb5a6045296b8c2cf15db3844c2d63526a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c0a5278_5535db22",
         "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
         "patchSetId": 2
