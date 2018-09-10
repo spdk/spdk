@@ -34,6 +34,24 @@
       "revId": "9e99bfbf4a9394786cf7e9d721be3ef633733911",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b89fcf57_71944ee0",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T22:47:04Z",
+      "side": 1,
+      "message": "nvme_rdma_alloc_reqs() is only called when the qpair is initialized. The requests will keep getting re-used over and over after that. If a request is first used for a command with in-capsule data, then later used for a command without in-capsule data, the num_sge here needs to get set back to 1.",
+      "parentUuid": "bb49d715_a1bf7aad",
+      "revId": "9e99bfbf4a9394786cf7e9d721be3ef633733911",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
