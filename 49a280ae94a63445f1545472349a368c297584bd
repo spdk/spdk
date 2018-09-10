@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f193632_de7314dd",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T22:40:46Z",
+      "side": 1,
+      "message": "This is simpler if you use a do {} while()",
+      "revId": "49a280ae94a63445f1545472349a368c297584bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
