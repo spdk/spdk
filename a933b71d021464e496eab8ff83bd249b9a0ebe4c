@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7cf4fe0c_9831f39f",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-10T13:41:53Z",
+      "side": 1,
+      "message": "I sent email with question what should be obligatory in this rpc. I will respond to this comments when I get information abou this.",
+      "parentUuid": "3af2837f_533278b0",
+      "range": {
+        "startLine": 25,
+        "startChar": 31,
+        "endLine": 25,
+        "endChar": 63
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89e63a25_3ba70f97",
         "filename": "scripts/spdkcli/ui_node_nvmf.py",
         "patchSetId": 7
@@ -163,6 +187,30 @@
     },
     {
       "key": {
+        "uuid": "f276921e_3a41df74",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-10T13:41:53Z",
+      "side": 1,
+      "message": "I cannot use separator like in rpc. I cannot use space character. Allowed characters that can be used are e.g. \u0027-\u0027 or \"\u003d\".",
+      "parentUuid": "8264fd33_5ed77d62",
+      "range": {
+        "startLine": 42,
+        "startChar": 8,
+        "endLine": 44,
+        "endChar": 77
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d3d390e_6c9d7fd4",
         "filename": "scripts/spdkcli/ui_node_nvmf.py",
         "patchSetId": 7
@@ -174,6 +222,30 @@
       "writtenOn": "2018-09-07T09:26:55Z",
       "side": 1,
       "message": "Should be bool type \"False\" instead of string",
+      "range": {
+        "startLine": 109,
+        "startChar": 48,
+        "endLine": 109,
+        "endChar": 55
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30c95274_72d37469",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-10T13:41:53Z",
+      "side": 1,
+      "message": "Thanks for noticing this.\nIn configshell there exists type bool(true or false) so I think this is ok.",
+      "parentUuid": "1d3d390e_6c9d7fd4",
       "range": {
         "startLine": 109,
         "startChar": 48,
@@ -209,6 +281,30 @@
     },
     {
       "key": {
+        "uuid": "7b28131a_a283f0ff",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-10T13:41:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a0738c3b_4e90dabb",
+      "range": {
+        "startLine": 131,
+        "startChar": 12,
+        "endLine": 131,
+        "endChar": 49
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13f8db7b_7cb50aba",
         "filename": "scripts/spdkcli/ui_node_nvmf.py",
         "patchSetId": 7
@@ -220,6 +316,30 @@
       "writtenOn": "2018-09-07T09:26:55Z",
       "side": 1,
       "message": "wrong indentation? this should probably belong to \"if\" a line up",
+      "range": {
+        "startLine": 132,
+        "startChar": 8,
+        "endLine": 132,
+        "endChar": 50
+      },
+      "revId": "a933b71d021464e496eab8ff83bd249b9a0ebe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84021cb0_d611a215",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-10T13:41:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "13f8db7b_7cb50aba",
       "range": {
         "startLine": 132,
         "startChar": 8,
