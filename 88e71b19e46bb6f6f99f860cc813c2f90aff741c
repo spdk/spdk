@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "1d0d4bae_ffb4f250",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1715,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T21:38:49Z",
+      "side": 1,
+      "message": "nvme_ctrlr_set_host_id() has several cases it checks (don\u0027t send if PCIe transport, don\u0027t send if host id is all zeroes) so I think a separate function is still best.",
+      "parentUuid": "ceafc7a2_2040b438",
+      "revId": "88e71b19e46bb6f6f99f860cc813c2f90aff741c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a0b5e788_bdf6ba7c",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 3
