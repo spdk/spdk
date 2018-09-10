@@ -588,6 +588,9 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
+#ifdef SPDK_LOG_BACKTRACE_LVL
+	spdk_log_set_backtrace_level(SPDK_LOG_BACKTRACE_LVL);
+#endif
 	spdk_log_open();
 
 	if (spdk_app_setup_env(opts) < 0) {
