@@ -685,7 +685,8 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		return -ENXIO;
 	}
 
-	block_size = spdk_nvme_ns_get_sector_size(ns);
+	block_size = spdk_nvme_ns_get_extended_sector_size(ns);
+
 	lba = io_u->offset / block_size;
 	lba_count = io_u->xfer_buflen / block_size;
 
