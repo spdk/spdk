@@ -112,6 +112,38 @@ def construct_nvmf_subsystem(client,
     return client.call('construct_nvmf_subsystem', params)
 
 
+def nvmf_subsystem_create(client,
+                          nqn,
+                          serial_number,
+                          allow_any_host=False,
+                          max_namespaces=0):
+    """Construct an NVMe over Fabrics target subsystem.
+
+    Args:
+        nqn: Subsystem NQN.
+        serial_number: Serial number of virtual controller.
+        allow_any_host: Allow any host (True) or enforce allowed host whitelist (False). Default: False.
+        max_namespaces: Maximum number of namespaces that can be attached to the subsystem (optional). Default: 0 (Unlimited).
+
+    Returns:
+        True or False
+    """
+    params = {
+        'nqn': nqn,
+    }
+
+    if serial_number:
+        params['serial_number'] = serial_number
+
+    if allow_any_host:
+        params['allow_any_host'] = True
+
+    if max_namespaces:
+        params['max_namespaces'] = max_namespaces
+
+    return client.call('nvmf_subsystem_create', params)
+
+
 def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam):
     """Add a new listen address to an NVMe-oF subsystem.
 
