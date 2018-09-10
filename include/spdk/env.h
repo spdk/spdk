@@ -66,6 +66,11 @@ extern "C" {
  */
 #define SPDK_MEMZONE_NO_IOVA_CONTIG 0x00100000 /**< no iova contiguity */
 
+/**
+ * Memory map translations are valid for a fixed length of 2MB
+ */
+#define SPDK_MEM_MAP_PAGE_SIZE (1 << 21)
+
 struct spdk_pci_device;
 
 /**
