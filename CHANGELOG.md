@@ -22,6 +22,11 @@ does not at this time confer any SPDK ABI compatibility claims.
 
 spdk_bdev_alias_del_all() was added to delete all alias from block device.
 
+### Environment Abstraction Layer and Event Framework
+
+The size parameter was removed from spdk_mem_map_translate(). This parameter was
+unused inside of the function.
+
 ### iscsi
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
