@@ -73,7 +73,11 @@ $rpc_py set_nvmf_target_options -u 8192 -p 4
 $rpc_py start_subsystem_init
 echo "NVMf target has started."
 bdevs=$($rpc_py construct_malloc_bdev 64 512)
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "$bdevs"
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
+for bdev in $bdevs; do
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
+done
 echo "NVMf subsystem created."
 
 timing_enter start_iscsi_tgt
