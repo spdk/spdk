@@ -243,6 +243,9 @@ trap - SIGINT SIGTERM EXIT
 # catch any stray core files
 process_core
 
+# remove orphaned SPDK files from the system
+./scripts/setup.sh cleanup
+
 if hash lcov; then
 	# generate coverage data and combine with baseline
 	$LCOV -q -c -d $src -t "$(hostname)" -o cov_test.info

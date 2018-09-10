@@ -263,6 +263,29 @@ function process_core() {
 	return $ret
 }
 
+function process_shm() {
+	type=$1
+	id=$2
+	if [ "$type" = "--pid" ]; then
+		id="pid${id}"
+	elif [ "$type" = "--id" ]; then
+		id="${id}"
+	else
+		echo "Please specify to search for pid or shared memory id."
+		return 1
+	fi
+
+	shm_file=$(find /dev/shm -name "*.${id}" -printf "%f\n")
+
+	if [[ -z $shm_file ]]; then
+	echo "SHM File for specified PID or shared memory id: ${pid} not found!"
+		return 1
+	fi
+
+	tar -cvzf /dev/shm/${shm_file} $output_dir/${shm_file}_shm.tar.gz
+	return 0
+}
+
 function waitforlisten() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
