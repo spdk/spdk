@@ -32,7 +32,10 @@ timing_exit start_nvmf_tgt
 modprobe -v nvme-rdma
 
 $rpc_py construct_malloc_bdev 64 512 --name Malloc0
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -a -s SPDK00000000000001 -n Malloc0 -m 2
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -m 2
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
+
 $rpc_py get_nvmf_subsystems
 
 # TODO: this aer test tries to invoke an AER completion by setting the temperature
