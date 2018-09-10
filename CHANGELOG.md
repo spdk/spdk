@@ -27,6 +27,10 @@ spdk_bdev_alias_del_all() was added to delete all alias from block device.
 The size parameter was removed from spdk_mem_map_translate(). This parameter was
 unused inside of the function.
 
+Instead, a define, SPDK_MEM_MAP_TRANSLATION_LEN has been added to indicate the size
+of each memory map entry. This define should be used when referencing a specific
+translation or determining if one has gone over the end of a translation.
+
 ### iscsi
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
