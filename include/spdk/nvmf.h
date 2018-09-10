@@ -219,6 +219,18 @@ int spdk_nvmf_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 				  struct spdk_nvme_transport_id *trid);
 
 /**
+ * Get the local transport ID for this queue pair.
+ *
+ * \param qpair The NVMe-oF qpair
+ * \param trid Output parameter that will contain the transport id.
+ *
+ * \return 0 for success.
+ * \return -EINVAL if the qpair is not connected.
+ */
+int spdk_nvmf_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
+				   struct spdk_nvme_transport_id *trid);
+
+/**
  * Get the associated listener transport ID for this queue pair.
  *
  * \param qpair The NVMe-oF qpair

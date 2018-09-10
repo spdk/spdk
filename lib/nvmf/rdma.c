@@ -2758,6 +2758,17 @@ spdk_nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 }
 
 static int
+spdk_nvmf_rdma_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
+				    struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	return spdk_nvmf_rdma_trid_from_cm_id(rqpair->cm_id, trid, false);
+}
+
+static int
 spdk_nvmf_rdma_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 				     struct spdk_nvme_transport_id *trid)
 {
@@ -2790,6 +2801,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.qpair_fini = spdk_nvmf_rdma_close_qpair,
 	.qpair_is_idle = spdk_nvmf_rdma_qpair_is_idle,
 	.qpair_get_peer_trid = spdk_nvmf_rdma_qpair_get_peer_trid,
+	.qpair_get_local_trid = spdk_nvmf_rdma_qpair_get_local_trid,
 	.qpair_get_listen_trid = spdk_nvmf_rdma_qpair_get_listen_trid,
 
 };
