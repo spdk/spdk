@@ -795,6 +795,74 @@ invalid:
 }
 SPDK_RPC_REGISTER("construct_nvmf_subsystem", spdk_rpc_construct_nvmf_subsystem, SPDK_RPC_RUNTIME)
 
+struct rpc_subsystem_create {
+	char *nqn;
+	char *serial_number;
+	uint32_t max_namespaces;
+	bool allow_any_host;
+};
+
+static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
+	{"nqn", offsetof(struct rpc_subsystem_create, nqn), spdk_json_decode_string},
+	{"serial_number", offsetof(struct rpc_subsystem_create, serial_number), spdk_json_decode_string, true},
+	{"max_namespaces", offsetof(struct rpc_subsystem_create, max_namespaces), spdk_json_decode_uint32, true},
+	{"allow_any_host", offsetof(struct rpc_subsystem_create, allow_any_host), spdk_json_decode_bool, true},
+};
+
+static void
+spdk_rpc_nvmf_subsystem_create(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_subsystem_create *req;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		goto invalid;
+	}
+
+	if (spdk_json_decode_object(params, rpc_subsystem_create_decoders,
+				    SPDK_COUNTOF(rpc_subsystem_create_decoders),
+				    req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME,
+					       req->max_namespaces);
+	if (!subsystem) {
+		goto invalid;
+	}
+
+	if (req->serial_number) {
+		if (spdk_nvmf_subsystem_set_sn(subsystem, req->serial_number)) {
+			SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req->nqn, req->serial_number);
+			goto invalid;
+		}
+	}
+
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
+
+	free(req->nqn);
+	free(req->serial_number);
+	free(req);
+
+	spdk_nvmf_subsystem_start(subsystem,
+				  spdk_rpc_nvmf_subsystem_started,
+				  request);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	if (req) {
+		free(req->nqn);
+		free(req->serial_number);
+	}
+	free(req);
+}
+SPDK_RPC_REGISTER("nvmf_subsystem_create", spdk_rpc_nvmf_subsystem_create, SPDK_RPC_RUNTIME)
+
 struct rpc_delete_subsystem {
 	char *nqn;
 };

@@ -1325,6 +1325,24 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=construct_nvmf_subsystem)
 
     @call_cmd
+    def nvmf_subsystem_create(args):
+        rpc.nvmf.nvmf_subsystem_create(args.client,
+                                       nqn=args.nqn,
+                                       serial_number=args.serial_number,
+                                       allow_any_host=args.allow_any_host,
+                                       max_namespaces=args.max_namespaces)
+
+    p = subparsers.add_parser('nvmf_subsystem_create', help='Create an NVMe-oF subsystem')
+    p.add_argument('nqn', help='Subsystem NQN (ASCII)')
+    p.add_argument("-s", "--serial-number", help="""
+    Format:  'sn' etc
+    Example: 'SPDK00000000000001'""", default='0000:00:01.0')
+    p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
+    p.add_argument("-m", "--max-namespaces", help="Maximum number of namespaces allowed",
+                   type=int, default=0)
+    p.set_defaults(func=nvmf_subsystem_create)
+
+    @call_cmd
     def delete_nvmf_subsystem(args):
         rpc.nvmf.delete_nvmf_subsystem(args.client,
                                        nqn=args.subsystem_nqn)
