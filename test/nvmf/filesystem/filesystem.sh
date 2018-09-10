@@ -30,7 +30,7 @@ for incapsule in 0 4096; do
 	$NVMF_APP -m 0xF --wait-for-rpc &
 	nvmfpid=$!
 
-	trap "killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+	trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 	waitforlisten $nvmfpid
 	$rpc_py set_nvmf_target_options -u 8192 -p 4 -c $incapsule

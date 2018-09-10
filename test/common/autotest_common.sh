@@ -263,6 +263,30 @@ function process_core() {
 	return $ret
 }
 
+function process_shm() {
+	type=$1
+	id=$2
+	if [ "$type" = "--pid" ]; then
+		id="pid${id}"
+	elif [ "$type" = "--id" ]; then
+		id="${id}"
+	else
+		echo "Please specify to search for pid or shared memory id."
+		return 1
+	fi
+
+	shm_files=$(find /dev/shm -name "*.${id}" -printf "%f\n")
+
+	if [[ -z $shm_files ]]; then
+		echo "SHM File for specified PID or shared memory id: ${id} not found!"
+		return 1
+	fi
+	for n in $shm_files; do
+		tar -C /dev/shm/ -cvzf $output_dir/${n}_shm.tar.gz ${n}
+	done
+	return 0
+}
+
 function waitforlisten() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
@@ -649,6 +673,7 @@ function get_bdev_size()
 function autotest_cleanup()
 {
 	$rootdir/scripts/setup.sh reset
+	$rootdir/scripts/setup.sh cleanup
 }
 
 function freebsd_update_contigmem_mod()
