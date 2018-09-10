@@ -446,12 +446,6 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 	uint64_t			end_strip = 0;
 	int				ret;
 
-	if (bdev_io->u.bdev.iovcnt != 1) {
-		SPDK_ERRLOG("iov vector count is not 1\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
-	}
-
 	/*
 	 * IO parameters used during io split and io completion
 	 */
