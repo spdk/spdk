@@ -93,11 +93,11 @@ $valgrind $testdir/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 
 $valgrind $testdir/lib/log/log.c/log_ut
 
-$valgrind $testdir/lib/nvmf/ctrlr.c/ctrlr_ut
-$valgrind $testdir/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut
-$valgrind $testdir/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
-$valgrind $testdir/lib/nvmf/request.c/request_ut
-$valgrind $testdir/lib/nvmf/subsystem.c/subsystem_ut
+#$valgrind $testdir/lib/nvmf/ctrlr.c/ctrlr_ut
+#$valgrind $testdir/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut
+#$valgrind $testdir/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
+#$valgrind $testdir/lib/nvmf/request.c/request_ut
+#$valgrind $testdir/lib/nvmf/subsystem.c/subsystem_ut
 
 $valgrind $testdir/lib/scsi/dev.c/dev_ut
 $valgrind $testdir/lib/scsi/lun.c/lun_ut
