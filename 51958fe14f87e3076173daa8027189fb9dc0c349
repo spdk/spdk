@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a45d9d1d_aca0138a",
+        "filename": "autobuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-10T16:04:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "af3c590d_f6a75166",
+      "revId": "51958fe14f87e3076173daa8027189fb9dc0c349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b48810cb_6ab68271",
         "filename": "autobuild.sh",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "93d02e7d_6013fa1e",
+        "filename": "autobuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-10T16:04:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b48810cb_6ab68271",
+      "revId": "51958fe14f87e3076173daa8027189fb9dc0c349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef9fcb83_7bcae4eb",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2018-09-07T00:01:00Z",
       "side": 1,
       "message": "copy/paste error - should be export SPDK_BUILD_SHARED_OBJECT",
+      "revId": "51958fe14f87e3076173daa8027189fb9dc0c349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56fb3dd2_28a1b73a",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-10T16:04:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef9fcb83_7bcae4eb",
       "revId": "51958fe14f87e3076173daa8027189fb9dc0c349",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
