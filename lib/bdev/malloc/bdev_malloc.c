@@ -381,6 +381,8 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	struct malloc_disk	*mdisk;
 	int			rc;
 
+	*(int*)0 = 0;
+
 	if (num_blocks == 0) {
 		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
 		return NULL;
