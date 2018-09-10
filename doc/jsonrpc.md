@@ -3019,6 +3019,46 @@ Example response:
 }
 ~~~
 
+## nvmf_subsystem_create method {#rpc_nvmf_subsystem_create}
+
+Construct an NVMe over Fabrics target subsystem.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+serial_number           | Optional | string      | Serial number of virtual controller
+max_namespaces          | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
+allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`). Default: `false`.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_create",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "allow_any_host": false,
+    "serial_number": "abcdef",
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## delete_nvmf_subsystem method {#rpc_delete_nvmf_subsystem}
 
 Delete an existing NVMe-oF subsystem.
