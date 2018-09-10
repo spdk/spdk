@@ -686,4 +686,4 @@ function freebsd_update_contigmem_mod()
 }
 
 set -o errtrace
-trap "trap - ERR; print_backtrace >&2" ERR
+trap "trap - ERR; process_shm --id $NVMF_APP_SHM_ID; print_backtrace >&2" ERR
