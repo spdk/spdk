@@ -139,9 +139,9 @@ _iscsi_free_lun(void *arg)
 	free(lun->bdev.name);
 	free(lun->url);
 	free(lun->initiator_iqn);
-	free(lun);
 
 	spdk_bdev_destruct_done(&lun->bdev, 0);
+	free(lun);
 }
 
 static void
