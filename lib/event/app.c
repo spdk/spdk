@@ -52,6 +52,10 @@
 #define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
 
+#ifndef SPDK_LOG_BACKTRACE_LVL
+#define SPDK_LOG_BACKTRACE_LVL SPDK_LOG_INVALID
+#endif
+
 struct spdk_app {
 	struct spdk_conf		*config;
 	int				shm_id;
@@ -591,6 +595,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
+	spdk_log_set_backtrace_level(SPDK_LOG_BACKTRACE_LVL);
 	spdk_log_open();
 
 	if (spdk_app_setup_env(opts) < 0) {
