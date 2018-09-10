@@ -33,6 +33,23 @@
       "revId": "eeb477ea4fd4c9345ed3820eacd7badbb9c37145",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce5353e2_ac74990d",
+        "filename": "test/nvmf/discovery/discovery.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T19:02:01Z",
+      "side": 1,
+      "message": "Could we move this -e 0xFFFF into the $NVMF_APP?  Then we don\u0027t have to add this to each test script.",
+      "revId": "eeb477ea4fd4c9345ed3820eacd7badbb9c37145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
