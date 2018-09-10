@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73586727_18bed719",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1791,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T22:01:48Z",
+      "side": 1,
+      "message": "Patch looks good - just need to separate this out (similar to earlier patches).",
+      "revId": "53b6f44b5acff87e8360479b7b839a1f78238b44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
