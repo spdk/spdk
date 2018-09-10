@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b511f6a_26aa2586",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1012925
+      },
+      "writtenOn": "2018-09-10T05:32:20Z",
+      "side": 1,
+      "message": "a pattern within [[ ]],don\u0027t need quatation mark and \" || \" can be placed within [[ ]].",
+      "range": {
+        "startLine": 16,
+        "startChar": 17,
+        "endLine": 16,
+        "endChar": 22
+      },
+      "revId": "4a3fcf77234eed33ea65a8fdd95011d1ec5dab39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
