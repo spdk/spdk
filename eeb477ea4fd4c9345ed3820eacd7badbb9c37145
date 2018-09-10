@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3bf8991_2b7a6fc5",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T17:21:16Z",
+      "side": 1,
+      "message": "indent",
+      "revId": "eeb477ea4fd4c9345ed3820eacd7badbb9c37145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e781bb2d_360031ee",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T17:21:16Z",
+      "side": 1,
+      "message": "we usually do \u0027for n in $shm_files; do\u0027",
+      "revId": "eeb477ea4fd4c9345ed3820eacd7badbb9c37145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
