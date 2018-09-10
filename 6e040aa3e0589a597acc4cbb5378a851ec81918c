@@ -495,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "36653c8d_6dc0bd63",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1799,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T19:15:27Z",
+      "side": 1,
+      "message": "The RPCs aren\u0027t consistent. For our C code, we generally prefer noun_verb. We should eventually do the same for the RPCs, but let\u0027s not worry about that here because it is a much broader issue.",
+      "parentUuid": "dd532d59_9113a7d9",
+      "range": {
+        "startLine": 1799,
+        "startChar": 19,
+        "endLine": 1799,
+        "endChar": 40
+      },
+      "revId": "6e040aa3e0589a597acc4cbb5378a851ec81918c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d880e00_224a0428",
         "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
         "patchSetId": 5
