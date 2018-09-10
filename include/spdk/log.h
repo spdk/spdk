@@ -58,6 +58,8 @@ void spdk_log_open(void);
 void spdk_log_close(void);
 
 enum spdk_log_level {
+	/** Don't use this value */
+	SPDK_LOG_INVALID = -1,
 	SPDK_LOG_ERROR,
 	SPDK_LOG_WARN,
 	SPDK_LOG_NOTICE,
@@ -79,6 +81,24 @@ void spdk_log_set_level(enum spdk_log_level level);
  * \return the current log level threshold.
  */
 enum spdk_log_level spdk_log_get_level(void);
+
+/**
+ * Set the log level threshold to include stack trace in log messages.
+ * Messages with a higher level than this will not contain stack trace.
+ *
+ * \note This function have no effect if SPKD is build without stack trace
+ *  printing support.
+ *
+ * \param level Log level threshold for stacktrace.
+ */
+void spdk_log_set_backtrace_level(enum spdk_log_level level);
+
+/**
+ * Get the current log level threshold for showing stack trace in log message.
+ *
+ * \return the current log level threshold for stack trace.
+ */
+enum spdk_log_level spdk_log_get_backtrace_level(void);
 
 /**
  * Set the current log level threshold for printing to stderr.
