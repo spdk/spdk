@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "065fdef0_b547274d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1715,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-10T04:49:33Z",
+      "side": 1,
+      "message": "I\u0027m not sure the following state such as NVME_CTRLR_STATE_SET_HOST_ID, is it better also inline function nvme_ctrlr_set_host_id() same as here ?",
+      "revId": "88e71b19e46bb6f6f99f860cc813c2f90aff741c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff6650a9_b21fa02c",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-10T04:49:33Z",
+      "side": 1,
+      "message": "We still need increase the state here because the mock function nvme_ctrlr_cmd_identify will set the state to the next state, but the code will change back to NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY.",
+      "revId": "88e71b19e46bb6f6f99f860cc813c2f90aff741c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
