@@ -484,6 +484,7 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
@@ -546,6 +547,7 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
@@ -729,6 +731,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
@@ -914,6 +917,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
@@ -1098,6 +1102,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
@@ -1152,6 +1157,7 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
@@ -1212,6 +1218,7 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 		if (ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES ||
+		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT ||
 		    ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_HOST_ID) {
