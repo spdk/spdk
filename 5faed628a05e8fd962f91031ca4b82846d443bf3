@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1241f8d5_b39c3832",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 59
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T18:09:25Z",
+      "side": 1,
+      "message": "Let\u0027s remove this line and make this a new item under \"Miscellaneous\".",
+      "revId": "5faed628a05e8fd962f91031ca4b82846d443bf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a5b8ec1_dc7a2ae7",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 59
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T18:09:25Z",
+      "side": 1,
+      "message": "I\u0027d like to change this to just read from stdin and write to stdout.  No command line parameters to specify file names.  Then users can do:\n\ncat ini.conf | config_converter.py \u003e json.conf",
+      "revId": "5faed628a05e8fd962f91031ca4b82846d443bf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
