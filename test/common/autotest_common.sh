@@ -80,7 +80,7 @@ config_params='--enable-debug --enable-werror'
 
 if echo -e "#include <libunwind.h>\nint main(int argc, char *argv[]) {return 0;}\n" | \
 	gcc -o /dev/null -lunwind -x c - 2>/dev/null; then
-	config_params+=' --enable-log-bt=ERROR'
+	config_params+=' --enable-log-bt'
 fi
 
 # RAID is marked experimental and not built by default currently, since it does not

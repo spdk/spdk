@@ -74,7 +74,7 @@ spdk_log_unwind_stack(FILE *fp, enum spdk_log_level level)
 	char f_name[64];
 	int frame;
 
-	if (level > SPDK_LOG_BACKTRACE_LVL) {
+	if (level > g_spdk_log_backtrace_level) {
 		return;
 	}
 
@@ -122,6 +122,8 @@ spdk_log(enum spdk_log_level level, const char *file, const int line, const char
 	case SPDK_LOG_DEBUG:
 		severity = LOG_INFO;
 		break;
+	case SPDK_LOG_DISABLED:
+		return;
 	}
 
 	va_start(ap, format);
