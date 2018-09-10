@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37f8b3aa_e1d18d5a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T21:19:36Z",
+      "side": 1,
+      "message": "Maybe say that the DPDK submodule was updated to 18.05.1?",
+      "revId": "6a48235f02482cab0edbaaf54fc39b56b12bf0c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
