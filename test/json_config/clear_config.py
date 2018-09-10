@@ -81,11 +81,11 @@ def clear_bdev_subsystem(args, bdev_config):
 
 
 def get_nvmf_destroy_method(nvmf):
-    destroy_method_map = {'construct_nvmf_subsystem': "delete_nvmf_subsystem",
-                          'set_nvmf_target_config': None,
-                          'set_nvmf_target_options': None
-                          }
-    return destroy_method_map[nvmf['method']]
+    destroy_method_map = {'nvmf_subsystem_create': "delete_nvmf_subsystem"}
+    try:
+        return destroy_method_map[nvmf['method']]
+    except KeyError:
+        return None
 
 
 def clear_nvmf_subsystem(args, nvmf_config):
