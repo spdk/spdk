@@ -53,6 +53,7 @@ nvmf_tgt_started(void *arg1, void *arg2)
 		spdk_memzone_dump(stdout);
 		fflush(stdout);
 	}
+	assert(false);
 }
 
 int
