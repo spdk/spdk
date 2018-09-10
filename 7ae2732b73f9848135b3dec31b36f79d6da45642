@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "653e2df8_d5298d87",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-10T11:03:15Z",
+      "side": 1,
+      "message": "Shared memory file naming differs when shared memory id is specified for spdk app",
+      "range": {
+        "startLine": 266,
+        "startChar": 0,
+        "endLine": 278,
+        "endChar": 0
+      },
+      "revId": "7ae2732b73f9848135b3dec31b36f79d6da45642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d27db70_13c60a04",
+        "filename": "test/nvmf/bdev_io_wait/bdev_io_wait.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-10T11:03:15Z",
+      "side": 1,
+      "message": "Searching for a file with pid won\u0027t work because nvmf_tgt has specified shared memory ID. We should search for a file named something like this: \"nvmf_trace.\u003cID number\u003e\"",
+      "range": {
+        "startLine": 32,
+        "startChar": 45,
+        "endLine": 32,
+        "endChar": 65
+      },
+      "revId": "7ae2732b73f9848135b3dec31b36f79d6da45642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
