@@ -16,6 +16,24 @@
       "revId": "897199815a260a880864fb0768b1748a6969ac4b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7beb7b9_1e6d451e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-10T16:18:44Z",
+      "side": 1,
+      "message": "I have written out my logic for doing it at this level instead of in mem_map_translate in a response to your comment to the next patch in this series. I think we will run into issues if we do it there.",
+      "parentUuid": "8dbb978c_8aa546f8",
+      "revId": "897199815a260a880864fb0768b1748a6969ac4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
