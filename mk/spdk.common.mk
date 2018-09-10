@@ -191,7 +191,6 @@ SYS_LIBS += -luuid
 SYS_LIBS += -lcrypto
 ifneq ($(CONFIG_LOG_BACKTRACE),)
 SYS_LIBS += -lunwind
-COMMON_CFLAGS += -DSPDK_LOG_BACKTRACE_LVL=SPDK_LOG_$(CONFIG_LOG_BACKTRACE)
 endif
 
 MAKEFLAGS += --no-print-directory

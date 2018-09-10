@@ -16,8 +16,7 @@ function usage()
 	echo " --prefix=path             Configure installation prefix (default: /usr/local)"
 	echo ""
 	echo " --enable-debug            Configure for debug builds"
-	echo " --enable-log-bt=lvl       Show backtrace using libunwind when logging message at level <= lvl."
-	echo "                           Valid values are: ERROR, WARN, NOTICE, DEBUG."
+	echo " --enable-log-bt           Enable support of backtrace printing in SPDK logs (requires libunwind)."
 	echo " --enable-werror           Treat compiler warnings as errors"
 	echo " --enable-asan             Enable address sanitizer"
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
@@ -91,8 +90,11 @@ for i in "$@"; do
 		--disable-debug)
 			CONFIG_DEBUG=n
 			;;
-		--enable-log-bt=*)
-			CONFIG_LOG_BACKTRACE=${i#*=}
+		--enable-log-bt)
+			CONFIG_LOG_BACKTRACE=y
+			;;
+		--disable-log-bt)
+			CONFIG_LOG_BACKTRACE=n
 			;;
 		--enable-asan)
 			CONFIG_ASAN=y
@@ -243,15 +245,6 @@ for i in "$@"; do
 			exit 1
 	esac
 done
-
-case "$CONFIG_LOG_BACKTRACE" in
-	""|ERROR|WARN|NOTICE|DEBUG)
-		;;
-	*)
-		echo "Invalid '--enable-log-bt=$CONFIG_LOG_BACKTRACE' option. Valid levels are ERROR, WARN, NOTICE or DEBUG"
-		exit 1
-		;;
-esac
 
 if [ -z "$CONFIG_ENV" ]; then
 	if [ -z "$CONFIG_DPDK_DIR" ]; then
