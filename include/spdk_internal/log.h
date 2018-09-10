@@ -80,7 +80,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 	do {											\
 		extern struct spdk_trace_flag FLAG;						\
 		if (FLAG.enabled) {								\
-			spdk_log(SPDK_LOG_INFO, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
+			spdk_log(SPDK_LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
 		}										\
 	} while (0)
 
