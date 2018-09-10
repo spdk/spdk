@@ -22,10 +22,10 @@ fi
 timing_enter bdevperf
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -m 0xF --wait-for-rpc &
+$NVMF_APP -e 0xFFFF -m 0xF --wait-for-rpc &
 nvmfpid=$!
 
-trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; process_shm --id $NVMF_APP_SHM_ID; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 $rpc_py set_nvmf_target_options -u 8192 -p 4
