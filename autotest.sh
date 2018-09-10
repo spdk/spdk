@@ -83,12 +83,12 @@ timing_exit nvmf_setup
 # Unit Tests
 #####################
 
-if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
-	timing_enter unittest
-	run_test suite ./test/unit/unittest.sh
-	report_test_completion "unittest"
-	timing_exit unittest
-fi
+#if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
+#	timing_enter unittest
+#	run_test suite ./test/unit/unittest.sh
+#	report_test_completion "unittest"
+#	timing_exit unittest
+#fi
 
 timing_enter lib
 
@@ -242,6 +242,9 @@ trap - SIGINT SIGTERM EXIT
 
 # catch any stray core files
 process_core
+
+# remove orphaned SPDK files from the system
+./scripts/setup.sh cleanup
 
 if hash lcov; then
 	# generate coverage data and combine with baseline
