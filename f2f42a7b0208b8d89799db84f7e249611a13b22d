@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4d0708a_239c034b",
+        "filename": "include/spdk/rpc_client.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T23:00:53Z",
+      "side": 1,
+      "message": "I think this library can depend directly on the jsonrpc library and its data structures, rather than defining placeholder structures like this.  I don\u0027t see any cases where we would ever want or need to use this library with anything except out jsonrpc library.  If we did, we would need abstractions to plug in different backends - and I just don\u0027t think that\u0027s worth doing, or at least not worth doing now.",
+      "revId": "f2f42a7b0208b8d89799db84f7e249611a13b22d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2748646e_5ff85c35",
+        "filename": "include/spdk/rpc_client.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T23:00:53Z",
+      "side": 1,
+      "message": "Connect to the specified RPC server.",
+      "revId": "f2f42a7b0208b8d89799db84f7e249611a13b22d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb1d2301_8fafa0e2",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T23:00:53Z",
+      "side": 1,
+      "message": "jsonrpc and id are required.\n\nhttps://www.jsonrpc.org/specification#response_object\n\nI was wrong about id being a uint32.  Spec says it can be a string, number or null.  So probably your earlier code was better here.",
+      "revId": "f2f42a7b0208b8d89799db84f7e249611a13b22d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76b9bed1_df7d8a8d",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T23:00:53Z",
+      "side": 1,
+      "message": "just pass AF_UNIX here directly.\n\nOr make addr_family static, and rename it to g_addr_family.",
+      "revId": "f2f42a7b0208b8d89799db84f7e249611a13b22d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

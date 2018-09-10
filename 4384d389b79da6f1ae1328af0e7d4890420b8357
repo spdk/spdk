@@ -780,6 +780,30 @@
     },
     {
       "key": {
+        "uuid": "e5914de6_91271a92",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T23:00:53Z",
+      "side": 1,
+      "message": "I think it\u0027s OK to just return the jsonrpc structures directly.\n\nThis wasn\u0027t done in the lib/rpc server code, but it only supports a single global server.  If it wanted to support multiple servers at once, it would probably also need to return jsonrpc objects.\n\nIn fact, in hindsight, lib/rpc probably should have been called lib/jsonrpc_server.",
+      "parentUuid": "a3e2def4_2a44a51a",
+      "range": {
+        "startLine": 103,
+        "startChar": 8,
+        "endLine": 103,
+        "endChar": 39
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c964f447_3de570e4",
         "filename": "lib/rpc_client/rpc_client.c",
         "patchSetId": 11
