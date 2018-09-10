@@ -21,7 +21,8 @@ timing_enter nvmf_tgt
 start_stub "-s 2048 -i 0 -m $NVMF_TEST_CORE_MASK"
 trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 
-export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i 0"
+export NVMF_APP_SHM_ID="0"
+export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
 
 run_test suite test/nvmf/filesystem/filesystem.sh
 run_test suite test/nvmf/discovery/discovery.sh

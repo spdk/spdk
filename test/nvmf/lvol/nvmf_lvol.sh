@@ -47,7 +47,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF --wait-for-rpc &
 pid=$!
 
-trap "disconnect_nvmf; killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; disconnect_nvmf; killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_nvmf_target_options -u 8192 -p 4
