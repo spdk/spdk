@@ -13,15 +13,15 @@ function test_subsystems() {
 
 	$rpc_py start_subsystem_init
 	create_nvmf_subsystem_config
-	$rpc_py save_config -f $base_nvmf_config
+	$rpc_py save_config > $base_nvmf_config
 	test_json_config
 
 	clear_nvmf_subsystem_config
 	kill_targets
 
 	run_spdk_tgt
-	$rpc_py load_config -f $base_nvmf_config
-	$rpc_py save_config -f $last_nvmf_config
+	$rpc_py load_config < $base_nvmf_config
+	$rpc_py save_config > $last_nvmf_config
 
 	diff $base_nvmf_config $last_nvmf_config
 
