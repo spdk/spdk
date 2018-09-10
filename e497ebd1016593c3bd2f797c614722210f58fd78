@@ -16,6 +16,57 @@
       "revId": "e497ebd1016593c3bd2f797c614722210f58fd78",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2938e666_4d62e820",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1378,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T22:12:42Z",
+      "side": 1,
+      "message": "set state to WAIT_FOR_CONFIGURE_AER here?",
+      "revId": "e497ebd1016593c3bd2f797c614722210f58fd78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bb6ee79_22bcf31b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1801,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T22:12:42Z",
+      "side": 1,
+      "message": "this needs to be removed - it\u0027s now done in nvme_ctrlr_configure_aer()",
+      "revId": "e497ebd1016593c3bd2f797c614722210f58fd78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51abf95d_ced28bc7",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1833,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-10T22:12:42Z",
+      "side": 1,
+      "message": "move this (similar to earlier patches)",
+      "revId": "e497ebd1016593c3bd2f797c614722210f58fd78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
