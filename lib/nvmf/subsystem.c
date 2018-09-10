@@ -313,6 +313,8 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	struct spdk_nvmf_ctrlr		*ctrlr, *ctrlr_tmp;
 	struct spdk_nvmf_ns		*ns;
 
+	assert(false);
+
 	if (!subsystem) {
 		return;
 	}
