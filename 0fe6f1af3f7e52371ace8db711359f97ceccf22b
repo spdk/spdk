@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cdbcc8b_5ee55461",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T22:39:20Z",
+      "side": 1,
+      "message": "SPDK_MEM_MAP_PAGE_SIZE?",
+      "revId": "0fe6f1af3f7e52371ace8db711359f97ceccf22b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
