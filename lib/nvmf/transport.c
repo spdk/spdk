@@ -218,6 +218,13 @@ spdk_nvmf_transport_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 }
 
 int
+spdk_nvmf_transport_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
+		struct spdk_nvme_transport_id *trid)
+{
+	return qpair->transport->ops->qpair_get_local_trid(qpair, trid);
+}
+
+int
 spdk_nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 		struct spdk_nvme_transport_id *trid)
 {

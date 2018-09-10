@@ -138,6 +138,12 @@ struct spdk_nvmf_transport_ops {
 				   struct spdk_nvme_transport_id *trid);
 
 	/*
+	 * Get the local transport ID for the queue pair.
+	 */
+	int (*qpair_get_local_trid)(struct spdk_nvmf_qpair *qpair,
+				    struct spdk_nvme_transport_id *trid);
+
+	/*
 	 * Get the listener transport ID that accepted this qpair originally.
 	 */
 	int (*qpair_get_listen_trid)(struct spdk_nvmf_qpair *qpair,
@@ -181,6 +187,9 @@ void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair);
 bool spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair);
 
 int spdk_nvmf_transport_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
+		struct spdk_nvme_transport_id *trid);
+
+int spdk_nvmf_transport_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
 		struct spdk_nvme_transport_id *trid);
 
 int spdk_nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
