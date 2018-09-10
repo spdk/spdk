@@ -2698,6 +2698,7 @@ spdk_nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 {
 	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct sockaddr *saddr;
+	uint16_t port;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
@@ -2711,7 +2712,8 @@ spdk_nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 		trid->adrfam = SPDK_NVMF_ADRFAM_IPV4;
 		inet_ntop(AF_INET, &saddr_in->sin_addr,
 			  trid->traddr, sizeof(trid->traddr));
-		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", saddr_in->sin_port);
+		port = ntohs(rdma_get_dst_port(rqpair->cm_id));
+		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", port);
 		break;
 	}
 	case AF_INET6: {
@@ -2719,7 +2721,8 @@ spdk_nvmf_rdma_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 		trid->adrfam = SPDK_NVMF_ADRFAM_IPV6;
 		inet_ntop(AF_INET6, &saddr_in->sin6_addr,
 			  trid->traddr, sizeof(trid->traddr));
-		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", saddr_in->sin6_port);
+		port = ntohs(rdma_get_dst_port(rqpair->cm_id));
+		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%u", port);
 		break;
 	}
 	default:
