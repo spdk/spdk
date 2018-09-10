@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09dda9bb_a3e67d22",
+        "filename": "test/nvmf/nmic/nmic.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T23:36:28Z",
+      "side": 1,
+      "message": "Does this actually get run in the test pool? Do we have any systems with two RDMA IP addresses?",
+      "revId": "5841354d4e70704782620f250dd467e944a5a7f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df974fa2_84471e96",
+        "filename": "test/nvmf/nmic/nmic.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-10T23:36:28Z",
+      "side": 1,
+      "message": "You can use spdk_nvmf_subsystem_add_listener to add an additional listen address without deleting and re-creating the subsystem.",
+      "revId": "5841354d4e70704782620f250dd467e944a5a7f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
