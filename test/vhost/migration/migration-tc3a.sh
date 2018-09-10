@@ -109,8 +109,9 @@ function host1_start_nvmf()
 	$rpc_nvmf start_subsystem_init
 	$SPDK_BUILD_DIR/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 
-	$rpc_nvmf construct_nvmf_subsystem nqn.2018-02.io.spdk:cnode1 \
-		"trtype:RDMA traddr:$RDMA_TARGET_IP trsvcid:4420" "" -a -s SPDK01 -n Nvme0n1
+	$rpc_py nvmf_subsystem_create nqn.2018-02.io.spdk:cnode1 -a -s SPDK01
+	$rpc_py nvmf_subsystem_add_ns nqn.2018-02.io.spdk:cnode1 Nvme0n1
+	$rpc_py nvmf_subsystem_add_listener nqn.2018-02.io.spdk:cnode1 -t rdma -a $RDMA_TARGET_IP -s 4420
 }
 
 function host1_start_vhost()
