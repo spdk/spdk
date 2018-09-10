@@ -37,8 +37,8 @@ CONFIG_PREFIX?=/usr/local
 # Build with debug logging. Turn off for performance testing and normal usage
 CONFIG_DEBUG?=n
 
-# Show backtrace when logging message at level <= lvl (ERROR, WARN, NOTICE, DEBUG)
-#CONFIG_LOG_BACKTRACE?=lvl
+# Build with support of backtrace printing in log messages. Requires libunwind.
+#CONFIG_LOG_BACKTRACE?=n
 
 # Treat warnings as errors (fail the build on any warning).
 CONFIG_WERROR?=n
