@@ -1845,6 +1845,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = family;
+	hints.ai_flags = AI_NUMERICSERV;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = 0;
 
