@@ -341,15 +341,25 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 
 	/* { */
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "method", "construct_nvmf_subsystem");
+	spdk_json_write_named_string(w, "method", "nvmf_subsystem_create");
 
 	/*     "params" : { */
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
 	spdk_json_write_named_bool(w, "allow_any_host", spdk_nvmf_subsystem_get_allow_any_host(subsystem));
+	spdk_json_write_named_string(w, "serial_number", spdk_nvmf_subsystem_get_sn(subsystem));
 
-	/*         "listen_addresses" : [ */
-	spdk_json_write_named_array_begin(w, "listen_addresses");
+	max_namespaces = spdk_nvmf_subsystem_get_max_namespaces(subsystem);
+	if (max_namespaces != 0) {
+		spdk_json_write_named_uint32(w, "max_namespaces", max_namespaces);
+	}
+
+	/*     } "params" */
+	spdk_json_write_object_end(w);
+
+	/* } */
+	spdk_json_write_object_end(w);
+
 	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
 	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
 		trid = spdk_nvmf_listener_get_trid(listener);
@@ -357,8 +367,16 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 		trtype = spdk_nvme_transport_id_trtype_str(trid->trtype);
 		adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
 
-		/*        { */
-		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_listener");
+
+		/*     "params" : { */
+		spdk_json_write_named_object_begin(w, "params");
+
+		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
+
+		/*     "listen_address" : { */
+		spdk_json_write_named_object_begin(w, "listen_address");
+
 		spdk_json_write_named_string(w, "trtype", trtype);
 		if (adrfam) {
 			spdk_json_write_named_string(w, "adrfam", adrfam);
@@ -366,26 +384,32 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 
 		spdk_json_write_named_string(w, "traddr", trid->traddr);
 		spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+		/*     } "listen_address" */
 		spdk_json_write_object_end(w);
-		/*        } */
-	}
-	spdk_json_write_array_end(w);
-	/*         ] "listen_addresses" */
 
-	/*         "hosts" : [ */
-	spdk_json_write_named_array_begin(w, "hosts");
+		/*     } "params" */
+		spdk_json_write_object_end(w);
+
+		/* } */
+		spdk_json_write_object_end(w);
+	}
+
 	for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
 	     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
-		spdk_json_write_string(w, spdk_nvmf_host_get_nqn(host));
-	}
-	spdk_json_write_array_end(w);
-	/*         ] "hosts" */
 
-	spdk_json_write_named_string(w, "serial_number", spdk_nvmf_subsystem_get_sn(subsystem));
+		spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_host");
 
-	max_namespaces = spdk_nvmf_subsystem_get_max_namespaces(subsystem);
-	if (max_namespaces != 0) {
-		spdk_json_write_named_uint32(w, "max_namespaces", max_namespaces);
+		/*     "params" : { */
+		spdk_json_write_named_object_begin(w, "params");
+
+		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
+		spdk_json_write_named_string(w, "host", spdk_nvmf_host_get_nqn(host));
+
+		/*     } "params" */
+		spdk_json_write_object_end(w);
+
+		/* } */
+		spdk_json_write_object_end(w);
 	}
 
 	/*         "namespaces" : [ */
@@ -394,8 +418,16 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
 		spdk_nvmf_ns_get_opts(ns, &ns_opts, sizeof(ns_opts));
 
-		/*         { */
-		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_ns");
+
+		/*     "params" : { */
+		spdk_json_write_named_object_begin(w, "params");
+
+		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
+
+		/*     "namespace" : { */
+		spdk_json_write_named_object_begin(w, "namespace");
+
 		spdk_json_write_named_uint32(w, "nsid", spdk_nvmf_ns_get_id(ns));
 		spdk_json_write_named_string(w, "bdev_name", spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
 
@@ -414,18 +446,16 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 			spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &ns_opts.uuid);
 			spdk_json_write_named_string(w, "uuid",  uuid_str);
 		}
-		/*         } */
+
+		/*     "namespace" */
+		spdk_json_write_object_end(w);
+
+		/*     } "params" */
+		spdk_json_write_object_end(w);
+
+		/* } */
 		spdk_json_write_object_end(w);
 	}
-
-	/*         ] "namespaces" */
-	spdk_json_write_array_end(w);
-
-	/*     } "params" */
-	spdk_json_write_object_end(w);
-
-	/* } */
-	spdk_json_write_object_end(w);
 }
 
 void
