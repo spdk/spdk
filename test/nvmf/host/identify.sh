@@ -33,9 +33,7 @@ timing_exit start_nvmf_tgt
 
 bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 '' '' -a -s SPDK00000000000001
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
-
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 for bdev in $bdevs; do
 	# NOTE: This will assign the same NGUID and EUI64 to all bdevs,
 	# but currently we only have one (see above), so this is OK.
@@ -43,6 +41,7 @@ for bdev in $bdevs; do
 		--nguid "ABCDEF0123456789ABCDEF0123456789" \
 		--eui64 "ABCDEF0123456789"
 done
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
 
 $rpc_py get_nvmf_subsystems
 
