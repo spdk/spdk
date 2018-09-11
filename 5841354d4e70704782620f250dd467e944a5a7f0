@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "75365ed7_12ff729b",
+        "filename": "test/nvmf/nmic/nmic.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-09-11T14:07:22Z",
+      "side": 1,
+      "message": "I checked the test result. This test case have been executed by fedora-03 in autotest system, nvmf-autotest #8681 in jenkins test pool.",
+      "parentUuid": "09dda9bb_a3e67d22",
+      "revId": "5841354d4e70704782620f250dd467e944a5a7f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df974fa2_84471e96",
         "filename": "test/nvmf/nmic/nmic.sh",
         "patchSetId": 12
