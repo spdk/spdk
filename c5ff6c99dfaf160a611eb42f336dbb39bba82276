@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eaa2e6c0_d20a7b41",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 591,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T20:04:45Z",
+      "side": 1,
+      "message": "What if we make this SPDK_APP_BACKTRACE_LOG_LEVEL instead?  Since it is now only used within the app library.\n\nThen you can just set this in COMMON_CFLAGS in the app directory Makefile.  Anything that doesn\u0027t use the app framework (including most unit tests) then would just get the default backtrace level of INVALID.\n\nI\u0027d also do a #ifndef/#define at the top of this file, rather than adding a #ifdef in the middle of the function.  I guess that\u0027s just a personal preference though - something about #ifdefs in the middle of a function aren\u0027t my favorite.",
+      "revId": "c5ff6c99dfaf160a611eb42f336dbb39bba82276",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "510873b1_1c6593e5",
+        "filename": "lib/log/log_flags.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T20:04:45Z",
+      "side": 1,
+      "message": "astyle really sucks sometimes.",
+      "revId": "c5ff6c99dfaf160a611eb42f336dbb39bba82276",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
