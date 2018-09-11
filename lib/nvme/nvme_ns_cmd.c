@@ -443,6 +443,8 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 
 	if (io_flags & 0xFFFF) {
 		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
 		return NULL;
 	}
 
