@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from subprocess import check_call, call, check_output, Popen, PIPE, CalledProcessError
 import re
@@ -62,7 +62,7 @@ def main():
         verify = False
 
     devices = get_target_devices()
-    print("Found devices: ", devices)
+    print(("Found devices: ", devices))
 
     configure_devices(devices)
     try:

@@ -21,7 +21,7 @@ function migration_tc1_configure_vhost()
 	target_vm=1
 	incoming_vm_ctrlr=naa.Malloc0.$incoming_vm
 	target_vm_ctrlr=naa.Malloc0.$target_vm
-	rpc="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+	rpc="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 	trap 'migration_tc1_error_handler; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 

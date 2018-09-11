@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -11,7 +11,7 @@ fio_bin = "fio"
 
 
 def show_help():
-    print("""Usage: python run_fio.py [options] [args]
+    print("""Usage: {} run_fio.py [options] [args]
     Description:
         Run FIO job file 'fio.job' on remote machines.
         NOTE: The job file must exist on remote machines on '/root/' directory.
@@ -25,7 +25,7 @@ def show_help():
                           files with test results
         -J, --json        Use JSON format for output
         -p, --perf-vmex   Enable aggregating statistic for VMEXITS for VMs
-    """)
+    """.format(os.path.split(sys.executable)[-1]))
 
 
 def exec_cmd(cmd, blocking):
@@ -34,7 +34,7 @@ def exec_cmd(cmd, blocking):
                          stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
     if blocking is True:
         out, _ = p.communicate()
-        return p.returncode, out
+        return p.returncode, out.decode()
     return p
 
 

@@ -101,7 +101,7 @@ done
 . $(readlink -e "$(dirname $0)/../common/common.sh") || exit 1
 . $(readlink -e "$(dirname $0)/../../../scripts/common.sh") || exit 1
 COMMON_DIR="$(cd $(readlink -f $(dirname $0))/../common && pwd)"
-rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 if [[ -n $custom_cpu_cfg ]]; then
 	source $custom_cpu_cfg

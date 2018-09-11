@@ -18,7 +18,7 @@ fi
 MALLOC_BDEV_SIZE=64
 
 rpc_py=$rootdir/scripts/rpc.py
-rpc_config_py="python $testdir/rpc_config.py"
+rpc_config_py="$testdir/rpc_config.py"
 
 timing_enter start_iscsi_tgt
 
