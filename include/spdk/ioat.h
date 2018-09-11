@@ -104,10 +104,8 @@ int spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_
  * Detach specified device returned by spdk_ioat_probe() from the I/OAT driver.
  *
  * \param ioat I/OAT channel to detach from the driver.
- *
- * \return 0 on success.
- */
-int spdk_ioat_detach(struct spdk_ioat_chan *ioat);
+  */
+void spdk_ioat_detach(struct spdk_ioat_chan *ioat);
 
 /**
  * Submit a DMA engine memory copy request.

@@ -568,7 +568,7 @@ spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_cb a
 	return rc;
 }
 
-int
+void
 spdk_ioat_detach(struct spdk_ioat_chan *ioat)
 {
 	struct ioat_driver	*driver = &g_ioat_driver;
@@ -582,8 +582,6 @@ spdk_ioat_detach(struct spdk_ioat_chan *ioat)
 
 	ioat_channel_destruct(ioat);
 	free(ioat);
-
-	return 0;
 }
 
 #define _2MB_PAGE(ptr)		((ptr) & ~(0x200000 - 1))
