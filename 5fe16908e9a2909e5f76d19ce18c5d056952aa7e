@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "299125e4_998ff249",
+        "filename": "test/blobstore/blob_io_wait/blob_io_wait.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T15:08:08Z",
+      "side": 1,
+      "message": "Sorry - I meant what are the lvs and lvol variables needed for?  I don\u0027t see them used anywhere.",
+      "parentUuid": "bdf4b081_d6cb7726",
+      "revId": "5fe16908e9a2909e5f76d19ce18c5d056952aa7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c50a3908_caf86be8",
         "filename": "test/blobstore/blob_io_wait/blob_io_wait.sh",
         "patchSetId": 4
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "I\u0027m not sure why, but bdevperf doesn\u0027t want to start with smaller poolsize. I will investigate this.",
       "parentUuid": "c50a3908_caf86be8",
+      "revId": "5fe16908e9a2909e5f76d19ce18c5d056952aa7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7b4c1e9_09a6d21e",
+        "filename": "test/blobstore/blob_io_wait/blob_io_wait.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T15:08:08Z",
+      "side": 1,
+      "message": "OK - let\u0027s keep this as 128.",
+      "parentUuid": "2876d0af_ac0d0ea0",
       "revId": "5fe16908e9a2909e5f76d19ce18c5d056952aa7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
