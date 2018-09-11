@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "fd6478f1_3c09d0d6",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-11T23:25:56Z",
+      "side": 1,
+      "message": "Allocating req locally without using calloc() may be enough in this case. (I saw similar manner in construct/delete_nvmf_subsystem RPC.)",
+      "revId": "ec2d71b6c3670ae5c3d6d91bef397697e4f9e08c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0aa26b8f_6df6e3b6",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
