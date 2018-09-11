@@ -631,6 +631,9 @@ nvme_rdma_mr_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return rc;
 }
 
+const struct spdk_mem_map_ops nvme_rdma_map_ops = {
+	.notify_cb = nvme_rdma_mr_map_notify
+};
 
 static int
 nvme_rdma_register_mem(struct nvme_rdma_qpair *rqpair)
@@ -659,7 +662,7 @@ nvme_rdma_register_mem(struct nvme_rdma_qpair *rqpair)
 
 	mr_map->ref = 1;
 	mr_map->pd = pd;
-	mr_map->map = spdk_mem_map_alloc((uint64_t)NULL, nvme_rdma_mr_map_notify, pd);
+	mr_map->map = spdk_mem_map_alloc((uint64_t)NULL, &nvme_rdma_map_ops, pd);
 	if (mr_map->map == NULL) {
 		SPDK_ERRLOG("spdk_mem_map_alloc() failed\n");
 		free(mr_map);
