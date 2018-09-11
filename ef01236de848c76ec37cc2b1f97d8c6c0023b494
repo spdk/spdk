@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a50f9506_6b6824ae",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1448,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T21:33:25Z",
+      "side": 1,
+      "message": "This can be inline.",
+      "revId": "ef01236de848c76ec37cc2b1f97d8c6c0023b494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
