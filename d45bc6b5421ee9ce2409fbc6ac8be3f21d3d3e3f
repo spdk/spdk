@@ -22,6 +22,30 @@
       "revId": "d45bc6b5421ee9ce2409fbc6ac8be3f21d3d3e3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b40597c5_8ed6d861",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-11T16:39:04Z",
+      "side": 1,
+      "message": "Yes - the disconnect function can handle being called on a qpair that is already disconnected so it\u0027s safest to always make the attempt to disconnect here.",
+      "parentUuid": "02e58512_7d764a81",
+      "range": {
+        "startLine": 1005,
+        "startChar": 1,
+        "endLine": 1005,
+        "endChar": 32
+      },
+      "revId": "d45bc6b5421ee9ce2409fbc6ac8be3f21d3d3e3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
