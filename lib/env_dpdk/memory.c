@@ -82,7 +82,7 @@ struct spdk_mem_map {
 	struct map_256tb map_256tb;
 	pthread_mutex_t mutex;
 	uint64_t default_translation;
-	struct spdk_mem_map_ops ops;
+	const struct spdk_mem_map_ops *ops;
 	void *cb_ctx;
 	TAILQ_ENTRY(spdk_mem_map) tailq;
 };
@@ -106,7 +106,7 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 	do {											\
 		if (contig_start != 0) {							\
 			/* End of of a virtually contiguous range */				\
-			map->ops.notify_cb(map->cb_ctx, map, action,				\
+			map->ops->notify_cb(map->cb_ctx, map, action,				\
 				       (void *)contig_start,					\
 				       contig_end - contig_start + 2 * 1024 * 1024);		\
 		}										\
@@ -151,7 +151,7 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 }
 
 struct spdk_mem_map *
-spdk_mem_map_alloc(uint64_t default_translation, spdk_mem_map_notify_cb notify_cb, void *cb_ctx)
+spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *ops, void *cb_ctx)
 {
 	struct spdk_mem_map *map;
 
@@ -166,12 +166,12 @@ spdk_mem_map_alloc(uint64_t default_translation, spdk_mem_map_notify_cb notify_c
 	}
 
 	map->default_translation = default_translation;
-	map->ops.notify_cb = notify_cb;
+	map->ops = ops;
 	map->cb_ctx = cb_ctx;
 
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
 
-	if (notify_cb) {
+	if (ops && ops->notify_cb) {
 		spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_REGISTER);
 		TAILQ_INSERT_TAIL(&g_spdk_mem_maps, map, tailq);
 	}
@@ -245,7 +245,7 @@ spdk_mem_register(void *vaddr, size_t len)
 		if (ref_count > 0) {
 			if (seg_len > 0) {
 				TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
-					rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
+					rc = map->ops->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
 					if (rc != 0) {
 						pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 						return rc;
@@ -265,7 +265,7 @@ spdk_mem_register(void *vaddr, size_t len)
 
 	if (seg_len > 0) {
 		TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
-			rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
+			rc = map->ops->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
 			if (rc != 0) {
 				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 				return rc;
@@ -321,7 +321,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 		if (ref_count > 1) {
 			if (seg_len > 0) {
 				TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
-					rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
+					rc = map->ops->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
 					if (rc != 0) {
 						pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 						return rc;
@@ -341,7 +341,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 
 	if (seg_len > 0) {
 		TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
-			rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
+			rc = map->ops->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
 			if (rc != 0) {
 				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 				return rc;
