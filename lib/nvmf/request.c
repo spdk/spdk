@@ -177,10 +177,19 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
 	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
+		/* Incrementing received fabric command count at nvmf_tgt level per poll group */
+		qpair->group->nvmf_stats.num_fabric_cmds++;
+
 		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
 	} else if (spdk_unlikely(spdk_nvmf_qpair_is_admin_queue(qpair))) {
+		/* Incrementing received admin command count at nvmf_tgt level per poll group */
+		qpair->group->nvmf_stats.num_admin_cmds++;
+
 		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
 	} else {
+		/* Incrementing received I/O command count at nvmf_tgt level per poll group */
+		qpair->group->nvmf_stats.num_io_cmds++;
+
 		status = spdk_nvmf_ctrlr_process_io_cmd(req);
 	}
 

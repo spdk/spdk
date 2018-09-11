@@ -273,3 +273,7 @@ def delete_nvmf_subsystem(client, nqn):
     """
     params = {'nqn': nqn}
     return client.call('delete_nvmf_subsystem', params)
+
+
+def get_nvmf_tgt_stats(client, args):
+    return client.call('get_nvmf_tgt_stats')
