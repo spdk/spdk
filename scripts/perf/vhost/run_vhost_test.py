@@ -7,7 +7,7 @@ from subprocess import check_call, call, check_output, Popen, PIPE
 
 
 def range_incl(a, b):
-    return range(a, b + 1)
+    return list(range(a, b + 1))
 
 
 def list_spdk_used_cpus(cpus):

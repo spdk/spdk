@@ -15,8 +15,8 @@ if [ -z $NVMF_FIRST_TARGET_IP ]; then
 	exit 0
 fi
 
-rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+rpc_py="$rootdir/scripts/rpc.py"
+fio_py="$rootdir/scripts/fio.py"
 
 NVMF_PORT=4420
 
