@@ -434,7 +434,8 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 const struct spdk_mem_map_ops vtophys_map_ops = {
-	.notify_cb = spdk_vtophys_notify
+	.notify_cb = spdk_vtophys_notify,
+	.are_contiguous = NULL
 };
 
 #if SPDK_VFIO_ENABLED
