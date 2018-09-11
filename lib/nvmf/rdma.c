@@ -1131,7 +1131,8 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 const struct spdk_mem_map_ops nvmf_rdma_map_ops = {
-	.notify_cb = spdk_nvmf_rdma_mem_notify
+	.notify_cb = spdk_nvmf_rdma_mem_notify,
+	.are_contiguous = NULL
 };
 
 typedef enum spdk_nvme_data_transfer spdk_nvme_data_transfer_t;

@@ -632,7 +632,8 @@ nvme_rdma_mr_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 const struct spdk_mem_map_ops nvme_rdma_map_ops = {
-	.notify_cb = nvme_rdma_mr_map_notify
+	.notify_cb = nvme_rdma_mr_map_notify,
+	.are_contiguous = NULL
 };
 
 static int

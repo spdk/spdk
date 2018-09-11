@@ -131,7 +131,8 @@ test_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 const struct spdk_mem_map_ops test_map_ops = {
-	.notify_cb = test_map_notify
+	.notify_cb = test_map_notify,
+	.are_contiguous = NULL
 };
 
 static int
