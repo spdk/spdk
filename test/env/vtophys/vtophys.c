@@ -135,8 +135,12 @@ mem_map_test(void)
 {
 	struct spdk_mem_map *map;
 	uint64_t default_translation = 0xDEADBEEF0BADF00D;
+	const struct spdk_mem_map_ops test_map_ops = {
+		.notify_cb = test_map_notify
+	};
 
-	map = spdk_mem_map_alloc(default_translation, test_map_notify, NULL);
+
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops, NULL);
 	if (map == NULL) {
 		return 1;
 	}
