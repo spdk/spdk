@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This script runs fio benchmark test on the local nvme device using the SPDK NVMe driver.
 # Prework: Run script/setup.sh to bind SSDs to SPDK driver.
@@ -128,7 +128,7 @@ def add_filename_to_conf(conf_file_name, bdf):
 
 
 if len(sys.argv) != 4:
-    print "usage: python ", sys.argv[0], " path_to_fio_conf path_to_ioengine num_ssds"
+    print "usage: ", sys.argv[0], " path_to_fio_conf path_to_ioengine num_ssds"
     sys.exit()
 
 num_ssds = int(sys.argv[3])

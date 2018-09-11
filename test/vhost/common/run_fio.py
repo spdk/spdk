@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -11,7 +11,7 @@ fio_bin = "fio"
 
 
 def show_help():
-    print("""Usage: python run_fio.py [options] [args]
+    print("""Usage: run_fio.py [options] [args]
     Description:
         Run FIO job file 'fio.job' on remote machines.
         NOTE: The job file must exist on remote machines on '/root/' directory.

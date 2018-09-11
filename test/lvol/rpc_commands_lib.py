@@ -9,7 +9,7 @@ class Spdk_Rpc(object):
 
     def __getattr__(self, name):
         def call(*args):
-            cmd = "python {} {}".format(self.rpc_py, name)
+            cmd = "python3 {} {}".format(self.rpc_py, name)
             for arg in args:
                 cmd += " {}".format(arg)
             try:

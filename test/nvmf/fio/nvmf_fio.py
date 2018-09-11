@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from subprocess import check_call, call, check_output, Popen, PIPE, CalledProcessError
 import re

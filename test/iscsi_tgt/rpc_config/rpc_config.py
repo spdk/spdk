@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 import os
@@ -61,7 +61,7 @@ class spdk_rpc(object):
 
     def __getattr__(self, name):
         def call(*args):
-            cmd = "python {} {}".format(self.rpc_py, name)
+            cmd = "python3 {} {}".format(self.rpc_py, name)
             for arg in args:
                 cmd += " {}".format(arg)
             return check_output(cmd, shell=True)
