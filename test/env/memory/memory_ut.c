@@ -96,13 +96,17 @@ test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return 0;
 }
 
+const struct spdk_mem_map_ops test_mem_map_ops = {
+	.notify_cb = test_mem_map_notify
+};
+
 static void
 test_mem_map_alloc_free(void)
 {
 	struct spdk_mem_map *map;
 	uint64_t default_translation = 0xDEADBEEF0BADF00D;
 
-	map = spdk_mem_map_alloc(default_translation, test_mem_map_notify, NULL);
+	map = spdk_mem_map_alloc(default_translation, &test_mem_map_ops, NULL);
 	SPDK_CU_ASSERT_FATAL(map != NULL);
 
 	spdk_mem_map_free(&map);
@@ -117,7 +121,7 @@ test_mem_map_translation(void)
 	uint64_t addr;
 	int rc;
 
-	map = spdk_mem_map_alloc(default_translation, test_mem_map_notify, NULL);
+	map = spdk_mem_map_alloc(default_translation, &test_mem_map_ops, NULL);
 	SPDK_CU_ASSERT_FATAL(map != NULL);
 
 	/* Try to get translation for address with no translation */
@@ -204,7 +208,7 @@ test_mem_map_registration(void)
 	struct spdk_mem_map *map;
 	uint64_t default_translation = 0xDEADBEEF0BADF00D;
 
-	map = spdk_mem_map_alloc(default_translation, test_mem_map_notify, NULL);
+	map = spdk_mem_map_alloc(default_translation, &test_mem_map_ops, NULL);
 	SPDK_CU_ASSERT_FATAL(map != NULL);
 
 	/* Unregister memory region that wasn't previously registered */

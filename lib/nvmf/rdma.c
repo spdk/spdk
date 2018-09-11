@@ -1172,6 +1172,10 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return 0;
 }
 
+const struct spdk_mem_map_ops nvmf_rdma_map_ops = {
+	.notify_cb = spdk_nvmf_rdma_mem_notify
+};
+
 typedef enum spdk_nvme_data_transfer spdk_nvme_data_transfer_t;
 
 static spdk_nvme_data_transfer_t
@@ -1731,7 +1735,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 			break;
 		}
 
-		device->map = spdk_mem_map_alloc(0, spdk_nvmf_rdma_mem_notify, device);
+		device->map = spdk_mem_map_alloc(0, &nvmf_rdma_map_ops, device);
 		if (!device->map) {
 			SPDK_ERRLOG("Unable to allocate memory map for new poll group\n");
 			ibv_dealloc_pd(device->pd);
