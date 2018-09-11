@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "edd2ecd2_8b345b20",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1818,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T15:29:39Z",
+      "side": 1,
+      "message": "call spdk_nvme_qpair_process_completions directly here",
+      "revId": "301d3087ded0337f38e02c5d8e7b41c2c8c2ce62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
