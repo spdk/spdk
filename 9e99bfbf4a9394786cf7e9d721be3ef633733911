@@ -52,6 +52,24 @@
       "revId": "9e99bfbf4a9394786cf7e9d721be3ef633733911",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e908cbaf_a1591309",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-09-11T07:38:28Z",
+      "side": 1,
+      "message": "ok. I get it now. I\u0027ll add it in new revision and send it out now.\nThanks for the explanation!",
+      "parentUuid": "b89fcf57_71944ee0",
+      "revId": "9e99bfbf4a9394786cf7e9d721be3ef633733911",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
