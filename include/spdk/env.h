@@ -979,6 +979,13 @@ typedef int (*spdk_mem_map_notify_cb)(void *cb_ctx, struct spdk_mem_map *map,
 				      void *vaddr, size_t size);
 
 /**
+ * A function table to be implemented by each memory map.
+ */
+struct spdk_mem_map_ops {
+	spdk_mem_map_notify_cb notify_cb;
+};
+
+/**
  * Allocate a virtual memory address translation map.
  *
  * \param default_translation Default translation for the map.
