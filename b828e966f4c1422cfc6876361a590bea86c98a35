@@ -34,6 +34,23 @@
       "revId": "b828e966f4c1422cfc6876361a590bea86c98a35",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01b8572b_322cd204",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T20:54:23Z",
+      "side": 1,
+      "message": "I needed a return here too.  I\u0027ll fix that.",
+      "revId": "b828e966f4c1422cfc6876361a590bea86c98a35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
