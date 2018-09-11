@@ -863,7 +863,9 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 	req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
 	req->cmd.dptr.sgl1.unkeyed.length = (uint32_t)req->payload_size;
-	req->cmd.dptr.sgl1.address = (uint64_t)0; /* icdoff is '0' for spdk */
+	/* Inline only supported for icdoff == 0 currently.  This function will
+	 * not get called for controllers with other values. */
+	req->cmd.dptr.sgl1.address = (uint64_t)0;
 
 	return 0;
 }
@@ -992,7 +994,9 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 	req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
 	req->cmd.dptr.sgl1.unkeyed.length = (uint32_t)req->payload_size;
-	req->cmd.dptr.sgl1.address = (uint64_t)0; /* icdoff is '0' for spdk */
+	/* Inline only supported for icdoff == 0 currently.  This function will
+	 * not get called for controllers with other values. */
+	req->cmd.dptr.sgl1.address = (uint64_t)0;
 
 	return 0;
 }
@@ -1018,7 +1022,9 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
 		/*
 		 * Check if icdoff is non zero, to avoid interop conflicts with
-		 * non spdk targets.
+		 * targets with non-zero icdoff.  Both SPDK and the Linux kernel
+		 * targets use icdoff = 0.  For targets with non-zero icdoff, we
+		 * will currently just not use inline data for now.
 		 */
 		if (req->cmd.opc == SPDK_NVME_OPC_WRITE &&
 		    req->payload_size <= nvme_rdma_icdsz_bytes(ctrlr) &&
