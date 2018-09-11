@@ -107,6 +107,7 @@ static const double g_latency_cutoffs[] = {
 
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
+	int64_t			io_cnt;
 	uint64_t		io_completed;
 	uint64_t		total_tsc;
 	uint64_t		min_tsc;
@@ -176,6 +177,8 @@ static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
 static int g_time_in_sec;
+static int g_time_used_tsc;
+static int64_t g_ns_io_cnt;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
 static int g_shm_id = -1;
@@ -731,7 +734,11 @@ task_complete(struct perf_task *task)
 	if (ns_ctx->is_draining) {
 		spdk_dma_free(task->buf);
 		free(task);
-	} else {
+	} else if (ns_ctx->io_cnt != 0) {
+		if (ns_ctx->io_cnt > 0) {
+			ns_ctx->io_cnt--;
+		}
+
 		submit_single_io(task);
 	}
 }
@@ -761,7 +768,11 @@ submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
 	struct perf_task *task;
 	uint32_t max_io_size_bytes;
 
-	while (queue_depth-- > 0) {
+	/* if ns_ctx->io_cnt == 0, then we have send enough IOs.
+	 * however, the queu_depth may be bigger than io_cnt.
+	 * so, we stop the while loop when io_cnt == 0.
+	 */
+	while ((queue_depth-- > 0) && (ns_ctx->io_cnt != 0)) {
 		task = calloc(1, sizeof(*task));
 		if (task == NULL) {
 			fprintf(stderr, "Out of memory allocating tasks\n");
@@ -823,12 +834,19 @@ init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 			opts.io_queue_requests = ns_ctx->entry->num_io_requests;
 		}
 
+		/* make sure we have enough qpair's req_buf for iodepth */
+		if ((int)opts.io_queue_requests < g_queue_depth) {
+			opts.io_queue_requests = g_queue_depth;
+		}
+
 		ns_ctx->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_ctx->entry->u.nvme.ctrlr, &opts,
 				       sizeof(opts));
 		if (!ns_ctx->u.nvme.qpair) {
 			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
 			return -1;
 		}
+
+		printf("init qpair with %d IO requests\n", opts.io_queue_requests);
 	}
 
 	return 0;
@@ -850,9 +868,10 @@ cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 static int
 work_fn(void *arg)
 {
-	uint64_t tsc_end;
+	uint64_t tsc_start, tsc_end;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
+	int ns_cnt = 0, done_ns = 0;
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
@@ -866,13 +885,15 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+	tsc_start = spdk_get_ticks();
+	tsc_end = tsc_start + g_time_in_sec * g_tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
 	while (ns_ctx != NULL) {
 		submit_io(ns_ctx, g_queue_depth);
 		ns_ctx = ns_ctx->next;
+		ns_cnt++;
 	}
 
 	while (1) {
@@ -882,12 +903,22 @@ work_fn(void *arg)
 		 * to replace each I/O that is completed.
 		 */
 		ns_ctx = worker->ns_ctx;
+		done_ns = 0;
 		while (ns_ctx != NULL) {
-			check_io(ns_ctx);
+			if (ns_ctx->io_cnt != 0) {
+				check_io(ns_ctx);
+			} else {
+				done_ns++;
+			}
+
 			ns_ctx = ns_ctx->next;
 		}
 
 		if (spdk_get_ticks() > tsc_end) {
+			break;
+		}
+
+		if (done_ns == ns_cnt) {
 			break;
 		}
 	}
@@ -898,6 +929,8 @@ work_fn(void *arg)
 		cleanup_ns_worker_ctx(ns_ctx);
 		ns_ctx = ns_ctx->next;
 	}
+
+	g_time_used_tsc = spdk_get_ticks() - tsc_start;
 
 	return 0;
 }
@@ -917,7 +950,8 @@ static void usage(char *program_name)
 	printf("\t[-L enable latency tracking via sw, default: disabled]\n");
 	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
 	printf("\t[-l enable latency tracking via ssd (if supported), default: disabled]\n");
-	printf("\t[-t time in seconds]\n");
+	printf("\t[-t time in seconds, stop IO dispatch when time runs out.]\n");
+	printf("\t[-n IO count per namespace, stop IO dispatch at the IO count.]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
 	printf("\t[-D disable submission queue in controller memory buffer, default: enabled]\n");
@@ -1007,7 +1041,7 @@ print_performance(void)
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx) {
 			if (ns_ctx->io_completed != 0) {
-				io_per_second = (double)ns_ctx->io_completed / g_time_in_sec;
+				io_per_second = (double)ns_ctx->io_completed * g_tsc_rate / g_time_used_tsc;
 				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
 				average_latency = ((double)ns_ctx->total_tsc / ns_ctx->io_completed) * 1000 * 1000 / g_tsc_rate;
 				min_latency = (double)ns_ctx->min_tsc * 1000 * 1000 / g_tsc_rate;
@@ -1275,11 +1309,12 @@ parse_args(int argc, char **argv)
 	g_io_size_bytes = 0;
 	workload_type = NULL;
 	g_time_in_sec = 0;
+	g_ns_io_cnt = -1;
 	g_rw_percentage = -1;
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:w:DLM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:s:t:w:DLM:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1298,6 +1333,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'm':
 			g_max_completions = atoi(optarg);
+			break;
+		case 'n':
+			g_ns_io_cnt = atoi(optarg);
 			break;
 		case 'o':
 			g_io_size_bytes = atoi(optarg);
@@ -1336,7 +1374,7 @@ parse_args(int argc, char **argv)
 		}
 	}
 
-	if (!g_queue_depth) {
+	if (g_queue_depth <= 0) {
 		usage(argv[0]);
 		return 1;
 	}
@@ -1348,7 +1386,9 @@ parse_args(int argc, char **argv)
 		usage(argv[0]);
 		return 1;
 	}
-	if (!g_time_in_sec) {
+
+	/* at least one of g_time_in_sec or g_ns_io_cnt > 0 to stop the IO */
+	if (!g_time_in_sec && g_ns_io_cnt <= 0) {
 		usage(argv[0]);
 		return 1;
 	}
@@ -1610,6 +1650,7 @@ associate_workers_with_ns(void)
 		ns_ctx->entry = entry;
 		ns_ctx->next = worker->ns_ctx;
 		ns_ctx->histogram = spdk_histogram_data_alloc();
+		ns_ctx->io_cnt = g_ns_io_cnt;
 		worker->ns_ctx = ns_ctx;
 
 		worker = worker->next;
