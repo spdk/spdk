@@ -282,7 +282,7 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 /*
  * brief:
- * raid_bdev_submit_children function is used to submit I/O to the correct
+ * raid_bdev_submit_rw_request function is used to submit I/O to the correct
  * member disk
  * params:
  * bdev_io - parent bdev io
@@ -292,7 +292,7 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
  * non zero - failure
  */
 static int
-raid_bdev_submit_children(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
+raid_bdev_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 {
 	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct raid_bdev_io_channel	*raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
@@ -422,7 +422,7 @@ raid_bdev_waitq_io_process(void *ctx)
 	 */
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	ret = raid_bdev_submit_children(bdev_io, start_strip);
+	ret = raid_bdev_submit_rw_request(bdev_io, start_strip);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
@@ -430,7 +430,7 @@ raid_bdev_waitq_io_process(void *ctx)
 
 /*
  * brief:
- * _raid_bdev_submit_rw_request function is the submit_request function for
+ * raid_bdev_start_rw_request function is the submit_request function for
  * read/write requests
  * params:
  * ch - pointer to raid bdev io channel
@@ -439,7 +439,7 @@ raid_bdev_waitq_io_process(void *ctx)
  * none
  */
 static void
-_raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+raid_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct raid_bdev_io		*raid_io;
 	struct raid_bdev		*raid_bdev;
@@ -459,7 +459,7 @@ _raid_bdev_submit_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
-	ret = raid_bdev_submit_children(bdev_io, start_strip);
+	ret = raid_bdev_submit_rw_request(bdev_io, start_strip);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
@@ -581,15 +581,15 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
-			spdk_bdev_io_get_buf(bdev_io, _raid_bdev_submit_rw_request,
+			spdk_bdev_io_get_buf(bdev_io, raid_bdev_start_rw_request,
 					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		} else {
 			/* Just call it directly if iov_base is already populated. */
-			_raid_bdev_submit_rw_request(ch, bdev_io);
+			raid_bdev_start_rw_request(ch, bdev_io);
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		_raid_bdev_submit_rw_request(ch, bdev_io);
+		raid_bdev_start_rw_request(ch, bdev_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
