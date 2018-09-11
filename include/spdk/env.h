@@ -995,7 +995,7 @@ struct spdk_mem_map_ops {
  * \return a pointer to the allocated virtual memory address translation map.
  */
 struct spdk_mem_map *spdk_mem_map_alloc(uint64_t default_translation,
-					spdk_mem_map_notify_cb notify_cb, void *cb_ctx);
+					const struct spdk_mem_map_ops *ops, void *cb_ctx);
 
 /**
  * Free a memory map previously allocated by spdk_mem_map_alloc().
