@@ -248,6 +248,8 @@ spdk_vhost_scsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 		memcpy(task->resp->sense, task->scsi.sense_data, task->scsi.sense_data_len);
 		task->resp->sense_len = task->scsi.sense_data_len;
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI, "Task (%p) req_idx=%d failed - status=%u\n", task, task->req_idx,
+			      task->scsi.status);
 	}
 	assert(task->scsi.transfer_len == task->scsi.length);
 	task->resp->resid = task->scsi.length - task->scsi.data_transferred;
