@@ -151,7 +151,7 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 }
 
 struct spdk_mem_map *
-spdk_mem_map_alloc(uint64_t default_translation, spdk_mem_map_notify_cb notify_cb, void *cb_ctx)
+spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *ops, void *cb_ctx)
 {
 	struct spdk_mem_map *map;
 
@@ -166,12 +166,14 @@ spdk_mem_map_alloc(uint64_t default_translation, spdk_mem_map_notify_cb notify_c
 	}
 
 	map->default_translation = default_translation;
-	map->ops.notify_cb = notify_cb;
 	map->cb_ctx = cb_ctx;
+	if (ops) {
+		map->ops = *ops;
+	}
 
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
 
-	if (notify_cb) {
+	if (ops && ops->notify_cb) {
 		spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_REGISTER);
 		TAILQ_INSERT_TAIL(&g_spdk_mem_maps, map, tailq);
 	}
