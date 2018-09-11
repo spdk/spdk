@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8b912ea_90e024d5",
+        "filename": "doc/bdev.md",
+        "patchSetId": 105
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T18:33:47Z",
+      "side": 1,
+      "message": "This should be updated with RPC example (similar to other sections in this file).\n\nI\u0027m OK with doing that in a separate patch.",
+      "revId": "940af57861241937bed7c50e32d867ea3cfc8ef0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
