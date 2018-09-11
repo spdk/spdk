@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c6830b2_2c596cf8",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1006,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T21:26:34Z",
+      "side": 1,
+      "message": "you can just put this inline (like comments on earlier patches in this series)",
+      "revId": "15f87c96e3e44a326616d17058d3687bae2f3620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25bf65e8_4302661f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T21:26:34Z",
+      "side": 1,
+      "message": "you can just put this inline (like comments on earlier patches in this series)",
+      "revId": "15f87c96e3e44a326616d17058d3687bae2f3620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f952969_eb90081e",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T21:26:34Z",
+      "side": 1,
+      "message": "Number",
+      "revId": "15f87c96e3e44a326616d17058d3687bae2f3620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
