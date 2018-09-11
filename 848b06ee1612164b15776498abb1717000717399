@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91460b50_a6861e83",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T15:26:34Z",
+      "side": 1,
+      "message": "This should be STATE_WAIT_FOR_IDENTIFY?",
+      "revId": "848b06ee1612164b15776498abb1717000717399",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
