@@ -114,6 +114,28 @@ spdk_nvmf_tgt_get_cmd_stats(struct spdk_nvmf_cmd_stats *nvmf_stats)
 	}
 }
 
+void
+spdk_nvmf_ctrlr_get_cmd_stats(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_ctrlr_stats *stats)
+{
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_qpair *qpair;
+
+	group = nvmf_tgt_get_poll_group(spdk_env_get_current_core());
+	if (group) {
+		TAILQ_FOREACH(qpair, &group->qpairs, link) {
+			if (qpair->ctrlr == ctrlr) {
+				if (spdk_unlikely(spdk_nvmf_qpair_is_admin_queue(qpair))) {
+					stats->num_admin_cmds_rcvd   = qpair->num_cmds_rcvd;
+					stats->num_admin_cmds_failed = qpair->num_cmds_failed;
+				} else {
+					stats->num_io_cmds_rcvd   += qpair->num_cmds_rcvd;
+					stats->num_io_cmds_failed += qpair->num_cmds_failed;
+				}
+			}
+		}
+	}
+}
+
 static int
 spdk_nvmf_poll_group_poll(void *ctx)
 {

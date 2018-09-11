@@ -177,6 +177,8 @@ struct spdk_nvmf_qpair {
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	struct spdk_nvmf_poll_group		*group;
 
+	uint64_t				num_cmds_rcvd;
+	uint64_t				num_cmds_failed;
 	uint16_t				qid;
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;

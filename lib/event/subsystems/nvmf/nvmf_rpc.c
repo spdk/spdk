@@ -43,6 +43,8 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 
+#define SPDK_HOST_ID_FMT_SIZE	36
+
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -1832,3 +1834,156 @@ invalid:
 	free_rpc_get_nvmf_ss_stats(&req);
 }
 SPDK_RPC_REGISTER("get_nvmf_subsystem_stats", spdk_rpc_get_nvmf_subsystem_stats, SPDK_RPC_RUNTIME)
+
+struct spdk_rpc_ctrlr_cmd_stats_ctx {
+	struct spdk_nvmf_ctrlr_stats stats;
+	bool get_all;
+	uint16_t ctrlr_id;
+	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+spdk_rpc_get_ctrlr_cmd_stats(void *arg)
+{
+	struct spdk_rpc_ctrlr_cmd_stats_ctx *ctx = arg;
+
+	spdk_nvmf_ctrlr_get_cmd_stats(ctx->ctrlr, &ctx->stats);
+}
+
+static void
+spdk_rpc_dump_ctrlr_stats(void *arg)
+{
+	struct spdk_rpc_ctrlr_cmd_stats_ctx *ctx = arg;
+	struct spdk_json_write_ctx *w = ctx->w;
+	struct spdk_nvmf_ctrlr *ctrlr;
+	uint8_t host_id[SPDK_HOST_ID_FMT_SIZE + 1];
+
+	ctrlr = spdk_nvmf_subsystem_get_ctrlr(ctx->subsystem, ctx->ctrlr_id);
+	if (!ctrlr) {
+		goto done;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "subsystem_nqn", spdk_nvmf_subsystem_get_nqn(ctx->subsystem));
+	spdk_json_write_named_uint32(w, "controller_id", ctx->ctrlr_id);
+	spdk_nvmf_ctrlr_get_host_id_fmt(ctrlr, host_id, SPDK_COUNTOF(host_id));
+	spdk_json_write_named_string(w, "host_id", host_id);
+	spdk_json_write_named_uint32(w, "num_qpairs", spdk_nvmf_ctrlr_get_num_qpairs(ctrlr));
+
+	spdk_json_write_named_uint64(w, "num_admin_cmds_rcvd", ctx->stats.num_admin_cmds_rcvd);
+	spdk_json_write_named_uint64(w, "num_admin_cmds_failed", ctx->stats.num_admin_cmds_failed);
+	spdk_json_write_named_uint64(w, "num_io_cmds_rcvd", ctx->stats.num_io_cmds_rcvd);
+	spdk_json_write_named_uint64(w, "num_io_cmds_failed", ctx->stats.num_io_cmds_failed);
+	spdk_json_write_object_end(w);
+
+	if (ctx->get_all != true) {
+		goto done;
+	}
+	ctx->ctrlr = spdk_nvmf_subsystem_get_next_ctrlr(ctrlr);
+	if (!ctx->ctrlr) {
+		goto done;
+	}
+	ctx->ctrlr_id = spdk_nvmf_ctrlr_get_id(ctx->ctrlr);
+	ctx->stats.num_io_cmds_rcvd = 0;
+	ctx->stats.num_io_cmds_failed = 0;
+	spdk_for_each_thread(spdk_rpc_get_ctrlr_cmd_stats, ctx, spdk_rpc_dump_ctrlr_stats);
+	return;
+
+done:
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(ctx->request, w);
+	free(ctx);
+}
+
+struct rpc_get_nvmf_stats {
+	uint8_t *ss_nqn;
+	uint16_t ctrlr_id;
+};
+
+static void
+free_rpc_get_nvmf_stats(struct rpc_get_nvmf_stats *r)
+{
+	free(r->ss_nqn);
+}
+
+static const struct spdk_json_object_decoder rpc_get_nvmf_stats_decoders[] = {
+	{"ss_nqn", offsetof(struct rpc_get_nvmf_stats, ss_nqn), spdk_json_decode_string},
+	{"ctrlr_id", offsetof(struct rpc_get_nvmf_stats, ctrlr_id), spdk_json_decode_uint32, true},
+};
+
+static void
+spdk_rpc_get_nvmf_ctrlr_stats(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct rpc_get_nvmf_stats req = {};
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_ctrlr *ctrlr = NULL;
+	struct spdk_rpc_ctrlr_cmd_stats_ctx *ctx;
+
+	if (spdk_json_decode_object(params, rpc_get_nvmf_stats_decoders,
+				    SPDK_COUNTOF(rpc_get_nvmf_stats_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, req.ss_nqn);
+	if (!subsystem) {
+		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", req.ss_nqn);
+		goto invalid;
+	}
+	if (req.ctrlr_id) {
+		ctrlr = spdk_nvmf_subsystem_get_ctrlr(subsystem, req.ctrlr_id);
+		if (!ctrlr) {
+			SPDK_ERRLOG("Unable to find ctrl %d in subsystem NQN %s\n", req.ctrlr_id, req.ss_nqn);
+			goto invalid;
+		}
+	}
+	free_rpc_get_nvmf_stats(&req);
+
+	ctx = calloc(1, sizeof(struct spdk_rpc_ctrlr_cmd_stats_ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate spdk_rpc_ctrlr_cmd_stats_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "No memory left");
+		return;
+	}
+
+	ctx->w = spdk_jsonrpc_begin_result(request);
+	if (ctx->w == NULL) {
+		free(ctx);
+		return;
+	}
+	ctx->request = request;
+	ctx->subsystem = subsystem;
+
+	spdk_json_write_array_begin(ctx->w);
+
+	if (ctrlr) {
+		ctx->get_all = false;
+		ctx->ctrlr_id = req.ctrlr_id;
+		ctx->ctrlr = ctrlr;
+		spdk_for_each_thread(spdk_rpc_get_ctrlr_cmd_stats, ctx, spdk_rpc_dump_ctrlr_stats);
+	} else {
+		ctx->get_all = true;
+		ctrlr = spdk_nvmf_subsystem_get_first_ctrlr(subsystem);
+		if (ctrlr) {
+			ctx->ctrlr_id = spdk_nvmf_ctrlr_get_id(ctrlr);
+			ctx->ctrlr = ctrlr;
+			spdk_for_each_thread(spdk_rpc_get_ctrlr_cmd_stats, ctx, spdk_rpc_dump_ctrlr_stats);
+		} else {
+			/* No controllers available in this subsystem */
+			spdk_json_write_array_end(ctx->w);
+			spdk_jsonrpc_end_result(ctx->request, ctx->w);
+			free(ctx);
+		}
+	}
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_get_nvmf_stats(&req);
+}
+SPDK_RPC_REGISTER("get_nvmf_ctrlr_stats", spdk_rpc_get_nvmf_ctrlr_stats, SPDK_RPC_RUNTIME)

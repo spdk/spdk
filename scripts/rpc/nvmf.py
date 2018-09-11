@@ -285,3 +285,11 @@ def get_nvmf_subsystem_stats(client, args):
         params['ss_nqn'] = args.ss_nqn
 
     return client.call('get_nvmf_subsystem_stats', params)
+
+
+def get_nvmf_ctrlr_stats(client, args):
+    params = {'ss_nqn': args.ss_nqn}
+    if args.ctrlr_id:
+        params['ctrlr_id'] = args.ctrlr_id
+
+    return client.call('get_nvmf_ctrlr_stats', params)

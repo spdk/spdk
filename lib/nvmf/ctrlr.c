@@ -308,6 +308,16 @@ spdk_nvmf_ctrlr_update_unauth_host_conn_count(void *ctx)
 	spdk_nvmf_subsystem_update_unauth_host_conn_count(subsystem);
 }
 
+uint32_t
+spdk_nvmf_ctrlr_get_num_qpairs(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	if (ctrlr) {
+		return spdk_bit_array_count_set(ctrlr->qpair_mask);
+	}
+
+	return 0;
+}
+
 static int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
@@ -1750,4 +1760,30 @@ spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 
 	spdk_nvmf_request_complete(ctrlr->aer_req);
 	ctrlr->aer_req = NULL;
+}
+
+void
+spdk_nvmf_ctrlr_get_host_id_fmt(struct spdk_nvmf_ctrlr *ctrlr, uint8_t *host_id, size_t len)
+{
+	if (ctrlr) {
+		/* hostid characters in string are of 36 */
+		snprintf(host_id, len, "%08x-%04x-%04x-%02x%02x-%04x%08x",
+			 ntohl(*(uint32_t *)&ctrlr->hostid[0]),
+			 ntohs(*(uint16_t *)&ctrlr->hostid[4]),
+			 ntohs(*(uint16_t *)&ctrlr->hostid[6]),
+			 ctrlr->hostid[8],
+			 ctrlr->hostid[9],
+			 ntohs(*(uint16_t *)&ctrlr->hostid[10]),
+			 ntohl(*(uint32_t *)&ctrlr->hostid[12]));
+	}
+}
+
+uint16_t
+spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	if (ctrlr) {
+		return ctrlr->cntlid;
+	}
+
+	return 0;
 }

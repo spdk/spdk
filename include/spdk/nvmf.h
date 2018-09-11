@@ -81,7 +81,7 @@ struct spdk_nvmf_transport_opts {
 	uint32_t max_aq_depth;
 };
 
-/** Statistics of received commands at Nvmf tgt level */
+/** Statistics of received commands at NVMe-oF target level */
 struct spdk_nvmf_cmd_stats {
 	uint64_t num_fabric_cmds;	/* number of fabric commands received */
 	uint64_t num_admin_cmds;	/* number of admin commands received */
@@ -103,6 +103,14 @@ struct spdk_nvmf_subsystem_stats {
 	uint16_t num_set_allow_any_host_fail;    /* number of times set_allow_any_host failed  */
 	uint16_t num_add_listener_fail;          /* number of times add listener failed    */
 	uint16_t num_rem_listener_fail;          /* number of times remove listener failed */
+};
+
+/* controller level statistics */
+struct spdk_nvmf_ctrlr_stats {
+	uint64_t num_admin_cmds_rcvd;
+	uint64_t num_admin_cmds_failed;
+	uint64_t num_io_cmds_rcvd;
+	uint64_t num_io_cmds_failed;
 };
 
 /**
@@ -704,9 +712,9 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
 
 /**
- * Get command statistics at NVMf tgt level.
+ * Get command statistics at NVMe-oF tgt level.
  *
- * \param nvmf_stats NVMf command statistics structure.
+ * \param nvmf_stats NVMe-oF command statistics structure.
  */
 void spdk_nvmf_tgt_get_cmd_stats(struct spdk_nvmf_cmd_stats *nvmf_stats);
 
@@ -722,7 +730,7 @@ struct spdk_nvmf_poll_group *nvmf_tgt_get_poll_group(uint32_t core);
 /**
  * Get the count of the failure of creating subsystem.
  *
- * \param tgt Nvmf tgt.
+ * \param tgt NVMe-oF tgt.
  *
  * \return number of times subsystem create failed.
  */
@@ -754,6 +762,53 @@ struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_first_ctrlr(struct spdk_nvmf_sub
  * \return  next allowed ctrlr in this subsystem, or NULL if prev_ctrlr was the last host.
  */
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_next_ctrlr(struct spdk_nvmf_ctrlr *prev_ctrlr);
+
+/**
+ * Get controller from controller id for the specified subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ * \param cntlid controller id to query.
+ *
+ * \return the controller with controller id of the specified subsystem.
+ */
+struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+		uint16_t cntlid);
+
+/**
+ * Get controller id from controller.
+ *
+ * \param ctrlr NVMe-oF controller to query.
+ *
+ * \return id of the specified controller.
+ */
+uint16_t spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr);
+
+/**
+ * Get number of qpairs of the controller.
+ *
+ * \param ctrlr NVMe-oF controller.
+ *
+ * \return actual number of qpairs of the specified controller.
+ */
+uint32_t spdk_nvmf_ctrlr_get_num_qpairs(struct spdk_nvmf_ctrlr *ctrlr);
+
+/**
+ * Get io and admin commands count of the controller.
+ *
+ * \param ctrlr NVMe-oF controller.
+ * \param stats gets total io and admin commands received for the query controller.
+ */
+void spdk_nvmf_ctrlr_get_cmd_stats(struct spdk_nvmf_ctrlr *ctrlr,
+				   struct spdk_nvmf_ctrlr_stats *stats);
+
+/**
+ * Get id of the host connected to the controller.
+ *
+ * \param ctrlr NVMe-oF controller.
+ * \param host_id gets the host id from the controller in query.
+ * \param len max host_id size to be copied.
+ */
+void spdk_nvmf_ctrlr_get_host_id_fmt(struct spdk_nvmf_ctrlr *ctrlr, uint8_t *host_id, size_t len);
 
 #ifdef __cplusplus
 }

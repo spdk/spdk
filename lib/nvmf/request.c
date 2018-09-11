@@ -184,13 +184,27 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	} else if (spdk_unlikely(spdk_nvmf_qpair_is_admin_queue(qpair))) {
 		/* Incrementing received admin command count at nvmf_tgt level per poll group */
 		qpair->group->nvmf_stats.num_admin_cmds++;
+		/* Incrementing received admin command count per qpair */
+		qpair->num_cmds_rcvd++;
 
 		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
+		if (spdk_unlikely((status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) &&
+				  (req->rsp->nvme_cpl.status.sc != SPDK_NVME_SC_SUCCESS))) {
+			/* Incrementing failed admin command count per qpair */
+			qpair->num_cmds_failed++;
+		}
 	} else {
 		/* Incrementing received I/O command count at nvmf_tgt level per poll group */
 		qpair->group->nvmf_stats.num_io_cmds++;
+		/* Incrementing received I/O command count per qpair */
+		qpair->num_cmds_rcvd++;
 
 		status = spdk_nvmf_ctrlr_process_io_cmd(req);
+		if (spdk_unlikely((status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) &&
+				  (req->rsp->nvme_cpl.status.sc != SPDK_NVME_SC_SUCCESS))) {
+			/* Incrementing failed admin command count per qpair */
+			qpair->num_cmds_failed++;
+		}
 	}
 
 	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
