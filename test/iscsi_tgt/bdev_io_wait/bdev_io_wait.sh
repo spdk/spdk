@@ -10,7 +10,7 @@ timing_enter bdev_io_wait
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="python $rootdir/scripts/rpc.py"
+rpc_py="$rootdir/scripts/rpc.py"
 
 timing_enter start_iscsi_tgt
 

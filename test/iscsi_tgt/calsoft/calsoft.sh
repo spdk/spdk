@@ -19,8 +19,8 @@ timing_enter calsoft
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="python $rootdir/scripts/rpc.py"
-calsoft_py="python $testdir/calsoft.py"
+rpc_py="$rootdir/scripts/rpc.py"
+calsoft_py="$testdir/calsoft.py"
 
 # Copy the calsoft config file to /usr/local/etc
 mkdir -p /usr/local/etc

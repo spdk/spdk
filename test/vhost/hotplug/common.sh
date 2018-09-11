@@ -63,7 +63,7 @@ tmp_attach_job=$BASE_DIR/fio_jobs/fio_attach.job.tmp
 tmp_detach_job=$BASE_DIR/fio_jobs/fio_detach.job.tmp
 . $BASE_DIR/../common/common.sh
 
-rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 function print_test_fio_header() {
     notice "==============="

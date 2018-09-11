@@ -11,7 +11,7 @@ LVOL_BDEV_SIZE=10
 SUBSYS_NR=2
 LVOL_BDEVS_NR=6
 
-rpc_py="python $rootdir/scripts/rpc.py"
+rpc_py="$rootdir/scripts/rpc.py"
 
 function disconnect_nvmf()
 {

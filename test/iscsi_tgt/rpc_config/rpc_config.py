@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 import os
@@ -61,7 +61,7 @@ class spdk_rpc(object):
 
     def __getattr__(self, name):
         def call(*args):
-            cmd = "python {} {}".format(self.rpc_py, name)
+            cmd = "{} {}".format(self.rpc_py, name)
             for arg in args:
                 cmd += " {}".format(arg)
             return check_output(cmd, shell=True)
@@ -414,7 +414,7 @@ def verify_get_interfaces(rpc_py):
 def help_get_interface_ip_list(rpc_py, nic_name):
     rpc = spdk_rpc(rpc_py)
     nics = json.loads(rpc.get_interfaces())
-    nic = list(filter(lambda x: x["name"] == nic_name, nics))
+    nic = list([x for x in nics if x["name"] == nic_name])
     verify(len(nic) != 0, 1,
            "Nic name: {} is not found in {}".format(nic_name, [x["name"] for x in nics]))
     return nic[0]["ip_addr"]
