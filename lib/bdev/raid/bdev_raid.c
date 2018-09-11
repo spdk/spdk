@@ -453,7 +453,7 @@ raid_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
 	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
 		    raid_bdev->strip_size_shift;
-	if (start_strip != end_strip) {
+	if (start_strip != end_strip && raid_bdev->num_base_bdevs > 1) {
 		assert(false);
 		SPDK_ERRLOG("I/O spans strip boundary!\n");
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -1292,8 +1292,14 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	raid_bdev->strip_size = (raid_bdev->strip_size * 1024) / blocklen;
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
 	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
-	raid_bdev_gen->optimal_io_boundary = raid_bdev->strip_size;
-	raid_bdev_gen->split_on_optimal_io_boundary = true;
+	if (raid_bdev->num_base_bdevs > 1) {
+		raid_bdev_gen->optimal_io_boundary = raid_bdev->strip_size;
+		raid_bdev_gen->split_on_optimal_io_boundary = true;
+	} else {
+		/* Do not need to split reads/writes on single bdev RAID modules. */
+		raid_bdev_gen->optimal_io_boundary = 0;
+		raid_bdev_gen->split_on_optimal_io_boundary = false;
+	}
 
 	/*
 	 * RAID bdev logic is for striping so take the minimum block count based
