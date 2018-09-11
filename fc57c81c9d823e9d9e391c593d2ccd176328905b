@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2267a642_62a15c1d",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T21:59:18Z",
+      "side": 1,
+      "message": "Hi Xiaodong,\n\njsonrpc has to be a string.  It is only id that can be a string, number or null.\n\n-Jim",
+      "revId": "fc57c81c9d823e9d9e391c593d2ccd176328905b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
