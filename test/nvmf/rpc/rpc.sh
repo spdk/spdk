@@ -84,6 +84,7 @@ do
 	for bdev in $bdevs; do
 		let j=j+1
 		$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001
+		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j $bdev -n 5
 		$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode$j
 		nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode$j -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
@@ -120,6 +121,7 @@ do
 	for bdev in $bdevs; do
 		let j=j+1
 		$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001
+		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j $bdev
 		$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode$j
 	done
