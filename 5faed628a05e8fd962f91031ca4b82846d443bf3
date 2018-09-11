@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "b3a1e0d2_40ee49d1",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 59
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-11T00:59:04Z",
+      "side": 1,
+      "message": "Will you check if the following work?\n\ndef get_iscsi_target_node_json(config, json):\n \n    diable_chap \u003d False\n    require_chap \u003d False\n    mutual_chap \u003d False\n    data_digest \u003d False\n    header_digest \u003d False\n\n    for option in config.options(section):\n        value \u003d config.get(section, option)\n        if \"AuthMethod\" \u003d\u003d option:\n            items \u003d re.findall(\"\\S+\", value)\n            for item in items:\n                if \"CHAP\" \u003d\u003d item:\n                    require_chap \u003d True\n                elif \"Mutual\" \u003d\u003d item:\n                    mutual_chap \u003d True\n                elif \"Auto\" \u003d\u003d item:\n                    disable_chap \u003d False\n                    require_chap \u003d False\n                    mutual_chap \u003d False\n                elif \"None\" \u003d\u003d item:\n                    disable_chap \u003d True\n                    require_chap \u003d False\n                    mutual_chap \u003d False\n         if \"AuthGroup\" \u003d\u003d option:\n             items \u003d re.findall(\"\\S+\", value)\n             chap_group \u003d int(re.findall(\u0027\\d+\u0027, items[0]))\n         if \"UseDigest\" \u003d\u003d option:\n             items \u003d re.findall(\"\\S+\", value)\n             for item in items:\n                 if \"Header\" \u003d\u003d item:\n                     header_digest \u003d True\n                 elif \"Data\" \u003d\u003d item:\n                     data_digest \u003d True\n                 elif \"Auto\" \u003d\u003d item:\n                     header_digest \u003d False\n                     data_digest \u003d False",
+      "range": {
+        "startLine": 592,
+        "startChar": 4,
+        "endLine": 592,
+        "endChar": 30
+      },
+      "revId": "5faed628a05e8fd962f91031ca4b82846d443bf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a5b8ec1_dc7a2ae7",
         "filename": "scripts/config_converter.py",
         "patchSetId": 59
