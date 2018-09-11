@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67135671_340a544d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:29:57Z",
+      "side": 1,
+      "message": "A few pointers on how SPDK (and other projects) usually do git commit messages.\n\nOverall the content here is good - it\u0027s mostly formatting.\n\nFirst line should be something like:\n\nnvmf: add target level statistics\n\n\"nvmf\" denotes the main component that it touches\n\nThen put an empty newline before the rest of the commit message.  If you do git log --oneline you will see why.\n\nThe rest of the commit message should be 80 characters max per line.",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "936a2154_362690e2",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:29:57Z",
+      "side": 1,
+      "message": "Can we just call this get_stats instead of get_cmd_stats?  I could see this getting extended in the future for other kinds of statistics - not just command counts.\n\nThat means struct spdk_nvmf_cmd_stats should also probably be renamed.",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a92bc129_d3c82f2a",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1737,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:29:57Z",
+      "side": 1,
+      "message": "A better implementation would be changing spdk_nvmf_tgt_get_cmd_stats to take a callback function.  Then put the for_each stuff in that function instead.\n\nThen have spdk_nvmf_tgt_get_cmd_stats use spdk_for_each_channel on the target object.  See spdk_nvmf_subsystem_state_change as an example for how this works.  Then you can be sure to only execute the function on threads that have poll groups.",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b288f6c3_b5d4d7aa",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1739,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:29:57Z",
+      "side": 1,
+      "message": "We should call this get_nvmf_target_stats.\n\nI know that internally, a lot of the C functions use \"tgt\" instead of \"target\".  But the RPCs use nvmf_target - spelled out.",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af025ead_fc7d60b8",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:29:57Z",
+      "side": 1,
+      "message": "You can just name this \"stats\" instead of \"nvmf_stats\".  The nvmf part is implicit since this is in an spdk_nvmf_poll_group.",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a363644b_d6972ed7",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:29:57Z",
+      "side": 1,
+      "message": "I think these extra comments can be removed.  The code is self-explanatory.",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc8b4825_f8063ecf",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1259,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:29:57Z",
+      "side": 1,
+      "message": "this should be get_nvmf_target_stats - similar to set_nvmf_target_options and set_nvmf_target_options",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42c40b1a_5e9f46ad",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:29:57Z",
+      "side": 1,
+      "message": "get_nvmf_target_stats\n\nThis should also have a doc string similar to the other functions in this file.",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
