@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "012a2543_7bb49fcd",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1804,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T15:28:10Z",
+      "side": 1,
+      "message": "here you can just directly call spdk_nvme_qpair_process_completions instead of adding the separate function",
+      "revId": "ff1db2c5734f0cc581164508238e2327a2e39084",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
