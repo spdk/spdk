@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bdf4b081_d6cb7726",
+        "filename": "test/blobstore/blob_io_wait/blob_io_wait.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-09-11T06:34:10Z",
+      "side": 1,
+      "message": "This test is designed for blobstore.\nBecause bdevperf doesn\u0027t have a way to take RPC, we need to create lvostore here.",
+      "parentUuid": "a102df99_a05884e4",
+      "revId": "5fe16908e9a2909e5f76d19ce18c5d056952aa7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c50a3908_caf86be8",
         "filename": "test/blobstore/blob_io_wait/blob_io_wait.sh",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-10T23:30:58Z",
       "side": 1,
       "message": "Can you use a much smaller number than 128 here?  really stress out your new code :)  Maybe 32?\n\nI wish we didn\u0027t have to use INI config file here.  But bdevperf doesn\u0027t have a way to take a JSON RPC file.  So this is OK for now.",
+      "revId": "5fe16908e9a2909e5f76d19ce18c5d056952aa7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2876d0af_ac0d0ea0",
+        "filename": "test/blobstore/blob_io_wait/blob_io_wait.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-09-11T06:34:10Z",
+      "side": 1,
+      "message": "I\u0027m not sure why, but bdevperf doesn\u0027t want to start with smaller poolsize. I will investigate this.",
+      "parentUuid": "c50a3908_caf86be8",
       "revId": "5fe16908e9a2909e5f76d19ce18c5d056952aa7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
