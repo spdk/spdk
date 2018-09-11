@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19adeab9_7edccb5b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1831,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T15:30:37Z",
+      "side": 1,
+      "message": "call qpair_process_completions directly here",
+      "revId": "5eda2300935b436bc451eb440714b5c65007b0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdaf6674_e978540b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1832,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T15:30:37Z",
+      "side": 1,
+      "message": "should this break instead?",
+      "revId": "5eda2300935b436bc451eb440714b5c65007b0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
