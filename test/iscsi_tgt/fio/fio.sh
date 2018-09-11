@@ -54,8 +54,8 @@ cp $testdir/iscsi.conf.in $testdir/iscsi.conf
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
-rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+rpc_py="$rootdir/scripts/rpc.py"
+fio_py="$rootdir/scripts/fio.py"
 
 timing_enter start_iscsi_tgt
 

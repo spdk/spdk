@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import time
 import sys
@@ -47,7 +49,7 @@ def run_case(case, result_list, log_dir_path):
 
 def main():
     if not os.path.exists(CALSOFT_BIN_PATH):
-        print "The Calsoft test suite is not available on this machine."
+        print("The Calsoft test suite is not available on this machine.")
         sys.exit(1)
 
     output_dir = sys.argv[1]
@@ -68,7 +70,7 @@ def main():
     if not os.path.exists(log_dir):
         os.mkdir(log_dir)
     for case in known_failed_cases:
-        print "Skipping %s. It is known to fail." % (case)
+        print("Skipping %s. It is known to fail." % (case))
         case_result_list.append({"Name": case, "Result": "SKIP"})
 
     thread_objs = []
@@ -96,7 +98,7 @@ def main():
         else:
             break
     else:
-        print "Thread timeout"
+        print("Thread timeout")
         exit(1)
     with open(output_file, 'w') as f:
         json.dump(obj=result, fp=f, indent=2)
@@ -104,7 +106,7 @@ def main():
     failed = 0
     for x in case_result_list:
         if x["Result"] == "FAIL":
-            print "Test case %s failed." % (x["Name"])
+            print("Test case %s failed." % (x["Name"]))
             failed = 1
     exit(failed)
 

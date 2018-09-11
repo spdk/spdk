@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from rpc.client import print_dict, JSONRPCException
 

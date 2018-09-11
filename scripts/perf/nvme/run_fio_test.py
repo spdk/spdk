@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This script runs fio benchmark test on the local nvme device using the SPDK NVMe driver.
 # Prework: Run script/setup.sh to bind SSDs to SPDK driver.
@@ -38,7 +38,7 @@ iter_num = ['1']
 
 
 def run_fio(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_time_sec):
-    print "Running Test: IO Size=", io_size_bytes, " QD=", qd, " Mix=", rw_mix, "CPU Mask=", cpu_mask
+    print("Running Test: IO Size={} QD={} Mix={} CPU Mask={}".format(io_size_bytes, qd, rw_mix, cpu_mask))
     string = "s_" + str(io_size_bytes) + "_q_" + str(qd) + "_m_" + str(rw_mix) + "_c_" + str(cpu_mask) + "_run_" + str(run_num)
 
     # Call fio
@@ -49,7 +49,7 @@ def run_fio(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_time_sec
         + " fio " + str(path_to_fio_conf) + " -output=" + string + " -output-format=json"
     output = subprocess.check_output(command, shell=True)
 
-    print "Finished Test: IO Size=", io_size_bytes, " QD=", qd, " Mix=", rw_mix, " CPU Mask=", cpu_mask
+    print("Finished Test: IO Size={} QD={} Mix={} CPU Mask={}".format(io_size_bytes, qd, rw_mix, cpu_mask))
     return
 
 
@@ -85,21 +85,21 @@ def parse_results(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_ti
         write_avg_lat = float(data['jobs'][job_pos]['write'][lat]['mean'])
         write_min_lat = float(data['jobs'][job_pos]['write'][lat]['min'])
         write_max_lat = float(data['jobs'][job_pos]['write'][lat]['max'])
-        print "%-10s" % "IO Size", "%-10s" % "QD", "%-10s" % "Mix", \
-            "%-10s" % "Workload Type", "%-10s" % "CPU Mask", \
-            "%-10s" % "Run Time", "%-10s" % "Run Num", \
-            "%-15s" % "Read IOps", \
-            "%-10s" % "Read MBps", "%-15s" % "Read Avg. Lat(" + lat_units + ")", \
-            "%-15s" % "Read Min. Lat(" + lat_units + ")", "%-15s" % "Read Max. Lat(" + lat_units + ")", \
-            "%-15s" % "Write IOps", \
-            "%-10s" % "Write MBps", "%-15s" % "Write Avg. Lat(" + lat_units + ")", \
-            "%-15s" % "Write Min. Lat(" + lat_units + ")", "%-15s" % "Write Max. Lat(" + lat_units + ")"
-        print "%-10s" % io_size_bytes, "%-10s" % qd, "%-10s" % rw_mix, \
-            "%-10s" % workload, "%-10s" % cpu_mask, "%-10s" % run_time_sec, \
-            "%-10s" % run_num, "%-15s" % read_iops, "%-10s" % read_bw, \
-            "%-15s" % read_avg_lat, "%-15s" % read_min_lat, "%-15s" % read_max_lat, \
-            "%-15s" % write_iops, "%-10s" % write_bw, "%-15s" % write_avg_lat, \
-            "%-15s" % write_min_lat, "%-15s" % write_max_lat
+        print("%-10s" % "IO Size", "%-10s" % "QD", "%-10s" % "Mix",
+              "%-10s" % "Workload Type", "%-10s" % "CPU Mask",
+              "%-10s" % "Run Time", "%-10s" % "Run Num",
+              "%-15s" % "Read IOps",
+              "%-10s" % "Read MBps", "%-15s" % "Read Avg. Lat(" + lat_units + ")",
+              "%-15s" % "Read Min. Lat(" + lat_units + ")", "%-15s" % "Read Max. Lat(" + lat_units + ")",
+              "%-15s" % "Write IOps",
+              "%-10s" % "Write MBps", "%-15s" % "Write Avg. Lat(" + lat_units + ")",
+              "%-15s" % "Write Min. Lat(" + lat_units + ")", "%-15s" % "Write Max. Lat(" + lat_units + ")")
+        print("%-10s" % io_size_bytes, "%-10s" % qd, "%-10s" % rw_mix,
+              "%-10s" % workload, "%-10s" % cpu_mask, "%-10s" % run_time_sec,
+              "%-10s" % run_num, "%-15s" % read_iops, "%-10s" % read_bw,
+              "%-15s" % read_avg_lat, "%-15s" % read_min_lat, "%-15s" % read_max_lat,
+              "%-15s" % write_iops, "%-10s" % write_bw, "%-15s" % write_avg_lat,
+              "%-15s" % write_min_lat, "%-15s" % write_max_lat)
         results = results + "," + str(read_iops) + "," + str(read_bw) + "," \
             + str(read_avg_lat) + "," + str(read_min_lat) + "," + str(read_max_lat) \
             + "," + str(write_iops) + "," + str(write_bw) + "," + str(write_avg_lat) \
@@ -128,12 +128,12 @@ def add_filename_to_conf(conf_file_name, bdf):
 
 
 if len(sys.argv) != 4:
-    print "usage: python ", sys.argv[0], " path_to_fio_conf path_to_ioengine num_ssds"
+    print("usage: " % sys.argv[0] % " path_to_fio_conf path_to_ioengine num_ssds")
     sys.exit()
 
 num_ssds = int(sys.argv[3])
 if num_ssds > get_nvme_devices_count():
-    print "System does not have ", num_ssds, " NVMe SSDs."
+    print("System does not have {} NVMe SSDs.".format(num_ssds))
     sys.exit()
 
 host_name = os.uname()[1]

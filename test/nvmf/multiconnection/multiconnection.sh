@@ -9,7 +9,7 @@ MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
 NVMF_SUBSYS=11
 
-rpc_py="python $rootdir/scripts/rpc.py"
+rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 

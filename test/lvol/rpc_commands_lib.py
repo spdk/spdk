@@ -1,4 +1,5 @@
 import json
+import sys
 from uuid import UUID
 from subprocess import check_output, CalledProcessError
 
@@ -9,7 +10,7 @@ class Spdk_Rpc(object):
 
     def __getattr__(self, name):
         def call(*args):
-            cmd = "python {} {}".format(self.rpc_py, name)
+            cmd = "{} {} {}".format(sys.executable, self.rpc_py, name)
             for arg in args:
                 cmd += " {}".format(arg)
             try:

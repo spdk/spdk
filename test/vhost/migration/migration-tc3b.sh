@@ -7,7 +7,7 @@ source $MIGRATION_DIR/autotest.config
 incoming_vm=1
 target_vm=2
 target_vm_ctrl=naa.VhostScsi0.$target_vm
-rpc="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 1)/rpc.sock"
+rpc="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 1)/rpc.sock"
 share_dir=$TEST_DIR/share
 
 function host_2_cleanup_vhost()

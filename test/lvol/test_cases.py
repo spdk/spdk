@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import io
 import time
 import sys
@@ -266,14 +266,14 @@ class TestCases(object):
 
     def get_lvs_size(self, lvs_name="lvs_test"):
         lvs = self.c.get_lvol_stores(lvs_name)[0]
-        return int(int(lvs[u'free_clusters'] * lvs['cluster_size']) / MEGABYTE)
+        return int(int(lvs['free_clusters'] * lvs['cluster_size']) / MEGABYTE)
 
     def get_lvs_divided_size(self, split_num, lvs_name="lvs_test"):
         # Actual size of lvol bdevs on creation is rounded up to multiple of cluster size.
         # In order to avoid over provisioning, this function returns
         # lvol store size in MB divided by split_num - rounded down to multiple of cluster size."
         lvs = self.c.get_lvol_stores(lvs_name)[0]
-        return int(int(lvs[u'free_clusters'] / split_num) * lvs['cluster_size'] / MEGABYTE)
+        return int(int(lvs['free_clusters'] / split_num) * lvs['cluster_size'] / MEGABYTE)
 
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.get_lvol_stores(lvs_name)[0]
@@ -816,7 +816,7 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs = self.c.get_lvol_stores()
-        size = int(int(lvs[0][u'free_clusters'] * lvs[0]['cluster_size']) / 4 / MEGABYTE)
+        size = int(int(lvs[0]['free_clusters'] * lvs[0]['cluster_size']) / 4 / MEGABYTE)
 
         # Construct thin provisioned lvol bdev
         uuid_bdev0 = self.c.construct_lvol_bdev(uuid_store,
@@ -881,7 +881,7 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs = self.c.get_lvol_stores()
-        size = int(int(lvs[0][u'free_clusters'] * lvs[0]['cluster_size']) / 4 / MEGABYTE)
+        size = int(int(lvs[0]['free_clusters'] * lvs[0]['cluster_size']) / 4 / MEGABYTE)
 
         # Create lvol bdev, snapshot it, then clone it and then snapshot the clone
         uuid_bdev0 = self.c.construct_lvol_bdev(uuid_store, self.lbd_name, size, thin=True)
@@ -946,7 +946,7 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         lvs = self.c.get_lvol_stores()
-        size = int(int(lvs[0][u'free_clusters'] * lvs[0]['cluster_size']) / 4 / MEGABYTE)
+        size = int(int(lvs[0]['free_clusters'] * lvs[0]['cluster_size']) / 4 / MEGABYTE)
 
         # Create lvol bdev, snapshot it, then clone it and then snapshot the clone
         uuid_bdev0 = self.c.construct_lvol_bdev(uuid_store, self.lbd_name, size, thin=True)
@@ -1046,7 +1046,7 @@ class TestCases(object):
         bdev_name = self.c.construct_lvol_bdev(uuid_store, self.lbd_name,
                                                bdev_size, thin=True)
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
-        free_clusters_create_lvol = int(lvs[u'free_clusters'])
+        free_clusters_create_lvol = int(lvs['free_clusters'])
         # check and save number of free clusters for lvol store
         if free_clusters_start != free_clusters_create_lvol:
             fail_count += 1
@@ -1058,7 +1058,7 @@ class TestCases(object):
         # write data (lvs cluster size) to created lvol bdev starting from offset 0.
         fail_count += self.run_fio_test("/dev/nbd0", 0, size, "write", "0xcc")
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
-        free_clusters_first_fio = int(lvs[u'free_clusters'])
+        free_clusters_first_fio = int(lvs['free_clusters'])
         # check that free clusters on lvol store was decremented by 1
         if free_clusters_start != free_clusters_first_fio + 1:
             fail_count += 1
@@ -1070,7 +1070,7 @@ class TestCases(object):
         # write data (lvs cluster size) to lvol bdev with offset set to one and half of cluster size
         fail_count += self.run_fio_test(nbd_name, offset, size, "write", "0xcc")
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
-        free_clusters_second_fio = int(lvs[u'free_clusters'])
+        free_clusters_second_fio = int(lvs['free_clusters'])
         # check that free clusters on lvol store was decremented by 2
         if free_clusters_start != free_clusters_second_fio + 3:
             fail_count += 1
@@ -1081,7 +1081,7 @@ class TestCases(object):
         # write data to lvol bdev to the end of its size
         fail_count += self.run_fio_test(nbd_name, offset, size, "write", "0xcc")
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
-        free_clusters_third_fio = int(lvs[u'free_clusters'])
+        free_clusters_third_fio = int(lvs['free_clusters'])
         # check that lvol store free clusters number equals to 0
         if free_clusters_third_fio != 0:
             fail_count += 1
@@ -1090,7 +1090,7 @@ class TestCases(object):
         # destroy thin provisioned lvol bdev
         fail_count += self.c.destroy_lvol_bdev(lvol_bdev['name'])
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
-        free_clusters_end = int(lvs[u'free_clusters'])
+        free_clusters_end = int(lvs['free_clusters'])
         # check that saved number of free clusters equals to current free clusters
         if free_clusters_start != free_clusters_end:
             fail_count += 1
@@ -1264,7 +1264,7 @@ class TestCases(object):
                                                 bdev_size, thin=True)
 
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
-        free_clusters_create_lvol = int(lvs[u'free_clusters'])
+        free_clusters_create_lvol = int(lvs['free_clusters'])
         if free_clusters_start != free_clusters_create_lvol:
             fail_count += 1
         lvol_bdev0 = self.c.get_lvol_bdev_with_name(bdev_name0)
