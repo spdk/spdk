@@ -136,7 +136,8 @@ mem_map_test(void)
 	struct spdk_mem_map *map;
 	uint64_t default_translation = 0xDEADBEEF0BADF00D;
 	const struct spdk_mem_map_ops test_map_ops = {
-		.notify_cb = test_map_notify
+		.notify_cb = test_map_notify,
+		.are_contiguous = NULL
 	};
 
 

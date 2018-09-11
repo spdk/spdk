@@ -96,8 +96,20 @@ test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return 0;
 }
 
+static int
+test_check_regions_contiguous(uint64_t addr1, uint64_t addr2)
+{
+	return addr1 == addr2;
+}
+
 const struct spdk_mem_map_ops test_mem_map_ops = {
-	.notify_cb = test_mem_map_notify
+	.notify_cb = test_mem_map_notify,
+	.are_contiguous = test_check_regions_contiguous
+};
+
+const struct spdk_mem_map_ops test_mem_map_ops_no_contig = {
+	.notify_cb = test_mem_map_notify,
+	.are_contiguous = NULL
 };
 
 static void
@@ -119,6 +131,7 @@ test_mem_map_translation(void)
 	struct spdk_mem_map *map;
 	uint64_t default_translation = 0xDEADBEEF0BADF00D;
 	uint64_t addr;
+	uint64_t mapping_length;
 	int rc;
 
 	map = spdk_mem_map_alloc(default_translation, &test_mem_map_ops, NULL);
@@ -144,6 +157,12 @@ test_mem_map_translation(void)
 	rc = spdk_mem_map_set_translation(map, 0, 3 * VALUE_2MB, 0);
 	CU_ASSERT(rc == 0);
 
+	/* Make sure we indicate that the three regions are contiguous */
+	mapping_length = VALUE_2MB * 3;
+	addr = spdk_mem_map_translate(map, 0, &mapping_length);
+	CU_ASSERT(addr == 0);
+	CU_ASSERT(mapping_length == VALUE_2MB * 3)
+
 	/* Clear translation for the middle page of the larger region. */
 	rc = spdk_mem_map_clear_translation(map, VALUE_2MB, VALUE_2MB);
 	CU_ASSERT(rc == 0);
@@ -151,6 +170,18 @@ test_mem_map_translation(void)
 	/* Get translation for first page */
 	addr = spdk_mem_map_translate(map, 0, NULL);
 	CU_ASSERT(addr == 0);
+
+	/* Make sure we indicate that the three regions are no longer contiguous */
+	mapping_length = VALUE_2MB * 3;
+	addr = spdk_mem_map_translate(map, 0, &mapping_length);
+	CU_ASSERT(addr == 0);
+	CU_ASSERT(mapping_length == VALUE_2MB)
+
+	/* Get translation for an unallocated block. Make sure size is 0 */
+	mapping_length = VALUE_2MB * 3;
+	addr = spdk_mem_map_translate(map, VALUE_2MB, &mapping_length);
+	CU_ASSERT(addr == default_translation);
+	CU_ASSERT(mapping_length == VALUE_2MB)
 
 	/* Verify translation for 2nd page is the default */
 	addr = spdk_mem_map_translate(map, VALUE_2MB, NULL);
@@ -196,6 +227,27 @@ test_mem_map_translation(void)
 	/* Attempt to set translation starting at a valid address but exceeding the valid range */
 	rc = spdk_mem_map_set_translation(map, 0xffffffe00000ULL, VALUE_2MB * 2, 0x123123);
 	CU_ASSERT(rc != 0);
+
+	spdk_mem_map_free(&map);
+	CU_ASSERT(map == NULL);
+
+	/* Allocate a map without a contiguous region checker */
+	map = spdk_mem_map_alloc(default_translation, &test_mem_map_ops_no_contig, NULL);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+
+	/* map three contiguous regions */
+	rc = spdk_mem_map_set_translation(map, 0, 3 * VALUE_2MB, 0);
+	CU_ASSERT(rc == 0);
+
+	/* Since we can't check their contiguity, make sure we only return the size of one page */
+	mapping_length = VALUE_2MB * 3;
+	addr = spdk_mem_map_translate(map, 0, &mapping_length);
+	CU_ASSERT(addr == 0);
+	CU_ASSERT(mapping_length == VALUE_2MB)
+
+	/* Clear the translation */
+	rc = spdk_mem_map_clear_translation(map, 0, VALUE_2MB * 3);
+	CU_ASSERT(rc == 0);
 
 	spdk_mem_map_free(&map);
 	CU_ASSERT(map == NULL);
