@@ -76,9 +76,9 @@ function migration_tc2_configure_vhost()
 	incoming_vm_ctrlr=naa.VhostScsi0.$incoming_vm
 	target_vm_ctrlr=naa.VhostScsi0.$target_vm
 
-	rpc_nvmf="python $SPDK_BUILD_DIR/scripts/rpc.py -s $nvmf_dir/rpc.sock"
-	rpc_0="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
-	rpc_1="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 1)/rpc.sock"
+	rpc_nvmf="$SPDK_BUILD_DIR/scripts/rpc.py -s $nvmf_dir/rpc.sock"
+	rpc_0="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
+	rpc_1="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 1)/rpc.sock"
 
 	# Default cleanup/error handlers will not shutdown nvmf_tgt app so setup it
 	# here to teardown in cleanup function

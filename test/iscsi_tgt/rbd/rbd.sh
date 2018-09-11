@@ -17,8 +17,8 @@ timing_exit rbd_setup
 
 timing_enter rbd
 
-rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+rpc_py="$rootdir/scripts/rpc.py"
+fio_py="$rootdir/scripts/fio.py"
 
 timing_enter start_iscsi_tgt
 

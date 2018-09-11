@@ -681,7 +681,7 @@ class UIBdevObj(UINode):
         if self.bdev.aliases:
             alias = self.bdev.aliases[0]
 
-        info = ", ".join(filter(None, [alias, size, in_use]))
+        info = ", ".join([_f for _f in [alias, size, in_use] if _f])
         return info, True
 
 
@@ -697,9 +697,9 @@ class UIVirtioScsiBdevObj(UIBdevObj):
                 UIBdevObj(bdev, self)
 
     def summary(self):
-        if "socket" in self.bdev.virtio.keys():
+        if "socket" in list(self.bdev.virtio.keys()):
             info = self.bdev.virtio["socket"]
-        if "pci_address" in self.bdev.virtio.keys():
+        if "pci_address" in list(self.bdev.virtio.keys()):
             info = self.bdev.virtio["pci_address"]
         return info, True
 
@@ -898,7 +898,7 @@ class UIVhostBlkCtrlObj(UIVhostCtrl):
         ro = None
         if self.ctrlr.backend_specific["block"]["readonly"]:
             ro = "Readonly"
-        info = ", ".join(filter(None, [self.ctrlr.socket, ro]))
+        info = ", ".join([_f for _f in [self.ctrlr.socket, ro] if _f])
         return info, True
 
 
