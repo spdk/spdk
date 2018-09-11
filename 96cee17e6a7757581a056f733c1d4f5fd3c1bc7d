@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2aa6cb10_b651ed0a",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-11T14:30:26Z",
+      "side": 1,
+      "message": "need \n  else\n    yum install -y python-configshell python-pexpect python3-configshell python3-pexpect",
+      "revId": "96cee17e6a7757581a056f733c1d4f5fd3c1bc7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
