@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+
 import json
 import argparse
 
@@ -31,7 +32,7 @@ def filter_methods(filename, do_remove_global_rpcs):
             'config': s_config,
         })
 
-    print json.dumps(out, indent=2)
+    print((json.dumps(out, indent=2)))
 
 
 if __name__ == "__main__":
