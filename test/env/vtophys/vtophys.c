@@ -130,13 +130,17 @@ test_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return 0;
 }
 
+const struct spdk_mem_map_ops test_map_ops = {
+	.notify_cb = test_map_notify
+};
+
 static int
 mem_map_test(void)
 {
 	struct spdk_mem_map *map;
 	uint64_t default_translation = 0xDEADBEEF0BADF00D;
 
-	map = spdk_mem_map_alloc(default_translation, test_map_notify, NULL);
+	map = spdk_mem_map_alloc(default_translation, &test_map_ops, NULL);
 	if (map == NULL) {
 		return 1;
 	}
