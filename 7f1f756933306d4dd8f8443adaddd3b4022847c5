@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9a5e3fe_b34d6961",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 62
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-11T21:40:25Z",
+      "side": 1,
+      "message": "The code to read from stdin and write to stdout should be under the if __name__ \u003d\u003d \"__main__\" block and instead pass the input as an argument here and have it return the output.",
+      "revId": "7f1f756933306d4dd8f8443adaddd3b4022847c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c563807f_690c696b",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 62
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-11T21:40:25Z",
+      "side": 1,
+      "message": "Using the section name as the key into a dictionary of key to function objects is effectively a switch statement. Python doesn\u0027t directly support those, so this is the only way to do a fast switch-like dispatch. However, for this case I don\u0027t think the downsides (it\u0027s hard to read/follow) out-weigh the improved performance over writing this out as a big if statement.\n\nif match_section \u003d\u003d \"Bdev\":\n   get_bdev_options_json(config, section)\nelif ...",
+      "revId": "7f1f756933306d4dd8f8443adaddd3b4022847c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd743712_2aa3f9b4",
+        "filename": "test/config_converter/iscsi_test_converter.sh",
+        "patchSetId": 62
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-11T21:40:25Z",
+      "side": 1,
+      "message": "All of these tests added here are testing the config_converter.py script. I don\u0027t think you need separate files for iscsi/vhost/nvmf - just put them all in one test and run it with the event framework tests.",
+      "revId": "7f1f756933306d4dd8f8443adaddd3b4022847c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
