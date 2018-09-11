@@ -16,6 +16,24 @@
       "revId": "b828e966f4c1422cfc6876361a590bea86c98a35",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30bbf5cc_816d230b",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T20:32:54Z",
+      "side": 1,
+      "message": "You\u0027re right.  Will fix now.\n\n\"multiple stripe IO on single raid bdev\" - can you explain?  Or does putting this code in a base bdev count check fix all of your concerns?",
+      "parentUuid": "d34b459e_91ab6b0f",
+      "revId": "b828e966f4c1422cfc6876361a590bea86c98a35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
