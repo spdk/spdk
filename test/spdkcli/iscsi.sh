@@ -7,7 +7,7 @@ testdir=$(readlink -f $(dirname $0))
 . $testdir/common.sh
 . $testdir/../iscsi_tgt/common.sh
 
-timing_enter spdkcli_pmem
+timing_enter spdkcli_iscsi
 trap 'on_error_exit;' ERR
 
 timing_enter run_spdk_tgt
