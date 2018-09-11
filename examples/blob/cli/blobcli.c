@@ -106,6 +106,7 @@ struct cli_context_t {
 	struct spdk_io_channel *channel;
 	uint8_t *buff;
 	uint64_t page_size;
+	uint64_t io_unit_size;
 	uint64_t page_count;
 	uint64_t blob_pages;
 	uint64_t bytes_so_far;
@@ -398,6 +399,7 @@ show_bs_cb(void *arg1, spdk_blob_id blobid, int bserrno)
 	}
 
 	printf("\tpage size: %" PRIu64 "\n", cli_context->page_size);
+	printf("\tio unit size: %" PRIu64 "\n", cli_context->io_unit_size);
 
 	val = spdk_bs_get_cluster_size(cli_context->bs);
 	printf("\tcluster size: %" PRIu64 "\n", val);
@@ -590,9 +592,9 @@ read_dump_cb(void *arg1, int bserrno)
 		return;
 	}
 
-	bytes_written = fwrite(cli_context->buff, NUM_PAGES, cli_context->page_size,
+	bytes_written = fwrite(cli_context->buff, NUM_PAGES, cli_context->io_unit_size,
 			       cli_context->fp);
-	if (bytes_written != cli_context->page_size) {
+	if (bytes_written != cli_context->io_unit_size) {
 		fclose(cli_context->fp);
 		unload_bs(cli_context, "Error with fwrite",
 			  bserrno);
@@ -632,21 +634,21 @@ write_imp_cb(void *arg1, int bserrno)
 	if (cli_context->bytes_so_far < cli_context->filesize) {
 		/* perform another file read */
 		bytes_read = fread(cli_context->buff, 1,
-				   cli_context->page_size,
+				   cli_context->io_unit_size,
 				   cli_context->fp);
 		cli_context->bytes_so_far += bytes_read;
 
 		/* if this read is < 1 page, fill with 0s */
-		if (bytes_read < cli_context->page_size) {
+		if (bytes_read < cli_context->io_unit_size) {
 			uint8_t *offset = cli_context->buff + bytes_read;
-			memset(offset, 0, cli_context->page_size - bytes_read);
+			memset(offset, 0, cli_context->io_unit_size - bytes_read);
 		}
 	} else {
 		/*
 		 * Done reading the file, fill the rest of the blob with 0s,
 		 * yeah we're memsetting the same page over and over here
 		 */
-		memset(cli_context->buff, 0, cli_context->page_size);
+		memset(cli_context->buff, 0, cli_context->io_unit_size);
 	}
 	if (++cli_context->page_count < cli_context->blob_pages) {
 		printf(".");
@@ -683,7 +685,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 * We'll transfer just one page at a time to keep the buffer
 	 * small. This could be bigger of course.
 	 */
-	cli_context->buff = spdk_dma_malloc(cli_context->page_size,
+	cli_context->buff = spdk_dma_malloc(cli_context->io_unit_size,
 					    ALIGN_4K, NULL);
 	if (cli_context->buff == NULL) {
 		printf("Error in allocating memory\n");
@@ -718,16 +720,16 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		cli_context->filesize = ftell(cli_context->fp);
 		rewind(cli_context->fp);
 		cli_context->bytes_so_far = fread(cli_context->buff, NUM_PAGES,
-						  cli_context->page_size,
+						  cli_context->io_unit_size,
 						  cli_context->fp);
 
 		/* if the file is < a page, fill the rest with 0s */
-		if (cli_context->filesize < cli_context->page_size) {
+		if (cli_context->filesize < cli_context->io_unit_size) {
 			uint8_t *offset =
 				cli_context->buff + cli_context->filesize;
 
 			memset(offset, 0,
-			       cli_context->page_size - cli_context->filesize);
+			       cli_context->io_unit_size - cli_context->filesize);
 		}
 
 		spdk_blob_io_write(cli_context->blob, cli_context->channel,
@@ -778,7 +780,7 @@ fill_blob_cb(void *arg1, struct spdk_blob *blob, int bserrno)
 	cli_context->blob = blob;
 	cli_context->page_count = 0;
 	cli_context->blob_pages = spdk_blob_get_num_pages(cli_context->blob);
-	cli_context->buff = spdk_dma_malloc(cli_context->page_size,
+	cli_context->buff = spdk_dma_malloc(cli_context->io_unit_size,
 					    ALIGN_4K, NULL);
 	if (cli_context->buff == NULL) {
 		unload_bs(cli_context, "Error in allocating memory",
@@ -787,7 +789,7 @@ fill_blob_cb(void *arg1, struct spdk_blob *blob, int bserrno)
 	}
 
 	memset(cli_context->buff, cli_context->fill_value,
-	       cli_context->page_size);
+	       cli_context->io_unit_size);
 	printf("Working");
 	spdk_blob_io_write(cli_context->blob, cli_context->channel,
 			   cli_context->buff,
@@ -812,6 +814,7 @@ load_bs_cb(void *arg1, struct spdk_blob_store *bs, int bserrno)
 
 	cli_context->bs = bs;
 	cli_context->page_size = spdk_bs_get_page_size(cli_context->bs);
+	cli_context->io_unit_size = spdk_bs_get_io_unit_size(cli_context->bs);
 	cli_context->channel = spdk_bs_alloc_io_channel(cli_context->bs);
 	if (cli_context->channel == NULL) {
 		unload_bs(cli_context, "Error in allocating channel",
