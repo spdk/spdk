@@ -101,6 +101,17 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->io_unit_size = SPDK_NVMF_DEFAULT_IO_UNIT_SIZE;
 }
 
+void
+spdk_nvmf_tgt_get_stats(struct spdk_nvmf_poll_group *group,
+			struct spdk_nvmf_tgt_stats *stats)
+{
+	if (group) {
+		stats->num_fabric_cmds += group->stats.num_fabric_cmds;
+		stats->num_admin_cmds  += group->stats.num_admin_cmds;
+		stats->num_io_cmds     += group->stats.num_io_cmds;
+	}
+}
+
 static int
 spdk_nvmf_poll_group_poll(void *ctx)
 {

@@ -81,6 +81,13 @@ struct spdk_nvmf_transport_opts {
 	uint32_t max_aq_depth;
 };
 
+/** Statistics of received commands at Nvmf tgt level */
+struct spdk_nvmf_tgt_stats {
+	uint64_t num_fabric_cmds;	/* number of fabric commands received */
+	uint64_t num_admin_cmds;	/* number of admin commands received */
+	uint64_t num_io_cmds;		/* number of io commands received */
+};
+
 /**
  * Initialize the default value of opts.
  *
@@ -678,6 +685,24 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
  * \return the type of the specified subsystem.
  */
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Get command statistics at NVMf tgt level.
+ *
+ * \param group NVMe-oF poll group.
+ * \param stats NVMf command statistics structure.
+ */
+void spdk_nvmf_tgt_get_stats(struct spdk_nvmf_poll_group *group,
+			     struct spdk_nvmf_tgt_stats *stats);
+
+/**
+ * Get poll group of the specified core.
+ *
+ * \param core core id to query.
+ *
+ * \return poll group of the respective core.
+ */
+struct spdk_nvmf_poll_group *nvmf_tgt_get_poll_group(uint32_t core);
 
 #ifdef __cplusplus
 }

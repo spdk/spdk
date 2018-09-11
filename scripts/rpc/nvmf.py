@@ -273,3 +273,12 @@ def delete_nvmf_subsystem(client, nqn):
     """
     params = {'nqn': nqn}
     return client.call('delete_nvmf_subsystem', params)
+
+
+def get_nvmf_target_stats(client, args):
+    """Get the NVMe-oF target statistics.
+
+    Returns:
+        NVMe-oF target statistics.
+    """
+    return client.call('get_nvmf_target_stats')

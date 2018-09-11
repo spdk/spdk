@@ -119,6 +119,7 @@ struct spdk_nvmf_poll_group {
 	/* Array of poll groups indexed by subsystem id (sid) */
 	struct spdk_nvmf_subsystem_poll_group		*sgroups;
 	uint32_t					num_sgroups;
+	struct spdk_nvmf_tgt_stats			stats;
 
 	/* All of the queue pairs that belong to this poll group */
 	TAILQ_HEAD(, spdk_nvmf_qpair)			qpairs;

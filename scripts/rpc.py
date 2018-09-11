@@ -1254,6 +1254,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-r', '--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
     p.set_defaults(func=set_nvmf_target_config)
 
+    # NVMe-oF stats
+    @call_cmd
+    def get_nvmf_target_stats(args):
+        print_dict(rpc.nvmf.get_nvmf_target_stats(args.client, args))
+
+    p = subparsers.add_parser('get_nvmf_target_stats',
+                              help='Display nvmf target level statistics')
+    p.set_defaults(func=get_nvmf_target_stats)
+
     @call_cmd
     def get_nvmf_subsystems(args):
         print_dict(rpc.nvmf.get_nvmf_subsystems(args.client))

@@ -41,6 +41,7 @@
 #include "spdk/nvmf.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/thread.h"
 
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
@@ -1668,3 +1669,71 @@ nvmf_rpc_subsystem_set_tgt_conf(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("set_nvmf_target_config", nvmf_rpc_subsystem_set_tgt_conf, SPDK_RPC_STARTUP)
+
+struct spdk_rpc_nvmf_tgt_stats_ctx {
+	struct spdk_nvmf_tgt_stats stats;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+spdk_rpc_dump_nvmf_tgt_stats(void *arg)
+{
+	struct spdk_rpc_nvmf_tgt_stats_ctx *ctx = arg;
+	struct spdk_jsonrpc_request *request = ctx->request;
+	struct spdk_json_write_ctx *w = ctx->w;
+	struct spdk_nvmf_tgt_stats *stats = &ctx->stats;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_uint64(w, "num_fabric_cmds", stats->num_fabric_cmds);
+	spdk_json_write_named_uint64(w, "num_admin_cmds", stats->num_admin_cmds);
+	spdk_json_write_named_uint64(w, "num_io_cmds", stats->num_io_cmds);
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+	free(ctx);
+}
+
+static void
+spdk_rpc_get_nvmf_tgt_cmd_stats(void *arg)
+{
+	struct spdk_rpc_nvmf_tgt_stats_ctx *ctx = arg;
+	struct spdk_nvmf_tgt_stats *stats = &ctx->stats;
+
+	spdk_nvmf_tgt_get_stats(nvmf_tgt_get_poll_group(spdk_env_get_current_core()), stats);
+}
+
+static void
+spdk_rpc_get_nvmf_tgt_stats(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct spdk_rpc_nvmf_tgt_stats_ctx *ctx;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_nvmf_tgt_stats requires no parameters");
+		return;
+	}
+
+	ctx = calloc(1, sizeof(struct spdk_rpc_nvmf_tgt_stats_ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate spdk_rpc_nvmf_tgt_stats_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "No memory left");
+		return;
+	}
+
+	ctx->w = spdk_jsonrpc_begin_result(request);
+	if (ctx->w == NULL) {
+		free(ctx);
+		return;
+	}
+	ctx->request = request;
+
+	spdk_json_write_array_begin(ctx->w);
+	spdk_for_each_thread(spdk_rpc_get_nvmf_tgt_cmd_stats, ctx, spdk_rpc_dump_nvmf_tgt_stats);
+}
+SPDK_RPC_REGISTER("get_nvmf_target_stats", spdk_rpc_get_nvmf_tgt_stats, SPDK_RPC_RUNTIME)
