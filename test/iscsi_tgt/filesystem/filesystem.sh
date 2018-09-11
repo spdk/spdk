@@ -8,7 +8,7 @@ source $rootdir/scripts/common.sh
 
 timing_enter filesystem
 
-rpc_py="python $rootdir/scripts/rpc.py"
+rpc_py="$rootdir/scripts/rpc.py"
 # Remove lvol bdevs and stores.
 function remove_backends() {
 	echo "INFO: Removing lvol bdev"

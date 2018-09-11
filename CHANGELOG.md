@@ -58,6 +58,15 @@ surprises for users who may have DPDK_DIR defined for other reasons.
 Users should just use the "configure" script to specify the DPDK
 location before building SPDK.
 
+Although we know that many developers still use Python 2 we are officially
+switching to Python3 with requirement that all new code must be valid also
+for Python 2 up to the EOL which is year 2020.
+
+Invoking interpreter explicitly is forbidden for executable scripts. There
+is no need to use syntax like "python ./scripts/rpc.py". All executable
+scripts must contain proper shebang pointing to the right interpreter.
+Scripts without shebang musn't be executable.
+
 ## v18.07:
 
 ### bdev

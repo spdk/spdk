@@ -94,7 +94,7 @@ function host1_cleanup_vhost()
 function host1_start_nvmf()
 {
 	nvmf_dir="$TEST_DIR/nvmf_tgt"
-	rpc_nvmf="python $SPDK_BUILD_DIR/scripts/rpc.py -s $nvmf_dir/nvmf_rpc.sock"
+	rpc_nvmf="$SPDK_BUILD_DIR/scripts/rpc.py -s $nvmf_dir/nvmf_rpc.sock"
 
 	notice "Starting nvmf_tgt instance on local server"
 	mkdir -p $nvmf_dir
@@ -115,7 +115,7 @@ function host1_start_nvmf()
 
 function host1_start_vhost()
 {
-	rpc_0="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
+	rpc_0="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 	notice "Starting vhost0 instance on local server"
 	trap 'host1_cleanup_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT

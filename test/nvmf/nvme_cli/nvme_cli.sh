@@ -15,7 +15,7 @@ spdk_nvme_cli="${DEPENDENCY_DIR}/nvme-cli"
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="python $rootdir/scripts/rpc.py"
+rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 

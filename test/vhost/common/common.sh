@@ -1052,7 +1052,7 @@ function run_fio()
 		return 0
 	fi
 
-	python $SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
+	$SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
 		$([[ ! -z "$fio_bin" ]] && echo "--fio-bin=$fio_bin") \
 		--out=$out $json ${fio_disks%,}
 }

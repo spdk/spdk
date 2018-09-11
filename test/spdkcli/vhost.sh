@@ -48,7 +48,7 @@ check_match
 timing_exit spdkcli_check_match
 
 timing_enter spdkcli_check_match_details
-python3 $SPDKCLI_BUILD_DIR/scripts/spdkcli.py bdevs/split_disk/Nvme0n1p0 show_details | jq -r -S '.' > $testdir/match_files/spdkcli_details_vhost.test
+$SPDKCLI_BUILD_DIR/scripts/spdkcli.py bdevs/split_disk/Nvme0n1p0 show_details | jq -r -S '.' > $testdir/match_files/spdkcli_details_vhost.test
 $SPDKCLI_BUILD_DIR/test/app/match/match -v $testdir/match_files/spdkcli_details_vhost.test.match
 rm -f $testdir/match_files/spdkcli_details_vhost.test
 timing_exit spdkcli_check_match_details
