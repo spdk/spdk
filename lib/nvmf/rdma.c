@@ -2248,10 +2248,9 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	SPDK_NOTICELOG("Async event: %s\n",
 		       ibv_event_type_str(event.event_type));
 
-	rqpair = event.element.qp->qp_context;
-
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
+		rqpair = event.element.qp->qp_context;
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
@@ -2259,6 +2258,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
+		rqpair = event.element.qp->qp_context;
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
@@ -2271,6 +2271,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		 * Note that we're not on the correct thread to access the qpair, but
 		 * the operations that the below calls make all happen to be thread
 		 * safe. */
+		rqpair = event.element.qp->qp_context;
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		state = spdk_nvmf_rdma_update_ibv_state(rqpair);
@@ -2284,6 +2285,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	case IBV_EVENT_COMM_EST:
 	case IBV_EVENT_PATH_MIG:
 	case IBV_EVENT_PATH_MIG_ERR:
+		rqpair = event.element.qp->qp_context;
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
