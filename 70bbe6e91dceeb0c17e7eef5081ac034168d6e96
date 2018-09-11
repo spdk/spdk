@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e07066fc_70a353d6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:50:33Z",
+      "side": 1,
+      "message": "Similar feedback on this commit message (see comments on previous patch).",
+      "revId": "70bbe6e91dceeb0c17e7eef5081ac034168d6e96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7301428f_2d6e6feb",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:50:33Z",
+      "side": 1,
+      "message": "Do you think we should just remove \"num\" from all of these member names?  Your comments clearly state this is the number of times each event occurred.\n\nI like smaller names when possible.  :-)\n\nSame would apply to target stats structure above.",
+      "revId": "70bbe6e91dceeb0c17e7eef5081ac034168d6e96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "285e2b0e_66718471",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1692,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:50:33Z",
+      "side": 1,
+      "message": "can we track subsystem_create_fail in the target-level stats structure?",
+      "revId": "70bbe6e91dceeb0c17e7eef5081ac034168d6e96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f2c2834_a759545d",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1757,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:50:33Z",
+      "side": 1,
+      "message": "can we remove \"_count\" from these?  it reduces the amount of data we have to transfer over RPC",
+      "revId": "70bbe6e91dceeb0c17e7eef5081ac034168d6e96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be9547fd_44dafac2",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1785,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:50:33Z",
+      "side": 1,
+      "message": "just \"nqn\" is sufficient",
+      "revId": "70bbe6e91dceeb0c17e7eef5081ac034168d6e96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "399c31e8_b8b7f452",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:50:33Z",
+      "side": 1,
+      "message": "Could you break out these changes into a separate patch?  Commit message can just say that this prepares for counting subsystem creation failures.",
+      "revId": "70bbe6e91dceeb0c17e7eef5081ac034168d6e96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "915a7c71_5bed259a",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:50:33Z",
+      "side": 1,
+      "message": "Then in this patch, you only need to add this line to count the failure.",
+      "revId": "70bbe6e91dceeb0c17e7eef5081ac034168d6e96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae376b86_d32676cd",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1014,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:50:33Z",
+      "side": 1,
+      "message": "same as above - let\u0027s break these changes into a separate patch (could be same patch as subsystem create changes)",
+      "revId": "70bbe6e91dceeb0c17e7eef5081ac034168d6e96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
