@@ -484,8 +484,12 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	uint64_t idx_256tb;
 	uint64_t idx_1gb;
 	uint64_t vfn_2mb;
+	uint64_t total_size = 0;
+	uint64_t cur_size;
+	uint64_t prev_translation;
 
 	if (size != NULL) {
+		total_size = *size;
 		*size = 0;
 	}
 
@@ -503,12 +507,39 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		return map->default_translation;
 	}
 
-	map_2mb = &map_1gb->map[idx_1gb];
+	cur_size = VALUE_2MB;
 	if (size != NULL) {
 		*size = VALUE_2MB;
 	}
 
-	return map_2mb->translation_2mb;
+	map_2mb = &map_1gb->map[idx_1gb];
+	if (size == NULL || map->ops.are_contiguous == NULL ||
+	    map_2mb->translation_2mb == map->default_translation) {
+		return map_2mb->translation_2mb;
+	}
+
+	prev_translation = map_2mb->translation_2mb;;
+	while (cur_size < total_size) {
+		vfn_2mb++;
+		idx_256tb = MAP_256TB_IDX(vfn_2mb);
+		idx_1gb = MAP_1GB_IDX(vfn_2mb);
+
+		map_1gb = map->map_256tb.map[idx_256tb];
+		if (spdk_unlikely(!map_1gb)) {
+			break;
+		}
+
+		map_2mb = &map_1gb->map[idx_1gb];
+		if (!map->ops.are_contiguous(prev_translation, map_2mb->translation_2mb)) {
+			break;
+		}
+
+		cur_size += VALUE_2MB;
+		prev_translation = map_2mb->translation_2mb;
+	}
+
+	*size = cur_size;
+	return prev_translation;
 }
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
