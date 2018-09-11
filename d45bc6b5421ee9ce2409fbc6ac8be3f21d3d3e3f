@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02e58512_7d764a81",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-11T01:56:19Z",
+      "side": 1,
+      "message": "checking if decremented count is 0 was removed. Is this intentional?",
+      "range": {
+        "startLine": 1005,
+        "startChar": 1,
+        "endLine": 1005,
+        "endChar": 32
+      },
+      "revId": "d45bc6b5421ee9ce2409fbc6ac8be3f21d3d3e3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
