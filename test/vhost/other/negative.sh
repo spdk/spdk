@@ -68,7 +68,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	spdk_vhost_run --json-path=$NEGATIVE_BASE_DIR
 	notice ""
 
-	rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+	rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 	# General commands
 	notice "Trying to remove nonexistent controller"

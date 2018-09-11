@@ -11,7 +11,7 @@ fi
 
 timing_enter ext4test
 
-rpc_py="python $rootdir/scripts/rpc.py"
+rpc_py="$rootdir/scripts/rpc.py"
 
 timing_enter start_iscsi_tgt
 

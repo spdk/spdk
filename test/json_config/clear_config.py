@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -59,7 +59,7 @@ def get_bdev_destroy_method(bdev):
     destroy_method = None
     if 'method' in bdev:
         construct_method = bdev['method']
-        if construct_method in destroy_method_map.keys():
+        if construct_method in list(destroy_method_map.keys()):
             destroy_method = destroy_method_map[construct_method]
 
     return destroy_method
@@ -168,7 +168,7 @@ def call_test_cmd(func):
         try:
             func(*args, **kwargs)
         except JSONRPCException as ex:
-            print(ex.message)
+            print((ex.message))
             exit(1)
     return rpc_test_cmd
 
@@ -196,7 +196,7 @@ if __name__ == "__main__":
         if config is None:
             return
         if args.verbose:
-            print "Calling clear_%s_subsystem" % args.subsystem
+            print("Calling clear_%s_subsystem" % args.subsystem)
         globals()["clear_%s_subsystem" % args.subsystem](args, config)
 
     p = subparsers.add_parser('clear_subsystem', help="""Clear configuration of SPDK subsystem using JSON RPC""")
@@ -208,6 +208,6 @@ if __name__ == "__main__":
     try:
         args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.verbose, args.timeout)
     except JSONRPCException as ex:
-        print(ex.message)
+        print((ex.message))
         exit(1)
     args.func(args)

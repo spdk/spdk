@@ -3,9 +3,9 @@ SPDK_BUILD_DIR=$JSON_DIR/../../
 source $JSON_DIR/../common/autotest_common.sh
 source $JSON_DIR/../nvmf/common.sh
 
-spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
+spdk_rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
 spdk_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/spdk.sock"
-initiator_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/virtio.sock"
+initiator_rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/virtio.sock"
 initiator_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/virtio.sock"
 base_json_config=$JSON_DIR/base_config.json
 last_json_config=$JSON_DIR/last_config.json
@@ -205,7 +205,7 @@ function clear_bdev_subsystem_config() {
 function test_global_params() {
 	target=$1
 	$rpc_py save_config > $full_config
-	python $JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $base_json_config
+	$JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $base_json_config
 	if [ $target == "spdk_tgt" ]; then
 		killprocess $spdk_tgt_pid
 		run_spdk_tgt
@@ -218,7 +218,7 @@ function test_global_params() {
 	fi
 	$rpc_py load_config < $full_config
 	$rpc_py save_config > $full_config
-	python $JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $last_json_config
+	$JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $last_json_config
 
 	json_diff $base_json_config $last_json_config
 	rm $base_json_config $last_json_config

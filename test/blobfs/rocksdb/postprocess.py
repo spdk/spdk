@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from collections import namedtuple
 from itertools import islice
 import operator
@@ -31,31 +31,31 @@ with open(sys.argv[1] + "/" + sys.argv[2] + ".perf.txt") as f:
 
 for thread in sorted(threads):
     thread_pct = 0
-    print
+    print("")
     print("Thread: {:s}".format(thread))
     print(" Percent      Module")
     print("============================")
-    for key, value in sorted(thread_module_samples.items(), key=operator.itemgetter(1), reverse=True):
+    for key, value in sorted(list(thread_module_samples.items()), key=operator.itemgetter(1), reverse=True):
         if key.thread == thread:
             print("{:8.4f}      {:20s}".format(float(value) * 100 / total_samples, key.module))
             thread_pct += float(value) * 100 / total_samples
     print("============================")
     print("{:8.4f}       Total".format(thread_pct))
 
-print
+print("")
 print(" Percent      Module               Function")
 print("=================================================================")
-for key, value in islice(sorted(function_module_samples.items(), key=operator.itemgetter(1), reverse=True), 100):
-    print("{:8.4f}      {:20s} {:s}".format(float(value) * 100 / total_samples, key.module, key.function))
+for key, value in islice(sorted(list(function_module_samples.items()), key=operator.itemgetter(1), reverse=True), 100):
+    print(("{:8.4f}      {:20s} {:s}".format(float(value) * 100 / total_samples, key.module, key.function)))
 
-print
-print
+print("")
+print("")
 print(" Percent      Module")
 print("=================================")
-for key, value in sorted(module_samples.items(), key=operator.itemgetter(1), reverse=True):
+for key, value in sorted(list(module_samples.items()), key=operator.itemgetter(1), reverse=True):
     print("{:8.4f}      {:s}".format(float(value) * 100 / total_samples, key))
 
-print
+print("")
 with open(sys.argv[1] + "/" + sys.argv[2] + "_db_bench.txt") as f:
     for line in f:
         if "maxresident" in line:
@@ -67,4 +67,4 @@ with open(sys.argv[1] + "/" + sys.argv[2] + "_db_bench.txt") as f:
             print("User:   {:8.2f} ({:5.2f}%)".format(user, user * 100 / (user + system)))
             print("System: {:8.2f} ({:5.2f}%)".format(system, system * 100 / (user + system)))
 
-print
+print("")
