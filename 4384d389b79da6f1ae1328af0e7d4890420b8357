@@ -804,6 +804,30 @@
     },
     {
       "key": {
+        "uuid": "766db912_9c7a86f4",
+        "filename": "lib/rpc_client/rpc_client.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-11T02:35:18Z",
+      "side": 1,
+      "message": "Got it. So it is reasonable to let rpc-client API return jsonrpc-conn.\nWill merge this file into jsonrpc-client.c",
+      "parentUuid": "e5914de6_91271a92",
+      "range": {
+        "startLine": 103,
+        "startChar": 8,
+        "endLine": 103,
+        "endChar": 39
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c964f447_3de570e4",
         "filename": "lib/rpc_client/rpc_client.c",
         "patchSetId": 11
@@ -1041,6 +1065,30 @@
       "side": 1,
       "message": "I think Pawel\u0027s concern is that once something goes into lib/, it is part of supported SPDK library API.  We will get questions on why all of them are not supported.  I\u0027m still not sure exactly what we are going to need in this library - for example, there is probably wrapper code around nvme_cmd RPC that will be needed for all of the different test/management apps that want to use this new capability.\n\nSo for now, let\u0027s keep this library, but move it under examples/rpc_client.\n\nPawel - are you OK with that?",
       "parentUuid": "2800fe07_166bfa4c",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 88
+      },
+      "revId": "4384d389b79da6f1ae1328af0e7d4890420b8357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcc78afa_fb4fca1a",
+        "filename": "lib/rpc_client/rpc_client_check_rpc_method.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-11T02:35:18Z",
+      "side": 1,
+      "message": "merged rpc_client.c into jsonrpc_client_tcp.c\nmoved rpc_client_check_rpc_method.c into test/rpc_client folder.\nSo, all issues about this lib can be closed.",
+      "parentUuid": "ed85b30e_3f78dab8",
       "range": {
         "startLine": 56,
         "startChar": 0,
