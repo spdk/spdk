@@ -72,8 +72,7 @@ class UIRoot(UINode):
             # For example logical volumes: listing in menu is "Logical_Volume"
             # (cannot have space), but the product name in SPDK is "Logical Volume"
             bdev_type = bdev_type.replace("_", " ")
-            for bdev in filter(lambda x: bdev_type in x["product_name"].lower(),
-                               self.current_bdevs):
+            for bdev in [x for x in self.current_bdevs if bdev_type in x["product_name"].lower()]:
                 test = Bdev(bdev)
                 yield test
 
@@ -223,8 +222,7 @@ class UIRoot(UINode):
     def get_vhost_ctrlrs(self, ctrlr_type):
         if self.is_init:
             self.list_vhost_ctrls()
-            for ctrlr in filter(lambda x: ctrlr_type in x["backend_specific"].keys(),
-                                self.current_vhost_ctrls):
+            for ctrlr in [x for x in self.current_vhost_ctrls if ctrlr_type in list(x["backend_specific"].keys())]:
                 yield VhostCtrlr(ctrlr)
 
     @verbose
@@ -259,7 +257,7 @@ class Bdev(object):
         # TODO: Document in docstring parameters which describe bdevs.
         # TODO: Possible improvement: JSON schema might be used here in future
         """
-        for i in bdev_info.keys():
+        for i in list(bdev_info.keys()):
             setattr(self, i, bdev_info[i])
 
 
@@ -271,7 +269,7 @@ class LvolStore(object):
         # TODO: Document in docstring parameters which describe bdevs.
         # TODO: Possible improvement: JSON schema might be used here in future
         """
-        for i in lvs_info.keys():
+        for i in list(lvs_info.keys()):
             setattr(self, i, lvs_info[i])
 
 
@@ -283,5 +281,5 @@ class VhostCtrlr(object):
         # TODO: Document in docstring parameters which describe bdevs.
         # TODO: Possible improvement: JSON schema might be used here in future
         """
-        for i in ctrlr_info.keys():
+        for i in list(ctrlr_info.keys()):
             setattr(self, i, ctrlr_info[i])

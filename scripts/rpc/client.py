@@ -4,7 +4,7 @@ import time
 
 
 def print_dict(d):
-    print(json.dumps(d, indent=2))
+    print((json.dumps(d, indent=2)))
 
 
 class JSONRPCException(Exception):
@@ -48,7 +48,7 @@ class JSONRPCClient(object):
 
         if verbose:
             print("request:")
-            print(json.dumps(req, indent=2))
+            print((json.dumps(req, indent=2)))
 
         self.sock.sendall(reqstr.encode("utf-8"))
         buf = ''
@@ -87,7 +87,7 @@ class JSONRPCClient(object):
 
         if verbose:
             print("response:")
-            print(json.dumps(response, indent=2))
+            print((json.dumps(response, indent=2)))
 
         if 'error' in response:
             msg = "\n".join(["Got JSON-RPC error response",
