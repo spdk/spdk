@@ -433,6 +433,10 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return rc;
 }
 
+const struct spdk_mem_map_ops vtophys_map_ops = {
+	.notify_cb = spdk_vtophys_notify
+};
+
 #if SPDK_VFIO_ENABLED
 
 static bool
@@ -608,7 +612,7 @@ spdk_vtophys_init(void)
 	spdk_vtophys_iommu_init();
 #endif
 
-	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, spdk_vtophys_notify, NULL);
+	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
 	if (g_vtophys_map == NULL) {
 		DEBUG_PRINT("vtophys map allocation failed\n");
 		return -1;
