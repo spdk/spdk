@@ -240,16 +240,16 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 
 	if (spdk_nvmf_tgt_find_subsystem(tgt, nqn)) {
 		SPDK_ERRLOG("Subsystem NQN '%s' already exists\n", nqn);
-		return NULL;
+		goto error;
 	}
 
 	if (!spdk_nvmf_valid_nqn(nqn)) {
-		return NULL;
+		goto error;
 	}
 
 	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY && num_ns != 0) {
 		SPDK_ERRLOG("Discovery subsystem cannot have namespaces.\n");
-		return NULL;
+		goto error;
 	}
 
 	/* Find a free subsystem id (sid) */
@@ -259,12 +259,12 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		}
 	}
 	if (sid >= tgt->opts.max_subsystems) {
-		return NULL;
+		goto error;
 	}
 
 	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
 	if (subsystem == NULL) {
-		return NULL;
+		goto error;
 	}
 
 	subsystem->thread = spdk_get_thread();
@@ -285,7 +285,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		if (subsystem->ns == NULL) {
 			SPDK_ERRLOG("Namespace memory allocation failed\n");
 			free(subsystem);
-			return NULL;
+			goto error;
 		}
 	}
 
@@ -293,6 +293,9 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	tgt->discovery_genctr++;
 
 	return subsystem;
+error:
+	tgt->num_ss_create_fail++;
+	return NULL;
 }
 
 static void
@@ -371,6 +374,7 @@ spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 		break;
 	case SPDK_NVMF_SUBSYSTEM_PAUSED:
 		expected_old_state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+		subsystem->stats.num_ss_paused++;
 		break;
 	case SPDK_NVMF_SUBSYSTEM_RESUMING:
 		expected_old_state = SPDK_NVMF_SUBSYSTEM_PAUSED;
@@ -388,6 +392,7 @@ spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 		if (actual_old_state == SPDK_NVMF_SUBSYSTEM_RESUMING &&
 		    state == SPDK_NVMF_SUBSYSTEM_ACTIVE) {
 			expected_old_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
+			subsystem->stats.num_ss_resumed++;
 		}
 		/* This is for the case when activating the subsystem fails. */
 		if (actual_old_state == SPDK_NVMF_SUBSYSTEM_ACTIVATING &&
@@ -608,11 +613,13 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	struct spdk_nvmf_host *host;
 
 	if (!spdk_nvmf_valid_nqn(hostnqn)) {
+		subsystem->stats.num_add_host_fail++;
 		return -EINVAL;
 	}
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		subsystem->stats.num_add_host_fail++;
 		return -EAGAIN;
 	}
 
@@ -623,11 +630,13 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 
 	host = calloc(1, sizeof(*host));
 	if (!host) {
+		subsystem->stats.num_add_host_fail++;
 		return -ENOMEM;
 	}
 	host->nqn = strdup(hostnqn);
 	if (!host->nqn) {
 		free(host);
+		subsystem->stats.num_add_host_fail++;
 		return -ENOMEM;
 	}
 
@@ -644,11 +653,13 @@ spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const cha
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		subsystem->stats.num_rem_host_fail++;
 		return -EAGAIN;
 	}
 
 	host = _spdk_nvmf_subsystem_find_host(subsystem, hostnqn);
 	if (host == NULL) {
+		subsystem->stats.num_rem_host_fail++;
 		return -ENOENT;
 	}
 
@@ -661,6 +672,7 @@ spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bo
 {
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		subsystem->stats.num_set_allow_any_host_fail++;
 		return -EAGAIN;
 	}
 
@@ -733,6 +745,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		subsystem->stats.num_add_listener_fail++;
 		return -EAGAIN;
 	}
 
@@ -744,11 +757,13 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, trid->trtype);
 	if (transport == NULL) {
 		SPDK_ERRLOG("Unknown transport type %d\n", trid->trtype);
+		subsystem->stats.num_add_listener_fail++;
 		return -EINVAL;
 	}
 
 	listener = calloc(1, sizeof(*listener));
 	if (!listener) {
+		subsystem->stats.num_add_listener_fail++;
 		return -ENOMEM;
 	}
 
@@ -768,11 +783,13 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		subsystem->stats.num_rem_listener_fail++;
 		return -EAGAIN;
 	}
 
 	listener = _spdk_nvmf_subsystem_find_listener(subsystem, trid);
 	if (listener == NULL) {
+		subsystem->stats.num_rem_listener_fail++;
 		return -ENOENT;
 	}
 
@@ -921,12 +938,14 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 
 	rc = _spdk_nvmf_subsystem_remove_ns(subsystem, nsid);
 	if (rc < 0) {
+		subsystem->stats.num_rem_ns_fail++;
 		return rc;
 	}
 
 	ctx = calloc(1, sizeof(*ctx));
 
 	if (ctx == NULL) {
+		subsystem->stats.num_rem_ns_fail++;
 		return -ENOMEM;
 	}
 
@@ -992,7 +1011,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
-		return 0;
+		goto error;
 	}
 
 	spdk_nvmf_ns_opts_get_defaults(&opts, sizeof(opts));
@@ -1006,7 +1025,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	if (opts.nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		SPDK_ERRLOG("Invalid NSID %" PRIu32 "\n", opts.nsid);
-		return 0;
+		goto error;
 	}
 
 	if (opts.nsid == 0) {
@@ -1025,7 +1044,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	if (_spdk_nvmf_subsystem_get_ns(subsystem, opts.nsid)) {
 		SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", opts.nsid);
-		return 0;
+		goto error;
 	}
 
 	if (opts.nsid > subsystem->max_nsid) {
@@ -1034,19 +1053,19 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		/* If MaxNamespaces was specified, we can't extend max_nsid beyond it. */
 		if (subsystem->max_allowed_nsid > 0 && opts.nsid > subsystem->max_allowed_nsid) {
 			SPDK_ERRLOG("Can't extend NSID range above MaxNamespaces\n");
-			return 0;
+			goto error;
 		}
 
 		/* If a controller is connected, we can't change NN. */
 		if (!TAILQ_EMPTY(&subsystem->ctrlrs)) {
 			SPDK_ERRLOG("Can't extend NSID range while controllers are connected\n");
-			return 0;
+			goto error;
 		}
 
 		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns *) * opts.nsid);
 		if (new_ns_array == NULL) {
 			SPDK_ERRLOG("Memory allocation error while resizing namespace array.\n");
-			return 0;
+			goto error;
 		}
 
 		memset(new_ns_array + subsystem->max_nsid, 0,
@@ -1058,7 +1077,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	ns = calloc(1, sizeof(*ns));
 	if (ns == NULL) {
 		SPDK_ERRLOG("Namespace allocation failed\n");
-		return 0;
+		goto error;
 	}
 
 	ns->bdev = bdev;
@@ -1069,13 +1088,13 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
 		free(ns);
-		return 0;
+		goto error;
 	}
 	rc = spdk_bdev_module_claim_bdev(bdev, ns->desc, &ns_bdev_module);
 	if (rc != 0) {
 		spdk_bdev_close(ns->desc);
 		free(ns);
-		return 0;
+		goto error;
 	}
 	subsystem->ns[opts.nsid - 1] = ns;
 
@@ -1087,6 +1106,10 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	spdk_nvmf_subsystem_ns_changed(subsystem, opts.nsid);
 
 	return opts.nsid;
+
+error:
+	subsystem->stats.num_add_ns_fail++;
+	return 0;
 }
 
 static uint32_t
@@ -1225,6 +1248,64 @@ spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 	return 0xFFFF;
 }
 
+static void
+spdk_nvmf_subsystem_connect_stats(struct spdk_nvmf_subsystem *subsystem,
+				  struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct spdk_nvmf_ctrlr *tmp_ctrlr = NULL;
+
+	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		return;
+	}
+
+	/*
+	 * Incrementing connects_count for each successful connect.
+	 * Incrementing active_host count for each unique host id.
+	 * Avoiding active_host count increment for connect over connects (with same host id).
+	 */
+	subsystem->stats.num_connects++;
+	for (tmp_ctrlr = spdk_nvmf_subsystem_get_first_ctrlr(subsystem); tmp_ctrlr != NULL;
+	     tmp_ctrlr = spdk_nvmf_subsystem_get_next_ctrlr(tmp_ctrlr)) {
+		if (memcmp(ctrlr->hostid, tmp_ctrlr->hostid, SPDK_COUNTOF(ctrlr->hostid)) == 0) {
+			if (ctrlr == tmp_ctrlr) {
+				subsystem->stats.num_active_hosts++;
+			} else {
+				break;
+			}
+		}
+	}
+}
+
+static void
+spdk_nvmf_subsystem_disconnect_stats(struct spdk_nvmf_subsystem *subsystem,
+				     struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct spdk_nvmf_ctrlr *tmp_ctrlr;
+	bool flag = false;
+
+	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		return;
+	}
+
+	/*
+	 * Incrementing disconnects_count for each successful disconnect.
+	 * Decrementing active_host count for each unique host id.
+	 * Active_host count will be decremented only for the last disconnect from the host (with unique hostid)
+	 */
+	subsystem->stats.num_disconnects++;
+	for (tmp_ctrlr = spdk_nvmf_subsystem_get_first_ctrlr(subsystem); tmp_ctrlr != NULL;
+	     tmp_ctrlr = spdk_nvmf_subsystem_get_next_ctrlr(tmp_ctrlr)) {
+		if (memcmp(ctrlr->hostid, tmp_ctrlr->hostid, SPDK_COUNTOF(ctrlr->hostid)) == 0) {
+			flag = true;
+			break;
+		}
+	}
+
+	if (!flag) {
+		subsystem->stats.num_active_hosts--;
+	}
+}
+
 int
 spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr)
 {
@@ -1236,6 +1317,7 @@ spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk
 	}
 
 	TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
+	spdk_nvmf_subsystem_connect_stats(subsystem, ctrlr);
 
 	return 0;
 }
@@ -1246,6 +1328,7 @@ spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 {
 	assert(subsystem == ctrlr->subsys);
 	TAILQ_REMOVE(&subsystem->ctrlrs, ctrlr, link);
+	spdk_nvmf_subsystem_disconnect_stats(subsystem, ctrlr);
 }
 
 struct spdk_nvmf_ctrlr *
@@ -1266,4 +1349,35 @@ uint32_t
 spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->max_allowed_nsid;
+}
+
+struct spdk_nvmf_ctrlr *
+spdk_nvmf_subsystem_get_first_ctrlr(struct spdk_nvmf_subsystem *subsystem)
+{
+	return TAILQ_FIRST(&subsystem->ctrlrs);
+}
+
+struct spdk_nvmf_ctrlr *
+spdk_nvmf_subsystem_get_next_ctrlr(struct spdk_nvmf_ctrlr *prev_ctrlr)
+{
+	return TAILQ_NEXT(prev_ctrlr, link);
+}
+
+void
+spdk_nvmf_subsystem_update_unauth_host_conn_count(struct spdk_nvmf_subsystem *subsystem)
+{
+	subsystem->stats.num_unauth_connects++;
+}
+
+uint32_t
+spdk_nvmf_subsystem_create_fail_count(struct spdk_nvmf_tgt *tgt)
+{
+	return tgt->num_ss_create_fail;
+}
+
+void
+spdk_nvmf_subsystem_get_stats(struct spdk_nvmf_subsystem *subsystem,
+			      struct spdk_nvmf_subsystem_stats *stats)
+{
+	memcpy(stats, &subsystem->stats, sizeof(struct spdk_nvmf_subsystem_stats));
 }

@@ -88,6 +88,23 @@ struct spdk_nvmf_cmd_stats {
 	uint64_t num_io_cmds;		/* number of io commands received */
 };
 
+/** Subsystem level statistics */
+struct spdk_nvmf_subsystem_stats {
+	uint32_t num_ss_paused;                  /* number of times subsystem paused           */
+	uint32_t num_ss_resumed;                 /* number of times subsystem resumed          */
+	uint32_t num_connects;                   /* number of connects to subsystem            */
+	uint32_t num_disconnects;                /* number of disconnects to the subsystem     */
+	uint16_t num_active_hosts;               /* number of hosts actively connected to the subsystem   */
+	uint16_t num_add_ns_fail;                /* number of times add ns failed              */
+	uint16_t num_rem_ns_fail;                /* number of times remove ns failed           */
+	uint16_t num_add_host_fail;              /* number of times add host failed            */
+	uint16_t num_rem_host_fail;              /* number of times remove host failed         */
+	uint16_t num_unauth_connects;            /* number of unauth connects to the subsystem */
+	uint16_t num_set_allow_any_host_fail;    /* number of times set_allow_any_host failed  */
+	uint16_t num_add_listener_fail;          /* number of times add listener failed    */
+	uint16_t num_rem_listener_fail;          /* number of times remove listener failed */
+};
+
 /**
  * Initialize the default value of opts.
  *
@@ -701,6 +718,42 @@ void spdk_nvmf_tgt_get_cmd_stats(struct spdk_nvmf_cmd_stats *nvmf_stats);
  * \return poll group of the respective core.
  */
 struct spdk_nvmf_poll_group *nvmf_tgt_get_poll_group(uint32_t core);
+
+/**
+ * Get the count of the failure of creating subsystem.
+ *
+ * \param tgt Nvmf tgt.
+ *
+ * \return number of times subsystem create failed.
+ */
+uint32_t spdk_nvmf_subsystem_create_fail_count(struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Get the statistics of the subsystem.
+ *
+ * \param subsystem subsystem to query.
+ * \param stats structure to collect all the subsystem level statistics.
+ */
+void spdk_nvmf_subsystem_get_stats(struct spdk_nvmf_subsystem *subsystem,
+				   struct spdk_nvmf_subsystem_stats *stats);
+
+/**
+ * Get the first allowed ctrlr in a subsystem.
+ *
+ * \param subsystem subsystem to query.
+ *
+ * \return first allowed ctrlr in this subsystem, or NULL if none allowed.
+ */
+struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_first_ctrlr(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Get the next allowed ctrlr in a subsystem.
+ *
+ * \param prev_ctrlr Previous ctrlr returned from this function.
+ *
+ * \return  next allowed ctrlr in this subsystem, or NULL if prev_ctrlr was the last host.
+ */
+struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_next_ctrlr(struct spdk_nvmf_ctrlr *prev_ctrlr);
 
 #ifdef __cplusplus
 }

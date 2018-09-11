@@ -1264,6 +1264,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=get_nvmf_tgt_stats)
 
     @call_cmd
+    def get_nvmf_subsystem_stats(args):
+        print_dict(rpc.nvmf.get_nvmf_subsystem_stats(args.client, args))
+
+    p = subparsers.add_parser('get_nvmf_subsystem_stats',
+                              help='Display nvmf subsystem stats')
+    p.add_argument('-n', '--ss_nqn', help='subsystem nqn', required=False)
+    p.set_defaults(func=get_nvmf_subsystem_stats)
+
+    @call_cmd
     def get_nvmf_subsystems(args):
         print_dict(rpc.nvmf.get_nvmf_subsystems(args.client))
 

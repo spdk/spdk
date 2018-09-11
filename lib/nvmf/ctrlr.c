@@ -300,6 +300,14 @@ _spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 	spdk_thread_send_msg(admin_qpair->group->thread, spdk_nvmf_ctrlr_add_io_qpair, req);
 }
 
+static void
+spdk_nvmf_ctrlr_update_unauth_host_conn_count(void *ctx)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctx;
+
+	spdk_nvmf_subsystem_update_unauth_host_conn_count(subsystem);
+}
+
 static int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
@@ -371,6 +379,8 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", subnqn, hostnqn);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
+		spdk_thread_send_msg(subsystem->thread,
+				     spdk_nvmf_ctrlr_update_unauth_host_conn_count, subsystem);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
