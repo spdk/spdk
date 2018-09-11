@@ -979,11 +979,14 @@ typedef int (*spdk_mem_map_notify_cb)(void *cb_ctx, struct spdk_mem_map *map,
 				      enum spdk_mem_map_notify_action action,
 				      void *vaddr, size_t size);
 
+typedef int (*spdk_mem_map_contiguous_translations)(uint64_t addr_1, uint64_t addr_2);
+
 /**
  * A function table to be implemented by each memory map.
  */
 struct spdk_mem_map_ops {
 	spdk_mem_map_notify_cb notify_cb;
+	spdk_mem_map_contiguous_translations are_contiguous;
 };
 
 /**

@@ -637,7 +637,8 @@ nvme_rdma_register_mem(struct nvme_rdma_qpair *rqpair)
 	struct ibv_pd *pd = rqpair->cm_id->qp->pd;
 	struct spdk_nvme_rdma_mr_map *mr_map;
 	const struct spdk_mem_map_ops nvme_rdma_map_ops = {
-		.notify_cb = nvme_rdma_mr_map_notify
+		.notify_cb = nvme_rdma_mr_map_notify,
+		.are_contiguous = NULL
 	};
 
 	pthread_mutex_lock(&g_rdma_mr_maps_mutex);

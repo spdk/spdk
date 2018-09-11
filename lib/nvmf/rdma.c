@@ -1635,7 +1635,8 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	uint32_t			sge_count;
 
 	const struct spdk_mem_map_ops nvmf_rdma_map_ops = {
-		.notify_cb = spdk_nvmf_rdma_mem_notify
+		.notify_cb = spdk_nvmf_rdma_mem_notify,
+		.are_contiguous = NULL
 	};
 
 	rtransport = calloc(1, sizeof(*rtransport));
