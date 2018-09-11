@@ -989,13 +989,13 @@ struct spdk_mem_map_ops {
  * Allocate a virtual memory address translation map.
  *
  * \param default_translation Default translation for the map.
- * \param notify_cb Callback function to notify the mapping.
+ * \param ops Table of callback functions for map operations.
  * \param cb_ctx Argument passed to the callback function.
  *
  * \return a pointer to the allocated virtual memory address translation map.
  */
 struct spdk_mem_map *spdk_mem_map_alloc(uint64_t default_translation,
-					spdk_mem_map_notify_cb notify_cb, void *cb_ctx);
+					const struct spdk_mem_map_ops *ops, void *cb_ctx);
 
 /**
  * Free a memory map previously allocated by spdk_mem_map_alloc().

@@ -34,6 +34,10 @@ The size parameter of spdk_mem_map_translate is now a pointer. This allows the
 function to report back the actual size of the translation relative to the original
 request made by the user.
 
+A new structure spdk_mem_map_ops has been introduced to hold memory map related
+callbacks. This structure is now passed as the second argument of spdk_mem_map_alloc
+in lieu of the notify callback.
+
 ### iscsi
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
