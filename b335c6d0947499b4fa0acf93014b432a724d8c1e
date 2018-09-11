@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "1b509a76_c325c97e",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-11T17:31:29Z",
+      "side": 1,
+      "message": "Looking at next patches that add other kinds of stats - maybe struct spdk_nvmf_tgt_stats would be a good name for the struct.",
+      "parentUuid": "936a2154_362690e2",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a92bc129_d3c82f2a",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
