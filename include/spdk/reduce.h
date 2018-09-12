@@ -38,4 +38,50 @@
 #ifndef SPDK_REDUCE_H_
 #define SPDK_REDUCE_H_
 
+#include "spdk/uuid.h"
+
+/**
+ * Describes the parameters of an spdk_reduce_vol.
+ */
+struct spdk_reduce_vol_params {
+	/**
+	 * Size in bytes of the IO unit for the backing device.  This
+	 *  is the unit in which space is allocated from the backing
+	 *  device, and the unit in which data is read from of written
+	 *  to the backing device.  Must be greater than 0.
+	 */
+	uint32_t		backing_io_unit_size;
+
+	/**
+	 * Size in bytes of a chunk on the compressed volume.  This
+	 *  is the unit in which data is compressed.  Must be an even
+	 *  multiple of backing_io_unit_size.  Must be greater than 0.
+	 */
+	uint32_t		chunk_size;
+
+	/**
+	 * Total size in bytes of the compressed volume.  Must be
+	 *  an even multiple of chunk_size.  Must be greater than 0.
+	 */
+	uint64_t		vol_size;
+};
+
+/**
+ * Get the required size for the pm file for a compressed volume.
+ *
+ * \param params Parameters for the compressed volume
+ * \return Size of the required pm file (in bytes) needed to create the
+ *         compressed volume.  Returns -1 if params is invalid.
+ */
+int64_t spdk_reduce_get_pm_file_size(struct spdk_reduce_vol_params *params);
+
+/**
+ * Get the required size for the backing device for a compressed volume.
+ *
+ * \param params Parameters for the compressed volume
+ * \return Size of the required backing device (in bytes) needed to create
+ *         the compressed volume.  Returns -1 if params is invalid.
+ */
+int64_t spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params);
+
 #endif /* SPDK_REDUCE_H_ */
