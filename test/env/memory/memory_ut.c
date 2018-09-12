@@ -123,6 +123,30 @@ test_mem_map_notify_fail(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 static int
+test_mem_map_notify_checklen(void *cb_ctx, struct spdk_mem_map *map,
+			     enum spdk_mem_map_notify_action action, void *vaddr, size_t size)
+{
+	size_t *len_arr = cb_ctx;
+
+	/*
+	 * This is a test requirement - the len array we use to verify
+	 * pages are valid is only so large.
+	 */
+	SPDK_CU_ASSERT_FATAL((uintptr_t)vaddr < (VALUE_2MB * PAGE_ARRAY_SIZE));
+
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		assert(size == len_arr[(uintptr_t)vaddr / VALUE_2MB]);
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		CU_ASSERT(size == len_arr[(uintptr_t)vaddr / VALUE_2MB]);
+		break;
+	}
+
+	return 0;
+}
+
+static int
 test_check_regions_contiguous(uint64_t addr1, uint64_t addr2)
 {
 	return addr1 == addr2;
@@ -140,6 +164,11 @@ const struct spdk_mem_map_ops test_mem_map_ops_no_contig = {
 
 struct spdk_mem_map_ops test_map_ops_notify_fail = {
 	.notify_cb = test_mem_map_notify_fail,
+	.are_contiguous = NULL
+};
+
+struct spdk_mem_map_ops test_map_ops_notify_checklen = {
+	.notify_cb = test_mem_map_notify_checklen,
 	.are_contiguous = NULL
 };
 
@@ -365,6 +394,38 @@ test_mem_map_registration(void)
 	CU_ASSERT(map == NULL);
 }
 
+static void
+test_mem_map_registration_adjacent(void)
+{
+	struct spdk_mem_map *map;
+	uint64_t default_translation = 0xDEADBEEF0BADF00D;
+	uintptr_t vaddr;
+	unsigned i;
+	size_t notify_len[PAGE_ARRAY_SIZE] = {0};
+	size_t chunk_len[] = { 2, 1, 3, 2, 1, 1 };
+
+	vaddr = 0;
+	for (i = 0; i < SPDK_COUNTOF(chunk_len); i++) {
+		notify_len[vaddr / VALUE_2MB] = chunk_len[i] * VALUE_2MB;
+		spdk_mem_register((void *)vaddr, notify_len[vaddr / VALUE_2MB]);
+		vaddr += notify_len[vaddr / VALUE_2MB];
+	}
+
+	/* Verify the memory is translated in the same chunks it was registered */
+	map = spdk_mem_map_alloc(default_translation,
+				 &test_map_ops_notify_checklen, notify_len);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	spdk_mem_map_free(&map);
+	CU_ASSERT(map == NULL);
+
+	vaddr = 0;
+	for (i = 0; i < SPDK_COUNTOF(chunk_len); i++) {
+		notify_len[vaddr / VALUE_2MB] = chunk_len[i] * VALUE_2MB;
+		spdk_mem_unregister((void *)vaddr, notify_len[vaddr / VALUE_2MB]);
+		vaddr += notify_len[vaddr / VALUE_2MB];
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -396,7 +457,8 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "alloc and free memory map", test_mem_map_alloc_free) == NULL ||
 		CU_add_test(suite, "mem map translation", test_mem_map_translation) == NULL ||
-		CU_add_test(suite, "mem map registration", test_mem_map_registration) == NULL
+		CU_add_test(suite, "mem map registration", test_mem_map_registration) == NULL ||
+		CU_add_test(suite, "mem map adjacent registrations", test_mem_map_registration_adjacent) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
