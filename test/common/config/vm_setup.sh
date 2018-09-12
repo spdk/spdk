@@ -120,7 +120,6 @@ if $INSTALL; then
     sudo dnf install -y iscsi-initiator-utils
     sudo dnf install -y isns-utils-devel
     sudo dnf install -y pmempool
-    sudo dnf install -y perl-open
     sudo dnf install -y glib2-devel
     sudo dnf install -y pixman-devel
     sudo dnf install -y astyle-devel
