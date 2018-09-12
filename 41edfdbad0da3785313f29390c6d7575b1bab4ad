@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29fbcd2c_717814cb",
+        "filename": "test/config_converter/test_converter.sh",
+        "patchSetId": 65
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-12T17:22:48Z",
+      "side": 1,
+      "message": "I\u0027m concerned that over time, we\u0027ll continue to add things to the json configuration dump that won\u0027t be required (i.e. default options and such), which will require more -I flags to the diff or other special handling.\n\nInstead, what do you think about writing the tests where you hand craft an .ini file and an expected output .json file, then you run the config converter and compare the two? That way you never need to run the targets at all and the test will remain valid forever. You can probably build just a single .ini file that contains every option that the script knows how to convert and the test would run nearly instantly too.",
+      "revId": "41edfdbad0da3785313f29390c6d7575b1bab4ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
