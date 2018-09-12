@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e15d663e_2e77793f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-12T12:36:43Z",
+      "side": 1,
+      "message": "Try to use shorter lines for better readability (I have to scroll sideways in gerrithub GUI to read the message)",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 39
+      },
+      "revId": "4b8633c155c44b282a0f4c64d988cac8ea055461",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d69f554b_ad7a900c",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-12T12:36:43Z",
+      "side": 1,
+      "message": "Non-consistent indentation. Most of the lines across file use spaces for indentation, let\u0027s keep it that way.",
+      "range": {
+        "startLine": 198,
+        "startChar": 0,
+        "endLine": 198,
+        "endChar": 1
+      },
+      "revId": "4b8633c155c44b282a0f4c64d988cac8ea055461",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
