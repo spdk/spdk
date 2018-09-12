@@ -951,7 +951,7 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 
 	bdev->name = lvol->unique_id;
 	bdev->product_name = "Logical Volume";
-	bdev->blocklen = spdk_bs_get_page_size(lvol->lvol_store->blobstore);
+	bdev->blocklen = spdk_bs_get_io_unit_size(lvol->lvol_store->blobstore);
 	total_size = spdk_blob_get_num_clusters(lvol->blob) *
 		     spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
 	assert((total_size % bdev->blocklen) == 0);
