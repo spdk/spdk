@@ -3398,7 +3398,13 @@ spdk_add_transfer_task(struct spdk_iscsi_conn *conn,
 	task->next_expected_r2t_offset = data_len;
 	task->current_r2t_length = 0;
 	task->R2TSN = 0;
-	task->ttt = ++conn->ttt;
+	/* According to RFC3720 10.8.5, 0xffffffff is
+	 * reserved for TTT in R2T.
+	 */
+	if (++conn->ttt == 0xffffffffu) {
+		conn->ttt = 0;
+	}
+	task->ttt = conn->ttt;
 
 	while (data_len != transfer_len) {
 		len = DMIN32(max_burst_len, (transfer_len - data_len));
