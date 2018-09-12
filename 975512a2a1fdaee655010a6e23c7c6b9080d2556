@@ -16,6 +16,24 @@
       "revId": "975512a2a1fdaee655010a6e23c7c6b9080d2556",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb349d17_22de023b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1233,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-12T05:33:14Z",
+      "side": 1,
+      "message": "Will you check if the following makes sense?\n\nAssumption:\n- I/O will be split into child 1, 2, 3, and 4.\n- Each child use one iov.\n- Number of child iovs are 4.\n\nExpectation:\nThe line \"parent_io-\u003einternal.status !\u003d SPDK_BDEV_IO_STATUS_SUCCESS\" will be necessary for the failure case 2.\n\nSuccess case:\n(1)Parent submits child 1 and 2 by batch fasion (child 3 and 4 are deferred due to the capacity of child iov).\n(2)child 1 returns success\n(3)child 2 returns success -\u003e parent submits child 3 and 4 by batch fasion.\n(4)child 3 returns success\n(5)child 4 returns success -\u003e split_remaining_num_blocks becomes 0 and parent returns success.\n\nFailure case 1:\n(1)Parent submits child 1 and 2 by batch fasion (child 3 and 4 are deferred due to the capacity of child iov).\n(2)child 1 returns success\n(3)child 2 returns failure -\u003e parent must return failure now because no child is outstanding.\n\nFailure case 2:\n(1)Parent submits child 1 and 2 by batch fasion (child 3 and 4 are deferred due to the capacity of child iov).\n(2)child 1 returns failure -\u003e parent must not return now because child 2 is outstanding.\n(3)child 2 returns success -\u003e parent must return failure now because no child is outstanding.",
+      "parentUuid": "05c35f04_50ac945c",
+      "revId": "975512a2a1fdaee655010a6e23c7c6b9080d2556",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
