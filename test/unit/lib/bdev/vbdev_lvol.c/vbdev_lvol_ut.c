@@ -279,6 +279,12 @@ spdk_bs_get_page_size(struct spdk_blob_store *bs)
 	return SPDK_BS_PAGE_SIZE;
 }
 
+uint64_t
+spdk_bs_get_io_unit_size(struct spdk_blob_store *bs)
+{
+	return SPDK_BS_PAGE_SIZE;
+}
+
 static void
 bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 {
