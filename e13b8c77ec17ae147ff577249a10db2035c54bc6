@@ -22,6 +22,30 @@
       "revId": "e13b8c77ec17ae147ff577249a10db2035c54bc6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a85492c_68525172",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1157,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-12T10:44:49Z",
+      "side": 1,
+      "message": "But splitting io in a strip may have any concern. Any feedback is very welcome",
+      "parentUuid": "e2bdc4a4_57c06849",
+      "range": {
+        "startLine": 1157,
+        "startChar": 0,
+        "endLine": 1157,
+        "endChar": 5
+      },
+      "revId": "e13b8c77ec17ae147ff577249a10db2035c54bc6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
