@@ -1,0 +1,153 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56ffb820_ab80822c",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 893,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-12T04:50:15Z",
+      "side": 1,
+      "message": "Still need the original trace output. The ID can not tell which connection it is from.",
+      "range": {
+        "startLine": 893,
+        "startChar": 42,
+        "endLine": 893,
+        "endChar": 49
+      },
+      "revId": "e400216d965e708de00af8fc6510f3000ad2124b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df9cccb6_1ffd8320",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-12T04:50:15Z",
+      "side": 1,
+      "message": "remove the space here.",
+      "range": {
+        "startLine": 928,
+        "startChar": 5,
+        "endLine": 928,
+        "endChar": 8
+      },
+      "revId": "e400216d965e708de00af8fc6510f3000ad2124b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "748d3430_725b7c06",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 929,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-12T04:50:15Z",
+      "side": 1,
+      "message": "add a tab. Also, please run the \"./scritps/check_format.sh\" before posting the patch. Thanks.",
+      "range": {
+        "startLine": 929,
+        "startChar": 0,
+        "endLine": 929,
+        "endChar": 1
+      },
+      "revId": "e400216d965e708de00af8fc6510f3000ad2124b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a52a1f95_118bb033",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-12T04:50:15Z",
+      "side": 1,
+      "message": "Why we need to comment these out?",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 83
+      },
+      "revId": "e400216d965e708de00af8fc6510f3000ad2124b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76b910f4_78a23482",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-12T04:50:15Z",
+      "side": 1,
+      "message": "Better not to change the original setting of the TPOINT ID. For the new TPOINT IDs, you can add after TRACE_ISCSI_CONN_IDLE. There are 64 IDs for iSCSI.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 27
+      },
+      "revId": "e400216d965e708de00af8fc6510f3000ad2124b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fb55485_b01ec288",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-12T04:50:15Z",
+      "side": 1,
+      "message": "no new line here",
+      "revId": "e400216d965e708de00af8fc6510f3000ad2124b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36cae7b8_edbe47f5",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-12T04:50:15Z",
+      "side": 1,
+      "message": "same. remove this.",
+      "revId": "e400216d965e708de00af8fc6510f3000ad2124b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
