@@ -110,7 +110,7 @@ LDFLAGS += -Wl,-z,relro,-z,now
 LDFLAGS += -Wl,-z,noexecstack
 
 ifeq ($(OS),FreeBSD)
-LIBS += -L/usr/local/lib
+SYS_LIBS += -L/usr/local/lib
 COMMON_CFLAGS += -I/usr/local/include
 endif
 
