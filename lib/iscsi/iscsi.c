@@ -3923,6 +3923,9 @@ spdk_remove_acked_pdu(struct spdk_iscsi_conn *conn,
 	}
 }
 
+/* Checking the LUN field  was removed because a major SCSI compliance test that
+ *  expects LUN field in SCSI Data-Out PDU is reserved.
+ */
 static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_pdu *pdu)
 {
@@ -3935,8 +3938,6 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	uint32_t DataSN;
 	uint32_t buffer_offset;
 	uint32_t len;
-	uint64_t lun;
-	int lun_i;
 	int F_bit;
 	int rc;
 	int reject_reason = ISCSI_REASON_INVALID_PDU_FIELD;
@@ -3952,15 +3953,14 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	task_tag = from_be32(&reqh->itt);
 	DataSN = from_be32(&reqh->data_sn);
 	buffer_offset = from_be32(&reqh->buffer_offset);
-	lun = from_be64(&reqh->lun);
-	lun_i = spdk_islun2lun(lun);
-	lun_dev = spdk_scsi_dev_get_lun(conn->dev, lun_i);
 
 	task = spdk_get_transfer_task(conn, transfer_tag);
 	if (task == NULL) {
 		SPDK_ERRLOG("Not found task for transfer_tag=%x\n", transfer_tag);
 		goto reject_return;
 	}
+
+	lun_dev = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
 
 	if (pdu->data_segment_len > task->desired_data_transfer_length) {
 		SPDK_ERRLOG("the dataout pdu data length is larger than the value sent by R2T PDU\n");
@@ -4033,7 +4033,8 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	}
 
 	if (lun_dev == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "LUN %d is removed, complete the task immediately\n", lun_i);
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "LUN %d is removed, complete the task immediately\n",
+			      task->lun_id);
 		subtask->scsi.transfer_len = subtask->scsi.length;
 		spdk_scsi_task_process_null_lun(&subtask->scsi);
 		spdk_iscsi_task_cpl(&subtask->scsi);
