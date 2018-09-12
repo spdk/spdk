@@ -70,6 +70,40 @@
       "revId": "8f971a0b12a52d298356b5669cf67225b7e208f4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33529c80_b9728e2c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-12T17:44:06Z",
+      "side": 1,
+      "message": "This is tricky, but I think it\u0027s always safest to set the state before calling the command submission function. Basically, move line 858 above line 850.\n\nThe reason I suggest this is to handle the case where nvme_ctrlr_cmd_identify, for some reason, is able to complete immediately (successfully) and call the callback. This particular command won\u0027t do that, but some could. If it does that inline here, the state will get set to NVME_CTRLR_STATE_SET_NUM_QPAIRS in the callback, but then overwritten to NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY here and the state machine will hang.",
+      "revId": "8f971a0b12a52d298356b5669cf67225b7e208f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3b2b80c_cb9a5be6",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-12T17:44:06Z",
+      "side": 1,
+      "message": "I don\u0027t think you need these unit test changes - I think the reason you had to put this in was that in the tests the identify command completes immediately and you ran into the problem I outlined in my other comment.",
+      "revId": "8f971a0b12a52d298356b5669cf67225b7e208f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
