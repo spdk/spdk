@@ -36,4 +36,116 @@
 #include "spdk/reduce.h"
 #include "spdk_internal/log.h"
 
+/* Structure written to offset 0 of both the pm file and the backing device. */
+struct spdk_reduce_vol_superblock {
+	struct spdk_reduce_vol_params	params;
+	uint8_t				reserved[4080];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_superblock) == 4096, "size incorrect");
+
+struct spdk_reduce_vol {
+};
+
+/*
+ * Allocate extra metadata chunks and corresponding backing io units to account for
+ *  outstanding I/O in worst case scenario where logical map is completely allocated
+ *  and no data can be compressed.  We need extra chunks in this case to handle
+ *  in-flight writes since reduce never writes data in place.
+ */
+#define REDUCE_EXTRA_CHUNKS 128
+
+static inline uint64_t
+divide_round_up(uint64_t num, uint64_t divisor)
+{
+	return (num + divisor - 1) / divisor;
+}
+
+static uint64_t
+_reduce_pm_logical_map_size(uint64_t vol_size, uint64_t chunk_size)
+{
+	uint64_t chunks_in_logical_map, logical_map_size;
+
+	chunks_in_logical_map = vol_size / chunk_size;
+	logical_map_size = chunks_in_logical_map * sizeof(uint64_t);
+
+	/* Round up to next cacheline. */
+	return divide_round_up(logical_map_size, 64) * 64;
+}
+
+static uint64_t
+_reduce_total_chunks(uint64_t vol_size, uint64_t chunk_size)
+{
+	uint64_t num_chunks;
+
+	num_chunks = vol_size / chunk_size;
+	num_chunks += REDUCE_EXTRA_CHUNKS;
+
+	return num_chunks;
+}
+
+static uint64_t
+_reduce_pm_total_chunks_size(uint64_t vol_size, uint64_t chunk_size, uint64_t backing_io_unit_size)
+{
+	uint64_t io_units_per_chunk, num_chunks, total_chunks_size;
+
+	num_chunks = _reduce_total_chunks(vol_size, chunk_size);
+	io_units_per_chunk = chunk_size / backing_io_unit_size;
+	total_chunks_size = num_chunks * io_units_per_chunk * sizeof(uint64_t);
+
+	/* Round up to next cacheline. */
+	return divide_round_up(total_chunks_size, 64) * 64;
+}
+
+static int
+_validate_vol_params(struct spdk_reduce_vol_params *params)
+{
+	if (params->vol_size == 0 || params->chunk_size == 0 || params->backing_io_unit_size == 0) {
+		return -EINVAL;
+	}
+
+	/* Chunk size must be an even multiple of the backing io unit size. */
+	if ((params->chunk_size % params->backing_io_unit_size) != 0) {
+		return -EINVAL;
+	}
+
+	/* Volume size must be an even multiple of the chunk size. */
+	if ((params->vol_size % params->chunk_size) != 0) {
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+int64_t
+spdk_reduce_get_pm_file_size(struct spdk_reduce_vol_params *params)
+{
+	uint64_t total_pm_size;
+
+	if (_validate_vol_params(params) != 0) {
+		return -1;
+	}
+
+	total_pm_size = sizeof(struct spdk_reduce_vol_superblock);
+	total_pm_size += _reduce_pm_logical_map_size(params->vol_size, params->chunk_size);
+	total_pm_size += _reduce_pm_total_chunks_size(params->vol_size, params->chunk_size,
+			 params->backing_io_unit_size);
+	return total_pm_size;
+}
+
+int64_t
+spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params)
+{
+	uint64_t total_backing_size, num_chunks;
+
+	if (_validate_vol_params(params) != 0) {
+		return -1;
+	}
+
+	num_chunks = _reduce_total_chunks(params->vol_size, params->chunk_size);
+	total_backing_size = num_chunks * params->chunk_size;
+	total_backing_size += sizeof(struct spdk_reduce_vol_superblock);
+
+	return total_backing_size;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("reduce", SPDK_LOG_REDUCE)
