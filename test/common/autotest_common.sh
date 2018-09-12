@@ -338,9 +338,11 @@ function killprocess() {
 		exit 1
 	fi
 
-	echo "killing process with pid $1"
-	kill $1
-	wait $1
+	if kill -0 $1; then
+		echo "killing process with pid $1"
+		kill $1
+		wait $1
+	fi
 }
 
 function iscsicleanup() {
