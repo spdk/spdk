@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/reduce.h"
+#include "spdk/string.h"
 #include "spdk_internal/log.h"
 
 /* Always round up the size of the PM region to the nearest cacheline. */
@@ -42,11 +43,14 @@
 /* Structure written to offset 0 of both the pm file and the backing device. */
 struct spdk_reduce_vol_superblock {
 	struct spdk_reduce_vol_params	params;
-	uint8_t				reserved[4080];
+	uint8_t				reserved[4064];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_superblock) == 4096, "size incorrect");
 
 struct spdk_reduce_vol {
+	struct spdk_uuid		uuid;
+	struct spdk_reduce_pm_file	pm_file;
+	struct spdk_reduce_backing_dev	*backing_dev;
 };
 
 /*
@@ -148,6 +152,68 @@ spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params)
 	total_backing_size += sizeof(struct spdk_reduce_vol_superblock);
 
 	return total_backing_size;
+}
+
+void
+spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
+		     struct spdk_reduce_backing_dev *backing_dev,
+		     struct spdk_reduce_pm_file *pm_file,
+		     spdk_reduce_vol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_reduce_vol *vol;
+	int64_t size, size_needed;
+
+	size_needed = spdk_reduce_get_backing_device_size(params);
+	size = backing_dev->blockcnt * backing_dev->blocklen;
+	if (size_needed > size) {
+		SPDK_ERRLOG("backing device size %" PRIi64 " but %" PRIi64 " needed\n",
+			    size, size_needed);
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
+	size_needed = spdk_reduce_get_pm_file_size(params);
+	size = pm_file->size;
+	if (size_needed > size) {
+		SPDK_ERRLOG("pm file size %" PRIi64 " but %" PRIi64 " needed\n",
+			    size, size_needed);
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
+	if (spdk_mem_all_zero(&params->uuid, sizeof(params->uuid))) {
+		SPDK_ERRLOG("no uuid specified\n");
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
+	vol = calloc(1, sizeof(*vol));
+	if (vol == NULL) {
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	memcpy(&vol->pm_file, pm_file, sizeof(*pm_file));
+
+	memcpy(&vol->uuid, &params->uuid, sizeof(params->uuid));
+	vol->backing_dev = backing_dev;
+
+	cb_fn(cb_arg, vol, 0);
+}
+
+void
+spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
+		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
+{
+	if (vol == NULL) {
+		/* This indicates a programming error. */
+		assert(false);
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	free(vol);
+	cb_fn(cb_arg, 0);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("reduce", SPDK_LOG_REDUCE)

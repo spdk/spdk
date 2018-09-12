@@ -44,6 +44,8 @@
  * Describes the parameters of an spdk_reduce_vol.
  */
 struct spdk_reduce_vol_params {
+	struct spdk_uuid	uuid;
+
 	/**
 	 * Size in bytes of the IO unit for the backing device.  This
 	 *  is the unit in which space is allocated from the backing
@@ -83,5 +85,70 @@ int64_t spdk_reduce_get_pm_file_size(struct spdk_reduce_vol_params *params);
  *         the compressed volume.  Returns -1 if params is invalid.
  */
 int64_t spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params);
+
+struct spdk_reduce_vol;
+
+/**
+ * Describes a persistent memory file used to hold metadata associated with a
+ *  compressed volume.
+ */
+struct spdk_reduce_pm_file {
+	/** Size of the persistent memory file in bytes. */
+	uint64_t		size;
+};
+
+typedef void (*spdk_reduce_vol_op_complete)(void *ctx, int ziperrno);
+typedef void (*spdk_reduce_vol_op_with_handle_complete)(void *ctx,
+		struct spdk_reduce_vol *vol,
+		int ziperrno);
+
+typedef void (*spdk_reduce_dev_cpl)(void *cb_arg, int ziperrno);
+
+struct spdk_reduce_vol_cb_args {
+	spdk_reduce_dev_cpl	cb_fn;
+	void			*cb_arg;
+};
+
+struct spdk_reduce_backing_dev {
+	void (*readv)(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int iovcnt,
+		      uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args);
+
+	void (*writev)(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int iovcnt,
+		       uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args);
+
+	void (*unmap)(struct spdk_reduce_backing_dev *dev,
+		      uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args);
+
+	void (*close)(struct spdk_reduce_backing_dev *dev);
+
+	uint64_t	blockcnt;
+	uint32_t	blocklen;
+};
+
+/**
+ * Initialize a new libreduce compressed volume.
+ *
+ * \param params Parameters for the new volume.
+ * \param backing_dev Structure describing the backing device to use for the new volume.
+ * \param pm_file Structure describing the persistent memory file to use for the new volume.
+ * \param cb_fn Callback function to signal completion of the initialization process.
+ * \param cb_arg Argument to pass to the callback function.
+ */
+void spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
+			  struct spdk_reduce_backing_dev *backing_dev,
+			  struct spdk_reduce_pm_file *pm_file,
+			  spdk_reduce_vol_op_with_handle_complete cb_fn,
+			  void *cb_arg);
+
+/**
+ * Unload a previously initialized or loaded libreduce compressed volume.
+ *
+ * \param vol Volume to unload.
+ * \param cb_fn Callback function to signal completion of the unload process.
+ * \param cb_arg Argument to pass to the callback function.
+ */
+void spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
+			    spdk_reduce_vol_op_complete cb_fn,
+			    void *cb_arg);
 
 #endif /* SPDK_REDUCE_H_ */

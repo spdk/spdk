@@ -38,6 +38,9 @@
 #include "reduce/reduce.c"
 #include "common/lib/test_env.c"
 
+static struct spdk_reduce_vol *g_vol;
+static int g_ziperrno;
+
 static void
 get_pm_file_size(void)
 {
@@ -120,6 +123,76 @@ get_backing_device_size(void)
 	CU_ASSERT(backing_size == expected_backing_size);
 }
 
+static void
+init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
+{
+	g_vol = vol;
+	g_ziperrno = ziperrno;
+}
+
+static void
+unload_cb(void *cb_arg, int ziperrno)
+{
+	g_ziperrno = ziperrno;
+}
+
+static void
+init(void)
+{
+	struct spdk_reduce_vol_params params = {};
+	struct spdk_reduce_backing_dev backing_dev = {};
+	struct spdk_reduce_pm_file pm_file = {};
+
+	backing_dev.blocklen = 512;
+
+	params.vol_size = 1024 * 1024; /* 1MB */
+	params.chunk_size = 16 * 1024;
+	params.backing_io_unit_size = backing_dev.blocklen;
+
+	/* backing_dev and pm_file have an invalid size.  This should fail. */
+	g_vol = NULL;
+	g_ziperrno = 0;
+	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	CU_ASSERT(g_ziperrno == -EINVAL);
+	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
+
+	/* backing_dev now has valid size, but pm_file is still invalid.
+	 * This should fail.
+	 */
+	backing_dev.blockcnt = spdk_reduce_get_backing_device_size(&params) / backing_dev.blocklen;
+
+	g_vol = NULL;
+	g_ziperrno = 0;
+	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	CU_ASSERT(g_ziperrno == -EINVAL);
+	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
+
+	/* pm_file now has valid size, but uuid is still all zeroes.
+	 * This should fail.
+	 */
+	pm_file.size = spdk_reduce_get_pm_file_size(&params);
+
+	g_vol = NULL;
+	g_ziperrno = 0;
+	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	CU_ASSERT(g_ziperrno == -EINVAL);
+	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
+
+	/* Now specify a uuid.  spdk_reduce_vol_init() should then pass. */
+	spdk_uuid_generate(&params.uuid);
+
+	g_vol = NULL;
+	g_ziperrno = -1;
+	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+	CU_ASSERT(spdk_uuid_compare(&params.uuid, &g_vol->uuid) == 0);
+
+	g_ziperrno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -138,7 +211,8 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "get_pm_file_size", get_pm_file_size) == NULL ||
-		CU_add_test(suite, "get_backing_device_size", get_backing_device_size) == NULL
+		CU_add_test(suite, "get_backing_device_size", get_backing_device_size) == NULL ||
+		CU_add_test(suite, "init", init) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
