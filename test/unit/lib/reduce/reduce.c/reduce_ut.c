@@ -39,9 +39,83 @@
 #include "common/lib/test_env.c"
 
 static void
-empty_test(void)
+get_pm_file_size(void)
 {
-	CU_ASSERT(true);
+	struct spdk_reduce_vol_params params;
+	int64_t pm_size, expected_pm_size;
+
+	params.vol_size = 0;
+	params.chunk_size = 0;
+	params.backing_io_unit_size = 0;
+	CU_ASSERT(spdk_reduce_get_pm_file_size(&params) == -1);
+
+	/*
+	 * Select a valid backing_io_unit_size.  This should still fail since
+	 *  vol_size and chunk_size are still 0.
+	 */
+	params.backing_io_unit_size = 4096;
+	CU_ASSERT(spdk_reduce_get_pm_file_size(&params) == -1);
+
+	/*
+	 * Select a valid chunk_size.  This should still fail since val_size
+	 *  is still 0.
+	 */
+	params.chunk_size = 4096 * 4;
+	CU_ASSERT(spdk_reduce_get_pm_file_size(&params) == -1);
+
+	/* Select a valid vol_size.  This should return a proper pm_size. */
+	params.vol_size = 4096 * 4 * 100;
+	pm_size = spdk_reduce_get_pm_file_size(&params);
+	expected_pm_size = sizeof(struct spdk_reduce_vol_superblock);
+	/* 100 chunks in logical map * 8 bytes per chunk */
+	expected_pm_size += 100 * sizeof(uint64_t);
+	/* 100 chunks * 4 backing io units per chunk * 8 bytes per backing io unit */
+	expected_pm_size += 100 * 4 * sizeof(uint64_t);
+	/* reduce allocates some extra chunks too for in-flight writes when logical map
+	 * is full.  SBZIP_EXTRA_CHUNKS is a private #ifdef in reduce.c.
+	 */
+	expected_pm_size += SBZIP_EXTRA_CHUNKS * 4 * sizeof(uint64_t);
+	/* reduce will add some padding so numbers may not match exactly.  Make sure
+	 * they are close though.
+	 */
+	CU_ASSERT((pm_size - expected_pm_size) < 128);
+}
+
+static void
+get_backing_device_size(void)
+{
+	struct spdk_reduce_vol_params params;
+	int64_t backing_size, expected_backing_size;
+
+	params.vol_size = 0;
+	params.chunk_size = 0;
+	params.backing_io_unit_size = 0;
+	CU_ASSERT(spdk_reduce_get_backing_device_size(&params) == -1);
+
+	/*
+	 * Select a valid backing_io_unit_size.  This should still fail since
+	 *  vol_size and chunk_size are still 0.
+	 */
+	params.backing_io_unit_size = 4096;
+	CU_ASSERT(spdk_reduce_get_backing_device_size(&params) == -1);
+
+	/*
+	 * Select a valid chunk_size.  This should still fail since val_size
+	 *  is still 0.
+	 */
+	params.chunk_size = 4096 * 4;
+	CU_ASSERT(spdk_reduce_get_backing_device_size(&params) == -1);
+
+	/* Select a valid vol_size.  This should return a proper backing device size. */
+	params.vol_size = 4096 * 4 * 100;
+	backing_size = spdk_reduce_get_backing_device_size(&params);
+	expected_backing_size = params.vol_size;
+	/* reduce allocates some extra chunks too for in-flight writes when logical map
+	 * is full.  SBZIP_EXTRA_CHUNKS is a private #ifdef in reduce.c.  Backing device
+	 * must have space allocated for these extra chunks.
+	 */
+	expected_backing_size += SBZIP_EXTRA_CHUNKS * params.chunk_size;
+	CU_ASSERT(backing_size == expected_backing_size);
 }
 
 int
@@ -61,7 +135,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "empty", empty_test) == NULL
+		CU_add_test(suite, "get_pm_file_size", get_pm_file_size) == NULL ||
+		CU_add_test(suite, "get_backing_device_size", get_backing_device_size) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
