@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 APP = perf
 
 ifeq ($(OS),Linux)
-LIBS += -laio
+SYS_LIBS += -laio
 CFLAGS += -DHAVE_LIBAIO
 endif
 
