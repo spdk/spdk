@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a98ae48e_c0100246",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-12T12:32:40Z",
+      "side": 1,
+      "message": "Try to use shorter lines for better readability (I have to scroll sideways in gerrithub GUI to read the message)",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 118
+      },
+      "revId": "d53d1483906aa9ef44587e8db29eb5a4398b0a33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
