@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8266cf74_3a270c12",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-12T17:13:09Z",
+      "side": 1,
+      "message": "Suggestion:\nSet of libraries and utilities for high performance user-mode storage",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6852ef8_f8d07fc6",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-12T17:13:09Z",
+      "side": 1,
+      "message": "BSD looks good to me.",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8f85a06_776f9e8a",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-12T17:13:09Z",
+      "side": 1,
+      "message": "Shall we constrain the version of DPDK to \"\u003e\u003d 17.11\" ?",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49747587_21285371",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-12T17:13:09Z",
+      "side": 1,
+      "message": "Suggestion:\nThis package contains the headers and other files needed for developing applications with the Storage Performance Development Kit.",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c6e4ea8_875fe72b",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-12T17:13:09Z",
+      "side": 1,
+      "message": "Reminder:   remove setup.sh",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca17f650_3f64d11a",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-12T17:13:09Z",
+      "side": 1,
+      "message": "Can you please educate me on this?   Why is env \"banned\"?",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9a397b0_1a57e430",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-12T17:13:09Z",
+      "side": 1,
+      "message": "Given the *.so, we\u0027d need to add \u0027--with-shared\u0027 to configure.   But, do I recall during a SPDK community call someone suggested that we produce the SPDK apps statically?   If so, how do we reconcile the production of shared-libs and the linking of apps statically?   New/modified options to configure and a change to the build?",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
