@@ -57,6 +57,15 @@
 #define MAP_256TB_IDX(vfn_2mb)	((vfn_2mb) >> (SHIFT_1GB - SHIFT_2MB))
 #define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB)) - 1))
 
+/* Low 16 bits for the reference count */
+#define REG_MAP_REF_MASK	0xffff
+
+/* A notification region barrier. The 2MB translation entry that's marked
+ * with this flag must be unregistered separately. This allows contiguous
+ * regions to be unregistered in the same chunks they were registered.
+ */
+#define REG_MAP_NOTIFY_START	(1ULL << 63)
+
 /* Translation of a single 2MB page. */
 struct map_2mb {
 	uint64_t translation_2mb;
@@ -87,6 +96,12 @@ struct spdk_mem_map {
 	TAILQ_ENTRY(spdk_mem_map) tailq;
 };
 
+/* Registrations map. The 64 bit translations are bit fields with the
+ * following layout (starting with the low bits):
+ *    0 - 15 : reference count
+ *   16 - 62 : reserved
+ *        63 : flags
+ */
 static struct spdk_mem_map *g_mem_reg_map;
 static TAILQ_HEAD(, spdk_mem_map) g_spdk_mem_maps = TAILQ_HEAD_INITIALIZER(g_spdk_mem_maps);
 static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -133,7 +148,9 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 		}
 
 		for (idx_1gb = 0; idx_1gb < sizeof(map_1gb->map) / sizeof(map_1gb->map[0]); idx_1gb++) {
-			if (map_1gb->map[idx_1gb].translation_2mb != 0) {
+			if ((map_1gb->map[idx_1gb].translation_2mb & REG_MAP_REF_MASK) > 0 &&
+			    (contig_start == UINT64_MAX ||
+			     (map_1gb->map[idx_1gb].translation_2mb & REG_MAP_NOTIFY_START) == 0)) {
 				/* Rebuild the virtual address from the indexes */
 				uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
@@ -152,6 +169,11 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 					if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
 						goto err_unregister;
 					}
+
+					/* This page might be a part of a neighbour region, so process
+					 * it again. The idx_1gb will be incremented immediately.
+					 */
+					idx_1gb--;
 				}
 				contig_start = UINT64_MAX;
 			}
@@ -187,7 +209,8 @@ err_unregister:
 		}
 
 		for (; idx_1gb < UINT64_MAX; idx_1gb--) {
-			if (map_1gb->map[idx_1gb].translation_2mb != 0) {
+			if ((map_1gb->map[idx_1gb].translation_2mb & REG_MAP_REF_MASK) > 0 &&
+			    (contig_end == UINT64_MAX || (map_1gb->map[idx_1gb].translation_2mb & REG_MAP_NOTIFY_START) == 0)) {
 				/* Rebuild the virtual address from the indexes */
 				uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
@@ -202,6 +225,7 @@ err_unregister:
 							   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
 							   (void *)contig_start,
 							   contig_end - contig_start + VALUE_2MB);
+					idx_1gb++;
 				}
 				contig_end = UINT64_MAX;
 			}
@@ -311,13 +335,13 @@ spdk_mem_register(void *vaddr, size_t len)
 	seg_vaddr = vaddr;
 	seg_len = 0;
 	while (len > 0) {
-		uint64_t ref_count;
+		uint64_t reg;
 
-		/* In g_mem_reg_map, the "translation" is the reference count */
-		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr, NULL);
-		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, ref_count + 1);
+		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr, NULL);
+		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB,
+					     seg_len == 0 ? (reg + 1) | REG_MAP_NOTIFY_START : reg + 1);
 
-		if (ref_count > 0) {
+		if ((reg & REG_MAP_REF_MASK) > 0 || (reg & REG_MAP_NOTIFY_START)) {
 			if (seg_len > 0) {
 				TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
 					rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
@@ -359,7 +383,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	int rc;
 	void *seg_vaddr;
 	size_t seg_len;
-	uint64_t ref_count;
+	uint64_t reg;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
@@ -377,8 +401,8 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	seg_vaddr = vaddr;
 	seg_len = len;
 	while (seg_len > 0) {
-		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
-		if (ref_count == 0) {
+		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
+		if ((reg & REG_MAP_REF_MASK) == 0) {
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			return -EINVAL;
 		}
@@ -389,11 +413,14 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	seg_vaddr = vaddr;
 	seg_len = 0;
 	while (len > 0) {
-		/* In g_mem_reg_map, the "translation" is the reference count */
-		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr, NULL);
-		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, ref_count - 1);
+		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr, NULL);
+		if ((reg & REG_MAP_REF_MASK) == 1) {
+			/* clear any flags */
+			reg = 1;
+		}
+		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, reg - 1);
 
-		if (ref_count > 1) {
+		if ((reg & REG_MAP_REF_MASK) > 1 || (reg & REG_MAP_NOTIFY_START)) {
 			if (seg_len > 0) {
 				TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
 					rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
