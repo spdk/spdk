@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d61e3565_0ca805e7",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-12T07:42:25Z",
+      "side": 1,
+      "message": "You may be able to refine the message like\n\n\"Identify failed: SC 0x%x SCT 0x%x\\n\",\ncpl-\u003estatus.sc, cpl-\u003estatus.sct",
+      "range": {
+        "startLine": 803,
+        "startChar": 13,
+        "endLine": 803,
+        "endChar": 50
+      },
+      "revId": "8f971a0b12a52d298356b5669cf67225b7e208f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
