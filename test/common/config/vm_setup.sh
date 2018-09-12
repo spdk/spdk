@@ -80,7 +80,7 @@ if hash dnf &>/dev/null ; then
     fi
 elif hash apt-get &>/dev/null ; then
     pkgmng='apt'
-    if [ ! -f /etc/debian_version ] ; then 
+    if [ ! -f /etc/debian_version ] ; then
         echo "Warning: Located apt-get package manager, but it was tested on Ubuntu only"
     fi
 else
@@ -227,9 +227,11 @@ if echo $CONF | grep -q librxe; then
             sudo make install
             cd ~
             ;;
-        *)
-	    echo "librxe setup is currently supported for Fedora only. Skipping librxe setup."
+        apt)
+	    sudo apt-get install -y rdma-core
 	    ;;
+	*)
+	    echo "librxe setup is currently supported for Fedora and Ubuntu only. Skipping librxe setup."
         esac
     fi
 fi
