@@ -3973,6 +3973,12 @@ spdk_bs_get_page_size(struct spdk_blob_store *bs)
 }
 
 uint64_t
+spdk_bs_get_io_unit_size(struct spdk_blob_store *bs)
+{
+	return SPDK_BS_PAGE_SIZE;
+}
+
+uint64_t
 spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
 {
 	return bs->num_free_clusters;
