@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a7371d1_50be2a7d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1118,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-12T17:47:55Z",
+      "side": 1,
+      "message": "Similar to comment on previous patch - move this call above nvme_ctrlr_cmd_set_host_id",
+      "revId": "e65c1bc92a9ea2c981b588ba2f66e0a44a311563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34168bfc_ebdcd76e",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-12T17:47:55Z",
+      "side": 1,
+      "message": "See comment on previous patch. You won\u0027t need this if you change when the states are set.",
+      "revId": "e65c1bc92a9ea2c981b588ba2f66e0a44a311563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
