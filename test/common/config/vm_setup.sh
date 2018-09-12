@@ -227,9 +227,11 @@ if echo $CONF | grep -q librxe; then
             sudo make install
             cd ~
             ;;
-        *)
-	    echo "librxe setup is currently supported for Fedora only. Skipping librxe setup."
+        apt)
+	    sudo apt-get install -y rdma-core
 	    ;;
+	*)
+	    echo "librxe setup is currently supported for Fedora and Ubuntu only. Skipping librxe setup."
         esac
     fi
 fi
