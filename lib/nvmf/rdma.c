@@ -496,8 +496,8 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 			    str_ibv_qp_state[state]);
 		return -1;
 	}
-	SPDK_NOTICELOG("IBV QP#%u changed to: %s\n", rqpair->qpair.qid,
-		       str_ibv_qp_state[state]);
+	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "IBV QP#%u changed to: %s\n", rqpair->qpair.qid,
+		      str_ibv_qp_state[state]);
 	return 0;
 }
 
@@ -2629,8 +2629,13 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	for (i = 0; i < reaped; i++) {
 		/* Handle error conditions */
 		if (wc[i].status) {
-			SPDK_WARNLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				     rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			if (wc[i].status != IBV_WC_WR_FLUSH_ERR) {
+				SPDK_ERRLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
+					    rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			} else {
+				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on CQ %p, Request 0x%lu (%d): %s\n",
+					      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			}
 			error = true;
 
 			switch (wc[i].opcode) {
