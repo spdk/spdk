@@ -22,6 +22,30 @@
       "revId": "0482508503c00d934cbf35143a6ce52c7e64ab58",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0298a4e_8a4ea055",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-09-12T19:56:34Z",
+      "side": 1,
+      "message": "I mean it is not clear why the logs should be masked out for a particular error.\nSuppose that WC flush error event is irrelevant to iWARP; why should it be bypassed for non-iWARP RDMA?\nIf there\u0027s something specific to iWARP in handling async errors, it would be reasonable to have iWARP-specific event handling function.",
+      "parentUuid": "07cb4def_c95e1606",
+      "range": {
+        "startLine": 14,
+        "startChar": 41,
+        "endLine": 14,
+        "endChar": 75
+      },
+      "revId": "0482508503c00d934cbf35143a6ce52c7e64ab58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
