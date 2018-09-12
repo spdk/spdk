@@ -99,7 +99,7 @@ $(COMBINED_LINKERNAME_LIB) : %.so : %.so.$(SO_SUFFIX_ALL)
 
 $(SEP_REALNAME_LIBS) : %.so.$(SO_SUFFIX_ALL) : %.a spdk.map
 	$(Q)echo "  SO $(notdir $@)"; \
-	$(call spdk_build_realname_shared_lib,$(filter %.a,$^),spdk.map)
+	$(call spdk_build_realname_shared_lib,$(filter %.a,$^),spdk.map,$(SYS_LIBS))
 
 $(SEP_LINKERNAME_LIBS) : %.so : %.so.$(SO_SUFFIX_ALL)
 	$(Q)echo "  SYMLINK $(notdir $@)"; $(BUILD_LINKERNAME_LIB)
