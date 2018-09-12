@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05c35f04_50ac945c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1233,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-12T05:04:45Z",
+      "side": 1,
+      "message": "I think you can delete this line \"parent_io-\u003einternal.status !\u003d SPDK_BDEV_IO_STATUS_SUCCESS\". If I understand your patch correctly.",
+      "revId": "975512a2a1fdaee655010a6e23c7c6b9080d2556",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
