@@ -64,6 +64,7 @@ _spdk_add_lvs_to_list(struct spdk_lvol_store *lvs)
 	TAILQ_FOREACH(tmp, &g_lvol_stores, link) {
 		if (!strncmp(lvs->name, tmp->name, SPDK_LVS_NAME_MAX)) {
 			name_conflict = true;
+			break;
 		}
 	}
 	if (!name_conflict) {
