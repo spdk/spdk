@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31968fb1_ad5cce14",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 63
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-12T11:17:00Z",
+      "side": 1,
+      "message": "Where did you get those parameters from? I don\u0027t see them implemented in the config file. They\u0027re only available via RPC and are probably not required in this script.",
+      "range": {
+        "startLine": 450,
+        "startChar": 8,
+        "endLine": 451,
+        "endChar": 39
+      },
+      "revId": "281cbd714dff63710238104365e91063548d083b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
