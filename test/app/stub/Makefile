@@ -47,7 +47,7 @@ LIBS += $(SPDK_LIB_LINKER_ARGS)
 LIBS += $(ENV_LINKER_ARGS)
 
 ifeq ($(CONFIG_RDMA),y)
-LIBS += -libverbs -lrdmacm
+SYS_LIBS += -libverbs -lrdmacm
 endif
 
 all : $(APP)

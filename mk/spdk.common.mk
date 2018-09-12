@@ -130,23 +130,23 @@ ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)
 # RDMA Userspace Verbs Library
 ifneq ("$(wildcard /usr/lib/libibverbs.*)","")
-LIBS += -libverbs
+SYS_LIBS += -libverbs
 endif
 # RDMA Connection Manager Library
 ifneq ("$(wildcard /usr/lib/librdmacm.*)","")
-LIBS += -lrdmacm
+SYS_LIBS += -lrdmacm
 endif
 # Mellanox - MLX4 HBA Userspace Library
 ifneq ("$(wildcard /usr/lib/libmlx4.*)","")
-LIBS += -lmlx4
+SYS_LIBS += -lmlx4
 endif
 # Mellanox - MLX5 HBA Userspace Library
 ifneq ("$(wildcard /usr/lib/libmlx5.*)","")
-LIBS += -lmlx5
+SYS_LIBS += -lmlx5
 endif
 # Chelsio HBA Userspace Library
 ifneq ("$(wildcard /usr/lib/libcxgb4.*)","")
-LIBS += -lcxgb4
+SYS_LIBS += -lcxgb4
 endif
 endif
 endif
