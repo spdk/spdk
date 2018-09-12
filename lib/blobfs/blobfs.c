@@ -149,8 +149,8 @@ struct spdk_fs_cb_args {
 			int		is_read;
 			off_t		offset;
 			size_t		length;
-			uint64_t	start_page;
-			uint64_t	num_pages;
+			uint64_t	start_lba;
+			uint64_t	num_lba;
 			uint32_t	blocklen;
 		} rw;
 		struct {
@@ -1588,16 +1588,16 @@ __read_done(void *ctx, int bserrno)
 	assert(req != NULL);
 	if (args->op.rw.is_read) {
 		memcpy(args->op.rw.user_buf,
-		       args->op.rw.pin_buf + (args->op.rw.offset & 0xFFF),
+		       args->op.rw.pin_buf + (args->op.rw.offset & (args->op.rw.blocklen - 1)),
 		       args->op.rw.length);
 		__rw_done(req, 0);
 	} else {
-		memcpy(args->op.rw.pin_buf + (args->op.rw.offset & 0xFFF),
+		memcpy(args->op.rw.pin_buf + (args->op.rw.offset & (args->op.rw.blocklen - 1)),
 		       args->op.rw.user_buf,
 		       args->op.rw.length);
 		spdk_blob_io_write(args->file->blob, args->op.rw.channel,
 				   args->op.rw.pin_buf,
-				   args->op.rw.start_page, args->op.rw.num_pages,
+				   args->op.rw.start_lba, args->op.rw.num_lba,
 				   __rw_done, req);
 	}
 }
@@ -1614,20 +1614,20 @@ __do_blob_read(void *ctx, int fserrno)
 	}
 	spdk_blob_io_read(args->file->blob, args->op.rw.channel,
 			  args->op.rw.pin_buf,
-			  args->op.rw.start_page, args->op.rw.num_pages,
+			  args->op.rw.start_lba, args->op.rw.num_lba,
 			  __read_done, req);
 }
 
 static void
 __get_page_parameters(struct spdk_file *file, uint64_t offset, uint64_t length,
-		      uint64_t *start_page, uint32_t *page_size, uint64_t *num_pages)
+		      uint64_t *start_lba, uint32_t *lba_size, uint64_t *num_lba)
 {
-	uint64_t end_page;
+	uint64_t end_lba;
 
-	*page_size = spdk_bs_get_page_size(file->fs->bs);
-	*start_page = offset / *page_size;
-	end_page = (offset + length - 1) / *page_size;
-	*num_pages = (end_page - *start_page + 1);
+	*lba_size = spdk_bs_get_io_unit_size(file->fs->bs);
+	*start_lba = offset / *lba_size;
+	end_lba = (offset + length - 1) / *lba_size;
+	*num_lba = (end_lba - *start_lba + 1);
 }
 
 static void
@@ -1638,8 +1638,8 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
-	uint64_t start_page, num_pages, pin_buf_length;
-	uint32_t page_size;
+	uint64_t start_lba, num_lba, pin_buf_length;
+	uint32_t lba_size;
 
 	if (is_read && offset + length > file->length) {
 		cb_fn(cb_arg, -EINVAL);
@@ -1652,6 +1652,8 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 		return;
 	}
 
+	__get_page_parameters(file, offset, length, &start_lba, &lba_size, &num_lba);
+
 	args = &req->args;
 	args->fn.file_op = cb_fn;
 	args->arg = cb_arg;
@@ -1661,9 +1663,9 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 	args->op.rw.is_read = is_read;
 	args->op.rw.offset = offset;
 	args->op.rw.length = length;
+	args->op.rw.blocklen = lba_size;
 
-	__get_page_parameters(file, offset, length, &start_page, &page_size, &num_pages);
-	pin_buf_length = num_pages * page_size;
+	pin_buf_length = num_lba * lba_size;
 	args->op.rw.pin_buf = spdk_dma_malloc(pin_buf_length, 4096, NULL);
 	if (args->op.rw.pin_buf == NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "Failed to allocate buf for: file=%s offset=%jx length=%jx\n",
@@ -1673,8 +1675,8 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 		return;
 	}
 
-	args->op.rw.start_page = start_page;
-	args->op.rw.num_pages = num_pages;
+	args->op.rw.start_lba = start_lba;
+	args->op.rw.num_lba = num_lba;
 
 	if (!is_read && file->length < offset + length) {
 		spdk_file_truncate_async(file, offset + length, __do_blob_read, req);
@@ -1979,8 +1981,8 @@ __file_flush(void *_args)
 	struct spdk_fs_cb_args *args = _args;
 	struct spdk_file *file = args->file;
 	struct cache_buffer *next;
-	uint64_t offset, length, start_page, num_pages;
-	uint32_t page_size;
+	uint64_t offset, length, start_lba, num_lba;
+	uint32_t lba_size;
 
 	pthread_spin_lock(&file->lock);
 	next = spdk_tree_find_buffer(file->tree, file->length_flushed);
@@ -2021,15 +2023,15 @@ __file_flush(void *_args)
 	args->op.flush.length = length;
 	args->op.flush.cache_buffer = next;
 
-	__get_page_parameters(file, offset, length, &start_page, &page_size, &num_pages);
+	__get_page_parameters(file, offset, length, &start_lba, &lba_size, &num_lba);
 
 	next->in_progress = true;
 	BLOBFS_TRACE(file, "offset=%jx length=%jx page start=%jx num=%jx\n",
-		     offset, length, start_page, num_pages);
+		     offset, length, start_lba, num_lba);
 	pthread_spin_unlock(&file->lock);
 	spdk_blob_io_write(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
-			   next->buf + (start_page * page_size) - next->offset,
-			   start_page, num_pages, __file_flush_done, args);
+			   next->buf + (start_lba * lba_size) - next->offset,
+			   start_lba, num_lba, __file_flush_done, args);
 }
 
 static void
@@ -2236,20 +2238,20 @@ __readahead(void *_args)
 {
 	struct spdk_fs_cb_args *args = _args;
 	struct spdk_file *file = args->file;
-	uint64_t offset, length, start_page, num_pages;
-	uint32_t page_size;
+	uint64_t offset, length, start_lba, num_lba;
+	uint32_t lba_size;
 
 	offset = args->op.readahead.offset;
 	length = args->op.readahead.length;
 	assert(length > 0);
 
-	__get_page_parameters(file, offset, length, &start_page, &page_size, &num_pages);
+	__get_page_parameters(file, offset, length, &start_lba, &lba_size, &num_lba);
 
 	BLOBFS_TRACE(file, "offset=%jx length=%jx page start=%jx num=%jx\n",
-		     offset, length, start_page, num_pages);
+		     offset, length, start_lba, num_lba);
 	spdk_blob_io_read(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
 			  args->op.readahead.cache_buffer->buf,
-			  start_page, num_pages, __readahead_done, args);
+			  start_lba, num_lba, __readahead_done, args);
 }
 
 static uint64_t
