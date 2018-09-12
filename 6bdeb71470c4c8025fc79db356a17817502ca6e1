@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1bbca9e_91752ebf",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1064,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-12T17:53:04Z",
+      "side": 1,
+      "message": "See earlier patch comments about moving this before spdk_nvme_ctrlr_cmd_get_feature",
+      "revId": "6bdeb71470c4c8025fc79db356a17817502ca6e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
