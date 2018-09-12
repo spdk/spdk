@@ -501,19 +501,20 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
-	spdk_json_write_array_begin(w);
-
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(ENOMEM));
 		return;
 	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		free(ctx);
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
 
 	ctx->w = w;
 	ctx->request = request;
