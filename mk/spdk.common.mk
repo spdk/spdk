@@ -125,17 +125,13 @@ LIBS += -L$(CONFIG_VPP_DIR)/lib64
 COMMON_CFLAGS += -I$(CONFIG_VPP_DIR)/include
 endif
 
+ifeq ($(CONFIG_RDMA),y)
+SYS_LIBS += -libverbs -lrdmacm
+endif
+
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)
-# RDMA Userspace Verbs Library
-ifneq ("$(wildcard /usr/lib/libibverbs.*)","")
-SYS_LIBS += -libverbs
-endif
-# RDMA Connection Manager Library
-ifneq ("$(wildcard /usr/lib/librdmacm.*)","")
-SYS_LIBS += -lrdmacm
-endif
 # Mellanox - MLX4 HBA Userspace Library
 ifneq ("$(wildcard /usr/lib/libmlx4.*)","")
 SYS_LIBS += -lmlx4
