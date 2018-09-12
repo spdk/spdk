@@ -844,16 +844,17 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 	struct nvme_request *req = rdma_req->req;
 	struct ibv_mr *mr;
 	void *payload;
-
+	uint64_t requested_size;
 
 	payload = req->payload.contig_or_cb_arg + req->payload_offset;
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
+	requested_size = req->payload_size;
 	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map,
-			(uint64_t)payload, NULL);
+			(uint64_t)payload, &requested_size);
 
-	if (mr == NULL) {
+	if (mr == NULL || requested_size < req->payload_size) {
 		return -EINVAL;
 	}
 
@@ -883,13 +884,15 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 	struct nvme_request *req = rdma_req->req;
 	void *payload = req->payload.contig_or_cb_arg + req->payload_offset;
 	struct ibv_mr *mr;
+	uint64_t requested_size;
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
+	requested_size = req->payload_size;
 	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload,
-			NULL);
-	if (mr == NULL) {
+			&requested_size);
+	if (mr == NULL || requested_size < req->payload_size) {
 		return -1;
 	}
 
@@ -914,6 +917,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	struct nvme_request *req = rdma_req->req;
 	struct ibv_mr *mr;
 	void *virt_addr;
+	uint64_t requested_size;
 	uint32_t length;
 	int rc;
 
@@ -933,10 +937,10 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 		SPDK_ERRLOG("multi-element SGL currently not supported for RDMA\n");
 		return -1;
 	}
-
+	requested_size = req->payload_size;
 	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
-			NULL);
-	if (mr == NULL) {
+			&requested_size);
+	if (mr == NULL || requested_size < req->payload_size) {
 		return -1;
 	}
 
@@ -962,6 +966,7 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	struct nvme_request *req = rdma_req->req;
 	struct ibv_mr *mr;
 	uint32_t length;
+	uint64_t requested_size;
 	void *virt_addr;
 	int rc;
 
@@ -982,9 +987,10 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 		return -1;
 	}
 
+	requested_size = req->payload_size;
 	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
-			NULL);
-	if (mr == NULL) {
+			&requested_size);
+	if (mr == NULL || requested_size < req->payload_size) {
 		return -1;
 	}
 
