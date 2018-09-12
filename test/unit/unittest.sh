@@ -121,6 +121,8 @@ $valgrind $testdir/lib/iscsi/iscsi.c/iscsi_ut
 $valgrind $testdir/lib/iscsi/init_grp.c/init_grp_ut $testdir/lib/iscsi/init_grp.c/init_grp.conf
 $valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/portal_grp.c/portal_grp.conf
 
+$valgrind $testdir/lib/reduce/reduce.c/reduce_ut
+
 $valgrind $testdir/lib/thread/thread.c/thread_ut
 
 $valgrind $testdir/lib/util/base64.c/base64_ut
