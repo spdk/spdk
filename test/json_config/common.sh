@@ -60,6 +60,28 @@ function kill_targets() {
 	fi
 }
 
+# Compare two JSON files.
+#
+# NOTE: Order of objects in JSON can change by just doing loads -> dumps so all JSON objects (not arrays) are sorted by
+# config_filter.py script. Sorted output is used to compare JSON output.
+#
+function json_diff()
+{
+	local tmp_file_1=$(mktemp ${1}.XXX)
+	local tmp_file_2=$(mktemp ${2}.XXX)
+	local ret=0
+
+	cat $1 | $JSON_DIR/config_filter.py -method "sort" > $tmp_file_1
+	cat $2 | $JSON_DIR/config_filter.py -method "sort" > $tmp_file_2
+
+	if ! diff -u $tmp_file_1 $tmp_file_2; then
+		ret=1
+	fi
+
+	rm $tmp_file_1 $tmp_file_2
+	return $ret
+}
+
 # This function test if json config was properly saved and loaded.
 # 1. Get a list of bdevs and save it to the file "base_bdevs".
 # 2. Save only configuration of the running spdk_tgt to the file "base_json_config"
@@ -88,8 +110,9 @@ function test_json_config() {
 	$rpc_py load_config < $base_json_config
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $last_bdevs
 	$rpc_py save_config | $JSON_DIR/config_filter.py -method "delete_global_parameters" > $last_json_config
-	diff $base_json_config $last_json_config
-	diff $base_bdevs $last_bdevs
+
+	json_diff $base_json_config $last_json_config
+	json_diff $base_bdevs $last_bdevs
 	remove_config_files_after_test_json_config
 }
 
@@ -196,7 +219,8 @@ function test_global_params() {
 	$rpc_py load_config < $full_config
 	$rpc_py save_config > $full_config
 	python $JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $last_json_config
-	diff $base_json_config $last_json_config
+
+	json_diff $base_json_config $last_json_config
 	rm $base_json_config $last_json_config
 	rm $full_config
 }

@@ -2,6 +2,22 @@
 import sys
 import json
 import argparse
+from collections import OrderedDict
+
+
+def sort_json_object(o):
+    if isinstance(o, dict):
+        sorted_o = OrderedDict()
+        """ Order of keys in JSON object is irrelevant but we need to pick one
+        to be able to compare JSONS. """
+        for key in sorted(o.keys()):
+            sorted_o[key] = sort_json_object(o[key])
+        return sorted_o
+    if isinstance(o, list):
+        """ Keep list in the same orded but sort each item """
+        return [sort_json_object(item) for item in o]
+    else:
+        return o
 
 
 def filter_methods(do_remove_global_rpcs):
@@ -41,5 +57,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.method == "delete_global_parameters":
         filter_methods(True)
-    if args.method == "delete_configs":
+    elif args.method == "delete_configs":
         filter_methods(False)
+    elif args.method == "sort":
+        """ Wrap input into JSON object so any input is possible here
+        like output from get_bdevs RPC method"""
+        o = json.loads('{ "the_object": ' + sys.stdin.read() + ' }')
+        print(json.dumps(sort_json_object(o)['the_object'], indent=2))
+    else:
+        raise ValueError("Invalid method '{}'".format(args.method))
