@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "446686ba_3a0c5f95",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T09:20:10Z",
+      "side": 1,
+      "message": "if we can get this by return value of construct_raid_bdev, it may be helpful.",
+      "range": {
+        "startLine": 78,
+        "startChar": 31,
+        "endLine": 78,
+        "endChar": 36
+      },
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e6e3877_4d37e218",
+        "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T09:20:10Z",
+      "side": 1,
+      "message": "NUM_LVS or NUM_LVS_ON_MALLOC may be meaningful now?",
+      "range": {
+        "startLine": 13,
+        "startChar": 1,
+        "endLine": 13,
+        "endChar": 11
+      },
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fec2879a_26d43a2a",
+        "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T09:20:10Z",
+      "side": 1,
+      "message": "How about adding comment like the following to the above of the for loop?\n\nCreate the first LVS from a raid bdev, which is created from two malloc bdevs.\nCreate remaining LVSs from a malloc bdev, respectively.\n\nIf you take it, you will be able to remove inline comments.",
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92c311bc_24a7f16b",
+        "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T09:20:10Z",
+      "side": 1,
+      "message": "This looks OK but we may be able to return the name of the created raid bdev like construct_malloc_bdev in separate patch.",
+      "range": {
+        "startLine": 50,
+        "startChar": 2,
+        "endLine": 50,
+        "endChar": 14
+      },
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
