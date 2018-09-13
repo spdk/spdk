@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8850f22_0f7ddc7c",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-13T18:19:16Z",
+      "side": 1,
+      "message": "spdk_mem_map_is_contiguous and make it return bool",
+      "revId": "acae08793614e041e254e5effbc25c39588547e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a7181be_65c7b9e7",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-13T18:19:16Z",
+      "side": 1,
+      "message": "I think you could rearrange this into a single while() loop covering all cases by making a few changes. First, if the user didn\u0027t provide a size, initialize requested_size to VALUE_2MB at the top. Also initialize vfn_2mb to vaddr \u003e\u003e SHIFT_2MB outside of the loop. Then you can combine lines 500-511 with 522-534 all inside of the loop I think. At the end of each loop iteration, just check if the arg_contiguous callback exists. If it doesn\u0027t, bail out of the loop.",
+      "revId": "acae08793614e041e254e5effbc25c39588547e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
