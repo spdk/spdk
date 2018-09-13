@@ -65,6 +65,29 @@
     },
     {
       "key": {
+        "uuid": "f6ea0626_660d1eda",
+        "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-09-13T11:52:50Z",
+      "side": 1,
+      "message": "One typo, \"put its name in $bdev\".",
+      "range": {
+        "startLine": 46,
+        "startChar": 36,
+        "endLine": 46,
+        "endChar": 37
+      },
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92c311bc_24a7f16b",
         "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
         "patchSetId": 4
