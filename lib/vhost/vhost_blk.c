@@ -53,6 +53,10 @@ struct spdk_vhost_blk_task {
 
 	uint16_t req_idx;
 
+	/* for io wait */
+	uint32_t payload_len;
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+
 	/* If set, the task is currently used for I/O processing. */
 	bool used;
 
@@ -182,6 +186,61 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	blk_request_finish(success, task);
 }
 
+static void
+blk_request_resubmit(void *arg)
+{
+	struct spdk_vhost_blk_task *task = (struct spdk_vhost_blk_task *)arg;
+	struct spdk_vhost_blk_dev *bvdev = task->bvdev;
+	const struct virtio_blk_outhdr *req;
+	struct iovec *iov;
+	int rc = 0;
+
+	iov = &task->iovs[0];
+	req = iov->iov_base;
+
+	switch (req->type) {
+	case VIRTIO_BLK_T_IN:
+		rc = spdk_bdev_readv(bvdev->bdev_desc, bvdev->bdev_io_channel,
+				     iov, task->iovcnt, req->sector * 512, task->payload_len,
+				     blk_request_complete_cb, arg);
+		if (rc) {
+			invalid_blk_request(arg, VIRTIO_BLK_S_IOERR);
+		}
+		break;
+	case VIRTIO_BLK_T_OUT:
+		rc = spdk_bdev_writev(bvdev->bdev_desc, bvdev->bdev_io_channel,
+				      iov, task->iovcnt, req->sector * 512, task->payload_len,
+				      blk_request_complete_cb, arg);
+		if (rc) {
+			invalid_blk_request(arg, VIRTIO_BLK_S_IOERR);
+		}
+		break;
+	default:
+		SPDK_ERRLOG("Unsupported io type %d\n", req->type);
+		invalid_blk_request(arg, VIRTIO_BLK_S_UNSUPP);
+		break;
+	}
+}
+
+static void
+blk_request_queue_io(struct spdk_vhost_blk_task *task, uint32_t payload_len)
+{
+	int rc;
+	struct spdk_vhost_blk_dev *bvdev = task->bvdev;
+	struct spdk_bdev *bdev = bvdev->bdev;
+
+	task->payload_len = payload_len;
+	task->bdev_io_wait.bdev = bdev;
+	task->bdev_io_wait.cb_fn = blk_request_resubmit;
+	task->bdev_io_wait.cb_arg = (void *)task;
+
+	rc = spdk_bdev_queue_io_wait(bdev, bvdev->bdev_io_channel, &task->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in vhost_blk, rc=%d\n", rc);
+		invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+	}
+}
+
 static int
 process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
 		    struct spdk_vhost_virtqueue *vq)
@@ -255,8 +314,13 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		}
 
 		if (rc) {
-			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
-			return -1;
+			if (rc == -ENOMEM) {
+				SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "No memory, start to queue io.\n");
+				blk_request_queue_io(task, payload_len);
+			} else {
+				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				return -1;
+			}
 		}
 		break;
 	case VIRTIO_BLK_T_GET_ID:
