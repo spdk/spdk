@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e48ed04f_843d1fb3",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-13T09:09:17Z",
+      "side": 1,
+      "message": "(\"no memory to allocate qpair req buf with %d requests\\n\", num_requests)",
+      "range": {
+        "startLine": 454,
+        "startChar": 15,
+        "endLine": 454,
+        "endChar": 47
+      },
+      "revId": "e0bec3e7521f9240a23c87d1e9a0b7a06b045408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be4be89f_a26a0c51",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-13T09:09:17Z",
+      "side": 1,
+      "message": "Looks like this line can be merged to above error log.",
+      "range": {
+        "startLine": 458,
+        "startChar": 1,
+        "endLine": 458,
+        "endChar": 54
+      },
+      "revId": "e0bec3e7521f9240a23c87d1e9a0b7a06b045408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
