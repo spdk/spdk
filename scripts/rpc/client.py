@@ -4,7 +4,7 @@ import time
 
 
 def print_dict(d):
-    print(json.dumps(d, indent=2))
+    print(json.dumps(d, indent=2, separators=(',', ': ')))
 
 
 class JSONRPCException(Exception):
