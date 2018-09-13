@@ -451,16 +451,39 @@ invalid:
 SPDK_RPC_REGISTER("remove_vhost_controller", spdk_rpc_remove_vhost_controller, SPDK_RPC_RUNTIME)
 
 struct rpc_get_vhost_ctrlrs {
+	char *name;
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request;
 };
+
+static void
+_spdk_rpc_get_vhost_controller(struct spdk_json_write_ctx *w, struct spdk_vhost_dev *vdev)
+{
+	uint32_t delay_base_us, iops_threshold;
+
+	spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "ctrlr", spdk_vhost_dev_get_name(vdev));
+	spdk_json_write_named_string_fmt(w, "cpumask", "0x%s", spdk_cpuset_fmt(vdev->cpumask));
+	spdk_json_write_named_uint32(w, "delay_base_us", delay_base_us);
+	spdk_json_write_named_uint32(w, "iops_threshold", iops_threshold);
+	spdk_json_write_named_string(w, "socket", vdev->path);
+
+	spdk_json_write_named_object_begin(w, "backend_specific");
+	spdk_vhost_dump_info_json(vdev, w);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
 
 static int
 spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct rpc_get_vhost_ctrlrs *ctx = arg;
-	uint32_t delay_base_us, iops_threshold;
 
+	assert(ctx->name == NULL);
 
 	if (vdev == NULL) {
 		spdk_json_write_array_end(ctx->w);
@@ -469,24 +492,43 @@ spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)
 		return 0;
 	}
 
-	spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
-
-	spdk_json_write_object_begin(ctx->w);
-
-	spdk_json_write_named_string(ctx->w, "ctrlr", spdk_vhost_dev_get_name(vdev));
-	spdk_json_write_named_string_fmt(ctx->w, "cpumask", "0x%s", spdk_cpuset_fmt(vdev->cpumask));
-	spdk_json_write_named_uint32(ctx->w, "delay_base_us", delay_base_us);
-	spdk_json_write_named_uint32(ctx->w, "iops_threshold", iops_threshold);
-	spdk_json_write_named_string(ctx->w, "socket", vdev->path);
-
-	spdk_json_write_named_object_begin(ctx->w, "backend_specific");
-	spdk_vhost_dump_info_json(vdev, ctx->w);
-	spdk_json_write_object_end(ctx->w);
-
-	spdk_json_write_object_end(ctx->w);
+	_spdk_rpc_get_vhost_controller(ctx->w, vdev);
 	return 0;
 }
 
+static int
+spdk_rpc_get_vhost_controller_cb(struct spdk_vhost_dev *vdev, void *arg)
+{
+	struct rpc_get_vhost_ctrlrs *ctx = arg;
+
+	assert(ctx->name != NULL);
+
+	if (vdev == NULL) {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(ENODEV));
+		goto free_name_ctx;
+	}
+
+	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
+	if (ctx->w == NULL) {
+		goto free_name_ctx;
+	}
+
+	spdk_json_write_array_begin(ctx->w);
+	_spdk_rpc_get_vhost_controller(ctx->w, vdev);
+	spdk_json_write_array_end(ctx->w);
+
+	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+
+free_name_ctx:
+	free(ctx->name);
+	free(ctx);
+	return 0;
+}
+
+static const struct spdk_json_object_decoder rpc_get_vhost_ctrlrs_decoders[] = {
+	{"name", offsetof(struct rpc_get_vhost_ctrlrs, name), spdk_json_decode_string, true},
+};
 
 static void
 spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
@@ -495,16 +537,25 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 	struct rpc_get_vhost_ctrlrs *ctx;
 	struct spdk_json_write_ctx *w;
 
-	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_vhost_controllers requires no parameters");
-		return;
-	}
-
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(ENOMEM));
+		return;
+	}
+
+	if (params && spdk_json_decode_object(params, rpc_get_vhost_ctrlrs_decoders,
+					      SPDK_COUNTOF(rpc_get_vhost_ctrlrs_decoders), ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		free(ctx);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		return;
+	}
+
+	if (ctx->name) {
+		ctx->request = request;
+		spdk_vhost_call_external_event(ctx->name, spdk_rpc_get_vhost_controller_cb, ctx);
 		return;
 	}
 
