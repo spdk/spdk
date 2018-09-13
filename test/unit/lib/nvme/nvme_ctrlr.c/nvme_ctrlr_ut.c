@@ -65,7 +65,9 @@ int set_status_cpl = -1;
 
 DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 	    (struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_t host_id_size,
-	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0)
+	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+DEFINE_STUB(nvme_ctrlr_identify_ns, int, (struct spdk_nvme_ns *ns), 0);
+DEFINE_STUB(nvme_ctrlr_identify_id_desc, int, (struct spdk_nvme_ns *ns), 0);
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,

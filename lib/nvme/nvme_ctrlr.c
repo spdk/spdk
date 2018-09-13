@@ -632,6 +632,12 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "wait for get number of queues";
 	case NVME_CTRLR_STATE_CONSTRUCT_NS:
 		return "construct namespaces";
+	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
+		return "identify active ns";
+	case NVME_CTRLR_STATE_IDENTIFY_NS:
+		return "identify ns";
+	case NVME_CTRLR_STATE_IDENTIFY_ID_DESCS:
+		return "identify id descriptor";
 	case NVME_CTRLR_STATE_CONFIGURE_AER:
 		return "configure AER";
 	case NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER:
@@ -956,6 +962,54 @@ fail:
 	return rc;
 }
 
+static int
+nvme_ctrlr_identify_namespaces(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t nsid;
+	struct spdk_nvme_ns *ns;
+	int rc;
+
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		if (ns == NULL) {
+			continue;
+		}
+
+		ns->ctrlr = ctrlr;
+		ns->id = nsid;
+
+		rc = nvme_ctrlr_identify_ns(ns);
+		if (rc < 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+static int
+nvme_ctrlr_identify_id_desc_namespaces(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t nsid;
+	struct spdk_nvme_ns *ns;
+	int rc;
+
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		if (ns == NULL) {
+			continue;
+		}
+		rc = nvme_ctrlr_identify_id_desc(ns);
+		if (rc < 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
 static void
 nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -1210,17 +1264,11 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->active_ns_list = NULL;
 }
 
-static int
+static void
 nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int rc;
 	uint32_t i, nn = ctrlr->cdata.nn;
 	struct spdk_nvme_ns_data *nsdata;
-
-	rc = nvme_ctrlr_identify_active_ns(ctrlr);
-	if (rc) {
-		return rc;
-	}
 
 	for (i = 0; i < nn; i++) {
 		struct spdk_nvme_ns	*ns = &ctrlr->ns[i];
@@ -1237,8 +1285,6 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			nvme_ns_destruct(ns);
 		}
 	}
-
-	return 0;
 }
 
 static int
@@ -1276,10 +1322,6 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->num_ns = nn;
 	}
 
-	rc = nvme_ctrlr_update_namespaces(ctrlr);
-	if (rc) {
-		goto fail;
-	}
 	return 0;
 
 fail:
@@ -1294,6 +1336,7 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	struct spdk_nvme_ctrlr		*ctrlr = aer->ctrlr;
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	union spdk_nvme_async_event_completion	event;
+	int					rc;
 
 	if (cpl->status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION) {
 		/*
@@ -1308,6 +1351,10 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	event.raw = cpl->cdw0;
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
+		rc = nvme_ctrlr_identify_active_ns(ctrlr);
+		if (rc) {
+			return;
+		}
 		nvme_ctrlr_update_namespaces(ctrlr);
 	}
 
@@ -1833,6 +1880,24 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_CONSTRUCT_NS:
 		rc = nvme_ctrlr_construct_namespaces(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
+		rc = nvme_ctrlr_identify_active_ns(ctrlr);
+		if (rc < 0) {
+			nvme_ctrlr_destruct_namespaces(ctrlr);
+		}
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_IDENTIFY_NS:
+		rc = nvme_ctrlr_identify_namespaces(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ID_DESCS, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_IDENTIFY_ID_DESCS:
+		rc = nvme_ctrlr_identify_id_desc_namespaces(ctrlr);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER, NVME_TIMEOUT_INFINITE);
 		break;
 
