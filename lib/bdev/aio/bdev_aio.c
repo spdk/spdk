@@ -81,7 +81,7 @@ bdev_aio_open(struct file_disk *disk)
 {
 	int fd;
 
-	fd = open(disk->filename, O_RDWR | O_DIRECT);
+	fd = open(disk->filename, O_RDWR);
 	if (fd < 0) {
 		/* Try without O_DIRECT for non-disk files */
 		fd = open(disk->filename, O_RDWR);
