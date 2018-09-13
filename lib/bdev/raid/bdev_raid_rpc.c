@@ -184,8 +184,8 @@ static void
 free_rpc_construct_raid_bdev(struct rpc_construct_raid_bdev *req)
 {
 	free(req->name);
-	for (size_t iter = 0; iter < req->base_bdevs.num_base_bdevs; iter++) {
-		free(req->base_bdevs.base_bdevs[iter]);
+	for (size_t i = 0; i < req->base_bdevs.num_base_bdevs; i++) {
+		free(req->base_bdevs.base_bdevs[i]);
 	}
 }
 
@@ -275,14 +275,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Failed to add any base bdev to RAID bdev %s: %s",
-						     req.name, spdk_strerror(-rc));
-		free_rpc_construct_raid_bdev(&req);
-		return;
-	}
-
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Failed to add base bdev to RAID bdev %s: %s",
 						     req.name, spdk_strerror(-rc));
 		free_rpc_construct_raid_bdev(&req);
 		return;
