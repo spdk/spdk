@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79c6cb35_4c34db48",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T09:32:31Z",
+      "side": 1,
+      "message": "Please be consistent. iSCSI patch removes raid bdev first and then malloc bdevs.\nBut this patch removes malloc bdevs first and then raid bdev.\n\nraid bdev is implemented to be fine for both cases but I feel iSCSI patch\u0027s ordering is better for the hotplug test case.",
+      "revId": "84394c58b45c0376abb7c6e8e7e6898532a5e5f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98266b4a_2f3a2c57",
+        "filename": "test/nvmf/lvol/nvmf_lvol.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T09:32:31Z",
+      "side": 1,
+      "message": "Please see the comment in the patch to iSCSI raid bdev test.",
+      "revId": "84394c58b45c0376abb7c6e8e7e6898532a5e5f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
