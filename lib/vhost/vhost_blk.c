@@ -71,6 +71,18 @@ struct spdk_vhost_blk_dev {
 	bool readonly;
 };
 
+struct blk_request_resubmit_ctx {
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+	uint32_t io_type;
+	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_io_channel *channel;
+	struct iovec *iov;
+	int iovcnt;
+	uint64_t lba;
+	uint32_t lba_count;
+	void *cb_args;
+};
+
 /* forward declaration */
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend;
 
@@ -182,6 +194,77 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	blk_request_finish(success, task);
 }
 
+static void
+blk_request_resubmit(void *arg)
+{
+	struct blk_request_resubmit_ctx *ctx = (struct blk_request_resubmit_ctx *)arg;
+	struct spdk_vhost_blk_dev *bvdev = ctx->bvdev;
+	int rc = 0;
+
+	switch (ctx->io_type) {
+	case VIRTIO_BLK_T_IN:
+		rc = spdk_bdev_readv(bvdev->bdev_desc, ctx->channel,
+				     ctx->iov, ctx->iovcnt, ctx->lba * 512, ctx->lba_count,
+				     blk_request_complete_cb, ctx->cb_args);
+		if (rc) {
+			invalid_blk_request(ctx->cb_args, VIRTIO_BLK_S_IOERR);
+		}
+		break;
+	case VIRTIO_BLK_T_OUT:
+		rc = spdk_bdev_writev(bvdev->bdev_desc, ctx->channel,
+				      ctx->iov, ctx->iovcnt, ctx->lba * 512, ctx->lba_count,
+				      blk_request_complete_cb, ctx->cb_args);
+		if (rc) {
+			invalid_blk_request(ctx->cb_args, VIRTIO_BLK_S_IOERR);
+		}
+		break;
+	default:
+		SPDK_ERRLOG("Unsupported io type %d\n", ctx->io_type);
+		assert(false);
+		invalid_blk_request(ctx->cb_args, VIRTIO_BLK_S_UNSUPP);
+		break;
+	}
+	free(ctx);
+}
+
+static void
+blk_request_queue_io(struct spdk_vhost_blk_dev *bvdev, struct spdk_io_channel *channel,
+		     uint32_t io_type, struct iovec *iov, int iovcnt, uint64_t lba, uint32_t len,
+		     void *cb_args)
+{
+	int rc;
+	struct spdk_bdev *bdev = bvdev->bdev;
+	struct blk_request_resubmit_ctx *ctx;
+	struct spdk_vhost_blk_task *task = (struct spdk_vhost_blk_task *)cb_args;
+
+	ctx = calloc(1, sizeof(struct blk_request_resubmit_ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Not enough memory to queue io for vhost_blk.\n");
+		blk_request_finish(false, task);
+		return;
+	}
+
+	ctx->io_type = io_type;
+	ctx->bvdev = bvdev;
+	ctx->channel = channel;
+	ctx->iovcnt = iovcnt;
+	ctx->iov = iov;
+	ctx->lba = lba;
+	ctx->lba_count = len;
+	ctx->cb_args = cb_args;
+	ctx->bdev_io_wait.bdev = bdev;
+	ctx->bdev_io_wait.cb_fn = blk_request_resubmit;
+	ctx->bdev_io_wait.cb_arg = ctx;
+
+	rc = spdk_bdev_queue_io_wait(bdev, channel, &ctx->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in vhost_blk, rc=%d\n", rc);
+		invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+		free(ctx);
+		assert(false);
+	}
+}
+
 static int
 process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
 		    struct spdk_vhost_virtqueue *vq)
@@ -255,8 +338,14 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		}
 
 		if (rc) {
-			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
-			return -1;
+			if (rc == -ENOMEM) {
+				SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "No memory, start to queue io.\n");
+				blk_request_queue_io(bvdev, bvdev->bdev_io_channel, type, &task->iovs[1], task->iovcnt,
+						     req->sector, payload_len, task);
+			} else {
+				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				return -1;
+			}
 		}
 		break;
 	case VIRTIO_BLK_T_GET_ID:
