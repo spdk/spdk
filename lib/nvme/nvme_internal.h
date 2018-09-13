@@ -449,9 +449,24 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES,
 
 	/**
-	 * Construct Namespaces of the controller.
+	 * Construct Namespace data structures of the controller.
 	 */
 	NVME_CTRLR_STATE_CONSTRUCT_NS,
+
+	/**
+	 * Get active Namespace list of the controller.
+	 */
+	NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS,
+
+	/**
+	 * Get Identify Namespace Data structure for each NS.
+	 */
+	NVME_CTRLR_STATE_IDENTIFY_NS,
+
+	/**
+	 * Get Identify Namespace Identification Descriptor.
+	 */
+	NVME_CTRLR_STATE_IDENTIFY_ID_DESCS,
 
 	/**
 	 * Configure AER of the controller.
