@@ -383,14 +383,18 @@ test_mem_map_registration(void)
 
 	/* Unregister the middle page of the larger region. */
 	rc = spdk_mem_unregister((void *)VALUE_2MB, VALUE_2MB);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -ERANGE);
 
 	/* Unregister the first page */
 	rc = spdk_mem_unregister((void *)0, VALUE_2MB);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -ERANGE);
 
 	/* Unregister the third page */
 	rc = spdk_mem_unregister((void *)(2 * VALUE_2MB), VALUE_2MB);
+	CU_ASSERT(rc == -ERANGE);
+
+	/* Unregister the entire address range */
+	rc = spdk_mem_unregister((void *)0, 3 * VALUE_2MB);
 	CU_ASSERT(rc == 0);
 
 	spdk_mem_map_free(&map);
