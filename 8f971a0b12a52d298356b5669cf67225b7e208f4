@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "bec7a0d6_f68fece2",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-13T01:01:22Z",
+      "side": 1,
+      "message": "I understand your point here, I can change it accordingly, this will make unit tests more easily too.",
+      "parentUuid": "33529c80_b9728e2c",
+      "revId": "8f971a0b12a52d298356b5669cf67225b7e208f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3b2b80c_cb9a5be6",
         "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
         "patchSetId": 5
