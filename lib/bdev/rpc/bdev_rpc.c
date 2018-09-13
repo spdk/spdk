@@ -53,51 +53,49 @@ spdk_rpc_get_bdevs_iostat_cb(struct spdk_bdev *bdev,
 	struct spdk_json_write_ctx *w = ctx->w;
 	const char *bdev_name;
 
-	if (rc != 0) {
+	if (rc != 0 || bdev == NULL) {
 		goto done;
 	}
 
 	bdev_name = spdk_bdev_get_name(bdev);
-	if (bdev_name != NULL) {
-		spdk_json_write_object_begin(w);
+	spdk_json_write_object_begin(w);
 
-		spdk_json_write_name(w, "name");
-		spdk_json_write_string(w, bdev_name);
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, bdev_name);
 
-		spdk_json_write_name(w, "bytes_read");
-		spdk_json_write_uint64(w, stat->bytes_read);
+	spdk_json_write_name(w, "bytes_read");
+	spdk_json_write_uint64(w, stat->bytes_read);
 
-		spdk_json_write_name(w, "num_read_ops");
-		spdk_json_write_uint64(w, stat->num_read_ops);
+	spdk_json_write_name(w, "num_read_ops");
+	spdk_json_write_uint64(w, stat->num_read_ops);
 
-		spdk_json_write_name(w, "bytes_written");
-		spdk_json_write_uint64(w, stat->bytes_written);
+	spdk_json_write_name(w, "bytes_written");
+	spdk_json_write_uint64(w, stat->bytes_written);
 
-		spdk_json_write_name(w, "num_write_ops");
-		spdk_json_write_uint64(w, stat->num_write_ops);
+	spdk_json_write_name(w, "num_write_ops");
+	spdk_json_write_uint64(w, stat->num_write_ops);
 
-		spdk_json_write_name(w, "read_latency_ticks");
-		spdk_json_write_uint64(w, stat->read_latency_ticks);
+	spdk_json_write_name(w, "read_latency_ticks");
+	spdk_json_write_uint64(w, stat->read_latency_ticks);
 
-		spdk_json_write_name(w, "write_latency_ticks");
-		spdk_json_write_uint64(w, stat->write_latency_ticks);
+	spdk_json_write_name(w, "write_latency_ticks");
+	spdk_json_write_uint64(w, stat->write_latency_ticks);
 
-		if (spdk_bdev_get_qd_sampling_period(bdev)) {
-			spdk_json_write_name(w, "queue_depth_polling_period");
-			spdk_json_write_uint64(w, spdk_bdev_get_qd_sampling_period(bdev));
+	if (spdk_bdev_get_qd_sampling_period(bdev)) {
+		spdk_json_write_name(w, "queue_depth_polling_period");
+		spdk_json_write_uint64(w, spdk_bdev_get_qd_sampling_period(bdev));
 
-			spdk_json_write_name(w, "queue_depth");
-			spdk_json_write_uint64(w, spdk_bdev_get_qd(bdev));
+		spdk_json_write_name(w, "queue_depth");
+		spdk_json_write_uint64(w, spdk_bdev_get_qd(bdev));
 
-			spdk_json_write_name(w, "io_time");
-			spdk_json_write_uint64(w, spdk_bdev_get_io_time(bdev));
+		spdk_json_write_name(w, "io_time");
+		spdk_json_write_uint64(w, spdk_bdev_get_io_time(bdev));
 
-			spdk_json_write_name(w, "weighted_io_time");
-			spdk_json_write_uint64(w, spdk_bdev_get_weighted_io_time(bdev));
-		}
-
-		spdk_json_write_object_end(w);
+		spdk_json_write_name(w, "weighted_io_time");
+		spdk_json_write_uint64(w, spdk_bdev_get_weighted_io_time(bdev));
 	}
+
+	spdk_json_write_object_end(w);
 
 done:
 	free(stat);
