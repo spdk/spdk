@@ -3,6 +3,9 @@
 
 Vagrant.configure(2) do |config|
 
+  # set virtual machine name
+  config.vm.define (ENV['VM_NAME'] ||"default")
+
   # Pick the right distro and bootstrap, default is ubuntu1604
   distro = ( ENV['SPDK_VAGRANT_DISTRO'] || "fedora26")
   case distro
