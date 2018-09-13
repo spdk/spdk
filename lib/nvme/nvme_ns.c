@@ -39,28 +39,12 @@ _nvme_ns_get_data(struct spdk_nvme_ns *ns)
 	return &ns->ctrlr->nsdata[ns->id - 1];
 }
 
-static
-int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
+static void
+nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 {
-	struct nvme_completion_poll_status	status;
-	struct spdk_nvme_ns_data		*nsdata;
-	int					rc;
+	struct spdk_nvme_ns_data	*nsdata;
 
 	nsdata = _nvme_ns_get_data(ns);
-	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id,
-				     nsdata, sizeof(*nsdata),
-				     nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		return rc;
-	}
-
-	if (spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status,
-			&ns->ctrlr->ctrlr_lock)) {
-		/* This can occur if the namespace is not active. Simply zero the
-		 * namespace data and continue. */
-		nvme_ns_destruct(ns);
-		return 0;
-	}
 
 	ns->flags = 0x0000;
 
@@ -110,24 +94,62 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
 	}
+}
+
+int
+nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
+{
+	struct nvme_completion_poll_status	status;
+	struct spdk_nvme_ns_data		*nsdata;
+	int					rc;
+
+	nsdata = _nvme_ns_get_data(ns);
+	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id,
+				     nsdata, sizeof(*nsdata),
+				     nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+
+	if (spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status,
+			&ns->ctrlr->ctrlr_lock)) {
+		/* This can occur if the namespace is not active. Simply zero the
+		 * namespace data and continue. */
+		nvme_ns_destruct(ns);
+		return 0;
+	}
+
+	nvme_ns_set_identify_data(ns);
+
+	return 0;
+}
+
+int
+nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
+{
+	struct nvme_completion_poll_status      status;
+	int                                     rc;
 
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
-	if (ns->ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 3, 0) &&
-	    !(ns->ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Attempting to retrieve NS ID Descriptor List\n");
-		rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
-					     ns->id_desc_list, sizeof(ns->id_desc_list),
-					     nvme_completion_poll_cb, &status);
-		if (rc == 0) {
-			rc = spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status, &ns->ctrlr->ctrlr_lock);
-		}
 
-		if (rc != 0 || spdk_nvme_cpl_is_error(&status.cpl)) {
-			SPDK_WARNLOG("Failed to retrieve NS ID Descriptor List\n");
-			memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
-		}
-	} else {
+	if (ns->ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) ||
+	    (ns->ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
+		return 0;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Attempting to retrieve NS ID Descriptor List\n");
+	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
+				     ns->id_desc_list, sizeof(ns->id_desc_list),
+				     nvme_completion_poll_cb, &status);
+	if (rc < 0) {
+		return rc;
+	}
+
+	rc = spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status, &ns->ctrlr->ctrlr_lock);
+	if (rc != 0) {
+		SPDK_WARNLOG("Failed to retrieve NS ID Descriptor List\n");
+		memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
 	}
 
 	return rc;
@@ -297,12 +319,19 @@ spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
 int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 		      struct spdk_nvme_ctrlr *ctrlr)
 {
+	int	rc;
+
 	assert(id > 0);
 
 	ns->ctrlr = ctrlr;
 	ns->id = id;
 
-	return nvme_ns_identify_update(ns);
+	rc = nvme_ctrlr_identify_ns(ns);
+	if (rc != 0) {
+		return rc;
+	}
+
+	return nvme_ctrlr_identify_id_desc(ns);
 }
 
 void nvme_ns_destruct(struct spdk_nvme_ns *ns)
