@@ -33,7 +33,7 @@ $rpc_py load_config < $base_iscsi_config
 $rpc_py save_config > $last_iscsi_config
 timing_exit iscsi_json_config_restart_spdk
 
-diff $base_iscsi_config $last_iscsi_config
+json_diff $base_iscsi_config $last_iscsi_config
 
 $clear_config_py clear_config
 kill_targets

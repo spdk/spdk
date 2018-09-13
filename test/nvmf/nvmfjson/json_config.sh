@@ -23,7 +23,7 @@ function test_subsystems() {
 	$rpc_py load_config < $base_nvmf_config
 	$rpc_py save_config > $last_nvmf_config
 
-	diff $base_nvmf_config $last_nvmf_config
+	json_diff $base_nvmf_config $last_nvmf_config
 
 	clear_nvmf_subsystem_config
 	kill_targets
