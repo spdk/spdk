@@ -372,7 +372,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	int rc;
 	void *seg_vaddr;
 	size_t seg_len;
-	uint64_t reg;
+	uint64_t reg, newreg;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
@@ -387,6 +387,12 @@ spdk_mem_unregister(void *vaddr, size_t len)
 
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
 
+	reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB);
+	if ((reg & REG_MAP_NOTIFY_START) == 0) {
+		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+		return -ERANGE;
+	}
+
 	seg_vaddr = vaddr;
 	seg_len = len;
 	while (seg_len > 0) {
@@ -395,8 +401,16 @@ spdk_mem_unregister(void *vaddr, size_t len)
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			return -EINVAL;
 		}
+
 		seg_vaddr += VALUE_2MB;
 		seg_len -= VALUE_2MB;
+	}
+
+	newreg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, VALUE_2MB);
+	if ((newreg & REG_MAP_NOTIFY_START) == 0 &&
+	    (newreg & REG_MAP_REF_MASK) >= (reg & REG_MAP_REF_MASK)) {
+		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+		return -ERANGE;
 	}
 
 	seg_vaddr = vaddr;
