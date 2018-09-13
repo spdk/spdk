@@ -53,6 +53,10 @@ struct spdk_vhost_blk_task {
 
 	uint16_t req_idx;
 
+	/* for io wait */
+	uint32_t payload_len;
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+
 	/* If set, the task is currently used for I/O processing. */
 	bool used;
 
@@ -73,6 +77,10 @@ struct spdk_vhost_blk_dev {
 
 /* forward declaration */
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend;
+
+static int
+process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
+		    struct spdk_vhost_virtqueue *vq);
 
 static void
 blk_task_finish(struct spdk_vhost_blk_task *task)
@@ -182,6 +190,37 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	blk_request_finish(success, task);
 }
 
+static void
+blk_request_resubmit(void *arg)
+{
+	struct spdk_vhost_blk_task *task = (struct spdk_vhost_blk_task *)arg;
+	int rc = 0;
+
+	rc = process_blk_request(task, task->bvdev, task->vq);
+	if (rc) {
+		SPDK_ERRLOG("blk_request_resubmit failed with rc = %d.\n", rc);
+	}
+}
+
+static void
+blk_request_queue_io(struct spdk_vhost_blk_task *task, uint32_t payload_len)
+{
+	int rc;
+	struct spdk_vhost_blk_dev *bvdev = task->bvdev;
+	struct spdk_bdev *bdev = bvdev->bdev;
+
+	task->payload_len = payload_len;
+	task->bdev_io_wait.bdev = bdev;
+	task->bdev_io_wait.cb_fn = blk_request_resubmit;
+	task->bdev_io_wait.cb_arg = task;
+
+	rc = spdk_bdev_queue_io_wait(bdev, bvdev->bdev_io_channel, &task->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in vhost_blk, rc=%d\n", rc);
+		invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+	}
+}
+
 static int
 process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
 		    struct spdk_vhost_virtqueue *vq)
@@ -255,8 +294,13 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		}
 
 		if (rc) {
-			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
-			return -1;
+			if (rc == -ENOMEM) {
+				SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "No memory, start to queue io.\n");
+				blk_request_queue_io(task, payload_len);
+			} else {
+				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				return -1;
+			}
 		}
 		break;
 	case VIRTIO_BLK_T_GET_ID:
