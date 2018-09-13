@@ -3635,15 +3635,21 @@ Example response:
 
 ## get_vhost_controllers {#rpc_get_vhost_controllers}
 
-Display information about all vhost controllers.
+Display information about all or specific vhost controller(s).
 
 ### Parameters
 
-This method has no parameters.
+The user may specify no parameters in order to list all controllers, or a controller may be
+specified by name.
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Vhost controller name
+
 
 ### Response {#rpc_get_vhost_controllers_response}
 
-Response is an array of objects describing each controllers. Common fields are:
+Response is an array of objects describing requested controller(s). Common fields are:
 
 Name                    | Type        | Description
 ----------------------- | ----------- | -----------

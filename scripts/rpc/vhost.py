@@ -106,12 +106,19 @@ def construct_vhost_blk_controller(client, ctrlr, dev_name, cpumask=None, readon
     return client.call('construct_vhost_blk_controller', params)
 
 
-def get_vhost_controllers(client):
-    """Get list of configured vhost controllers.
+def get_vhost_controllers(client, name=None):
+    """Get information about configured vhost controllers.
+
+    Args:
+        name: controller name to query (optional; if omitted, query all controllers)
+
     Returns:
         List of vhost controllers.
     """
-    return client.call('get_vhost_controllers')
+    params = {}
+    if name:
+        params['name'] = name
+    return client.call('get_vhost_controllers', params)
 
 
 def remove_vhost_controller(client, ctrlr):
