@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "741ffb7d_335d8415",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-13T08:30:10Z",
+      "side": 1,
+      "message": "For this callback, it is executed as below:\n\nstatic void\n_spdk_bdev_get_device_stat_done(struct spdk_io_channel_iter *i, int status)\n{\n\tvoid *io_device \u003d spdk_io_channel_iter_get_io_device(i);\n\tstruct spdk_bdev_iostat_ctx *bdev_iostat_ctx \u003d spdk_io_channel_iter_get_ctx(i);\n\n\tbdev_iostat_ctx-\u003ecb(__bdev_from_io_dev(io_device), bdev_iostat_ctx-\u003estat,\n\t\t\t    bdev_iostat_ctx-\u003ecb_arg, 0);\n\tfree(bdev_iostat_ctx);\n}\n\nShould it already meets some problem at the handling of \"__bdev_from_io_dev(io_device)\"? Can we determine the removed bdev earlier and set the \"rc\" parameter status properly?",
+      "range": {
+        "startLine": 56,
+        "startChar": 16,
+        "endLine": 56,
+        "endChar": 28
+      },
+      "revId": "621db883d30ca643493170303f5dac5d267bfde4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
