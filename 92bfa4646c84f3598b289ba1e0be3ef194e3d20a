@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ad7d94a_dca6a4a2",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 845,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-13T09:31:10Z",
+      "side": 1,
+      "message": "\"init qpair with %d IO requests\\n\", opts.io_queue_requests",
+      "range": {
+        "startLine": 845,
+        "startChar": 10,
+        "endLine": 845,
+        "endChar": 27
+      },
+      "revId": "92bfa4646c84f3598b289ba1e0be3ef194e3d20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c044be16_1108afb0",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-13T09:31:10Z",
+      "side": 1,
+      "message": "Looks like this change make the \"-n\" max number of IOs to sent as a required parameter. Can we make it an optional parameter. If it is not set, then we use the time to limit the I/Os sent. If it is set, then IO_count will decide how many IOs to send. If both set, the smaller one will decide how long the Perf tool will run.",
+      "range": {
+        "startLine": 1377,
+        "startChar": 20,
+        "endLine": 1377,
+        "endChar": 39
+      },
+      "revId": "92bfa4646c84f3598b289ba1e0be3ef194e3d20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
