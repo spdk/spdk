@@ -1,9 +1,10 @@
 #!/usr/bin/python
+import sys
 import json
 import argparse
 
 
-def filter_methods(filename, do_remove_global_rpcs):
+def filter_methods(do_remove_global_rpcs):
     global_rpcs = [
         'set_iscsi_options',
         'set_nvmf_target_config',
@@ -13,8 +14,7 @@ def filter_methods(filename, do_remove_global_rpcs):
         'set_bdev_nvme_hotplug',
     ]
 
-    with open(filename) as json_file:
-        data = json.loads(json_file.read())
+    data = json.loads(sys.stdin.read())
     out = {'subsystems': []}
     for s in data['subsystems']:
         if s['config']:
@@ -31,16 +31,15 @@ def filter_methods(filename, do_remove_global_rpcs):
             'config': s_config,
         })
 
-    print json.dumps(out, indent=2)
+    print(json.dumps(out, indent=2))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-method', dest='method')
-    parser.add_argument('-filename', dest='filename')
 
     args = parser.parse_args()
     if args.method == "delete_global_parameters":
-        filter_methods(args.filename, True)
+        filter_methods(True)
     if args.method == "delete_configs":
-        filter_methods(args.filename, False)
+        filter_methods(False)
