@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db67f90a_2aacaf83",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-13T17:58:42Z",
+      "side": 1,
+      "message": "I think you should leave this as an embedded structure.",
+      "revId": "1a009c0cd9e38d2e6f3f82fcb63c4df24c7cae5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac1867db_b64ba165",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-13T17:58:42Z",
+      "side": 1,
+      "message": "It would be safest if you left opts as an embedded structure and then copied the user\u0027s ops structure into this one. That way there isn\u0027t a question of who owns the memory.",
+      "revId": "1a009c0cd9e38d2e6f3f82fcb63c4df24c7cae5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
