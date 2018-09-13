@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eec2af4e_b30b37a6",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 68
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-13T12:54:24Z",
+      "side": 1,
+      "message": "~~~{.sh}\ncat old_format.ini | scripts/config_converter.py \u003e new_json_format.json\n~~~",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 71
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c9815e3_6ac5b502",
+        "filename": "autotest.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-13T12:54:24Z",
+      "side": 1,
+      "message": "wrong indent",
+      "range": {
+        "startLine": 106,
+        "startChar": 0,
+        "endLine": 106,
+        "endChar": 8
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cd56d27_ad3f6437",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-13T12:54:24Z",
+      "side": 1,
+      "message": "wrong indent",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 8
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43e4a66f_45ed9228",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-13T12:54:24Z",
+      "side": 1,
+      "message": "But only if we really want to run with Python2 (personally I\u0027d remove this)",
+      "range": {
+        "startLine": 43,
+        "startChar": 16,
+        "endLine": 43,
+        "endChar": 35
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0da0eaab_b3ae3fb5",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-13T12:54:24Z",
+      "side": 1,
+      "message": "python3 has this in stdlib",
+      "range": {
+        "startLine": 43,
+        "startChar": 36,
+        "endLine": 43,
+        "endChar": 56
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0ee8120_c3d42d03",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-13T12:54:24Z",
+      "side": 1,
+      "message": "Just a side-note, not related to this commit: we could in future add an option for a Python venv, so that the global environment is not polluted by our dependencies.",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 36
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d4c69f4_31405555",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-13T12:54:24Z",
+      "side": 1,
+      "message": "sudo apt-get install python-configparser\nBut only if we really want to run with Python2 (personally I\u0027d remove this line)",
+      "range": {
+        "startLine": 61,
+        "startChar": 1,
+        "endLine": 61,
+        "endChar": 25
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "553dfaa9_e9375d13",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-13T12:54:24Z",
+      "side": 1,
+      "message": "python3 has configparser in stdlib: https://docs.python.org/3/library/configparser.html",
+      "range": {
+        "startLine": 62,
+        "startChar": 1,
+        "endLine": 62,
+        "endChar": 26
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ae28523_d7929834",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-13T12:54:24Z",
+      "side": 1,
+      "message": "Uhm... I think this should have been added when we created JSON-RPC scripts, but OK, let it be here:P",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 44
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
