@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3d6628f5_9d570ef4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 68
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-13T14:12:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eec2af4e_b30b37a6",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 71
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c9815e3_6ac5b502",
         "filename": "autotest.sh",
         "patchSetId": 68
@@ -59,6 +83,30 @@
       "writtenOn": "2018-09-13T12:54:24Z",
       "side": 1,
       "message": "wrong indent",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 8
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "858da25f_60c69a3b",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-13T14:12:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4cd56d27_ad3f6437",
       "range": {
         "startLine": 42,
         "startChar": 0,
@@ -117,6 +165,54 @@
     },
     {
       "key": {
+        "uuid": "94649db2_f9500d50",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-13T14:12:14Z",
+      "side": 1,
+      "message": "Pawel W advised to add this package",
+      "parentUuid": "43e4a66f_45ed9228",
+      "range": {
+        "startLine": 43,
+        "startChar": 16,
+        "endLine": 43,
+        "endChar": 35
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4619fb33_a7ac5219",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-13T14:12:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0da0eaab_b3ae3fb5",
+      "range": {
+        "startLine": 43,
+        "startChar": 36,
+        "endLine": 43,
+        "endChar": 56
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0ee8120_c3d42d03",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 68
@@ -128,6 +224,30 @@
       "writtenOn": "2018-09-13T12:54:24Z",
       "side": 1,
       "message": "Just a side-note, not related to this commit: we could in future add an option for a Python venv, so that the global environment is not polluted by our dependencies.",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 36
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e47087e_b0f669da",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-13T14:12:14Z",
+      "side": 1,
+      "message": "Wrong comment?",
+      "parentUuid": "c0ee8120_c3d42d03",
       "range": {
         "startLine": 58,
         "startChar": 0,
@@ -163,6 +283,30 @@
     },
     {
       "key": {
+        "uuid": "74018a7b_15161cd2",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-13T14:12:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3d4c69f4_31405555",
+      "range": {
+        "startLine": 61,
+        "startChar": 1,
+        "endLine": 61,
+        "endChar": 25
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "553dfaa9_e9375d13",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 68
@@ -186,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "d2593357_91d2d664",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-13T14:12:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "553dfaa9_e9375d13",
+      "range": {
+        "startLine": 62,
+        "startChar": 1,
+        "endLine": 62,
+        "endChar": 26
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ae28523_d7929834",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 68
@@ -197,6 +365,30 @@
       "writtenOn": "2018-09-13T12:54:24Z",
       "side": 1,
       "message": "Uhm... I think this should have been added when we created JSON-RPC scripts, but OK, let it be here:P",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 44
+      },
+      "revId": "45b68d0bc190b61844dcb7e01f419c3eaa8fdd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45ab0ac8_67aabd12",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-13T14:12:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9ae28523_d7929834",
       "range": {
         "startLine": 57,
         "startChar": 0,
