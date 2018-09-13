@@ -12,7 +12,6 @@ last_json_config=$JSON_DIR/last_config.json
 full_config=$JSON_DIR/full_config.json
 base_bdevs=$JSON_DIR/bdevs_base.txt
 last_bdevs=$JSON_DIR/bdevs_last.txt
-tmp_config=$JSON_DIR/tmp_config.json
 null_json_config=$JSON_DIR/null_json_config.json
 
 function run_spdk_tgt() {
@@ -31,7 +30,7 @@ function load_nvme() {
 	echo '{"subsystems": [' > nvme_config.json
 	$SPDK_BUILD_DIR/scripts/gen_nvme.sh --json >> nvme_config.json
 	echo ']}' >> nvme_config.json
-	$rpc_py load_config -f nvme_config.json
+	$rpc_py load_config < nvme_config.json
 	rm nvme_config.json
 }
 
@@ -78,19 +77,17 @@ function kill_targets() {
 # 11. Remove all files.
 function test_json_config() {
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $base_bdevs
-	$rpc_py save_config -f $full_config
-	$JSON_DIR/config_filter.py -method "delete_global_parameters" -filename $full_config > $base_json_config
+	$rpc_py save_config > $full_config
+	$JSON_DIR/config_filter.py -method "delete_global_parameters" < $full_config > $base_json_config
 	$clear_config_py clear_config
-	$rpc_py save_config -f $tmp_config
-	$JSON_DIR/config_filter.py -method "delete_global_parameters" -filename $tmp_config > $null_json_config
+	$rpc_py save_config | $JSON_DIR/config_filter.py -method "delete_global_parameters" > $null_json_config
 	if [ "[]" != "$(jq '.subsystems | map(select(.config != null)) | map(select(.config != []))' $null_json_config)" ]; then
 		echo "Config has not been cleared"
 		return 1
 	fi
-	$rpc_py load_config -f $base_json_config
+	$rpc_py load_config < $base_json_config
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $last_bdevs
-	$rpc_py save_config -f $tmp_config
-	$JSON_DIR/config_filter.py -method "delete_global_parameters" -filename $tmp_config > $last_json_config
+	$rpc_py save_config | $JSON_DIR/config_filter.py -method "delete_global_parameters" > $last_json_config
 	diff $base_json_config $last_json_config
 	diff $base_bdevs $last_bdevs
 	remove_config_files_after_test_json_config
@@ -99,7 +96,7 @@ function test_json_config() {
 function remove_config_files_after_test_json_config() {
 	rm -f $last_bdevs $base_bdevs
 	rm -f $last_json_config $base_json_config
-	rm -f $tmp_config $full_config $null_json_config
+	rm -f $full_config $null_json_config
 }
 
 function create_pmem_bdev_subsytem_config() {
@@ -184,8 +181,8 @@ function clear_bdev_subsystem_config() {
 # 8. Delete all files.
 function test_global_params() {
 	target=$1
-	$rpc_py save_config -f $full_config
-	python $JSON_DIR/config_filter.py -method "delete_configs" -filename $full_config > $base_json_config
+	$rpc_py save_config > $full_config
+	python $JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $base_json_config
 	if [ $target == "spdk_tgt" ]; then
 		killprocess $spdk_tgt_pid
 		run_spdk_tgt
@@ -196,9 +193,9 @@ function test_global_params() {
 		echo "Target is not specified for test_global_params"
 		return 1
 	fi
-	$rpc_py load_config -f $full_config
-	$rpc_py save_config -f $full_config
-	python $JSON_DIR/config_filter.py -method "delete_configs" -filename $full_config > $last_json_config
+	$rpc_py load_config < $full_config
+	$rpc_py save_config > $full_config
+	python $JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $last_json_config
 	diff $base_json_config $last_json_config
 	rm $base_json_config $last_json_config
 	rm $full_config
