@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9864222_dadec03f",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T05:51:48Z",
+      "side": 1,
+      "message": "Currently portal group outputs as follows\n\n/iscsi/portal_groups\u003e ls\no- portal_groups .................... [...]\n  o- 192.168.171.3:3260@0x1 ......... [Tag: 1]\n\nCould you change to the following?\n\n  o- portal_groups ....................................\n  | o- 1 ..............................................\n  | | o- host\u003d192.168.171.3, port\u003d3260, cpumask\u003d0x1 ...",
+      "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9d70749_67dff77f",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T05:51:48Z",
+      "side": 1,
+      "message": "Could we use ig.tag instead?\n\n\"Name \u0027ANY\u0027 already used by a sibling.\" is false negative.",
+      "range": {
+        "startLine": 532,
+        "startChar": 8,
+        "endLine": 532,
+        "endChar": 37
+      },
+      "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf9f1b74_b87ece5a",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T05:51:48Z",
+      "side": 1,
+      "message": "It looks that initiators is used as index now.\nWill use use Tag as index and output like the following?\n\ninitiators \u003d \"\"\ninitiators \u003d \",\".join(self.ig.initiators)\nnetmasks \u003d \"\"\nnetmasks \u003d \",\".join(self.ig.initiators)\nreturn \"Initiators: %s, Netmasks: %s\" % (initiators, netmasks), None",
+      "range": {
+        "startLine": 543,
+        "startChar": 8,
+        "endLine": 543,
+        "endChar": 15
+      },
+      "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32eed25a_4b93a353",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-13T05:51:48Z",
+      "side": 1,
+      "message": "UIISCSIConnection ?",
+      "range": {
+        "startLine": 554,
+        "startChar": 29,
+        "endLine": 554,
+        "endChar": 30
+      },
+      "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
