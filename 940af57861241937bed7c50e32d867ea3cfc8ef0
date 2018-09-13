@@ -16,6 +16,24 @@
       "revId": "940af57861241937bed7c50e32d867ea3cfc8ef0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "856de9d1_2aa9fef6",
+        "filename": "doc/bdev.md",
+        "patchSetId": 105
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-13T21:47:26Z",
+      "side": 1,
+      "message": "will follow up as son as this is merged... had this on my list but this patch just got so big \u0026 wide I spaced it out :)",
+      "parentUuid": "d8b912ea_90e024d5",
+      "revId": "940af57861241937bed7c50e32d867ea3cfc8ef0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
