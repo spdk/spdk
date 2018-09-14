@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee023d6e_a4fdb505",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-14T19:16:24Z",
+      "side": 1,
+      "message": "You can rearrange this to make it a bit simpler:\n\nuint32_t attempts;\n\nfor (attempts \u003d 0; attempts \u003c g_num_poll_groups; attempts++) {\n    core \u003d nvmf_tgt_get_qpair_core(qpair);\n    pg \u003d \u0026g_poll_groups[core];\n    if (!pg) {\n        continue;\n    }\n}\n\nassert(pg !\u003d NULL);\n...\n\nIf the load balancing algorithm is round-robin, nvmf_tgt_get_qpair_core does the iteration correctly. If the load balancing algorithm is by host IP, that will only return cores on which there is a poll group (because there are necessarily other connections) or fall back to round robin, which is also what you want.",
+      "revId": "ac4c65f782a20fa742cf7a80b222a9392b0d645a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3097fd77_ddc4ed15",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-14T19:16:24Z",
+      "side": 1,
+      "message": "Revert change",
+      "revId": "ac4c65f782a20fa742cf7a80b222a9392b0d645a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
