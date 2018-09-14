@@ -61,8 +61,10 @@ notice "..."
 
 # Set up lvols and vhost controllers
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
-notice "Constructing lvol store and lvol bdev on top of Nvme0n1"
-lvs_uuid=$($rpc_py construct_lvol_store Nvme0n1 lvol_store)
+# Create the LVS from a Raid-0 bdev, which is created from two Nvme bdevs
+notice "Constructing lvol store and lvol bdev on raid-0 bdev which is created from Nvme0n1 and Nvme1n1"
+$rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "Nvme0n1 Nvme1n1"
+lvs_uuid=$($rpc_py construct_lvol_store raid0 lvol_store)
 $rpc_py construct_lvol_bdev lvol_bdev 10000 -l lvol_store
 
 if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
@@ -91,7 +93,9 @@ vm_shutdown_all
 
 clean_lvol_cfg
 
+$rpc_py destroy_raid_bdev raid0
 $rpc_py delete_nvme_controller Nvme0
+$rpc_py delete_nvme_controller Nvme1
 
 notice "Shutting down SPDK vhost app..."
 spdk_vhost_kill
