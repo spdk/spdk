@@ -2635,8 +2635,6 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			switch (wc[i].opcode) {
 			case IBV_WC_SEND:
-			case IBV_WC_RDMA_WRITE:
-			case IBV_WC_RDMA_READ:
 				rdma_req = get_rdma_req_from_wc(&wc[i]);
 				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
@@ -2652,6 +2650,14 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				/* Dump this into the incoming queue. This gets cleaned up when
 				 * the queue pair disconnects or recovers. */
 				TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
+				break;
+			case IBV_WC_RDMA_WRITE:
+			case IBV_WC_RDMA_READ:
+				/* If the data transfer fails still force the queue into the error state,
+				 * but the rdma_req objects should only be manipulated in response to
+				 * SEND and RECV operations. */
+				rdma_req = get_rdma_req_from_wc(&wc[i]);
+				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 				break;
 			default:
 				SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
