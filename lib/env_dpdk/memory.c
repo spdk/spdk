@@ -380,7 +380,8 @@ spdk_mem_unregister(void *vaddr, size_t len)
 		return -EINVAL;
 	}
 
-	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+
+	if (((uintptr_t)vaddr & MASK_2MB) || (len != SIZE_MAX && (len & MASK_2MB))) {
 		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;
@@ -399,11 +400,19 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	while (seg_len > 0) {
 		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, VALUE_2MB);
 		if ((reg & REG_MAP_REF_MASK) == 0) {
+			if (len == SIZE_MAX) {
+				len = seg_vaddr - vaddr;
+				break;
+			}
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			return -EINVAL;
 		}
 
 		if (seg_vaddr > vaddr && (reg & REG_MAP_NOTIFY_START)) {
+			if (len == SIZE_MAX) {
+				len = seg_vaddr - vaddr;
+				break;
+			}
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			return -ERANGE;
 		}
@@ -615,26 +624,6 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	return map_2mb->translation_2mb;
 }
 
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
-static void
-memory_hotplug_cb(enum rte_mem_event event_type,
-		  const void *addr, size_t len, void *arg)
-{
-	if (event_type == RTE_MEM_EVENT_ALLOC) {
-		spdk_mem_register((void *)addr, len);
-	} else if (event_type == RTE_MEM_EVENT_FREE) {
-		spdk_mem_unregister((void *)addr, len);
-	}
-}
-
-static int
-memory_iter_cb(const struct rte_memseg_list *msl,
-	       const struct rte_memseg *ms, size_t len, void *arg)
-{
-	return spdk_mem_register(ms->addr, len);
-}
-#endif
-
 int
 spdk_mem_map_init(void)
 {
@@ -648,10 +637,7 @@ spdk_mem_map_init(void)
 	 * Walk all DPDK memory segments and register them
 	 * with the master memory map
 	 */
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
-	rte_mem_event_callback_register("spdk", memory_hotplug_cb, NULL);
-	rte_memseg_contig_walk(memory_iter_cb, NULL);
-#else
+#if RTE_VERSION < RTE_VERSION_NUM(18, 05, 0, 0)
 	struct rte_mem_config *mcfg;
 	size_t seg_idx;
 

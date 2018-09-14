@@ -62,6 +62,40 @@ virt_to_phys(void *vaddr)
 	return spdk_vtophys(vaddr);
 }
 
+static void
+register_dpdk_mem(void *addr, size_t size)
+{
+	struct rte_memseg *seg_start, *seg_end;
+	size_t rem_size;
+
+	seg_start = rte_mem_virt2memseg(addr, NULL);
+	assert(seg_start != NULL);
+	spdk_mem_register(seg_start->addr, seg_start->len);
+
+	seg_end = rte_mem_virt2memseg((void *)((uintptr_t)addr + size - 1), NULL);
+	assert(seg_end != NULL);
+	if (seg_end == seg_start) {
+		return;
+	}
+
+	spdk_mem_register(seg_end->addr, seg_end->len);
+
+	rem_size = seg_end->addr - seg_start->addr - seg_start->len;
+	if (rem_size > 0) {
+		spdk_mem_register(seg_start->addr + seg_start->len, rem_size);
+	}
+}
+
+static void
+unregister_dpdk_mem(void *addr)
+{
+	struct rte_memseg *seg;
+
+	seg = rte_mem_virt2memseg(addr, NULL);
+	assert(seg != NULL);
+	spdk_mem_unregister(seg->addr, SIZE_MAX);
+}
+
 void *
 spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
 {
@@ -73,6 +107,8 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint3
 	if (buf && phys_addr) {
 		*phys_addr = virt_to_phys(buf);
 	}
+
+	register_dpdk_mem(buf, size);
 	return buf;
 }
 
@@ -89,6 +125,7 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint
 void
 spdk_free(void *buf)
 {
+	unregister_dpdk_mem(buf);
 	rte_free(buf);
 }
 
@@ -119,16 +156,23 @@ spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 void *
 spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 {
-	void *new_buf = rte_realloc(buf, size, align);
+	void *new_buf;
+
+	if (buf) {
+		unregister_dpdk_mem(buf);
+	}
+	new_buf = rte_realloc(buf, size, align);
 	if (new_buf && phys_addr) {
 		*phys_addr = virt_to_phys(new_buf);
 	}
+	register_dpdk_mem(new_buf, size);
 	return new_buf;
 }
 
 void
 spdk_dma_free(void *buf)
 {
+	unregister_dpdk_mem(buf);
 	spdk_free(buf);
 }
 
@@ -156,6 +200,7 @@ spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
 
 	if (mz != NULL) {
 		memset(mz->addr, 0, len);
+		spdk_mem_register(mz->addr, mz->len);
 		return mz->addr;
 	} else {
 		return NULL;
@@ -187,6 +232,7 @@ spdk_memzone_free(const char *name)
 	const struct rte_memzone *mz = rte_memzone_lookup(name);
 
 	if (mz != NULL) {
+		spdk_mem_unregister(mz->addr, mz->len);
 		return rte_memzone_free(mz);
 	}
 
@@ -197,6 +243,14 @@ void
 spdk_memzone_dump(FILE *f)
 {
 	rte_memzone_dump(f);
+}
+
+static void
+mempool_mem_register(struct rte_mempool *mp,
+		void *opaque, struct rte_mempool_memhdr *memhdr,
+		unsigned mem_idx)
+{
+	register_dpdk_mem(memhdr->addr, memhdr->len);
 }
 
 struct spdk_mempool *
@@ -225,6 +279,7 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
 				socket_id, MEMPOOL_F_NO_PHYS_CONTIG);
 
+	rte_mempool_mem_iter(mp, mempool_mem_register, NULL);
 	return (struct spdk_mempool *)mp;
 }
 
@@ -243,10 +298,19 @@ spdk_mempool_get_name(struct spdk_mempool *mp)
 	return ((struct rte_mempool *)mp)->name;
 }
 
+static void
+mempool_mem_unregister(struct rte_mempool *mp,
+		void *opaque, struct rte_mempool_memhdr *memhdr,
+		unsigned mem_idx)
+{
+	unregister_dpdk_mem(memhdr->addr);
+}
+
 void
 spdk_mempool_free(struct spdk_mempool *mp)
 {
 #if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 1)
+	rte_mempool_mem_iter((struct rte_mempool *)mp, mempool_mem_unregister, NULL);
 	rte_mempool_free((struct rte_mempool *)mp);
 #endif
 }
