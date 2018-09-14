@@ -39,7 +39,7 @@ _nvme_ns_get_data(struct spdk_nvme_ns *ns)
 	return &ns->ctrlr->nsdata[ns->id - 1];
 }
 
-static void
+void
 nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ns_data	*nsdata;
