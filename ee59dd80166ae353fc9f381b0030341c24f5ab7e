@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdf306eb_b6534c1d",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-14T01:34:38Z",
+      "side": 1,
+      "message": "I can\u0027t find that patch, but as experts replied in the previous patch, for notifications (a request object without an \"id\" member) no response objects needs to be returned. Hence this case is very rare but not error.\n\nWill you remove this if possible?",
+      "range": {
+        "startLine": 513,
+        "startChar": 2,
+        "endLine": 513,
+        "endChar": 13
+      },
+      "revId": "ee59dd80166ae353fc9f381b0030341c24f5ab7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
