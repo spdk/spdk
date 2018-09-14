@@ -108,6 +108,30 @@
       "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca16186a_1482e8ea",
+        "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-14T00:23:38Z",
+      "side": 1,
+      "message": "I submitted a patch for construct_raid_bdev to return \"raid0\". You can ignore this comment in your patch for now.",
+      "parentUuid": "92c311bc_24a7f16b",
+      "range": {
+        "startLine": 50,
+        "startChar": 2,
+        "endLine": 50,
+        "endChar": 14
+      },
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
