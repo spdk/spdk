@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "213aa077_ac9a1318",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-14T03:03:33Z",
+      "side": 1,
+      "message": "hi, Pawel\nI haven\u0027t found other log ways in SPDK except spdk/log.h and spdk-internal/log.h\n\nyes, we already did a great log solution in SPDK for various usage.\nbut here the problem is that client library is aiming to aplications out of SPDK framework, so SPDK log infrastructure and its facilities won\u0027t be set automaticly.\nAnd for a client library, I\u0027m thinking it is too complex if using SPDK_XXXLOG macros, since it needs client appliction controls the log infrastructure by related API.\n\nso just extract essential code from spdk log into these simple log API; If SPDK is configured with enable-debug, then jsonrpc-client library print debug log to syslog; if not, then debug logs are removed.",
+      "parentUuid": "658ecc46_32d2a4eb",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 53
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d639973d_235a1ebe",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 20
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-13T20:06:45Z",
       "side": 1,
       "message": "this might not be NULL since \"jsonrpc\" is mandatory.",
+      "range": {
+        "startLine": 73,
+        "startChar": 5,
+        "endLine": 73,
+        "endChar": 21
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8041f4b_15047183",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-14T03:03:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d639973d_235a1ebe",
       "range": {
         "startLine": 73,
         "startChar": 5,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "21aa1258_14104cfb",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-14T03:03:33Z",
+      "side": 1,
+      "message": "Good point!",
+      "parentUuid": "68d54a0d_51f86890",
+      "range": {
+        "startLine": 201,
+        "startChar": 9,
+        "endLine": 201,
+        "endChar": 17
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b6c99dfe_0a4de89c",
         "filename": "test/rpc_client/rpc_client.sh",
         "patchSetId": 20
@@ -82,6 +154,30 @@
       "writtenOn": "2018-09-13T20:06:45Z",
       "side": 1,
       "message": "will the bdev_svc process be killed if rpc_client_test fail?",
+      "range": {
+        "startLine": 21,
+        "startChar": 2,
+        "endLine": 21,
+        "endChar": 24
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d4ba3fb_abb7b571",
+        "filename": "test/rpc_client/rpc_client.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-14T03:03:33Z",
+      "side": 1,
+      "message": "Good question.\nadd trap to kill it if exit or term or int.",
+      "parentUuid": "b6c99dfe_0a4de89c",
       "range": {
         "startLine": 21,
         "startChar": 2,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "d888174e_2692b96d",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-14T03:03:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ac00fba2_e7519933",
+      "range": {
+        "startLine": 54,
+        "startChar": 41,
+        "endLine": 54,
+        "endChar": 76
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a463f358_03eaa4b0",
         "filename": "test/rpc_client/rpc_client_test.c",
         "patchSetId": 20
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "9166cdaa_ee501788",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-14T03:03:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a463f358_03eaa4b0",
+      "range": {
+        "startLine": 106,
+        "startChar": 9,
+        "endLine": 106,
+        "endChar": 11
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6bfc9711_8afcf6a0",
         "filename": "test/rpc_client/rpc_client_test.c",
         "patchSetId": 20
@@ -151,6 +295,30 @@
       "writtenOn": "2018-09-13T20:06:45Z",
       "side": 1,
       "message": "rc ? EXIT_FAILURE : 0",
+      "range": {
+        "startLine": 113,
+        "startChar": 8,
+        "endLine": 113,
+        "endChar": 10
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3508584b_0e486e14",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-14T03:03:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6bfc9711_8afcf6a0",
       "range": {
         "startLine": 113,
         "startChar": 8,
