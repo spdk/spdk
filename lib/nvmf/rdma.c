@@ -1306,15 +1306,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			return -1;
 		}
 #ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
-		/**
-		 * These vendor IDs are assigned by the IEEE and an ID of 0 implies Soft-RoCE.
-		 * The Soft-RoCE RXE driver does not currently support send with invalidate.
-		 * There are changes making their way through the kernel now that will enable
-		 * this feature. When they are merged, we can conditionally enable this feature.
-		 *
-		 * todo: enable this for versions of the kernel rxe driver that support it.
-		 */
-		if (device->attr.vendor_id != 0) {
+		if ((device->attr.device_cap_flags & IBV_DEVICE_MEM_MGT_EXTENSIONS) != 0) {
 			if (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
 				rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
 				rdma_req->rsp.wr.imm_data = sgl->keyed.key;
@@ -1714,6 +1706,27 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 			break;
 
 		}
+
+#ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
+		if ((device->attr.device_cap_flags & IBV_DEVICE_MEM_MGT_EXTENSIONS) == 0) {
+			SPDK_WARNLOG("The libibverbs on this system supports SEND_WITH_INVALIDATE,");
+			SPDK_WARNLOG("but the device with vendor ID %u does not.\n", device->attr.vendor_id);
+		}
+
+		/**
+		 * The vendor ID is assigned by the IEEE and an ID of 0 implies Soft-RoCE.
+		 * The Soft-RoCE RXE driver does not currently support send with invalidate,
+		 * but incorrectly reports that it does. There are changes making their way
+		 * through the kernel now that will enable this feature. When they are merged,
+		 * we can conditionally enable this feature.
+		 *
+		 * TODO: enable this for versions of the kernel rxe driver that support it.
+		 */
+		if (device->attr.vendor_id == 0) {
+			device->attr.device_cap_flags &= ~(IBV_DEVICE_MEM_MGT_EXTENSIONS);
+		}
+#endif
+
 		/* set up device context async ev fd as NON_BLOCKING */
 		flag = fcntl(device->context->async_fd, F_GETFL);
 		rc = fcntl(device->context->async_fd, F_SETFL, flag | O_NONBLOCK);
