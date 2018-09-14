@@ -46,6 +46,30 @@
       "revId": "0482508503c00d934cbf35143a6ce52c7e64ab58",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "deca18ad_310aad11",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-09-14T15:25:10Z",
+      "side": 1,
+      "message": "Sorry for the misleading comment. Highlighted sentence is wrong. I actually meant, that the errors may not be treated as potential errors that needs to be logged on to the console if it is a flush error.",
+      "parentUuid": "e0298a4e_8a4ea055",
+      "range": {
+        "startLine": 14,
+        "startChar": 41,
+        "endLine": 14,
+        "endChar": 75
+      },
+      "revId": "0482508503c00d934cbf35143a6ce52c7e64ab58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
