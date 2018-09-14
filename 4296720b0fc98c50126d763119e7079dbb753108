@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dc0117e_00ba4074",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-14T04:09:37Z",
+      "side": 1,
+      "message": "Not to call \"nvmf_tgt_get_qpair_core\" for the \"CONNECT_SCHED_HOST_IP\" policy, it could get the same core. So that here pick the round robin policy.",
+      "range": {
+        "startLine": 217,
+        "startChar": 9,
+        "endLine": 217,
+        "endChar": 30
+      },
+      "revId": "4296720b0fc98c50126d763119e7079dbb753108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
