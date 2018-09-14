@@ -114,16 +114,41 @@ for vm_conf in ${vms[@]}; do
 
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
+				notice "Creating Raid-0 bdev which is based on two Malloc bdevs"
+				if [[ $disk == "raid0" ]]; then
+					raid_based_bdevs="$($rpc_py construct_malloc_bdev 64 512) "
+					raid_based_bdevs+="$($rpc_py construct_malloc_bdev 64 512)"
+					$rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$raid_based_bdevs"
+					based_disk="raid0"
+				notice "Creating Raid-0 bdev which is based on Nvme0n1p2 and one Malloc bdev"
+				elif [[ $disk == "raid1" ]]; then
+					raid_based_bdevs="$($rpc_py construct_malloc_bdev 64 512) "
+					raid_based_bdevs+="Nvme0n1p2"
+					$rpc_py construct_raid_bdev -n raid1 -s 64 -r 0 -b "$raid_based_bdevs"
+					based_disk="raid1"
+				notice "Creating lvol store on device Raid-0 which is based on two Malloc bdevs"
+				elif [[ $disk == "raid2" ]]; then
+					raid_based_bdevs="$($rpc_py construct_malloc_bdev 64 512) "
+					raid_based_bdevs+="$($rpc_py construct_malloc_bdev 64 512)"
+					$rpc_py construct_raid_bdev -n raid2 -s 64 -r 0 -b "$raid_based_bdevs"
+					ls_guid=$($rpc_py construct_lvol_store raid2 lvs_0 -c 4194304)
+					free_mb=$(get_lvs_free_mb "$ls_guid")
+					lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_0 $free_mb)
+					based_disk="$lb_name"
+				else
+					based_disk="$disk"
+				fi
+
 				if [[ "$test_type" == "spdk_vhost_blk" ]]; then
 					disk=${disk%%_*}
 					notice "Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
-					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $disk
+					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $based_disk
 				else
 					notice "Creating controller naa.$disk.${conf[0]}"
 					$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
 
 					notice "Adding device (0) to naa.$disk.${conf[0]}"
-					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
+					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $based_disk
 				fi
 			done
 		done <<< "${conf[2]}"
@@ -147,13 +172,19 @@ if [[ $test_type == "spdk_vhost_scsi" ]]; then
 		IFS=',' read -ra conf <<< "$vm_conf"
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
+				# Set the lvol_bdev's name when the disk equal to "raid2"
+				if [[ $disk == "raid2" ]]; then
+					based_disk="$lb_name"
+				else
+					based_disk="$disk"
+				fi
 				notice "Hotdetach test. Trying to remove existing device from a controller naa.$disk.${conf[0]}"
 				$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
 
 				sleep 0.1
 
 				notice "Hotattach test. Re-adding device 0 to naa.$disk.${conf[0]}"
-				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
+				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $based_disk
 			done
 		done <<< "${conf[2]}"
 		unset IFS;
@@ -228,6 +259,11 @@ if ! $no_shutdown; then
 					fi
 
 					$rpc_py remove_vhost_controller naa.$disk.${conf[0]}
+					if [[ $disk == "raid2" ]]; then
+						notice "Removing lvol bdev and lvol store"
+						$rpc_py destroy_lvol_bdev lvs_0/lbd_0
+						$rpc_py destroy_lvol_store -l lvs_0
+					fi
 				done
 			done <<< "${conf[2]}"
 		done
