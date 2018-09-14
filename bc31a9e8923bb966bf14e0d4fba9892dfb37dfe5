@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7581e20_8ffb3f24",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-14T04:16:16Z",
+      "side": 1,
+      "message": "These logic may be not needed. You have the logic the stop the I/O depends on the set of g_ns_io_cnt. Looks like it does not relate to opts.io_queue_requests and the global g_queue_depth.\n\nCould you give more information why we need to change these two variables here? Thanks.",
+      "range": {
+        "startLine": 830,
+        "startChar": 0,
+        "endLine": 836,
+        "endChar": 3
+      },
+      "revId": "bc31a9e8923bb966bf14e0d4fba9892dfb37dfe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
