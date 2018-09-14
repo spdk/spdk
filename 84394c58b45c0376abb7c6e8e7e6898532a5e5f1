@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "57553c7b_1870d6fb",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-09-14T01:48:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79c6cb35_4c34db48",
+      "revId": "84394c58b45c0376abb7c6e8e7e6898532a5e5f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98266b4a_2f3a2c57",
         "filename": "test/nvmf/lvol/nvmf_lvol.sh",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-13T09:32:31Z",
       "side": 1,
       "message": "Please see the comment in the patch to iSCSI raid bdev test.",
+      "revId": "84394c58b45c0376abb7c6e8e7e6898532a5e5f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d536dfd_ca228f16",
+        "filename": "test/nvmf/lvol/nvmf_lvol.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-09-14T01:48:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "98266b4a_2f3a2c57",
       "revId": "84394c58b45c0376abb7c6e8e7e6898532a5e5f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
