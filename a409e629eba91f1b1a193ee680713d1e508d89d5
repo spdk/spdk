@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ba5ff26_95d9f5c1",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-14T18:30:54Z",
+      "side": 1,
+      "message": "The I/O is likely being queued here because the system is out of resources, so there is a reasonable chance that this calloc will fail too. A more robust strategy would be to embed the bdev_io_wait structure into the nbd_io so you always have it available.",
+      "revId": "a409e629eba91f1b1a193ee680713d1e508d89d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
