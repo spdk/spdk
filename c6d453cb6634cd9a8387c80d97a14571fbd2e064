@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "416e3484_5339ceca",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-14T20:56:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "389fb03d_b17f5f2a",
+      "revId": "c6d453cb6634cd9a8387c80d97a14571fbd2e064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aa9fe7fc_74dab638",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-14T19:00:54Z",
       "side": 1,
       "message": "This doesn\u0027t need to be global. It can be a local variable on the stack.",
+      "revId": "c6d453cb6634cd9a8387c80d97a14571fbd2e064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ccf768b_e6780aed",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1174,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-14T20:56:57Z",
+      "side": 1,
+      "message": "Done, applied to the other files as applicable.",
+      "parentUuid": "aa9fe7fc_74dab638",
       "revId": "c6d453cb6634cd9a8387c80d97a14571fbd2e064",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
