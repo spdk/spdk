@@ -215,7 +215,7 @@ static const struct spdk_json_object_decoder rpc_construct_raid_bdev_decoders[] 
  * spdk_rpc_construct_raid_bdev function is the RPC for construct_raids. It takes
  * input as raid bdev name, raid level, strip size in KB and list of base bdev names.
  * params:
- * requuest - pointer to json rpc request
+ * request - pointer to json rpc request
  * params - pointer to request parameters
  * returns:
  * none
@@ -224,10 +224,11 @@ static void
 spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
-	struct rpc_construct_raid_bdev req = {};
-	struct spdk_json_write_ctx     *w;
-	struct raid_bdev_config        *raid_cfg;
-	int			       rc;
+	struct rpc_construct_raid_bdev	req = {};
+	struct spdk_json_write_ctx	*w;
+	struct raid_bdev_config		*raid_cfg;
+	struct spdk_bdev		*bdev;
+	int				rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_raid_bdev_decoders,
 				    SPDK_COUNTOF(rpc_construct_raid_bdev_decoders),
@@ -287,7 +288,12 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_json_write_bool(w, true);
+	bdev = spdk_bdev_get_by_name(raid_cfg->name);
+	if (bdev != NULL) {
+		spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+	} else {
+		spdk_json_write_string(w, "(none)");
+	}
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("construct_raid_bdev", spdk_rpc_construct_raid_bdev, SPDK_RPC_RUNTIME)

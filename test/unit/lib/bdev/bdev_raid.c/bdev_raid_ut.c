@@ -258,6 +258,12 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	return 0;
 }
 
+const char *
+spdk_bdev_get_name(const struct spdk_bdev *bdev)
+{
+	return NULL;
+}
+
 void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {

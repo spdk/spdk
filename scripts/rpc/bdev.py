@@ -94,10 +94,11 @@ def construct_raid_bdev(client, name, strip_size, raid_level, base_bdevs):
         name: user defined raid bdev name
         strip_size: strip size of raid bdev in KB, supported values like 8, 16, 32, 64, 128, 256, 512, 1024 etc
         raid_level: raid level of raid bdev, supported values 0
-        base_bdevs: Space separated names of Nvme bdevs in double quotes, like "Nvme0n1 Nvme1n1 Nvme2n1"
+        base_bdevs: Space separated names of base bdevs in double quotes, like "Nvme0n1 Nvme1n1 Nvme2n1"
 
     Returns:
-        None
+        Name of created block device. Note that `(none)` is returned if the device is configured due to
+        any nonexistent base bdev.
     """
     params = {'name': name, 'strip_size': strip_size, 'raid_level': raid_level, 'base_bdevs': base_bdevs}
 
