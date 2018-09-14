@@ -68,6 +68,7 @@ DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 DEFINE_STUB(nvme_ctrlr_identify_ns, int, (struct spdk_nvme_ns *ns), 0);
 DEFINE_STUB(nvme_ctrlr_identify_id_desc, int, (struct spdk_nvme_ns *ns), 0);
+DEFINE_STUB_V(nvme_ns_set_identify_data, (struct spdk_nvme_ns *ns));
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
