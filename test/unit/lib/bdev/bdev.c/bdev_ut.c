@@ -95,10 +95,11 @@ struct bdev_ut_channel {
 	uint64_t			expected_offset;
 	uint64_t			expected_length;
 	int				expected_iovcnt;
-	struct iovec			expected_iov[32];
+	struct iovec			expected_iov[BDEV_IO_NUM_CHILD_IOV];
 };
 
 static bool g_io_done;
+static enum spdk_bdev_io_status g_io_status;
 static uint32_t g_bdev_ut_io_device;
 static struct bdev_ut_channel *g_bdev_ut_channel;
 
@@ -639,6 +640,7 @@ static void
 io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	g_io_done = true;
+	g_io_status = bdev_io->internal.status;
 	spdk_bdev_free_io(bdev_io);
 }
 
@@ -789,7 +791,8 @@ bdev_io_split(void)
 		.bdev_io_pool_size = 512,
 		.bdev_io_cache_size = 64,
 	};
-	struct iovec iov[4];
+	struct iovec iov[BDEV_IO_NUM_CHILD_IOV * 2];
+	uint64_t i;
 	int rc;
 
 	rc = spdk_bdev_set_opts(&bdev_opts);
@@ -917,6 +920,67 @@ bdev_io_split(void)
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
+
+	/* Test multi vector command that needs to be split by strip and then needs to be
+	 * split further due to the capacity of child iovs.
+	 */
+	for (i = 0; i < BDEV_IO_NUM_CHILD_IOV * 2; i++) {
+		iov[i].iov_base = (void *)((i + 1) * 0x10000);
+		iov[i].iov_len = 512;
+	}
+
+	bdev->optimal_io_boundary = BDEV_IO_NUM_CHILD_IOV;
+	g_io_done = false;
+	g_bdev_ut_channel->expected_iotype = SPDK_BDEV_IO_TYPE_READ;
+	g_bdev_ut_channel->expected_offset = 0;
+	g_bdev_ut_channel->expected_length = BDEV_IO_NUM_CHILD_IOV;
+	g_bdev_ut_channel->expected_iovcnt = BDEV_IO_NUM_CHILD_IOV;
+	for (i = 0; i < BDEV_IO_NUM_CHILD_IOV; i++) {
+		g_bdev_ut_channel->expected_iov[i].iov_base = (void *)((i + 1) * 0x10000);
+		g_bdev_ut_channel->expected_iov[i].iov_len = 512;
+	}
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iov, BDEV_IO_NUM_CHILD_IOV * 2, 0,
+				    BDEV_IO_NUM_CHILD_IOV * 2, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	g_bdev_ut_channel->expected_offset = BDEV_IO_NUM_CHILD_IOV;
+	g_bdev_ut_channel->expected_length = BDEV_IO_NUM_CHILD_IOV;
+	g_bdev_ut_channel->expected_iovcnt = BDEV_IO_NUM_CHILD_IOV;
+	for (i = 0; i < BDEV_IO_NUM_CHILD_IOV; i++) {
+		g_bdev_ut_channel->expected_iov[i].iov_base = (void *)((i + 1 + BDEV_IO_NUM_CHILD_IOV) * 0x10000);
+		g_bdev_ut_channel->expected_iov[i].iov_len = 512;
+	}
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+
+	/* Test multi vector command that needs to be split by strip and then needs to be
+	 * split further due to the capacity of child iovs, but fails to split. The cause
+	 * of failure of split is that the length of an iovec is not multiple of block size.
+	 */
+	for (i = 0; i < BDEV_IO_NUM_CHILD_IOV - 1; i++) {
+		iov[i].iov_base = (void *)((i + 1) * 0x10000);
+		iov[i].iov_len = 512;
+	}
+	iov[BDEV_IO_NUM_CHILD_IOV - 1].iov_base = (void *)(BDEV_IO_NUM_CHILD_IOV * 0x10000);
+	iov[BDEV_IO_NUM_CHILD_IOV - 1].iov_len = 256;
+
+	bdev->optimal_io_boundary = BDEV_IO_NUM_CHILD_IOV;
+	g_io_done = false;
+	g_io_status = 0;
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iov, BDEV_IO_NUM_CHILD_IOV * 2, 0,
+				    BDEV_IO_NUM_CHILD_IOV * 2, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
 
 	/* Test a WRITE_ZEROES that would span an I/O boundary.  WRITE_ZEROES should not be
 	 * split, so test that.
