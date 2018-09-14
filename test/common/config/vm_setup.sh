@@ -24,7 +24,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
-CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi"
+CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli"
 CONF_PATH="${VM_SETUP_PATH}/vm_setup.conf"
 
 function usage()
@@ -335,6 +335,15 @@ if echo $CONF | grep -q vpp; then
     fi
 fi
 
+if echo $CONF | grep -q nvmecli; then
+    if [ ! -d nvme-cli ]; then
+        git clone "${GIT_REPO_SPDK_NVME_CLI}"
+    else
+        echo "nvme-cli already checked out. Skipping"
+    fi
+fi
+
+
 if echo $CONF | grep -q libiscsi; then
     # We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
     # to later. Cloning from git is just future proofing the machines.
@@ -365,9 +374,10 @@ SPDK_RUN_SCANBUILD=1
 SPDK_RUN_VALGRIND=1
 SPDK_TEST_UNITTEST=1
 SPDK_TEST_ISCSI=1
-SPDK_TEST_ISCSI_INITIATOR=1
+SPDK_TEST_ISCSI_INITIATOR=1\
+# nvme and nvme-cli cannot be run at the same time on a VM.
 SPDK_TEST_NVME=1
-SPDK_TEST_NVME_CLI=1
+SPDK_TEST_NVME_CLI=0
 SPDK_TEST_NVMF=1
 SPDK_TEST_RBD=1
 # requires some extra configuration. see TEST_ENV_SETUP_README
