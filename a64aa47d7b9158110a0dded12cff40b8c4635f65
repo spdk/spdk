@@ -34,6 +34,24 @@
       "revId": "a64aa47d7b9158110a0dded12cff40b8c4635f65",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14cf2c5b_06533199",
+        "filename": "include/spdk/assert.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1014787
+      },
+      "writtenOn": "2018-09-14T01:32:52Z",
+      "side": 1,
+      "message": "Ack how to modify the line. I think that it\u0027s ok in CI.",
+      "parentUuid": "417bc2f6_4b928fb6",
+      "revId": "a64aa47d7b9158110a0dded12cff40b8c4635f65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
