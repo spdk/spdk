@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a689ff97_295142cc",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-14T04:01:26Z",
+      "side": 1,
+      "message": "Looks good to me. Please other reviewers to see when we want to keep this earlier check here or not. Thanks.",
+      "range": {
+        "startLine": 444,
+        "startChar": 1,
+        "endLine": 444,
+        "endChar": 38
+      },
+      "revId": "b3b3fe6e8040be09e3dabeaf0efb3a98bd6e6f31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
