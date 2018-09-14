@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "773ea266_4e8fc160",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 684,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-14T12:48:50Z",
+      "side": 1,
+      "message": "Just for the record - it\u0027s OK to use a list comprehension, but personally I think this is an unnecessary change as filter() would work as well.\n\nThe difference between py2 and py3 is that the former returns a list object and the latter an iterator object, but it shouldn\u0027t really matter in this case.",
+      "range": {
+        "startLine": 684,
+        "startChar": 25,
+        "endLine": 684,
+        "endChar": 67
+      },
+      "revId": "eb9d4caa395206ce5ad34973003e6c269e7a9980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68cf9fdc_7ef996ec",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-14T12:48:50Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 901,
+        "startChar": 25,
+        "endLine": 901,
+        "endChar": 69
+      },
+      "revId": "eb9d4caa395206ce5ad34973003e6c269e7a9980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32d444ea_8bc272b5",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-14T12:48:50Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 75,
+        "startChar": 24,
+        "endLine": 75,
+        "endChar": 97
+      },
+      "revId": "eb9d4caa395206ce5ad34973003e6c269e7a9980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6f8a2a3_82e82b60",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-14T12:48:50Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 225,
+        "startChar": 25,
+        "endLine": 225,
+        "endChar": 115
+      },
+      "revId": "eb9d4caa395206ce5ad34973003e6c269e7a9980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94e8ebbe_acc53c21",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-14T12:48:50Z",
+      "side": 1,
+      "message": "as in spdkcli comments - using filter() should still be OK",
+      "range": {
+        "startLine": 417,
+        "startChar": 15,
+        "endLine": 417,
+        "endChar": 57
+      },
+      "revId": "eb9d4caa395206ce5ad34973003e6c269e7a9980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
