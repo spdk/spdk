@@ -887,8 +887,13 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 			CU_ASSERT(strcmp(pbdev->bdev.product_name, "Pooled Device") == 0);
 			CU_ASSERT(pbdev->bdev.write_cache == 0);
 			CU_ASSERT(pbdev->bdev.blocklen == g_block_len);
-			CU_ASSERT(pbdev->bdev.optimal_io_boundary == pbdev->strip_size);
-			CU_ASSERT(pbdev->bdev.split_on_optimal_io_boundary == true);
+			if (pbdev->num_base_bdevs > 1) {
+				CU_ASSERT(pbdev->bdev.optimal_io_boundary == pbdev->strip_size);
+				CU_ASSERT(pbdev->bdev.split_on_optimal_io_boundary == true);
+			} else {
+				CU_ASSERT(pbdev->bdev.optimal_io_boundary == 0);
+				CU_ASSERT(pbdev->bdev.split_on_optimal_io_boundary == false);
+			}
 			CU_ASSERT(pbdev->bdev.ctxt == pbdev);
 			CU_ASSERT(pbdev->bdev.fn_table == &g_raid_bdev_fn_table);
 			CU_ASSERT(pbdev->bdev.module == &g_raid_if);
