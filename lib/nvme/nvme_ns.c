@@ -39,7 +39,13 @@ _nvme_ns_get_data(struct spdk_nvme_ns *ns)
 	return &ns->ctrlr->nsdata[ns->id - 1];
 }
 
-static void
+/**
+ * Update Namespace flags based on Identify Controller
+ * and Identify Namespace.  This can be also used for
+ * Namespace Attribute Notice events and Namespace
+ * operations such as Attach/Detach.
+ */
+void
 nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ns_data	*nsdata;
@@ -96,7 +102,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	}
 }
 
-int
+static int
 nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status	status;
