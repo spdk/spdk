@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3403b921_38a4d4ed",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-14T02:41:24Z",
+      "side": 1,
+      "message": "with the suggestion of failing the poll group creation. This logic can be removed. Thanks.",
+      "parentUuid": "475f423d_6b6fc804",
+      "revId": "a54e6323f676f132636dc7c83e3cdafd78aba92a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a97a3ce6_b4293eb6",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "dea5a61d_c1be665f",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-14T02:41:24Z",
+      "side": 1,
+      "message": "Ok. I will pick this strategy to fail the creation of poll group totally.",
+      "parentUuid": "a97a3ce6_b4293eb6",
+      "revId": "a54e6323f676f132636dc7c83e3cdafd78aba92a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df74306e_1e2e3836",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2018-09-13T17:19:05Z",
       "side": 1,
       "message": "This is saying \"if any subsystem was able to obtain a channel on this poll group, proceed\". But what if the subsystem the qpair is targeted at wasn\u0027t able to obtain a channel? Then it is still broken. Even worse, we don\u0027t even know what subsystem the qpair is targeted at until after the first command is received, so I don\u0027t think this strategy is going to be tractable.",
+      "revId": "a54e6323f676f132636dc7c83e3cdafd78aba92a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3e92d7d_6af90e1c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 610,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-14T02:41:24Z",
+      "side": 1,
+      "message": "Yes. To fail the Poll group creation totally could be more straightforward. Thanks.",
+      "parentUuid": "df74306e_1e2e3836",
       "revId": "a54e6323f676f132636dc7c83e3cdafd78aba92a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
