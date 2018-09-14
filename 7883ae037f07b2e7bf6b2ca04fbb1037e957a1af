@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c93d95ab_536dbbd4",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-14T12:14:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e9864222_dadec03f",
+      "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9d70749_67dff77f",
         "filename": "scripts/spdkcli/ui_node_iscsi.py",
         "patchSetId": 10
@@ -30,6 +48,30 @@
       "writtenOn": "2018-09-13T05:51:48Z",
       "side": 1,
       "message": "Could we use ig.tag instead?\n\n\"Name \u0027ANY\u0027 already used by a sibling.\" is false negative.",
+      "range": {
+        "startLine": 532,
+        "startChar": 8,
+        "endLine": 532,
+        "endChar": 37
+      },
+      "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31c706ff_0282efa6",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-14T12:14:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c9d70749_67dff77f",
       "range": {
         "startLine": 532,
         "startChar": 8,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "5e5908c5_d3cfe591",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-14T12:14:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf9f1b74_b87ece5a",
+      "range": {
+        "startLine": 543,
+        "startChar": 8,
+        "endLine": 543,
+        "endChar": 15
+      },
+      "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32eed25a_4b93a353",
         "filename": "scripts/spdkcli/ui_node_iscsi.py",
         "patchSetId": 10
@@ -76,6 +142,30 @@
       "writtenOn": "2018-09-13T05:51:48Z",
       "side": 1,
       "message": "UIISCSIConnection ?",
+      "range": {
+        "startLine": 554,
+        "startChar": 29,
+        "endLine": 554,
+        "endChar": 30
+      },
+      "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9cd5b1e_3cf18c5d",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-14T12:14:14Z",
+      "side": 1,
+      "message": "Could you help me to create iscsi connection?\nI cannot get it by rpc get_iscsi_connections.",
+      "parentUuid": "32eed25a_4b93a353",
       "range": {
         "startLine": 554,
         "startChar": 29,
