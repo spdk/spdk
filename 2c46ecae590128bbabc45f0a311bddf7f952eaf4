@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71756d28_c2bf2153",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-14T18:04:13Z",
+      "side": 1,
+      "message": "One common reason for the readv or writev calls to fail is that they\u0027ve run out of resources and are unable to allocate more. That means there is a reasonable chance that this calloc is also going to fail. I think a better strategy for handling these low memory conditions is to embed the bdev_io_wait structure and other necessary information into the spdk_vhost_blk_task object, so you always have it available without doing an allocation.",
+      "revId": "2c46ecae590128bbabc45f0a311bddf7f952eaf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
