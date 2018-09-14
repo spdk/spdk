@@ -78,6 +78,9 @@ struct nbd_io {
 	 */
 	uint32_t		offset;
 
+	/* for bdev io_wait */
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+
 	TAILQ_ENTRY(nbd_io)	tailq;
 };
 
@@ -116,6 +119,9 @@ struct spdk_nbd_disk_globals {
 };
 
 static struct spdk_nbd_disk_globals g_spdk_nbd;
+
+static int
+nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io);
 
 int
 spdk_nbd_init(void)
@@ -451,6 +457,37 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 }
 
+static void
+nbd_resubmit_io(void *arg)
+{
+	struct nbd_io *io = (struct nbd_io *)arg;
+	struct spdk_nbd_disk *nbd = io->nbd;
+	int rc = 0;
+
+	rc = nbd_submit_bdev_io(nbd, io);
+	if (rc) {
+		SPDK_INFOLOG(SPDK_LOG_NBD, "nbd: io resubmit for dev %s , io_type %d, returned %d.\n",
+			     spdk_nbd_disk_get_bdev_name(nbd), from_be32(&io->req.type), rc);
+	}
+}
+
+static void
+nbd_queue_io(struct nbd_io *io)
+{
+	int rc;
+	struct spdk_bdev *bdev = io->nbd->bdev;
+
+	io->bdev_io_wait.bdev = bdev;
+	io->bdev_io_wait.cb_fn = nbd_resubmit_io;
+	io->bdev_io_wait.cb_arg = io;
+
+	rc = spdk_bdev_queue_io_wait(bdev, io->nbd->ch, &io->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in nbd_queue_io, rc=%d.\n", rc);
+		nbd_io_done(NULL, false, io);
+	}
+}
+
 static int
 nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 {
@@ -489,7 +526,13 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 	}
 
 	if (rc < 0) {
-		nbd_io_done(NULL, false, io);
+		if (rc == -ENOMEM) {
+			SPDK_INFOLOG(SPDK_LOG_NBD, "No memory, start to queue io.\n");
+			nbd_queue_io(io);
+		} else {
+			SPDK_ERRLOG("nbd io failed in nbd_queue_io, rc=%d.\n", rc);
+			nbd_io_done(NULL, false, io);
+		}
 	}
 
 	return 0;
