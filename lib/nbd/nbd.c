@@ -117,6 +117,17 @@ struct spdk_nbd_disk_globals {
 
 static struct spdk_nbd_disk_globals g_spdk_nbd;
 
+struct nbd_resubmit_ctx {
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+	struct spdk_nbd_disk *nbd;
+	struct spdk_io_channel *channel;
+	uint32_t io_type;
+	void *buf;
+	uint64_t lba;
+	uint32_t lba_count;
+	void *cb_args;
+};
+
 int
 spdk_nbd_init(void)
 {
@@ -451,6 +462,81 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 }
 
+static void
+nbd_resubmit_io(void *arg)
+{
+	struct nbd_resubmit_ctx *ctx = (struct nbd_resubmit_ctx *)arg;
+	struct spdk_nbd_disk *nbd = ctx->nbd;
+	int rc = 0;
+
+	switch (ctx->io_type) {
+	case NBD_CMD_READ:
+		rc = spdk_bdev_read(nbd->bdev_desc, ctx->channel, ctx->buf, ctx->lba,
+				    ctx->lba_count, nbd_io_done, ctx->cb_args);
+		break;
+	case NBD_CMD_WRITE:
+		rc = spdk_bdev_write(nbd->bdev_desc, ctx->channel, ctx->buf, ctx->lba,
+				     ctx->lba_count, nbd_io_done, ctx->cb_args);
+		break;
+#ifdef NBD_FLAG_SEND_FLUSH
+	case NBD_CMD_FLUSH:
+		rc = spdk_bdev_flush(nbd->bdev_desc, ctx->channel, 0,
+				     spdk_bdev_get_num_blocks(nbd->bdev) * spdk_bdev_get_block_size(nbd->bdev),
+				     nbd_io_done, ctx->cb_args);
+		break;
+#endif
+#ifdef NBD_FLAG_SEND_TRIM
+	case NBD_CMD_TRIM:
+		rc = spdk_bdev_unmap(nbd->bdev_desc, ctx->channel, ctx->lba,
+				     ctx->lba_count, nbd_io_done, ctx->cb_args);
+		break;
+#endif
+	default:
+		SPDK_ERRLOG("Unsupport io type for io_wait %d.\n", ctx->io_type);
+		nbd_io_done(NULL, false, ctx->cb_args);
+		break;
+	}
+	if (rc) {
+		SPDK_ERRLOG("nbd: io resubmit failed for dev %s , io_type %d, with %d.\n",
+			    spdk_nbd_disk_get_bdev_name(nbd), ctx->io_type, rc);
+		nbd_io_done(NULL, false, ctx->cb_args);
+	}
+	free(ctx);
+}
+static void
+nbd_queue_io(struct spdk_nbd_disk *nbd, struct spdk_io_channel *channel, uint32_t io_type,
+	     void *buf, uint64_t lba, uint32_t len, struct nbd_io *io)
+{
+	int rc;
+	struct spdk_bdev *bdev = nbd->bdev;
+	struct nbd_resubmit_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Not enough memory to queue io for nbd.\n");
+		nbd_io_done(NULL, false, io);
+		return ;
+	}
+
+	ctx->io_type = io_type;
+	ctx->nbd = nbd;
+	ctx->channel = channel;
+	ctx->buf = buf;
+	ctx->lba = lba;
+	ctx->lba_count = len;
+	ctx->cb_args = (void *) io;
+	ctx->bdev_io_wait.bdev = bdev;
+	ctx->bdev_io_wait.cb_fn = nbd_resubmit_io;
+	ctx->bdev_io_wait.cb_arg = ctx;
+
+	rc = spdk_bdev_queue_io_wait(bdev, channel, &ctx->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in nbd_queue_io, rc=%d.\n", rc);
+		nbd_io_done(NULL, false, io);
+		free(ctx);
+	}
+}
+
 static int
 nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 {
@@ -489,7 +575,13 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 	}
 
 	if (rc < 0) {
-		nbd_io_done(NULL, false, io);
+		if (rc == -ENOMEM) {
+			SPDK_INFOLOG(SPDK_LOG_NBD, "No memory, start to queue io.\n");
+			nbd_queue_io(nbd, ch, from_be32(&io->req.type), io->payload, from_be64(&io->req.from),
+				     io->payload_size, io);
+		} else {
+			nbd_io_done(NULL, false, io);
+		}
 	}
 
 	return 0;
