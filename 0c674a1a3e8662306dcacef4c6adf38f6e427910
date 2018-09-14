@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d42758fe_3035cb40",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-09-14T01:38:26Z",
+      "side": 1,
+      "message": "OK, I will update it after your patch has been merged.",
+      "parentUuid": "446686ba_3a0c5f95",
+      "range": {
+        "startLine": 78,
+        "startChar": 31,
+        "endLine": 78,
+        "endChar": 36
+      },
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e6e3877_4d37e218",
         "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-13T09:20:10Z",
       "side": 1,
       "message": "NUM_LVS or NUM_LVS_ON_MALLOC may be meaningful now?",
+      "range": {
+        "startLine": 13,
+        "startChar": 1,
+        "endLine": 13,
+        "endChar": 11
+      },
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b04a800a_73fba886",
+        "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-09-14T01:38:26Z",
+      "side": 1,
+      "message": "yes, i think you are right.",
+      "parentUuid": "8e6e3877_4d37e218",
       "range": {
         "startLine": 13,
         "startChar": 1,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "6db4dbed_a2dfdff5",
+        "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-09-14T01:38:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fec2879a_26d43a2a",
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6ea0626_660d1eda",
         "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
         "patchSetId": 4
@@ -76,6 +142,30 @@
       "writtenOn": "2018-09-13T11:52:50Z",
       "side": 1,
       "message": "One typo, \"put its name in $bdev\".",
+      "range": {
+        "startLine": 46,
+        "startChar": 36,
+        "endLine": 46,
+        "endChar": 37
+      },
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69bff307_9215858a",
+        "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-09-14T01:38:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6ea0626_660d1eda",
       "range": {
         "startLine": 46,
         "startChar": 36,
@@ -123,6 +213,30 @@
       "side": 1,
       "message": "I submitted a patch for construct_raid_bdev to return \"raid0\". You can ignore this comment in your patch for now.",
       "parentUuid": "92c311bc_24a7f16b",
+      "range": {
+        "startLine": 50,
+        "startChar": 2,
+        "endLine": 50,
+        "endChar": 14
+      },
+      "revId": "0c674a1a3e8662306dcacef4c6adf38f6e427910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71272d78_386055fd",
+        "filename": "test/iscsi_tgt/lvol/iscsi_lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-09-14T01:38:26Z",
+      "side": 1,
+      "message": "Thanks, and i will update it after your patch has been merged.\nhttps://review.gerrithub.io/c/spdk/spdk/+/425529",
+      "parentUuid": "ca16186a_1482e8ea",
       "range": {
         "startLine": 50,
         "startChar": 2,
