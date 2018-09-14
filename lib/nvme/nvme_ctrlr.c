@@ -40,6 +40,9 @@
 
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
+static int
+nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns, uint32_t id,
+			     struct spdk_nvme_ctrlr *ctrlr);
 
 static int
 nvme_ctrlr_get_cc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc)
@@ -636,6 +639,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "identify active ns";
 	case NVME_CTRLR_STATE_IDENTIFY_NS:
 		return "identify ns";
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS:
+		return "wait for identify ns";
 	case NVME_CTRLR_STATE_IDENTIFY_ID_DESCS:
 		return "identify id descriptor";
 	case NVME_CTRLR_STATE_CONFIGURE_AER:
@@ -962,22 +967,64 @@ fail:
 	return rc;
 }
 
+static void
+nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	uint32_t nsid;
+	int rc;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		nvme_ns_destruct(ns);
+	} else {
+		nvme_ns_identify_data_update(ns);
+	}
+
+	nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
+	if (nsid == 0) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ID_DESCS, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	/* continue the next NS */
+	rc = nvme_ctrlr_identify_ns_async(&ctrlr->ns[nsid - 1], nsid, ctrlr);
+	if (rc) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+	}
+}
+
+static int
+nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns, uint32_t id,
+			     struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ns_data	*nsdata;
+
+	ns->ctrlr = ctrlr;
+	ns->id = id;
+
+	nsdata = &ctrlr->nsdata[id - 1];;
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS, NVME_TIMEOUT_INFINITE);
+	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id,
+				       nsdata, sizeof(*nsdata),
+				       nvme_ctrlr_identify_ns_async_done, ns);
+}
+
 static int
 nvme_ctrlr_identify_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t nsid;
 	struct spdk_nvme_ns *ns;
 
-	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-		if (ns == NULL) {
-			continue;
-		}
-		nvme_ctrlr_identify_ns(ns, nsid, ctrlr);
+	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	if (ns == NULL) {
+		/* No active NS, switch to the next state */
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER, NVME_TIMEOUT_INFINITE);
+		return 0;
 	}
 
-	return 0;
+	return nvme_ctrlr_identify_ns_async(ns, nsid, ctrlr);
 }
 
 static int
@@ -1882,7 +1929,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_IDENTIFY_NS:
 		rc = nvme_ctrlr_identify_namespaces(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ID_DESCS, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY_ID_DESCS:
