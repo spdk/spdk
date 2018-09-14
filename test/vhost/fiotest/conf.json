@@ -36,6 +36,82 @@
             "num_blocks": 32768
           },
           "method": "construct_malloc_bdev"
+        },
+	{
+          "params": {
+            "name": "Malloc2",
+            "num_blocks": 131072,
+            "block_size": 512
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "name": "Malloc3",
+            "num_blocks": 131072,
+            "block_size": 512
+          },
+          "method": "construct_malloc_bdev"
+        },
+	{
+          "params": {
+            "name": "Malloc4",
+            "num_blocks": 131072,
+            "block_size": 512
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "name": "Malloc5",
+            "num_blocks": 131072,
+            "block_size": 512
+          },
+          "method": "construct_malloc_bdev"
+        },
+	{
+          "params": {
+            "name": "Malloc6",
+            "num_blocks": 131072,
+            "block_size": 512
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "method": "construct_raid_bdev",
+          "params": {
+            "name": "RaidBdev0",
+            "strip_size": 128,
+            "raid_level": 0,
+            "base_bdevs": [
+              "Malloc2",
+              "Malloc3"
+            ]
+          }
+        },
+        {
+          "method": "construct_raid_bdev",
+          "params": {
+            "name": "RaidBdev1",
+            "strip_size": 128,
+            "raid_level": 0,
+            "base_bdevs": [
+              "Nvme0n1p2",
+              "Malloc4"
+            ]
+          }
+        },
+        {
+          "method": "construct_raid_bdev",
+          "params": {
+            "name": "RaidBdev2",
+            "strip_size": 128,
+            "raid_level": 0,
+            "base_bdevs": [
+              "Malloc5",
+              "Malloc6"
+            ]
+          }
         }
       ]
     },

@@ -114,16 +114,25 @@ for vm_conf in ${vms[@]}; do
 
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
+				notice "Create a lvol store on RaidBdev2 and then a lvol bdev on the lvol store"
+				if [[ $disk == "RaidBdev2" ]]; then
+					ls_guid=$($rpc_py construct_lvol_store RaidBdev2 lvs_0 -c 4194304)
+					free_mb=$(get_lvs_free_mb "$ls_guid")
+					based_disk=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_0 $free_mb)
+				else
+					based_disk="$disk"
+				fi
+
 				if [[ "$test_type" == "spdk_vhost_blk" ]]; then
 					disk=${disk%%_*}
 					notice "Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
-					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $disk
+					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $based_disk
 				else
 					notice "Creating controller naa.$disk.${conf[0]}"
 					$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
 
 					notice "Adding device (0) to naa.$disk.${conf[0]}"
-					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
+					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $based_disk
 				fi
 			done
 		done <<< "${conf[2]}"
@@ -147,13 +156,19 @@ if [[ $test_type == "spdk_vhost_scsi" ]]; then
 		IFS=',' read -ra conf <<< "$vm_conf"
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
+				# For RaidBdev2, the lvol bdev on RaidBdev2 is being used.
+				if [[ $disk == "RaidBdev2" ]]; then
+					based_disk="lvs_0/lbd_0"
+				else
+					based_disk="$disk"
+				fi
 				notice "Hotdetach test. Trying to remove existing device from a controller naa.$disk.${conf[0]}"
 				$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
 
 				sleep 0.1
 
 				notice "Hotattach test. Re-adding device 0 to naa.$disk.${conf[0]}"
-				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
+				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $based_disk
 			done
 		done <<< "${conf[2]}"
 		unset IFS;
@@ -228,6 +243,11 @@ if ! $no_shutdown; then
 					fi
 
 					$rpc_py remove_vhost_controller naa.$disk.${conf[0]}
+					if [[ $disk == "RaidBdev2" ]]; then
+						notice "Removing lvol bdev and lvol store"
+						$rpc_py destroy_lvol_bdev lvs_0/lbd_0
+						$rpc_py destroy_lvol_store -l lvs_0
+					fi
 				done
 			done <<< "${conf[2]}"
 		done

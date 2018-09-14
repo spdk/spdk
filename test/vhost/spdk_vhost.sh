@@ -91,7 +91,7 @@ case $1 in
 	-i|--integrity)
 		echo 'Running SCSI integrity suite...'
 		run_test case $WORKDIR/fiotest/autotest.sh -x --fio-bin=$FIO_BIN \
-		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
+		--vm=0,$VM_IMAGE,Nvme0n1p0:RaidBdev0:RaidBdev1:RaidBdev2 \
 		--test-type=spdk_vhost_scsi \
 		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job
 		report_test_completion "nightly_vhost_integrity"
