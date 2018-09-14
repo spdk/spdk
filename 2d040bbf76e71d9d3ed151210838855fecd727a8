@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ac62363_212ca33f",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-14T06:09:35Z",
+      "side": 1,
+      "message": "No need for assert here.",
+      "revId": "2d040bbf76e71d9d3ed151210838855fecd727a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b721ceff_b9cbc4fd",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-14T06:09:35Z",
+      "side": 1,
+      "message": "ditto.",
+      "revId": "2d040bbf76e71d9d3ed151210838855fecd727a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
