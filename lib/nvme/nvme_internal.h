@@ -463,6 +463,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_IDENTIFY_NS,
 
 	/**
+	 * Waiting for the Identify Namespace commands to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS,
+
+	/**
 	 * Get Identify Namespace Identification Descripor.
 	 */
 	NVME_CTRLR_STATE_IDENTIFY_ID_DESCS,
