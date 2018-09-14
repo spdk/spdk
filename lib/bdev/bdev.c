@@ -1158,7 +1158,7 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 	to_next_boundary = spdk_min(remaining, to_next_boundary);
 	to_next_boundary_bytes = to_next_boundary * blocklen;
 	child_iovcnt = 0;
-	while (to_next_boundary_bytes > 0) {
+	while (to_next_boundary_bytes > 0 && child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
 		child_iov_len = spdk_min(to_next_boundary_bytes, parent_iov->iov_len - parent_iov_offset);
 		to_next_boundary_bytes -= child_iov_len;
 
@@ -1168,14 +1168,9 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 		parent_iov++;
 		parent_iov_offset = 0;
 		child_iovcnt++;
-		if (child_iovcnt == BDEV_IO_NUM_CHILD_IOV && to_next_boundary_bytes > 0) {
-			/* We've run out of child iovs - we need to fail this I/O. */
-			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-			bdev_io->internal.cb(bdev_io, SPDK_BDEV_IO_STATUS_FAILED,
-					     bdev_io->internal.caller_ctx);
-			return;
-		}
 	}
+
+	to_next_boundary -= to_next_boundary_bytes / blocklen;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		rc = spdk_bdev_readv_blocks(bdev_io->internal.desc,
