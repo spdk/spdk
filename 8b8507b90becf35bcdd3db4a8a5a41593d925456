@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc12f954_d40b5874",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-14T20:02:55Z",
+      "side": 1,
+      "message": "# Add ldconfig invocations.\n\n%post -p /sbin/ldconfig\n\n%postun -p /sbin/ldconfig",
+      "revId": "8b8507b90becf35bcdd3db4a8a5a41593d925456",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bafef9b6_ca6609a5",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-14T20:02:55Z",
+      "side": 1,
+      "message": "For the base package, I believe this should be.   Note the added period.   \n\n%{_libdir}/*.so.*",
+      "revId": "8b8507b90becf35bcdd3db4a8a5a41593d925456",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43f83352_7528df14",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-14T20:02:55Z",
+      "side": 1,
+      "message": "Even though this is devel, I think the setup.sh script should be omitted.",
+      "revId": "8b8507b90becf35bcdd3db4a8a5a41593d925456",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f363360_a0693657",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-14T20:02:55Z",
+      "side": 1,
+      "message": "Add:\n\n%{_libdir}/*.so",
+      "revId": "8b8507b90becf35bcdd3db4a8a5a41593d925456",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
