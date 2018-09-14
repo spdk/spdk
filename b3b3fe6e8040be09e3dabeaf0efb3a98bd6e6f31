@@ -22,6 +22,52 @@
       "revId": "b3b3fe6e8040be09e3dabeaf0efb3a98bd6e6f31",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55578ddd_74c9a2b5",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-09-14T07:19:06Z",
+      "side": 1,
+      "message": "Better to have print which qpair if we really need to add this error message",
+      "range": {
+        "startLine": 445,
+        "startChar": 2,
+        "endLine": 445,
+        "endChar": 60
+      },
+      "revId": "b3b3fe6e8040be09e3dabeaf0efb3a98bd6e6f31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67c21d8d_0b45c985",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-09-14T07:19:06Z",
+      "side": 1,
+      "message": "No memory to allocate req_buf on qpair(%) with %d requests \n\nThis may be better to let us know which qpair.",
+      "range": {
+        "startLine": 454,
+        "startChar": 2,
+        "endLine": 454,
+        "endChar": 18
+      },
+      "revId": "b3b3fe6e8040be09e3dabeaf0efb3a98bd6e6f31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
