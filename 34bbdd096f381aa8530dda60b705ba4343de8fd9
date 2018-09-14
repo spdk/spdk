@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ca30077_13b2b585",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-14T18:12:14Z",
+      "side": 1,
+      "message": "This check is redundant with the one performed inside nvme_allocate_request. I think it should be removed.",
+      "revId": "34bbdd096f381aa8530dda60b705ba4343de8fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ca475d6_e7b02ee1",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-14T18:12:14Z",
+      "side": 1,
+      "message": "Running out of requests isn\u0027t really an error and it may occur often in an application that is functioning correctly (assuming it handles this case by queueing at a higher layer). I don\u0027t think we should be printing an error message every time this happens.",
+      "revId": "34bbdd096f381aa8530dda60b705ba4343de8fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
