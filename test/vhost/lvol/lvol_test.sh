@@ -132,12 +132,15 @@ nest_lvol_stores=()
 nest_lvol_bdevs=()
 used_vms=""
 
-# On each NVMe create one lvol store
+# Create the LVS from a Raid-0 bdev, which is created from one Nvme and one malloc bdev
 for (( i=0; i<$max_disks; i++ ));do
 
-    # Create base lvol store on NVMe
-    notice "Creating lvol store on device Nvme${i}n1"
-    ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i -c 4194304)
+    # Create base lvol store on Raid-0 bdev
+    notice "Creating lvol store on device Raid-0 witch is based on Nvme${i}n1 and one Malloc bdev"
+    raid_based_bdevs="$($rpc_py construct_malloc_bdev 64 512) "
+    raid_based_bdevs+="Nvme${i}n1"
+    $rpc_py construct_raid_bdev -n raid${i} -s 64 -r 0 -b "$raid_based_bdevs"
+    ls_guid=$($rpc_py construct_lvol_store raid${i} lvs_$i -c 4194304)
     lvol_stores+=("$ls_guid")
 
     if $nested_lvol; then
