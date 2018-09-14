@@ -1548,10 +1548,14 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 			rc = request_transfer_out(&rdma_req->req, &data_posted);
 			assert(rc == 0); /* No good way to handle this currently */
-			spdk_nvmf_rdma_request_set_state(rdma_req,
-							 data_posted ?
-							 RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST :
-							 RDMA_REQUEST_STATE_COMPLETING);
+			if (rc) {
+				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+			} else {
+				spdk_nvmf_rdma_request_set_state(rdma_req,
+								 data_posted ?
+								 RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST :
+								 RDMA_REQUEST_STATE_COMPLETING);
+			}
 			break;
 		case RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST, 0, 0,
