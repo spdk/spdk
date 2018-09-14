@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1866dea_35e9ad01",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-14T18:38:17Z",
+      "side": 0,
+      "message": "Was this change intentional?",
+      "revId": "bd0ee70e2e676bf27f1434e35d4260dfee5aa8be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
