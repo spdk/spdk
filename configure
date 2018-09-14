@@ -149,7 +149,6 @@ for i in "$@"; do
 			;;
 		--with-raid)
 			CONFIG_RAID=y
-			echo "Warning: the RAID module does not support multiple iovecs per request and will not work with vhost"
 			;;
 		--without-raid)
 			CONFIG_RAID=n
