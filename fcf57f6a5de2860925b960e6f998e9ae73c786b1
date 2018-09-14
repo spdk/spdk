@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87d71a9a_b502fbc5",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-09-14T09:42:53Z",
+      "side": 1,
+      "message": "blk_request_queue_io() is only be called from process_blk_request(), so we know the type of cb_args.",
+      "revId": "fcf57f6a5de2860925b960e6f998e9ae73c786b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5dedf627_602051eb",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-09-14T09:42:53Z",
+      "side": 1,
+      "message": "Maybe calloc(1, sizeof(*ctx)) is better.",
+      "revId": "fcf57f6a5de2860925b960e6f998e9ae73c786b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92fb53b9_0f00a810",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-09-14T09:42:53Z",
+      "side": 1,
+      "message": "The io is queued because of ENOMEM, but blk_request_queue_io() will allocate memory immediately. Can we just inline the struct blk_request_resubmit_ctx in struct spdk_vhost_blk_task?",
+      "revId": "fcf57f6a5de2860925b960e6f998e9ae73c786b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
