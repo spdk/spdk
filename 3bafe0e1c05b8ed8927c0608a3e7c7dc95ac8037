@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "825e657e_e7de8eb4",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-14T07:40:47Z",
+      "side": 1,
+      "message": "\u003e aplications out of SPDK framework\n\nGreat, so this \"out of SPDK framework\" can provide its own SPDK_XXXXLOG macros or its own spdk_log() implementation. Or you can do in C file\n\n  #ifndef SPDK_XXXLOG\n    #define CLIENT_ERRLOG(...) ...\n    ...\n  #endif",
+      "parentUuid": "213aa077_ac9a1318",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 53
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d639973d_235a1ebe",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 20
