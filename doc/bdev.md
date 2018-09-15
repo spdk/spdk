@@ -105,15 +105,17 @@ time the SPDK virtual bdev module supports cipher only as follows:
 (Note: QAT is functional however is marked as experimental until the hardware has
 been fully integrated with the SPDK CI system.)
 
-Support for other DPDK drivers and capabilities may be added programmatically. Existing
-functionality is configured through a .conf file as shown here:
+Example command
 
-[crypto]<br>
- \# CRY \<bdev name\> \<vbdev name\> \<key\> \<PMD\><br>
- \# key size depends on cipher<br>
- \# supported PMD names: crypto_aesni_mb, crypto_qat<br>
- \# Note: QAT is experimental while test HW is being setup<br>
- CRY Malloc4 crypto_ram 0123456789123456 crypto_aesni_mb
+`rpc.py construct_crypto_bdev -b NVMe1n1 -c CryNvmeA -d crypto_aesni_mb -k 0123456789123456`
+
+This command will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bdev
+'NVMe1n1' and will use the DPDK software driver 'crypto_aesni_mb' and the key
+'0123456789123456'.
+
+To remove the vbdev use the delete_crypto_bdev command.
+
+`rpc.py delete_crypto_bdev CryNvmeA`
 
 In order to support using the bdev block offset (LBA) as the initialization vector (IV),
 the crypto module break up all I/O into crypto operations of a size equal to the block
