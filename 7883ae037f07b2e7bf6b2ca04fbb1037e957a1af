@@ -175,6 +175,30 @@
       "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80a406da_5365fca7",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-15T05:41:24Z",
+      "side": 1,
+      "message": "Sorry, this is not for configuration but for monitoring active states. Hence will you remove these classes, connection and connections?\n\nThis is like showing active processes.",
+      "parentUuid": "d9cd5b1e_3cf18c5d",
+      "range": {
+        "startLine": 554,
+        "startChar": 29,
+        "endLine": 554,
+        "endChar": 30
+      },
+      "revId": "7883ae037f07b2e7bf6b2ca04fbb1037e957a1af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
