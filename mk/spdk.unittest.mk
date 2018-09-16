@@ -49,7 +49,7 @@ APP = $(TEST_FILE:.c=)
 all: $(APP)
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ADDITIONAL_LIBS)
 	$(LINK_C)
 
 clean:

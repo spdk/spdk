@@ -39,4 +39,5 @@ CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test/lib
 TEST_FILE = memory_ut.c
 
+ADDITIONAL_LIBS += $(ENV_LIBS)
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
