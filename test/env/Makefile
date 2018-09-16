@@ -47,4 +47,8 @@ endif
 all: $(DIRS-y)
 clean: $(DIRS-y)
 
+
+ADDITIONAL_LIBS += $(ENV_LIBS)
+export ADDITIONAL_LIBS
+
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
