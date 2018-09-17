@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39b0459f_6622230d",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T20:00:55Z",
+      "side": 1,
+      "message": "I think this comment should be removed.\n\nI know that this matches Ben comments from the review.  But there are many places in SPDK where an error code is returned without printing an error message.  We should not add comments explaining each of those cases.",
+      "revId": "374d990641665c379fe1e011e552503e8deed5e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
