@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d34e4395_19a7921b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-09-17T15:00:01Z",
+      "side": 1,
+      "message": "OK, so the error is not logged to console but the error is actually generated and the QP state is set to IBV_QPS_ERR.\nIs it the behavior you are looking for?",
+      "range": {
+        "startLine": 14,
+        "startChar": 41,
+        "endLine": 15,
+        "endChar": 37
+      },
+      "revId": "a33b0f115ec2fae68b7687ba81dc694ca5667cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
