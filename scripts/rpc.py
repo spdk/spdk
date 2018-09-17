@@ -149,10 +149,10 @@ if __name__ == "__main__":
     @call_cmd
     def delete_crypto_bdev(args):
         rpc.bdev.delete_crypto_bdev(args.client,
-                                    name=args.name)
+                                    crypto_bdev_name=args.crypto_bdev_name)
 
     p = subparsers.add_parser('delete_crypto_bdev', help='Delete a crypto disk')
-    p.add_argument('name', help='crypto bdev name')
+    p.add_argument('crypto_bdev_name', help='crypto bdev name')
     p.set_defaults(func=delete_crypto_bdev)
 
     @call_cmd

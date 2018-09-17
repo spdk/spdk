@@ -101,17 +101,17 @@ invalid:
 SPDK_RPC_REGISTER("construct_crypto_bdev", spdk_rpc_construct_crypto_bdev, SPDK_RPC_RUNTIME)
 
 struct rpc_delete_crypto {
-	char *name;
+	char *crypto_bdev_name;
 };
 
 static void
 free_rpc_delete_crypto(struct rpc_delete_crypto *req)
 {
-	free(req->name);
+	free(req->crypto_bdev_name);
 }
 
 static const struct spdk_json_object_decoder rpc_delete_crypto_decoders[] = {
-	{"name", offsetof(struct rpc_delete_crypto, name), spdk_json_decode_string},
+	{"crypto_bdev_name", offsetof(struct rpc_delete_crypto, crypto_bdev_name), spdk_json_decode_string},
 };
 
 static void
@@ -144,7 +144,7 @@ spdk_rpc_delete_crypto_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_get_by_name(req.name);
+	bdev = spdk_bdev_get_by_name(req.crypto_bdev_name);
 	if (bdev == NULL) {
 		rc = -ENODEV;
 		goto invalid;

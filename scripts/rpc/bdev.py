@@ -32,13 +32,13 @@ def construct_crypto_bdev(client, base_bdev_name, crypto_bdev_name, crypto_pmd, 
     return client.call('construct_crypto_bdev', params)
 
 
-def delete_crypto_bdev(client, name):
+def delete_crypto_bdev(client, crypto_bdev_name):
     """Delete crypto virtual block device.
 
     Args:
-        bdev_name: name of crypto vbdev to delete
+        crypto_bdev_name: name of crypto vbdev to delete
     """
-    params = {'name': name}
+    params = {'crypto_bdev_name': crypto_bdev_name}
     return client.call('delete_crypto_bdev', params)
 
 
