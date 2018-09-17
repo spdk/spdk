@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b642fe45_8939ada4",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T21:22:02Z",
+      "side": 1,
+      "message": "You should take this ini config section out while you\u0027re here.  We\u0027ve remove ini config file sections from the rest of this document.",
+      "revId": "e8161b5ce7be79fa7c3026de439293b383924723",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
