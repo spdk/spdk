@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa37bd23_af4423c7",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T17:35:17Z",
+      "side": 1,
+      "message": "task payload data starts at task-\u003eiovs[1]. See process_blk_request().",
+      "range": {
+        "startLine": 204,
+        "startChar": 9,
+        "endLine": 204,
+        "endChar": 12
+      },
+      "revId": "c0c0de16038d33caa3881a9153abeafb9ca8126e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8cedf4f_ba247b12",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T17:35:17Z",
+      "side": 1,
+      "message": "cast to \u0027void *\u0027 is not needed",
+      "range": {
+        "startLine": 235,
+        "startChar": 29,
+        "endLine": 235,
+        "endChar": 37
+      },
+      "revId": "c0c0de16038d33caa3881a9153abeafb9ca8126e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
