@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "825bdcda_c3f60c13",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-09-17T16:54:45Z",
+      "side": 1,
+      "message": "\u003e \u003eThis code change confuses me a bit - the use case seems to be too specific to your setup.\n\u003e \u003eThe log output could be filtered out with grep or spdk cmd line settings after all...\n\u003e \n\u003e No I dont think so, And it is not specific with iwarp too. This should be purely application specific(how the connection is disconnected). BTW the applicatio I use is fio. I will try with IB/ROCE and update you the results.\n\nI see the same logs with iwarp and ib/roce devices aswell with fio application.\n\nrdma.c:2633:spdk_nvmf_rdma_poller_poll: *WARNING*: CQ error on CQ 0x14995c000a70, Request 0x22648908800960 (5): Work Request Flushed Error\nrdma.c: 500:spdk_nvmf_rdma_set_ibv_state: *NOTICE*: IBV QP#0 changed to: IBV_QPS_ERR\nrdma.c:2633:spdk_nvmf_rdma_poller_poll: *WARNING*: CQ error on CQ 0x14995c000a70, Request 0x22648908801056 (5): Work Request Flushed Error\nrdma.c: 500:spdk_nvmf_rdma_set_ibv_state: *NOTICE*: IBV QP#0 changed to: IBV_QPS_ERR\nrdma.c:2633:spdk_nvmf_rdma_poller_poll: *WARNING*: CQ error on CQ 0x14995c000a70, Request 0x22648908801152 (5): Work Request Flushed Error\nrdma.c: 500:spdk_nvmf_rdma_set_ibv_state: *NOTICE*: IBV QP#0 changed to: IBV_QPS_ERR\n\n\nHere is an example of similar thing done in kernel nvmf: nvmet_rdma_send_done()(linux:drivers/nvme/target/rdma.c)\n\nI am not totaly aware of spdk nvmf implementation, shall look chack it out if i missing anything here and post the next revision of this patch.\nAlso please let me know if I am missing something.\nThanks!",
+      "parentUuid": "e1c7de80_ee3396c8",
+      "range": {
+        "startLine": 14,
+        "startChar": 41,
+        "endLine": 15,
+        "endChar": 37
+      },
+      "revId": "a33b0f115ec2fae68b7687ba81dc694ca5667cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e23daa4_24b33706",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
