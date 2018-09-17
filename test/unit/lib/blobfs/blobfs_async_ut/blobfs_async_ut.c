@@ -464,6 +464,7 @@ channel_ops_sync(void)
 
 int main(int argc, char **argv)
 {
+	struct spdk_thread *thread;
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
@@ -491,7 +492,8 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
+	spdk_set_thread(thread);
 
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 	CU_basic_set_mode(CU_BRM_VERBOSE);

@@ -201,6 +201,12 @@ struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		const char *name);
 
 /**
+ * Force the current system thread to act as if executing the given SPDK thread.
+ * This is only used for unit testing.
+ */
+void spdk_set_thread(struct spdk_thread *thread);
+
+/**
  * Release any resources related to the calling thread for I/O channel allocation.
  *
  * All I/O channel references related to the calling thread must be released using

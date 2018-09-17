@@ -343,7 +343,8 @@ thread_name(void)
 	const char *name;
 
 	/* Create thread with no name, which automatically generates one */
-	spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
+	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
+	spdk_set_thread(thread);
 	thread = spdk_get_thread();
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	name = spdk_thread_get_name(thread);
@@ -351,7 +352,8 @@ thread_name(void)
 	spdk_free_thread();
 
 	/* Create thread named "test_thread" */
-	spdk_allocate_thread(NULL, NULL, NULL, NULL, "test_thread");
+	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "test_thread");
+	spdk_set_thread(thread);
 	thread = spdk_get_thread();
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	name = spdk_thread_get_name(thread);

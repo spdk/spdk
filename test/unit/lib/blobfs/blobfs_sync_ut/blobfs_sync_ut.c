@@ -339,9 +339,11 @@ terminate_spdk_thread(void *arg)
 static void *
 spdk_thread(void *arg)
 {
+	struct spdk_thread *thread;
 	struct ut_request *req;
 
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread1");
+	thread = spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread1");
+	spdk_set_thread(thread);
 
 	while (1) {
 		pthread_mutex_lock(&g_mutex);
@@ -364,6 +366,7 @@ spdk_thread(void *arg)
 
 int main(int argc, char **argv)
 {
+	struct spdk_thread *thread;
 	CU_pSuite	suite = NULL;
 	pthread_t	spdk_tid;
 	unsigned int	num_failures;
@@ -389,7 +392,8 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
+	spdk_set_thread(thread);
 
 	pthread_create(&spdk_tid, NULL, spdk_thread, NULL);
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);

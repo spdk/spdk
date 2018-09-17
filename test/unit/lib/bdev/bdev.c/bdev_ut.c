@@ -1402,8 +1402,9 @@ bdev_io_alignment(void)
 int
 main(int argc, char **argv)
 {
-	CU_pSuite	suite = NULL;
-	unsigned int	num_failures;
+	struct spdk_thread	*thread;
+	CU_pSuite		suite = NULL;
+	unsigned int		num_failures;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
@@ -1432,7 +1433,8 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	spdk_allocate_thread(_bdev_send_msg, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread(_bdev_send_msg, NULL, NULL, NULL, "thread0");
+	spdk_set_thread(thread);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
