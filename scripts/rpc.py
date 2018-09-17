@@ -135,13 +135,13 @@ if __name__ == "__main__":
     def construct_crypto_bdev(args):
         print(rpc.bdev.construct_crypto_bdev(args.client,
                                              base_bdev_name=args.base_bdev_name,
-                                             crypto_bdev_name=args.crypto_bdev_name,
+                                             name=args.name,
                                              crypto_pmd=args.crypto_pmd,
                                              key=args.key))
     p = subparsers.add_parser('construct_crypto_bdev',
                               help='Add a crypto vbdev')
     p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
-    p.add_argument('-c', '--crypto_bdev_name', help="Name of the crypto vbdev")
+    p.add_argument('-c', '--name', help="Name of the crypto vbdev")
     p.add_argument('-d', '--crypto_pmd', help="Name of the crypto device driver")
     p.add_argument('-k', '--key', help="Key")
     p.set_defaults(func=construct_crypto_bdev)
