@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4d884316_5ac711d2",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-17T04:18:35Z",
+      "side": 1,
+      "message": "For the first connection by host IP, it will fall back to round robin to get one core and add the g_nvmf_tgt_host_trids. The potential issue here is that the pg-\u003egroup for the current core is NULL. Later, for the same host IP, it will find the existing entry and the g_nvmf_tgt_host_trids and always get the same core and NULL gp-\u003egroup. To avoid this, if getting core through nvmf_tgt_get_qpair_core() fails, remove the added entry and call again to get the next core.",
+      "parentUuid": "ee023d6e_a4fdb505",
+      "revId": "ac4c65f782a20fa742cf7a80b222a9392b0d645a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3097fd77_ddc4ed15",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 13
