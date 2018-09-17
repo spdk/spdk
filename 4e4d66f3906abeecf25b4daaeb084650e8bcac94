@@ -1033,6 +1033,30 @@
       "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2794bdb_e61d2fa5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 1114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T18:01:39Z",
+      "side": 1,
+      "message": "I agree with Pawel on this one.  free(NULL) is 100% valid, and we have always preferred that in SPDK than to try to only call free() when the argument is not NULL.\n\nBut this can be cleaned up later.",
+      "parentUuid": "b4b031fc_76402dda",
+      "range": {
+        "startLine": 1106,
+        "startChar": 0,
+        "endLine": 1114,
+        "endChar": 12
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
