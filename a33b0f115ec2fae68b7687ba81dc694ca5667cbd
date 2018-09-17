@@ -144,6 +144,30 @@
     },
     {
       "key": {
+        "uuid": "a49f3038_317b14da",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-09-17T18:15:06Z",
+      "side": 1,
+      "message": "SPDK detects that QP has gone into the error state with asynchronous events API, see lib/nvmf/rdma.c, functions spdk_nvmf_rdma_accept and spdk_nvmf_process_ib_event.\n\nIf your SNIC fw/drivers do not trigger those events, SPDK is not aware of an error and considers QP to be fine.\nThen you might run into your case when you first know about your QP is in trouble when you get CQ completion errors.\n\nYou might want to verify this by reading the QP state from SNIC with spdk_nvmf_rdma_update_ibv_state right after you get IBV_WC_WR_FLUSH_ERR.",
+      "parentUuid": "4d163b6d_2c777666",
+      "range": {
+        "startLine": 14,
+        "startChar": 41,
+        "endLine": 15,
+        "endChar": 37
+      },
+      "revId": "a33b0f115ec2fae68b7687ba81dc694ca5667cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e23daa4_24b33706",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
