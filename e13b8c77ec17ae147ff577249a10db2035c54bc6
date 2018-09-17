@@ -46,6 +46,30 @@
       "revId": "e13b8c77ec17ae147ff577249a10db2035c54bc6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df2a448b_4b2ccd59",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1157,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T21:28:14Z",
+      "side": 1,
+      "message": "I\u0027m not totally clear on these two conditions.  Your first if \"if (used_child_iovcnt \u003d\u003d BDEV_IO_NUM_CHILD_IOV)\" isn\u0027t that enough to know you have to wait? Why the additional nested check where you\u0027re checking the current number of iovs used for this split IO?\n\nMaybe I can comment on your question after I better understand these 2 conditions and why of them means \"fail now\" and one means wait, thanks!",
+      "parentUuid": "4a85492c_68525172",
+      "range": {
+        "startLine": 1157,
+        "startChar": 0,
+        "endLine": 1157,
+        "endChar": 5
+      },
+      "revId": "e13b8c77ec17ae147ff577249a10db2035c54bc6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
