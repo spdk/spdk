@@ -36,7 +36,7 @@
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_crypto {
 	char *base_bdev_name;
-	char *crypto_bdev_name;
+	char *name;
 	char *crypto_pmd;
 	char *key;
 };
@@ -46,7 +46,7 @@ static void
 free_rpc_construct_crypto(struct rpc_construct_crypto *r)
 {
 	free(r->base_bdev_name);
-	free(r->crypto_bdev_name);
+	free(r->name);
 	free(r->crypto_pmd);
 	free(r->key);
 }
@@ -54,7 +54,7 @@ free_rpc_construct_crypto(struct rpc_construct_crypto *r)
 /* Structure to decode the input parameters for this RPC method. */
 static const struct spdk_json_object_decoder rpc_construct_crypto_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_crypto, base_bdev_name), spdk_json_decode_string},
-	{"crypto_bdev_name", offsetof(struct rpc_construct_crypto, crypto_bdev_name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_construct_crypto, name), spdk_json_decode_string},
 	{"crypto_pmd", offsetof(struct rpc_construct_crypto, crypto_pmd), spdk_json_decode_string},
 	{"key", offsetof(struct rpc_construct_crypto, key), spdk_json_decode_string},
 };
@@ -77,7 +77,7 @@ spdk_rpc_construct_crypto_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = create_crypto_disk(req.base_bdev_name, req.crypto_bdev_name,
+	rc = create_crypto_disk(req.base_bdev_name, req.name,
 				req.crypto_pmd, req.key);
 	if (rc != 0) {
 		goto invalid;
@@ -89,7 +89,7 @@ spdk_rpc_construct_crypto_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_json_write_string(w, req.crypto_bdev_name);
+	spdk_json_write_string(w, req.name);
 	spdk_jsonrpc_end_result(request, w);
 	free_rpc_construct_crypto(&req);
 	return;

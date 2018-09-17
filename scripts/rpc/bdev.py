@@ -15,19 +15,19 @@ def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
     return client.call('set_bdev_options', params)
 
 
-def construct_crypto_bdev(client, base_bdev_name, crypto_bdev_name, crypto_pmd, key):
+def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
     """Construct a crypto virtual block device.
 
     Args:
         base_bdev_name: name of the underlying base bdev
-        crypto_bdev_name: name for the crypto vbdev
+        name: name for the crypto vbdev
         crypto_pmd: name of of the DPDK crypto driver to use
         key: key
 
     Returns:
         Name of created virtual block device.
     """
-    params = {'base_bdev_name': base_bdev_name, 'crypto_bdev_name': crypto_bdev_name, 'crypto_pmd': crypto_pmd, 'key': key}
+    params = {'base_bdev_name': base_bdev_name, 'name': name, 'crypto_pmd': crypto_pmd, 'key': key}
 
     return client.call('construct_crypto_bdev', params)
 
@@ -36,7 +36,7 @@ def delete_crypto_bdev(client, name):
     """Delete crypto virtual block device.
 
     Args:
-        bdev_name: name of crypto vbdev to delete
+        name: name of crypto vbdev to delete
     """
     params = {'name': name}
     return client.call('delete_crypto_bdev', params)
