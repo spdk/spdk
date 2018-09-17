@@ -519,6 +519,30 @@
     },
     {
       "key": {
+        "uuid": "7c392dcf_38b9bc14",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-17T21:22:52Z",
+      "side": 1,
+      "message": "I agree - the crypto_len is always the block size of the virtual block device by definition. This should be a nice clean up patch.",
+      "parentUuid": "c2352c77_18c6f1c9",
+      "range": {
+        "startLine": 640,
+        "startChar": 2,
+        "endLine": 640,
+        "endChar": 54
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ed3a6c5_a7e75944",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -754,6 +778,30 @@
     },
     {
       "key": {
+        "uuid": "a752a0ab_4d23589c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-17T21:22:52Z",
+      "side": 1,
+      "message": "We have the compiler option to treat void pointer math as char* math turned on.",
+      "parentUuid": "33d51cc3_86060d66",
+      "range": {
+        "startLine": 693,
+        "startChar": 55,
+        "endLine": 693,
+        "endChar": 63
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da732408_e680e97c",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -895,6 +943,30 @@
     },
     {
       "key": {
+        "uuid": "e0f4e8d4_e9b6d45a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-17T21:22:52Z",
+      "side": 1,
+      "message": "Agree",
+      "parentUuid": "1b2439cd_bedfcca8",
+      "range": {
+        "startLine": 915,
+        "startChar": 0,
+        "endLine": 918,
+        "endChar": 69
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b2c19145_036c1f53",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -930,6 +1002,30 @@
       "side": 1,
       "message": "another good followup, thanks.  I\u0027ll look into it.",
       "parentUuid": "b2c19145_036c1f53",
+      "range": {
+        "startLine": 970,
+        "startChar": 1,
+        "endLine": 980,
+        "endChar": 31
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d524729_289483ee",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-17T21:22:52Z",
+      "side": 1,
+      "message": "Agree",
+      "parentUuid": "74039f70_c09d6bd1",
       "range": {
         "startLine": 970,
         "startChar": 1,
@@ -1048,6 +1144,30 @@
       "side": 1,
       "message": "I agree with Pawel on this one.  free(NULL) is 100% valid, and we have always preferred that in SPDK than to try to only call free() when the argument is not NULL.\n\nBut this can be cleaned up later.",
       "parentUuid": "b4b031fc_76402dda",
+      "range": {
+        "startLine": 1106,
+        "startChar": 0,
+        "endLine": 1114,
+        "endChar": 12
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83dfaafc_e2a07312",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 1114,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-17T21:22:52Z",
+      "side": 1,
+      "message": "Agree - we do free on NULL pointers everywhere.",
+      "parentUuid": "a2794bdb_e61d2fa5",
       "range": {
         "startLine": 1106,
         "startChar": 0,
