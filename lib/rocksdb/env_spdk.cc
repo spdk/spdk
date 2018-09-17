@@ -45,6 +45,8 @@ extern "C" {
 #include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk/bdev.h"
+
+#include "spdk_internal/thread.h"
 }
 
 namespace rocksdb
@@ -579,8 +581,11 @@ public:
 
 void SpdkInitializeThread(void)
 {
+	struct spdk_thread *thread;
+
 	if (g_fs != NULL) {
-		spdk_allocate_thread(NULL, NULL, NULL, NULL, "spdk_rocksdb");
+		thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "spdk_rocksdb");
+		spdk_set_thread(thread);
 		g_sync_args.channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	}
 }

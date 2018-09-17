@@ -36,6 +36,7 @@
 
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
+#include "spdk_internal/thread.h"
 
 #include "spdk/log.h"
 #include "spdk/thread.h"
@@ -134,7 +135,7 @@ spdk_event_call(struct spdk_event *event)
 }
 
 static inline uint32_t
-_spdk_event_queue_run_batch(struct spdk_reactor *reactor)
+_spdk_event_queue_run_batch(struct spdk_reactor *reactor, struct spdk_thread *thread)
 {
 	unsigned count, i;
 	void *events[SPDK_EVENT_BATCH_SIZE];
@@ -153,12 +154,16 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 		return 0;
 	}
 
+	spdk_set_thread(thread);
+
 	for (i = 0; i < count; i++) {
 		struct spdk_event *event = events[i];
 
 		assert(event != NULL);
 		event->fn(event->arg1, event->arg2);
 	}
+
+	spdk_set_thread(NULL);
 
 	spdk_mempool_put_bulk(g_spdk_event_mempool, events, count);
 
@@ -294,7 +299,9 @@ _spdk_reactor_run(void *arg)
 
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	if (g_context_switch_monitor_enabled) {
+		spdk_set_thread(thread);
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
+		spdk_set_thread(NULL);
 	}
 	now = spdk_get_ticks();
 	reactor->tsc_last = now;
@@ -302,7 +309,7 @@ _spdk_reactor_run(void *arg)
 	while (1) {
 		bool took_action = false;
 
-		event_count = _spdk_event_queue_run_batch(reactor);
+		event_count = _spdk_event_queue_run_batch(reactor, thread);
 		if (event_count > 0) {
 			rc = 1;
 			now = spdk_get_ticks();
@@ -346,6 +353,7 @@ _spdk_reactor_run(void *arg)
 		}
 	}
 
+	spdk_set_thread(thread);
 	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
 	spdk_free_thread();
 	return 0;
