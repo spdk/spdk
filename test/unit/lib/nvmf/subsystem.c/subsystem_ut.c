@@ -36,6 +36,7 @@
 #include "common/lib/test_env.c"
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
+#include "spdk_internal/thread.h"
 
 #include "nvmf/subsystem.c"
 
@@ -448,6 +449,7 @@ test_spdk_nvmf_subsystem_set_sn(void)
 
 int main(int argc, char **argv)
 {
+	struct spdk_thread *thread;
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
@@ -469,11 +471,14 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	spdk_allocate_thread(_subsystem_send_msg, NULL, NULL, NULL, "thread0");
+	thread = spdk_allocate_thread(_subsystem_send_msg, NULL, NULL, NULL, "thread0");
+	spdk_set_thread(thread);
+
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+
 	spdk_free_thread();
 
 	return num_failures;
