@@ -43,6 +43,8 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/thread.h"
+
 #include "config-host.h"
 #include "fio.h"
 #include "optgroup.h"
@@ -141,6 +143,8 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_close_targets, fio_thread);
 
 	while (spdk_fio_poll_thread(fio_thread) > 0) {}
+
+	spdk_set_thread(fio_thread->thread);
 
 	spdk_free_thread();
 	free(fio_thread->iocq);
