@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2d99f0_1770e031",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T22:10:22Z",
+      "side": 1,
+      "message": "Maybe also mention that SPDK_LOG_INVALID can be used to disable the stack trace, even if the capability was built in.",
+      "revId": "87c6f6831a8afe570209f51806e13ecfa1d0766f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3001983_c859d888",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T22:10:22Z",
+      "side": 1,
+      "message": "SPDK",
+      "revId": "87c6f6831a8afe570209f51806e13ecfa1d0766f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "889ed540_7c362c5a",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T22:10:22Z",
+      "side": 1,
+      "message": "I think these APIs are fine - but for the unit tests, could we add this to mk/spdk.unittest.mk:\n\n# Unit tests cause lots of errors, make sure we don\u0027t print backtraces\n# for all of them.\nCFLAGS +\u003d -USPDK_LOG_BACKTRACE_LVL\n\nThen we won\u0027t have to explicitly add this spdk_log_set_backtrace_level() call to all 60 unit test files.",
+      "revId": "87c6f6831a8afe570209f51806e13ecfa1d0766f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
