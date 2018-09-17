@@ -40,6 +40,7 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
+#include "spdk_internal/thread.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -130,22 +131,12 @@ struct spdk_thread {
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 static uint32_t g_thread_count = 0;
 
-static struct spdk_thread *
+static __thread struct spdk_thread *tls_thread = NULL;
+
+static inline struct spdk_thread *
 _get_thread(void)
 {
-	pthread_t thread_id;
-	struct spdk_thread *thread;
-
-	thread_id = pthread_self();
-
-	thread = NULL;
-	TAILQ_FOREACH(thread, &g_threads, tailq) {
-		if (thread->thread_id == thread_id) {
-			return thread;
-		}
-	}
-
-	return NULL;
+	return tls_thread;
 }
 
 static void
@@ -258,6 +249,12 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 }
 
 void
+spdk_set_thread(struct spdk_thread *thread)
+{
+	tls_thread = thread;
+}
+
+void
 spdk_free_thread(void)
 {
 	struct spdk_thread *thread;
@@ -289,6 +286,8 @@ spdk_free_thread(void)
 	}
 
 	free(thread);
+
+	tls_thread = NULL;
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 }
@@ -360,6 +359,10 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 	struct spdk_poller *poller;
 	int rc = 0;
 
+	assert(_get_thread() == NULL);
+
+	tls_thread = thread;
+
 	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
 	if (msg_count) {
 		rc = 1;
@@ -419,6 +422,8 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 			}
 		}
 	}
+
+	tls_thread = NULL;
 
 	return rc;
 }

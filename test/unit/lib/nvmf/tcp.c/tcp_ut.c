@@ -35,6 +35,7 @@
 
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
+#include "spdk_internal/thread.h"
 
 #include "common/lib/test_env.c"
 #include "nvmf/ctrlr.c"
@@ -205,6 +206,7 @@ test_nvmf_tcp_create(void)
 
 	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
 
 	/* case 1 */
 	memset(&opts, 0, sizeof(opts));
@@ -273,6 +275,7 @@ test_nvmf_tcp_destroy(void)
 
 	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
 
 	/* case 1 */
 	memset(&opts, 0, sizeof(opts));
