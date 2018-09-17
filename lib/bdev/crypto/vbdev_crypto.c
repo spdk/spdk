@@ -1125,36 +1125,35 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 	int rc = 0;
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (!bdev) {
-		return -1;
-	}
 
 	rc = vbdev_crypto_insert_name(bdev_name, vbdev_name, crypto_pmd, key);
 	if (rc != 0) {
 		return rc;
 	}
 
-	vbdev_crypto_claim(bdev);
+	if (bdev) {
+		vbdev_crypto_claim(bdev);
 
-	rc = vbdev_crypto_init_crypto_drivers();
-	if (rc) {
-		SPDK_ERRLOG("Error setting up crypto devices\n");
-		return rc;
-	}
+		rc = vbdev_crypto_init_crypto_drivers();
+		if (rc) {
+			SPDK_ERRLOG("Error setting up crypto devices\n");
+			return rc;
+		}
 
-	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
-		if (strcmp(crypto_bdev->base_bdev->name, bdev->name) == 0) {
-			rc = spdk_vbdev_register(&crypto_bdev->crypto_bdev,
-						 &crypto_bdev->base_bdev, 1);
-			if (rc) {
-				SPDK_ERRLOG("could not register crypto_bdev\n");
-				spdk_bdev_close(crypto_bdev->base_desc);
-				TAILQ_REMOVE(&g_vbdev_crypto, crypto_bdev, link);
-				free(crypto_bdev->crypto_bdev.name);
-				free(crypto_bdev->key);
-				free(crypto_bdev);
+		TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
+			if (strcmp(crypto_bdev->base_bdev->name, bdev->name) == 0) {
+				rc = spdk_vbdev_register(&crypto_bdev->crypto_bdev,
+							 &crypto_bdev->base_bdev, 1);
+				if (rc) {
+					SPDK_ERRLOG("could not register crypto_bdev\n");
+					spdk_bdev_close(crypto_bdev->base_desc);
+					TAILQ_REMOVE(&g_vbdev_crypto, crypto_bdev, link);
+					free(crypto_bdev->crypto_bdev.name);
+					free(crypto_bdev->key);
+					free(crypto_bdev);
+				}
+				break;
 			}
-			break;
 		}
 	}
 
@@ -1430,6 +1429,7 @@ error_claim:
 error_open:
 	TAILQ_REMOVE(&g_vbdev_crypto, vbdev, link);
 	spdk_io_device_unregister(vbdev, NULL);
+	free(vbdev->drv_name);
 error_drv_name:
 	free(vbdev->key);
 error_alloc_key:
