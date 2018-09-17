@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dbf4d405_64e571a4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a6a4c956_69a3c5d4",
+      "range": {
+        "startLine": 97,
+        "startChar": 82,
+        "endLine": 98,
+        "endChar": 9
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6300e728_965bd358",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "duplicate",
+      "range": {
+        "startLine": 99,
+        "startChar": 3,
+        "endLine": 99,
+        "endChar": 6
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b953774_7260a285",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6300e728_965bd358",
       "range": {
         "startLine": 99,
         "startChar": 3,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "1bde9ee1_0f2647eb",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Wow, how\u0027d you catch that?  Thanks!",
+      "parentUuid": "6cacfb2f_77035cb2",
+      "range": {
+        "startLine": 239,
+        "startChar": 14,
+        "endLine": 239,
+        "endChar": 52
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "452480ee_b6eb69f3",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -82,6 +154,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "This and all other mempool\u0027s should be power of 2 minus 1\n\nSee http://git.dpdk.org/dpdk/tree/lib/librte_mempool/rte_mempool.h#n877",
+      "range": {
+        "startLine": 245,
+        "startChar": 50,
+        "endLine": 245,
+        "endChar": 66
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71b46b87_fa78381d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Going to leave this for now, talked to Jim and he doesn\u0027t quite get why this is either plus I\"m pretty sure not all of our calls are doing this.  If we do think it\u0027s a requirement - and the doc you pointed to says \u0027optimal\u0027 - then we should think about enforcing it in our wrapper.",
+      "parentUuid": "452480ee_b6eb69f3",
       "range": {
         "startLine": 245,
         "startChar": 50,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "13d3fe98_03656bcd",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "My old Windows camel case is haunting me still!",
+      "parentUuid": "850fbdf8_8111957d",
+      "range": {
+        "startLine": 392,
+        "startChar": 22,
+        "endLine": 392,
+        "endChar": 28
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65dbf305_34c44aee",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -128,6 +248,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "Is this NULL store needed?",
+      "range": {
+        "startLine": 478,
+        "startChar": 2,
+        "endLine": 478,
+        "endChar": 47
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62e55b18_eb1e306c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "It was part of some debug I was doing a while back and I kept an assertion in the code (poller) top make sure we aren\u0027t getting a crypto op that was re0used.  I\u0027d like to keep it in as that would be a nasty bug",
+      "parentUuid": "65dbf305_34c44aee",
       "range": {
         "startLine": 478,
         "startChar": 2,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "dea750a1_9d0628c9",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Actually it doesn\u0027t need to be initialized at all.  This was leftover from prev logic down below.",
+      "parentUuid": "2ca8acea_ae5c1e33",
+      "range": {
+        "startLine": 511,
+        "startChar": 17,
+        "endLine": 511,
+        "endChar": 18
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ba946f1_43185e83",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -174,6 +342,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "uint16_t, unsigned or size_t?",
+      "range": {
+        "startLine": 517,
+        "startChar": 9,
+        "endLine": 517,
+        "endChar": 17
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efe189a3_3cdd7a43",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2ba946f1_43185e83",
       "range": {
         "startLine": 517,
         "startChar": 9,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "3c2f208f_59af63a6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "858e8905_f6322152",
+      "range": {
+        "startLine": 518,
+        "startChar": 1,
+        "endLine": 518,
+        "endChar": 4
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "44aa37e1_61564387",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -220,6 +436,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "unsigned?",
+      "range": {
+        "startLine": 519,
+        "startChar": 1,
+        "endLine": 519,
+        "endChar": 4
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca76a5d1_5a59020d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "44aa37e1_61564387",
       "range": {
         "startLine": 519,
         "startChar": 1,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "c2352c77_18c6f1c9",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "This function has evolved over time, many times, based on initial understanding of how we use IV.  Early on we had no requirement to have block size as the crypto data size.  So, I think you are correct here HOWEVER I\u0027ve done extensive testing with this logic so do not want to change it the day it gets merged.  I\u0027ll make a note to follow up with a patch that simplifies this once everything is merged so I can take my time running all the test I ran before.  Thanks!!",
+      "parentUuid": "25bf04a0_63df4ea5",
+      "range": {
+        "startLine": 640,
+        "startChar": 2,
+        "endLine": 640,
+        "endChar": 54
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ed3a6c5_a7e75944",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -266,6 +530,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "I think that this is NOP check as it is already verified in the bdev layer (see spdk_bdev_writev/spdk_bdev_readv).",
+      "range": {
+        "startLine": 649,
+        "startChar": 6,
+        "endLine": 649,
+        "endChar": 30
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbf98acf_2b61d939",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "might be, but same comment as above but with the caveat that I discussed this logic with JIm and Ben at one point and there was a feeling that there may be cases where this could happen",
+      "parentUuid": "1ed3a6c5_a7e75944",
       "range": {
         "startLine": 649,
         "startChar": 6,
@@ -301,6 +589,30 @@
     },
     {
       "key": {
+        "uuid": "08c60a02_2002610c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "I think its OK like this",
+      "parentUuid": "184a042b_786046c8",
+      "range": {
+        "startLine": 667,
+        "startChar": 10,
+        "endLine": 667,
+        "endChar": 13
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5c96082_5563e614",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -312,6 +624,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "if comment in line 640 is true this can be converted to\n\n  offset_blocks +\u003d 1",
+      "range": {
+        "startLine": 668,
+        "startChar": 16,
+        "endLine": 668,
+        "endChar": 27
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d88c6ef_1000add0",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "I don\u0027t think it matters either way",
+      "parentUuid": "f5c96082_5563e614",
       "range": {
         "startLine": 668,
         "startChar": 16,
@@ -347,6 +683,30 @@
     },
     {
       "key": {
+        "uuid": "1650a53d_422a8b40",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Not for the initial patch - as you mention its quite complicated and right now it works so 2 days after getting two +2 votes is a bad time to refactor :) . Once merged you are, of course, free to submit a patch with any simplifications you see but re-testing it thoroughly takes time of course.",
+      "parentUuid": "919a35a6_af9215ed",
+      "range": {
+        "startLine": 669,
+        "startChar": 2,
+        "endLine": 669,
+        "endChar": 11
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f34eee1a_ea5a62f3",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -358,6 +718,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "Isn\u0027t this producing a compiler warning?",
+      "range": {
+        "startLine": 693,
+        "startChar": 55,
+        "endLine": 693,
+        "endChar": 63
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33d51cc3_86060d66",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Nope",
+      "parentUuid": "f34eee1a_ea5a62f3",
       "range": {
         "startLine": 693,
         "startChar": 55,
@@ -393,6 +777,30 @@
     },
     {
       "key": {
+        "uuid": "5246bc4a_2c4d5315",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da732408_e680e97c",
+      "range": {
+        "startLine": 694,
+        "startChar": 52,
+        "endLine": 694,
+        "endChar": 60
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0ba0015_22ce509c",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -404,6 +812,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "Don\u0027t think that decryption is an error :)",
+      "range": {
+        "startLine": 812,
+        "startChar": 3,
+        "endLine": 812,
+        "endChar": 35
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0bd68d9_0b073372",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Hmmm, not sure what you mean.  \"Error decrypting\" seems clear to me, there was an error decrypting and that\u0027s what happened here.",
+      "parentUuid": "b0ba0015_22ce509c",
       "range": {
         "startLine": 812,
         "startChar": 3,
@@ -439,6 +871,30 @@
     },
     {
       "key": {
+        "uuid": "1b2439cd_bedfcca8",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Good suggestion, I\u0027ll put that on the list of follow-ups after merge.",
+      "parentUuid": "f55ddbb5_315c316e",
+      "range": {
+        "startLine": 915,
+        "startChar": 0,
+        "endLine": 918,
+        "endChar": 69
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b2c19145_036c1f53",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -450,6 +906,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "can you use spdk_json_write_named_*() API ?",
+      "range": {
+        "startLine": 970,
+        "startChar": 1,
+        "endLine": 980,
+        "endChar": 31
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74039f70_c09d6bd1",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "another good followup, thanks.  I\u0027ll look into it.",
+      "parentUuid": "b2c19145_036c1f53",
       "range": {
         "startLine": 970,
         "startChar": 1,
@@ -485,6 +965,30 @@
     },
     {
       "key": {
+        "uuid": "8a8269b1_0e11cc6c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "Good catch! We were going to not dump the key for security reasons but changed our minds later on and I never updated the code.",
+      "parentUuid": "c89253fb_ac25ed91",
+      "range": {
+        "startLine": 996,
+        "startChar": 2,
+        "endLine": 996,
+        "endChar": 58
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "878d804e_4e4fb696",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 107
@@ -496,6 +1000,30 @@
       "writtenOn": "2018-09-17T14:00:35Z",
       "side": 1,
       "message": "one \"error:\" label would be enought here as free() will handle NULL\u0027s",
+      "range": {
+        "startLine": 1106,
+        "startChar": 0,
+        "endLine": 1114,
+        "endChar": 12
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4b031fc_76402dda",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 1114,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-17T16:04:00Z",
+      "side": 1,
+      "message": "I like this better, I think its much easier to read and we\u0027re not in the perf path here anyway",
+      "parentUuid": "878d804e_4e4fb696",
       "range": {
         "startLine": 1106,
         "startChar": 0,
