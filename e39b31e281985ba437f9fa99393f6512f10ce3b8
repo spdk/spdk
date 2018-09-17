@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "294cae80_eb21c3f6",
+        "filename": "test/env/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-17T07:27:20Z",
+      "side": 1,
+      "message": "env_dpdk is kind of special library and it probably shouldn\u0027t be explicitly included like that. \n\nTo describe it briefly:\nSPDK provides an abstraction layer for managing hugepage memory and PCI devices. The default implementation that SPDK ships with is based on DPDK (all rte_* functions) and it\u0027s located in env_dpdk dir, but it\u0027s possible to specify a different env implementation during compilation. In such case, the env_dpdk dir is completely omitted in the build process.\n\nI can see this is partially handled in this makefile (line #41).\n\nAs the long term solution, I\u0027d suggest adding ENV_LIBS as a direct dependency of APP in spdk.unittest.mk. This should work no matter which env implementation is used.",
+      "range": {
+        "startLine": 51,
+        "startChar": 17,
+        "endLine": 51,
+        "endChar": 25
+      },
+      "revId": "e39b31e281985ba437f9fa99393f6512f10ce3b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
