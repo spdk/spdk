@@ -22,6 +22,29 @@
       "revId": "a1d923d8ca43035fdc478fef255ba5e32cbfd6d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc0c6112_60e40a8c",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-09-17T13:22:19Z",
+      "side": 1,
+      "message": "should either check if root or run first with sudo (sudo mkdir \u0026\u0026 chown /home/sys_sgsw)",
+      "range": {
+        "startLine": 109,
+        "startChar": 1,
+        "endLine": 111,
+        "endChar": 83
+      },
+      "revId": "a1d923d8ca43035fdc478fef255ba5e32cbfd6d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
