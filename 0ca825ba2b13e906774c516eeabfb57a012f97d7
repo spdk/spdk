@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d87c89c_821b7d53",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-17T06:55:23Z",
+      "side": 1,
+      "message": "Add a check\n\nif (ns_ctx-\u003eio_cnt \u003e 0) {\n  ns_ctx-\u003eio_cnt--;\n}",
+      "range": {
+        "startLine": 693,
+        "startChar": 2,
+        "endLine": 693,
+        "endChar": 19
+      },
+      "revId": "0ca825ba2b13e906774c516eeabfb57a012f97d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af691487_3c802d82",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-17T06:55:23Z",
+      "side": 1,
+      "message": "It looks like this check is not needed as the is_draining is set at line 911",
+      "range": {
+        "startLine": 738,
+        "startChar": 32,
+        "endLine": 738,
+        "endChar": 33
+      },
+      "revId": "0ca825ba2b13e906774c516eeabfb57a012f97d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef7192ef_fce848fe",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 835,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-17T06:55:23Z",
+      "side": 1,
+      "message": "iodepth",
+      "range": {
+        "startLine": 835,
+        "startChar": 50,
+        "endLine": 835,
+        "endChar": 57
+      },
+      "revId": "0ca825ba2b13e906774c516eeabfb57a012f97d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e57379b8_bb546d8e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-17T06:55:23Z",
+      "side": 1,
+      "message": "This check looks like not needed.\n\nAnd what if you specify the parameters as (-t 10 -n 0)? With this check, it will break out immediately.\n\nInstead, here it can check if (ns_ctx-\u003eio_cnt \u003d\u003d 0) and break",
+      "range": {
+        "startLine": 911,
+        "startChar": 2,
+        "endLine": 911,
+        "endChar": 23
+      },
+      "revId": "0ca825ba2b13e906774c516eeabfb57a012f97d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3baea9b_74839a2e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1328,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-17T06:55:23Z",
+      "side": 1,
+      "message": "Could add a check like:\n\nif (atoi(optarg) \u003e 0) {\n  g_ns_io_cnt \u003d atoi(optarg);\n}",
+      "range": {
+        "startLine": 1328,
+        "startChar": 3,
+        "endLine": 1328,
+        "endChar": 30
+      },
+      "revId": "0ca825ba2b13e906774c516eeabfb57a012f97d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65b384d2_ee804861",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1643,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-17T06:55:23Z",
+      "side": 1,
+      "message": "in this way, the initialized value will be either -1 or \u003e 0",
+      "range": {
+        "startLine": 1643,
+        "startChar": 10,
+        "endLine": 1643,
+        "endChar": 16
+      },
+      "revId": "0ca825ba2b13e906774c516eeabfb57a012f97d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
