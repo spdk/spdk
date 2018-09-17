@@ -70,6 +70,30 @@
       "revId": "e13b8c77ec17ae147ff577249a10db2035c54bc6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc5213e8_a2fe4cd5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1157,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-17T23:42:42Z",
+      "side": 1,
+      "message": "Yes, that condition was not necessary. I added two patches before this patch. I hope the patch https://review.gerrithub.io/#/c/spdk/spdk/+/425876/ will be the answer for your question.",
+      "parentUuid": "df2a448b_4b2ccd59",
+      "range": {
+        "startLine": 1157,
+        "startChar": 0,
+        "endLine": 1157,
+        "endChar": 5
+      },
+      "revId": "e13b8c77ec17ae147ff577249a10db2035c54bc6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
