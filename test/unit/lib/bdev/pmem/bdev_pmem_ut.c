@@ -36,6 +36,8 @@
 #include "common/lib/test_env.c"
 #include "unit/lib/json_mock.c"
 
+#include "spdk_internal/thread.h"
+
 #include "bdev/pmem/bdev_pmem.c"
 
 DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *,
@@ -377,9 +379,12 @@ ut_pmem_blk_clean(void)
 static int
 ut_pmem_blk_init(void)
 {
+	struct spdk_thread *thread;
+
 	errno = 0;
 
-	spdk_allocate_thread(_pmem_send_msg, NULL, NULL, NULL, NULL);
+	thread = spdk_allocate_thread(_pmem_send_msg, NULL, NULL, NULL, NULL);
+	spdk_set_thread(thread);
 
 	g_pool_ok.buffer = calloc(g_pool_ok.nblock, g_pool_ok.bsize);
 	if (g_pool_ok.buffer == NULL) {
