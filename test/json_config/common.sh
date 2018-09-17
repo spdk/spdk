@@ -146,6 +146,7 @@ function create_bdev_subsystem_config() {
 	$rpc_py construct_split_vbdev Nvme0n1 2
 	$rpc_py construct_null_bdev Null0 32 512
 	$rpc_py construct_malloc_bdev 128 512 --name Malloc0
+	$rpc_py construct_crypto_bdev -b Malloc0 -c CryMalloc -d crypto_aesni_mb -k 0123456789123456
 	$rpc_py construct_malloc_bdev 64 4096 --name Malloc1
 	$rpc_py construct_malloc_bdev 8 1024 --name Malloc2
 	$rpc_py construct_error_bdev Malloc2
@@ -182,6 +183,7 @@ function clear_nvmf_subsystem_config() {
 }
 
 function clear_bdev_subsystem_config() {
+	$rpc_py delete_crypto_bdev CryMalloc
 	$rpc_py destroy_lvol_bdev lvs_test/clone0
 	$rpc_py destroy_lvol_bdev lvs_test/lvol0
 	$rpc_py destroy_lvol_bdev lvs_test/snapshot0
