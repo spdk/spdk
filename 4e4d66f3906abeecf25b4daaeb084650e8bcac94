@@ -1,0 +1,510 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6a4c956_69a3c5d4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "Sorry, I can\u0027t understand this sentence :P",
+      "range": {
+        "startLine": 97,
+        "startChar": 82,
+        "endLine": 98,
+        "endChar": 9
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6300e728_965bd358",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "duplicate",
+      "range": {
+        "startLine": 99,
+        "startChar": 3,
+        "endLine": 99,
+        "endChar": 6
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cacfb2f_77035cb2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "This function is deprecated.",
+      "range": {
+        "startLine": 239,
+        "startChar": 14,
+        "endLine": 239,
+        "endChar": 52
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "452480ee_b6eb69f3",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "This and all other mempool\u0027s should be power of 2 minus 1\n\nSee http://git.dpdk.org/dpdk/tree/lib/librte_mempool/rte_mempool.h#n877",
+      "range": {
+        "startLine": 245,
+        "startChar": 50,
+        "endLine": 245,
+        "endChar": 66
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "850fbdf8_8111957d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "xD -\u003e free_me?",
+      "range": {
+        "startLine": 392,
+        "startChar": 22,
+        "endLine": 392,
+        "endChar": 28
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65dbf305_34c44aee",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "Is this NULL store needed?",
+      "range": {
+        "startLine": 478,
+        "startChar": 2,
+        "endLine": 478,
+        "endChar": 47
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ca8acea_ae5c1e33",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "why only one? :)\n\nLine 539 sets this to total_length / crypto_len.\n\nAlso I think size_t would be better as type of cryop_cnt.",
+      "range": {
+        "startLine": 511,
+        "startChar": 17,
+        "endLine": 511,
+        "endChar": 18
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ba946f1_43185e83",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "uint16_t, unsigned or size_t?",
+      "range": {
+        "startLine": 517,
+        "startChar": 9,
+        "endLine": 517,
+        "endChar": 17
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "858e8905_f6322152",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "size_t? unsigned?",
+      "range": {
+        "startLine": 518,
+        "startChar": 1,
+        "endLine": 518,
+        "endChar": 4
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44aa37e1_61564387",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "unsigned?",
+      "range": {
+        "startLine": 519,
+        "startChar": 1,
+        "endLine": 519,
+        "endChar": 4
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25bf04a0_63df4ea5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "Pls correct me if I\u0027m wrong here.\n\nAt the top of the file \n\n  crypto_len \u003d io_ctx-\u003ecrypto_bdev-\u003ecrypto_bdev.blocklen;\n  total_length \u003d bdev_io-\u003eu.bdev.num_blocks * crypto_len;\n  total_remaining \u003d total_length;\n\n  crypto_len \u003c\u003d current_iov_remaining \u003c\u003d total_length\n\nif the bdev crypto operates on LBA\u0027s only so the below assumption is true\n\n  current_iov_remaining \u003d n * crypto_len\n\nthis imply\n\n  current_len \u003d spdk_min(n * crypto_len, crypto_len) \u003d crypto_len\n  \nSo I think all these spdk_min() stuf is not needed at all.",
+      "range": {
+        "startLine": 640,
+        "startChar": 2,
+        "endLine": 640,
+        "endChar": 54
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ed3a6c5_a7e75944",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "I think that this is NOP check as it is already verified in the bdev layer (see spdk_bdev_writev/spdk_bdev_readv).",
+      "range": {
+        "startLine": 649,
+        "startChar": 6,
+        "endLine": 649,
+        "endChar": 30
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "184a042b_786046c8",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "\u0027current_iov\u0027 suggesed me that you are iterating over iovs array. Maybe iov_base would be more natural here. Just suggestion.",
+      "range": {
+        "startLine": 667,
+        "startChar": 10,
+        "endLine": 667,
+        "endChar": 13
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5c96082_5563e614",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "if comment in line 640 is true this can be converted to\n\n  offset_blocks +\u003d 1",
+      "range": {
+        "startLine": 668,
+        "startChar": 16,
+        "endLine": 668,
+        "endChar": 27
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "919a35a6_af9215ed",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "This function is quite complicated. Can you gather together all initialization at the loop start? This would defragment it and help analyze it :)",
+      "range": {
+        "startLine": 669,
+        "startChar": 2,
+        "endLine": 669,
+        "endChar": 11
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f34eee1a_ea5a62f3",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "Isn\u0027t this producing a compiler warning?",
+      "range": {
+        "startLine": 693,
+        "startChar": 55,
+        "endLine": 693,
+        "endChar": 63
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da732408_e680e97c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "buf_addr is already \u0027void *\u0027",
+      "range": {
+        "startLine": 694,
+        "startChar": 52,
+        "endLine": 694,
+        "endChar": 60
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0ba0015_22ce509c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "Don\u0027t think that decryption is an error :)",
+      "range": {
+        "startLine": 812,
+        "startChar": 3,
+        "endLine": 812,
+        "endChar": 35
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f55ddbb5_315c316e",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "I think you should explicitly state what commands are supported. Don\u0027t think that you support any of SPDK_BDEV_IO_TYPE_NVME_ADMIN, SPDK_BDEV_IO_TYPE_NVME_IO, SPDK_BDEV_IO_TYPE_NVME_IO_MD.",
+      "range": {
+        "startLine": 915,
+        "startChar": 0,
+        "endLine": 918,
+        "endChar": 69
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2c19145_036c1f53",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "can you use spdk_json_write_named_*() API ?",
+      "range": {
+        "startLine": 970,
+        "startChar": 1,
+        "endLine": 980,
+        "endChar": 31
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c89253fb_ac25ed91",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "the vbdev_crypto_dump_info_json() method is dumping the key. Also I think the \"NOT SPECIFIED\" is no what we expect here. Maybe spdk_json_write_named_null() or just empty string?",
+      "range": {
+        "startLine": 996,
+        "startChar": 2,
+        "endLine": 996,
+        "endChar": 58
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "878d804e_4e4fb696",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 1114,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-17T14:00:35Z",
+      "side": 1,
+      "message": "one \"error:\" label would be enought here as free() will handle NULL\u0027s",
+      "range": {
+        "startLine": 1106,
+        "startChar": 0,
+        "endLine": 1114,
+        "endChar": 12
+      },
+      "revId": "4e4d66f3906abeecf25b4daaeb084650e8bcac94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
