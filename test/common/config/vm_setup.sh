@@ -21,10 +21,9 @@
 set -e
 
 VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
-
 UPGRADE=false
 INSTALL=false
-CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi"
+CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,perl-open,pmdk"
 CONF_PATH="${VM_SETUP_PATH}/vm_setup.conf"
 
 function usage()
@@ -34,8 +33,8 @@ function usage()
     echo ""
     echo "./vm_setup.sh"
     echo "  -h --help"
-    echo "  -u --upgrade Run dnf upgrade"
-    echo "  -i --install-deps Install dnf based dependencies"
+    echo "  -u --upgrade Run package manager upgrade"
+    echo "  -i --install-deps Install dnf based or apt-get based dependencies"
     echo "  -t --test-conf List of test configurations to enable (${CONF})"
     echo "  -c --conf-path Path to configuration file"
     exit 0
@@ -73,12 +72,37 @@ source "$CONF_PATH"
 
 jobs=$(($(nproc)*2))
 
+pkgmng='undefined'
+if hash dnf &>/dev/null ; then
+    pkgmng='dnf'
+    if [ ! -s /etc/redhat-release ]; then
+        echo "Warning: Located dnf package manager, but it was tested on Fedora only"
+    fi
+elif hash apt-get &>/dev/null ; then
+    pkgmng='apt'
+    if [ ! -f /etc/debian_version ]; then
+        echo "Warning: Located apt-get package manager, but it was tested on Ubuntu only"
+    fi
+else
+    echo "Cannot find supported package managers (apt, dnf), INSTALL and UPGRADE steps will be skipped"
+fi
+
 if $UPGRADE; then
-    sudo dnf upgrade -y
+    case $pkgmng in
+    dnf)
+        sudo dnf upgrade -y ;;
+    apt)
+        sudo apt-get upgrade -y ;;
+    esac
 fi
 
 if $INSTALL; then
-    sudo dnf install -y git
+    case $pkgmng in
+    dnf)
+        sudo dnf install -y git ;;
+    apt)
+        sudo apt-get install -y git ;;
+    esac
 fi
 
 cd ~
@@ -98,43 +122,92 @@ git submodule update --init --recursive
 if $INSTALL; then
     sudo ./scripts/pkgdep.sh
 
-    if echo $CONF | grep -q tsocks; then
-        sudo dnf install -y tsocks
-    fi
+    case $pkgmng in
+    dnf)
+        if echo $CONF | grep -q tsocks; then
+            sudo dnf install -y tsocks
+        fi
+        if echo $CONF | grep -q pmdk; then
+            sudo dnf install -y pmempool
+        fi
+        if echo $CONF | grep -q perl-open; then
+            sudo dnf install -y perl-open
+        fi
+        sudo dnf install -y valgrind
+        sudo dnf install -y jq
+        sudo dnf install -y nvme-cli
+        sudo dnf install -y ceph
+        sudo dnf install -y gdb
+        sudo dnf install -y fio
+        sudo dnf install -y librbd-devel
+        sudo dnf install -y kernel-devel
+        sudo dnf install -y gflags-devel
+        sudo dnf install -y libasan
+        sudo dnf install -y libubsan
+        sudo dnf install -y autoconf
+        sudo dnf install -y automake
+        sudo dnf install -y libtool
+        sudo dnf install -y libmount-devel
+        sudo dnf install -y iscsi-initiator-utils
+        sudo dnf install -y isns-utils-devel
+        sudo dnf install -y glib2-devel
+        sudo dnf install -y pixman-devel
+        sudo dnf install -y astyle-devel
+        sudo dnf install -y elfutils
+        sudo dnf install -y elfutils-libelf-devel
+        sudo dnf install -y flex
+        sudo dnf install -y bison
+        sudo dnf install -y targetcli
+        sudo dnf install -y perl-Switch
+        sudo dnf install -y librdmacm-utils
+        sudo dnf install -y libibverbs-utils
+        sudo dnf install -y gdisk
+        sudo dnf install -y socat
 
-    sudo dnf install -y valgrind
-    sudo dnf install -y jq
-    sudo dnf install -y nvme-cli
-    sudo dnf install -y ceph
-    sudo dnf install -y gdb
-    sudo dnf install -y fio
-    sudo dnf install -y librbd-devel
-    sudo dnf install -y kernel-devel
-    sudo dnf install -y gflags-devel
-    sudo dnf install -y libasan
-    sudo dnf install -y libubsan
-    sudo dnf install -y autoconf
-    sudo dnf install -y automake
-    sudo dnf install -y libtool
-    sudo dnf install -y libmount-devel
-    sudo dnf install -y iscsi-initiator-utils
-    sudo dnf install -y isns-utils-devel
-    sudo dnf install -y pmempool
-    sudo dnf install -y perl-open
-    sudo dnf install -y glib2-devel
-    sudo dnf install -y pixman-devel
-    sudo dnf install -y astyle-devel
-    sudo dnf install -y elfutils
-    sudo dnf install -y elfutils-libelf-devel
-    sudo dnf install -y flex
-    sudo dnf install -y bison
-    sudo dnf install -y targetcli
-    sudo dnf install -y perl-Switch
-    sudo dnf install -y librdmacm-utils
-    sudo dnf install -y libibverbs-utils
-    sudo dnf install -y gdisk
-    sudo dnf install -y socat
-    sudo dnf install -y sshfs
+        ;;
+    apt)
+        if echo $CONF | grep -q tsocks; then
+            sudo apt-get install -y tsocks
+        fi
+        if echo $CONF | grep -q pmdk; then
+            echo "libmempool is not available for Ubuntu <= 18" >&2 && false
+        fi
+        if echo $CONF | grep -q perl-open; then
+            echo "perl-open is not available for Ubuntu" >&2 && false
+        fi
+        sudo apt-get install -y valgrind
+        sudo apt-get install -y jq
+        sudo apt-get install -y nvme-cli
+        sudo apt-get install -y ceph
+        sudo apt-get install -y gdb
+        sudo apt-get install -y fio
+        sudo apt-get install -y librbd-dev
+        sudo apt-get install -y linux-headers-generic
+        sudo apt-get install -y libgflags-dev
+        sudo apt-get install -y libasan5
+        sudo apt-get install -y libubsan1
+        sudo apt-get install -y autoconf
+        sudo apt-get install -y automake
+        sudo apt-get install -y libtool
+        sudo apt-get install -y libmount-dev
+        sudo apt-get install -y open-iscsi
+        sudo apt-get install -y open-isns-utils
+        sudo apt-get install -y libglib2.0-dev
+        sudo apt-get install -y libpixman-1-dev
+        sudo apt-get install -y astyle
+        sudo apt-get install -y elfutils
+        sudo apt-get install -y libelf-dev
+        sudo apt-get install -y flex
+        sudo apt-get install -y bison
+        sudo apt-get install -y targetcli-fb
+        sudo apt-get install -y libswitch-perl
+        sudo apt-get install -y rdmacm-utils
+        sudo apt-get install -y ibverbs-utils
+        sudo apt-get install -y gdisk
+        sudo apt-get install -y socat
+
+        ;;
+    esac
 fi
 
 cd ~
@@ -147,55 +220,68 @@ if echo $CONF | grep -q librxe; then
     if hash rxe_cfg 2> /dev/null; then
         echo "rxe_cfg is already installed. skipping"
     else
-        if [ -d librxe-dev ]; then
-            echo "librxe-dev source already present, not cloning"
-        else
-            git clone "${GIT_REPO_LIBRXE}"
-        fi
+        case $pkgmng in
+        dnf)
+            if [ -d librxe-dev ]; then
+                echo "librxe-dev source already present, not cloning"
+            else
+                git clone "${GIT_REPO_LIBRXE}"
+            fi
 
-        cd librxe-dev
-        ./configure --libdir=/usr/lib64/ --prefix=
-        make -j${jobs}
-        sudo make install
-        cd ~
+            cd librxe-dev
+            ./configure --libdir=/usr/lib64/ --prefix=
+            make -j${jobs}
+            sudo make install
+            cd ~
+            ;;
+        *)
+            echo "librxe setup is currently supported for Fedora only. Skipping librxe setup."
+            ;;
+        esac
     fi
 fi
 
 if echo $CONF | grep -q iscsi; then
-    # iscsiadm is used in the iscsi_tgt tests
-    # The version of iscsiadm that ships with fedora 26 was broken as of November 3 2017.
-    # There is already a bug report out about it, and hopefully it is fixed soon, but in the event that
-    # that version is still broken when you do your setup, the below steps will fix the issue.
-    CURRENT_VERSION=$(iscsiadm --version)
-    OPEN_ISCSI_VER='iscsiadm version 6.2.0.874'
-    if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
-        if [ ! -d open-iscsi-install ]; then
-            mkdir -p open-iscsi-install
-            cd open-iscsi-install
-            sudo dnf download --source iscsi-initiator-utils
-            rpm2cpio $(ls) | cpio -idmv
-            mkdir -p patches
-            mv 00* patches/
-            git clone "${GIT_REPO_OPEN_ISCSI}"
+    case $pkgmng in
+    dnf)
+        # iscsiadm is used in the iscsi_tgt tests
+        # The version of iscsiadm that ships with fedora 26 was broken as of November 3 2017.
+        # There is already a bug report out about it, and hopefully it is fixed soon, but in the event that
+        # that version is still broken when you do your setup, the below steps will fix the issue.
+        CURRENT_VERSION=$(iscsiadm --version)
+        OPEN_ISCSI_VER='iscsiadm version 6.2.0.874'
+        if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
+            if [ ! -d open-iscsi-install ]; then
+                mkdir -p open-iscsi-install
+                cd open-iscsi-install
+                sudo dnf download --source iscsi-initiator-utils
+                rpm2cpio $(ls) | cpio -idmv
+                mkdir -p patches
+                mv 00* patches/
+                git clone "${GIT_REPO_OPEN_ISCSI}"
 
-            cd open-iscsi
+                cd open-iscsi
 
-            # the configurations of username and email are needed for applying patches to iscsiadm.
-            git config user.name none
-            git config user.email none
+                # the configurations of username and email are needed for applying patches to iscsiadm.
+                git config user.name none
+                git config user.email none
 
-            git checkout 86e8892
-            for patch in `ls ../patches`; do
-                git am ../patches/$patch
-            done
-            sed -i '427s/.*/-1);/' usr/session_info.c
-            make -j${jobs}
-            sudo make install
-            cd ~
-        else
-            echo "custom open-iscsi install located, not reinstalling"
+                git checkout 86e8892
+                for patch in `ls ../patches`; do
+                    git am ../patches/$patch
+                done
+                sed -i '427s/.*/-1);/' usr/session_info.c
+                make -j${jobs}
+                sudo make install
+                cd ~
+            else
+                echo "custom open-iscsi install located, not reinstalling"
+            fi
         fi
-    fi
+        ;;
+    *)
+        echo "ISCI setup in currenlty supported for Fedora only. Skipping ISCSI setup." ;;
+    esac
 fi
 
 sudo mkdir -p /usr/src
@@ -281,59 +367,65 @@ fi
 cd ~
 
 if echo $CONF | grep -q vpp; then
-    # Vector packet processing (VPP) is installed for use with iSCSI tests.
-    # At least on fedora 28, the yum setup that vpp uses is deprecated and fails.
-    # The actions taken under the vpp_setup script are necessary to fix this issue.
-    if [ -d vpp_setup ]; then
-        echo "vpp setup already done."
-    else
-        echo "%_topdir  $HOME/vpp_setup/src/rpm" >> ~/.rpmmacros
-        sudo dnf install perl-generators
-        mkdir -p ~/vpp_setup/src/rpm
-        cd ~/vpp_setup/src/rpm
-        mkdir -p BUILD RPMS SOURCES SPECS SRPMS
-        dnf download --source redhat-rpm-config
-        rpm -ivh redhat-rpm-config*
-        sed -i s/"Requires: (annobin if gcc)"//g SPECS/redhat-rpm-config.spec
-        rpmbuild -ba SPECS/*.spec
-        sudo dnf remove -y --noautoremove redhat-rpm-config
-        sudo rpm -Uvh RPMS/noarch/*
-        cd -
-    fi
-
-    if [ -d vpp ]; then
-        echo "vpp already cloned."
-        if [ ! -d vpp/build-root ]; then
-            echo "build-root has not been done"
-            echo "remove the `pwd` and start again"
-            exit 1
+    case $pkgmng in
+    dnf)
+        # Vector packet processing (VPP) is installed for use with iSCSI tests.
+        # At least on fedora 28, the yum setup that vpp uses is deprecated and fails.
+        # The actions taken under the vpp_setup script are necessary to fix this issue.
+        if [ -d vpp_setup ]; then
+            echo "vpp setup already done."
+        else
+            echo "%_topdir  $HOME/vpp_setup/src/rpm" >> ~/.rpmmacros
+            sudo dnf install perl-generators
+            mkdir -p ~/vpp_setup/src/rpm
+            cd ~/vpp_setup/src/rpm
+            mkdir -p BUILD RPMS SOURCES SPECS SRPMS
+            dnf download --source redhat-rpm-config
+            rpm -ivh redhat-rpm-config*
+            sed -i s/"Requires: (annobin if gcc)"//g SPECS/redhat-rpm-config.spec
+            rpmbuild -ba SPECS/*.spec
+            sudo dnf remove -y --noautoremove redhat-rpm-config
+            sudo rpm -Uvh RPMS/noarch/*
+            cd -
         fi
-    else
-        git clone "${GIT_REPO_VPP}"
-        cd vpp
-        git checkout v18.01.1
-        # VPP 18.01.1 does not support OpenSSL 1.1.
-        # For compilation, a compatibility package is used temporarily.
-        sudo dnf install -y --allowerasing compat-openssl10-devel
-        # Installing required dependencies for building VPP
-        yes | make install-dep
 
-        make pkg-rpm -j${jobs}
-        # Reinstall latest OpenSSL devel package.
-        sudo dnf install -y --allowerasing openssl-devel
-        cd build-root
-        sudo dnf install -y \
-            ./vpp-lib-18.01.1-release.x86_64.rpm \
-            ./vpp-devel-18.01.1-release.x86_64.rpm \
-            ./vpp-18.01.1-release.x86_64.rpm
-        # Since hugepage configuration is done via spdk/scripts/setup.sh,
-        # this default config is not needed.
-        #
-        # NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
-        # very low count and cause issues with hugepage total sizes above 1GB.
-        sudo rm -f /etc/sysctl.d/80-vpp.conf
-        cd ~
-    fi
+        if [ -d vpp ]; then
+            echo "vpp already cloned."
+            if [ ! -d vpp/build-root ]; then
+                echo "build-root has not been done"
+                echo "remove the `pwd` and start again"
+                exit 1
+            fi
+        else
+            git clone "${GIT_REPO_VPP}"
+            cd vpp
+            git checkout v18.01.1
+            # VPP 18.01.1 does not support OpenSSL 1.1.
+            # For compilation, a compatibility package is used temporarily.
+            sudo dnf install -y --allowerasing compat-openssl10-devel
+            # Installing required dependencies for building VPP
+            yes | make install-dep
+
+            make pkg-rpm -j${jobs}
+            # Reinstall latest OpenSSL devel package.
+            sudo dnf install -y --allowerasing openssl-devel
+            cd build-root
+            sudo dnf install -y \
+                ./vpp-lib-18.01.1-release.x86_64.rpm \
+                ./vpp-devel-18.01.1-release.x86_64.rpm \
+                ./vpp-18.01.1-release.x86_64.rpm
+            # Since hugepage configuration is done via spdk/scripts/setup.sh,
+            # this default config is not needed.
+            #
+            # NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
+            # very low count and cause issues with hugepage total sizes above 1GB.
+            sudo rm -f /etc/sysctl.d/80-vpp.conf
+            cd ~
+        fi
+        ;;
+    *)
+        echo "VPP setup in currenlty supported for Fedora only. Skipping VPP setup" ;;
+    esac
 fi
 
 if echo $CONF | grep -q libiscsi; then
