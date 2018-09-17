@@ -22,6 +22,30 @@
       "revId": "d4c91582ab2ec847ad7edf3adc8c2b0a43e48d1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fb8ff84_6ad29336",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-17T16:02:45Z",
+      "side": 1,
+      "message": "Or 17.10 although it appears to be slated for 18.04. I might recommend this readme for earlier versions https://github.com/linux-rdma/rdma-core. This is what I used on FC25.",
+      "parentUuid": "834e1919_201833d4",
+      "range": {
+        "startLine": 231,
+        "startChar": 5,
+        "endLine": 231,
+        "endChar": 38
+      },
+      "revId": "d4c91582ab2ec847ad7edf3adc8c2b0a43e48d1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
