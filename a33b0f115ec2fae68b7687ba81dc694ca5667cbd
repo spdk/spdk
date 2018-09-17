@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "e1c7de80_ee3396c8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-09-17T16:46:57Z",
+      "side": 1,
+      "message": "\u003eThis code change confuses me a bit - the use case seems to be too specific to your setup.\n\u003eThe log output could be filtered out with grep or spdk cmd line settings after all...\n\nNo I dont think so, And it is not specific with iwarp too. This should be purely application specific(how the connection is disconnected). BTW the applicatio I use is fio. I will try with IB/ROCE and update you the results.",
+      "parentUuid": "4d163b6d_2c777666",
+      "range": {
+        "startLine": 14,
+        "startChar": 41,
+        "endLine": 15,
+        "endChar": 37
+      },
+      "revId": "a33b0f115ec2fae68b7687ba81dc694ca5667cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e23daa4_24b33706",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
