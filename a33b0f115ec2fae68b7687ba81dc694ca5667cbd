@@ -22,6 +22,46 @@
       "revId": "a33b0f115ec2fae68b7687ba81dc694ca5667cbd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e23daa4_24b33706",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2639,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-09-17T15:02:00Z",
+      "side": 1,
+      "message": "The error condition is raised here.",
+      "revId": "a33b0f115ec2fae68b7687ba81dc694ca5667cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37cc31c7_487559d4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2667,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-09-17T15:02:00Z",
+      "side": 1,
+      "message": "The QP is put to error state here.",
+      "range": {
+        "startLine": 2667,
+        "startChar": 3,
+        "endLine": 2667,
+        "endChar": 53
+      },
+      "revId": "a33b0f115ec2fae68b7687ba81dc694ca5667cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
