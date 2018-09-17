@@ -43,6 +43,8 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/thread.h"
+
 #include "config-host.h"
 #include "fio.h"
 #include "optgroup.h"
@@ -676,6 +678,8 @@ spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread)
 	struct spdk_fio_poller *p, *tmp;
 	size_t count;
 
+	spdk_set_thread(fio_thread->thread);
+
 	/* Process new events */
 	count = spdk_ring_dequeue(fio_thread->ring, (void **)&msg, 1);
 	if (count > 0) {
@@ -687,6 +691,8 @@ spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread)
 	TAILQ_FOREACH_SAFE(p, &fio_thread->pollers, link, tmp) {
 		p->cb_fn(p->cb_arg);
 	}
+
+	spdk_set_thread(NULL);
 
 	return count;
 }
