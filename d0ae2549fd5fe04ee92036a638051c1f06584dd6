@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "246edf86_b2c90a6a",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-17T10:05:35Z",
+      "side": 1,
+      "message": "These \"complicated\" arguments need better description on how to pass them to spdkcli.\n\nOverall, I don\u0027t like the idea of using different separators than we originally do in rpc.py.\nThere is an option to overload methods from configshell/shell.py appropriately so that params can be added with quote signs and whitespaces, but we need to decide if we want to do that.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 79
+      },
+      "revId": "d0ae2549fd5fe04ee92036a638051c1f06584dd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
