@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b78a3db_5eba5327",
+        "filename": "test/env/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T21:20:37Z",
+      "side": 1,
+      "message": "Hi Vitaliy,\n\nThis is a great catch.  Glad you found the fix rather than just \"make clean\" and \"make\" to work around the problem!\n\nUsing export here would work, but I think I would prefer a new spdk.env_unittests.mk file.  We really don\u0027t use \"export\" like this in the SPDK build system and am concerned it makes it not obvious enough how the ADDITIONAL_LIBS gets pulled in.\n\nI would be OK with one of two alternate approaches:\n\n1) Just add this ADDITIONAL_LIBS to each of the the three Makefiles under test/env.\n2) Add a new mk/spdk.env.unittest.mk which just adds this ADDITIONAL_LIBS line and includes spdk.unittest.mk.  Then change the three Makefiles under test/env to include this new .mk file instead.\n\nThanks,\n\n-Jim",
+      "revId": "c5af67bc6332e7640a5a5b6d8f793a970b82d60d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
