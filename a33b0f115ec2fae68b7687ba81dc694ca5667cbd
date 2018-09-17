@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "4d163b6d_2c777666",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1014690
+      },
+      "writtenOn": "2018-09-17T16:23:57Z",
+      "side": 1,
+      "message": "Sorry, I think I am wrong.\nMy assumption of spdk code was, we get this flush errors after QP is moved to error.\nI think the Flush error can be ignored and the for loop to be continued with out setting error.\nI mean the QP should not attempt the connection tear down or the QP error recovery(I am not sure about this part, looking into the code). I will send out a revised patch. PLease let me know your thoughts.",
+      "parentUuid": "eb2bf830_f837dc35",
+      "range": {
+        "startLine": 14,
+        "startChar": 41,
+        "endLine": 15,
+        "endChar": 37
+      },
+      "revId": "a33b0f115ec2fae68b7687ba81dc694ca5667cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e23daa4_24b33706",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
