@@ -34,6 +34,7 @@
 #include "spdk_cunit.h"
 #include "spdk/thread.h"
 #include "spdk_internal/mock.h"
+#include "spdk_internal/thread.h"
 
 #include "common/lib/test_env.c"
 
@@ -67,9 +68,12 @@ set_thread(uintptr_t thread_id)
 	g_thread_id = thread_id;
 	if (thread_id == INVALID_THREAD) {
 		MOCK_CLEAR(pthread_self);
+		spdk_set_thread(NULL);
 	} else {
 		MOCK_SET(pthread_self, (pthread_t)thread_id);
+		spdk_set_thread(g_ut_threads[thread_id].thread);
 	}
+
 }
 
 int
@@ -120,7 +124,7 @@ poll_thread(uintptr_t thread_id)
 	CU_ASSERT(thread_id < g_ut_num_threads);
 
 	original_thread_id = g_thread_id;
-	set_thread(thread_id);
+	set_thread(INVALID_THREAD);
 
 	while (spdk_thread_poll(thread->thread, 0) > 0) {
 		busy = true;
