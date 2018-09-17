@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72778f99_bdc991bf",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-17T17:52:33Z",
+      "side": 1,
+      "message": "This portion didn\u0027t work for me on ubuntu 16.04. I got an error from apt saying libmempool is not available for Ubuntu \u003c\u003d 18 presumable during the call to update, then the error unable to locate package libpmempool1.",
+      "revId": "d640b909b3f36eec4d64d3a2d62ca9ad12517415",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
