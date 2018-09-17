@@ -969,7 +969,7 @@ vbdev_crypto_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_name(w, "crypto");
 	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "crypto_bdev_name");
+	spdk_json_write_name(w, "name");
 	spdk_json_write_string(w, spdk_bdev_get_name(&crypto_bdev->crypto_bdev));
 	spdk_json_write_name(w, "base_bdev_name");
 	spdk_json_write_string(w, spdk_bdev_get_name(crypto_bdev->base_bdev));
@@ -991,7 +991,7 @@ vbdev_crypto_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_string(w, "method", "construct_crypto_bdev");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(crypto_bdev->base_bdev));
-		spdk_json_write_named_string(w, "crypto_bdev_name", spdk_bdev_get_name(&crypto_bdev->crypto_bdev));
+		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&crypto_bdev->crypto_bdev));
 		spdk_json_write_named_string(w, "crypto_pmd", crypto_bdev->drv_name);
 		spdk_json_write_named_string(w, "key", crypto_bdev->key);
 		spdk_json_write_object_end(w);
@@ -1126,7 +1126,7 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	if (!bdev) {
-		return -1;
+		return 0;
 	}
 
 	rc = vbdev_crypto_insert_name(bdev_name, vbdev_name, crypto_pmd, key);
@@ -1430,6 +1430,7 @@ error_claim:
 error_open:
 	TAILQ_REMOVE(&g_vbdev_crypto, vbdev, link);
 	spdk_io_device_unregister(vbdev, NULL);
+	free(vbdev->drv_name);
 error_drv_name:
 	free(vbdev->key);
 error_alloc_key:
