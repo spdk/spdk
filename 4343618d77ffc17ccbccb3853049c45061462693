@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe6f056a_d9cd25a3",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T22:29:47Z",
+      "side": 1,
+      "message": "Why put the iov in the trace?  This is a local variable.  I don\u0027t think this will be helpful for root causing any issues.\n\nWe usually only want to record pointers which give us additional data about the tracepoint - for example, what connection this tracepoint is associated with (similar to the NVMf tracepoints).",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e0b06ad_931637ff",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1228,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T22:29:47Z",
+      "side": 1,
+      "message": "I don\u0027t think EXECUTING adds much additional information.  We just posted an event in spdk_iscsi_read_pdu for TRACE_READ_PDU (now TRACE_ISCSI_READ_PDU).\n\nThere is always a tradeoff.  Adding extra trace points may add additional information, but when they are enabled, it adds extra overhead too.  The extra overhead can affect performance and reproducibility of bugs.  So we should be careful where we add additional tracepoints.",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25b50ed7_4876bd9c",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1395,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T22:29:47Z",
+      "side": 1,
+      "message": "Flushing a writebuf is not associated with one PDU.  There may be many PDUs that need to be flushed.  This is why we use OBJECT_NONE here.  It is meant to show how much data total was in the queue before we tried to flush data, then the next event shows how much it had afterwards.",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c74b32f2_8a41f59e",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T22:29:47Z",
+      "side": 1,
+      "message": "Hi Liang,\n\nThanks for looking at improving our iSCSI tracepoints!\n\nCould you break out this part of adding \"ISCSI_\" into a separate patch?  I would like to separate that from the more functional changes.\n\nThanks,\n\n-Jim",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d88add72_2dbb64b0",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2720,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T22:29:47Z",
+      "side": 1,
+      "message": "We already pass task-\u003epdu as the last argument.  We want to pass task here since we are trying to record the queuing of the SCSI task, not the iSCSI PDU.",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "999723f9_220732c5",
+        "filename": "lib/scsi/scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-17T22:29:47Z",
+      "side": 1,
+      "message": "This should not be changed.  This should only be set to 1 when the first tracepoint is recorded for the specified SCSI task.  This would be TRACE_ISCSI_TASK_QUEUE.  See that for TRACE_ISCSI_TASK_QUEUE, it already sets the object as OBJECT_SCSI_TASK and sets this parameter to 1.",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
