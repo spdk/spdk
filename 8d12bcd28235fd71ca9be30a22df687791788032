@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff7524f4_fdcf41c6",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-09-17T02:11:17Z",
+      "side": 1,
+      "message": "Remove extra line.",
+      "revId": "8d12bcd28235fd71ca9be30a22df687791788032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d29dd29_cfc8ba0f",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-09-17T02:11:17Z",
+      "side": 1,
+      "message": "Unnecessary change",
+      "range": {
+        "startLine": 377,
+        "startChar": 27,
+        "endLine": 377,
+        "endChar": 28
+      },
+      "revId": "8d12bcd28235fd71ca9be30a22df687791788032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
