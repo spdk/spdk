@@ -74,7 +74,8 @@ Blobstore Public Info:
 	Using bdev Product Name: NVMe disk
 	API Version: $(N)
 	super blob ID: 4294967296
-	page size: 4096
+	page size: $(N)
+	io unit size: $(N)
 	cluster size: 1048576
 	# free clusters: $(N)
 	blobstore type:
@@ -110,7 +111,8 @@ Blobstore Public Info:
 	Using bdev Product Name: NVMe disk
 	API Version: 3
 	super blob ID: 4294967296
-	page size: 4096
+	page size: $(N)
+	io unit size: $(N)
 	cluster size: 1048576
 	# free clusters: $(N)
 	blobstore type:
