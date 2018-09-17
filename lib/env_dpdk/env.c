@@ -62,6 +62,38 @@ virt_to_phys(void *vaddr)
 	return spdk_vtophys(vaddr);
 }
 
+static void
+align_alloc_size(size_t *size, size_t *align)
+{
+	/* In order to control how the memory is registered and unregistered,
+	 * we control how it is allocated. We need to ensure all dynamically
+	 * added hugepages will be unregistered in the same chunks they were
+	 * registered. The only problematic case here is when a single hugepage
+	 * was registered as a part of bigger region (>2MB allocation), but was
+	 * later reused to hold smaller allocations. The scenario is as follows
+	 * (assuming 2MB pages):
+	 *  * allocate 3MB of memory -> 2 pages are reserved and registered
+	 *  * allocate 500KB of memory -> one page from the previous allocation
+	 *				  is reused
+	 *  * free 3MB -> one of the pages still keeps the 500KB allocation,
+	 *                so only the other page is released and unregistered
+	 * To prevent the case above, we extend each allocation bigger than 2MB
+	 * (reduced by cache line size to make place for dpdk metadata) to
+	 * occupy entire pages.
+	 *
+	 * Buffers smaller than 2MB and crossing the hugepage boundary do not
+	 * cause any trouble as they partially reuse a page that's already
+	 * registered, hence cause only another single page to be dynamically
+	 * allocated and registered.
+	 */
+	if (*size < 0x200000 - RTE_CACHE_LINE_SIZE) {
+		return;
+	}
+
+	*size = ((*size + RTE_CACHE_LINE_SIZE + 0x200000 - 1) & ~(0x200000 - 1)) - RTE_CACHE_LINE_SIZE;
+	*align = 0x200000;
+}
+
 void *
 spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
 {
@@ -69,6 +101,7 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint3
 		return NULL;
 	}
 
+	align_alloc_size(&size, &align);
 	void *buf = rte_malloc_socket(NULL, size, align, socket_id);
 	if (buf && phys_addr) {
 		*phys_addr = virt_to_phys(buf);
@@ -119,7 +152,10 @@ spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 void *
 spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 {
-	void *new_buf = rte_realloc(buf, size, align);
+	void *new_buf;
+
+	align_alloc_size(&size, &align);
+	new_buf = rte_realloc(buf, size, align);
 	if (new_buf && phys_addr) {
 		*phys_addr = virt_to_phys(new_buf);
 	}
@@ -134,10 +170,11 @@ spdk_dma_free(void *buf)
 
 void *
 spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
-			     unsigned flags, unsigned align)
+			     unsigned flags, unsigned _align)
 {
 	const struct rte_memzone *mz;
 	unsigned dpdk_flags = 0;
+	size_t align = _align;
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
 	/* Older DPDKs do not offer such flag since their
@@ -152,6 +189,7 @@ spdk_memzone_reserve_aligned(const char *name, size_t len, int socket_id,
 		socket_id = SOCKET_ID_ANY;
 	}
 
+	align_alloc_size(&len, &align);
 	mz = rte_memzone_reserve_aligned(name, len, socket_id, dpdk_flags, align);
 
 	if (mz != NULL) {
