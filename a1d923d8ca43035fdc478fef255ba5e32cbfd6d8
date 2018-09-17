@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5816b24a_ed8cd154",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-17T13:20:05Z",
+      "side": 1,
+      "message": "tabs",
+      "range": {
+        "startLine": 23,
+        "startChar": 27,
+        "endLine": 23,
+        "endChar": 29
+      },
+      "revId": "a1d923d8ca43035fdc478fef255ba5e32cbfd6d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
