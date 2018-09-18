@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b2ea6173_da933105",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-18T21:18:30Z",
+      "side": 1,
+      "message": "The spdk-devel pkg contains the static libs -- not the base spdk pkg.",
+      "revId": "53d71161c45df4acaf0d713246d4331d39c99cfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "568db928_00fbe5d2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-18T21:18:30Z",
+      "side": 1,
+      "message": "+ \"linker named\" libraries (i.e. just the \u0027*.so\u0027), static libraries.",
+      "revId": "53d71161c45df4acaf0d713246d4331d39c99cfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "433889e3_dd747bcd",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 9
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-18T21:18:30Z",
+      "side": 1,
+      "message": "I\u0027d like to give this some more thought and research; i.e. specifically the use of the getenv(RTE_SDK) portion for retrieving the base directory for the dpdk.   I would prefer that we substitute the use of getenv(RTE_SDK) with just the hard-coded path /usr/share/dpdk.  Alternatively, we could add some construct that defaults to /usr/share/dpdk unless it is overridden by an argument to rpmbuild.   In essence, I am trying to avoid or minimize the use of external parameters or env variables to simplify the environment in which the rpmbuild will be invoked.",
+      "revId": "53d71161c45df4acaf0d713246d4331d39c99cfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
