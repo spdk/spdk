@@ -93,6 +93,30 @@
       "revId": "905927cf270a64a01e99a7a53fe92935226957ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3248d44a_353649aa",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-18T08:38:42Z",
+      "side": 1,
+      "message": "True",
+      "parentUuid": "31bdb4c0_c0d586b0",
+      "range": {
+        "startLine": 542,
+        "startChar": 1,
+        "endLine": 546,
+        "endChar": 2
+      },
+      "revId": "905927cf270a64a01e99a7a53fe92935226957ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
