@@ -16,6 +16,24 @@
       "revId": "a8d255cc60cdfbe87982fce9c70bb4634ec7757e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6b5c8cf_6bd233b5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1176,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-18T23:10:35Z",
+      "side": 1,
+      "message": "Jim, Thank you for nice proposal. I felt all your proposal improved the patch.",
+      "parentUuid": "2b5a39c6_e0087eb1",
+      "revId": "a8d255cc60cdfbe87982fce9c70bb4634ec7757e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
