@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 import sys
 import argparse
+import os
 from os import getuid
-from configshell_fb import ConfigShell
+try:
+    from configshell_fb import ConfigShell
+except ImportError:
+    """ Try Python 2 """
+    os.execv("/usr/bin/python2", sys.argv)
 from spdkcli import UIRoot
 
 
