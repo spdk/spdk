@@ -1669,7 +1669,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 		}
 
 		if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
-			fprintf(fp, "TransportId \"trtype:%s traddr:%s\" %s\n",
+			fprintf(fp, "TransportID \"trtype:%s traddr:%s\" %s\n",
 				trtype,
 				nvme_ctrlr->trid.traddr, nvme_ctrlr->name);
 		} else {
@@ -1678,12 +1678,12 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 			adrfam = spdk_nvme_transport_id_adrfam_str(nvme_ctrlr->trid.adrfam);
 
 			if (adrfam) {
-				fprintf(fp, "TransportId \"trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
+				fprintf(fp, "TransportID \"trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
 					trtype,	adrfam,
 					nvme_ctrlr->trid.traddr, nvme_ctrlr->trid.trsvcid,
 					nvme_ctrlr->trid.subnqn, nvme_ctrlr->name);
 			} else {
-				fprintf(fp, "TransportId \"trtype:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
+				fprintf(fp, "TransportID \"trtype:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
 					trtype,
 					nvme_ctrlr->trid.traddr, nvme_ctrlr->trid.trsvcid,
 					nvme_ctrlr->trid.subnqn, nvme_ctrlr->name);
