@@ -88,8 +88,8 @@
   # other sections in the configuration file. For NVMe devices, a namespace
   # is automatically appended to each name in the format <YourName>nY, where
   # Y is the NSID (starts at 1).
-  TransportId "trtype:PCIe traddr:0000:00:00.0" Nvme0
-  TransportId "trtype:PCIe traddr:0000:01:00.0" Nvme1
+  TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
+  TransportID "trtype:PCIe traddr:0000:01:00.0" Nvme1
 
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
