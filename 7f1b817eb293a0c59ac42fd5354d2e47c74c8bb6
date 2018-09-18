@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1a7beee_6725dd47",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T22:33:34Z",
+      "side": 1,
+      "message": "Most of these parameter values are the same as tc1. You might want to move them to common.sh",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 14
+      },
+      "revId": "7f1b817eb293a0c59ac42fd5354d2e47c74c8bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78e0387a_14a4fac5",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T22:33:34Z",
+      "side": 1,
+      "message": "I would rather we make these workload types match the fio definitions: randread, randrw, randwrite. That way we don\u0027t have an extra level of translation when someone is reading this file because read/write in fio is sequential read/write.",
+      "range": {
+        "startLine": 19,
+        "startChar": 6,
+        "endLine": 19,
+        "endChar": 26
+      },
+      "revId": "7f1b817eb293a0c59ac42fd5354d2e47c74c8bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a095a837_9bb77a7f",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T22:33:34Z",
+      "side": 1,
+      "message": "Should this values be the same as TC1? I think moving these common parameters to common.sh will help with consistency.",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 20
+      },
+      "revId": "7f1b817eb293a0c59ac42fd5354d2e47c74c8bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0aab137_fa1a3fe2",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T22:33:34Z",
+      "side": 1,
+      "message": "This should go in common.sh",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 1
+      },
+      "revId": "7f1b817eb293a0c59ac42fd5354d2e47c74c8bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4a462f0_d3f561aa",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T22:33:34Z",
+      "side": 1,
+      "message": "Put in common.sh",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 4
+      },
+      "revId": "7f1b817eb293a0c59ac42fd5354d2e47c74c8bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21149f18_3f840916",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T22:33:34Z",
+      "side": 1,
+      "message": "Even this line is common",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 95
+      },
+      "revId": "7f1b817eb293a0c59ac42fd5354d2e47c74c8bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d511aaad_26fcb248",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T22:33:34Z",
+      "side": 1,
+      "message": "This is common so it should go to common.sh too.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 2
+      },
+      "revId": "7f1b817eb293a0c59ac42fd5354d2e47c74c8bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ea10a81_ccfff8e1",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T22:33:34Z",
+      "side": 1,
+      "message": "Lets call this out as usecs instead of just u",
+      "range": {
+        "startLine": 79,
+        "startChar": 25,
+        "endLine": 79,
+        "endChar": 26
+      },
+      "revId": "7f1b817eb293a0c59ac42fd5354d2e47c74c8bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11c902b5_f8edd844",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T22:33:34Z",
+      "side": 1,
+      "message": "This function returns latency in nanoseconds, not usecs",
+      "range": {
+        "startLine": 103,
+        "startChar": 21,
+        "endLine": 103,
+        "endChar": 30
+      },
+      "revId": "7f1b817eb293a0c59ac42fd5354d2e47c74c8bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
