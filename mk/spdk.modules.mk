@@ -37,6 +37,7 @@ LVOL_MODULES_LIST += blob blob_bdev lvol
 
 BLOCKDEV_MODULES_LIST = $(LVOL_MODULES_LIST)
 BLOCKDEV_MODULES_LIST += bdev_malloc bdev_null bdev_nvme nvme vbdev_passthru vbdev_error vbdev_gpt vbdev_split
+BLOCKDEV_MODULES_LIST += vbdev_raid
 
 ifeq ($(CONFIG_CRYPTO),y)
 BLOCKDEV_MODULES_LIST += vbdev_crypto
@@ -62,10 +63,6 @@ endif
 ifeq ($(CONFIG_RBD),y)
 BLOCKDEV_MODULES_LIST += bdev_rbd
 BLOCKDEV_MODULES_DEPS += -lrados -lrbd
-endif
-
-ifeq ($(CONFIG_RAID),y)
-BLOCKDEV_MODULES_LIST += vbdev_raid
 endif
 
 ifeq ($(CONFIG_PMDK),y)
