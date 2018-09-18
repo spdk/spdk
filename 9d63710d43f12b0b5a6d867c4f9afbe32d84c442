@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "172ea14e_1f9c7566",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-18T18:18:49Z",
+      "side": 1,
+      "message": "Is the string allocated by this function? Is the caller of this function responsible for freeing the memory?",
+      "revId": "9d63710d43f12b0b5a6d867c4f9afbe32d84c442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d097c664_4c3a8363",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-18T18:18:49Z",
+      "side": 1,
+      "message": "Let\u0027s call this spdk_bdev_qos_rate_limit_type_to_str",
+      "revId": "9d63710d43f12b0b5a6d867c4f9afbe32d84c442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83545a6d_59ab1369",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-18T18:18:49Z",
+      "side": 1,
+      "message": "Does this user allocate this array using SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES, or is it internally allocated? The comment should clarify this.",
+      "revId": "9d63710d43f12b0b5a6d867c4f9afbe32d84c442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
