@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "0c42f7b9_0a488b21",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-18T16:33:55Z",
+      "side": 1,
+      "message": "iov is not a unique object id.  It is a local variable.\n\nBut the bigger problem is that this trace event applies to the *connection*, not one specific PDU or task.\n\nObject IDs are meant to be used to track the amount of time it takes for that object to move from one state to another.  This concept doesn\u0027t apply to flushing the writebuf.",
+      "parentUuid": "ec79b755_3bdebbdc",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e0b06ad_931637ff",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 11
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "Ok, I will remove these two tracepoint in next patch.",
       "parentUuid": "0e0b06ad_931637ff",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33e8e83c_28d51606",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1228,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-18T16:33:55Z",
+      "side": 1,
+      "message": "I think you only need to remove EXECUTING.  I think EXECUTED may be helpful, especially for non-SCSI PDUs.  So you should keep EXECUTED.",
+      "parentUuid": "85037e05_61825596",
       "revId": "4343618d77ffc17ccbccb3853049c45061462693",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -153,6 +189,24 @@
       "side": 1,
       "message": "Since this tracepoint is in iscsi.c, so I want to use iscsi object type, OBJECT_ISCSI_PDU. That is why I used the PDU pointer to be object id. If not suitable, I will revert this change.",
       "parentUuid": "d88add72_2dbb64b0",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a1a4d35_26a3dc01",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2720,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-18T16:33:55Z",
+      "side": 1,
+      "message": "For this case, the task is the object.  The task is \"created\" here - meaning this event marks the start of the task.  Then in SCSI layer, this same task pointer is used for its events.\n\nSo yes, this change should be reverted.",
+      "parentUuid": "060ca1e2_50872cf9",
       "revId": "4343618d77ffc17ccbccb3853049c45061462693",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
