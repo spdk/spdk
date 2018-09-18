@@ -102,7 +102,16 @@ struct pt_io_channel {
  */
 struct passthru_bdev_io {
 	uint8_t test;
+
+	/* bdev related */
+	struct spdk_io_channel *ch;
+
+	/* for bdev_io_wait */
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
+
+static void
+vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 /* Called after we've unregistered following a hot remove callback.
  * Our finish entry point will be called next.
@@ -149,6 +158,32 @@ _pt_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 */
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+vbdev_passthru_resubmit_io(void *arg)
+{
+	struct spdk_bdev_io *bdev_io = (struct spdk_bdev_io *)arg;
+	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)bdev_io->driver_ctx;
+
+	vbdev_passthru_submit_request(io_ctx->ch, bdev_io);
+}
+
+static void
+vbdev_passthru_queue_io(struct spdk_bdev_io *bdev_io)
+{
+	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)bdev_io->driver_ctx;
+	int rc;
+
+	io_ctx->bdev_io_wait.bdev = bdev_io->bdev;
+	io_ctx->bdev_io_wait.cb_fn = vbdev_passthru_resubmit_io;
+	io_ctx->bdev_io_wait.cb_arg = bdev_io;
+
+	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, io_ctx->ch, &io_ctx->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in vbdev_passthru_queue_io, rc=%d.\n", rc);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
 }
 
 /* Callback for getting a buf from the bdev pool in the event that the caller passed
@@ -226,8 +261,14 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 		return;
 	}
 	if (rc != 0) {
-		SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
+			io_ctx->ch = ch;
+			vbdev_passthru_queue_io(bdev_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
 	}
 }
 
