@@ -70,7 +70,7 @@ struct map_1gb {
 	struct map_2mb map[1ULL << (SHIFT_1GB - SHIFT_2MB)];
 };
 
-/* Top-level map table indexed by bits [30..46] of the virtual address.
+/* Top-level map table indexed by bits [30..47] of the virtual address.
  * Each entry points to a second-level map table or NULL.
  */
 struct map_256tb {
