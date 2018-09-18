@@ -1009,6 +1009,29 @@ _nvmf_rdma_disconnect(void *ctx)
 	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 }
 
+static void
+_nvmf_rdma_disconnect_retry(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_poll_group *group;
+
+	/* Read the group out of the qpair. This is normally set and accessed only from
+	 * the thread that created the group. Here, we're not on that thread necessarily.
+	 * The data member qpair->group begins it's life as NULL and then is assigned to
+	 * a pointer and never changes. So fortunately reading this and checking for
+	 * non-NULL is thread safe in the x86_64 memory model. */
+	group = qpair->group;
+
+	if (group == NULL) {
+		/* The qpair hasn't been assigned to a group yet, so we can't
+		 * process a disconnect. Send a message to ourself and try again. */
+		spdk_thread_send_msg(spdk_get_thread(), _nvmf_rdma_disconnect_retry, qpair);
+		return;
+	}
+
+	spdk_thread_send_msg(group->thread, _nvmf_rdma_disconnect, qpair);
+}
+
 static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
@@ -1027,12 +1050,13 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	}
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair->cm_id, 0);
-	spdk_nvmf_rdma_update_ibv_state(rqpair);
 
+	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair->cm_id, 0);
+
+	spdk_nvmf_rdma_update_ibv_state(rqpair);
 	spdk_nvmf_rdma_qpair_inc_refcnt(rqpair);
 
-	spdk_thread_send_msg(qpair->group->thread, _nvmf_rdma_disconnect, qpair);
+	_nvmf_rdma_disconnect_retry(qpair);
 
 	return 0;
 }
