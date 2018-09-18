@@ -48,6 +48,9 @@
 struct bdev_aio_task {
 	struct iocb			iocb;
 	uint64_t			len;
+	uint8_t				*buf;
+	struct iovec			*iovs;
+	int				iovcnt;
 	TAILQ_ENTRY(bdev_aio_task)	link;
 };
 

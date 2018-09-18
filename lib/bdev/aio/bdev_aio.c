@@ -119,6 +119,75 @@ bdev_aio_close(struct file_disk *disk)
 	return 0;
 }
 
+static bool
+_is_iov_bs_aligned(struct iovec *iov, int iovcnt, uint32_t alignment)
+{
+	int i;
+	uintptr_t iov_base;
+
+	for (i = 0; i < iovcnt; i++) {
+		iov_base = (uintptr_t)iov[i].iov_base;
+		if ((iov_base & (alignment - 1)) != 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static void
+_free_aligned_iovec(struct iovec *iov, int iovcnt)
+{
+	int i;
+
+	for (i = 0; i < iovcnt; i++) {
+		spdk_dma_free(iov[i].iov_base);
+	}
+	free(iov);
+}
+
+static bool
+_prepare_aligned_iovec(struct bdev_aio_task *aio_task, struct iovec *iov, int iovcnt,
+		       uint64_t nbytes, uint32_t alignment)
+{
+	int i;
+	void *base;
+	struct iovec *copy_iov;
+
+	copy_iov = calloc(1, sizeof(struct iovec) * iovcnt);
+	if (copy_iov == NULL) {
+		return false;
+	}
+
+	for (i = 0; i < iovcnt; i++) {
+		base = spdk_dma_malloc(iov[i].iov_len, alignment, NULL);
+		if (base == NULL) {
+			while (i > 0) {
+				i--;
+				spdk_dma_free(copy_iov[i].iov_base);
+			}
+			free(copy_iov);
+			return false;
+		}
+		copy_iov[i].iov_base = base;
+		copy_iov[i].iov_len = iov[i].iov_len;
+	}
+
+	aio_task->iovs = copy_iov;
+	aio_task->iovcnt = iovcnt;
+	return true;
+}
+
+static void
+_copy_iovec(struct iovec *dst, struct iovec *src, int iovcnt)
+{
+	int i;
+
+	for (i = 0; i < iovcnt; i++) {
+		assert(dst[i].iov_len == src[i].iov_len);
+		memcpy(dst[i].iov_base, src[i].iov_base, src[i].iov_len);
+	}
+}
+
 static int64_t
 bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	       struct bdev_aio_task *aio_task,
@@ -126,9 +195,24 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 {
 	struct iocb *iocb = &aio_task->iocb;
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
+	struct iovec *submit_iov = iov;
 	int rc;
 
-	io_prep_preadv(iocb, fdisk->fd, iov, iovcnt, offset);
+	if (!_is_iov_bs_aligned(iov, iovcnt, fdisk->disk.blocklen)) {
+		SPDK_ERRLOG("%s: Read aio iov not aligned\n", __func__);
+		if (!_prepare_aligned_iovec(aio_task, iov, iovcnt, nbytes, fdisk->disk.blocklen)) {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
+			return -1;
+		}
+		submit_iov = aio_task->iovs;
+		if (!_is_iov_bs_aligned(submit_iov, iovcnt, fdisk->disk.blocklen)) {
+			assert(false);
+		}
+	} else {
+		SPDK_ERRLOG("%s: Read aio iov IS aligned\n", __func__);
+	}
+
+	io_prep_preadv(iocb, fdisk->fd, submit_iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
 	io_set_eventfd(iocb, aio_ch->efd);
@@ -157,9 +241,22 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 {
 	struct iocb *iocb = &aio_task->iocb;
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
+	struct iovec *submit_iov = iov;
 	int rc;
 
-	io_prep_pwritev(iocb, fdisk->fd, iov, iovcnt, offset);
+	if (!_is_iov_bs_aligned(iov, iovcnt, fdisk->disk.blocklen)) {
+		SPDK_ERRLOG("%s: Write aio iov not aligned\n", __func__);
+		if (!_prepare_aligned_iovec(aio_task, iov, iovcnt, len, fdisk->disk.blocklen)) {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
+			return -1;
+		}
+		_copy_iovec(aio_task->iovs, iov, iovcnt);
+		submit_iov = aio_task->iovs;
+	} else {
+		SPDK_ERRLOG("%s: Write aio iov IS aligned\n", __func__);
+	}
+
+	io_prep_pwritev(iocb, fdisk->fd, submit_iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = len;
 	io_set_eventfd(iocb, aio_ch->efd);
@@ -260,7 +357,16 @@ bdev_aio_group_poll(void *arg)
 			} else {
 				status = SPDK_BDEV_IO_STATUS_SUCCESS;
 			}
-
+			if (aio_task->iovcnt != 0) {
+				if (_is_iov_bs_aligned(aio_task->iovs, aio_task->iovcnt, 4096)) {
+					SPDK_ERRLOG("Complete iov is aligned\n");
+				} else {
+					SPDK_ERRLOG("Complete iov is NOT aligned\n");
+				}
+				SPDK_ERRLOG("Copying from aligned iovec to unaligned iovec after finishing read\n");
+				_copy_iovec(spdk_bdev_io_from_ctx(aio_task)->u.bdev.iovs, aio_task->iovs, aio_task->iovcnt);
+				_free_aligned_iovec(aio_task->iovs, aio_task->iovcnt);
+			}
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
 			ch->io_inflight--;
 		}
