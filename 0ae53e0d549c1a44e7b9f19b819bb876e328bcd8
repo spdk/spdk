@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "b0e62906_74aab677",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-18T13:52:46Z",
+      "side": 1,
+      "message": "This should be like UIISCSIChapAuth. Additionaly please replace discovery_service by chap_auth.\n\nChap authentication is used for discovery service and login to target nodes.",
+      "revId": "0ae53e0d549c1a44e7b9f19b819bb876e328bcd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac1920ea_7e4afc38",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 14
