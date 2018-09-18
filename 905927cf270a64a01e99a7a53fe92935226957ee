@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1e68d67e_faa19870",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-09-18T01:10:59Z",
+      "side": 1,
+      "message": "If there is a lot of controllers, I think filtering controller in server side is more efficient than client side, just like option -b/--name of get_bdevs.",
+      "parentUuid": "36a7694f_075b891c",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 17
+      },
+      "revId": "905927cf270a64a01e99a7a53fe92935226957ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb94e4f9_8a552bd4",
         "filename": "lib/vhost/vhost_rpc.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-17T15:23:03Z",
       "side": 1,
       "message": "You can move this at the end.\n\n  if (ctx-\u003ename) {\n    spdk_vhost_call_external_event(...);\n  } else {\n    spdk_vhost_call_external_event_foreach(...);\n  }\n\nOr you can leave the spdk_vhost_call_external_event_foreach() as is and just check in spdk_rpc_get_vhost_controllers_cb() if name is provided to ignore not matching controllers.",
+      "range": {
+        "startLine": 542,
+        "startChar": 1,
+        "endLine": 546,
+        "endChar": 2
+      },
+      "revId": "905927cf270a64a01e99a7a53fe92935226957ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31bdb4c0_c0d586b0",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-09-18T01:10:59Z",
+      "side": 1,
+      "message": "If move this at the end, or check in spdk_rpc_get_vhost_controllers_cb(), I have to do\n    w \u003d spdk_jsonrpc_begin_result()\nin spdk_rpc_get_vhost_controllers(). Then, if specific controller is not found (ctx-\u003ename !\u003d NULL and vdev \u003d\u003d NULL in spdk_get_vhost_controllers_cb()), I have to invoke spdk_jsonrpc_send_error_response() to send error message and there is no way to free w.",
+      "parentUuid": "cb94e4f9_8a552bd4",
       "range": {
         "startLine": 542,
         "startChar": 1,
