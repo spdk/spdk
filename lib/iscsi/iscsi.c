@@ -492,7 +492,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	/* All data for this PDU has now been read from the socket. */
 	conn->pdu_in_progress = NULL;
 
-	spdk_trace_record(TRACE_READ_PDU, conn->id, pdu->data_valid_bytes,
+	spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
 			  (uintptr_t)pdu, pdu->bhs.opcode);
 
 	/* Data Segment */
