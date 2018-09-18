@@ -42,7 +42,7 @@ C_SRCS = bdev.c part.c scsi_nvme.c
 C_SRCS-$(CONFIG_VTUNE) += vtune.c
 LIBNAME = bdev
 
-DIRS-y += error gpt lvol malloc null nvme passthru rpc split
+DIRS-y += error gpt lvol malloc null nvme passthru raid rpc split
 
 ifeq ($(CONFIG_CRYPTO),y)
 DIRS-y += crypto
@@ -56,6 +56,5 @@ DIRS-$(CONFIG_PMDK) += pmem
 endif
 
 DIRS-$(CONFIG_RBD) += rbd
-DIRS-$(CONFIG_RAID) += raid
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

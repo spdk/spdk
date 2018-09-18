@@ -100,9 +100,6 @@ CONFIG_VPP?=n
 # Requires libiscsi development libraries.
 CONFIG_ISCSI_INITIATOR?=n
 
-# Build with raid
-CONFIG_RAID?=n
-
 # Enable the dependencies for building the crypto vbdev
 CONFIG_CRYPTO?=n
 

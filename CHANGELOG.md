@@ -28,6 +28,9 @@ Intel QAT hardware accelerator also currently implemented with support for CBC c
 may include additional ciphers as well as consideration for authentication. NOTE: this module is
 currently marked as experimental.  Do not use in production.
 
+The RAID virtual bdev module is now always enabled by default.  The configure --with-raid and
+--without-raid options are now ignored and deprecated and will be removed in the next release.
+
 ### Environment Abstraction Layer and Event Framework
 
 The size parameter of spdk_mem_map_translate is now a pointer. This allows the
