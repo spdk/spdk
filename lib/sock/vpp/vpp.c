@@ -231,11 +231,10 @@ spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type)
 		SPDK_ERRLOG("IP address with invalid format\n");
 		return NULL;
 	}
-	endpt.vrf = VPPCOM_VRF_DEFAULT;
 	endpt.ip = (uint8_t *)&addr_buf;
 	endpt.port = htons(port);
 
-	fd = vppcom_session_create(VPPCOM_VRF_DEFAULT, VPPCOM_PROTO_TCP, 1 /* is_nonblocking */);
+	fd = vppcom_session_create(VPPCOM_PROTO_TCP, 1 /* is_nonblocking */);
 	if (fd < 0) {
 		errno = -fd;
 		SPDK_ERRLOG("vppcom_session_create() failed, errno = %d\n", errno);
@@ -315,7 +314,7 @@ spdk_vpp_sock_accept(struct spdk_sock *_sock)
 	assert(sock != NULL);
 	assert(g_vpp_initialized);
 
-	rc = vppcom_session_accept(sock->fd, &endpt, O_NONBLOCK, wait_time);
+	rc = vppcom_session_accept(sock->fd, &endpt, O_NONBLOCK);
 	if (rc < 0) {
 		errno = -rc;
 		return NULL;
