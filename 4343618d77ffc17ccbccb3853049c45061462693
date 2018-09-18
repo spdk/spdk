@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ec79b755_3bdebbdc",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-09-18T12:05:12Z",
+      "side": 1,
+      "message": "I can\u0027t find a suitable pointer to be an unique object id. So I used iov.",
+      "parentUuid": "fe6f056a_d9cd25a3",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e0b06ad_931637ff",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 11
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "85037e05_61825596",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1228,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-09-18T12:05:12Z",
+      "side": 1,
+      "message": "Ok, I will remove these two tracepoint in next patch.",
+      "parentUuid": "0e0b06ad_931637ff",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25b50ed7_4876bd9c",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 11
@@ -47,6 +83,24 @@
       "writtenOn": "2018-09-17T22:29:47Z",
       "side": 1,
       "message": "Flushing a writebuf is not associated with one PDU.  There may be many PDUs that need to be flushed.  This is why we use OBJECT_NONE here.  It is meant to show how much data total was in the queue before we tried to flush data, then the next event shows how much it had afterwards.",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ad24dbe_ab70ed8b",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1395,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-09-18T12:05:12Z",
+      "side": 1,
+      "message": "Currently we can\u0027t get the elapsed time for FLUSH_WRITEBUF task since the OBJECT_NONE is used for this task. So I defined a new object type, OBJECT_ISCSI_FLUSH_PDU. \nIf we can define new object type, can we use OBJECT_ISCSI_FLUSH_WRITEBUF or OBJECT_ISCSI_FLUSH_BUF?",
+      "parentUuid": "25b50ed7_4876bd9c",
       "revId": "4343618d77ffc17ccbccb3853049c45061462693",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "060ca1e2_50872cf9",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2720,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-09-18T12:05:12Z",
+      "side": 1,
+      "message": "Since this tracepoint is in iscsi.c, so I want to use iscsi object type, OBJECT_ISCSI_PDU. That is why I used the PDU pointer to be object id. If not suitable, I will revert this change.",
+      "parentUuid": "d88add72_2dbb64b0",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "999723f9_220732c5",
         "filename": "lib/scsi/scsi.c",
         "patchSetId": 11
@@ -98,6 +170,24 @@
       "writtenOn": "2018-09-17T22:29:47Z",
       "side": 1,
       "message": "This should not be changed.  This should only be set to 1 when the first tracepoint is recorded for the specified SCSI task.  This would be TRACE_ISCSI_TASK_QUEUE.  See that for TRACE_ISCSI_TASK_QUEUE, it already sets the object as OBJECT_SCSI_TASK and sets this parameter to 1.",
+      "revId": "4343618d77ffc17ccbccb3853049c45061462693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68a32e5a_bd6dbcca",
+        "filename": "lib/scsi/scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-09-18T12:05:12Z",
+      "side": 1,
+      "message": "As my response in iscsi.c. The tracepoint TRACE_ISCSI_TASK_QUEUE is in the iscsi.c. So I changed the object type to OBJECT_ISCSI_PDU for TRACE_ISCSI_TASK_QUEUE.\nIf not suitable, I will revert this change.",
+      "parentUuid": "999723f9_220732c5",
       "revId": "4343618d77ffc17ccbccb3853049c45061462693",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
