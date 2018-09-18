@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9976a7a_476dce40",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-18T07:19:05Z",
+      "side": 1,
+      "message": "Could you add descriptions?",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 22
+      },
+      "revId": "0ae53e0d549c1a44e7b9f19b819bb876e328bcd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac1920ea_7e4afc38",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-18T07:19:05Z",
+      "side": 1,
+      "message": "This is confusing. Will this list anything related to Vhost-SCSI as well? If so, then listing stuff that way might not be appropriate",
+      "range": {
+        "startLine": 256,
+        "startChar": 8,
+        "endLine": 256,
+        "endChar": 25
+      },
+      "revId": "0ae53e0d549c1a44e7b9f19b819bb876e328bcd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddccb9d7_efe8fd00",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-18T07:19:05Z",
+      "side": 1,
+      "message": "This is the only place where self.current_scsi_devices is used, so using a class variable may not be needed.\nHow about shortening this to just:\n\nif self.is_init:\n  return rpc.iscsi.get_scsi_devices(self.client)",
+      "range": {
+        "startLine": 258,
+        "startChar": 12,
+        "endLine": 258,
+        "endChar": 79
+      },
+      "revId": "0ae53e0d549c1a44e7b9f19b819bb876e328bcd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1863957_6c350f28",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-18T07:19:05Z",
+      "side": 1,
+      "message": "If you follow previous advice then this may be shortened to:\n\nfor device in self.list_scsi_devices():",
+      "range": {
+        "startLine": 262,
+        "startChar": 12,
+        "endLine": 263,
+        "endChar": 52
+      },
+      "revId": "0ae53e0d549c1a44e7b9f19b819bb876e328bcd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de5cfe63_6be584f8",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-18T07:19:05Z",
+      "side": 1,
+      "message": "not vhost;)",
+      "range": {
+        "startLine": 404,
+        "startChar": 13,
+        "endLine": 404,
+        "endChar": 34
+      },
+      "revId": "0ae53e0d549c1a44e7b9f19b819bb876e328bcd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
