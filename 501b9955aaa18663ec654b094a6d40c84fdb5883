@@ -16,6 +16,24 @@
       "revId": "501b9955aaa18663ec654b094a6d40c84fdb5883",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e277267d_42996691",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1173,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-18T01:11:43Z",
+      "side": 1,
+      "message": "Thank you. I added the code to\n- check if each iov is multiple of block size and return failure if not\n- assert if to_next_boundary_bytes is not multiple of block size.",
+      "parentUuid": "1db910bc_f2168c1a",
+      "revId": "501b9955aaa18663ec654b094a6d40c84fdb5883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
