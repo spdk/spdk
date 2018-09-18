@@ -350,7 +350,7 @@ ioat_process_channel_events(struct spdk_ioat_chan *ioat)
 	return 0;
 }
 
-static int
+static void
 ioat_channel_destruct(struct spdk_ioat_chan *ioat)
 {
 	ioat_unmap_pci_bar(ioat);
@@ -367,8 +367,6 @@ ioat_channel_destruct(struct spdk_ioat_chan *ioat)
 		spdk_dma_free((void *)ioat->comp_update);
 		ioat->comp_update = NULL;
 	}
-
-	return 0;
 }
 
 static int
