@@ -234,6 +234,14 @@ bdevperf_construct_targets(void)
 		if (target->io_size_blocks == 0) {
 			SPDK_ERRLOG("IO size (%d) is bigger than blocksize of bdev %s (%"PRIu32")\n",
 				    g_io_size, spdk_bdev_get_name(bdev), spdk_bdev_get_block_size(bdev));
+		}
+		if (g_io_size % spdk_bdev_get_block_size(bdev)) {
+			SPDK_ERRLOG("IO size (%d) is not a multiple of the blocksize of bdev %s (%"PRIu32")\n",
+				    g_io_size, spdk_bdev_get_name(bdev), spdk_bdev_get_block_size(bdev));
+			target->io_size_blocks = 0;
+
+		}
+		if (target->io_size_blocks == 0) {
 			spdk_bdev_close(target->bdev_desc);
 			free(target->name);
 			free(target);
