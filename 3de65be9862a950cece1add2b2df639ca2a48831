@@ -16,6 +16,24 @@
       "revId": "3de65be9862a950cece1add2b2df639ca2a48831",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ae326ab_b169d5e7",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-18T20:31:10Z",
+      "side": 1,
+      "message": "Assuming you mean:\n  if (not a multiple) then print message and set blocks\u003d0\nThen we\u0027d get both error messages.  I was going tor re-using the cleanup logic and only printing the relevant error message which is what this does. What am I not seeing (something I\u0027m sure)?",
+      "parentUuid": "350d04cd_a013d0d0",
+      "revId": "3de65be9862a950cece1add2b2df639ca2a48831",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
