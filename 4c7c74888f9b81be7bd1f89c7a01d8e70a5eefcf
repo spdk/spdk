@@ -1,0 +1,280 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41ff8459_a39207fb",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "I think this is random writes. Please note that properly in the parameter or via a comment.",
+      "range": {
+        "startLine": 57,
+        "startChar": 16,
+        "endLine": 57,
+        "endChar": 21
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "350b29f2_3090f811",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "So this run times for preconditioning depend on the size of the disk. If this script is going to be generalized, we should looking into using some of the other fio parameters that do this automatically.\nThere was an fio script that we used for rocksdb testing that had the following settings for preconditioning sequential writes:\nrw\u003dwrite\niodepth\u003d128\nbs\u003d128K\nloops\u003d2\nThis was sufficient to precondition any capacity SSD without trying to figure out the runtime for each SSD.",
+      "range": {
+        "startLine": 61,
+        "startChar": 44,
+        "endLine": 61,
+        "endChar": 58
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54deab93_a7c2949a",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "I think this should be a weighted average since 70% of the values have one average and 30% have another average.",
+      "range": {
+        "startLine": 76,
+        "startChar": 10,
+        "endLine": 76,
+        "endChar": 23
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48dad6b7_1bf86341",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "The script is for both NVMe PMD and bdev.",
+      "range": {
+        "startLine": 23,
+        "startChar": 16,
+        "endLine": 23,
+        "endChar": 19
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1e821c6_2abce871",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "Might want to specify the time is in secs",
+      "range": {
+        "startLine": 26,
+        "startChar": 96,
+        "endLine": 26,
+        "endChar": 100
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38d793d3_edeafc0c",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "Consistently use underscores (_) or don\u0027t use them at all. For example in runtime there was no underscore, but you have it here.",
+      "range": {
+        "startLine": 27,
+        "startChar": 13,
+        "endLine": 27,
+        "endChar": 22
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4216dd97_b5689ba5",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "Might want to specify the time is in secs",
+      "range": {
+        "startLine": 27,
+        "startChar": 88,
+        "endLine": 27,
+        "endChar": 92
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a74fe5c_c2bf8cf3",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "Consistently use underscores (_) or don\u0027t use them at all.\nfiobin has no underscore but you have underscore for fio_plugin.",
+      "range": {
+        "startLine": 29,
+        "startChar": 13,
+        "endLine": 29,
+        "endChar": 23
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9f077b8_6a1052a7",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "This needs more explanation. On a system with multiple disks are taking the first disk_no BDFs? What if they used a PCI whitelist with setup script?",
+      "range": {
+        "startLine": 30,
+        "startChar": 33,
+        "endLine": 30,
+        "endChar": 59
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01c0d4de_a399ca63",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "u? caught me off-guard. Lets call this usecs.",
+      "range": {
+        "startLine": 73,
+        "startChar": 32,
+        "endLine": 73,
+        "endChar": 33
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b841a413_4db4c68a",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "get_value function returns the latency values in nanoseconds but your reporting them in usecs per your header in line 73 above.",
+      "range": {
+        "startLine": 86,
+        "startChar": 51,
+        "endLine": 86,
+        "endChar": 60
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "018ab6dd_38c2654f",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-18T14:43:40Z",
+      "side": 1,
+      "message": "When your printing the test results, it is usually a good to have the workload info like block size, QD, how long the test ran? It makes it easier to read the results.",
+      "range": {
+        "startLine": 101,
+        "startChar": 2,
+        "endLine": 101,
+        "endChar": 78
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
