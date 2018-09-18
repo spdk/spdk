@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9b41748_b110a38c",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-18T17:30:14Z",
+      "side": 1,
+      "message": "Nit - let\u0027s spell this out as --move-to-default-dir\n\nFor some reason, I think \"def\" as \"define\".  This option is already 17 characters along, what\u0027s another 3?  :-)\n\nSame for MOVE_TO_DEF_DIR.",
+      "revId": "34ccee3683c974dcf29a6b07e9878bcc1e896f3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
