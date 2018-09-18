@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18bc40df_e311db68",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-09-18T06:05:25Z",
+      "side": 1,
+      "message": "Could we have the alignment for all the following definitions",
+      "range": {
+        "startLine": 61,
+        "startChar": 8,
+        "endLine": 61,
+        "endChar": 41
+      },
+      "revId": "070db65e9460954f3363a795eb2b853503b76b84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
