@@ -1380,13 +1380,13 @@ SPDK_TRACE_REGISTER_FN(iscsi_conn_trace)
 {
 	spdk_trace_register_owner(OWNER_ISCSI_CONN, 'c');
 	spdk_trace_register_object(OBJECT_ISCSI_PDU, 'p');
-	spdk_trace_register_description("READ_FROM_SOCKET_DONE", "", TRACE_READ_FROM_SOCKET_DONE,
+	spdk_trace_register_description("READ_FROM_SOCKET_DONE", "", TRACE_ISCSI_READ_FROM_SOCKET_DONE,
 					OWNER_ISCSI_CONN, OBJECT_NONE, 0, 0, "");
-	spdk_trace_register_description("FLUSH_WRITEBUF_START", "", TRACE_FLUSH_WRITEBUF_START,
+	spdk_trace_register_description("FLUSH_WRITEBUF_START", "", TRACE_ISCSI_FLUSH_WRITEBUF_START,
 					OWNER_ISCSI_CONN, OBJECT_NONE, 0, 0, "iovec: ");
-	spdk_trace_register_description("FLUSH_WRITEBUF_DONE", "", TRACE_FLUSH_WRITEBUF_DONE,
+	spdk_trace_register_description("FLUSH_WRITEBUF_DONE", "", TRACE_ISCSI_FLUSH_WRITEBUF_DONE,
 					OWNER_ISCSI_CONN, OBJECT_NONE, 0, 0, "");
-	spdk_trace_register_description("READ_PDU", "", TRACE_READ_PDU,
+	spdk_trace_register_description("READ_PDU", "", TRACE_ISCSI_READ_PDU,
 					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 1, 0, "opc:   ");
 	spdk_trace_register_description("ISCSI_TASK_DONE", "", TRACE_ISCSI_TASK_DONE,
 					OWNER_ISCSI_CONN, OBJECT_SCSI_TASK, 0, 0, "");
