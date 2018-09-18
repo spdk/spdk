@@ -192,12 +192,9 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 {
 	struct spdk_thread *thread;
 
-	pthread_mutex_lock(&g_devlist_mutex);
-
 	thread = _get_thread();
 	if (thread) {
 		SPDK_ERRLOG("Double allocated SPDK thread\n");
-		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
 
@@ -210,7 +207,6 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	thread = calloc(1, sizeof(*thread));
 	if (!thread) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
-		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
 
@@ -220,8 +216,6 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	thread->stop_poller_fn = stop_poller_fn;
 	thread->thread_ctx = thread_ctx;
 	TAILQ_INIT(&thread->io_channels);
-	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
-
 	TAILQ_INIT(&thread->active_pollers);
 	TAILQ_INIT(&thread->timer_pollers);
 
@@ -229,11 +223,9 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	if (!thread->messages) {
 		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
 		free(thread);
-		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
 
-	g_thread_count++;
 	if (name) {
 		_set_thread_name(name);
 		thread->name = strdup(name);
@@ -243,6 +235,9 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Allocating new thread %s\n", thread->name);
 
+	pthread_mutex_lock(&g_devlist_mutex);
+	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
+	g_thread_count++;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	return thread;
@@ -260,12 +255,9 @@ spdk_free_thread(void)
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
 
-	pthread_mutex_lock(&g_devlist_mutex);
-
 	thread = _get_thread();
 	if (!thread) {
 		SPDK_ERRLOG("No thread allocated\n");
-		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
 
@@ -276,9 +268,12 @@ spdk_free_thread(void)
 			    thread->name, ch->dev->name);
 	}
 
+	pthread_mutex_lock(&g_devlist_mutex);
 	assert(g_thread_count > 0);
 	g_thread_count--;
 	TAILQ_REMOVE(&g_threads, thread, tailq);
+	pthread_mutex_unlock(&g_devlist_mutex);
+
 	free(thread->name);
 
 	if (thread->messages) {
@@ -288,8 +283,6 @@ spdk_free_thread(void)
 	free(thread);
 
 	tls_thread = NULL;
-
-	pthread_mutex_unlock(&g_devlist_mutex);
 }
 
 static inline uint32_t
@@ -457,14 +450,10 @@ spdk_get_thread(void)
 {
 	struct spdk_thread *thread;
 
-	pthread_mutex_lock(&g_devlist_mutex);
-
 	thread = _get_thread();
 	if (!thread) {
 		SPDK_ERRLOG("No thread allocated\n");
 	}
-
-	pthread_mutex_unlock(&g_devlist_mutex);
 
 	return thread;
 }
