@@ -107,6 +107,11 @@ struct spdk_vhost_nvme_task {
 	/** Offset in current iovec. */
 	uint32_t iov_offset;
 
+	/* for bdev_io_wait */
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+	struct spdk_vhost_nvme_sq *sq;
+	struct spdk_vhost_nvme_ns *ns;
+
 	/* parent pointer. */
 	struct spdk_vhost_nvme_task *parent;
 	uint8_t dnr;
@@ -149,6 +154,10 @@ static const struct spdk_vhost_dev_backend spdk_vhost_nvme_device_backend;
  * SPDK_VERSION_STRING won't fit into FR (only 8 bytes), so try to fit the most important parts.
  */
 #define FW_VERSION SPDK_VERSION_MAJOR_STRING SPDK_VERSION_MINOR_STRING SPDK_VERSION_PATCH_STRING
+
+static int
+spdk_nvme_process_sq(struct spdk_vhost_nvme_dev *nvme, struct spdk_vhost_nvme_sq *sq,
+		     struct spdk_vhost_nvme_task *task);
 
 static struct spdk_vhost_nvme_dev *
 to_nvme_dev(struct spdk_vhost_dev *vdev)
@@ -411,6 +420,39 @@ spdk_vhost_nvme_get_ns_from_nsid(struct spdk_vhost_nvme_dev *dev, uint32_t nsid)
 	return &dev->ns[nsid - 1];
 }
 
+static void
+vhost_nvme_resubmit_task(void *arg)
+{
+	struct spdk_vhost_nvme_task *task = (struct spdk_vhost_nvme_task *)arg;
+	int rc;
+
+	rc = spdk_nvme_process_sq(task->nvme, task->sq, task);
+	if (rc) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "vhost_nvme: task resubmit failed, rc = %d.\n", rc);
+	}
+}
+
+static int
+vhost_nvme_queue_task(struct spdk_vhost_nvme_task *task)
+{
+	int rc;
+
+	task->bdev_io_wait.bdev = task->ns->bdev;
+	task->bdev_io_wait.cb_fn = vhost_nvme_resubmit_task;
+	task->bdev_io_wait.cb_arg = task;
+
+	rc = spdk_bdev_queue_io_wait(task->ns->bdev, task->ns->bdev_io_channel, &task->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in vhost_nvme_queue_task, rc=%d.\n", rc);
+		task->dnr = 1;
+		task->sct = SPDK_NVME_SCT_GENERIC;
+		task->sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		spdk_vhost_nvme_task_complete(task);
+	}
+
+	return rc;
+}
+
 static int
 spdk_nvme_process_sq(struct spdk_vhost_nvme_dev *nvme, struct spdk_vhost_nvme_sq *sq,
 		     struct spdk_vhost_nvme_task *task)
@@ -442,6 +484,8 @@ spdk_nvme_process_sq(struct spdk_vhost_nvme_dev *nvme, struct spdk_vhost_nvme_sq
 	task->num_children = 0;
 	task->cqid = sq->cqid;
 	task->sqid = sq->sqid;
+
+	task->ns = ns;
 
 	if (spdk_unlikely(!ns->active_ns)) {
 		task->dnr = 1;
@@ -531,12 +575,18 @@ spdk_nvme_process_sq(struct spdk_vhost_nvme_dev *nvme, struct spdk_vhost_nvme_sq
 	}
 
 	if (spdk_unlikely(ret)) {
-		/* post error status to cqe */
-		SPDK_ERRLOG("Error Submission For Command %u, ret %d\n", cmd->opc, ret);
-		task->dnr = 1;
-		task->sct = SPDK_NVME_SCT_GENERIC;
-		task->sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		spdk_vhost_nvme_task_complete(task);
+		if (ret == -ENOMEM) {
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "No memory, start to queue io.\n");
+			task->sq = sq;
+			ret = vhost_nvme_queue_task(task);
+		} else {
+			/* post error status to cqe */
+			SPDK_ERRLOG("Error Submission For Command %u, ret %d\n", cmd->opc, ret);
+			task->dnr = 1;
+			task->sct = SPDK_NVME_SCT_GENERIC;
+			task->sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			spdk_vhost_nvme_task_complete(task);
+		}
 	}
 
 	return ret;
