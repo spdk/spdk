@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "051a4f71_1ea16d8c",
+        "filename": "test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-18T15:54:10Z",
+      "side": 1,
+      "message": "should we add the namespaces before we add the listener?\n\nfor this test, it\u0027s fine - but in general I think you\u0027d want to have all the namespaces added before you allow anyone to connect to it\n\nthis applies to the rest of this patch too\n\nI know in some cases in this patch, we already were adding namespaces after the listener was started.  But at least for the ones like here where it is all getting broken out, adding the namespaces first would be better.",
+      "revId": "f1363bb2ecb88323b18df10f218f0d3c35595b59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
