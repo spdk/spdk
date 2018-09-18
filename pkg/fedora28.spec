@@ -1,7 +1,7 @@
 Name: spdk
 Version: 18.07
-Release: 1%{?dist}
-Epoch: 1
+Release: 3%{?dist}
+Epoch: 0
 URL: http://spdk.io
 
 Source: https://github.com/spdk/spdk/archive/v%{version}.tar.gz
@@ -111,5 +111,6 @@ sed -i -E '1s@#!/usr/bin/env (.*)@#!/usr/bin/\1@' %{buildroot}/%{_datadir}/%{nam
 # FIXME: remove this at the end.
 echo "NOP"
 
-# TODO: initial changelog
 %changelog
+* Tue Sep 18 2018 Pawel Wodkowski <pawelx.wodkowski@intel.com> - 0:18.07-3
+- Initial RPM release
