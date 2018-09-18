@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b5a39c6_e0087eb1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1176,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-18T16:14:28Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nThe code here is fine.  But I think it might be clearer for future readers if we put all of this code (lines 1176 to 1185) inside of a check like:\n\nif (to_next_boundary_bytes \u003e 0) {\n  /* We had to stop this child I/O early because we ran out of\n   *  child_iov space.  Make sure the iovs collected are valid and\n   *  then adjust to_next_boundary before starting the child I/O.\n   */\n\n\n-Jim",
+      "revId": "a8d255cc60cdfbe87982fce9c70bb4634ec7757e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
