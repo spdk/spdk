@@ -38,5 +38,6 @@ CFLAGS += $(ENV_CFLAGS)
 C_SRCS = env.c memory.c pci.c vtophys.c init.c threads.c
 C_SRCS += pci_nvme.c pci_ioat.c pci_virtio.c
 LIBNAME = env_dpdk
+LOCAL_SYS_LIBS = $(filter-out $(ENV_DPDK_FILE), $(ENV_LINKER_ARGS))
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

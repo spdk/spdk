@@ -42,5 +42,6 @@ CFLAGS += -include rte_config.h
 C_SRCS += fd_man.c socket.c vhost_user.c vhost.c
 
 LIBNAME = rte_vhost
+LOCAL_SYS_LIBS = $(filter-out $(ENV_DPDK_FILE), $(ENV_LINKER_ARGS))
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
