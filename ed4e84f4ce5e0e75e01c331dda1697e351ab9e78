@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9d6a9e1d_46c62f6e",
+        "filename": "scripts/vagrant/Vagrantfile_vhost_vm",
+        "patchSetId": 7
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-19T09:12:21Z",
+      "side": 1,
+      "message": "Added more details on why I do that a couple of lines up.\nIm open to better ideas:)",
+      "parentUuid": "766375d3_2ea6938e",
+      "revId": "ed4e84f4ce5e0e75e01c331dda1697e351ab9e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e28312a_2ee90638",
         "filename": "scripts/vagrant/create_vhost_vm.sh",
         "patchSetId": 7
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "cd90403a_33e3f549",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-19T09:12:21Z",
+      "side": 1,
+      "message": "No problem",
+      "parentUuid": "5e28312a_2ee90638",
+      "range": {
+        "startLine": 28,
+        "startChar": 9,
+        "endLine": 28,
+        "endChar": 11
+      },
+      "revId": "ed4e84f4ce5e0e75e01c331dda1697e351ab9e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1d1fa8a3_33e5e87a",
         "filename": "scripts/vagrant/create_vhost_vm.sh",
         "patchSetId": 7
@@ -53,6 +95,30 @@
       "writtenOn": "2018-09-19T08:15:34Z",
       "side": 1,
       "message": "xx",
+      "range": {
+        "startLine": 77,
+        "startChar": 18,
+        "endLine": 77,
+        "endChar": 29
+      },
+      "revId": "ed4e84f4ce5e0e75e01c331dda1697e351ab9e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ade271c_3bdeb77c",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-19T09:12:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d1fa8a3_33e5e87a",
       "range": {
         "startLine": 77,
         "startChar": 18,
