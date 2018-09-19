@@ -373,14 +373,17 @@ test_mem_map_registration(void)
 
 	/* Register an overlapping address range */
 	rc = spdk_mem_register((void *)0, 3 * VALUE_2MB);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EBUSY);
 
-	/*
-	 * Unregister the middle page of the larger region.
-	 * It was set twice, so unregister it twice.
-	 */
+	/* Unregister a 2MB page */
 	rc = spdk_mem_unregister((void *)VALUE_2MB, VALUE_2MB);
 	CU_ASSERT(rc == 0);
+
+	/* Register non overlapping address range */
+	rc = spdk_mem_register((void *)0, 3 * VALUE_2MB);
+	CU_ASSERT(rc == 0);
+
+	/* Unregister the middle page of the larger region. */
 	rc = spdk_mem_unregister((void *)VALUE_2MB, VALUE_2MB);
 	CU_ASSERT(rc == 0);
 
