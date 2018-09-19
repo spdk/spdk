@@ -33,21 +33,40 @@
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/shared_lib/spdk.map
 LIB := $(call spdk_lib_list_to_files,$(LIBNAME))
+SHARED_LINKED_LIB := $(subst .a,.so,$(LIB))
+SHARED_REALNAME_LIB := $(subst .so,.so.$(SO_SUFFIX_ALL),$(SHARED_LINKED_LIB))
+
+ifeq ($(CONFIG_SHARED),y)
+DEP := $(SHARED_LINKED_LIB)
+else
+DEP := $(LIB)
+endif
 
 .PHONY: all clean $(DIRS-y)
 
-all: $(LIB) $(DIRS-y)
+all: $(DEP) $(DIRS-y)
 	@:
 
 clean: $(DIRS-y)
-	$(CLEAN_C) $(LIB)
+	$(CLEAN_C) $(LIB) $(SHARED_LINKED_LIB) $(SHARED_REALNAME_LIB)
+
+$(SHARED_LINKED_LIB): $(SHARED_REALNAME_LIB)
+	$(Q)echo "  SYMLINK $(notdir $@)"; $(BUILD_LINKERNAME_LIB)
+
+$(SHARED_REALNAME_LIB): $(LIB)
+	$(Q)echo "  SO $(notdir $@)"; \
+	$(call spdk_build_realname_shared_lib,$^,$(SPDK_MAP_FILE))
 
 $(LIB): $(OBJS)
 	$(LIB_C)
 
 install: all
 	$(INSTALL_LIB)
+ifeq ($(CONFIG_SHARED),y)
+	$(INSTALL_SHARED_LIB)
+endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
 
