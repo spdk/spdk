@@ -109,6 +109,7 @@ if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 fi
 $valgrind $testdir/lib/nvmf/request.c/request_ut
 $valgrind $testdir/lib/nvmf/subsystem.c/subsystem_ut
+$valgrind $testdir/lib/nvmf/tcp.c/tcp_ut
 
 $valgrind $testdir/lib/scsi/dev.c/dev_ut
 $valgrind $testdir/lib/scsi/lun.c/lun_ut
