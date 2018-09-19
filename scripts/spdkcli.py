@@ -2,7 +2,7 @@
 import sys
 import argparse
 from os import getuid
-from configshell_fb import ConfigShell
+from spdkcli import SpdkShell
 from spdkcli import UIRoot
 
 
@@ -11,7 +11,7 @@ def main():
     Start SPDK CLI
     :return:
     """
-    shell = ConfigShell("~/.scripts")
+    shell = SpdkShell("~/.scripts")
 
     parser = argparse.ArgumentParser(description="SPDK command line interface")
     parser.add_argument("-s", dest="socket", help="RPC socket path", default="/var/tmp/spdk.sock")
