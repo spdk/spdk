@@ -707,7 +707,7 @@ function vm_setup()
 				fi
 
 				# Create disk file if it not exist or it is smaller than 10G
-				if ( [[ -f $raw_disk ]] && [[ $(stat --printf="%s" $raw_disk) -lt $((1024 * 1024 * 1024 * 10)) ]] ) || \
+				if ( [[ -f $raw_disk ]] && [[ $(stat --printf="%s" $raw_disk) -lt $((1024 * 1024 * 1024)) ]] ) || \
 					[[ ! -e $raw_disk ]]; then
 					if [[ $raw_disk =~ /dev/.* ]]; then
 						error \
@@ -717,7 +717,7 @@ function vm_setup()
 					fi
 
 					notice "Creating Virtio disc $raw_disk"
-					dd if=/dev/zero of=$raw_disk bs=1024k count=10240
+					dd if=/dev/zero of=$raw_disk bs=1024k count=1024
 				else
 					notice "Using existing image $raw_disk"
 				fi
