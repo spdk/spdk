@@ -42,6 +42,7 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
 SPDK_LIB_LIST += thread util log ut_mock sock
 
+LIBS += $(SOCK_MODULES_LINKER_ARGS)
 LIBS += -lcunit $(SPDK_STATIC_LIB_LINKER_ARGS)
 
 APP = $(TEST_FILE:.c=)
@@ -49,7 +50,7 @@ APP = $(TEST_FILE:.c=)
 all: $(APP)
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ADDITIONAL_LIBS)
+$(APP) : $(OBJS) $(SOCK_MODULES_FILES) $(SOCK_LIB_FILES) $(ADDITIONAL_LIBS)
 	$(LINK_C)
 
 clean:
