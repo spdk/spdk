@@ -362,6 +362,7 @@ fi
 
 sudo mkdir -p /usr/src
 
+<<<<<<< HEAD
 install_rxe_cfg&
 install_iscsi_adm&
 install_rocksdb&
@@ -373,6 +374,159 @@ install_nvmecli&
 install_libiscsi&
 
 wait
+=======
+if echo $CONF | grep -q rocksdb; then
+
+    # Rocksdb is installed for use with the blobfs tests.
+    if [ ! -d /usr/src/rocksdb ]; then
+	git clone "${GIT_REPO_ROCKSDB}"
+        git -C ./rocksdb checkout spdk-v5.6.1
+        sudo mv rocksdb /usr/src/
+    else
+        sudo git -C /usr/src/rocksdb checkout spdk-v5.6.1
+        echo "rocksdb already in /usr/src. Not checking out again"
+    fi
+fi
+
+if echo $CONF | grep -q fio; then
+    # This version of fio is installed in /usr/src/fio to enable
+    # building the spdk fio plugin.
+    if [ ! -d /usr/src/fio ]; then
+        if [ ! -d fio ]; then
+            git clone "${GIT_REPO_FIO}"
+            sudo mv fio /usr/src/
+        else
+            sudo mv fio /usr/src/
+        fi
+        (
+            cd /usr/src/fio &&
+            git checkout master &&
+            git pull &&
+            git checkout fio-3.3 &&
+            make -j${jobs} &&
+            sudo make install
+        )
+    else
+        echo "fio already in /usr/src/fio. Not installing"
+    fi
+fi
+
+cd ~
+
+if echo $CONF | grep -q flamegraph; then
+    # Flamegraph is used when printing out timing graphs for the tests.
+    if [ ! -d /usr/local/FlameGraph ]; then
+        git clone "${GIT_REPO_FLAMEGRAPH}"
+        mkdir -p /usr/local
+        sudo mv FlameGraph /usr/local/FlameGraph
+    else
+        echo "flamegraph already installed. Skipping"
+    fi
+fi
+
+if echo $CONF | grep -q qemu; then
+    # Qemu is used in the vhost tests.
+    SPDK_QEMU_BRANCH=spdk-2.12
+    mkdir -p qemu
+    cd qemu
+    if [ ! -d "$SPDK_QEMU_BRANCH" ]; then
+        git clone "${GIT_REPO_QEMU}" -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
+    else
+        echo "qemu already checked out. Skipping"
+    fi
+
+    cd "$SPDK_QEMU_BRANCH"
+
+    declare -a opt_params=("--prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH")
+
+    # Most tsocks proxies rely on a configuration file in /etc/tsocks.conf.
+    # If using tsocks, please make sure to complete this config before trying to build qemu.
+    if echo $CONF | grep -q tsocks; then
+        if hash tsocks 2> /dev/null; then
+            opt_params+=(--with-git='tsocks git')
+        fi
+    fi
+
+    ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa
+
+    make -j${jobs}
+    sudo make install
+fi
+
+cd ~
+
+if echo $CONF | grep -q vpp; then
+    # Vector packet processing (VPP) is installed for use with iSCSI tests.
+    # At least on fedora 28, the yum setup that vpp uses is deprecated and fails.
+    # The actions taken under the vpp_setup script are necessary to fix this issue.
+    if [ -d vpp_setup ]; then
+        echo "vpp setup already done."
+    else
+        echo "%_topdir  $HOME/vpp_setup/src/rpm" >> ~/.rpmmacros
+        sudo dnf install -y perl-generators
+        mkdir -p ~/vpp_setup/src/rpm
+        cd ~/vpp_setup/src/rpm
+        mkdir -p BUILD RPMS SOURCES SPECS SRPMS
+        dnf download --source redhat-rpm-config
+        rpm -ivh redhat-rpm-config*
+        sed -i s/"Requires: (annobin if gcc)"//g SPECS/redhat-rpm-config.spec
+        rpmbuild -ba SPECS/*.spec
+        sudo dnf remove -y --noautoremove redhat-rpm-config
+        sudo rpm -Uvh RPMS/noarch/*
+        cd -
+    fi
+
+    if [ -d vpp ]; then
+        echo "vpp already cloned."
+        if [ ! -d vpp/build-root ]; then
+            echo "build-root has not been done"
+            echo "remove the `pwd` and start again"
+            exit 1
+        fi
+    else
+        git clone "${GIT_REPO_VPP}"
+        cd vpp
+        git checkout v18.01.1
+        # VPP 18.01.1 does not support OpenSSL 1.1.
+        # For compilation, a compatibility package is used temporarily.
+        sudo dnf install -y --allowerasing compat-openssl10-devel
+        # Installing required dependencies for building VPP
+        yes | make install-dep
+
+        make pkg-rpm -j${jobs}
+        # Reinstall latest OpenSSL devel package.
+        sudo dnf install -y --allowerasing openssl-devel
+        cd build-root
+        sudo dnf install -y \
+            ./vpp-lib-18.01.1-release.x86_64.rpm \
+            ./vpp-devel-18.01.1-release.x86_64.rpm \
+            ./vpp-18.01.1-release.x86_64.rpm
+        # Since hugepage configuration is done via spdk/scripts/setup.sh,
+        # this default config is not needed.
+        #
+        # NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
+        # very low count and cause issues with hugepage total sizes above 1GB.
+        sudo rm -f /etc/sysctl.d/80-vpp.conf
+        cd ~
+    fi
+fi
+
+if echo $CONF | grep -q libiscsi; then
+    # We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
+    # to later. Cloning from git is just future proofing the machines.
+    if [ ! -d libiscsi ]; then
+        git clone "${GIT_REPO_LIBISCSI}"
+    else
+        echo "libiscsi already checked out. Skipping"
+    fi
+    cd libiscsi
+    ./autogen.sh
+    ./configure --prefix=/usr/local/libiscsi
+    make -j${jobs}
+    sudo make install
+fi
+
+>>>>>>> test/vm_setup.sh: add missing assume yes option
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
 # By setting any one of the values below to 0, you can skip that specific test. If you are
 # using your autotest platform to do sanity checks before uploading to the build pool, it is
