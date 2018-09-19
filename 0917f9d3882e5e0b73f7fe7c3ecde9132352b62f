@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dd8207a8_d893f519",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011884
+      },
+      "writtenOn": "2018-09-19T06:51:38Z",
+      "side": 1,
+      "message": "Thanks for your comments\nthe blk_request_queue_io is only called in process_blk_request.\nThis function call spdk_bdev_readv directly, will not call blk_request_queue_io again.",
+      "parentUuid": "341b0c68_6b977738",
+      "revId": "0917f9d3882e5e0b73f7fe7c3ecde9132352b62f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90f8545e_7265c73d",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 11
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-19T01:16:06Z",
       "side": 1,
       "message": "Same as above.",
+      "revId": "0917f9d3882e5e0b73f7fe7c3ecde9132352b62f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2904730b_485ab06d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011884
+      },
+      "writtenOn": "2018-09-19T06:51:38Z",
+      "side": 1,
+      "message": "Thanks for your comments\nthe blk_request_queue_io is only called in process_blk_request.\nThis function call spdk_bdev_readv directly, will not call blk_request_queue_io again.",
+      "parentUuid": "90f8545e_7265c73d",
       "revId": "0917f9d3882e5e0b73f7fe7c3ecde9132352b62f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
