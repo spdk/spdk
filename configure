@@ -177,7 +177,7 @@ for i in "$@"; do
 			CONFIG_DPDK_DIR=
 			;;
 		--with-crypto)
-			CONFIG_CRYPTO=y
+			CONFIG_CRYPTO=n
 			;;
 		--without-crypto)
 			CONFIG_CRYPTO=n
