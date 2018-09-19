@@ -31,29 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
-C_SRCS = $(TEST_FILE)
+TEST_FILE = tcp_ut.c
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
-
-SPDK_LIB_LIST += thread util log ut_mock sock
-
-LIBS += $(SOCK_MODULES_LINKER_ARGS)
-LIBS += -lcunit $(SPDK_STATIC_LIB_LINKER_ARGS)
-
-APP = $(TEST_FILE:.c=)
-
-all: $(APP)
-	@:
-
-$(APP) : $(OBJS) $(SOCK_MODULES_FILES) $(SPDK_LIB_FILES) $(ADDITIONAL_LIBS)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
