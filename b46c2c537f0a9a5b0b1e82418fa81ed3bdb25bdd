@@ -16,6 +16,24 @@
       "revId": "b46c2c537f0a9a5b0b1e82418fa81ed3bdb25bdd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "191259e2_f95c86bd",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1401,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-09-19T05:19:59Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nThe TRACE_ISCSI_TASK_EXECUTED is used to record TSC while iSCSI task was executed. It may be helpful, especially for non-SCSI PDU(See Jim\u0027s comment above).\nThe TRACE_ISCSI_PDU_COMPLETED is used to record TSC when the PDU is completed. With this tracepoint, we can get the elapsed time from begin to end since flushing writebuf duration is not calculated before.\n\nThanks\n\nLiang",
+      "parentUuid": "230968f6_687e1c4c",
+      "revId": "b46c2c537f0a9a5b0b1e82418fa81ed3bdb25bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
