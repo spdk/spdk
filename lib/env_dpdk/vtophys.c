@@ -341,6 +341,9 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	int rc = 0, pci_phys = 0;
 	uint64_t paddr;
 
+	fprintf(stderr, "%s %p-%p (len %zu)\n",
+		action == SPDK_MEM_MAP_NOTIFY_REGISTER ? "register" : "unregister", vaddr, vaddr + len, len);
+
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
 		return -EINVAL;
