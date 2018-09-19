@@ -44,6 +44,13 @@ else
 DEP := $(LIB)
 endif
 
+ifeq ($(OS),FreeBSD)
+LOCAL_SYS_LIBS += -L/usr/local/lib -lrt
+else
+LOCAL_SYS_LIBS += -lrt
+endif
+
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DEP) $(DIRS-y)
@@ -57,7 +64,7 @@ $(SHARED_LINKED_LIB): $(SHARED_REALNAME_LIB)
 
 $(SHARED_REALNAME_LIB): $(LIB)
 	$(Q)echo "  SO $(notdir $@)"; \
-	$(call spdk_build_realname_shared_lib,$^,$(SPDK_MAP_FILE))
+	$(call spdk_build_realname_shared_lib,$^,$(SPDK_MAP_FILE),$(LOCAL_SYS_LIBS))
 
 $(LIB): $(OBJS)
 	$(LIB_C)
