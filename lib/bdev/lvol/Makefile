@@ -36,5 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = vbdev_lvol.c vbdev_lvol_rpc.c
 LIBNAME = vbdev_lvol
+LOCAL_SYS_LIBS = -luuid
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
