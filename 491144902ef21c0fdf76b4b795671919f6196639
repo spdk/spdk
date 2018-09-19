@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8029d6fb_de3a1a86",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-19T15:07:49Z",
+      "side": 1,
+      "message": "One small thing. You already have this information in bdev_io-\u003eu.bdev.num_blocks so no division is neede.",
+      "range": {
+        "startLine": 539,
+        "startChar": 1,
+        "endLine": 539,
+        "endChar": 39
+      },
+      "revId": "491144902ef21c0fdf76b4b795671919f6196639",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
