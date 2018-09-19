@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "44dbed91_7fdb91d6",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T00:18:36Z",
+      "side": 1,
+      "message": "This is not related with this patch, but should be smaller here?",
+      "range": {
+        "startLine": 235,
+        "startChar": 32,
+        "endLine": 235,
+        "endChar": 38
+      },
+      "revId": "3de65be9862a950cece1add2b2df639ca2a48831",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "350d04cd_a013d0d0",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 1
@@ -31,6 +54,24 @@
       "side": 1,
       "message": "Assuming you mean:\n  if (not a multiple) then print message and set blocks\u003d0\nThen we\u0027d get both error messages.  I was going tor re-using the cleanup logic and only printing the relevant error message which is what this does. What am I not seeing (something I\u0027m sure)?",
       "parentUuid": "350d04cd_a013d0d0",
+      "revId": "3de65be9862a950cece1add2b2df639ca2a48831",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f52d83db_cbd2ca63",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T00:18:36Z",
+      "side": 1,
+      "message": "How about the following for the line 233 to 250?\n\nblocklen \u003d spdk_bdev_get_block_size(bdev);\nif ((g_io_size / blocklen) \u003d\u003d 0 ||\n  (g_io_size % blocklen) !\u003d 0) {\n  SPDK_ERRLOG(\"IO size (%d) is smaller than or not a multiple of the block size of bdev %s (%\" PRIu32 \")\\n\",\n    ...);\n  spdk_bdev_close(target-\u003ebdev_desc);\n  free(target-\u003ename);\n  free(target);\n  bdev \u003d spdk_bdev_next_leaf(bdev);\n  continue;\n}\ntarget-\u003eio_size_blocks \u003d g_io_size / blocklen;",
+      "parentUuid": "3ae326ab_b169d5e7",
       "revId": "3de65be9862a950cece1add2b2df639ca2a48831",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
