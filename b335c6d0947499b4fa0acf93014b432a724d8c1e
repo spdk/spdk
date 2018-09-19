@@ -71,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "d8e588c6_caedae71",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1737,
+      "author": {
+        "id": 1014768
+      },
+      "writtenOn": "2018-09-19T18:55:09Z",
+      "side": 1,
+      "message": "Hello Harris,\nI didn\u0027t understand this comment fully. Kindly elaborate your view of using spdk_for_each_channel() instead of spdk_for_each_thread.\nI see, each core has one thread and one poll group allocated.\nDoes this not hold good now or in future?",
+      "parentUuid": "a92bc129_d3c82f2a",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b288f6c3_b5d4d7aa",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
