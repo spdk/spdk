@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "341b0c68_6b977738",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T01:16:06Z",
+      "side": 1,
+      "message": "I think you have to call blk_request_queue_io() again if rc is -ENOMEM.",
+      "revId": "0917f9d3882e5e0b73f7fe7c3ecde9132352b62f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90f8545e_7265c73d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T01:16:06Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "0917f9d3882e5e0b73f7fe7c3ecde9132352b62f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
