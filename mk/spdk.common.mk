@@ -265,20 +265,14 @@ INSTALL_REL_SYMLINK := ln -sf -r
 endif
 
 define spdk_install_lib_symlink
-	$(INSTALL_REL_SYMLINK) $(DESTDIR)$(libdir)/$(1).$(SO_SUFFIX_ALL) $(DESTDIR)$(libdir)/$(1)
+	$(INSTALL_REL_SYMLINK) $(DESTDIR)$(libdir)/$(1) $(DESTDIR)$(libdir)/$(2)
 endef
 
-# Install shared library(s)
-define spdk_install_shared_libs
-	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/$(notdir $(1))"
-	install -d -m 755 $(DESTDIR)$(libdir)
-	@for l in $(1); do \
-		bln=$${l##*/}; \
-		rn=$$l.$(SO_SUFFIX_ALL); \
-		install -m 755 $$rn $(DESTDIR)$(libdir)/; \
-		$(call spdk_install_lib_symlink,$$bln); \
-	done
-endef
+INSTALL_SHARED_LIB=\
+	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/$(notdir $(SHARED_LINKED_LIB))"; \
+	install -d -m 755 "$(DESTDIR)$(libdir)"; \
+	install -m 755 "$(SHARED_REALNAME_LIB)" "$(DESTDIR)$(libdir)/"; \
+	$(call spdk_install_lib_symlink,$(notdir $(SHARED_REALNAME_LIB)),$(notdir $(SHARED_LINKED_LIB)));
 
 # Install an app binary
 INSTALL_APP=\
