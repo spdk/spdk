@@ -79,8 +79,11 @@ Vagrant.configure(2) do |config|
   vmcpu=(ENV['SPDK_VAGRANT_VMCPU'] || 2)
   vmram=(ENV['SPDK_VAGRANT_VMRAM'] || 4096)
   spdk_dir=(ENV['SPDK_DIR'] || "none")
+  spdk_gig_hugepages=(ENV['SPDK_GIG_HUGEPAGES'] || "false")
   vhost_host_dir=(ENV['VHOST_HOST_DIR'] || "none")
   vhost_vm_dir=(ENV['VHOST_VM_DIR'] || "none")
+  add_virtio_scsi=(ENV['ADD_VIRTIO_SCSI'] || "false")
+  add_virtio_blk=(ENV['ADD_VIRTIO_BLK'] || "false")
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
@@ -107,11 +110,12 @@ Vagrant.configure(2) do |config|
   # There are few limitation for SElinux - The file added outside libvirt must have proper SE ACL policy or setenforce 0
   config.vm.provider "libvirt" do |libvirt, override|
     libvirt.random_hostname = "1"
-    libvirt.disk_bus = "virtio"
+    libvirt.disk_bus = "ide"
 
     # we put nvme_disk inside default pool to eliminate libvirt/SELinux Permissions Problems
     # and to be able to run vagrant from user $HOME directory
     nvme_disk = '/var/lib/libvirt/images/nvme_disk.img'
+
     unless File.exist? (nvme_disk)
       puts "If run with libvirt provider please execute create_nvme_img.sh"
     end
@@ -120,6 +124,15 @@ Vagrant.configure(2) do |config|
     libvirt.qemuargs :value => "file=#{nvme_disk},if=none,id=D22"
     libvirt.qemuargs :value => "-device"
     libvirt.qemuargs :value => "nvme,drive=D22,serial=1234"
+
+    if add_virtio_scsi.include? "true"
+      libvirt.storage :file, :size => '128M', :path => 'virtio_scsi.img', :allow_existing => true, :type => 'raw'
+    end
+
+    if add_virtio_blk.include? "true"
+      libvirt.storage :file, :size => '128M', :path => 'virtio_blk.img', :allow_existing => true, :type => 'raw'
+    end
+
     libvirt.driver = "kvm"
     libvirt.graphics_type = "spice"
     libvirt.memory = "#{vmram}"
@@ -149,6 +162,17 @@ Vagrant.configure(2) do |config|
       config.vm.provision "shell", inline: "sudo mkdir -p /root/.ssh"
       config.vm.provision "shell", inline: "sudo cp #{vhost_vm_dir}/spdk_vhost_id_rsa* /root/.ssh"
       config.vm.provision "shell", inline: "sudo chmod 600 /root/.ssh/spdk_vhost_id_rsa"
+  end
+
+  unless distro.include? "freebsd"
+    if spdk_gig_hugepages.include? "true"
+      config.vm.provision "shell", inline: 'sudo sh -c \'echo GRUB_CMDLINE_LINUX+=\" default_hugepagesz=1G hugepagesz=1G hugepages=2\"\' >> /etc/default/grub'
+      if File.exist?("/etc/redhat-release")
+        config.vm.provision "shell", inline: "sudo grub2-mkconfig -o /boot/grub2/grub.cfg"
+      elsif File.exist?("/etc/debian_version")
+        config.vm.provision "shell", inline: "sudo update-grub"
+      end
+    end
   end
 
   # Copy in the user's tools if they exists
