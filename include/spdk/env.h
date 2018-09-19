@@ -516,6 +516,7 @@ struct spdk_ring;
 enum spdk_ring_type {
 	SPDK_RING_TYPE_SP_SC,		/* Single-producer, single-consumer */
 	SPDK_RING_TYPE_MP_SC,		/* Multi-producer, single-consumer */
+	SPDK_RING_TYPE_MP_MC,		/* Multi-producer, multi-consumer */
 };
 
 /**
