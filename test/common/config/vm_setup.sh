@@ -179,7 +179,7 @@ function install_vpp()
             echo "vpp setup already done."
         else
             echo "%_topdir  $HOME/vpp_setup/src/rpm" >> ~/.rpmmacros
-            sudo dnf install perl-generators
+            sudo dnf install -y perl-generators
             mkdir -p ~/vpp_setup/src/rpm
             mkdir -p vpp_setup/src/rpm/BUILD vpp_setup/src/rpm/RPMS vpp_setup/src/rpm/SOURCES \
             vpp_setup/src/rpm/SPECS vpp_setup/src/rpm/SRPMS
