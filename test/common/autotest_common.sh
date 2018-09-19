@@ -101,6 +101,13 @@ if [ `uname -s` = "Linux" ]; then
 	export HUGEMEM=8192
 fi
 
+# BlobFS tests require at least 5GB of memory on socket #0, so instead of
+# distributing hugepages 50/50 between two sockets, allocate them all on
+# the first one.
+if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+        export HUGENODE=0
+fi
+
 DEFAULT_RPC_ADDR=/var/tmp/spdk.sock
 
 case `uname` in
@@ -688,9 +695,17 @@ function autotest_cleanup()
 function freebsd_update_contigmem_mod()
 {
 	if [ `uname` = FreeBSD ]; then
+		local contigmem_path
+
 		kldunload contigmem.ko || true
-		cp -f $rootdir/dpdk/build/kmod/contigmem.ko /boot/modules/
-		cp -f $rootdir/dpdk/build/kmod/contigmem.ko /boot/kernel/
+		if [ ! -z "$WITH_DPDK_DIR" ]; then
+			contigmem_path="$WITH_DPDK_DIR/kmod/contigmem.ko"
+		else
+			contigmem_path="$rootdir/dpdk/build/kmod/contigmem.ko"
+		fi
+
+		cp -f "$contigmem_path" /boot/modules/
+		cp -f "$contigmem_path" /boot/kernel/
 	fi
 }
 

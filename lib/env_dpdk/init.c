@@ -267,14 +267,6 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
-	/* SPDK holds off with using the new memory management model just yet */
-	args = spdk_push_arg(args, &argcount, _sprintf_alloc("--legacy-mem"));
-	if (args == NULL) {
-		return -1;
-	}
-#endif
-
 	if (opts->num_pci_addr) {
 		size_t i;
 		char bdf[32];
