@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f57ed681_c90d7e3c",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-19T19:45:52Z",
+      "side": 1,
+      "message": "Is it valid to not pass an ops structure here?\n\nI\u0027m even questioning that we used to seemingly allow this to be called with a NULL notify_cb.\n\nI guess I\u0027m thinking that all of this stuff only works and is only useful if a notify_cb is provided.  I think we should tighten this up and require it.\n\nAt the beginning of this function, you can do:\n\nif (ops \u003d\u003d NULL || ops-\u003enotify_cb \u003d\u003d NULL) {\n  SPDK_ERRLOG(\"something\\n\");\n  assert(false);\n  return NULL;\n}",
+      "revId": "49e3d9d9aa96d654830fe3a3f9e33dc02f9b460f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
