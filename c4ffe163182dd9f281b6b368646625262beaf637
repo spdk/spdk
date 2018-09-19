@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3306b714_e931a05b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T08:06:29Z",
+      "side": 1,
+      "message": "this doesn\u0027t require performance but is fine to me.",
+      "range": {
+        "startLine": 204,
+        "startChar": 7,
+        "endLine": 204,
+        "endChar": 13
+      },
+      "revId": "c4ffe163182dd9f281b6b368646625262beaf637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
