@@ -200,7 +200,6 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	core = nvmf_tgt_get_qpair_core(qpair);
 
 	pg = &g_poll_groups[core];
-	assert(pg != NULL);
 
 	event = spdk_event_allocate(core, nvmf_tgt_poll_group_add, qpair, pg);
 	spdk_event_call(event);
@@ -229,7 +228,6 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 	struct nvmf_tgt_poll_group *pg;
 
 	pg = &g_poll_groups[spdk_env_get_current_core()];
-	assert(pg != NULL);
 
 	spdk_nvmf_poll_group_destroy(pg->group);
 	pg->group = NULL;
@@ -251,7 +249,6 @@ nvmf_tgt_create_poll_group(void *ctx)
 	struct nvmf_tgt_poll_group *pg;
 
 	pg = &g_poll_groups[spdk_env_get_current_core()];
-	assert(pg != NULL);
 
 	pg->group = spdk_nvmf_poll_group_create(g_spdk_nvmf_tgt);
 	assert(pg->group != NULL);
