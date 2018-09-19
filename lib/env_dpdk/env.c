@@ -366,6 +366,9 @@ spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
 	case SPDK_RING_TYPE_MP_SC:
 		flags = RING_F_SC_DEQ;
 		break;
+	case SPDK_RING_TYPE_MP_MC:
+		flags = 0;
+		break;
 	default:
 		return NULL;
 	}
@@ -393,14 +396,14 @@ spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
 {
 	int rc;
 #if RTE_VERSION < RTE_VERSION_NUM(17, 5, 0, 0)
-	rc = rte_ring_mp_enqueue_bulk((struct rte_ring *)ring, objs, count);
+	rc = rte_ring_enqueue_bulk((struct rte_ring *)ring, objs, count);
 	if (rc == 0) {
 		return count;
 	}
 
 	return 0;
 #else
-	rc = rte_ring_mp_enqueue_bulk((struct rte_ring *)ring, objs, count, NULL);
+	rc = rte_ring_enqueue_bulk((struct rte_ring *)ring, objs, count, NULL);
 	return rc;
 #endif
 }
@@ -409,8 +412,8 @@ size_t
 spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 {
 #if RTE_VERSION < RTE_VERSION_NUM(17, 5, 0, 0)
-	return rte_ring_sc_dequeue_burst((struct rte_ring *)ring, objs, count);
+	return rte_ring_dequeue_burst((struct rte_ring *)ring, objs, count);
 #else
-	return rte_ring_sc_dequeue_burst((struct rte_ring *)ring, objs, count, NULL);
+	return rte_ring_dequeue_burst((struct rte_ring *)ring, objs, count, NULL);
 #endif
 }
