@@ -36,5 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = bdev_malloc.c bdev_malloc_rpc.c
 LIBNAME = bdev_malloc
+LOCAL_SYS_LIBS = -luuid
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
