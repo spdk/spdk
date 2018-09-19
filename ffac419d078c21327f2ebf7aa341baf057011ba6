@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9e61bad_38af4a1f",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T07:42:34Z",
+      "side": 1,
+      "message": "this is not needed anymore?",
+      "range": {
+        "startLine": 57,
+        "startChar": 1,
+        "endLine": 57,
+        "endChar": 22
+      },
+      "revId": "ffac419d078c21327f2ebf7aa341baf057011ba6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e57d001f_fdb490ab",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T07:42:34Z",
+      "side": 1,
+      "message": "this is not needed anymore?",
+      "range": {
+        "startLine": 206,
+        "startChar": 55,
+        "endLine": 206,
+        "endChar": 75
+      },
+      "revId": "ffac419d078c21327f2ebf7aa341baf057011ba6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b119dcc9_6bbe884b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T07:42:34Z",
+      "side": 1,
+      "message": "this is not needed anymore?",
+      "range": {
+        "startLine": 212,
+        "startChar": 1,
+        "endLine": 212,
+        "endChar": 33
+      },
+      "revId": "ffac419d078c21327f2ebf7aa341baf057011ba6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6597a655_e9c86ef4",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T07:42:34Z",
+      "side": 1,
+      "message": "Now you may be able to inline blk_request_queue_io to here? blk_request_queue_io() is called only here and now very simple.",
+      "revId": "ffac419d078c21327f2ebf7aa341baf057011ba6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
