@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a417e5aa_100b19a2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1178,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-19T22:10:38Z",
+      "side": 1,
+      "message": "Why exactly do we need this check inside the condition of stopping early because we ran out of child IOVs?",
+      "revId": "6cabc4a45dced0d8ec6f0b33b4869d0ae614d6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
