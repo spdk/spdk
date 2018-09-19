@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d4645c6_50397c0f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T18:08:02Z",
+      "side": 1,
+      "message": "Our coding style requires that variables be declared at the top of a scope, but not necessarily at the top of a function. One good practice is to declare variables at the top of a loop if the variable is only used within the loop. I\u0027m mostly suggesting this because this function currently has a lot of stack variables which usually indicates that it can either be simplified, broken up into smaller functions, or both.",
+      "revId": "1c669bf634d02d263be45c7369f30c26a22411c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc4fcdb4_c5c5e2dd",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T18:08:02Z",
+      "side": 1,
+      "message": "The two lines here and the one on line 651 are all part of the broader loop condition. I\u0027ve found it to be best to gather all of the increments/loop math to either the beginning or end of the loop. In this case, I\u0027d move these 3 statements right before line 687.",
+      "revId": "1c669bf634d02d263be45c7369f30c26a22411c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65759ae8_c8549d2a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T18:08:02Z",
+      "side": 1,
+      "message": "Extra whitespace",
+      "revId": "1c669bf634d02d263be45c7369f30c26a22411c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba06f166_c5b44305",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T18:08:02Z",
+      "side": 1,
+      "message": "This comment doesn\u0027t apply to the \u0027default\u0027 case, which includes other things like NVMe passthru. Move the comment up.",
+      "revId": "1c669bf634d02d263be45c7369f30c26a22411c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
