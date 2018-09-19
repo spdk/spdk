@@ -36,5 +36,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = bdev_aio.c bdev_aio_rpc.c
 LIBNAME = bdev_aio
+ifeq ($(OS),Linux)
+LOCAL_SYS_LIBS = -laio
+endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
