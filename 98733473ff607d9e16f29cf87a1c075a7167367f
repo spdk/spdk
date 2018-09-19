@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c183cc00_afc2bf28",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-19T05:26:20Z",
+      "side": 1,
+      "message": "The comments above says only using 1 subsystem for softRoce test machine.  I\u0027m not sure this change can involve any potential issue?",
+      "revId": "98733473ff607d9e16f29cf87a1c075a7167367f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
