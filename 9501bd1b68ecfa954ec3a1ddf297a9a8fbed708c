@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e292533_5bacce66",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-19T14:41:44Z",
+      "side": 1,
+      "message": "is tmp_namespaces really needed?\nYou could just do for namespace in namespaces.split()",
+      "range": {
+        "startLine": 52,
+        "startChar": 12,
+        "endLine": 52,
+        "endChar": 44
+      },
+      "revId": "9501bd1b68ecfa954ec3a1ddf297a9a8fbed708c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "458521c6_f369d372",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-19T14:41:44Z",
+      "side": 1,
+      "message": "How about using try/catch here instead of if\u0027s and default values like nsid\u003d0? Something like:\n\ntry:\n  bdev_name, nsid \u003d namespace.split()\n  ns_params[nsid] \u003d nsid\nexcept ValueError:\n  bdev_name \u003d namespace\nfinally:\n  ns_params[bdev_name] \u003d bdev_name",
+      "range": {
+        "startLine": 54,
+        "startChar": 16,
+        "endLine": 60,
+        "endChar": 43
+      },
+      "revId": "9501bd1b68ecfa954ec3a1ddf297a9a8fbed708c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
