@@ -16,6 +16,24 @@
       "revId": "6cabc4a45dced0d8ec6f0b33b4869d0ae614d6e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b250f12_6a9736b0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1178,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-19T23:09:18Z",
+      "side": 1,
+      "message": "IO submission must restart from the position saved in bdev_io after child IOVs become available. The position is saved as not byte address but block address now.\n\nThe position saved in bdev_io is updated at line 1202 and 1203.\n\nOn the other hand, IOV is based on byte address. Hence conversion is done at line 1186.\n\nIf remaining is not multiple of block size, correct conversion is not possible. Hence check is done here.\n\nHolding the position as byte address in bdev_io may be possible but using block address will be reasonable because bdev is block device.",
+      "parentUuid": "a417e5aa_100b19a2",
+      "revId": "6cabc4a45dced0d8ec6f0b33b4869d0ae614d6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
