@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30ff0f0f_bd4cf090",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-19T21:41:56Z",
+      "side": 1,
+      "message": "Let\u0027s change this to \"NVMe-oF RDMA tracepoints\".  I just want to make it clear that these aren\u0027t generic RDMA tracepoints - they are specific to NVMe-oF.",
+      "revId": "28c10272fb8f27ee2dfe2991e4af8a35bb7cd3ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ef96d36_99e3d97e",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-19T21:41:56Z",
+      "side": 1,
+      "message": "This list has been extended to include QP operations and IBV/CM async events.\n\nI would just include one example here.  You already mention lib/nvmf/rdma.c so readers can go there for more details.  That will help avoid these lists getting out of sync between docs and code.",
+      "revId": "28c10272fb8f27ee2dfe2991e4af8a35bb7cd3ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77dfda1d_9899c6e7",
+        "filename": "doc/nvmf_tracing.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-19T21:41:56Z",
+      "side": 1,
+      "message": "This function signature has changed.  The is_alias parameter was removed.\n\nBut similar to above, I think you should just show an example of one event description.",
+      "revId": "28c10272fb8f27ee2dfe2991e4af8a35bb7cd3ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
