@@ -606,7 +606,6 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	return cc.bits.en != 0;
 }
 
-#ifdef DEBUG
 static const char *
 nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 {
@@ -664,7 +663,6 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 	}
 	return "unknown";
 };
-#endif /* DEBUG */
 
 static void
 nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
@@ -672,12 +670,12 @@ nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 {
 	ctrlr->state = state;
 	if (timeout_in_ms == NVME_TIMEOUT_INFINITE) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "setting state to %s (no timeout)\n",
-			      nvme_ctrlr_state_string(ctrlr->state));
+		SPDK_ERRLOG("setting state to %s (no timeout)\n",
+			    nvme_ctrlr_state_string(ctrlr->state));
 		ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
-			      nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
+		SPDK_ERRLOG("setting state to %s (timeout %" PRIu64 " ms)\n",
+			    nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
 		ctrlr->state_timeout_tsc = spdk_get_ticks() + (timeout_in_ms * spdk_get_ticks_hz()) / 1000;
 	}
 }
@@ -1785,10 +1783,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_ENABLE:
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Setting CC.EN = 1\n");
+		SPDK_ERRLOG("Setting CC.EN = 1\n");
 		rc = nvme_ctrlr_enable(ctrlr);
 		if (rc != 1) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "nvme_ctrlr_enable() failed with rc=%d\n", rc);
+			SPDK_ERRLOG("nvme_ctrlr_enable() failed with rc=%d\n", rc);
 			if (rc != 0) {
 				nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 				return rc;
@@ -1806,7 +1804,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		if (csts.bits.rdy == 1) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
+			SPDK_ERRLOG("CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
 			/*
 			 * The controller has been enabled.
 			 *  Perform the rest of initialization serially.

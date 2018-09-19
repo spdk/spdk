@@ -72,6 +72,9 @@ timing_exit cleanup
 
 # set up huge pages
 timing_enter afterboot
+if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+        export HUGEMEM=10240
+fi
 ./scripts/setup.sh
 timing_exit afterboot
 
