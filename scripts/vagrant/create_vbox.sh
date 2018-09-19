@@ -26,6 +26,9 @@ display_help() {
 	echo "  --vhost-host-dir=<path>   directory path with vhost test dependencies"
 	echo "                            (test VM qcow image, fio binary, ssh keys)"
 	echo "  --vhost-vm-dir=<path>     directory where to put vhost dependencies in VM"
+	echo "  --use-1G-HP               configure 1G huge pages in VM"
+	echo "  --add-virtio-scsi         add VirtioSCSI disk to VM. Used by vhost initiator tests."
+	echo "  --add-virtio-blk          add VirtioBLK disk to VM. Used by vhost initiator tests."
 	echo "  -r dry-run"
 	echo "  -h help"
 	echo "  -v verbose"
@@ -49,6 +52,9 @@ DRY_RUN=0
 SPDK_VAGRANT_DISTRO="distro"
 SPDK_VAGRANT_VMCPU=4
 SPDK_VAGRANT_VMRAM=4096
+SPDK_GIG_HUGEPAGES=false
+ADD_VIRTIO_SCSI=false
+ADD_VIRTIO_BLK=false
 OPTIND=1
 
 while getopts ":n:s:x:p:vrh-:" opt; do
@@ -57,6 +63,9 @@ while getopts ":n:s:x:p:vrh-:" opt; do
 		case "${OPTARG}" in
 			vhost-host-dir=*) VHOST_HOST_DIR="${OPTARG#*=}" ;;
 			vhost-vm-dir=*) VHOST_VM_DIR="${OPTARG#*=}" ;;
+			use-1G-HP) SPDK_GIG_HUGEPAGES=true ;;
+			add-virtio-scsi) ADD_VIRTIO_SCSI=true; ;;
+			add-virtio-blk) ADD_VIRTIO_BLK=true; ;;
 			*) echo "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -133,6 +142,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
 	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
 	echo SPDK_VAGRANT_HTTP_PROXY=$SPDK_VAGRANT_HTTP_PROXY
+	echo SPDK_GIG_HUGEPAGES=$SPDK_GIG_HUGEPAGES
 	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
 	echo VHOST_VM_DIR=$VHOST_VM_DIR
 	echo
@@ -141,6 +151,9 @@ fi
 export SPDK_VAGRANT_HTTP_PROXY
 export SPDK_VAGRANT_VMCPU
 export SPDK_VAGRANT_VMRAM
+export SPDK_GIG_HUGEPAGES
+export ADD_VIRTIO_SCSI
+export ADD_VIRTIO_BLK
 export SPDK_DIR
 
 if [ -n "$PROVIDER" ]; then
@@ -183,6 +196,11 @@ if [ ${DRY_RUN} != 1 ]; then
 		fi
 	fi
 	vagrant up $provider
+
+	if $SPDK_GIG_HUGEPAGES; then
+		vagrant reload
+	fi
+
 	echo ""
 	echo "  SUCCESS!"
 	echo ""
