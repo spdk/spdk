@@ -288,7 +288,7 @@ if echo $CONF | grep -q vpp; then
         echo "vpp setup already done."
     else
         echo "%_topdir  $HOME/vpp_setup/src/rpm" >> ~/.rpmmacros
-        sudo dnf install perl-generators
+        sudo dnf install -y perl-generators
         mkdir -p ~/vpp_setup/src/rpm
         cd ~/vpp_setup/src/rpm
         mkdir -p BUILD RPMS SOURCES SPECS SRPMS
