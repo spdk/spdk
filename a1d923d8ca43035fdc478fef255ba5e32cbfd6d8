@@ -68,6 +68,30 @@
       "revId": "a1d923d8ca43035fdc478fef255ba5e32cbfd6d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f2de3c7_cd38223b",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-19T07:00:32Z",
+      "side": 1,
+      "message": "No need to check if root, sudo with root will work just fine",
+      "parentUuid": "fc0c6112_60e40a8c",
+      "range": {
+        "startLine": 109,
+        "startChar": 1,
+        "endLine": 111,
+        "endChar": 83
+      },
+      "revId": "a1d923d8ca43035fdc478fef255ba5e32cbfd6d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

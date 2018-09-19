@@ -16,6 +16,24 @@
       "revId": "34ccee3683c974dcf29a6b07e9878bcc1e896f3a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b57c5962_e5d35618",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-19T07:00:32Z",
+      "side": 1,
+      "message": "Done:)",
+      "parentUuid": "f9b41748_b110a38c",
+      "revId": "34ccee3683c974dcf29a6b07e9878bcc1e896f3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
