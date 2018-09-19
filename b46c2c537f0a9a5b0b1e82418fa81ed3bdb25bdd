@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "230968f6_687e1c4c",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1401,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-19T04:50:18Z",
+      "side": 1,
+      "message": "I don\u0027t think the two states can help with anything, if you want to see the execution of Read/Write you should add more states here. And if you think the two states are not used for now, just remove it.",
+      "revId": "b46c2c537f0a9a5b0b1e82418fa81ed3bdb25bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
