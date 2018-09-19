@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "52d60635_de40ae2d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-19T09:26:24Z",
+      "side": 1,
+      "message": "We probably don\u0027t want this to be errlog, but a vhost debuglog - just like the rest of the logs in this file.\n\nAlso, this doesn\u0027t match the log style with the current process_blk_request() handling. For now I\u0027d suggest to copy the entire block from lines (#363 - #368).",
+      "range": {
+        "startLine": 199,
+        "startChar": 1,
+        "endLine": 201,
+        "endChar": 2
+      },
+      "revId": "c4ffe163182dd9f281b6b368646625262beaf637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3306b714_e931a05b",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 13
