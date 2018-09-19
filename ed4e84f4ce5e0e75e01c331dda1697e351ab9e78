@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "766375d3_2ea6938e",
+        "filename": "scripts/vagrant/Vagrantfile_vhost_vm",
+        "patchSetId": 7
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-19T08:15:34Z",
+      "side": 1,
+      "message": "what\u0027s inside a fresh /etc/network/interfaces?\n\nwhy are those two lines needed?",
+      "revId": "ed4e84f4ce5e0e75e01c331dda1697e351ab9e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e28312a_2ee90638",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-19T08:15:34Z",
+      "side": 1,
+      "message": "Can we use something more descriptive than \u0027-x\u0027?\nHow about \u0027--http-proxy\u0027?",
+      "range": {
+        "startLine": 28,
+        "startChar": 9,
+        "endLine": 28,
+        "endChar": 11
+      },
+      "revId": "ed4e84f4ce5e0e75e01c331dda1697e351ab9e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d1fa8a3_33e5e87a",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-19T08:15:34Z",
+      "side": 1,
+      "message": "xx",
+      "range": {
+        "startLine": 77,
+        "startChar": 18,
+        "endLine": 77,
+        "endChar": 29
+      },
+      "revId": "ed4e84f4ce5e0e75e01c331dda1697e351ab9e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
