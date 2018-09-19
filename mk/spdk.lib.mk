@@ -64,6 +64,7 @@ $(LIB): $(OBJS)
 
 install: all
 	$(INSTALL_LIB)
+	$(INSTALL_SHARED_LIB)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
 
