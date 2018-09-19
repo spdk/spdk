@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8a8fd1a_f5c116df",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1104,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-19T07:42:13Z",
+      "side": 1,
+      "message": "shouldn\u0027t we wait for all I/O to finish?\n\nOtherwise what\u0027s the point of this poller if it unregisters itself after the first tick?",
+      "revId": "15f3ad950e4aa494991fa9d05a2cdbe9fa870fd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
