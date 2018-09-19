@@ -16,6 +16,24 @@
       "revId": "49e3d9d9aa96d654830fe3a3f9e33dc02f9b460f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d0aeadf_758a1fa7",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-19T20:23:23Z",
+      "side": 1,
+      "message": "We actually do this in spdk_mem_map_init when initializing g_mem_reg_map. That map is used to track the number of times a virtual address has been mapped. It historically didn\u0027t use a notify cb.\nWould you like me to add a notify_cb to that map in this patch or series?",
+      "parentUuid": "f57ed681_c90d7e3c",
+      "revId": "49e3d9d9aa96d654830fe3a3f9e33dc02f9b460f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
