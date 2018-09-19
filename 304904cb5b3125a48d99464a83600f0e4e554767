@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77feb4d7_4a9f5093",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T20:33:11Z",
+      "side": 1,
+      "message": "This is looking better, but I think I see another problem. If the poll group fails on creation, g_num_poll_groups won\u0027t be incremented. But g_poll_groups and the number of allowed cores is unchanged. That means here we won\u0027t end up iterating over all of the possible poll groups and may fail in cases where it really should succeed.\n\nInstead, this should iterate SPDK_COUNTOF(g_poll_groups) times. It also turns out that g_num_poll_groups isn\u0027t needed at all and can be removed.",
+      "revId": "304904cb5b3125a48d99464a83600f0e4e554767",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cc55a4a_6a11c29e",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T20:33:11Z",
+      "side": 1,
+      "message": "No poll groups exist",
+      "revId": "304904cb5b3125a48d99464a83600f0e4e554767",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
