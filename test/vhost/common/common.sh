@@ -159,11 +159,11 @@ function spdk_vhost_run()
 		return 1
 	fi
 
-	local cmd="$vhost_app -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock $no_pci"
+	local cmd="$vhost_app -L nvme -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock $no_pci"
 	if [[ -n "$vhost_conf_path" ]]; then
 		cp $vhost_conf_template $vhost_conf_file
 		$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
-		cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock $no_pci"
+		cmd="$vhost_app -L nvme -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock $no_pci"
 	fi
 
 	notice "Loging to:   $vhost_log_file"
@@ -174,6 +174,7 @@ function spdk_vhost_run()
 	cd $vhost_dir; $cmd &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
+	bash -c "sleep 8 && pmap $vhost_pid" &
 
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
