@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64de7313_0e7fa16b",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T17:44:30Z",
+      "side": 1,
+      "message": "I\u0027d like to suggest some alternate variable names that I find more intuitive:\n\nrequested_size -\u003e total_size\nlocal_size -\u003e cur_size\noriginal_translation -\u003e start_translation\nprevious_translation -\u003e prev_translation",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1ec8fcb_2296aae6",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T17:44:30Z",
+      "side": 1,
+      "message": "I think you actually need to set *size to 2MB here. That way when the default translation is returned it correctly indicates it\u0027s valid for 2MB.",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "733e4ae4_aec8fb43",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T17:44:30Z",
+      "side": 1,
+      "message": "I still think you can use a do {} while() loop to remove the duplicated code on lines 501-510 and 523-532.",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fba9407_f82342d6",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T17:44:30Z",
+      "side": 1,
+      "message": "You can do\n\nif (size \u003d\u003d NULL || map-\u003eops.are_contiguous \u003d\u003d NULL) {\n    return map_2mb-\u003etranslation_2mb;\n}\n\nand then remove a layer of indentation below, assuming you took my above comment to default size to 2MB.",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e27f72e0_beb5c30d",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T17:44:30Z",
+      "side": 1,
+      "message": "I think you just want to break out of the loop here, make sure size is set to the total size up to this point, and return original_translation.",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef1a3d41_5bdd40b7",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T17:44:30Z",
+      "side": 1,
+      "message": "If you just break here (in combination with the comment on line 540) you can unify the updating of *size and returning of original_translation.",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96ac134d_b33268c8",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-19T17:44:30Z",
+      "side": 1,
+      "message": "*size \u003d local_size",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
