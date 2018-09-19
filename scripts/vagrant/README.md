@@ -109,6 +109,34 @@ This arrangement allows the provisioning of multiple, different VMs within that 
   $ vagrant ssh
 ```
 
+## Additional options for creating a Virtual Box
+
+Additional options are supported by create_vbox.sh script in order to better customize VM for the tests which will be run.
+
+### Provision VM with 1GB Hugepages
+
+```
+--use-1G-HP               configure 1G huge pages in VM
+```
+
+This options allows to use 1GB hugepages instead of standard 2MB hugepages.
+GRUB_CMDLINE_LINUX field in /etc/default/grub will be modified and GRUB on system will be appropriately updated.
+Currently supports only Ubuntu and Fedora images provisioned with libvirt provider.
+
+### Provision VM with Virtio SCSI & Virtio BLK disks
+
+```
+--add-virtio-disks        add VirtioSCSI and VirtioBLK disks to VM
+```
+Attaches Virtio disks to the VM. Virtio SCSI and BLK disks are used in one of the Vhost Initiator tests.
+Using this option is not obligatory as it only extends initiator tests and Virtio disks are not obligatory.
+Currently supports only images provisioned with libvirt provider.
+
+Prior to using this function a separate script should be called in order to create disk image files in libvirt directory:
+```
+    $ spdk/scripts/vagrant/create_virtio_img.sh
+```
+
 ## Finish VM Initializtion
 
 A copy of the `spdk` repository you cloned will exist in the `spdk_repo` directory of the `/home/vagrant` user account. After using `vagrant ssh` to enter your VM you must complete the initialization of your VM by running the `scripts/vagrant/update.sh` script. For example:
