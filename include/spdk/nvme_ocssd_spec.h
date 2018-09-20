@@ -157,7 +157,7 @@ struct spdk_ocssd_geometry_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_ocssd_geometry_data) == 4096, "Incorrect size");
 
-struct spdk_ocssd_chunk_information {
+struct spdk_ocssd_chunk_information_entry {
 	/** Chunk State */
 	struct {
 		/** if set to 1 chunk is free */
@@ -208,7 +208,105 @@ struct spdk_ocssd_chunk_information {
 	/** Write Pointer */
 	uint64_t wp;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_ocssd_chunk_information) == 32, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_ocssd_chunk_information_entry) == 32, "Incorrect size");
+
+struct spdk_ocssd_chunk_notification_entry {
+
+	/**
+	 * This is a 64-bit incrementing notification count, indicating a
+	 * unique identifier for this notification. The counter begins at 1h
+	 * and is incremented for each unique event
+	 */
+	uint64_t		nc;
+
+	/** This field points to the chunk that has its state updated */
+	uint64_t		lba;
+
+	/**
+	 * This field indicates the namespace id that the event is associated
+	 * with
+	 */
+	uint32_t		nsid;
+
+	/** Field that indicate the state of the block */
+	struct {
+
+		/**
+		 * If set to 1, then the error rate of the chunk has been
+		 * changed to low
+		 */
+		uint8_t error_rate_low : 1;
+
+		/**
+		 * If set to 1, then the error rate of the chunk has been
+		 * changed to medium
+		 */
+		uint8_t error_rate_medium : 1;
+
+		/**
+		 * If set to 1, then the error rate of the chunk has been
+		 * changed to high
+		 */
+		uint8_t error_rate_high : 1;
+
+		/**
+		 * If set to 1, then the error rate of the chunk has been
+		 * changed to unrecoverable
+		 */
+		uint8_t unrecoverable : 1;
+
+		/**
+		 * If set to 1, then the chunk has been refreshed by the
+		 * device
+		 */
+		uint8_t refreshed : 1;
+
+		uint8_t rsvd : 3;
+
+		/**
+		 * If set to 1 then the chunk's wear-level index is outside
+		 * the average wear-level index threshold defined by the
+		 * controller
+		 */
+		uint8_t wit_exceeded : 1;
+
+		uint8_t rsvd2 : 7;
+	} state;
+
+	/**
+	 * The address provided is covering either logical block, chunk, or
+	 * parallel unit
+	 */
+	struct {
+
+		/** If set to 1, the LBA covers the logical block */
+		uint8_t lblk : 1;
+
+		/** If set to 1, the LBA covers the respecting chunk */
+		uint8_t chunk : 1;
+
+		/**
+		 * If set to 1, the LBA covers the respecting parallel unit
+		 * including all chunks
+		 */
+		uint8_t pu : 1;
+
+		uint8_t rsvd : 5;
+	} mask;
+
+	uint8_t			rsvd[9];
+
+	/**
+	 * This field indicates the number of logical chunks to be written.
+	 * This is a 0's based value. This field is only valid if mask bit 0 is
+	 * set. The number of blocks addressed shall not be outside the boundary
+	 * of the specified chunk.
+	 */
+	uint16_t		nlb;
+
+	uint8_t			rsvd2[30];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_ocssd_chunk_notification_entry) == 64, "Incorrect size");
 
 /**
  * Vector completion queue entry
@@ -249,7 +347,10 @@ enum spdk_ocssd_io_opcode {
  */
 enum spdk_ocssd_log_page {
 	/** Chunk Information */
-	SPDK_OCSSD_LOG_CHUNK_INFO	= 0xCA,
+	SPDK_OCSSD_LOG_CHUNK_INFO		= 0xCA,
+
+	/** Chunk Notification Log */
+	SPDK_OCSSD_LOG_CHUNK_NOTIFICATION	= 0xD0,
 };
 
 /**

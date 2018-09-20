@@ -78,7 +78,7 @@ static uint64_t g_discovery_page_numrec;
 
 static struct spdk_ocssd_geometry_data geometry_data;
 
-static struct spdk_ocssd_chunk_information g_ocssd_chunk_info_page[NUM_CHUNK_INFO_ENTRIES ];
+static struct spdk_ocssd_chunk_information_entry g_ocssd_chunk_info_page[NUM_CHUNK_INFO_ENTRIES ];
 
 static bool g_hex_dump = false;
 
@@ -580,7 +580,7 @@ print_ascii_string(const void *buf, size_t size)
 }
 
 static void
-print_ocssd_chunk_info(struct spdk_ocssd_chunk_information *chk_info, int chk_num)
+print_ocssd_chunk_info(struct spdk_ocssd_chunk_information_entry *chk_info, int chk_num)
 {
 	int i;
 	char *cs_str, *ct_str;
