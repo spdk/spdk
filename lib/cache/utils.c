@@ -31,67 +31,38 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
- */
+#include "spdk/stdinc.h"
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+#include "utils.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+static char *cache_modes[ocf_cache_mode_max] = {
+	[ocf_cache_mode_wt] = "wt",
+	[ocf_cache_mode_wb] = "wb",
+	[ocf_cache_mode_wa] = "wa",
+	[ocf_cache_mode_pt] = "pt",
+	[ocf_cache_mode_wi] = "wi"
+};
 
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+int
+ocf_get_cache_mode(const char *cache_mode)
+{
+	int mode = -1, i;
 
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
+	for (i = 0; i < ocf_cache_mode_max; i++) {
+		if (0 == strcmp(cache_mode, cache_modes[i])) {
+			return i;
+		}
+	}
 
-/* GNU extension */
-#include <getopt.h>
-
-#ifdef __cplusplus
+	return mode;
 }
-#endif
 
-#endif /* SPDK_STDINC_H */
+const char *
+ocf_get_cache_modename(int mode)
+{
+	if (mode >= 0 && mode < ocf_cache_mode_max) {
+		return cache_modes[mode];
+	} else {
+		return NULL;
+	}
+}
