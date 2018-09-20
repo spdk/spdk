@@ -16,6 +16,24 @@
       "revId": "15f3ad950e4aa494991fa9d05a2cdbe9fa870fd8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69cc0ffb_8cba1847",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1104,
+      "author": {
+        "id": 1011884
+      },
+      "writtenOn": "2018-09-20T02:22:27Z",
+      "side": 1,
+      "message": "i didn\u0027t get your point, do you mean we need to put the io_channel in bdev_io_wait?",
+      "parentUuid": "e8a8fd1a_f5c116df",
+      "revId": "15f3ad950e4aa494991fa9d05a2cdbe9fa870fd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
