@@ -340,6 +340,18 @@ spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
 }
 
 int
+spdk_json_write_named_object_begin(struct spdk_json_write_ctx *w, const char *name)
+{
+	return 0;
+}
+
+int
+spdk_json_write_named_array_begin(struct spdk_json_write_ctx *w, const char *name)
+{
+	return 0;
+}
+
+int
 spdk_json_write_array_end(struct spdk_json_write_ctx *w)
 {
 	return 0;
