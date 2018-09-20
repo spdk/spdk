@@ -644,10 +644,12 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 	struct nbd_io *io;
 	int ret = 0;
 
-	io = TAILQ_FIRST(&nbd->executed_io_list);
-	if (io == NULL) {
+	if (TAILQ_EMPTY(&nbd->executed_io_list)) {
 		return 0;
 	}
+
+	io = TAILQ_FIRST(&nbd->executed_io_list);
+	assert(io != NULL);
 
 	/* resp error and handler are already set in io_done */
 
