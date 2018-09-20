@@ -62,6 +62,8 @@ function usage()
 	echo "                           No path required."
 	echo " vtune                     Required to profile I/O under Intel VTune Amplifier XE."
 	echo "                           example: /opt/intel/vtune_amplifier_xe_version"
+	echo " cas                       Required to build vbdev CAS module."
+	echo "                           example: /usr/src/ocf/"
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -263,6 +265,15 @@ for i in "$@"; do
 		--without-igb-uio-driver)
 			CONFIG[IGB_UIO_DRIVER]=n
 			;;
+		--with-cas=*)
+			CONFIG[CAS]=y
+			check_dir "$i"
+			CONFIG[OCF_DIR]=$(readlink -f ${i#*=})
+			;;
+		--without-cas)
+			CONFIG[CAS]=n
+			CONFIG[OCF_DIR]=
+			;;
 		--)
 			break
 			;;
@@ -383,6 +394,31 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 	fi
 fi
 
+if [[ "${CONFIG[CAS]}" = "y" ]]; then
+	if [ -z "${CONFIG[OCF_DIR]}" ]; then
+		echo "When Cache is enabled, you must specify the OCF directory using --with-cas=path"
+		exit 1
+	fi
+
+	if [ -f "${CONFIG[OCF_DIR]}"/Makefile ]; then
+		echo "configuring CAS..."
+		rootdir=$(readlink -f $(dirname $0))
+
+		if pushd "${CONFIG[OCF_DIR]}" > /dev/null && \
+		   make inc O="$rootdir" && \
+		   popd > /dev/null
+		then
+			echo "done configuring CAS"
+		else
+			echo "Could not configure CAS"
+			exit 1
+		fi
+	else
+		echo "OCF directory is missing Makefile"
+		exit 1
+	fi
+fi
+
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
 if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" CONFIG) -ne ${#CONFIG[@]} ]; then
@@ -393,6 +429,9 @@ if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" CONFIG) -ne ${#CONFIG[@]} ]; then
 		<(sed -r -e '/^\s*$/d; /^\s*#.*/d; s/(CONFIG_[[:alnum:]_]+)=.*/\1/g' CONFIG | sort) \
 		<(printf "CONFIG_%s\n" ${!CONFIG[@]} | sort)
 	exit 1
+fi
+if [ -n "$CONFIG_CAS" ]; then
+	echo "CONFIG_CAS?=$CONFIG_CAS" >> CONFIG.local
 fi
 
 echo -n "Creating mk/config.mk..."
