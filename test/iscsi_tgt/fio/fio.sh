@@ -99,7 +99,8 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Run the running_config test which will generate a config file from the
 	#  running iSCSI target, then kill and restart the iSCSI target using the
 	#  generated config file
-	running_config
+	# Temporarily disabled
+	# running_config
 fi
 
 # Start hotplug test case.
