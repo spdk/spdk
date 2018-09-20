@@ -31,67 +31,95 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
- */
+#include <ocf/ocf.h>
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+#include "spdk/bdev.h"
+#include "spdk/log.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "ocf_env.h"
+#include "data.h"
+#include "vbdev_cache.h"
 
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+struct bdev_ocf_data *
+opencas_data_alloc(uint32_t iovcnt)
+{
+	struct bdev_ocf_data *data;
 
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
+	data = env_malloc(sizeof(*data), ENV_MEM_NOIO);
+	if (!data) {
+		return NULL;
+	}
 
-/* GNU extension */
-#include <getopt.h>
+	data->seek = 0;
 
-#ifdef __cplusplus
+	if (iovcnt) {
+		data->iovs = env_malloc(sizeof(*data->iovs) * iovcnt, ENV_MEM_NOIO);
+		if (!data->iovs) {
+			env_free(data);
+			return NULL;
+		}
+	}
+
+	data->iovcnt = 0;
+	data->iovalloc = iovcnt;
+
+	return data;
 }
-#endif
 
-#endif /* SPDK_STDINC_H */
+void
+opencas_data_free(struct bdev_ocf_data *data)
+{
+	if (!data) {
+		return;
+	}
+
+	env_free(data->iovs);
+	env_free(data);
+}
+
+void
+_opencas_iovs_add(struct bdev_ocf_data *data, void *base, size_t len)
+{
+	assert(NULL != data);
+	assert(data->iovalloc != -1);
+
+	if (data->iovcnt == data->iovalloc) {
+		/* TODO: Realloc iovs */
+		SPDK_ERRLOG("IOV error");
+	}
+
+	data->iovs[data->iovcnt].iov_base = base;
+	data->iovs[data->iovcnt].iov_len = len;
+	data->iovcnt++;
+}
+
+struct bdev_ocf_data *
+opencas_data_from_spdk_io(void *io_ptr)
+{
+	struct spdk_bdev_io *bdev_io = io_ptr;
+	struct bdev_ocf_data *data;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_READ:
+		ENV_BUG_ON(!bdev_io->u.bdev.iovs);
+		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		break;
+	default:
+		SPDK_ERRLOG("Unsupported IO type %d\n", bdev_io->type);
+		return NULL;
+	}
+
+	data = opencas_data_alloc(0);
+	if (data == NULL) {
+		SPDK_ERRLOG("Memory allocation error\n");
+		return NULL;
+	}
+
+	data->iovs = bdev_io->u.bdev.iovs;
+	data->iovcnt = bdev_io->u.bdev.iovcnt;
+	data->size = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+
+	return data;
+}
