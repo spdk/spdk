@@ -62,6 +62,10 @@ function usage()
 	echo "                           No path required."
 	echo " vtune                     Required to profile I/O under Intel VTune Amplifier XE."
 	echo "                           example: /opt/intel/vtune_amplifier_xe_version"
+	echo " ocf                       Required to build OCF module."
+	echo "                           If argument is directory, interpret it as root of OCF repo"
+	echo "                           If argument is file, interpret it as compiled OCF lib"
+	echo "                           example: /usr/src/ocf/"
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -269,6 +273,14 @@ for i in "$@"; do
 		--without-ftl)
 			CONFIG[FTL]=n
 			;;
+		--with-ocf=*)
+			CONFIG[OCF]=y
+			CONFIG[OCF_PATH]=$(readlink -f ${i#*=})
+			;;
+		--without-ocf)
+			CONFIG[OCF]=n
+			CONFIG[OCF_PATH]=
+			;;
 		--)
 			break
 			;;
@@ -387,6 +399,38 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 		echo --with-reduce requires libpmem.
 		echo Please install then re-run this script.
 		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[OCF]}" = "y" ]]; then
+	if [ -z "${CONFIG[OCF_PATH]}" ]; then
+		echo "When OCF module is enabled, you must specify"
+		echo "the OCF directory or path to OCF library using --with-ocf=path"
+		exit 1
+	fi
+
+	# If OCF_PATH is a file, assume it is a library and use it to compile with
+	if [ -f ${CONFIG[OCF_PATH]} ]; then
+		CONFIG[CUSTOMOCF]=y
+	else
+		CONFIG[CUSTOMOCF]=n
+	fi
+
+	# If OCF_PATH is not a library, we need to do sources export procedure using OCF Makefile
+	if [[ ${CONFIG[CUSTOMOCF]} = "n" ]]; then
+		echo "configuring OCF..."
+		rootdir=$(readlink -f $(dirname $0))
+
+		if pushd "${CONFIG[OCF_PATH]}" > /dev/null && \
+		   make inc O="$rootdir/lib/bdev/ocf/env/" && \
+		   make src O="$rootdir/lib/bdev/ocf/env/" CMD=cp 1>/dev/null && \
+		   popd > /dev/null
+		then
+			echo "done configuring OCF"
+		else
+			echo "Could not configure OCF"
+			exit 1
+		fi
 	fi
 fi
 
