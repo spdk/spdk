@@ -31,67 +31,31 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
- */
+#ifndef OPENCAS_DOBJ_H
+#define OPENCAS_DOBJ_H
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+#include <ocf/ocf.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "ocf_env.h"
+#include "ctx.h"
+#include "data.h"
 
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+struct ocf_io_container {
+	struct ocf_io base;
+	struct bdev_ocf_data *data;
+	struct spdk_io_channel *ch;
+	uint32_t offset;
+	int ref;
+	int rq_cnt;
+	int error;
+};
 
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
+int opencas_dobj_init(void);
+void opencas_dobj_cleanup(void);
 
-/* GNU extension */
-#include <getopt.h>
-
-#ifdef __cplusplus
+static inline struct ocf_io_container *ocf_io_to_bdev_io(struct ocf_io *ocf_io)
+{
+	return container_of(ocf_io, struct ocf_io_container, base);
 }
-#endif
 
-#endif /* SPDK_STDINC_H */
+#endif
