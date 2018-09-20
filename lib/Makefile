@@ -55,6 +55,13 @@ endif
 
 DEPDIRS-iscsi := scsi
 
+ifeq ($(CONFIG_CAS),y)
+DIRS-y += cas
+DIRS-y += cas/ocfenv
+DEPDIRS-cas := cas/ocfenv
+DEPDIRS-bdev += cas
+endif
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
