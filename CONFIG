@@ -121,3 +121,7 @@ CONFIG_IGB_UIO_DRIVER=n
 
 # Build FTL library
 CONFIG_FTL=n
+
+# Enable CAS module
+CONFIG_CAS=n
+CONFIG_OCF_DIR=
