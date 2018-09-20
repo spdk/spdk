@@ -2,6 +2,115 @@
   "comments": [
     {
       "key": {
+        "uuid": "44c8105a_b1ed9f3c",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Seems like nothing is happening in refresh for this node. Do we even need refresh() here at all?",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 32
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ae00b18_fecde7c8",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "space before line break",
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0e4c4e5_0b5d2a1b",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "If these are described as positional then params positions don\u0027t match.\ncommand header sequence is: name, alias, bdev_nam_id_pairs, pg_mappings...etc.\nwhile this description here has different sequence: bdev_pairs, pg_mappings, name,...etc.",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 50
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5c6e59a_110f2886",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Could we move simple assignments like these to top of function?\nBtw, why do we need to do name\u003dname and alias\u003dalias? These variables are already defined.",
+      "range": {
+        "startLine": 106,
+        "startChar": 8,
+        "endLine": 108,
+        "endChar": 69
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32d8eca7_1d4322b2",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "I\u0027m wondering if we could reduce the number of lines caused by these ifs using ternary assignment operator. TBH I don\u0027t really like it in Python, but...\nHow about:\nchap_group \u003d g if g else 0 chap_group \u003d 0?",
+      "range": {
+        "startLine": 109,
+        "startChar": 8,
+        "endLine": 111,
+        "endChar": 26
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93a19000_7e66ea56",
         "filename": "scripts/spdkcli/ui_node_iscsi.py",
         "patchSetId": 16
@@ -179,6 +288,351 @@
         "startChar": 23,
         "endLine": 284,
         "endChar": 36
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ca6f563_749d89f9",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Nothing happens here, do we need refresh in this class?",
+      "range": {
+        "startLine": 289,
+        "startChar": 0,
+        "endLine": 290,
+        "endChar": 32
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87fa32ec_a96fe869",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Nothing happens here, do we need refresh in this class?",
+      "range": {
+        "startLine": 312,
+        "startChar": 0,
+        "endLine": 313,
+        "endChar": 32
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86672f18_ea444446",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Nothing happens here, do we need refresh in this class?",
+      "range": {
+        "startLine": 335,
+        "startChar": 0,
+        "endLine": 336,
+        "endChar": 32
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2de89d3f_6b5dbc5c",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Nothing happens here, do we need refresh in this class?",
+      "range": {
+        "startLine": 406,
+        "startChar": 0,
+        "endLine": 407,
+        "endChar": 32
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d1ce98d_2ca7609a",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Nothing happens here, do we need summary in this class?",
+      "range": {
+        "startLine": 409,
+        "startChar": 0,
+        "endLine": 410,
+        "endChar": 23
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1599adfa_81335b3d",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Originally these lists are quoted and whitespace separated, can we try using my patch for configshell to fix that?",
+      "range": {
+        "startLine": 456,
+        "startChar": 0,
+        "endLine": 460,
+        "endChar": 49
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a7445d8_5e463cfe",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Originally these lists are quoted and whitespace separated, can we try using my patch for configshell to fix that?",
+      "range": {
+        "startLine": 475,
+        "startChar": 0,
+        "endLine": 478,
+        "endChar": 77
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ce59089_9073556b",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Nothing happens in these methods, can they be removed?",
+      "range": {
+        "startLine": 520,
+        "startChar": 0,
+        "endLine": 524,
+        "endChar": 23
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3efca9c0_86c76d20",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Nothing happens here, can this be removed?",
+      "range": {
+        "startLine": 551,
+        "startChar": 0,
+        "endLine": 552,
+        "endChar": 23
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd2203f3_3f9b97b7",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Nothing happens in these methods, can they be removed?",
+      "range": {
+        "startLine": 560,
+        "startChar": 0,
+        "endLine": 564,
+        "endChar": 23
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebd79622_f950b8f3",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Check if we can use original format with my patch - quoted with whitespaces",
+      "range": {
+        "startLine": 586,
+        "startChar": 0,
+        "endLine": 587,
+        "endChar": 84
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5c4fb5c_7f762dcd",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "not needed?",
+      "range": {
+        "startLine": 662,
+        "startChar": 0,
+        "endLine": 663,
+        "endChar": 23
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f805d083_88d89acf",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "not needed?",
+      "range": {
+        "startLine": 674,
+        "startChar": 0,
+        "endLine": 678,
+        "endChar": 23
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1434e1a6_38b6c483",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "Nitpicking - \nHow about using full name \"target_node\" instead of tg?\n(applies to \u0027ig\u0027, \u0027pg\u0027 in other get_* functions as well)",
+      "range": {
+        "startLine": 262,
+        "startChar": 12,
+        "endLine": 263,
+        "endChar": 24
+      },
+      "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fcc6f64_cf6d384d",
+        "filename": "test/spdkcli/match_files/spdkcli_vhost.test.match",
+        "patchSetId": 16
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T08:19:08Z",
+      "side": 1,
+      "message": "This is way too long output. We should hide some some of the attributes and display them only on demand.\nFor example - global_params could be hidden and shown only after \"show_details\" (or similar) command like in Vhost objects.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 132
       },
       "revId": "0e8b9cbd0f6ee43eac76fd927101674c351536fd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
