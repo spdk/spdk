@@ -696,13 +696,43 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct raid_bdev *raid_bdev = bdev->ctxt;
+	struct spdk_bdev *base;
+	uint16_t i;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_raid_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", bdev->name);
+	spdk_json_write_named_uint32(w, "strip_size", raid_bdev->strip_size);
+	spdk_json_write_named_uint32(w, "raid_level", raid_bdev->raid_level);
+
+	spdk_json_write_named_array_begin(w, "base_bdevs");
+	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		base = raid_bdev->base_bdev_info[i].bdev;
+		if (base) {
+			spdk_json_write_string(w, base->name);
+		}
+	}
+	spdk_json_write_array_end(w);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 /* g_raid_bdev_fn_table is the function table for raid bdev */
 static const struct spdk_bdev_fn_table g_raid_bdev_fn_table = {
-	.destruct           = raid_bdev_destruct,
-	.submit_request     = raid_bdev_submit_request,
-	.io_type_supported  = raid_bdev_io_type_supported,
-	.get_io_channel     = raid_bdev_get_io_channel,
-	.dump_info_json     = raid_bdev_dump_info_json,
+	.destruct		= raid_bdev_destruct,
+	.submit_request		= raid_bdev_submit_request,
+	.io_type_supported	= raid_bdev_io_type_supported,
+	.get_io_channel		= raid_bdev_get_io_channel,
+	.dump_info_json		= raid_bdev_dump_info_json,
+	.write_config_json	= raid_bdev_write_config_json,
 };
 
 /*
