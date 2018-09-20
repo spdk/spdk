@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "7a3411be_130d87a4",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011884
+      },
+      "writtenOn": "2018-09-20T07:07:55Z",
+      "side": 1,
+      "message": "Already done, the style is same as belows.",
+      "parentUuid": "cf52554c_a87db3b6",
+      "range": {
+        "startLine": 199,
+        "startChar": 1,
+        "endLine": 201,
+        "endChar": 2
+      },
+      "revId": "c4ffe163182dd9f281b6b368646625262beaf637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3306b714_e931a05b",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 13
@@ -132,6 +156,30 @@
       "side": 1,
       "message": "You specified inline and hence the function is inlined as you said. What I wanted to say was that the function is called only once and just pasting line 211 to 218 may be enough.\nBut current one is fine.",
       "parentUuid": "3b948059_1efe0b2b",
+      "range": {
+        "startLine": 204,
+        "startChar": 7,
+        "endLine": 204,
+        "endChar": 13
+      },
+      "revId": "c4ffe163182dd9f281b6b368646625262beaf637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c2414d0_de11d56d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011884
+      },
+      "writtenOn": "2018-09-20T07:07:55Z",
+      "side": 1,
+      "message": "Yes, inline function will do the same, but it will looks better to understand. Thank you.",
+      "parentUuid": "c5058f0f_f1da2723",
       "range": {
         "startLine": 204,
         "startChar": 7,
