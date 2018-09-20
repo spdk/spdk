@@ -17,6 +17,7 @@ ut_coverage/
 tags
 cscope.out
 dpdk-*
+include/ocf/
 CUnit-Memory-Dump.xml
 include/spdk/config.h
 CONFIG.local
