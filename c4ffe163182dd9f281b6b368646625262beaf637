@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5bf77445_7c3eef76",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011884
+      },
+      "writtenOn": "2018-09-20T02:24:39Z",
+      "side": 1,
+      "message": "OK, I will change it in next patch, :) , since this is reviewed a lot of times.",
+      "parentUuid": "52d60635_de40ae2d",
+      "range": {
+        "startLine": 199,
+        "startChar": 1,
+        "endLine": 201,
+        "endChar": 2
+      },
+      "revId": "c4ffe163182dd9f281b6b368646625262beaf637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3306b714_e931a05b",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 13
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-19T08:06:29Z",
       "side": 1,
       "message": "this doesn\u0027t require performance but is fine to me.",
+      "range": {
+        "startLine": 204,
+        "startChar": 7,
+        "endLine": 204,
+        "endChar": 13
+      },
+      "revId": "c4ffe163182dd9f281b6b368646625262beaf637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b948059_1efe0b2b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011884
+      },
+      "writtenOn": "2018-09-20T02:24:39Z",
+      "side": 1,
+      "message": "Agree, this inline function is small but together all inlines, it maybe a significant improvement.",
+      "parentUuid": "3306b714_e931a05b",
       "range": {
         "startLine": 204,
         "startChar": 7,
