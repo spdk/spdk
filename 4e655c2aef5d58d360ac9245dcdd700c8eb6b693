@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2189b87e_7f1abc41",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-20T00:14:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64de7313_0e7fa16b",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1ec8fcb_2296aae6",
         "filename": "lib/env_dpdk/memory.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-19T17:44:30Z",
       "side": 1,
       "message": "I think you actually need to set *size to 2MB here. That way when the default translation is returned it correctly indicates it\u0027s valid for 2MB.",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0080efa3_ded506bf",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-20T00:14:36Z",
+      "side": 1,
+      "message": "After looking at this a bit more, I think I still need to set it to 0, but increment it after I know that I have a valid virtual address.\nWe return map-\u003edefault translation in three places, once when that\u0027s actually what the map defaults to, another time when we have an invalid virtual address, and finally when the 1gb map is NULL. I think that in the former case we would want to say it\u0027s valid for 2MB in the latter we would want to inform the user that the translation isn\u0027t valid at all because it couldn\u0027t be resolved.",
+      "parentUuid": "b1ec8fcb_2296aae6",
       "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "76ae421f_9dfad02d",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-20T00:14:36Z",
+      "side": 1,
+      "message": "I really tried to use one, but the logic just gets really messy. There are a few issues.\n1. I rely on a call to are_contiguous which takes two translations. How do I get both of those values on the initial loop while avoiding skipping comparisons on future loops?\n2. If I use a do while loop, I don\u0027t have access to any translations until I go through the do once, so in the case that size is NULL or are_contiguous is not defined, I have to add a boolean to preempt before entering the rest of the checks in the while of the loop.\n3. Since I still had to enter the do loop, I will have to check if size is null once I break before setting it to the final value.\nI couldn\u0027t figure out a way to do it without making everything really confusing to myself (and adding back in almost all 10 lines of code I save.)",
+      "parentUuid": "733e4ae4_aec8fb43",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6fba9407_f82342d6",
         "filename": "lib/env_dpdk/memory.c",
         "patchSetId": 8
@@ -64,6 +118,24 @@
       "writtenOn": "2018-09-19T17:44:30Z",
       "side": 1,
       "message": "You can do\n\nif (size \u003d\u003d NULL || map-\u003eops.are_contiguous \u003d\u003d NULL) {\n    return map_2mb-\u003etranslation_2mb;\n}\n\nand then remove a layer of indentation below, assuming you took my above comment to default size to 2MB.",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f55cfd85_6a280848",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-20T00:14:36Z",
+      "side": 1,
+      "message": "Thanks! That makes everything a lot cleaner!",
+      "parentUuid": "6fba9407_f82342d6",
       "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "98239c31_25726382",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-20T00:14:36Z",
+      "side": 1,
+      "message": "Yep! Thanks!",
+      "parentUuid": "e27f72e0_beb5c30d",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef1a3d41_5bdd40b7",
         "filename": "lib/env_dpdk/memory.c",
         "patchSetId": 8
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "8cf31f61_588235d8",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-20T00:14:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef1a3d41_5bdd40b7",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "96ac134d_b33268c8",
         "filename": "lib/env_dpdk/memory.c",
         "patchSetId": 8
@@ -115,6 +223,24 @@
       "writtenOn": "2018-09-19T17:44:30Z",
       "side": 1,
       "message": "*size \u003d local_size",
+      "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a5bec80_5c094866",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-20T00:14:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "96ac134d_b33268c8",
       "revId": "4e655c2aef5d58d360ac9245dcdd700c8eb6b693",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
