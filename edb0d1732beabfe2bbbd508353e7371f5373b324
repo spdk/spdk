@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12e78fc5_d62fa625",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-20T00:27:33Z",
+      "side": 1,
+      "message": "I think passing ns as a parameter to vhost_nvme_queue_task() will remove this part.",
+      "range": {
+        "startLine": 438,
+        "startChar": 0,
+        "endLine": 445,
+        "endChar": 2
+      },
+      "revId": "edb0d1732beabfe2bbbd508353e7371f5373b324",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
