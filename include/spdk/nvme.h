@@ -449,6 +449,43 @@ struct spdk_nvme_ctrlr *spdk_nvme_connect(const struct spdk_nvme_transport_id *t
 		size_t opts_size);
 
 /**
+ * Connect the NVMe driver to the device located at the given transport ID.
+ *
+ * This function will return a controller to caller, the controller maybe in
+ * READY or INIT state, for INIT state, caller must call spdk_nvme_connect_poll()
+ * to bring up the contoller into READY state.
+ *
+ * \param trid The transport ID indicating which bus to enumerate. If the trtype
+ * is PCIe or trid is NULL, this will scan the local PCIe bus. If the trtype is
+ * RDMA, the traddr and trsvcid must point at the location of an NVMe-oF discovery
+ * service.
+ * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
+ * the callbacks.
+ * \param probe_cb will be called once per NVMe device found in the system.
+ * \param remove_cb will be called for devices that are no longer attached
+ * to the system. Optional;
+ *
+ * \return pointer to the NVMe controller or NULL if there is any failure.
+ *
+ */
+struct spdk_nvme_ctrlr *
+spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
+			spdk_nvme_probe_cb probe_cb, spdk_nvme_remove_cb remove_cb);
+
+/**
+ * Bring up specified NVMe controller to READY state.
+ *
+ * Function spdk_nvme_connect_async() will return NVMe controller data structure to
+ * the caller, the controller state maybe in READY or INIT, the caller should call
+ * spdk_nvme_connect_poll() to bring up the controller to READY state.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return 0 for success or -EAGAIN for another poll, other value if there is any failure.
+ */
+int spdk_nvme_connect_poll(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Detach specified device returned by spdk_nvme_probe()'s attach_cb from the
  * NVMe driver.
  *
