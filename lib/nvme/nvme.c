@@ -481,6 +481,24 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 
 /* This function must not be called while holding g_spdk_nvme_driver->lock */
 static struct spdk_nvme_ctrlr *
+spdk_nvme_get_uninitialized_ctrlr_by_trid(const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvme_ctrlr *ctrlr, *tmp;
+
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+	TAILQ_FOREACH_SAFE(ctrlr, &g_nvme_init_ctrlrs, tailq, tmp) {
+		if (spdk_nvme_transport_id_compare(&ctrlr->trid, trid) == 0) {
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+			return ctrlr;
+		}
+	}
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+
+	return NULL;
+}
+
+/* This function must not be called while holding g_spdk_nvme_driver->lock */
+static struct spdk_nvme_ctrlr *
 spdk_nvme_get_ctrlr_by_trid(const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -655,6 +673,66 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 	ctrlr = spdk_nvme_get_ctrlr_by_trid(trid);
 
 	return ctrlr;
+}
+
+struct spdk_nvme_ctrlr *
+spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
+			spdk_nvme_probe_cb probe_cb, spdk_nvme_remove_cb remove_cb)
+{
+	int			rc;
+	struct spdk_nvme_ctrlr	*ctrlr;
+
+	if (trid == NULL || (strlen(trid->traddr) == 0)) {
+		SPDK_ERRLOG("Invalid TransportID\n");
+		return NULL;
+	}
+
+	rc = nvme_driver_init();
+	if (rc != 0) {
+		return NULL;
+	}
+
+	rc = spdk_nvme_probe_internal(trid, cb_ctx, probe_cb, NULL, remove_cb, &ctrlr);
+	if (rc < 0) {
+		return NULL;
+	}
+
+	ctrlr = spdk_nvme_get_ctrlr_by_trid(trid);
+	if (ctrlr == NULL) {
+		ctrlr = spdk_nvme_get_uninitialized_ctrlr_by_trid(trid);
+	}
+
+	return ctrlr;
+}
+
+int
+spdk_nvme_connect_poll(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc = 0;
+	struct spdk_nvme_ctrlr *ctrlr_tmp1, *ctrlr_tmp2;
+
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+
+	TAILQ_FOREACH_SAFE(ctrlr_tmp1, &g_nvme_init_ctrlrs, tailq, ctrlr_tmp2) {
+		if (ctrlr_tmp1 == ctrlr) {
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+			rc = nvme_connect_poll_internal(ctrlr, NULL, NULL);
+			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+			if (rc) {
+				break;
+			}
+
+			if (ctrlr->state != NVME_CTRLR_STATE_READY) {
+				rc = -EAGAIN;
+			}
+			break;
+		}
+	}
+
+	g_spdk_nvme_driver->initialized = true;
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+
+	return rc;
 }
 
 int
