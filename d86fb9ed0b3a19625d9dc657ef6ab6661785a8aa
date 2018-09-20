@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3f77b3c_ae8489a9",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T09:45:59Z",
+      "side": 1,
+      "message": "Since we\u0027re deprecating config files in favor of json-config it\u0027d be best to modify the running_config step to use json files instead.\nUnfortunately - seems that RAID stuff configuration does not get written to configuration file and \"load_config\" operation ends in error \"no bdev raid0\".",
+      "range": {
+        "startLine": 103,
+        "startChar": 1,
+        "endLine": 103,
+        "endChar": 17
+      },
+      "revId": "d86fb9ed0b3a19625d9dc657ef6ab6661785a8aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
