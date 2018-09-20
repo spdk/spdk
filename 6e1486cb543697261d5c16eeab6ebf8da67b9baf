@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7115924f_305c00b2",
+        "filename": "scripts/spdkcli.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T13:22:29Z",
+      "side": 1,
+      "message": "This probably should catch IOError exception.",
+      "range": {
+        "startLine": 70,
+        "startChar": 16,
+        "endLine": 70,
+        "endChar": 22
+      },
+      "revId": "6e1486cb543697261d5c16eeab6ebf8da67b9baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
