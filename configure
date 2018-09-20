@@ -62,6 +62,8 @@ function usage()
 	echo "                           No path required."
 	echo " vtune                     Required to profile I/O under Intel VTune Amplifier XE."
 	echo "                           example: /opt/intel/vtune_amplifier_xe_version"
+	echo " cache                     Required to build vbdev cache module."
+	echo "                           example: /usr/src/ocf/"
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -263,6 +265,15 @@ for i in "$@"; do
 		--without-igb-uio-driver)
 			CONFIG[IGB_UIO_DRIVER]=n
 			;;
+		--with-cache=*)
+			CONFIG[CACHE]=y
+			check_dir "$i"
+			CONFIG[CACHE_DIR]=$(readlink -f ${i#*=})
+			;;
+		--without-cache)
+			CONFIG[CACHE]=n
+			CONFIG[CACHE_DIR]=
+			;;
 		--)
 			break
 			;;
@@ -383,6 +394,31 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 	fi
 fi
 
+if [[ "${CONFIG[CACHE]}" = "y" ]]; then
+        if [ -z "${CONFIG[CACHE_DIR]}" ]; then
+			echo "When Cache is enabled, you must specify the OCF directory using --with-cache=path"
+			exit 1
+		fi
+
+        if [ -f "${CONFIG[CACHE_DIR]}"/Makefile ]; then
+                echo "configuring cache..."
+				rootdir=$(readlink -f $(dirname $0))
+
+                if pushd "${CONFIG[CACHE_DIR]}" > /dev/null && \
+                   make inc O="$rootdir" && \
+                   popd > /dev/null
+				then
+					echo "done configuring cache"
+				else
+					echo "Could not configure cache"
+					exit 1
+				fi
+        else
+                echo "OCF directory is missing Makefile"
+				exit 1
+        fi
+fi
+
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
 if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" CONFIG) -ne ${#CONFIG[@]} ]; then
@@ -393,6 +429,9 @@ if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" CONFIG) -ne ${#CONFIG[@]} ]; then
 		<(sed -r -e '/^\s*$/d; /^\s*#.*/d; s/(CONFIG_[[:alnum:]_]+)=.*/\1/g' CONFIG | sort) \
 		<(printf "CONFIG_%s\n" ${!CONFIG[@]} | sort)
 	exit 1
+fi
+if [ -n "$CONFIG_CACHE" ]; then
+	echo "CONFIG_CACHE?=$CONFIG_CACHE" >> CONFIG.local
 fi
 
 echo -n "Creating mk/config.mk..."
