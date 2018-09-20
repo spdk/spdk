@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e14a2cee_65cadde1",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T07:15:13Z",
+      "side": 1,
+      "message": "Can this be None like \"st\" in line 128 or allow_any_host in line 131?",
+      "range": {
+        "startLine": 125,
+        "startChar": 8,
+        "endLine": 125,
+        "endChar": 15
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdf5703b_6d0e9ec9",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T07:15:13Z",
+      "side": 1,
+      "message": "You can remove this whole method if you don\u0027t need any summary info",
+      "range": {
+        "startLine": 259,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 24
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e20efa3b_74c0ddd2",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T07:15:13Z",
+      "side": 1,
+      "message": "We could also add our version of ui_eval_param which would allow checking of eui64 and uuid formats. Maybe mark as #TODO or create trello for that?",
+      "range": {
+        "startLine": 292,
+        "startChar": 8,
+        "endLine": 292,
+        "endChar": 55
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6393f979_50b42b1f",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T07:15:13Z",
+      "side": 1,
+      "message": "Why do string formatting? You could just use namespace[\u0027bdev_name\u0027] as argument",
+      "range": {
+        "startLine": 323,
+        "startChar": 30,
+        "endLine": 323,
+        "endChar": 59
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25c8d8cf_3ea7efb3",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T07:15:13Z",
+      "side": 1,
+      "message": "Other summary \"info\" constructions use .join() to create string. Can we follow this for consistency?",
+      "range": {
+        "startLine": 327,
+        "startChar": 8,
+        "endLine": 328,
+        "endChar": 54
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
