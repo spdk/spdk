@@ -1096,6 +1096,7 @@ raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **_raid_
 	return false;
 }
 
+static void raid_bdev_get_spdk_running_config(FILE *fp);
 
 static struct spdk_bdev_module g_raid_if = {
 	.name = "raid",
@@ -1104,7 +1105,7 @@ static struct spdk_bdev_module g_raid_if = {
 	.module_fini = raid_bdev_exit,
 	.get_ctx_size = raid_bdev_get_ctx_size,
 	.examine_config = raid_bdev_examine,
-	.config_text = NULL,
+	.config_text = raid_bdev_get_spdk_running_config,
 	.async_init = false,
 	.async_fini = false,
 };
@@ -1541,6 +1542,24 @@ raid_bdev_examine(struct spdk_bdev *bdev)
 	}
 
 	spdk_bdev_module_examine_done(&g_raid_if);
+}
+
+static void
+raid_bdev_get_spdk_running_config(FILE *fp)
+{
+	fprintf(fp,
+		"# Raid configuration options.\n"
+		"[RAID0]\n"
+		"  # raid bdev name\n"
+		"  Name raid0\n"
+		"  # strip size in KB\n"
+		"  StripSize 64\n"
+		"  # number of devices\n"
+		"  NumDevices 1\n"
+		"  # raid level, only raid level 0 is supported\n"
+		"  RaidLevel 0\n"
+		"  # base bdevs name, whitespace separated list in quotes\n"
+		"  Devices Nvme0n1\n");
 }
 
 /* Log component for bdev raid bdev module */

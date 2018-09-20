@@ -51,6 +51,9 @@ timing_enter fio
 
 cp $testdir/iscsi.conf.in $testdir/iscsi.conf
 
+# Get nvme info through filtering gen_nvme.sh's result.
+$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
+
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
