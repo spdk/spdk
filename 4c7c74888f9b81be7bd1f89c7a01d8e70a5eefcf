@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "935b5cc8_f723ef2c",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T13:06:09Z",
+      "side": 1,
+      "message": "suggestion: how about create_fio_filename, to better present what is going on and what is returned by this function?",
+      "range": {
+        "startLine": 29,
+        "startChar": 9,
+        "endLine": 29,
+        "endChar": 21
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b1dafb0_17cd5918",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T13:06:09Z",
+      "side": 1,
+      "message": "Since you already handle args $1 and $3 with named variables you could also do that for $2 for better readibility",
+      "range": {
+        "startLine": 30,
+        "startChar": 1,
+        "endLine": 31,
+        "endChar": 10
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41ff8459_a39207fb",
         "filename": "test/nvme/perf/common.sh",
         "patchSetId": 5
@@ -36,6 +82,30 @@
       "writtenOn": "2018-09-19T14:57:36Z",
       "side": 1,
       "message": "ack",
+      "parentUuid": "41ff8459_a39207fb",
+      "range": {
+        "startLine": 57,
+        "startChar": 16,
+        "endLine": 57,
+        "endChar": 21
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d4d2a15_43387f03",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T13:06:09Z",
+      "side": 1,
+      "message": "Why do we need \"if\" in preconditioning function?\nPrecondition is run seq writes on whole disk twice, it\u0027s not dependent on the traffic type you will run later in test.",
       "parentUuid": "41ff8459_a39207fb",
       "range": {
         "startLine": 57,
@@ -96,6 +166,53 @@
     },
     {
       "key": {
+        "uuid": "fd9e97cd_ce7f074d",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T13:06:09Z",
+      "side": 1,
+      "message": "John is right here. Either use size\u003d100% loops\u003d2 or size\u003d200% for precond.\nI think blocksize could be bigger too, with smaller IOdepth - bs\u003d1M iodepth\u003d32? This should go faster. John, correct me if I\u0027m wrong.",
+      "parentUuid": "350b29f2_3090f811",
+      "range": {
+        "startLine": 61,
+        "startChar": 44,
+        "endLine": 61,
+        "endChar": 58
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94b0aa9f_d4df697f",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T13:06:09Z",
+      "side": 1,
+      "message": "function name not clear. get_value... of what? (I body I can see we parse json using jq, so I\u0027m nitpicking here, but you get the point:))\n\nBTW. Do we even need to create such function in this script?\nThere\u0027s already a \"parse_results\" function in scripts/perf/nvme/run_fio_test.py. YOu\u0027d just need to extract it to a separate module. Up to you.",
+      "range": {
+        "startLine": 66,
+        "startChar": 9,
+        "endLine": 66,
+        "endChar": 18
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54deab93_a7c2949a",
         "filename": "test/nvme/perf/common.sh",
         "patchSetId": 5
@@ -137,6 +254,23 @@
         "endLine": 76,
         "endChar": 23
       },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "534a870a_df17f27d",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T13:06:09Z",
+      "side": 1,
+      "message": "Shouldn\u0027t --ioengine have full path like on line 111?",
       "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -331,6 +465,30 @@
     },
     {
       "key": {
+        "uuid": "de3310c0_b2204b30",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T13:06:09Z",
+      "side": 1,
+      "message": "I think Pawel copied options names from FIO man itself - it\u0027s \"runtime\" and \"ramp_time\" there as well:).\nI agree with John - either drop the underscores or be consistent.\nMy personal suggestion - I find it much easier to type in the options if they use dash \"-\" instead of underscore (because you have to type 2 dashes at beginning of option anyway)",
+      "parentUuid": "4216dd97_b5689ba5",
+      "range": {
+        "startLine": 27,
+        "startChar": 88,
+        "endLine": 27,
+        "endChar": 92
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a74fe5c_c2bf8cf3",
         "filename": "test/nvme/perf/perf_tc1.sh",
         "patchSetId": 5
@@ -459,6 +617,30 @@
       "writtenOn": "2018-09-19T14:57:36Z",
       "side": 1,
       "message": "ack",
+      "parentUuid": "f86c3f26_f44e2247",
+      "range": {
+        "startLine": 54,
+        "startChar": 21,
+        "endLine": 54,
+        "endChar": 37
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "779a1fa6_95fa2b49",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-20T13:06:09Z",
+      "side": 1,
+      "message": "If this will be a global or env variable passed between scripts then it should be in CAPITAL letters so that the name stands out.",
       "parentUuid": "f86c3f26_f44e2247",
       "range": {
         "startLine": 54,
