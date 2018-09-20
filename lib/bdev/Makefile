@@ -48,6 +48,12 @@ ifeq ($(CONFIG_CRYPTO),y)
 DIRS-y += crypto
 endif
 
+ifeq ($(CONFIG_OCF), y)
+DIRS-y += ocf
+DIRS-y += ocf/env
+DEPDIRS-ocf := ocf/env
+endif
+
 ifeq ($(OS),Linux)
 DIRS-y += aio
 DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
