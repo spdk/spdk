@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fe10768_43914504",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-20T18:50:28Z",
+      "side": 1,
+      "message": "Maybe just do:\n\nif (!bdev) {\n  return 0;\n}\n\nThen you don\u0027t have to indent all of this code and the size of the patch becomes much smaller.",
+      "revId": "71f1fb6d7797d975d2e33978d0afba2d38b4cd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
