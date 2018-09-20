@@ -311,7 +311,7 @@ test_nvme_init_controllers(void)
 	g_spdk_nvme_driver->initialized = false;
 	ut_destruct_called = false;
 	rc = nvme_init_controllers(cb_ctx, attach_cb);
-	CU_ASSERT(rc == -1);
+	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_spdk_nvme_driver->initialized == true);
 	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
 	CU_ASSERT(ut_destruct_called == true);
