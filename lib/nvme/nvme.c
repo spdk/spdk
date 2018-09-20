@@ -394,10 +394,61 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 }
 
 static int
+nvme_connect_poll_internal(struct spdk_nvme_ctrlr *ctrlr, void *cb_ctx,
+			   spdk_nvme_attach_cb attach_cb)
+{
+	int	rc = 0;
+
+	rc = nvme_ctrlr_process_init(ctrlr);
+
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+
+	if (rc) {
+		/* Controller failed to initialize. */
+		TAILQ_REMOVE(&g_nvme_init_ctrlrs, ctrlr, tailq);
+		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+		SPDK_ERRLOG("Failed to initialize SSD: %s\n", ctrlr->trid.traddr);
+		nvme_ctrlr_destruct(ctrlr);
+		return rc;
+	}
+
+	if (ctrlr->state == NVME_CTRLR_STATE_READY) {
+		/*
+		 * Controller has been initialized.
+		 *  Move it to the attached_ctrlrs list.
+		 */
+		TAILQ_REMOVE(&g_nvme_init_ctrlrs, ctrlr, tailq);
+		if (nvme_ctrlr_shared(ctrlr)) {
+			TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
+		} else {
+			TAILQ_INSERT_TAIL(&g_nvme_attached_ctrlrs, ctrlr, tailq);
+		}
+
+		/*
+		 * Increase the ref count before calling attach_cb() as the user may
+		 * call nvme_detach() immediately.
+		 */
+		nvme_ctrlr_proc_get_ref(ctrlr);
+
+		/*
+		 * Unlock while calling attach_cb() so the user can call other functions
+		 *  that may take the driver lock, like nvme_detach().
+		 */
+		if (attach_cb) {
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+			attach_cb(cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
+			return 0;
+		}
+	}
+
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+	return 0;
+}
+
+static int
 nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 {
 	int rc = 0;
-	int start_rc;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
@@ -414,46 +465,9 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 			 *  can assume it is held.
 			 */
 			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-			start_rc = nvme_ctrlr_process_init(ctrlr);
+			rc = nvme_connect_poll_internal(ctrlr, cb_ctx, attach_cb);
 			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-
-			if (start_rc) {
-				/* Controller failed to initialize. */
-				TAILQ_REMOVE(&g_nvme_init_ctrlrs, ctrlr, tailq);
-				SPDK_ERRLOG("Failed to initialize SSD: %s\n", ctrlr->trid.traddr);
-				nvme_ctrlr_destruct(ctrlr);
-				rc = -1;
-				break;
-			}
-
-			if (ctrlr->state == NVME_CTRLR_STATE_READY) {
-				/*
-				 * Controller has been initialized.
-				 *  Move it to the attached_ctrlrs list.
-				 */
-				TAILQ_REMOVE(&g_nvme_init_ctrlrs, ctrlr, tailq);
-				if (nvme_ctrlr_shared(ctrlr)) {
-					TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
-				} else {
-					TAILQ_INSERT_TAIL(&g_nvme_attached_ctrlrs, ctrlr, tailq);
-				}
-
-				/*
-				 * Increase the ref count before calling attach_cb() as the user may
-				 * call nvme_detach() immediately.
-				 */
-				nvme_ctrlr_proc_get_ref(ctrlr);
-
-				/*
-				 * Unlock while calling attach_cb() so the user can call other functions
-				 *  that may take the driver lock, like nvme_detach().
-				 */
-				if (attach_cb) {
-					nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-					attach_cb(cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
-					nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-				}
-
+			if (rc) {
 				break;
 			}
 		}
@@ -507,7 +521,6 @@ spdk_nvme_probe_internal(const struct spdk_nvme_transport_id *trid, void *cb_ctx
 			 spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 			 spdk_nvme_remove_cb remove_cb, struct spdk_nvme_ctrlr **connected_ctrlr)
 {
-	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
 	bool direct_connect = (connected_ctrlr != NULL);
 
@@ -543,28 +556,11 @@ spdk_nvme_probe_internal(const struct spdk_nvme_transport_id *trid, void *cb_ctx
 				nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 			}
 		}
-
-		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-
-		rc = 0;
-
-		goto exit;
 	}
 
 	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-	/*
-	 * Keep going even if one or more nvme_attach() calls failed,
-	 *  but maintain the value of rc to signal errors when we return.
-	 */
 
-	rc = nvme_init_controllers(cb_ctx, attach_cb);
-
-exit:
-	if (connected_ctrlr) {
-		*connected_ctrlr = spdk_nvme_get_ctrlr_by_trid(trid);
-	}
-
-	return rc;
+	return 0;
 }
 
 int
@@ -586,7 +582,22 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		trid = &trid_pcie;
 	}
 
-	return spdk_nvme_probe_internal(trid, cb_ctx, probe_cb, attach_cb, remove_cb, NULL);
+	rc = spdk_nvme_probe_internal(trid, cb_ctx, probe_cb, attach_cb, remove_cb, NULL);
+	if (rc != 0) {
+		return rc;
+	}
+
+	if ((spdk_process_is_primary()) ||
+	    (!spdk_process_is_primary() && (trid->trtype != SPDK_NVME_TRANSPORT_PCIE))) {
+		/*
+		 * Keep going even if one or more nvme_attach() calls failed,
+		 *  but maintain the value of rc to signal errors when we return.
+		 */
+
+		rc = nvme_init_controllers(cb_ctx, attach_cb);
+	}
+
+	return rc;
 }
 
 static bool
@@ -632,6 +643,16 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 	}
 
 	spdk_nvme_probe_internal(trid, user_connect_opts, probe_cb, NULL, NULL, &ctrlr);
+
+	if ((spdk_process_is_primary()) ||
+	    (!spdk_process_is_primary() && (trid->trtype != SPDK_NVME_TRANSPORT_PCIE))) {
+		rc = nvme_init_controllers(NULL, NULL);
+		if (rc != 0) {
+			return NULL;
+		}
+	}
+
+	ctrlr = spdk_nvme_get_ctrlr_by_trid(trid);
 
 	return ctrlr;
 }
