@@ -39,6 +39,12 @@ ifeq ($(CONFIG_CRYPTO),y)
 BLOCKDEV_MODULES_LIST += bdev_crypto
 endif
 
+ifeq ($(CONFIG_CACHE),y)
+BLOCKDEV_MODULES_LIST += ocf
+BLOCKDEV_MODULES_LIST += cache
+BLOCKDEV_MODULES_LIST += vbdev_cache
+endif
+
 ifeq ($(CONFIG_RDMA),y)
 SYS_LIBS += -libverbs -lrdmacm
 endif
