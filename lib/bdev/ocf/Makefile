@@ -31,37 +31,17 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(CONFIG_VTUNE_DIR)/include -I$(CONFIG_VTUNE_DIR)/sdk/src/ittnotify
-endif
+CFLAGS += $(ENV_CFLAGS) -I$(CURDIR)/env -I$(CURDIR)/env/include
+C_SRCS = $(shell ls *.c)
 
-C_SRCS = bdev.c part.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
-LIBNAME = bdev
-
-DIRS-y += error gpt lvol malloc null nvme passthru raid rpc split
-
-ifeq ($(CONFIG_CRYPTO),y)
-DIRS-y += crypto
-endif
-
-ifeq ($(CONFIG_OCF), y)
-DIRS-y += ocf
-DIRS-y += ocf/env
-DEPDIRS-ocf := ocf/env
-endif
-
-ifeq ($(OS),Linux)
-DIRS-y += aio
-DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
-DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_PMDK) += pmem
-endif
-
-DIRS-$(CONFIG_RBD) += rbd
-DIRS-$(CONFIG_FTL) += ftl
+LIBNAME := bdev_ocf
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+
+SPDK_DEP_LIBS = $(call spdk_lib_list_to_static_libs,ocfenv)
+
+$(LIB) : $(SPDK_DEP_LIBS)

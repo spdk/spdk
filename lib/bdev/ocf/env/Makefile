@@ -31,37 +31,45 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+# OCF requires users to build with their sources
+# If SPDK is configured with OCF source directory,
+# we export its files and then compile SPDK LIB with them
+# Else if SPDK is configured with OCF precompiled library
+# we just use it as SPDK lib by copying it to /build/lib/
+
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+OCFDIR=$(CONFIG_OCF_DIR)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(CONFIG_VTUNE_DIR)/include -I$(CONFIG_VTUNE_DIR)/sdk/src/ittnotify
-endif
+LIBNAME := ocfenv
 
-C_SRCS = bdev.c part.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
-LIBNAME = bdev
+ifeq ($(CONFIG_CUSTOMOCF),n)
 
-DIRS-y += error gpt lvol malloc null nvme passthru raid rpc split
-
-ifeq ($(CONFIG_CRYPTO),y)
-DIRS-y += crypto
-endif
-
-ifeq ($(CONFIG_OCF), y)
-DIRS-y += ocf
-DIRS-y += ocf/env
-DEPDIRS-ocf := ocf/env
-endif
-
-ifeq ($(OS),Linux)
-DIRS-y += aio
-DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
-DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_PMDK) += pmem
-endif
-
-DIRS-$(CONFIG_RBD) += rbd
-DIRS-$(CONFIG_FTL) += ftl
+CFLAGS +=  $(ENV_CFLAGS) -I$(CURDIR) -I$(CURDIR)/include -w
+C_SRCS = $(shell find -name \*.c)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+
+else
+
+LIB = $(call spdk_lib_list_to_static_libs,$(LIBNAME))
+
+all: $(LIB)
+
+$(LIB):
+	cp $(CONFIG_OCF_PATH) $(LIB)
+
+clean:
+	$(Q)rm -f $(LIB)
+install:
+
+endif
+
+exportlib: $(LIB)
+	@ if [ -z $(O) ]; then echo "No output specified"; exit 1; fi
+	cp $(LIB) $(O)
+
+help:
+	@ echo "all                     Default"
+	@ echo "exportlib O=<outpath>   Default build to specified outpath"
