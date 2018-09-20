@@ -31,67 +31,30 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
- */
+#ifndef OPENCAS_DATA_H
+#define OPENCAS_DATA_H
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+typedef struct IntelCASAIOCB IntelCASAIOCB;
 
-#ifdef __cplusplus
-extern "C" {
+#include "spdk/stdinc.h"
+
+struct bdev_ocf_data {
+	struct iovec *iovs;
+	int iovcnt;
+	int iovalloc;
+	uint32_t size;
+	uint32_t seek;
+};
+
+struct bdev_ocf_data *opencas_data_from_spdk_io(void *spdk_io);
+
+struct bdev_ocf_data *opencas_data_alloc(uint32_t nvecs);
+
+void opencas_data_free(struct bdev_ocf_data *data);
+
+struct bdev_ocf_data *opencas_data_from_iov(struct iovec *iovs);
+
+void _opencas_iovs_add(struct bdev_ocf_data *data, void *base, size_t len);
+
+void opencas_data_free(struct bdev_ocf_data *data);
 #endif
-
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
-
-/* GNU extension */
-#include <getopt.h>
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* SPDK_STDINC_H */
