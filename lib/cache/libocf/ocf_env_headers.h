@@ -31,67 +31,17 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
- */
+#ifndef __OCF_ENV_HEADERS_H__
+#define __OCF_ENV_HEADERS_H__
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+#include "spdk/stdinc.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define OCF_VERSION_MAIN 3
+#define OCF_VERSION_MAJOR 8
+#define OCF_VERSION_MINOR 0
 
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#define OCF_LOGO "Intel(R) OCF"
+#define OCF_PREFIX_SHORT "[" OCF_LOGO "] "
+#define OCF_PREFIX_LONG "Intel(R) Cache Acceleration Software"
 
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
-
-/* GNU extension */
-#include <getopt.h>
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* SPDK_STDINC_H */
+#endif /* __OCF_ENV_HEADERS_H__ */
