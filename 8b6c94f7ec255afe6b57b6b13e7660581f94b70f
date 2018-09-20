@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bba99e92_b0791643",
+        "filename": "test/nvme/perf/perf_tc3.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-20T10:54:16Z",
+      "side": 1,
+      "message": "This default value is used in any other spdk test but could be changed by typing --fiobin\u003d... in script argumets. Could You elaborate your idea?",
+      "parentUuid": "f619e81a_173e5aec",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 26
+      },
+      "revId": "8b6c94f7ec255afe6b57b6b13e7660581f94b70f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "55599cb4_c2fde5dc",
         "filename": "test/nvme/perf/perf_tc3.sh",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "c197e2cf_4d6606dd",
+        "filename": "test/nvme/perf/perf_tc3.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-20T10:54:16Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "55599cb4_c2fde5dc",
+      "range": {
+        "startLine": 19,
+        "startChar": 20,
+        "endLine": 19,
+        "endChar": 21
+      },
+      "revId": "8b6c94f7ec255afe6b57b6b13e7660581f94b70f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5eb83da6_3210b7e0",
         "filename": "test/nvme/perf/perf_tc3.sh",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2018-09-20T07:17:25Z",
       "side": 1,
       "message": "This \"i\" should be replaced by other variable. Or add the \"local i\" in \"test/nvme/perf/common.sh\".\nThe value of this \"i\" will be replaced by the value of \"i\" in function preconditioning. And will cause the endless loop.\n\nfor (( i\u003d0; i \u003c $DISKNO; i++ ))\n\tdo\n\t\tdev_name\u003d\u0027trtype\u003dPCIe traddr\u003d\u0027${disks[i]//:/.}\u0027 ns\u003d1\u0027\n\t\tfilename+\u003d$(printf %s\":\" \"$dev_name\")\n\tdone",
+      "range": {
+        "startLine": 72,
+        "startChar": 7,
+        "endLine": 72,
+        "endChar": 22
+      },
+      "revId": "8b6c94f7ec255afe6b57b6b13e7660581f94b70f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4cbedff_6abfeb5e",
+        "filename": "test/nvme/perf/perf_tc3.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-20T10:54:16Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "5eb83da6_3210b7e0",
       "range": {
         "startLine": 72,
         "startChar": 7,
