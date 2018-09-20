@@ -80,7 +80,9 @@ static void
 _spdk_lvs_free(struct spdk_lvol_store *lvs)
 {
 	if (lvs->on_list) {
+		pthread_mutex_lock(&g_lvol_stores_mutex);
 		TAILQ_REMOVE(&g_lvol_stores, lvs, link);
+		pthread_mutex_unlock(&g_lvol_stores_mutex);
 	}
 	free(lvs);
 }
