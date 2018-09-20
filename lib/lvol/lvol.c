@@ -79,9 +79,12 @@ _spdk_add_lvs_to_list(struct spdk_lvol_store *lvs)
 static void
 _spdk_lvs_free(struct spdk_lvol_store *lvs)
 {
+	pthread_mutex_lock(&g_lvol_stores_mutex);
 	if (lvs->on_list) {
 		TAILQ_REMOVE(&g_lvol_stores, lvs, link);
 	}
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+
 	free(lvs);
 }
 
@@ -712,13 +715,16 @@ spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
 	}
 
 	/* Check if new or new_name is already used in other lvs */
+	pthread_mutex_lock(&g_lvol_stores_mutex);
 	TAILQ_FOREACH(tmp, &g_lvol_stores, link) {
 		if (!strncmp(new_name, tmp->name, SPDK_LVS_NAME_MAX) ||
 		    !strncmp(new_name, tmp->new_name, SPDK_LVS_NAME_MAX)) {
+			pthread_mutex_unlock(&g_lvol_stores_mutex);
 			cb_fn(cb_arg, -EEXIST);
 			return;
 		}
 	}
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
 
 	req = calloc(1, sizeof(*req));
 	if (!req) {
