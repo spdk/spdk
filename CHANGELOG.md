@@ -4,6 +4,9 @@
 
 ### nvme
 
+spdk_nvme_connect_async() and spdk_nvme_connect_poll() ware added.  The two
+functions can be used to connect a NVMe controller asynchonrously.
+
 spdk_nvme_ns_get_extended_sector_size() was added.  This function includes
 the metadata size per sector (if any).  spdk_nvme_ns_get_sector_size() still
 returns only the data size per sector, not including metadata.
