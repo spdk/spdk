@@ -33,6 +33,24 @@
       "revId": "71f1fb6d7797d975d2e33978d0afba2d38b4cd0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a484814a_3d63c010",
+        "filename": "lib/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-20T19:41:34Z",
+      "side": 1,
+      "message": "Its actually not consistent with *all* of them.  Look at lvol or split for example and lvol is pretty new.  It was originally \u0027name\u0027 before I saw any of this other code and in the process of figuring how where/how things worked to run the json_config test it just worked out that I used crypto_bdev_name instead because that\u0027s what I use in the params for the create method.\n\nIs this a showstopper for you? I can always go back through and get things working using \u0027name\u0027 consistently but IMHO it makes more sense to be descriptive within the bdev modules when they\u0027re not already 100% consistent across the bdev modules. Let me know, its not a problem to change.",
+      "parentUuid": "3762ee06_fd106add",
+      "revId": "71f1fb6d7797d975d2e33978d0afba2d38b4cd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
