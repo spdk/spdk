@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "288f62ee_fe5309c4",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-20T02:29:44Z",
+      "side": 1,
+      "message": "When poll group fails to create, it is g_active_poll_groups that not increased. The g_num_poll_groups is initialized to the allowed cores and it is consistent here.",
+      "parentUuid": "77feb4d7_4a9f5093",
+      "revId": "304904cb5b3125a48d99464a83600f0e4e554767",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cc55a4a_6a11c29e",
         "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
         "patchSetId": 15
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-19T20:33:11Z",
       "side": 1,
       "message": "No poll groups exist",
+      "revId": "304904cb5b3125a48d99464a83600f0e4e554767",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "721a54b3_22227041",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-20T02:29:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7cc55a4a_6a11c29e",
       "revId": "304904cb5b3125a48d99464a83600f0e4e554767",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
