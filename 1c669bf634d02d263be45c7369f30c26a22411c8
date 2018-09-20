@@ -67,6 +67,29 @@
       "revId": "1c669bf634d02d263be45c7369f30c26a22411c8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "509c108d_0f940360",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 968,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-20T21:43:55Z",
+      "side": 1,
+      "message": "Note for next fix: no need _SAFE version here.",
+      "range": {
+        "startLine": 968,
+        "startChar": 1,
+        "endLine": 968,
+        "endChar": 19
+      },
+      "revId": "1c669bf634d02d263be45c7369f30c26a22411c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
