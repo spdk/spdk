@@ -47,6 +47,9 @@ DIRS-y += error gpt lvol malloc null nvme passthru raid rpc split
 ifeq ($(CONFIG_CRYPTO),y)
 DIRS-y += crypto
 endif
+ifeq ($(CONFIG_CAS), y)
+DIRS-y += cas
+endif
 
 ifeq ($(OS),Linux)
 DIRS-y += aio
