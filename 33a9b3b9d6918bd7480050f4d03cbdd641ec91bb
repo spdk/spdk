@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2556b153_0ef6ebd6",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-20T10:01:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e14a2cee_65cadde1",
+      "range": {
+        "startLine": 125,
+        "startChar": 8,
+        "endLine": 125,
+        "endChar": 15
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cdf5703b_6d0e9ec9",
         "filename": "scripts/spdkcli/ui_node_nvmf.py",
         "patchSetId": 16
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-20T07:15:13Z",
       "side": 1,
       "message": "You can remove this whole method if you don\u0027t need any summary info",
+      "range": {
+        "startLine": 259,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 24
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d681ac8a_83f2f772",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-20T10:01:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cdf5703b_6d0e9ec9",
       "range": {
         "startLine": 259,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "ad4b9611_3932fa82",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-20T10:01:58Z",
+      "side": 1,
+      "message": "I think that it can be done as improvement. Originally it is also not checked.",
+      "parentUuid": "e20efa3b_74c0ddd2",
+      "range": {
+        "startLine": 292,
+        "startChar": 8,
+        "endLine": 292,
+        "endChar": 55
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6393f979_50b42b1f",
         "filename": "scripts/spdkcli/ui_node_nvmf.py",
         "patchSetId": 16
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "fdcc1785_815db864",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-20T10:01:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6393f979_50b42b1f",
+      "range": {
+        "startLine": 323,
+        "startChar": 30,
+        "endLine": 323,
+        "endChar": 59
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25c8d8cf_3ea7efb3",
         "filename": "scripts/spdkcli/ui_node_nvmf.py",
         "patchSetId": 16
@@ -105,6 +201,30 @@
       "writtenOn": "2018-09-20T07:15:13Z",
       "side": 1,
       "message": "Other summary \"info\" constructions use .join() to create string. Can we follow this for consistency?",
+      "range": {
+        "startLine": 327,
+        "startChar": 8,
+        "endLine": 328,
+        "endChar": 54
+      },
+      "revId": "33a9b3b9d6918bd7480050f4d03cbdd641ec91bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d656f01b_8bf282bc",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-20T10:01:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25c8d8cf_3ea7efb3",
       "range": {
         "startLine": 327,
         "startChar": 8,
