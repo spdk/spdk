@@ -1,0 +1,594 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5c4d551_1adc4164",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "Please add summary to output the number of target nodes\n   get count and output like return \"Target nodes: %d\" % count, None",
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56bf56e2_970b6d70",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "should be auth or authentication",
+      "range": {
+        "startLine": 234,
+        "startChar": 8,
+        "endLine": 234,
+        "endChar": 20
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "064fe227_af89ff24",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "If you use the hierarchy, UIISCSIAuthentication - UIISCSIAuthenticationDetails may be better.",
+      "range": {
+        "startLine": 239,
+        "startChar": 8,
+        "endLine": 239,
+        "endChar": 30
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47de86a0_f6d39b51",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "auth or authentication",
+      "range": {
+        "startLine": 239,
+        "startChar": 31,
+        "endLine": 239,
+        "endChar": 43
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd8d9afe_4495d063",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIISCSIAuthentication?",
+      "range": {
+        "startLine": 246,
+        "startChar": 6,
+        "endLine": 246,
+        "endChar": 28
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e708dd8_fe4d5b9c",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "authentication",
+      "range": {
+        "startLine": 248,
+        "startChar": 31,
+        "endLine": 248,
+        "endChar": 46
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c59c8b4_132dc7e2",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIISCSIAuthenticationDetails?",
+      "range": {
+        "startLine": 266,
+        "startChar": 6,
+        "endLine": 266,
+        "endChar": 27
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb0db9f6_8daae440",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "Please add summary to output counts of Luns",
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2263c0df_a1c50ea7",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "I think initializing UINode by\n \"lun\" + \"%s\" % (lun[\u0027lun_id\u0027]\nand adding summary\n \"%s\" % self.lun[\u0027bdev_name\u0027], None\nmay be easier to use.",
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3f68a0d_96ec4fbe",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "Please add summary to output counts of Pg_ig_maps",
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3c1bb10_713230e5",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "\"portal_group%s - initiator_group%s\" may fit well with others.",
+      "range": {
+        "startLine": 307,
+        "startChar": 30,
+        "endLine": 307,
+        "endChar": 43
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4aec3ca4_59f915e2",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIPortalGroup",
+      "range": {
+        "startLine": 356,
+        "startChar": 12,
+        "endLine": 356,
+        "endChar": 28
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42b7793c_ef93f5c0",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "Please add summary to count of Portal groups",
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c82efea_69feaf81",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIPortalGroup",
+      "range": {
+        "startLine": 359,
+        "startChar": 6,
+        "endLine": 359,
+        "endChar": 22
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55e501ed_760a0e60",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "\"portal_group%s\"",
+      "range": {
+        "startLine": 361,
+        "startChar": 30,
+        "endLine": 361,
+        "endChar": 34
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d7c4885_0f149bcd",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIPortal",
+      "range": {
+        "startLine": 368,
+        "startChar": 12,
+        "endLine": 368,
+        "endChar": 25
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f1a7446_30221e59",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIPortal",
+      "range": {
+        "startLine": 374,
+        "startChar": 6,
+        "endLine": 374,
+        "endChar": 19
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02c88928_6343a3ba",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIInitiatorGroup",
+      "range": {
+        "startLine": 465,
+        "startChar": 12,
+        "endLine": 465,
+        "endChar": 31
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f915124_6278001e",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "Please add summary to output counts of Initiator groups.",
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af27712b_d5d5062c",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIInitiatorGroup",
+      "range": {
+        "startLine": 468,
+        "startChar": 6,
+        "endLine": 468,
+        "endChar": 25
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3614f4c0_c6305fd0",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "initiator_group%s",
+      "range": {
+        "startLine": 470,
+        "startChar": 30,
+        "endLine": 470,
+        "endChar": 34
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "407e70a6_a02734c5",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIInitiator",
+      "range": {
+        "startLine": 477,
+        "startChar": 12,
+        "endLine": 477,
+        "endChar": 28
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c28bd88_81d6398d",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "UIInitiator",
+      "range": {
+        "startLine": 483,
+        "startChar": 6,
+        "endLine": 483,
+        "endChar": 22
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fac08905_dd868486",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "hostname%s, netmask%s may be better",
+      "range": {
+        "startLine": 485,
+        "startChar": 30,
+        "endLine": 485,
+        "endChar": 37
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff801f14_2fda77e3",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "Please add summary to output counts of Connections",
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84c9be43_08f822e3",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "Please add summary to output counts of Auth groups.",
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "244ef82c_5b66cd9a",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "\"auth_group\" + str(ag[\u0027tag\u0027])",
+      "range": {
+        "startLine": 606,
+        "startChar": 30,
+        "endLine": 606,
+        "endChar": 44
+      },
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1426734f_916f6191",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T00:09:29Z",
+      "side": 1,
+      "message": "Please add summary to output counts of Secrets",
+      "revId": "b40b664129d26fba9db4a838b743bff6ffd95c75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
