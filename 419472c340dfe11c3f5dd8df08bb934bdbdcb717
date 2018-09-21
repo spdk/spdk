@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "299f7094_b163186c",
+        "filename": "scripts/spdkcli.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-21T07:30:15Z",
+      "side": 1,
+      "message": "This whole class along with it\u0027s dependencies could be moved to separate module and imported here for better readability.",
+      "revId": "419472c340dfe11c3f5dd8df08bb934bdbdcb717",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "326228f0_f0b62430",
+        "filename": "scripts/spdkcli.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-21T07:30:15Z",
+      "side": 1,
+      "message": "Let\u0027s change name to SpdkShell to stick with other class naming coventions",
+      "range": {
+        "startLine": 16,
+        "startChar": 6,
+        "endLine": 16,
+        "endChar": 16
+      },
+      "revId": "419472c340dfe11c3f5dd8df08bb934bdbdcb717",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
