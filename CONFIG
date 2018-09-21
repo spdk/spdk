@@ -96,6 +96,9 @@ CONFIG_VIRTIO=y
 CONFIG_PMDK=n
 CONFIG_PMDK_DIR=
 
+# Build with "reduce" (SPDK block compression)
+CONFIG_REDUCE=n
+
 # Build with VPP
 CONFIG_VPP=n
 CONFIG_VPP_DIR=

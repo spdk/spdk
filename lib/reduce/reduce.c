@@ -37,6 +37,8 @@
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 
+#include "libpmem.h"
+
 /* Always round up the size of the PM region to the nearest cacheline. */
 #define REDUCE_PM_SIZE_ALIGNMENT	64
 

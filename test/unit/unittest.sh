@@ -121,7 +121,9 @@ $valgrind $testdir/lib/iscsi/iscsi.c/iscsi_ut
 $valgrind $testdir/lib/iscsi/init_grp.c/init_grp_ut $testdir/lib/iscsi/init_grp.c/init_grp.conf
 $valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/portal_grp.c/portal_grp.conf
 
-$valgrind $testdir/lib/reduce/reduce.c/reduce_ut
+if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/config.h; then
+	$valgrind $testdir/lib/reduce/reduce.c/reduce_ut
+fi
 
 $valgrind $testdir/lib/thread/thread.c/thread_ut
 

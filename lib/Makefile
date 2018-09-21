@@ -36,12 +36,14 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += bdev blob blobfs conf copy event json jsonrpc \
           log lvol net rpc sock thread trace util nvme nvmf scsi ioat \
-	  ut_mock iscsi reduce
+	  ut_mock iscsi
 ifeq ($(OS),Linux)
 DIRS-y += nbd
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
 endif
+
+DIRS-$(CONFIG_REDUCE) += reduce
 
 # If CONFIG_ENV is pointing at a directory in lib, build it.
 # Out-of-tree env implementations must be built separately by the user.
