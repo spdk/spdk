@@ -1776,10 +1776,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			SPDK_DEBUGLOG(SPDK_LOG_NVME, "CC.EN = 0 && CSTS.RDY = 0\n");
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE, ready_timeout_in_ms);
 			/*
-			 * Delay 100us before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
+			 * Delay 2.5s before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
 			 *  set to 1 if it is too soon after CSTS.RDY is reported as 0.
 			 */
-			spdk_delay_us(100);
+			ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (2500 * spdk_get_ticks_hz() / 1000);
 			return 0;
 		}
 		break;
