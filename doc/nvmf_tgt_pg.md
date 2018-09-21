@@ -67,9 +67,9 @@ system. This is used for access control.
 ## The Basics
 
 A user of the NVMe-oF target library begins by creating a target using
-spdk_nvmf_tgt_create(), setting up a set of addresses to accept connections on
-by calling spdk_nvmf_tgt_listen(), then creating a subsystem using
-spdk_nvmf_subsystem_create().
+spdk_nvmf_tgt_create(), setting up a set of addresses on which to accept
+connections by calling spdk_nvmf_tgt_listen(), then creating a subsystem
+using spdk_nvmf_subsystem_create().
 
 Subsystems begin in an inactive state and must be activated by calling
 spdk_nvmf_subsystem_start(). Subsystems may be modified at run time, but only
@@ -89,13 +89,13 @@ All I/O to a subsystem is driven by a poll group, which polls for incoming
 network I/O. Poll groups may be created by calling
 spdk_nvmf_poll_group_create(). They automatically request to begin polling
 upon creation on the thread from which they were created. Most importantly, *a
-poll group may only be accessed from the thread it was created on.*
+poll group may only be accessed from the thread on which it was created.*
 
 When spdk_nvmf_tgt_accept() detects a new connection, it will construct a new
 struct spdk_nvmf_qpair object and call the user provided `new_qpair_fn`
 callback for each new qpair. In response to this callback, the user must
 assign the qpair to a poll group by calling spdk_nvmf_poll_group_add().
-Remember, a poll group may only be accessed from the thread it was created on,
+Remember, a poll group may only be accessed from the thread on which it was created,
 so making a call to spdk_nvmf_poll_group_add() may require passing a message
 to the appropriate thread.
 
@@ -136,7 +136,7 @@ per thread used in the application. New qpairs created in response to
 spdk_nvmf_tgt_accept() can be handed out round-robin to the poll groups. This
 is how the SPDK NVMe-oF target application currently functions.
 
-More advanced algorithms for distributing qpairs to poll groups is possible.
+More advanced algorithms for distributing qpairs to poll groups are possible.
 For instance, a NUMA-aware algorithm would be an improvement over basic
 round-robin, where NUMA-aware means assigning qpairs to poll groups running on
 CPU cores that are on the same NUMA node as the network adapter and storage
@@ -166,7 +166,7 @@ the I/O path.
 ## Zero Copy Support
 
 For the RDMA transport, data is transferred from the RDMA NIC to host memory
-and then host memory to the SSD (or vis. versa), without any intermediate
+and then host memory to the SSD (or vice versa), without any intermediate
 copies. Data is never moved from one location in host memory to another. Other
 transports in the future may require data copies.
 
