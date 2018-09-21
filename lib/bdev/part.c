@@ -146,7 +146,8 @@ spdk_bdev_part_io_type_supported(void *_part, enum spdk_bdev_io_type io_type)
 {
 	struct spdk_bdev_part *part = _part;
 
-	return part->internal.base->bdev->fn_table->io_type_supported(part->internal.base->bdev, io_type);
+	return part->internal.base->bdev->fn_table->io_type_supported(part->internal.base->bdev->ctxt,
+			io_type);
 }
 
 static struct spdk_io_channel *
