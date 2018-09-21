@@ -19,11 +19,11 @@ cscope.out
 dpdk-*
 CUnit-Memory-Dump.xml
 include/spdk/config.h
-CONFIG.local
 *VC.db
 .vscode
 .project
 .cproject
 .settings
 mk/cc.mk
+mk/config.mk
 PYTHON_COMMAND
