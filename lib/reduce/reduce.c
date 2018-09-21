@@ -42,10 +42,13 @@
 /* Always round up the size of the PM region to the nearest cacheline. */
 #define REDUCE_PM_SIZE_ALIGNMENT	64
 
+#define SPDK_REDUCE_SIGNATURE "SPDKREDU"
+
 /* Structure written to offset 0 of both the pm file and the backing device. */
 struct spdk_reduce_vol_superblock {
+	uint8_t				signature[8];
 	struct spdk_reduce_vol_params	params;
-	uint8_t				reserved[4064];
+	uint8_t				reserved[4056];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_superblock) == 4096, "size incorrect");
 
@@ -167,6 +170,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		     spdk_reduce_vol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_reduce_vol *vol;
+	struct spdk_reduce_vol_superblock *pm_super;
 	int64_t size, size_needed;
 	int rc;
 
@@ -211,6 +215,15 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 
 	memcpy(&vol->uuid, &params->uuid, sizeof(params->uuid));
 	vol->backing_dev = backing_dev;
+	pm_super = (struct spdk_reduce_vol_superblock *)vol->pm_file.pm_buf;
+
+	memcpy(pm_super->signature, SPDK_REDUCE_SIGNATURE, 8);
+	memcpy(&pm_super->params, params, sizeof(*params));
+	if (vol->pm_file.pm_is_pmem) {
+		pmem_persist(pm_super, sizeof(*pm_super));
+	} else {
+		pmem_msync(pm_super, sizeof(*pm_super));
+	}
 
 	cb_fn(cb_arg, vol, 0);
 }
