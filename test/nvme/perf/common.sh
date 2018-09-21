@@ -22,6 +22,7 @@ IODEPTH=(256 256 32)
 DISKNO=1
 CPU_MASKS=(0x02 0x06 0x1E 0x7E 0x1FE 0x7FE)
 CPUs=(1 2 4 6 8 10)
+CPU_NO=2
 
 function get_disks(){
 	if [ "$1" = "nvme" ]; then
@@ -164,6 +165,9 @@ function usage()
 	echo "    --fio-plugin=STR      Use bdev or nvme fio_plugin. [default=$PLUGIN]"
 	echo "    --disk-no=INT,ALL     Number of disks to test on, if =ALL then test on all found disk. [default=$DISKNO]"
 	echo "    --no-preconditioning  Skip preconditioning"
+	if [ "$TC4" = "1" ]; then
+		echo "    --cpu_no=INT          Number of cores to test with. [default=$CPU_NO]"
+	fi
 	set -x
 }
 
@@ -178,6 +182,7 @@ while getopts 'h-:' optchar; do
 			disk-no=*) DISKNO="${OPTARG#*=}" ;;
 			fio-plugin=*) PLUGIN="${OPTARG#*=}" ;;
 			no-preconditioning) PRECONDITIONING=false ;;
+			cpu_no=*) CPU_NO="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'"; exit 1 ;;
 		esac
 		;;
