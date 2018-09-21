@@ -103,6 +103,8 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	# running_config
 fi
 
+running_config
+
 # Start hotplug test case.
 $fio_py 1048576 128 rw 10 &
 fio_pid=$!
