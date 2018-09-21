@@ -26,4 +26,5 @@ CONFIG.local
 .cproject
 .settings
 mk/cc.mk
+mk/config.mk
 PYTHON_COMMAND
