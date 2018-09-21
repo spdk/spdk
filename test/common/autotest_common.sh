@@ -95,10 +95,10 @@ fi
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
 # On Linux systems, override the default HUGEMEM in scripts/setup.sh to
-#  allocate 8GB in hugepages.
+#  allocate 10GB in hugepages.
 # FreeBSD runs a much more limited set of tests, so keep the default 2GB.
 if [ `uname -s` = "Linux" ]; then
-	export HUGEMEM=8192
+	export HUGEMEM=10240
 fi
 
 DEFAULT_RPC_ADDR=/var/tmp/spdk.sock
