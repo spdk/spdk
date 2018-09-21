@@ -32,82 +32,83 @@
 #
 
 # Installation prefix
-CONFIG_PREFIX?=/usr/local
+CONFIG_PREFIX="/usr/local"
 
 # Build with debug logging. Turn off for performance testing and normal usage
-CONFIG_DEBUG?=n
+CONFIG_DEBUG=n
 
 # Build with support of backtrace printing in log messages. Requires libunwind.
-CONFIG_LOG_BACKTRACE?=n
+CONFIG_LOG_BACKTRACE=n
 
 # Treat warnings as errors (fail the build on any warning).
-CONFIG_WERROR?=n
+CONFIG_WERROR=n
 
 # Build with link-time optimization.
-CONFIG_LTO?=n
+CONFIG_LTO=n
 
 # Build with code coverage instrumentation.
-CONFIG_COVERAGE?=n
+CONFIG_COVERAGE=n
 
 # Build with Address Sanitizer enabled
-CONFIG_ASAN?=n
+CONFIG_ASAN=n
 
 # Build with Undefined Behavior Sanitizer enabled
-CONFIG_UBSAN?=n
+CONFIG_UBSAN=n
 
 # Build with Thread Sanitizer enabled
-CONFIG_TSAN?=n
+CONFIG_TSAN=n
 
 # Build tests
-CONFIG_TESTS?=y
+CONFIG_TESTS=y
 
 # Directory that contains the desired SPDK environment library.
 # By default, this is implemented using DPDK.
-CONFIG_ENV?=
+CONFIG_ENV=
 
 # This directory should contain 'include' and 'lib' directories for your DPDK
 # installation.
-CONFIG_DPDK_DIR?=
+CONFIG_DPDK_DIR=
 
 # Build SPDK FIO plugin. Requires CONFIG_FIO_SOURCE_DIR set to a valid
 # fio source code directory.
-CONFIG_FIO_PLUGIN?=n
+CONFIG_FIO_PLUGIN=n
 
 # This directory should contain the source code directory for fio
 # which is required for building the SPDK FIO plugin.
-CONFIG_FIO_SOURCE_DIR?=/usr/src/fio
+CONFIG_FIO_SOURCE_DIR=/usr/src/fio
 
 # Enable RDMA support for the NVMf target.
 # Requires ibverbs development libraries.
-CONFIG_RDMA?=n
-CONFIG_RDMA_SEND_WITH_INVAL?=n
+CONFIG_RDMA=n
+CONFIG_RDMA_SEND_WITH_INVAL=n
 
 # Build Ceph RBD support in bdev modules
 # Requires librbd development libraries
-CONFIG_RBD?=n
+CONFIG_RBD=n
 
 # Build vhost library.
-CONFIG_VHOST?=y
+CONFIG_VHOST=y
 
 # Build vhost initiator (Virtio) driver.
-CONFIG_VIRTIO?=y
+CONFIG_VIRTIO=y
 
 # Build with PMDK backends
-CONFIG_PMDK?=n
-CONFIG_PMDK_DIR?=
+CONFIG_PMDK=n
+CONFIG_PMDK_DIR=
 
 # Build with VPP
-CONFIG_VPP?=n
+CONFIG_VPP=n
+CONFIG_VPP_DIR=
 
 # Requires libiscsi development libraries.
-CONFIG_ISCSI_INITIATOR?=n
+CONFIG_ISCSI_INITIATOR=n
 
 # Enable the dependencies for building the crypto vbdev
-CONFIG_CRYPTO?=n
+CONFIG_CRYPTO=n
 
 # Build spdk shared libraries in addition to the static ones.
-CONFIG_SHARED?=n
+CONFIG_SHARED=n
 
 # Build with VTune suport.
-CONFIG_VTUNE?=n
-CONFIG_VTUNE_DIR?=
+CONFIG_VTUNE=n
+CONFIG_VTUNE_DIR=

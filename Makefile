@@ -41,7 +41,7 @@ DIRS-$(CONFIG_SHARED) += shared_lib
 DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
 
-.PHONY: all clean $(DIRS-y) include/spdk/config.h CONFIG.local mk/cc.mk cc_version cxx_version
+.PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk mk/cc.mk cc_version cxx_version
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
@@ -81,15 +81,38 @@ mk/cc.mk:
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 
-include/spdk/config.h: CONFIG CONFIG.local scripts/genconfig.py
-	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
-	test -z "$$PYCMD" && PYCMD=python ; \
-	echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
-	echo "#define SPDK_CONFIG_H" >> $@.tmp; \
-	$$PYCMD scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp; \
-	echo "#endif /* SPDK_CONFIG_H */" >> $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
-	rm -f $@.tmp
+# Transform config.mk into config.h by:
+# 1. Replace variables from command line (MAKEFLAGS) by directly replacing CONFIG_XXX lines.
+# 2. Remove empty lines, comments and '?='.
+# 3. CONFIG_ENV and CONFIG_PREFIX are paths so quote them first to not them remove later if empty.
+# 4. 'n' or empty options replace by undef.
+# 5. 'y' options replace by define 1.
+# 6. Options ending with "_DIR" threat like paths and replace by quoting the argument.
+#    Empty options are already replaced in step 4 and won't show up as "".
+# 7. Any other options are replaced by directly defining the value.
+# 8. Add sentinels.
+include/spdk/config.h: mk/config.mk
+	$(Q)cp mk/config.mk $@.tmp
+	$(Q)for cfg in $(filter CONFIG_%,$(MAKEFLAGS)); do \
+		sed -i.bak -r "s@$${cfg%%=*}[?]?=.*@$$cfg@g" $@.tmp; \
+	done
+
+	$(Q)sed -i.bak -r '/^\s*(#.*)?$$/d; s/[?]?=/ /g' $@.tmp
+	$(Q)sed -i.bak -r 's/^\s*(CONFIG_ENV|CONFIG_PREFIX)\s+(.*)$$/#define \1 "\2"/g' $@.tmp
+	$(Q)sed -i.bak -r 's/^\s*(CONFIG_[A-Z0-9_]+)\s+n?\s*$$/#undef \1/g' $@.tmp
+	$(Q)sed -i.bak -r 's/^\s*(CONFIG_[A-Z0-9_]+)\s+y\s*$$/#define \1 1/g' $@.tmp
+	$(Q)sed -i.bak -r 's/^\s*(CONFIG_[A-Z0-9_^D]+_DIR)\s+(.*)$$/#define \1 "\2"/g' $@.tmp
+	$(Q)sed -i.bak -r 's/^\s*(CONFIG_[A-Z0-9_]+)\s+(.*)$$/#define \1 \2/g' $@.tmp
+
+	$(Q)echo '#ifndef SPDK_CONFIG_H' > $@.tmp.bak
+	$(Q)echo '#define SPDK_CONFIG_H' >> $@.tmp.bak
+	$(Q)echo '' >> $@.tmp.bak
+	$(Q)cat $@.tmp >> $@.tmp.bak
+	$(Q)echo '' >> $@.tmp.bak
+	$(Q)echo '#endif /* SPDK_CONFIG_H */' >> $@.tmp.bak
+
+	$(Q)cmp -s $@.tmp.bak $@ || cp $@.tmp.bak $@
+	$(Q)rm -f $@.tmp $@.tmp.bak
 
 cc_version: mk/cc.mk
 	$(Q)echo "SPDK using CC=$(CC)"; $(CC) -v
