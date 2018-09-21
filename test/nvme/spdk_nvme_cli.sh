@@ -33,9 +33,43 @@ ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
 bdfs=$(iter_pci_class_code 01 08 02)
 bdf=$(echo $bdfs|awk '{ print $1 }')
 
-if [[ -s $rootdir/CONFIG.local ]] && grep CONFIG_LOG_BACKTRACE $rootdir/CONFIG.local -q; then
+if [[ -s $rootdir/mk/config.mk ]] && grep CONFIG_LOG_BACKTRACE $rootdir/mk/config.mk -q; then
 	nvme_cli_ldflags='LDFLAGS=-lunwind'
 fi
+
+#
+# HACK: revert this change when https://review.gerrithub.io/#/c/spdk/nvme-cli/+/426695/ is merged
+#
+echo "WARNING: Patching nvme-cli - PLS REMOVE THIS PART!!!"
+git reset --hard
+cat << 'EOF' | git -C $spdk_nvme_cli apply
+From 467da3f4ac2dc438ec66510814cadc1bf51a1df4 Mon Sep 17 00:00:00 2001
+From: Pawel Wodkowski <pawelx.wodkowski@intel.com>
+Date: Tue, 25 Sep 2018 18:03:37 +0200
+Subject: [PATCH] env: switch to use mk/config.mk
+
+Signed-off-by: Pawel Wodkowski <pawelx.wodkowski@intel.com>
+---
+ env.spdk.mk | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/env.spdk.mk b/env.spdk.mk
+index c02f67402ef5..7b6dfcfc0d58 100644
+--- a/env.spdk.mk
++++ b/env.spdk.mk
+@@ -35,8 +35,7 @@ SPDK_ROOT_DIR ?= $(abspath $(CURDIR)/spdk)
+ SPDK_LIB_DIR ?= $(SPDK_ROOT_DIR)/build/lib
+ DPDK_LIB_DIR ?= $(SPDK_ROOT_DIR)/dpdk/build/lib
+
+--include $(SPDK_ROOT_DIR)/CONFIG.local
+-include $(SPDK_ROOT_DIR)/CONFIG
++include $(SPDK_ROOT_DIR)/mk/config.mk
+
+ override CFLAGS += -I$(SPDK_ROOT_DIR)/include
+ override LDFLAGS += \
+--
+2.7.4
+EOF
 
 cd $spdk_nvme_cli
 make clean && make -j$(nproc) $nvme_cli_ldflags
