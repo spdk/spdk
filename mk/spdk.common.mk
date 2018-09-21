@@ -32,8 +32,13 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
--include $(SPDK_ROOT_DIR)/CONFIG.local
-include $(SPDK_ROOT_DIR)/CONFIG
+ifneq ($(MAKECMDGOALS),clean)
+ifeq ($(wildcard $(SPDK_ROOT_DIR)/mk/config.mk),)
+$(error mk/config.mk: file not found. Please run configure before 'make $(filter-out clean,$(MAKECMDGOALS))')
+endif
+endif
+
+include $(SPDK_ROOT_DIR)/mk/config.mk
 
 -include $(SPDK_ROOT_DIR)/mk/cc.mk
 
