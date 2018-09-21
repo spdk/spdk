@@ -56,7 +56,8 @@ userspace processes to use InfiniBand/RDMA verbs directly.
 ~~~{.sh}
 modprobe ib_cm
 modprobe ib_core
-modprobe ib_ucm
+# Please note that ib_ucm does not exist in newer versions of the kernel and is not required.
+modprobe ib_ucm || true
 modprobe ib_umad
 modprobe ib_uverbs
 modprobe iw_cm
@@ -67,6 +68,12 @@ modprobe rdma_ucm
 ## Prerequisites for RDMA NICs {#nvmf_prereqs_rdma_nics}
 
 Before starting our NVMe-oF target we must detect RDMA NICs and assign them IP addresses.
+
+### Finding RDMA NICs and associated network interfaces
+
+~~~{.sh}
+ls /sys/class/infiniband/*/device/net
+~~~
 
 ### Mellanox ConnectX-3 RDMA NICs
 
@@ -92,7 +99,43 @@ ifconfig eth2 192.168.100.9 netmask 255.255.255.0 up
 
 ## Configuring the SPDK NVMe over Fabrics Target {#nvmf_config}
 
-A `nvmf_tgt`-specific configuration file is used to configure the NVMe over Fabrics target. This
+An NVMe over Fabrics target can be configured using JSON RPC calls or a .ini style configuration file.
+While both methods will be detailed below, the preferred method is over RPC.
+The basic RPC calls needed to configure the NVMe-oF subsystem are detailed below. More information about
+working with NVMe over Fabrics specific RPCs can be found at (@ref jsonrpc_components_nvmf_tgt).
+
+### Using RPCs {#nvmf_config_rpc}
+
+Start the nvmf_tgt application with elevated privileges and instruct it to wait for rpcs.
+The set_nvmf_target_options RPC can then be used to configure basic target parameters.
+Below is an example where the target is configured with an I/O unit size of 8192,
+4 max qpairs per controller, and an in capsule data size of 0. The parameters controlled
+by set_nvmf_target_options may only be modified before the SPDK NVMe-oF subsystem is initialized.
+Once the target options are configured. You need to start the NVMe-oF subsystem with start_subsystem_init.
+
+~~~{.sh}
+app/nvmf_tgt/nvmf_tgt --wait-for-rpc
+scripts/rpc.py set_nvmf_target_options -u 8192 -p 4 -c 0
+scripts/rpc.py start_subsystem_init
+~~~
+
+Note: The start_subsystem_init rpc is referring to SPDK application subsystems and not the NVMe over Fabrics concept.
+
+#### Subsystem Configuration with RPCs
+
+Below is an example of creating a malloc bdev and assigning it to a subsystem. Please adjust the bdevs,
+NQN, serial number, and IP address to your own circumstances.
+
+~~~{.sh}
+scripts/rpc.py construct_malloc_bdev -b Malloc0 512 512
+scripts/rpc.py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+scripts/rpc.py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
+scripts/rpc.py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a 192.168.100.8 -s 4420
+~~~
+
+### Using a configuration file (Legacy) {#nvmf_config_file}
+
+A `nvmf_tgt`-specific configuration file can be used to configure the NVMe over Fabrics target. This
 file's primary purpose is to define subsystems. A fully documented example configuration file is
 located at `etc/spdk/nvmf.conf.in`.
 
@@ -104,7 +147,7 @@ the target requires elevated privileges (root) to run.
 app/nvmf_tgt/nvmf_tgt -c /path/to/nvmf.conf
 ~~~
 
-### Subsystem Configuration {#nvmf_config_subsystem}
+#### Subsystem Configuration with a configuration file
 
 The `[Subsystem]` section in the configuration file is used to configure
 subsystems for the NVMe-oF target.
