@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33ca976e_7bc6a8b8",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-09-21T03:52:39Z",
+      "side": 1,
+      "message": "I think \"StripSize 64\\n\" should be added here, otherwise there will be error \"bdev_raid.c: 800:raid_bdev_config_add: *ERROR*: Invalid strip size -1\".\nA question, I noticed raid0 is based on Devices Malloc here, how it can base on Nvme? Thanks.\nIf raid0 is based on Nvme, bdfs of Nvme should be added in generated iscsi.conf.",
+      "range": {
+        "startLine": 1121,
+        "startChar": 6,
+        "endLine": 1121,
+        "endChar": 16
+      },
+      "revId": "0d686ae55aaad49688e33e4e747cc5914bc258e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
