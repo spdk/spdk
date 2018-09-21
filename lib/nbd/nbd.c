@@ -639,15 +639,11 @@ spdk_nbd_io_recv(struct spdk_nbd_disk *nbd)
 }
 
 static int
-spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
+spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 {
-	struct nbd_io *io;
 	int ret = 0;
 
-	io = TAILQ_FIRST(&nbd->executed_io_list);
-	if (io == NULL) {
-		return 0;
-	}
+	assert(io != NULL);
 
 	/* resp error and handler are already set in io_done */
 
@@ -696,6 +692,7 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 static int
 spdk_nbd_io_xmit(struct spdk_nbd_disk *nbd)
 {
+	struct nbd_io *io;
 	int ret = 0;
 
 	/*
@@ -707,7 +704,8 @@ spdk_nbd_io_xmit(struct spdk_nbd_disk *nbd)
 	}
 
 	while (!TAILQ_EMPTY(&nbd->executed_io_list)) {
-		ret = spdk_nbd_io_xmit_internal(nbd);
+		io = TAILQ_FIRST(&nbd->executed_io_list);
+		ret = spdk_nbd_io_xmit_internal(nbd, io);
 		if (ret != 0) {
 			return ret;
 		}
