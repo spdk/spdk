@@ -68,7 +68,7 @@ function usage()
 
 # Load default values
 # Convert config to sourcable configuration file
-sed -r 's/CONFIG_([[:alnum:]_]+)\?=(.*)/CONFIG[\1]=\2/g' CONFIG > CONFIG.sh
+sed -r 's/CONFIG_([[:alnum:]_]+)=(.*)/CONFIG[\1]=\2/g' CONFIG > CONFIG.sh
 declare -A CONFIG
 source CONFIG.sh
 rm CONFIG.sh
@@ -364,39 +364,35 @@ fi
 
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
-if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+\?=" CONFIG) -ne ${#CONFIG[@]} ]; then
+if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" CONFIG) -ne ${#CONFIG[@]} ]; then
 	echo ""
 	echo "BUG: Some configuration options are not present in CONFIG file. Please update this file."
 	echo "Missing options in CONFIG (+) file and in current config (-): "
 	diff -u --label "CONFIG file" --label "CONFIG[@]" \
-		<(sed -r -e '/^\s*$/d; /^\s*#.*/d; s/(CONFIG_[[:alnum:]_]+)\?=.*/\1/g' CONFIG | sort) \
+		<(sed -r -e '/^\s*$/d; /^\s*#.*/d; s/(CONFIG_[[:alnum:]_]+)=.*/\1/g' CONFIG | sort) \
 		<(printf "CONFIG_%s\n" ${!CONFIG[@]} | sort)
 	exit 1
 fi
 
-echo -n "Creating CONFIG.local..."
-cp -f CONFIG CONFIG.local
+echo -n "Creating mk/config.mk..."
+cp -f CONFIG mk/config.mk
 for key in ${!CONFIG[@]}; do
-	sed -i.bak -r "s#^\s*CONFIG_${key}\?=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" CONFIG.local
+	sed -i.bak -r "s#^\s*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" mk/config.mk
 done
 # On FreeBSD sed -i 'SUFFIX' - SUFFIX is mandatory. So no way but to delete the backed file.
-rm -f CONFIG.local.bak
+rm -f mk/config.mk.bak
 
 # Environment variables
-if [ -n "$CFLAGS" ]; then
-	echo "CFLAGS?=$CFLAGS" >> CONFIG.local
-fi
-if [ -n "$CXXFLAGS" ]; then
-	echo "CXXFLAGS?=$CXXFLAGS" >> CONFIG.local
-fi
-if [ -n "$LDFLAGS" ]; then
-	echo "LDFLAGS?=$LDFLAGS" >> CONFIG.local
-fi
-if [ -n "$DESTDIR" ]; then
-	echo "DESTDIR?=$DESTDIR" >> CONFIG.local
-fi
+[ -n "$CFLAGS" ] && echo "CFLAGS?=$CFLAGS" >> mk/config.mk
+[ -n "$CXXFLAGS" ] && echo "CXXFLAGS?=$CXXFLAGS" >> mk/config.mk
+[ -n "$LDFLAGS" ] && echo "LDFLAGS?=$LDFLAGS" >> mk/config.mk
+[ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> mk/config.mk
+
+# When nvme-cli repo will be update this link can be removed
+ln -fs mk/config.mk CONFIG.local
 
 echo "done."
+
 if [[ "$OSTYPE" == "freebsd"* ]]; then
 	echo "Type 'gmake' to build."
 else

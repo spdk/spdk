@@ -16,32 +16,31 @@ for arg in sys.argv:
         args[var] = val
 
 defs = {}
-for config in ('CONFIG', 'CONFIG.local'):
-    try:
-        with open(config) as f:
-            for line in f:
-                line = line.strip()
-                if not comment.match(line):
-                    m = assign.match(line)
-                    if m:
-                        var = m.group(1).strip()
-                        default = m.group(3).strip()
-                        val = default
-                        if var in args:
-                            val = args[var]
-                        if default.lower() == 'y' or default.lower() == 'n':
-                            if val.lower() == 'y':
-                                defs["SPDK_{0}".format(var)] = 1
-                            else:
-                                defs["SPDK_{0}".format(var)] = 0
+try:
+    with open('mk/config.mk') as f:
+        for line in f:
+            line = line.strip()
+            if not comment.match(line):
+                m = assign.match(line)
+                if m:
+                    var = m.group(1).strip()
+                    default = m.group(3).strip()
+                    val = default
+                    if var in args:
+                        val = args[var]
+                    if default.lower() == 'y' or default.lower() == 'n':
+                        if val.lower() == 'y':
+                            defs["SPDK_{0}".format(var)] = 1
                         else:
-                            strval = val.replace('"', '\"')
-                            defs["SPDK_{0}".format(var)] = strval
-    except IOError:
-        continue
+                            defs["SPDK_{0}".format(var)] = 0
+                    else:
+                        strval = val.replace('"', '\"')
+                        defs["SPDK_{0}".format(var)] = strval
+except IOError:
+    print("Failed to open file {}".format(config))
 
 for key, value in sorted(defs.items()):
-    if value == 0:
+    if not value:
         print("#undef {0}".format(key))
     else:
         print("#define {0} {1}".format(key, value))
