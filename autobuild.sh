@@ -19,6 +19,7 @@ git describe --tags
 # Print some test system info out for the log
 echo "** START ** Info for Hostname: $HOSTNAME"
 uname -a
+./configure $config_params
 $MAKE cc_version
 $MAKE cxx_version
 echo "** END ** Info for Hostname: $HOSTNAME"
