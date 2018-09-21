@@ -56,6 +56,7 @@ fi
 : ${SPDK_TEST_PMDK=1}; export SPDK_TEST_PMDK
 : ${SPDK_TEST_LVOL=1}; export SPDK_TEST_LVOL
 : ${SPDK_TEST_JSON=1}; export SPDK_TEST_JSON
+: ${SPDK_TEST_REDUCE=1}; export SPDK_TEST_REDUCE
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=1}; export SPDK_RUN_INSTALLED_DPDK
@@ -150,6 +151,14 @@ if [ -f /usr/include/libpmemblk.h ]; then
 else
 	# PMDK not installed so disable PMDK tests explicitly here
 	SPDK_TEST_PMDK=0; export SPDK_TEST_PMDK
+fi
+
+if [ -f /usr/include/libpmem.h ]; then
+	config_params+=' --with-reduce'
+else
+	# PMDK not installed so disable any reduce tests explicitly here
+	#  since reduce depends on libpmem
+	SPDK_TEST_REDUCE=0; export SPDK_TEST_REDUCE
 fi
 
 if [ -d /usr/src/fio ]; then
