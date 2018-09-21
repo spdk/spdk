@@ -41,7 +41,7 @@ DIRS-$(CONFIG_SHARED) += shared_lib
 DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
 
-.PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk cc_version cxx_version
+.PHONY: all clean $(DIRS-y) config.h mk/config.mk mk/cc.mk cc_version cxx_version
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
@@ -81,11 +81,17 @@ mk/cc.mk:
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 
-config.h: CONFIG CONFIG.local scripts/genconfig.py
+config.h: mk/config.mk scripts/genconfig.py
 	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
 	test -z "$$PYCMD" && PYCMD=python ; \
 	$$PYCMD scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
+	config_mk_cnt=`egrep -c '^\\s*CONFIG_[[:alnum:]_]+\\?=' mk/config.mk`; \
+	config_h_cnt=`egrep -c '^#(define|undef) SPDK_CONFIG' $@`; \
+	if [ $$config_mk_cnt -ne $$config_h_cnt ]; then \
+		echo 'BUG: Number of options from CONFIG not equal to $@'; \
+		exit 1; \
+	fi; \
 	rm -f $@.tmp
 
 cc_version: mk/cc.mk
