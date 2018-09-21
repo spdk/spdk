@@ -1099,6 +1099,48 @@ raid_bdev_get_ctx_size(void)
 
 /*
  * brief:
+ * raid_bdev_get_running_config is used to get the configuration options.
+ *
+ * params:
+ * fp - The pointer to a file that will be written to the configuration options.
+ * returns:
+ * none
+ */
+static void
+raid_bdev_get_running_config(FILE *fp)
+{
+	struct raid_bdev *raid_bdev;
+	struct spdk_bdev *base;
+	int index = 1;
+	uint16_t i;
+
+	TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_configured_list, state_link) {
+		fprintf(fp,
+			"\n"
+			"[RAID%d]\n"
+			"  Name %s\n"
+			"  NumDevices %hu\n"
+			"  RaidLevel %hhu\n",
+			index, raid_bdev->bdev.name, raid_bdev->num_base_bdevs,
+			raid_bdev->raid_level);
+		fprintf(fp,
+			"  Devices ");
+		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+			base = raid_bdev->base_bdev_info[i].bdev;
+			if (base) {
+				fprintf(fp,
+					"%s ",
+					base->name);
+			}
+		}
+		fprintf(fp,
+			"\n");
+		index++;
+	}
+}
+
+/*
+ * brief:
  * raid_bdev_can_claim_bdev is the function to check if this base_bdev can be
  * claimed by raid bdev or not.
  * params:
@@ -1143,7 +1185,7 @@ static struct spdk_bdev_module g_raid_if = {
 	.module_fini = raid_bdev_exit,
 	.get_ctx_size = raid_bdev_get_ctx_size,
 	.examine_config = raid_bdev_examine,
-	.config_text = NULL,
+	.config_text = raid_bdev_get_running_config,
 	.async_init = false,
 	.async_fini = false,
 };
