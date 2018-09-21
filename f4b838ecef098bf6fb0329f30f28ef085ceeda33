@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a5e214f_6c5736ec",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-21T20:12:30Z",
+      "side": 1,
+      "message": "Change perms from 644 to 755",
+      "revId": "f4b838ecef098bf6fb0329f30f28ef085ceeda33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
