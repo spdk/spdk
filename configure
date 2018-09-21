@@ -457,21 +457,6 @@ if [ -n "$DESTDIR" ]; then
 	echo "DESTDIR?=$DESTDIR" >> CONFIG.local
 fi
 
-python_command=
-for interpreter in python3 python2 python ; do
-	type $interpreter > /dev/null 2>&1 || continue
-	python_command=$interpreter
-	break
-done
-if [[ -z "$python_command" ]] ; then
-	echo "Could not find python interpreter! Bailing out."
-	exit 1
-fi
-
-rm -f PYTHON_COMMAND
-echo $python_command > PYTHON_COMMAND
-$python_command scripts/genconfig.py > config.h
-
 echo "done."
 if [[ "$OSTYPE" == "freebsd"* ]]; then
 	echo "Type 'gmake' to build."
