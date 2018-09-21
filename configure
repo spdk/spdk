@@ -48,6 +48,8 @@ function usage()
 	echo "                           No path required."
 	echo " pmdk                      Required to build persistent memory bdev."
 	echo "                           example: /usr/share/pmdk"
+	echo " reduce                    Required to build \"reduce\" (SPDK block compression)."
+	echo "                           No path required."
 	echo " vpp                       Required to build VPP net module."
 	echo "                           example: /vpp_repo/build-root/install-vpp-native/vpp"
 	echo " rbd                       [disabled]"
@@ -220,6 +222,12 @@ for i in "$@"; do
 		--without-pmdk)
 			CONFIG[PMDK]=n
 			;;
+		--with-reduce)
+			CONFIG[REDUCE]=y
+			;;
+		--without-reduce)
+			CONFIG[REDUCE]=n
+			;;
 		--with-vpp)
 			CONFIG[VPP]=y
 			;;
@@ -364,6 +372,14 @@ if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 			echo "run 'make' then 'sudo make install' then re-run this script."
 			exit 1
 		fi
+	fi
+fi
+
+if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
+	if [ ! -f /usr/include/libpmem.h ]; then
+		echo --with-reduce requires libpmem.
+		echo Please install then re-run this script.
+		exit 1
 	fi
 fi
 
