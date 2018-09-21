@@ -88,11 +88,17 @@ int64_t spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *param
 
 struct spdk_reduce_vol;
 
+#define REDUCE_PATH_MAX	4096
+
 /**
  * Describes a persistent memory file used to hold metadata associated with a
  *  compressed volume.
  */
 struct spdk_reduce_pm_file {
+	char			path[REDUCE_PATH_MAX];
+	void			*pm_buf;
+	bool			pm_is_pmem;
+
 	/** Size of the persistent memory file in bytes. */
 	uint64_t		size;
 };

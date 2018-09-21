@@ -36,10 +36,34 @@
 #include "spdk_cunit.h"
 
 #include "reduce/reduce.c"
+#include "spdk_internal/mock.h"
 #include "common/lib/test_env.c"
 
 static struct spdk_reduce_vol *g_vol;
 static int g_ziperrno;
+static char *g_volatile_pm_buf;
+static char *g_persistent_pm_buf;
+
+static void
+sync_pm_buf(const void *addr, size_t length)
+{
+	uint64_t offset = (char *)addr - g_volatile_pm_buf;
+
+	memcpy(&g_persistent_pm_buf[offset], addr, length);
+}
+
+int
+pmem_msync(const void *addr, size_t length)
+{
+	sync_pm_buf(addr, length);
+	return 0;
+}
+
+void
+pmem_persist(const void *addr, size_t len)
+{
+	sync_pm_buf(addr, len);
+}
 
 static void
 get_pm_file_size(void)
@@ -123,6 +147,24 @@ get_backing_device_size(void)
 	CU_ASSERT(backing_size == expected_backing_size);
 }
 
+static int
+pm_file_init(struct spdk_reduce_pm_file *pm_file, struct spdk_reduce_vol_params *params)
+{
+	pm_file->size = spdk_reduce_get_pm_file_size(params);
+
+	CU_ASSERT(g_persistent_pm_buf == NULL);
+	g_persistent_pm_buf = calloc(1, pm_file->size);
+	SPDK_CU_ASSERT_FATAL(g_persistent_pm_buf != NULL);
+
+	CU_ASSERT(g_volatile_pm_buf == NULL);
+	g_volatile_pm_buf = calloc(1, pm_file->size);
+	SPDK_CU_ASSERT_FATAL(g_volatile_pm_buf != NULL);
+
+	pm_file->pm_buf = g_volatile_pm_buf;
+
+	return 0;
+}
+
 static void
 init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
 {
@@ -170,7 +212,7 @@ init(void)
 	/* pm_file now has valid size, but uuid is still all zeroes.
 	 * This should fail.
 	 */
-	pm_file.size = spdk_reduce_get_pm_file_size(&params);
+	pm_file_init(&pm_file, &params);
 
 	g_vol = NULL;
 	g_ziperrno = 0;
@@ -191,6 +233,47 @@ init(void)
 	g_ziperrno = -1;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
 	CU_ASSERT(g_ziperrno == 0);
+	free(g_persistent_pm_buf);
+	g_persistent_pm_buf = NULL;
+	free(g_volatile_pm_buf);
+	g_volatile_pm_buf = NULL;
+}
+
+static void
+init_md(void)
+{
+	struct spdk_reduce_vol_params params = {};
+	struct spdk_reduce_vol_params *persistent_params;
+	struct spdk_reduce_backing_dev backing_dev = {};
+	struct spdk_reduce_pm_file pm_file = {};
+
+	backing_dev.blocklen = 512;
+
+	params.vol_size = 1024 * 1024; /* 1MB */
+	params.chunk_size = 16 * 1024;
+	params.backing_io_unit_size = backing_dev.blocklen;
+	spdk_uuid_generate(&params.uuid);
+
+	backing_dev.blockcnt = spdk_reduce_get_backing_device_size(&params) / backing_dev.blocklen;
+	pm_file_init(&pm_file, &params);
+
+	g_vol = NULL;
+	g_ziperrno = -1;
+	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+	/* Confirm that reduce persisted the params to metadata. */
+	CU_ASSERT(memcmp(g_persistent_pm_buf, SPDK_REDUCE_SIGNATURE, 8) == 0);
+	persistent_params = (struct spdk_reduce_vol_params *)(g_persistent_pm_buf + 8);
+	CU_ASSERT(memcmp(persistent_params, &params, sizeof(params)) == 0);
+
+	g_ziperrno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+	free(g_persistent_pm_buf);
+	g_persistent_pm_buf = NULL;
+	free(g_volatile_pm_buf);
+	g_volatile_pm_buf = NULL;
 }
 
 int
@@ -212,7 +295,8 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "get_pm_file_size", get_pm_file_size) == NULL ||
 		CU_add_test(suite, "get_backing_device_size", get_backing_device_size) == NULL ||
-		CU_add_test(suite, "init", init) == NULL
+		CU_add_test(suite, "init", init) == NULL ||
+		CU_add_test(suite, "init_md", init_md) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
