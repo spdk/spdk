@@ -1779,7 +1779,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 * Delay 100us before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
 			 *  set to 1 if it is too soon after CSTS.RDY is reported as 0.
 			 */
-			spdk_delay_us(100);
+			spdk_delay_us(1000);
 			return 0;
 		}
 		break;
