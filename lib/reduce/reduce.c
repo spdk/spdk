@@ -37,6 +37,8 @@
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 
+#include "libpmem.h"
+
 /* Structure written to offset 0 of both the pm file and the backing device. */
 struct spdk_reduce_vol_superblock {
 	struct spdk_reduce_vol_params	params;
