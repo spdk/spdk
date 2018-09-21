@@ -56,7 +56,8 @@ userspace processes to use InfiniBand/RDMA verbs directly.
 ~~~{.sh}
 modprobe ib_cm
 modprobe ib_core
-modprobe ib_ucm
+# Please note that ib_ucm does not exist in newer versions of the kernel and is not required.
+modprobe ib_ucm || true
 modprobe ib_umad
 modprobe ib_uverbs
 modprobe iw_cm
@@ -67,6 +68,12 @@ modprobe rdma_ucm
 ## Prerequisites for RDMA NICs {#nvmf_prereqs_rdma_nics}
 
 Before starting our NVMe-oF target we must detect RDMA NICs and assign them IP addresses.
+
+### Finding RDMA NICs and associated network interfaces
+
+~~~{.sh}
+ls /sys/class/infiniband/*/device/net
+~~~
 
 ### Mellanox ConnectX-3 RDMA NICs
 
@@ -92,61 +99,42 @@ ifconfig eth2 192.168.100.9 netmask 255.255.255.0 up
 
 ## Configuring the SPDK NVMe over Fabrics Target {#nvmf_config}
 
-A `nvmf_tgt`-specific configuration file is used to configure the NVMe over Fabrics target. This
-file's primary purpose is to define subsystems. A fully documented example configuration file is
-located at `etc/spdk/nvmf.conf.in`.
+An NVMe over Fabrics target can be configured using JSON RPCs.
+The basic RPCs needed to configure the NVMe-oF subsystem are detailed below. More information about
+working with NVMe over Fabrics specific RPCs can be found on the @ref jsonrpc_components_nvmf_tgt RPC page.
 
-You should make a copy of the example configuration file, modify it to suit your environment, and
-then run the nvmf_tgt application and pass it the configuration file using the -c option. Right now,
-the target requires elevated privileges (root) to run.
+Using .ini style configuration files for configuration of the NVMe-oF target is deprecated and should
+be replaced with JSON based RPCs. .ini style configuration files can be converted to json format by way
+of the new script `scripts/config_converter.py`.
 
-~~~{.sh}
-app/nvmf_tgt/nvmf_tgt -c /path/to/nvmf.conf
-~~~
+### Using RPCs {#nvmf_config_rpc}
 
-### Subsystem Configuration {#nvmf_config_subsystem}
-
-The `[Subsystem]` section in the configuration file is used to configure
-subsystems for the NVMe-oF target.
-
-This example shows two local PCIe NVMe devices exposed as separate NVMe-oF target subsystems:
+Start the nvmf_tgt application with elevated privileges and instruct it to wait for RPCs.
+The set_nvmf_target_options RPC can then be used to configure basic target parameters.
+Below is an example where the target is configured with an I/O unit size of 8192,
+4 max qpairs per controller, and an in capsule data size of 0. The parameters controlled
+by set_nvmf_target_options may only be modified before the SPDK NVMe-oF subsystem is initialized.
+Once the target options are configured. You need to start the NVMe-oF subsystem with start_subsystem_init.
 
 ~~~{.sh}
-[Nvme]
-TransportID "trtype:PCIe traddr:0000:02:00.0" Nvme0
-TransportID "trtype:PCIe traddr:0000:82:00.0" Nvme1
-
-[Subsystem1]
-NQN nqn.2016-06.io.spdk:cnode1
-Listen RDMA 192.168.100.8:4420
-AllowAnyHost No
-Host nqn.2016-06.io.spdk:init
-SN SPDK00000000000001
-Namespace Nvme0n1 1
-
-[Subsystem2]
-NQN nqn.2016-06.io.spdk:cnode2
-Listen RDMA 192.168.100.9:4420
-AllowAnyHost Yes
-SN SPDK00000000000002
-Namespace Nvme1n1 1
+app/nvmf_tgt/nvmf_tgt --wait-for-rpc
+scripts/rpc.py set_nvmf_target_options -u 8192 -p 4 -c 0
+scripts/rpc.py start_subsystem_init
 ~~~
 
-Any bdev may be presented as a namespace.
-See @ref bdev for details on setting up bdevs.
-For example, to create a virtual controller with two namespaces backed by the malloc bdevs
-named Malloc0 and Malloc1 and made available as NSID 1 and 2:
+Note: The start_subsystem_init rpc is referring to SPDK application subsystems and not the NVMe over Fabrics concept.
+
+Below is an example of creating a malloc bdev and assigning it to a subsystem. Adjust the bdevs,
+NQN, serial number, and IP address to your own circumstances.
+
 ~~~{.sh}
-[Subsystem3]
-  NQN nqn.2016-06.io.spdk:cnode3
-  Listen RDMA 192.168.2.21:4420
-  AllowAnyHost Yes
-  SN SPDK00000000000003
-  Namespace Malloc0 1
-  Namespace Malloc1 2
+scripts/rpc.py construct_malloc_bdev -b Malloc0 512 512
+scripts/rpc.py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+scripts/rpc.py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
+scripts/rpc.py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a 192.168.100.8 -s 4420
 ~~~
 
-#### NQN Formal Definition
+### NQN Formal Definition
 
 NVMe qualified names or NQNs are defined in section 7.9 of the
 [NVMe specification](http://nvmexpress.org/wp-content/uploads/NVM_Express_Revision_1.3.pdf). SPDK has attempted to
