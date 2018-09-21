@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "b667d213_81c02e70",
+        "filename": "scripts/vagrant/create_virtio_img.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-21T07:28:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c00b9a60_2aa81a91",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 4
+      },
+      "revId": "b128c5523d9065ec70261d18d70ae63786636d56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4e5dcba_e2a5fc7b",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 1
@@ -53,6 +77,30 @@
       "writtenOn": "2018-09-20T18:01:48Z",
       "side": 1,
       "message": "still checking for 10G while initial size is 1G\n -\u003e may override existing disk",
+      "range": {
+        "startLine": 710,
+        "startChar": 72,
+        "endLine": 710,
+        "endChar": 97
+      },
+      "revId": "b128c5523d9065ec70261d18d70ae63786636d56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88e15bcc_b8cca460",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-21T07:28:07Z",
+      "side": 1,
+      "message": "Good catch!",
+      "parentUuid": "e4e5dcba_e2a5fc7b",
       "range": {
         "startLine": 710,
         "startChar": 72,
