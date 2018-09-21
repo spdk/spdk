@@ -598,7 +598,12 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 		return -EIO;
 	}
 
-	return 0;
+	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
+		SPDK_ERRLOG("get_cc() failed\n");
+		return -EIO;
+	}
+
+	return cc.bits.en != 0;
 }
 
 #ifdef DEBUG
@@ -1775,11 +1780,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		if (csts.bits.rdy == 0) {
 			SPDK_DEBUGLOG(SPDK_LOG_NVME, "CC.EN = 0 && CSTS.RDY = 0\n");
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE, ready_timeout_in_ms);
-			/*
-			 * Delay 100us before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
-			 *  set to 1 if it is too soon after CSTS.RDY is reported as 0.
-			 */
-			spdk_delay_us(100);
 			return 0;
 		}
 		break;
@@ -1787,6 +1787,15 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_ENABLE:
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Setting CC.EN = 1\n");
 		rc = nvme_ctrlr_enable(ctrlr);
+		if (rc != 1) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "nvme_ctrlr_enable() failed with rc=%d\n", rc);
+			/*
+			 * Delay 100us before setting CC.EN again.  Some NVMe SSDs miss CC.EN getting
+			 * set to 1 if it is too soon after CSTS.RDY is reported as 0.
+			 */
+			ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (100 * spdk_get_ticks_hz() / 1000);
+			return 0;
+		}
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 		return rc;
 
