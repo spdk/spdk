@@ -81,11 +81,26 @@ mk/cc.mk:
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 
-config.h: mk/cofnig.mk scripts/genconfig.py
-	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
-	test -z "$$PYCMD" && PYCMD=python ; \
-	$$PYCMD scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
+config.h: mk/cofnig.mk
+	# Transformate config.mk into config.h
+	cp mk/config.mk $@.tmp
+	sed -i -r 's/(CONFIG_[[:alnum:]_]+)[?]=(n|\s*$$)/\#undef \1/g' $@.tmp
+	sed -i -r 's/(CONFIG_[[:alnum:]_]+)[?]=y/\#define \1 1/g' $@.tmp
+	sed -i -r 's/(CONFIG_[[:alnum:]_]+)[?]=(.?.+)/\#define \1 \2/g' $@.tmp
+
+	for cfg in $(filter CONFIG_%,$(MAKEFLAGS)); do \
+		var_name="$${cfg%%=*}"; \
+		var_value="$${cfg#*=}"; \
+		\
+		if [ -z $$var_value ] || [ $$var_value = n ]; then \
+			echo "#undef $$var_name" >> $@.tmp; \
+		elif [ $$var_val != y ]; then \
+			echo "#define $$var_name $$var_value" >> $@.tmp; \
+		else \
+			echo "#define $$var_name 1" >> $@.tmp; \
+		fi; \
+	done
+	cmp -s $@.tmp $@ || mv $@.tmp $@ ;
 	rm -f $@.tmp
 
 cc_version: mk/cc.mk
