@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f582cd90_d073b8c4",
+        "filename": "scripts/spdkcli.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-21T09:38:02Z",
+      "side": 1,
+      "message": "I cant say I like it, but I see no other way as Centos7 and RHEL don\u0027t have configshell_fb packaged for Py3.\nCould you try running this without RFC?",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 42
+      },
+      "revId": "d732a2aacf312ecdc30299984558be9006c4ff79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
