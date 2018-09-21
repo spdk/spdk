@@ -103,12 +103,12 @@ Details on the Vagrant setup can be found in the
 ## Advanced Build Options
 
 Optional components and other build-time configuration are controlled by
-settings in two Makefile fragments in the root of the repository. `CONFIG`
-contains the base settings. Running the `configure` script generates a new
-file, `CONFIG.local`, that contains overrides to the base `CONFIG` file. For
-advanced configuration, there are a number of additional options to `configure`
-that may be used, or `CONFIG.local` can simply be created and edited by hand. A
-description of all possible options is located in `CONFIG`.
+settings in the Makefile configuration file in the root of the repository. `CONFIG`
+contains the base settings for the `configure` script. This script generates a new
+file, `mk/config.mk`, that contains final build settings. For advanced configuration,
+there are a number of additional options to `configure` that may be used, or
+`mk/config.mk` can simply be created and edited by hand. A description of all
+possible options is located in `CONFIG`.
 
 Boolean (on/off) options are configured with a 'y' (yes) or 'n' (no). For
 example, this line of `CONFIG` controls whether the optional RDMA (libibverbs)
@@ -116,7 +116,7 @@ support is enabled:
 
 	CONFIG_RDMA?=n
 
-To enable RDMA, this line may be added to `CONFIG.local` with a 'y' instead of
+To enable RDMA, this line may be added to `mk/config.mk` with a 'y' instead of
 'n'. For the majority of options this can be done using the `configure` script.
 For example:
 
@@ -152,10 +152,9 @@ gmake
 ~~~
 
 The options specified on the `make` command line take precedence over the
-default values in `CONFIG` and `CONFIG.local`. This can be useful if you, for
-example, generate a `CONFIG.local` using the `configure` script and then have
-one or two options (i.e. debug builds) that you wish to turn on and off
-frequently.
+values in `mk/config.mk`. This can be useful if you, for example, generate
+a `mk/config.mk` using the `configure` script and then have one or two
+options (i.e. debug builds) that you wish to turn on and off frequently.
 
 <a id="huge"></a>
 ## Hugepages and Device Binding

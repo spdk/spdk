@@ -137,7 +137,7 @@ vagrant@vagrant:~/spdk_repo/spdk$ sudo scripts/pkgdep.sh
 <<output trimmed>>
 
 vagrant@vagrant:~/spdk_repo/spdk$ ./configure
-Creating CONFIG.local...done.
+Creating mk/config.mk...done.
 Type 'make' to build.
 
 vagrant@vagrant:~/spdk_repo/spdk$ make
