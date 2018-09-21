@@ -22,6 +22,30 @@
       "revId": "0d686ae55aaad49688e33e4e747cc5914bc258e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d5b8217_939e734d",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-21T04:00:49Z",
+      "side": 1,
+      "message": "Oh, I missed that, thank you so much.\n\nI have not tried by .INI config file yet, but NVMe bdev already supports running_config. Hence bdf will be generated automatically together with raid bdev.",
+      "parentUuid": "33ca976e_7bc6a8b8",
+      "range": {
+        "startLine": 1121,
+        "startChar": 6,
+        "endLine": 1121,
+        "endChar": 16
+      },
+      "revId": "0d686ae55aaad49688e33e4e747cc5914bc258e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
