@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(VTUNE_SOURCE_DIR)/include -I$(VTUNE_SOURCE_DIR)/sdk/src/ittnotify
+CFLAGS += -I$(COFNIG_VTUNE_SOURCE_DIR)/include -I$(COFNIG_VTUNE_SOURCE_DIR)/sdk/src/ittnotify
 endif
 
 C_SRCS = bdev.c part.c scsi_nvme.c
