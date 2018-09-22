@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec602126_e36c1deb",
+        "filename": "include/spdk/nvme_ocssd_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-22T13:57:30Z",
+      "side": 1,
+      "message": "suggestion, append _entry to the name to both match the spec and make it clear that this isn\u0027t the log, just one entry",
+      "revId": "1d0278af8ca50465d7ba2c26c41eba9b1204a516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
