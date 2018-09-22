@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "416c1136_4e2fb64f",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-22T13:59:54Z",
+      "side": 1,
+      "message": "maybe look for substring \"freebsd\" so if/when we add other freebsd boxes we don\u0027t have to add an or condition here?",
+      "revId": "a4d8a4ff2062c463a89d0ffaa38df4a7a4f489e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
