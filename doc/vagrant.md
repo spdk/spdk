@@ -25,23 +25,22 @@ In case you want use kvm/libvirt you should also install `vagrant-libvirt`
 
 # VM Configuration {#vagrant_config}
 
-This vagrant environment creates a VM based on environment variables found in `env.sh`.
-To use, edit `env.sh`, then:
+To create a configured VM with vagrant you need to run `create_vbox.sh` script.
 
-~~~{.sh}
-    cd scripts/vagrant
-    source ./env.sh
-    vagrant up
-~~~
+Basically, the script will create a new sub-directory based on distro you choose,
+copy the vagrant configuration file (a.k.a. `Vagrantfile`) to it,
+and run `vagrant up` with some settings defined by the script arguments.
 
-At this point you can use `vagrant ssh` to ssh into the VM. The `/spdk` directory is
-sync'd from the host system and the build is automatically done.  Other notable files:
+By default, the VM created is configured with:
+- 2 vCPUs
+- 4G of RAM
+- 2 NICs (1 x NAT - host access, 1 x private network)
 
-- `build.sh`: executed on the VM automatically when provisioned
-- `Vagrantfile`: startup parameters/commands for the VM
+In order to modify some advanced settings like provisioning and rsyncing,
+you may want to change Vagrantfile source.
 
-The few commands we mention here are enough to get you up and running; for additional
-support, use the Vagrant help function to learn how to destroy, restart, etc.  Further
+For additional support,
+use the Vagrant help function to learn how to destroy, restart, etc.  Further
 below is sample output from a successful VM launch and execution of the NVMe hello
 world example application.
 
@@ -49,52 +48,51 @@ world example application.
     vagrant --help
 ~~~
 
-By default, the VM created is configured with:
-- Ubuntu 16.04
-- 2 vCPUs
-- 4G of RAM
-- 2 NICs (1 x NAT - host access, 1 x private network)
-
-# Providers {#vagrant_providers}
-
-Currently VirtualBox & libvirt provider are supported.
-
-For libvirt currently there is only centos 7 image available.
-
-To run with libvirt:
-
-~~~{.sh}
-    ./create_nvme_img.sh
-    vagrant up --provider=libvirt
-~~~
-
 # Running An Example {#vagrant_example}
 
-The following shows sample output from starting up a VM and running
-the NVMe sample application `hello_world`. If you don't see the
-NVMe device as seen below in both the `lspci` output as well as the
+The following shows sample output from starting up a Ubuntu18 VM,
+compiling SPDK on it and running the NVMe sample application `hello_world`.
+If you don't see the NVMe device as seen below in both the `lspci` output as well as the
 application output, you likely have a VirtualBox and/or Vagrant
 versioning issue.
 
 ~~~{.sh}
-user@dev-system:~$ cd spdk
-user@dev-system:~/spdk$ cd scripts/
-user@dev-system:~/spdk/scripts$ cd vagrant/
-user@dev-system:~/spdk/scripts/vagrant$ vagrant up
+user@dev-system:~$ cd spdk/scripts/vagrant
+user@dev-system:~/spdk/scripts/vagrant$ ./create_vbox.sh ubuntu18
+mkdir: created directory '/home/user/spdk/scripts/vagrant/ubuntu18'
+~/spdk/scripts/vagrant/ubuntu18 ~/spdk/scripts/vagrant
+vagrant-proxyconf already installed... skipping
 Bringing machine 'default' up with 'virtualbox' provider...
-==> default: Clearing any previously set forwarded ports...
+==> default: Box 'bento/ubuntu-18.04' could not be found. Attempting to find and install...
+    default: Box Provider: virtualbox
+    default: Box Version: 201803.24.0
+==> default: Loading metadata for box 'bento/ubuntu-18.04'
+    default: URL: https://vagrantcloud.com/bento/ubuntu-18.04
+==> default: Adding box 'bento/ubuntu-18.04' (v201803.24.0) for provider: virtualbox
+    default: Downloading: https://vagrantcloud.com/bento/boxes/ubuntu-18.04/versions/201803.24.0/providers/virtualbox.box
+==> default: Box download is resuming from prior download progress
+==> default: Successfully added box 'bento/ubuntu-18.04' (v201803.24.0) for 'virtualbox'!
+==> default: Importing base box 'bento/ubuntu-18.04'...
+==> default: Matching MAC address for NAT networking...
+==> default: Setting the name of the VM: ubuntu18_default_1237088131451_82174
+==> default: Fixed port collision for 22 => 2222. Now on port 2202.
 ==> default: Clearing any previously set network interfaces...
 ==> default: Preparing network interfaces based on configuration...
     default: Adapter 1: nat
     default: Adapter 2: hostonly
 ==> default: Forwarding ports...
-    default: 22 (guest) => 2222 (host) (adapter 1)
+    default: 22 (guest) => 2202 (host) (adapter 1)
 ==> default: Running 'pre-boot' VM customizations...
 ==> default: Booting VM...
 ==> default: Waiting for machine to boot. This may take a few minutes...
-    default: SSH address: 127.0.0.1:2222
+    default: SSH address: 127.0.0.1:2202
     default: SSH username: vagrant
     default: SSH auth method: private key
+    default: Warning: Remote connection disconnect. Retrying...
+    default: Warning: Connection reset. Retrying...
+<<some output trimmed>>
+    default: Warning: Connection reset. Retrying...
+    default: Warning: Remote connection disconnect. Retrying...
     default:
     default: Vagrant insecure key detected. Vagrant will automatically replace
     default: this with a newly generated keypair for better security.
@@ -104,86 +102,66 @@ Bringing machine 'default' up with 'virtualbox' provider...
     default: Key inserted! Disconnecting and reconnecting using new SSH key...
 ==> default: Machine booted and ready!
 ==> default: Checking for guest additions in VM...
-    default: Guest Additions Version: 5.1
-    default: VirtualBox Version: 5.1
 ==> default: Configuring and enabling network interfaces...
-==> default: Rsyncing folder: /home/peluse/spdk/ => /spdk
+==> default: Configuring proxy for Apt...
+==> default: Configuring proxy environment variables...
+==> default: Rsyncing folder: /home/user/spdk/ => /home/vagrant/spdk_repo/spdk
 ==> default: Mounting shared folders...
-    default: /vagrant => /home/peluse/spdk/scripts/vagrant
-==> default: Running provisioner: shell...
-    default: Running: /tmp/vagrant-shell20170524-2405-3cam94.sh
-==> default: vm.nr_hugepages = 1024
-==> default: Hit:1 http://us.archive.ubuntu.com/ubuntu xenial InRelease
-<< some output trimmed >>
-==> default: Fetched 2,329 kB in 3s (588 kB/s)
-==> default: Reading package lists...
-==> default: Building dependency tree...
-==> default: Reading state information...
-==> default: Calculating upgrade...
-==> default: The following packages have been kept back:
-==> default:   linux-generic linux-headers-generic linux-image-generic
-==> default: The following packages will be upgraded:
-==> default:   accountsservice apparmor apt apt-transport-https apt-utils base-files bash
-<< some output trimmed >>
-==> default: 167 upgraded, 0 newly installed, 0 to remove and 3 not upgraded.
-==> default: Need to get 124 MB of archives.
-==> default: After this operation, 39.5 MB of additional disk space will be used.
-==> default: Get:1 http://us.archive.ubuntu.com/ubuntu xenial-updates/main amd64 base-files amd64 9.4ubuntu4.4 [60.                 2 kB]
-<< some output trimmed >>
-==> default: Preconfiguring packages ...
-==> default: Fetched 11.8 MB in 17s (669 kB/s)
-==> default: Setting up libc6:amd64 (2.23-0ubuntu7) ...
-==> default: Processing triggers for libc-bin (2.23-0ubuntu3) ...
-<< some output trimmed >>
-==> default: Running provisioner: shell...
-    default: Running: /tmp/vagrant-shell20170524-2405-1wt8p3c.sh
-==> default: 0:/tmp/vagrant-shell
-==> default: SUDOCMD: sudo -H -u vagrant
-==> default: KERNEL_OS: GNU/Linux
-==> default: KERNEL_MACHINE: x86_64
-==> default: KERNEL_RELEASE: 4.4.0-21-generic
-==> default: KERNEL_VERSION: #37-Ubuntu SMP Mon Apr 18 18:33:37 UTC 2016
-==> default: DISTRIB_ID: Ubuntu
-==> default: DISTRIB_RELEASE: 16.04
-==> default: DISTRIB_CODENAME: xenial
-==> default: DISTRIB_DESCRIPTION: Ubuntu 16.04 LTS
-==> default: Reading package lists...
-==> default: Building dependency tree...
-<< some output trimmed >>
-==> default: Processing triggers for libc-bin (2.23-0ubuntu3) ...
-==> default: Creating CONFIG.local...
-==> default: done.
-==> default: Type 'make' to build.
-==> default: Configuration done
-==> default: make[3]: Entering directory '/spdk/dpdk'
-==> default: == Build lib
-==> default: == Build lib/librte_compat
-==> default: == Build lib/librte_eal
-==> default: == Build lib/librte_eal/common
-==> default:   SYMLINK-FILE include/rte_compat.h
-<< some output trimmed >>
-==> default: Build complete [x86_64-native-linuxapp-gcc]
-==> default: make[3]: Leaving directory '/spdk/dpdk'
-==> default:   CC lib/blob/blobstore.o
-==> default:   CC lib/bdev/bdev.o
-<< some output trimmed >>
-==> default:   LINK test/nvme/e2edp/nvme_dp
-==> default: Running provisioner: shell...
-    default: Running: inline script
-==> default: 0000:00:0e.0 (80ee 4e56): nvme -> uio_pci_generic
+    default: /vagrant => /home/user/spdk/scripts/vagrant/ubuntu18
+==> default: Running provisioner: file...
 
-user@dev-system:~/spdk/scripts/vagrant$ vagrant ssh
-Welcome to Ubuntu 16.04 LTS (GNU/Linux 4.4.0-21-generic x86_64)
+  SUCCESS!
 
- * Documentation:  https://help.ubuntu.com/
-vagrant@localhost:~$ lspci | grep "Non-Volatile"
+  cd to ubuntu18 and type "vagrant ssh" to use.
+  Use vagrant "suspend" and vagrant "resume" to stop and start.
+  Use vagrant "destroy" followed by "rm -rf ubuntu18" to destroy all trace of vm.
+~~~
+
+Check the enviroment.
+
+~~~{.sh}
+user@dev-system:~/spdk/scripts/vagrant$ cd ubuntu18
+user@dev-system:~/spdk/scripts/vagrant/ubuntu18$ vagrant ssh
+Welcome to Ubuntu Bionic Beaver (development branch) (GNU/Linux 4.15.0-12-generic x86_64)
+<<some output trimmed>>
+vagrant@vagrant:~$ lspci | grep "Non-Volatile"
 00:0e.0 Non-Volatile memory controller: InnoTek Systemberatung GmbH Device 4e56
+vagrant@vagrant:~$ ls
+spdk_repo
+~~~
 
-vagrant@localhost:~$ sudo /spdk/examples/nvme/hello_world/hello_world
-Starting DPDK 17.02.0 initialization...
-[ DPDK EAL parameters: hello_world -c 0x1 --file-prefix=spdk_pid17681 ]
-EAL: Detected 2 lcore(s)
+Compiling SPDK and running an example.
+
+~~~{.sh}
+vagrant@vagrant:~/spdk_repo/spdk$ sudo apt update
+<<output trimmed>>
+vagrant@vagrant:~/spdk_repo/spdk$ sudo scripts/spdkdep.sh
+<<output trimmed>>
+
+vagrant@vagrant:~/spdk_repo/spdk$ ./configure
+Creating CONFIG.local...done.
+Type 'make' to build.
+
+vagrant@vagrant:~/spdk_repo/spdk$ make
+<<output trimmed>>
+
+vagrant@vagrant:~/spdk_repo/spdk$ sudo ./scripts/setup.sh
+0000:00:0e.0 (80ee 4e56): nvme -> uio_pci_generic
+
+vagrant@vagrant:~/spdk_repo/spdk$ sudo examples/nvme/hello_world/hello_world
+Starting SPDK v18.10-pre / DPDK 18.05.0 initialization...
+[ DPDK EAL parameters: hello_world -c 0x1 --legacy-mem --file-prefix=spdk0 --base-virtaddr=0x200000000000 --proc-type=auto ]
+EAL: Detected 4 lcore(s)
+EAL: Detected 1 NUMA nodes
+EAL: Auto-detected process type: PRIMARY
+EAL: Multi-process socket /var/run/dpdk/spdk0/mp_socket
 EAL: Probing VFIO support...
+EAL: WARNING! Base virtual address hint (0x20040008f000 != 0x7efdfc6af000) not respected!
+EAL:    This may cause issues with mapping memory into secondary processes
+EAL: WARNING! Base virtual address hint (0x2008000f0000 != 0x7efdfc64e000) not respected!
+EAL:    This may cause issues with mapping memory into secondary processes
+EAL: WARNING! Base virtual address hint (0x200c00151000 != 0x7efdfc5ed000) not respected!
+EAL:    This may cause issues with mapping memory into secondary processes
 Initializing NVMe Controllers
 EAL: PCI device 0000:00:0e.0 on NUMA socket 0
 EAL:   probe driver: 80ee:4e56 spdk_nvme
@@ -192,6 +170,6 @@ Attached to 0000:00:0e.0
 Using controller ORCL-VBOX-NVME-VER12 (VB1234-56789        ) with 1 namespaces.
   Namespace ID: 1 size: 1GB
 Initialization complete.
+INFO: using host memory buffer for IO
 Hello world!
-vagrant@localhost:~$
 ~~~
