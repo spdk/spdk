@@ -181,6 +181,13 @@ if [ ${DRY_RUN} != 1 ]; then
 		else
 			vagrant plugin install vagrant-proxyconf
 		fi
+		if [ $SPDK_VAGRANT_DISTRO = "freebsd11" ]; then
+			cat >~/vagrant_pkg.conf <<EOF
+pkg_env: {
+http_proxy: ${http_proxy}
+}
+EOF
+		fi
 	fi
 	vagrant up $provider
 	echo ""
