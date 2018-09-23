@@ -137,6 +137,29 @@
       "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5d4e772_3a7149f8",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1065,
+      "author": {
+        "id": 1015094
+      },
+      "writtenOn": "2018-09-23T19:57:24Z",
+      "side": 1,
+      "message": "I saw this only after sending the previous set of comments. This is not exactly fast but as long as you don\u0027t have many sessions you may not see a difference. \n\nThe thing to note is that fifos have a \"has_event\" field. If not set, on rx of new data, vpp generates a FIFO_EVENT_APP_RX event message and sends it on the app\u0027s event queue (g_app_event_queue). Therefore, instead of scanning all the socks, you could just dequeue all the io event messages, generate events from them and unset has_event. You\u0027ll probably need to handle situations when you receive an event and the fifo is actually empty. The scenario goes like this: you generate an event from an io event message, unset has_event, you get a new io event message before recv consumes the data, recv consumes all the data (not only what was signaled by the first event), if you\u0027re not careful you may generate a new event from the second io event message, although the fifo is empty because no new data has been received (latest version of vcl deals with that, but it also uses the new message queues). \n\nEven if you don\u0027t use the io event messages, you should still make sure you clean up g_app_event_queue. But in this case, don\u0027t unset has_event.\n\nFinally, if you want to block waiting for events here, you can call svm_queue_wait on the app\u0027s event queue. That eventually leads to a pthread_mutex_cond_wait on the queue\u0027s mutex which pops when the queue goes non-empty.",
+      "range": {
+        "startLine": 1065,
+        "startChar": 0,
+        "endLine": 1065,
+        "endChar": 29
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
