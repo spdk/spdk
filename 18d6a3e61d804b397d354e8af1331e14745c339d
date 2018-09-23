@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74642a90_a5df706b",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1015094
+      },
+      "writtenOn": "2018-09-23T19:21:48Z",
+      "side": 1,
+      "message": "Use svm_queue_t instead of unix_shared_memory_queue_t. The latter is a typedef to the former and it will be eventually removed.",
+      "range": {
+        "startLine": 79,
+        "startChar": 7,
+        "endLine": 79,
+        "endChar": 33
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a261ad3_35cb0d44",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1015094
+      },
+      "writtenOn": "2018-09-23T19:21:48Z",
+      "side": 1,
+      "message": "You may consider using foreach_app_session_field just as vcl_session_t does. The benefit is that you\u0027ll be able to use app_recv*/app_send* which work with both stream and dgram sessions.",
+      "range": {
+        "startLine": 94,
+        "startChar": 7,
+        "endLine": 94,
+        "endChar": 23
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd7d46aa_9e48c1ae",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1015094
+      },
+      "writtenOn": "2018-09-23T19:21:48Z",
+      "side": 1,
+      "message": "Two comments here:\n1. Have you considered using per spdk worker session pools? That way you could avoid locking the pool for any CRD operation. \n2. Assuming 1. cannot be done: I never measured performance but I suspect pthread_mutex_lock may be a bit slower than clib_spinlock_lock. Do you expect levels of contention here whereby sleeping is better than spinning?",
+      "range": {
+        "startLine": 165,
+        "startChar": 1,
+        "endLine": 165,
+        "endChar": 19
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec6a65cf_dec2754a",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1015094
+      },
+      "writtenOn": "2018-09-23T19:21:48Z",
+      "side": 1,
+      "message": "I think TRANSPORT_PROTO_TCP is visible here.",
+      "range": {
+        "startLine": 487,
+        "startChar": 14,
+        "endLine": 487,
+        "endChar": 15
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4048a43_66079a1b",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1015094
+      },
+      "writtenOn": "2018-09-23T19:21:48Z",
+      "side": 1,
+      "message": "This is fine. But, to clarify things, since I don\u0027t exactly know how SPDK works: is the buf really the destination or an intermediary buffer? If it\u0027s an intermediary buffer, instead of doing the copy, you could retrieve pointers to the data in the fifo with svm_fifo_segments (see vppcom_session_read_segments for an example, unfortunately only recently introduced). You can pass the segments around until you finally do the copy. The only downside is that once you do the copy, you need to call svm_fifo_segments_free, to mark the fifo as free.",
+      "range": {
+        "startLine": 917,
+        "startChar": 6,
+        "endLine": 917,
+        "endChar": 29
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b3ab445_0e33fdd9",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1015094
+      },
+      "writtenOn": "2018-09-23T19:21:48Z",
+      "side": 1,
+      "message": "Maybe it would be clearer if you used SVM_Q_WAIT here.",
+      "range": {
+        "startLine": 958,
+        "startChar": 54,
+        "endLine": 958,
+        "endChar": 83
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
