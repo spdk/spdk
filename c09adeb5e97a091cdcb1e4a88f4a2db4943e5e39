@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab396998_4e625b7a",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-24T20:56:49Z",
+      "side": 1,
+      "message": "Don\u0027t get it. RHEL also have /etc/redhat-release. You can use `/etc/os-release` - it is standard for anything younger than coal :P Justcheck it\u0027s content.",
+      "range": {
+        "startLine": 78,
+        "startChar": 4,
+        "endLine": 80,
+        "endChar": 6
+      },
+      "revId": "c09adeb5e97a091cdcb1e4a88f4a2db4943e5e39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02f43d20_e5578c18",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-24T20:56:49Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 85,
+        "endChar": 6
+      },
+      "revId": "c09adeb5e97a091cdcb1e4a88f4a2db4943e5e39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
