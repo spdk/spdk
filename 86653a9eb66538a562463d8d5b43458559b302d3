@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "5cb2d87d_ebfd67cc",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-24T21:29:11Z",
+      "side": 1,
+      "message": "x can be removed.",
+      "revId": "86653a9eb66538a562463d8d5b43458559b302d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "81b64732_02d8fb67",
         "filename": "scripts/vagrant/create_vhost_vm.sh",
         "patchSetId": 8
