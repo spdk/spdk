@@ -682,7 +682,10 @@ function get_bdev_size()
 function autotest_cleanup()
 {
 	$rootdir/scripts/setup.sh reset
-	$rootdir/scripts/setup.sh cleanup
+	if [ $(uname) == "Linux" ]; then
+		# Only Linux, "cleanup" option not supported on FreeBSD
+		$rootdir/scripts/setup.sh cleanup
+	fi
 }
 
 function freebsd_update_contigmem_mod()
