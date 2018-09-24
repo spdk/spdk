@@ -26,7 +26,10 @@ src=$(readlink -f $(dirname $0))
 out=$PWD
 cd $src
 
-./scripts/setup.sh status
+if [ $(uname) == "Linux" ]; then
+	# Only Linux, "status" option not supported on FreeBSD
+	./scripts/setup.sh status
+fi
 
 freebsd_update_contigmem_mod
 
