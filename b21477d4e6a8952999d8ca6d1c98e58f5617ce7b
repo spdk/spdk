@@ -33,6 +33,24 @@
       "revId": "b21477d4e6a8952999d8ca6d1c98e58f5617ce7b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cef5a129_a71a4601",
+        "filename": "README.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-24T19:41:55Z",
+      "side": 1,
+      "message": "CONFIG is just a list of option we have (with default values). mk/config.mk is list of option after ./configure. I need to include final configuration in spdk-devel package. I could include CONFIG and CONFIG.local but there are couple of issues:\n\n 1. CONFIG.local and CONFIG is located in ./spdk where all makefile scripts are in ./spdk/mk - so two additional files (rules) to include in spdk-devel package\n 2. These two files are used to make config.h but you can check it - it can be inconsistent with current CONFIG and CONFIG.local - the config.h Makefile target is providing additional args - the MAKEFLAGS to genconfig.py.\n 3. genconfig.py - ./configure script is searching for proper python interpreter to launch this file but Makfile don\u0027t do that - not quite nice.\n 4. Generated config.h have defines like \"$(SPDK_ROOT_DIR)/lib/env_dpdk\" - I don\u0027t think this is intentional but huh... lets fix it as we are here anyway.\n\nSo I decided to clean up this mess and use one mk/config.mk file with all options (copy CONFIG -\u003e mk/config.mk -\u003e change whatever need to be changed using ./configure script). Then I just include ./spdk/mk folder in spdk-devel package.",
+      "parentUuid": "3abf34cd_034e6683",
+      "revId": "b21477d4e6a8952999d8ca6d1c98e58f5617ce7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
