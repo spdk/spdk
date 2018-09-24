@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3f14bb8_e59e23f2",
+        "filename": "test/spdkcli/nvmf.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-24T14:55:15Z",
+      "side": 1,
+      "message": "So on the iscsi teset I sugested appending _iscsi to the test_completion so I\u0027d say the same thing here as they both say spdk_cli but I haven\u0027t gone back and looked to see how this is reported, if these are in iscsi and nvmf sections then obviously its not needed.\n\nAlso, what\u0027s the execution time on this one?  And, maybe we should consider just an spdk_client test that runs just a few commands against its various supported targets instead of adding longer tests per target.  I didn\u0027t compare coverage but I\u0027m guessing this is testing the client for than it is the target correct?",
+      "revId": "7e628e30035b71cc8d1ba8c722fceeb9de35488c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
