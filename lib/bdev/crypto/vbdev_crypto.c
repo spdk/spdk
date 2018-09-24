@@ -524,8 +524,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	int completed = 0;
 	int crypto_index = 0;
 	uint32_t en_offset = 0;
-	uint8_t *iv_ptr = NULL;
-	uint64_t op_block_offset;
 	struct rte_crypto_op *crypto_ops[MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *src_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *dst_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
@@ -628,6 +626,9 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	current_iov = bdev_io->u.bdev.iovs[iov_index].iov_base;
 	current_iov_remaining = bdev_io->u.bdev.iovs[iov_index].iov_len;
 	do {
+		uint8_t *iv_ptr;
+		uint64_t op_block_offset;
+
 		/* Set the mbuf elements address and length. Null out the next pointer. */
 		src_mbufs[crypto_index]->buf_addr = current_iov;
 		src_mbufs[crypto_index]->buf_iova = spdk_vtophys((void *)current_iov);
@@ -636,19 +637,12 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		/* Store context in every mbuf as we don't know anything about completion order */
 		src_mbufs[crypto_index]->userdata = bdev_io;
 
-		/* Subtract our running totals for the op in progress and the overall bdev io */
-		total_remaining -= crypto_len;
-		current_iov_remaining -= crypto_len;
-
 		/* Set the IV - we use the LBA of the crypto_op */
 		iv_ptr = rte_crypto_op_ctod_offset(crypto_ops[crypto_index], uint8_t *,
 						   IV_OFFSET);
 		memset(iv_ptr, 0, AES_CBC_IV_LENGTH);
 		op_block_offset = bdev_io->u.bdev.offset_blocks + crypto_index;
 		rte_memcpy(iv_ptr, &op_block_offset, sizeof(uint64_t));
-
-		/* move our current IOV pointer accordingly. */
-		current_iov += crypto_len;
 
 		/* Set the data to encrypt/decrypt length */
 		crypto_ops[crypto_index]->sym->cipher.data.length = crypto_len;
@@ -684,15 +678,22 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 			goto error_attach_session;
 		}
 
+		/* Subtract our running totals for the op in progress and the overall bdev io */
+		total_remaining -= crypto_len;
+		current_iov_remaining -= crypto_len;
+
+		/* move our current IOV pointer accordingly. */
+		current_iov += crypto_len;
+
+		/* move on to the next crypto operation */
+		crypto_index++;
+
 		/* If we're done with this IOV, move to the next one. */
 		if (current_iov_remaining == 0 && total_remaining > 0) {
 			iov_index++;
 			current_iov = bdev_io->u.bdev.iovs[iov_index].iov_base;
 			current_iov_remaining = bdev_io->u.bdev.iovs[iov_index].iov_len;
 		}
-
-		/* move on to the next crypto operation */
-		crypto_index++;
 	} while (total_remaining > 0);
 
 	/* Enqueue everything we've got but limit by the max number of descriptors we
