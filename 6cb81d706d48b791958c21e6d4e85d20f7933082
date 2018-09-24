@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "323d431c_53f221df",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-09-24T12:58:20Z",
+      "side": 1,
+      "message": "This lamba is not accepted by our check_format script:\nE731 do not assign a lambda expression, use a def\nI will do function.",
+      "parentUuid": "bd41e612_34dd5a12",
+      "range": {
+        "startLine": 77,
+        "startChar": 29,
+        "endLine": 77,
+        "endChar": 81
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f937519_51a28b01",
         "filename": "scripts/remote_rpc.py",
         "patchSetId": 1
