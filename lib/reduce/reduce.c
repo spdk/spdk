@@ -227,6 +227,10 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		return;
 	}
 
+	if (vol->pm_file.close != NULL) {
+		vol->pm_file.close(&vol->pm_file);
+	}
+
 	free(vol);
 	cb_fn(cb_arg, 0);
 }

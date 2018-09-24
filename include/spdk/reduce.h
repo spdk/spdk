@@ -101,6 +101,8 @@ struct spdk_reduce_pm_file {
 
 	/** Size of the persistent memory file in bytes. */
 	uint64_t		size;
+
+	void	(*close)(struct spdk_reduce_pm_file *);
 };
 
 typedef void (*spdk_reduce_vol_op_complete)(void *ctx, int ziperrno);
