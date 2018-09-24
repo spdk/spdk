@@ -147,6 +147,21 @@ get_backing_device_size(void)
 	CU_ASSERT(backing_size == expected_backing_size);
 }
 
+static void
+pm_file_close(struct spdk_reduce_pm_file *pm_file)
+{
+	free(g_volatile_pm_buf);
+	g_volatile_pm_buf = NULL;
+}
+
+static void
+pm_file_destroy(void)
+{
+	CU_ASSERT(g_persistent_pm_buf != NULL);
+	free(g_persistent_pm_buf);
+	g_persistent_pm_buf = NULL;
+}
+
 static int
 pm_file_init(struct spdk_reduce_pm_file *pm_file, struct spdk_reduce_vol_params *params)
 {
@@ -161,6 +176,7 @@ pm_file_init(struct spdk_reduce_pm_file *pm_file, struct spdk_reduce_vol_params 
 	SPDK_CU_ASSERT_FATAL(g_volatile_pm_buf != NULL);
 
 	pm_file->pm_buf = g_volatile_pm_buf;
+	pm_file->close = pm_file_close;
 
 	return 0;
 }
@@ -233,10 +249,9 @@ init(void)
 	g_ziperrno = -1;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
 	CU_ASSERT(g_ziperrno == 0);
-	free(g_persistent_pm_buf);
-	g_persistent_pm_buf = NULL;
-	free(g_volatile_pm_buf);
-	g_volatile_pm_buf = NULL;
+	CU_ASSERT(g_volatile_pm_buf == NULL);
+
+	pm_file_destroy();
 }
 
 static void
@@ -270,10 +285,9 @@ init_md(void)
 	g_ziperrno = -1;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
 	CU_ASSERT(g_ziperrno == 0);
-	free(g_persistent_pm_buf);
-	g_persistent_pm_buf = NULL;
-	free(g_volatile_pm_buf);
-	g_volatile_pm_buf = NULL;
+	CU_ASSERT(g_volatile_pm_buf == NULL);
+
+	pm_file_destroy();
 }
 
 int
