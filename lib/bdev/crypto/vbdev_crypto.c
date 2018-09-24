@@ -893,10 +893,10 @@ vbdev_crypto_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return spdk_bdev_io_type_supported(crypto_bdev->base_bdev, io_type);
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+	/* Force the bdev layer to issue actual writes of zeroes so we can
+	 * encrypt them as regular writes.
+	 */
 	default:
-		/* Force the bdev layer to issue actual writes of zeroes so we can
-		 * encrypt them as regular writes.
-		 */
 		return false;
 	}
 }
