@@ -416,7 +416,7 @@ function vm_shutdown()
 	# "fail" due to shutdown
 	notice "Shutting down virtual machine $vm_dir"
 	set +e
-	vm_ssh $1 "nohup sh -c 'shutdown -h -P now'" || true
+	vm_ssh $1 "nohup sh -c 'systemctl --force poweroff'" || true
 	notice "VM$1 is shutting down - wait a while to complete"
 	set -e
 }
