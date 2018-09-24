@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "1276e360_96aca8d0",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T13:07:49Z",
+      "side": 1,
+      "message": "Doesn\u0027t that kind of contradict the point of using a lambda?:P Heh.",
+      "parentUuid": "323d431c_53f221df",
+      "range": {
+        "startLine": 77,
+        "startChar": 29,
+        "endLine": 77,
+        "endChar": 81
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f937519_51a28b01",
         "filename": "scripts/remote_rpc.py",
         "patchSetId": 1
@@ -390,6 +414,30 @@
       "side": 1,
       "message": "I thought about argpase, but for these 4 parameters this could be overkill.",
       "parentUuid": "e8da3ead_bc4827ed",
+      "range": {
+        "startLine": 109,
+        "startChar": 4,
+        "endLine": 111,
+        "endChar": 14
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d1f0376_18ec4388",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T13:07:49Z",
+      "side": 1,
+      "message": "Well, we\u0027re up to 5 args now including the optional one. Up to you.",
+      "parentUuid": "c03ff812_3f730761",
       "range": {
         "startLine": 109,
         "startChar": 4,
