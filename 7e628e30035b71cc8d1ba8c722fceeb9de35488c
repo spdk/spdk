@@ -16,6 +16,24 @@
       "revId": "7e628e30035b71cc8d1ba8c722fceeb9de35488c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02b1eb2a_4006340d",
+        "filename": "test/spdkcli/nvmf.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-09-24T21:04:04Z",
+      "side": 1,
+      "message": "Hi Paul. Thanks for review. I fixed test_completion for iscsi test. This command only says that test was completed.\nThis fix is needed also in rbd.sh script. \nTiming_enter and timing_exit say more about test time.\nTests for spdkcli with iscsi take about 30 seconds. I think that we cannot tests all with one target as some machines don\u0027t support all features.",
+      "parentUuid": "c3f14bb8_e59e23f2",
+      "revId": "7e628e30035b71cc8d1ba8c722fceeb9de35488c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
