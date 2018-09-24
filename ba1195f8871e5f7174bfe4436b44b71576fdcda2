@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55aad2c5_d35272a7",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-24T16:52:32Z",
+      "side": 1,
+      "message": "I think this should be customizing",
+      "range": {
+        "startLine": 112,
+        "startChar": 26,
+        "endLine": 112,
+        "endChar": 34
+      },
+      "revId": "ba1195f8871e5f7174bfe4436b44b71576fdcda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9887efb5_e13d8d73",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-24T16:52:32Z",
+      "side": 1,
+      "message": "You don\u0027t need \"better\". \nI would reword the rest of this sentence to \"... to customize attributes of your VirtualBox virtual machine.\"",
+      "range": {
+        "startLine": 114,
+        "startChar": 70,
+        "endLine": 114,
+        "endChar": 77
+      },
+      "revId": "ba1195f8871e5f7174bfe4436b44b71576fdcda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "377f17a0_3a2a6685",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-24T16:52:32Z",
+      "side": 1,
+      "message": "I would change this to \" ... changes the size of hugepages to 1 GB ...\"",
+      "range": {
+        "startLine": 122,
+        "startChar": 13,
+        "endLine": 122,
+        "endChar": 40
+      },
+      "revId": "ba1195f8871e5f7174bfe4436b44b71576fdcda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdc4b02d_9bf099ff",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-24T16:52:32Z",
+      "side": 1,
+      "message": "How about \n\"The GRUB_CMDLINE_LINUX boot parameter ...\"\nCan you also show what will be added to the param? I think this adds something like \"default_hugepagesz\u003d1G hugepagesz\u003d1G\"",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 24
+      },
+      "revId": "ba1195f8871e5f7174bfe4436b44b71576fdcda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ec089c8_c9a8bc7c",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-24T16:52:32Z",
+      "side": 1,
+      "message": "This parameter currently supports ...",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 124,
+        "endChar": 82
+      },
+      "revId": "ba1195f8871e5f7174bfe4436b44b71576fdcda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41b264d1_fe1233b5",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-24T16:52:32Z",
+      "side": 1,
+      "message": "After reading this, I still don\u0027t understand how to use it to add a virtio-disk. I think an example would help.",
+      "range": {
+        "startLine": 131,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 65
+      },
+      "revId": "ba1195f8871e5f7174bfe4436b44b71576fdcda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ac3719d_489e22ab",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-24T16:52:32Z",
+      "side": 1,
+      "message": "I think this is added to support a specific usage/test where you have a virtio-scsi and virtio-blk device. However, in this script I think we should be doing things in a generic way to allow say adding a virtio-scsi/virtio-blk or both.\nWill this work if I just want to add a virtio-scsi device? Or just a virtio-block device?",
+      "range": {
+        "startLine": 112,
+        "startChar": 3,
+        "endLine": 124,
+        "endChar": 7
+      },
+      "revId": "ba1195f8871e5f7174bfe4436b44b71576fdcda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
