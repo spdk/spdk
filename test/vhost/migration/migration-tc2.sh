@@ -118,9 +118,9 @@ function migration_tc2_configure_vhost()
 	notice "Configuring nvmf_tgt, vhost devices & controllers via RPC ..."
 
 	# Construct shared bdevs and controllers
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
-	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Nvme0n1
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $nvmf_target_ip -s 4420
+	$rpc_nvmf nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+	$rpc_nvmf nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Nvme0n1
+	$rpc_nvmf nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $nvmf_target_ip -s 4420
 
 	$rpc_0 construct_nvme_bdev -b Nvme0 -t rdma -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
 	$rpc_0 construct_vhost_scsi_controller $incoming_vm_ctrlr
