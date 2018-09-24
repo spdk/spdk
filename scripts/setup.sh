@@ -592,6 +592,10 @@ else
 		configure_freebsd
 	elif [ "$mode" == "reset" ]; then
 		reset_freebsd
+	elif [ "$mode" == "cleanup" ]; then
+		echo "setup.sh cleanup function not yet supported on $(uname)"
+	elif [ "$mode" == "status" ]; then
+		echo "setup.sh status function not yet supported on $(uname)"
 	elif [ "$mode" == "help" ]; then
 		usage $0
 	else
