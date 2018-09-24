@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81b64732_02d8fb67",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-24T21:27:20Z",
+      "side": 1,
+      "message": "Do you intentionally not bail out of the script here if the user provides an invalid --arg? I found that to be a little confusing.\n\nAlso Invalid aaargument and Invalid bbargument? Is that just leftover debugging output?",
+      "revId": "86653a9eb66538a562463d8d5b43458559b302d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
