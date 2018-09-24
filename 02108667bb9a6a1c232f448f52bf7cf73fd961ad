@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2256a58_5a742f7d",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-09-24T16:06:17Z",
+      "side": 1,
+      "message": "Isn\u0027t this the same as the shutdown -P now?",
+      "range": {
+        "startLine": 419,
+        "startChar": 25,
+        "endLine": 419,
+        "endChar": 51
+      },
+      "revId": "02108667bb9a6a1c232f448f52bf7cf73fd961ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
