@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "e89f9d4d_99c07c5e",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-09-24T14:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a6ed3e8b_60978e2d",
+      "range": {
+        "startLine": 18,
+        "startChar": 4,
+        "endLine": 21,
+        "endChar": 17
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4cadfc9_9361f742",
         "filename": "scripts/remote_rpc.py",
         "patchSetId": 1
@@ -191,6 +215,30 @@
     },
     {
       "key": {
+        "uuid": "4786c3e9_3dcbcff3",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-09-24T14:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1276e360_96aca8d0",
+      "range": {
+        "startLine": 77,
+        "startChar": 29,
+        "endLine": 77,
+        "endChar": 81
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f937519_51a28b01",
         "filename": "scripts/remote_rpc.py",
         "patchSetId": 1
@@ -226,6 +274,30 @@
       "side": 1,
       "message": "Ack",
       "parentUuid": "7f937519_51a28b01",
+      "range": {
+        "startLine": 78,
+        "startChar": 12,
+        "endLine": 78,
+        "endChar": 16
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fd9295d_8204f563",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-09-24T14:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "96c4058b_a81694b5",
       "range": {
         "startLine": 78,
         "startChar": 12,
@@ -285,6 +357,30 @@
     },
     {
       "key": {
+        "uuid": "4ab7fa0e_24bee911",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-09-24T14:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "66b7d204_52c46845",
+      "range": {
+        "startLine": 81,
+        "startChar": 12,
+        "endLine": 81,
+        "endChar": 30
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "532c92a4_21a39ff9",
         "filename": "scripts/remote_rpc.py",
         "patchSetId": 1
@@ -332,6 +428,30 @@
     },
     {
       "key": {
+        "uuid": "74b750c9_10ad037e",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-09-24T14:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c032a830_a513edf2",
+      "range": {
+        "startLine": 98,
+        "startChar": 12,
+        "endLine": 98,
+        "endChar": 16
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52dde8e3_f44a868f",
         "filename": "scripts/remote_rpc.py",
         "patchSetId": 1
@@ -367,6 +487,30 @@
       "side": 1,
       "message": "Ack",
       "parentUuid": "52dde8e3_f44a868f",
+      "range": {
+        "startLine": 103,
+        "startChar": 12,
+        "endLine": 103,
+        "endChar": 16
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85a9052b_27adc527",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-09-24T14:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3d2e934f_d43e0b5f",
       "range": {
         "startLine": 103,
         "startChar": 12,
@@ -485,6 +629,30 @@
       "side": 1,
       "message": "Yes, but as a default value. I will add command line argument for that.",
       "parentUuid": "2a0dd354_2634d381",
+      "range": {
+        "startLine": 114,
+        "startChar": 4,
+        "endLine": 114,
+        "endChar": 38
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e781fdd6_10a82d3d",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-09-24T14:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bed8679e_fb61d1ed",
       "range": {
         "startLine": 114,
         "startChar": 4,
