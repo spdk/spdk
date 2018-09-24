@@ -22,6 +22,30 @@
       "revId": "39541e63b1f2f860ff4f75cb3db5a5184857f2b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e841a05c_d7ef377a",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-24T14:10:32Z",
+      "side": 1,
+      "message": "This happens pretty often.  I think its good to leave it in here so that when people see it they either ask a question or assume its OK",
+      "parentUuid": "4c70e8dd_96362d0a",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 160,
+        "endChar": 74
+      },
+      "revId": "39541e63b1f2f860ff4f75cb3db5a5184857f2b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
