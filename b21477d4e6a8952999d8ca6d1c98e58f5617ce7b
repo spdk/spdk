@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "691f59dd_497c0062",
+        "filename": "README.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-24T17:14:29Z",
+      "side": 1,
+      "message": "Instead of editing these first two sentences, I would rewrite them into one cohesive sentence describing what CONFIG is and does.  If you really like what\u0027s here though, you need to change \"in Makefile\" to \"in the Makefile\" but rewriting I think would make it clearer.",
+      "revId": "b21477d4e6a8952999d8ca6d1c98e58f5617ce7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3abf34cd_034e6683",
+        "filename": "README.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-24T17:14:29Z",
+      "side": 1,
+      "message": "I don\u0027t fully follow everything in this patch, and I\u0027m not sure I want to learn it all either LOL, but is there a good reason to still have CONFIG and mk/config.mk?  Why not just mk/config.mk?",
+      "revId": "b21477d4e6a8952999d8ca6d1c98e58f5617ce7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
