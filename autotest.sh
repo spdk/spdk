@@ -26,7 +26,9 @@ src=$(readlink -f $(dirname $0))
 out=$PWD
 cd $src
 
-./scripts/setup.sh status
+if [ $(uname) == "Linux" ]; then
+	./scripts/setup.sh status
+fi
 
 freebsd_update_contigmem_mod
 
