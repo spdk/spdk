@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0b45fe9_2c9ddd18",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T12:31:22Z",
+      "side": 1,
+      "message": "You can declare dict and define it\u0027s keys at the same time, no need to do it separately",
+      "range": {
+        "startLine": 18,
+        "startChar": 4,
+        "endLine": 21,
+        "endChar": 17
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4cadfc9_9361f742",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T12:31:22Z",
+      "side": 1,
+      "message": "doesnt seem to be used anywhere",
+      "range": {
+        "startLine": 55,
+        "startChar": 4,
+        "endLine": 55,
+        "endChar": 12
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5d28940_be54d5a1",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T12:31:22Z",
+      "side": 1,
+      "message": "shows up copy-pasted 3 times here\nCould move to lambda function at the top of do_POST.\n\nSmth like:\nresp_to_bytes \u003d lambda x: bytes(json.dumps(response).encode(encoding\u003d\u0027ascii\u0027))\n\nand then\nself.wfile.write(resp_to_bytes(response))",
+      "range": {
+        "startLine": 77,
+        "startChar": 29,
+        "endLine": 77,
+        "endChar": 81
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f937519_51a28b01",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T12:31:22Z",
+      "side": 1,
+      "message": "Can be removed",
+      "range": {
+        "startLine": 78,
+        "startChar": 12,
+        "endLine": 78,
+        "endChar": 16
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e756f048_923feb3b",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T12:31:22Z",
+      "side": 1,
+      "message": "Is this print intended? Looks like a debug print.\nIf it\u0027s supposed to be there then maybe add some \"INFO:\" or similar so it stands out?",
+      "range": {
+        "startLine": 81,
+        "startChar": 12,
+        "endLine": 81,
+        "endChar": 30
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "532c92a4_21a39ff9",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T12:31:22Z",
+      "side": 1,
+      "message": "Can be removed",
+      "range": {
+        "startLine": 98,
+        "startChar": 12,
+        "endLine": 98,
+        "endChar": 16
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52dde8e3_f44a868f",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T12:31:22Z",
+      "side": 1,
+      "message": "Can be removed",
+      "range": {
+        "startLine": 103,
+        "startChar": 12,
+        "endLine": 103,
+        "endChar": 16
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8da3ead_bc4827ed",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T12:31:22Z",
+      "side": 1,
+      "message": "I know this code is small, but using argparse gets the job done for you in terms of displaying help in case of wrong arguments and prevents from using var names directly from sys.argv[] :)",
+      "range": {
+        "startLine": 109,
+        "startChar": 4,
+        "endLine": 111,
+        "endChar": 14
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a0dd354_2634d381",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-24T12:31:22Z",
+      "side": 1,
+      "message": "Do we want this hardcoded?",
+      "range": {
+        "startLine": 114,
+        "startChar": 4,
+        "endLine": 114,
+        "endChar": 38
+      },
+      "revId": "6cb81d706d48b791958c21e6d4e85d20f7933082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
