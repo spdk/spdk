@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f32cd20_c6b59d18",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T05:25:01Z",
+      "side": 1,
+      "message": "Moving this into task_complete may be better.",
+      "range": {
+        "startLine": 693,
+        "startChar": 0,
+        "endLine": 695,
+        "endChar": 3
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "350a124c_568da6be",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T05:25:01Z",
+      "side": 1,
+      "message": "submit_io(ns_ctx, queue_depth) is called only once. I don\u0027t think this comment is appropriate.\n\nYou checked if queue_depth is enough before submit_io. Hence ns_ctx-\u003eio_cnt should not become 0 in submit_io?",
+      "range": {
+        "startLine": 770,
+        "startChar": 1,
+        "endLine": 770,
+        "endChar": 59
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1e9f48c_8b35aa46",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T05:25:01Z",
+      "side": 1,
+      "message": "What you want to do is to ensure ns_ctx-\u003eio_cnt is more than opts.io_queue_requests?\n\nIf so, perf should fail here.",
+      "range": {
+        "startLine": 833,
+        "startChar": 0,
+        "endLine": 836,
+        "endChar": 3
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09f37312_9262e7d7",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 885,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T05:25:01Z",
+      "side": 1,
+      "message": "should be tsc_start",
+      "range": {
+        "startLine": 885,
+        "startChar": 11,
+        "endLine": 885,
+        "endChar": 27
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41515d57_aa6303e1",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 907,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T05:25:01Z",
+      "side": 1,
+      "message": "done_ns may be better.",
+      "range": {
+        "startLine": 907,
+        "startChar": 4,
+        "endLine": 907,
+        "endChar": 12
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdce549d_8f651de5",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T05:25:01Z",
+      "side": 1,
+      "message": "Each namespace stops IO dispatch when it completes the IO count. ?",
+      "range": {
+        "startLine": 950,
+        "startChar": 39,
+        "endLine": 950,
+        "endChar": 72
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
