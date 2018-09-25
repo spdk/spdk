@@ -46,6 +46,30 @@
       "revId": "02108667bb9a6a1c232f448f52bf7cf73fd961ad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88d85c1f_5b145fb2",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-25T09:33:21Z",
+      "side": 1,
+      "message": "So basically this would equal to killing Qemu from host system?\nNot sure about this solution - graceful shutdown allowed us to see if there are any errors while detaching vhost controller, shutting down VM, etc.",
+      "parentUuid": "d7fcf6b2_d1515ce6",
+      "range": {
+        "startLine": 419,
+        "startChar": 25,
+        "endLine": 419,
+        "endChar": 51
+      },
+      "revId": "02108667bb9a6a1c232f448f52bf7cf73fd961ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
