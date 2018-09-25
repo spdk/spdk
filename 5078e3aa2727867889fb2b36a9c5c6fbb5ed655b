@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e39ff08a_17205ac6",
+        "filename": "README.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-25T19:53:01Z",
+      "side": 1,
+      "message": "Are there any settings that can\u0027t be controlled via the configure script these days? Maybe this section should just talk about running ./configure --help and showing an example or two. mk/config.mk probably doesn\u0027t need to be mentioned at all.",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ecf9790_1e6ac1c6",
+        "filename": "README.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-25T19:53:01Z",
+      "side": 1,
+      "message": "Would removing this behavior simplify this? So that you can only change build options using configure?",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dd59d28_59bddff4",
+        "filename": "configure",
+        "patchSetId": 18
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-25T19:53:01Z",
+      "side": 1,
+      "message": "I\u0027d be perfectly fine with just making this change to the CONFIG file directly, instead of doing it dynamically. It doesn\u0027t make it that much less readable.",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b779b75_4f03a9b4",
+        "filename": "configure",
+        "patchSetId": 18
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-25T19:53:01Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it be simpler to just echo the values in the CONFIG array out to a blank file, rather than copying CONFIG and doing sed operations?",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bcf9575_be5eee35",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 18
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-25T19:53:01Z",
+      "side": 1,
+      "message": "file not found",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
