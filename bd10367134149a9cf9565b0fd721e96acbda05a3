@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e8f34138_0bc66ca0",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-25T19:05:35Z",
+      "side": 1,
+      "message": "That\u0027s right, thanks. There was even one more bug with ctx-\u003elcore being initialized incorrectly, so each event could be unnecessarily rescheduled one additional time. Fixed now.",
+      "parentUuid": "cfa9ecc1_b1ad7f5e",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 15
+      },
+      "revId": "bd10367134149a9cf9565b0fd721e96acbda05a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b3a0e2a_7f4bcf39",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-25T10:15:07Z",
       "side": 1,
       "message": "Is this new codding style? :) If yes, pls do it separate patch.",
+      "range": {
+        "startLine": 952,
+        "startChar": 0,
+        "endLine": 952,
+        "endChar": 1
+      },
+      "revId": "bd10367134149a9cf9565b0fd721e96acbda05a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c735c3d9_f1e0eb1e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-25T19:05:35Z",
+      "side": 1,
+      "message": "In my opinion the additional underscore tells you: do not attempt to use this function, unless you really, really know what you\u0027re doing. It\u0027s easy to introduce bugs with it.\n\nNow that this function messes with the vhost mutex in the middle, it got some strict requirements of when it can be called, and is not really reusable in any additional scenarios.\n\nIt\u0027s not really a new approach. I use it all the time. It\u0027s even present in some other areas within this file.",
+      "parentUuid": "6b3a0e2a_7f4bcf39",
       "range": {
         "startLine": 952,
         "startChar": 0,
