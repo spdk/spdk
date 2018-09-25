@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff81d67a_e0bdd9d9",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T01:19:09Z",
+      "side": 1,
+      "message": "All optional arguments look positional. First is group, second is disable_chap, third is require_chap, fourth is mutual_chap.\n\nset_auth g\u003d# d\u003dTrue/False r\u003dTrue/False m\u003dTrue/False\n\nmay be easy for user to use.\n\nOr we may be able to take \"set_auth r m\" if we want to make both r and m True.\n\nHow do you think?",
+      "range": {
+        "startLine": 30,
+        "startChar": 8,
+        "endLine": 30,
+        "endChar": 27
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "204bd42c_a4592821",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T01:19:09Z",
+      "side": 1,
+      "message": "I must type refresh to get the latest value when I type \"set_auth 1 True\". Is this intentional?",
+      "range": {
+        "startLine": 57,
+        "startChar": 6,
+        "endLine": 57,
+        "endChar": 24
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a17667ec_044b8eb5",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T01:19:09Z",
+      "side": 1,
+      "message": "Optional args also look positional.\n\ncreate g\u003d# d\u003dTrue/False r\u003dTrue/False m\u003dTrue/False... or\ncreate g\u003d# r m (If we want to make r and m True)\n\nmay be possible. How do you think?",
+      "range": {
+        "startLine": 88,
+        "startChar": 8,
+        "endLine": 88,
+        "endChar": 22
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eff7d386_bd99dc74",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T01:19:09Z",
+      "side": 1,
+      "message": "should remove s.",
+      "range": {
+        "startLine": 249,
+        "startChar": 19,
+        "endLine": 249,
+        "endChar": 20
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2ded27d_efb1872c",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T01:19:09Z",
+      "side": 1,
+      "message": "should remove s.",
+      "range": {
+        "startLine": 256,
+        "startChar": 17,
+        "endLine": 256,
+        "endChar": 18
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62d46162_4652e14e",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T01:19:09Z",
+      "side": 1,
+      "message": "should remove s.",
+      "range": {
+        "startLine": 258,
+        "startChar": 35,
+        "endLine": 258,
+        "endChar": 36
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3991da12_4e8134bc",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T01:19:09Z",
+      "side": 1,
+      "message": "Thank you for taking my feedback. This is easy for me to use but your original idea UIISCSIAuth - UIISCSIAuthDetails is also fine. If your original idea is better, please restore that.",
+      "range": {
+        "startLine": 262,
+        "startChar": 4,
+        "endLine": 262,
+        "endChar": 22
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db06eb1c_cea2733c",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T01:19:09Z",
+      "side": 1,
+      "message": "(portal_group%s, initiator_group%s) may be appropriate to show the pair. But this was my request and OK to me. Sorry for back and force.",
+      "range": {
+        "startLine": 310,
+        "startChar": 31,
+        "endLine": 310,
+        "endChar": 65
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99e9e97a_0ef0e359",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T01:19:09Z",
+      "side": 1,
+      "message": "tag (unique, integer \u003e 0)\"\"\"\n\nPlease add a space between tag and ( and remove the last right bracket.",
+      "range": {
+        "startLine": 347,
+        "startChar": 44,
+        "endLine": 347,
+        "endChar": 69
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
