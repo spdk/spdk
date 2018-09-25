@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a197de6_5629eb6a",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-09-25T17:27:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "74642a90_a5df706b",
+      "range": {
+        "startLine": 79,
+        "startChar": 7,
+        "endLine": 79,
+        "endChar": 33
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a261ad3_35cb0d44",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 31
@@ -94,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "715b120c_0169b867",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-09-25T17:27:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec6a65cf_dec2754a",
+      "range": {
+        "startLine": 487,
+        "startChar": 14,
+        "endLine": 487,
+        "endChar": 15
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4048a43_66079a1b",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 31
@@ -137,6 +185,30 @@
       "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7e577d4_c3823714",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-09-25T17:27:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b3ab445_0e33fdd9",
+      "range": {
+        "startLine": 958,
+        "startChar": 54,
+        "endLine": 958,
+        "endChar": 83
+      },
+      "revId": "18d6a3e61d804b397d354e8af1331e14745c339d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
