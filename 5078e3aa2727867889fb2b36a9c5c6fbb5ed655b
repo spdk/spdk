@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "a6901c27_772140d8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 18
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-25T20:06:35Z",
+      "side": 1,
+      "message": "Another transposition of \u0027f\u0027 and \u0027n\u0027.",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e39ff08a_17205ac6",
         "filename": "README.md",
         "patchSetId": 18
@@ -13,6 +30,24 @@
       "writtenOn": "2018-09-25T19:53:01Z",
       "side": 1,
       "message": "Are there any settings that can\u0027t be controlled via the configure script these days? Maybe this section should just talk about running ./configure --help and showing an example or two. mk/config.mk probably doesn\u0027t need to be mentioned at all.",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50382497_60dc4503",
+        "filename": "README.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-25T20:06:35Z",
+      "side": 1,
+      "message": "I believe in part the mission of this is to assist in the production of the spdk-devel package in which the mk/config.mk will become part of, and there will be no \"./configure\" at that juncture.    Whether it\u0027s worthy of citing that here or elsewhere is something to consider.",
+      "parentUuid": "e39ff08a_17205ac6",
       "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
