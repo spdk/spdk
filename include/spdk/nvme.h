@@ -1200,6 +1200,27 @@ int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload
 				    struct spdk_nvme_status *completion_status);
 
 /**
+ * Send or receive security protocol data to or from controller.
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
+ *
+ * \param ctrlr NVMe controller to use for security transfer command submission.
+ * \param nsid Namespace identifier for namespace to do security transfer.
+ * \param spsp Security Protocol Specific field.
+ * \param secp Security Protocol that is used.
+ * \param nssf NVMe Security Specific filed. Indicate RPMB target when using Security
+ * Protocol EAh.
+ * \param buffer Pointer to the data buffer.
+ * \param len Transfer length in bytes.
+ * \param send Transfer direction, send or receive.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be allocated
+ * for this request.
+ */
+int spdk_nvme_ctrlr_sec_submit(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			       uint16_t spsp, uint8_t secp, uint8_t nssf, void *buffer, size_t len, bool send);
+
+/**
  * Allocate an I/O buffer from the controller memory buffer (Experimental).
  *
  * This function allocates registered memory which belongs to the Controller
