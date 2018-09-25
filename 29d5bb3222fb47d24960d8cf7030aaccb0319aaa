@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60f669d1_ce542892",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-25T19:16:16Z",
+      "side": 1,
+      "message": "Above you have \u0027cofnig.mk\u0027 where you transposed the \u0027f\u0027 and \u0027n\u0027.",
+      "revId": "29d5bb3222fb47d24960d8cf7030aaccb0319aaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
