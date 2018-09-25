@@ -84,7 +84,10 @@ mk/cc.mk:
 config.h: CONFIG CONFIG.local scripts/genconfig.py
 	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
 	test -z "$$PYCMD" && PYCMD=python ; \
-	$$PYCMD scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
+	echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
+	echo "#define SPDK_CONFIG_H" >> $@.tmp; \
+	$$PYCMD scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp; \
+	echo "#endif SPDK_CONFIG_H" >> $@.tmp; \
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 
