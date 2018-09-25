@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7bf1f1fe_8ae5d4f0",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-25T19:56:20Z",
+      "side": 1,
+      "message": "I think the #defines prefix the values with SPDK_",
+      "revId": "2c400dd267727c2a61cfb015d5283c1e30b2615b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
