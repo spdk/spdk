@@ -62,6 +62,7 @@ trap "killprocess $pid; nvmfcleanup; exit 1" SIGINT SIGTERM EXIT
 # Add the host NQN and verify that the connect succeeds
 $rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1
 nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+waitforblk "nvme0n1"
 nvme disconnect -n nqn.2016-06.io.spdk:cnode1
 
 # Remove the host and verify that the connect fails
@@ -71,6 +72,7 @@ $rpc_py nvmf_subsystem_remove_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spd
 # Allow any host and verify that the connect succeeds
 $rpc_py nvmf_subsystem_allow_any_host -e nqn.2016-06.io.spdk:cnode1
 nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+waitforblk "nvme0n1"
 nvme disconnect -n nqn.2016-06.io.spdk:cnode1
 
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
@@ -87,6 +89,7 @@ do
 		nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode$j -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 	done
 
+	waitforblk "nvme0n1"
 	n=$j
 	for j in `seq 1 $n`
 	do
