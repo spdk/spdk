@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71ba5460_6e63e0ea",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-25T04:27:26Z",
+      "side": 1,
+      "message": "I think the change makes sense.  You can move pthread_mutex_lock/pthread_mutex_unlock out of the {} block, spdk_lvs_rename() also need to be updated.",
+      "revId": "99e64b4179395d1a9a915559f69ca4fe837124c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
