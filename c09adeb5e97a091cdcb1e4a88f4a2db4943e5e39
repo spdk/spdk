@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "29eb68ab_f5c89a26",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-09-25T13:25:21Z",
+      "side": 1,
+      "message": "You are right, thanks. I will fix this right now.",
+      "parentUuid": "ab396998_4e625b7a",
+      "range": {
+        "startLine": 78,
+        "startChar": 4,
+        "endLine": 80,
+        "endChar": 6
+      },
+      "revId": "c09adeb5e97a091cdcb1e4a88f4a2db4943e5e39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "02f43d20_e5578c18",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 5
