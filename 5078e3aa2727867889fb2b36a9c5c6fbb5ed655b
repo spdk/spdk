@@ -119,6 +119,23 @@
       "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71174da3_037ffc78",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-25T22:41:51Z",
+      "side": 1,
+      "message": "Please remember to put:\ngit checkout env.spdk.mk in a trap or somewhere that you know it will always be executed, otherwise you\u0027ll risk failing future builds with the dirtied files in them. e.g.\nhttps://ci.spdk.io/spdk/builds/review/c750088fba6b6fac8bd8226291f9d8d306dbe766.1537912461\n https://ci.spdk.io/spdk-jenkins/public_build/autotest-per-patch_12016.html\nI have reset these machines, but before you upload again, please double check to make sure you clean up any changes you make to nvme-cli",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
