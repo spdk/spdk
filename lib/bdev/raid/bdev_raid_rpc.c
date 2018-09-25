@@ -280,14 +280,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Failed to add base bdev to RAID bdev %s: %s",
-						     req.name, spdk_strerror(-rc));
-		free_rpc_construct_raid_bdev(&req);
-		return;
-	}
-
 	free_rpc_construct_raid_bdev(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
