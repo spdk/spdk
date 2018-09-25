@@ -2444,6 +2444,28 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	return spdk_nvme_ctrlr_reset(ctrlr);
 }
 
+int
+spdk_nvme_ctrlr_sec_submit(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			   uint16_t spsp, uint8_t secp, void *buffer, size_t len, bool send)
+{
+	struct nvme_completion_poll_status status;
+	int res;
+
+	res = nvme_ctrlr_cmd_sec_submit(ctrlr, nsid, spsp, secp, buffer, len, send,
+					nvme_completion_poll_cb, &status);
+
+	if (res) {
+		return res;
+	}
+	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock)) {
+		SPDK_ERRLOG("spdk_nvme_ctrlr_sec_submit failed!\n");
+		return -ENXIO;
+	}
+
+	return 0;
+
+}
+
 void *
 spdk_nvme_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {

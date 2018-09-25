@@ -418,6 +418,13 @@ nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 	return 0;
 }
 
+int nvme_ctrlr_cmd_sec_submit(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			      uint16_t spsp, uint8_t secp, void *buffer, size_t len,
+			      bool send, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
 #define DECLARE_AND_CONSTRUCT_CTRLR()	\
 	struct spdk_nvme_ctrlr	ctrlr = {};	\
 	struct spdk_nvme_qpair	adminq = {};	\
