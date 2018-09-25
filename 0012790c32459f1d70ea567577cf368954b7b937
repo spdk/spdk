@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49b36ca9_1c69e9f0",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 578,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-25T03:58:25Z",
+      "side": 1,
+      "message": "you should return 0 here for successful submission, and just make vhost_nvme_queue_task can return the right errno.",
+      "revId": "0012790c32459f1d70ea567577cf368954b7b937",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
