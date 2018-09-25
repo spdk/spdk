@@ -94,6 +94,29 @@
     },
     {
       "key": {
+        "uuid": "2e266579_4fa1ba09",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-25T09:43:54Z",
+      "side": 1,
+      "message": "Looks like there is an issue here for the calculation of done_cnt. As the outer is while(1), when it checks for each ns_ctx, whenever the current ns has no IO allowed to send, it will have the done_cnt increased at line 907. This means the done_cnt will duplicate the same ns_cnt multiple times.\n\nWhat you want here is to count the ns_ctx with zero allowed I/Os one and only once. So that all ns has no I/Os to send, it will break out the while(1).",
+      "range": {
+        "startLine": 904,
+        "startChar": 7,
+        "endLine": 904,
+        "endChar": 26
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41515d57_aa6303e1",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 10
