@@ -41,7 +41,7 @@ DIRS-$(CONFIG_SHARED) += shared_lib
 DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
 
-.PHONY: all clean $(DIRS-y) config.h mk/config.mk mk/cc.mk cc_version cxx_version
+.PHONY: all clean config $(DIRS-y) include/spdk/config.h mk/config.mk mk/cc.mk cc_version cxx_version
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
@@ -61,7 +61,7 @@ endif
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
-	$(Q)rm -f config.h
+	$(Q)rm -f include/spdk/config.h
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
@@ -74,14 +74,14 @@ examples: $(LIB)
 pkgdep:
 	sh ./scripts/pkgdep.sh
 
-$(DIRS-y): mk/cc.mk config.h
+$(DIRS-y): mk/cc.mk include/spdk/config.h
 
 mk/cc.mk:
 	$(Q)scripts/detect_cc.sh --cc=$(CC) --cxx=$(CXX) --lto=$(CONFIG_LTO) > $@.tmp; \
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 
-# Transfor config.mk into config.h by:
+# Transfor config.mk into include/spdk/config.h by:
 # 1. Apply command line variables by directly replacing CONFIG_XXX lines.
 # 2. Remove empty lines and comments
 # 3. n or empty option -> undef
@@ -89,7 +89,7 @@ mk/cc.mk:
 # 5. Other values (like paths) -> define value
 # 6. Perform sanity check: compare number of option from config.mk with these config.h.tmp
 # 7. Add sentinels
-config.h: mk/config.mk
+include/spdk/config.h: mk/config.mk
 	$(Q)cp mk/config.mk $@.tmp
 	$(Q)for cfg in $(filter CONFIG_%,$(MAKEFLAGS)); do \
 		sed -i.bak -r "s@$${cfg%%=*}[?]?=.*@$$cfg@g" $@.tmp; \
@@ -111,9 +111,8 @@ config.h: mk/config.mk
 
 	$(Q)sed -i.bak -r '1s/^/#ifndef SPDK_CONFIG_H\n#define SPDK_CONFIG_H\n\n/g' $@.tmp
 	$(Q)sed -i.bak -r '$$ s@(.*)@\n#endif /* SPDK_CONFIG_H */\n@g' $@.tmp
-	$(Q)rm -f  $@.tmp.bak
 	$(Q)cmp -s $@.tmp $@ || cp $@.tmp $@ ;
-	$(Q)rm -f $@.tmp
+	$(Q)rm -f $@.tmp $@.tmp.bak
 
 cc_version: mk/cc.mk
 	$(Q)echo "SPDK using CC=$(CC)"; $(CC) -v
