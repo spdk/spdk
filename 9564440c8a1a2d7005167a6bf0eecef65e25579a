@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f851d12e_a254cf60",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-25T12:49:28Z",
+      "side": 1,
+      "message": "Do we need \u0027set -e\u0027 ?",
+      "revId": "9564440c8a1a2d7005167a6bf0eecef65e25579a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
