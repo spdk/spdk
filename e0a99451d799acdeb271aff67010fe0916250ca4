@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab35127f_1ebb7480",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T02:59:08Z",
+      "side": 1,
+      "message": "this context is specific for hooks? hooks_ctx may be clear?",
+      "range": {
+        "startLine": 81,
+        "startChar": 10,
+        "endLine": 81,
+        "endChar": 15
+      },
+      "revId": "e0a99451d799acdeb271aff67010fe0916250ca4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26e55373_d084ac23",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T02:59:08Z",
+      "side": 1,
+      "message": "I think \n if (!g_nvme_hooks) {} else {}\nis natural for most users.",
+      "revId": "e0a99451d799acdeb271aff67010fe0916250ca4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcaec6a9_98062855",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T02:59:08Z",
+      "side": 1,
+      "message": "I think\n if (!g_nvme_hooks) { } else { }\nis natural for most users.",
+      "revId": "e0a99451d799acdeb271aff67010fe0916250ca4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f74ed5f_43011c47",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T02:59:08Z",
+      "side": 1,
+      "message": "I think \n  if (!g_nvme_hooks) {} else {}\nwill be natural for most users.",
+      "revId": "e0a99451d799acdeb271aff67010fe0916250ca4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6eb5530_d811e723",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1307,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-25T02:59:08Z",
+      "side": 1,
+      "message": "successfully",
+      "range": {
+        "startLine": 1307,
+        "startChar": 31,
+        "endLine": 1307,
+        "endChar": 41
+      },
+      "revId": "e0a99451d799acdeb271aff67010fe0916250ca4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
