@@ -173,7 +173,6 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 		assert(0);
 	}
 	TAILQ_REMOVE(&g_spdk_raid_bdev_list, raid_bdev, global_link);
-	free(raid_bdev->bdev.name);
 	raid_bdev->bdev.name = NULL;
 	assert(raid_bdev->base_bdev_info);
 	free(raid_bdev->base_bdev_info);
@@ -1179,14 +1178,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 
 	raid_bdev_gen = &raid_bdev->bdev;
 
-	raid_bdev_gen->name = strdup(raid_cfg->name);
-	if (!raid_bdev_gen->name) {
-		SPDK_ERRLOG("Unable to allocate name for raid\n");
-		free(raid_bdev->base_bdev_info);
-		free(raid_bdev);
-		return -ENOMEM;
-	}
-
+	raid_bdev_gen->name = raid_cfg->name;
 	raid_bdev_gen->product_name = "Pooled Device";
 	raid_bdev_gen->ctxt = raid_bdev;
 	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
