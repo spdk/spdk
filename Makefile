@@ -82,6 +82,9 @@ mk/cc.mk:
 	rm -f $@.tmp
 
 config.h: mk/config.mk scripts/genconfig.py
+	echo "Checking for mk/config.mk*"
+	ls -al mk/config.mk* || true
+
 	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
 	test -z "$$PYCMD" && PYCMD=python ; \
 	echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
@@ -96,6 +99,9 @@ config.h: mk/config.mk scripts/genconfig.py
 		exit 1; \
 	fi; \
 	rm -f $@.tmp
+
+	echo "Checking for mk/config.mk*"
+	ls -al mk/config.mk* || true
 
 cc_version: mk/cc.mk
 	$(Q)echo "SPDK using CC=$(CC)"; $(CC) -v

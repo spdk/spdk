@@ -383,11 +383,17 @@ if [ $(IFS='|'; egrep -c "^\s*CONFIG_(${!CONFIG[*]})=" CONFIG) -ne ${#CONFIG[@]}
 	exit 1
 fi
 
+echo "Checking for mk/config.mk*"
+ls -al mk/config.mk* || true
+
 echo -n "Creating mk/config.mk..."
 cp -f CONFIG mk/config.mk
 for key in ${!CONFIG[@]}; do
 	sed -i -r "s#^\s*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" mk/config.mk
 done
+
+echo "Checking for mk/config.mk*"
+ls -al mk/config.mk* || true
 
 # Environment variables
 [ -n "$CFLAGS" ] && echo "CFLAGS?=$CFLAGS" >> mk/config.mk
@@ -397,10 +403,16 @@ done
 
 echo "done."
 
+echo "Checking for mk/config.mk*"
+ls -al mk/config.mk* || true
+
 if [[ "$OSTYPE" == "freebsd"* ]]; then
 	echo "Type 'gmake' to build."
 else
 	echo "Type 'make' to build."
 fi
+
+echo "Checking for mk/config.mk*"
+ls -al mk/config.mk* || true
 
 exit 0
