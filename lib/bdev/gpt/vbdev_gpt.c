@@ -160,8 +160,13 @@ static void
 vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct gpt_channel *ch = spdk_io_channel_get_ctx(_ch);
+	int rc;
 
-	spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
+	rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
+	if (rc) {
+		SPDK_ERRLOG("gpt: error on bdev_io submission, rc=%d.\n", rc);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
 }
 
 static void
