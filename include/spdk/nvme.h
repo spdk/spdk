@@ -1096,6 +1096,58 @@ int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t fe
 				       void *cb_arg, uint32_t ns_id);
 
 /**
+ * Receive security protocol data from controller.
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
+ *
+ * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
+ * commands submitted through this function.
+ *
+ * \param ctrlr NVMe controller to use for security receive command submission.
+ * \param nsid Namespace identifier for namespace to do security transfer.
+ * \param spsp Security Protocol Specific field.
+ * \param secp Security Protocol that is used.
+ * \param nssf NVMe Security Specific filed. Indicate RPMB target when using Security
+ * Protocol EAh.
+ * \param buffer Pointer to the data buffer.
+ * \param len Transfer length in bytes.
+ * \param cb_fn Callback function to invoke when the security receive has completed.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be allocated
+ * for this request.
+ */
+int spdk_nvme_ctrlr_cmd_sec_receive(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				    uint16_t spsp, uint8_t secp, uint8_t nssf, void *buffer, size_t len,
+				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Send security protocol data to controller.
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
+ *
+ * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
+ * commands submitted through this function.
+ *
+ * \param ctrlr NVMe controller to use for security send command submission.
+ * \param nsid Namespace identifier for namespace to do security transfer.
+ * \param spsp Security Protocol Specific field.
+ * \param secp Security Protocol that is used.
+ * \param nssf NVMe Security Specific filed. Indicate RPMB target when using Security
+ * Protocol EAh.
+ * \param buffer Pointer to the data buffer.
+ * \param len Transfer length in bytes.
+ * \param cb_fn Callback function to invoke when the security send has completed.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be allocated
+ * for this request.
+ */
+int spdk_nvme_ctrlr_cmd_sec_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				 uint16_t spsp, uint8_t secp, uint8_t nssf, void *buffer, size_t len,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * Attach the specified namespace to controllers.
  *
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
