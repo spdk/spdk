@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad80c155_729d7bf1",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-25T18:00:00Z",
+      "side": 1,
+      "message": "Why here and not in setup.sh? If status and cleanup are not supported they should print that message and do nothing.",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 2
+      },
+      "revId": "a388086fad5939cfe208516b4e3d9db697b77031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
