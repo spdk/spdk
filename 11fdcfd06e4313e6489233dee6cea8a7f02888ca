@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b655b36_ef073970",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1203,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-25T09:53:57Z",
+      "side": 1,
+      "message": "to or from (to match send or receive)",
+      "range": {
+        "startLine": 1203,
+        "startChar": 42,
+        "endLine": 1203,
+        "endChar": 49
+      },
+      "revId": "11fdcfd06e4313e6489233dee6cea8a7f02888ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "920e3873_80977593",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1212,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-25T09:53:57Z",
+      "side": 1,
+      "message": "Transfer length in bytes or in what unit?",
+      "range": {
+        "startLine": 1212,
+        "startChar": 14,
+        "endLine": 1212,
+        "endChar": 29
+      },
+      "revId": "11fdcfd06e4313e6489233dee6cea8a7f02888ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8c084f9_7ba91786",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-25T09:53:57Z",
+      "side": 1,
+      "message": "seems that on the spec, the low 8 bits are for NSSF. Should we also add them here. And in this case, we may define a structure for the total 32bits (SECP, SPSP, NSSF). Thanks, Gang",
+      "range": {
+        "startLine": 663,
+        "startChar": 1,
+        "endLine": 663,
+        "endChar": 62
+      },
+      "revId": "11fdcfd06e4313e6489233dee6cea8a7f02888ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac6065ee_e1c0f760",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-25T09:53:57Z",
+      "side": 1,
+      "message": "tab here for the alignment",
+      "range": {
+        "startLine": 748,
+        "startChar": 3,
+        "endLine": 748,
+        "endChar": 4
+      },
+      "revId": "11fdcfd06e4313e6489233dee6cea8a7f02888ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05f318a5_c086ae41",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-25T09:53:57Z",
+      "side": 1,
+      "message": "newline",
+      "range": {
+        "startLine": 421,
+        "startChar": 0,
+        "endLine": 421,
+        "endChar": 4
+      },
+      "revId": "11fdcfd06e4313e6489233dee6cea8a7f02888ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
