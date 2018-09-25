@@ -81,21 +81,44 @@ mk/cc.mk:
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 
-config.h: mk/config.mk scripts/genconfig.py
-	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
-	test -z "$$PYCMD" && PYCMD=python ; \
-	echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
-	echo "#define SPDK_CONFIG_H" >> $@.tmp; \
-	$$PYCMD scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp; \
-	echo "#endif /* SPDK_CONFIG_H */" >> $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
-	config_mk_cnt=`egrep -c '^\\s*CONFIG_[[:alnum:]_]+\\?=' mk/config.mk`; \
-	config_h_cnt=`egrep -v '^#define SPDK_CONFIG_H$$' $@ | egrep -c '^#(define|undef) SPDK_CONFIG'`; \
+# Transform config.mk into config.h by:
+# 1. Apply command line variables by directly replacing CONFIG_XXX lines.
+# 2. Remove empty lines and comments
+# 3. n or empty option -> undef
+# 4. y -> define 1
+# 5. Other values (like paths) -> define value
+# 6. Perform sanity check: compare number of option from config.mk with these config.h.tmp
+# 7. Add sentinels
+config.h: mk/config.mk
+	$(Q)cp mk/config.mk $@.tmp
+	$(Q)for cfg in $(filter CONFIG_%,$(MAKEFLAGS)); do \
+		sed -i.bak -r "s@$${cfg%%=*}[?]?=.*@$$cfg@g" $@.tmp; \
+	done
+
+	$(Q)sed -i.bak -r '/^\s*(#.*)?$$/d' $@.tmp
+	$(Q)sed -i.bak -r 's/(CONFIG_[[:alnum:]_]+)[?]?=(n)?\s*$$/\#undef SPDK_\1/g' $@.tmp
+	$(Q)sed -i.bak -r 's/(CONFIG_[[:alnum:]_]+)[?]?=y/\#define SPDK_\1 1/g' $@.tmp
+	$(Q)sed -i.bak -r 's/(CONFIG_[[:alnum:]_]+)[?]?=(.+)/\#define SPDK_\1 \2/g' $@.tmp
+
+	$(Q)config_mk_cnt=`egrep -c '^\\s*CONFIG_[[:alnum:]_]+\\?=' mk/config.mk`; \
+	config_h_cnt=`egrep -c '^#(define|undef) SPDK_CONFIG' $@.tmp`; \
 	if [ $$config_mk_cnt -ne $$config_h_cnt ]; then \
-		echo 'BUG: Number of options from CONFIG not equal to $@'; \
+		echo ''; \
+		echo 'BUG: Number of options from CONFIG not equal to $@.tmp'; \
+		echo ''; \
 		exit 1; \
-	fi; \
-	rm -f $@.tmp
+	fi;
+
+	$(Q)echo '#ifndef SPDK_CONFIG_H' > $@.tmp.bak
+	$(Q)echo '#define SPDK_CONFIG_H' >> $@.tmp.bak
+	$(Q)echo '' >> $@.tmp.bak
+	$(Q)cat $@.tmp >> $@.tmp.bak
+	$(Q)echo '' >> $@.tmp.bak
+	$(Q)echo '#endif /* SPDK_CONFIG_H */' >> $@.tmp.bak
+
+	$(Q)mv $@.tmp.bak $@.tmp
+	$(Q)cmp -s $@.tmp $@ || cp $@.tmp $@
+	$(Q)rm -f $@.tmp
 
 cc_version: mk/cc.mk
 	$(Q)echo "SPDK using CC=$(CC)"; $(CC) -v
