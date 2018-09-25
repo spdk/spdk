@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfa9ecc1_b1ad7f5e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-25T10:15:07Z",
+      "side": 1,
+      "message": "In spdk_vhost_event_async_foreach_fn() and spdk_vhost_event_async_fn() you can use spdk_env_get_current_core() instead of this.",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 15
+      },
+      "revId": "bd10367134149a9cf9565b0fd721e96acbda05a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b3a0e2a_7f4bcf39",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-25T10:15:07Z",
+      "side": 1,
+      "message": "Is this new codding style? :) If yes, pls do it separate patch.",
+      "range": {
+        "startLine": 952,
+        "startChar": 0,
+        "endLine": 952,
+        "endChar": 1
+      },
+      "revId": "bd10367134149a9cf9565b0fd721e96acbda05a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
