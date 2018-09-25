@@ -16,6 +16,24 @@
       "revId": "29d5bb3222fb47d24960d8cf7030aaccb0319aaa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad9fcd69_d9368466",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-25T19:23:07Z",
+      "side": 1,
+      "message": "ehhh, thanks",
+      "parentUuid": "60f669d1_ce542892",
+      "revId": "29d5bb3222fb47d24960d8cf7030aaccb0319aaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
