@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7abf68b2_bbd41242",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-25T17:43:52Z",
+      "side": 1,
+      "message": "The title of this commit should be \"gather loop condition variables into one spot in _crypto_operation\" or something. Misc cleanup from previous review isn\u0027t specific enough to be helpful when scanning a commit log.",
+      "revId": "10b5c70f5d3b306949440afa2bc0ee003838fb74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
