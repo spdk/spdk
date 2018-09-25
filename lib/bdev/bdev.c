@@ -3290,8 +3290,12 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 void
 spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
-	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev *bdev;
 	bool do_unregister = false;
+
+	assert(desc != NULL);
+
+	bdev = desc->bdev;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
