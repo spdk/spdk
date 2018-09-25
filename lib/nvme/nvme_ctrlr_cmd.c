@@ -636,3 +636,59 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 
 	return rc;
 }
+
+int
+spdk_nvme_ctrlr_cmd_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+				     uint16_t spsp, uint8_t nssf, void *payload,
+				     uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+	int rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	req = nvme_allocate_request_user_copy(ctrlr->adminq, payload, payload_size,
+					      cb_fn, cb_arg, false);
+	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_SECURITY_RECEIVE;
+	cmd->cdw10 = ((uint32_t)secp << 24) | ((uint32_t)spsp << 8) | ((uint32_t)nssf);
+	cmd->cdw11 = payload_size;
+
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+}
+
+int
+spdk_nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+				  uint16_t spsp, uint8_t nssf, void *payload,
+				  uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+	int rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	req = nvme_allocate_request_user_copy(ctrlr->adminq, payload, payload_size,
+					      cb_fn, cb_arg, true);
+	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_SECURITY_SEND;
+	cmd->cdw10 = ((uint32_t)secp << 24) | ((uint32_t)spsp << 8) | ((uint32_t)nssf);
+	cmd->cdw11 = payload_size;
+
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+}
