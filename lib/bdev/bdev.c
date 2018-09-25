@@ -1171,8 +1171,7 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 		if (child_iovcnt == BDEV_IO_NUM_CHILD_IOV && to_next_boundary_bytes > 0) {
 			/* We've run out of child iovs - we need to fail this I/O. */
 			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-			bdev_io->internal.cb(bdev_io, SPDK_BDEV_IO_STATUS_FAILED,
-					     bdev_io->internal.caller_ctx);
+			bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 			return;
 		}
 	}
@@ -1211,13 +1210,13 @@ _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 
 	if (!success) {
 		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		parent_io->internal.cb(parent_io, SPDK_BDEV_IO_STATUS_FAILED, parent_io->internal.caller_ctx);
+		parent_io->internal.cb(parent_io, false, parent_io->internal.caller_ctx);
 		return;
 	}
 
 	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
 		parent_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		parent_io->internal.cb(parent_io, SPDK_BDEV_IO_STATUS_SUCCESS, parent_io->internal.caller_ctx);
+		parent_io->internal.cb(parent_io, true, parent_io->internal.caller_ctx);
 		return;
 	}
 
@@ -3466,7 +3465,7 @@ _spdk_bdev_write_zero_buffer_next(void *_bdev_io)
 		/* This should never happen. */
 		assert(false);
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		bdev_io->internal.cb(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, bdev_io->internal.caller_ctx);
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 	}
 }
 
@@ -3479,13 +3478,13 @@ _spdk_bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, vo
 
 	if (!success) {
 		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		parent_io->internal.cb(parent_io, SPDK_BDEV_IO_STATUS_FAILED, parent_io->internal.caller_ctx);
+		parent_io->internal.cb(parent_io, false, parent_io->internal.caller_ctx);
 		return;
 	}
 
 	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
 		parent_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		parent_io->internal.cb(parent_io, SPDK_BDEV_IO_STATUS_SUCCESS, parent_io->internal.caller_ctx);
+		parent_io->internal.cb(parent_io, true, parent_io->internal.caller_ctx);
 		return;
 	}
 
