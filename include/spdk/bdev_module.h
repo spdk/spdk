@@ -904,8 +904,9 @@ int spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_
  *
  * \param ch The I/O channel associated with the spdk_bdev_part.
  * \param bdev_io The I/O to be submitted to the underlying bdev.
+ * \return 0 on success or non-zero if submit request failed.
  */
-void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io);
+int spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io);
 
 /**
  * Return a pointer to this part's spdk_bdev.

@@ -67,17 +67,30 @@ struct vbdev_split_channel {
 	struct spdk_bdev_part_channel	part_ch;
 };
 
+struct vbdev_split_bdev_io {
+	struct spdk_io_channel *ch;
+	struct spdk_bdev_io *bdev_io;
+
+	/* for bdev_io_wait */
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+};
+
 static void vbdev_split_del_config(struct spdk_vbdev_split_config *cfg);
 
 static int vbdev_split_init(void);
 static void vbdev_split_fini(void);
 static void vbdev_split_examine(struct spdk_bdev *bdev);
 static int vbdev_split_config_json(struct spdk_json_write_ctx *w);
+static int vbdev_split_get_ctx_size(void);
+
+static void
+vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
 
 static struct spdk_bdev_module split_if = {
 	.name = "split",
 	.module_init = vbdev_split_init,
 	.module_fini = vbdev_split_fini,
+	.get_ctx_size = vbdev_split_get_ctx_size,
 	.examine_config = vbdev_split_examine,
 	.config_json = vbdev_split_config_json,
 };
@@ -110,11 +123,49 @@ vbdev_split_base_bdev_hotremove_cb(void *_base_bdev)
 }
 
 static void
+vbdev_split_resubmit_io(void *arg)
+{
+	struct vbdev_split_bdev_io *split_io = (struct vbdev_split_bdev_io *)arg;
+
+	vbdev_split_submit_request(split_io->ch, split_io->bdev_io);
+}
+
+static void
+vbdev_split_queue_io(struct vbdev_split_bdev_io *split_io)
+{
+	int rc;
+
+	split_io->bdev_io_wait.bdev = split_io->bdev_io->bdev;
+	split_io->bdev_io_wait.cb_fn = vbdev_split_resubmit_io;
+	split_io->bdev_io_wait.cb_arg = split_io;
+
+	rc = spdk_bdev_queue_io_wait(split_io->bdev_io->bdev,
+				     split_io->ch, &split_io->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in vbdev_split_queue_io, rc=%d\n", rc);
+		spdk_bdev_io_complete(split_io->bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static void
 vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct vbdev_split_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct vbdev_split_bdev_io *io_ctx = (struct vbdev_split_bdev_io *)bdev_io->driver_ctx;
+	int rc;
 
-	spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
+	rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
+	if (rc) {
+		if (rc == -ENOMEM) {
+			SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "split: no memory, queue io.\n");
+			io_ctx->ch = _ch;
+			io_ctx->bdev_io = bdev_io;
+			vbdev_split_queue_io(io_ctx);
+		} else {
+			SPDK_ERRLOG("split: error on io submission, rc=%d.\n", rc);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
 }
 
 static int
@@ -498,6 +549,17 @@ spdk_vbdev_split_get_part_base(struct spdk_bdev *bdev)
 	}
 
 	return cfg->split_base;
+}
+
+/*
+ * During init we'll be asked how much memory we'd like passed to us
+ * in bev_io structures as context. Here's where we specify how
+ * much context we want per IO.
+ */
+static int
+vbdev_split_get_ctx_size(void)
+{
+	return sizeof(struct vbdev_split_bdev_io);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_split", SPDK_LOG_VBDEV_SPLIT)
