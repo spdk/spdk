@@ -8,6 +8,9 @@ spdk_nvme_ns_get_extended_sector_size() was added.  This function includes
 the metadata size per sector (if any).  spdk_nvme_ns_get_sector_size() still
 returns only the data size per sector, not including metadata.
 
+spdk_nvme_ctrlr_cmd_sec_receive() and spdk_nvme_ctrlr_cmd_sec_send() were
+added to support sending or receiving security protocol data to nvme controller.
+
 ### Build System
 
 New `configure` options, `--with-shared` and `--without-shared`
