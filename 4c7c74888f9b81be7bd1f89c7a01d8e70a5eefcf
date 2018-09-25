@@ -213,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "0de5f7cc_acc5a692",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-25T15:25:27Z",
+      "side": 1,
+      "message": "I\u0027ll check that",
+      "parentUuid": "94b0aa9f_d4df697f",
+      "range": {
+        "startLine": 66,
+        "startChar": 9,
+        "endLine": 66,
+        "endChar": 18
+      },
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54deab93_a7c2949a",
         "filename": "test/nvme/perf/common.sh",
         "patchSetId": 5
@@ -271,6 +295,24 @@
       "writtenOn": "2018-09-20T13:06:09Z",
       "side": 1,
       "message": "Shouldn\u0027t --ioengine have full path like on line 111?",
+      "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a66689ae_33ad8601",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-25T15:25:27Z",
+      "side": 1,
+      "message": "Readme says that it should be \"spdk\" for nvme fio_plugin and \"spdk_bdev\" for bdev fio_plugin",
+      "parentUuid": "534a870a_df17f27d",
       "revId": "4c7c74888f9b81be7bd1f89c7a01d8e70a5eefcf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
