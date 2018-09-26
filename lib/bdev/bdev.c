@@ -3258,6 +3258,9 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 
 	bdev->internal.status = SPDK_BDEV_STATUS_READY;
 	bdev->internal.measured_queue_depth = UINT64_MAX;
+	bdev->internal.claim_module = NULL;
+	bdev->internal.qd_poller = NULL;
+	bdev->internal.qos = NULL;
 
 	TAILQ_INIT(&bdev->internal.open_descs);
 
