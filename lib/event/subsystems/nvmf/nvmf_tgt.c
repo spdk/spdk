@@ -293,6 +293,7 @@ nvmf_tgt_destroy_done(void *ctx, int status)
 	}
 
 	free(g_spdk_nvmf_tgt_conf);
+	g_spdk_nvmf_tgt_conf = NULL;
 	nvmf_tgt_advance_state();
 }
 

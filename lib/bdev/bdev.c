@@ -893,6 +893,8 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 	cb_fn(g_fini_cb_arg);
 	g_fini_cb_fn = NULL;
 	g_fini_cb_arg = NULL;
+	g_bdev_mgr.init_complete = false;
+	g_bdev_mgr.module_init_complete = false;
 }
 
 static void
