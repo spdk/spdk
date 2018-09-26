@@ -3191,6 +3191,10 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 
 	bdev->internal.status = SPDK_BDEV_STATUS_READY;
 	bdev->internal.measured_queue_depth = UINT64_MAX;
+	bdev->internal.claim_module = NULL;
+	bdev->internal.qd_poller = NULL;
+	bdev->internal.base_bdevs = NULL;
+	bdev->internal.base_bdevs_cnt = 0;
 
 	TAILQ_INIT(&bdev->internal.open_descs);
 
@@ -3239,6 +3243,7 @@ spdk_bdev_fini(struct spdk_bdev *bdev)
 	pthread_mutex_destroy(&bdev->internal.mutex);
 
 	free(bdev->internal.qos);
+	bdev->internal.qos = NULL;
 
 	spdk_io_device_unregister(__bdev_to_io_dev(bdev), spdk_bdev_destroy_cb);
 }
