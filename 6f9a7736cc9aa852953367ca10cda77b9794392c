@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "55ecaabe_41d4f5d6",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T18:06:42Z",
+      "side": 1,
+      "message": "I\u0027m not an exper in Vagrant but this looks like adding new disk by using qemu params params directly. I think you can (should) add it using existing storage providers. (https://github.com/vagrant-libvirt/vagrant-libvirt#additional-disks)",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 13
+      },
+      "revId": "6f9a7736cc9aa852953367ca10cda77b9794392c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10983c73_90283362",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 3
