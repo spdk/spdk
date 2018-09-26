@@ -35,6 +35,8 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS += vpp.c
+CFLAGS += -Wno-sign-compare -Wno-error=old-style-definition
+CFLAGS += -Wno-error=strict-prototypes -Wno-error=ignored-qualifiers
 
 LIBNAME = sock_vpp
 
