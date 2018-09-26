@@ -226,8 +226,9 @@ function install_vpp()
 function install_nvmecli()
 {
     if echo $CONF | grep -q nvmecli; then
+        SPDK_NVME_CLI_BRANCH=spdk-1.6
         if [ ! -d nvme-cli ]; then
-            git clone "${GIT_REPO_SPDK_NVME_CLI}"
+            git clone "${GIT_REPO_SPDK_NVME_CLI}" -b "$SPDK_NVME_CLI_BRANCH"
         else
             echo "nvme-cli already checked out. Skipping"
         fi
