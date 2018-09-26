@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "600f4b09_d04694fb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 76
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:19:12Z",
+      "side": 1,
+      "message": "PRC \u003d\u003e RPC",
+      "revId": "fc05b1170be4f2cad7118f62428e9f5ed48cffb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6512b79e_b33755fb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:19:12Z",
+      "side": 1,
+      "message": "should we only print out limits that are valid?\n\ni mean, if the user did not specify any QoS - I don\u0027t think we should issue this RPC\n\nand if they only specified one limit, we should only dump that limit here",
+      "revId": "fc05b1170be4f2cad7118f62428e9f5ed48cffb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b2ec69d_971416ee",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 571,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:19:12Z",
+      "side": 1,
+      "message": "Error message may need to be modified here.  Maybe \"No rate limits specified.\"?\n\nHow does the user clear QoS limits?  By setting them to 0?",
+      "revId": "fc05b1170be4f2cad7118f62428e9f5ed48cffb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3bf96c7_f8709931",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 76
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:19:12Z",
+      "side": 1,
+      "message": "is the default\u003d-1 needed?\n\ni was thinking that since they are optional parameters, we don\u0027t need a default - that\u0027s how we do it with other optional parameters in spdk",
+      "revId": "fc05b1170be4f2cad7118f62428e9f5ed48cffb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
