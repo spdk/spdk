@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "e8855bc0_e44934c2",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T10:47:34Z",
+      "side": 1,
+      "message": "I need to check this with Jim and others but BSD look good to me to.",
+      "parentUuid": "c6852ef8_f8d07fc6",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8f85a06_776f9e8a",
         "filename": "pkg/fedora28.spec",
         "patchSetId": 4
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "b48fb182_239cc2a1",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T10:47:34Z",
+      "side": 1,
+      "message": "I don\u0027t think there exist RPM with DPDK \u003c 17.11 but will check this.",
+      "parentUuid": "a8f85a06_776f9e8a",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49747587_21285371",
         "filename": "pkg/fedora28.spec",
         "patchSetId": 4
@@ -64,6 +100,24 @@
       "writtenOn": "2018-09-12T17:13:09Z",
       "side": 1,
       "message": "Suggestion:\nThis package contains the headers and other files needed for developing applications with the Storage Performance Development Kit.",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c26a22db_611fd144",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T10:47:34Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "49747587_21285371",
       "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -104,6 +158,24 @@
     },
     {
       "key": {
+        "uuid": "ce6d627d_741cb63e",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T10:47:34Z",
+      "side": 1,
+      "message": "https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/message/2PD5RNJRKPN2DVTNGJSBHR5RUSVZSDZI/\n\nhttps://pagure.io/packaging-committee/issue/738",
+      "parentUuid": "ca17f650_3f64d11a",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9a397b0_1a57e430",
         "filename": "pkg/fedora28.spec",
         "patchSetId": 4
@@ -115,6 +187,24 @@
       "writtenOn": "2018-09-12T17:13:09Z",
       "side": 1,
       "message": "Given the *.so, we\u0027d need to add \u0027--with-shared\u0027 to configure.   But, do I recall during a SPDK community call someone suggested that we produce the SPDK apps statically?   If so, how do we reconcile the production of shared-libs and the linking of apps statically?   New/modified options to configure and a change to the build?",
+      "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e640399_ae636296",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T10:47:34Z",
+      "side": 1,
+      "message": "I need to recheck this, but I think I checked this and at least spdk_tgt is dynamicaly linked. I will rebase on current master and recheck this.",
+      "parentUuid": "a9a397b0_1a57e430",
       "revId": "8c375d0b8a60aa25ba16f9dbdcd069b1687aa401",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
