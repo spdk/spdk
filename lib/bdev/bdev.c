@@ -3122,6 +3122,7 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 
 	sp = spdk_conf_find_section(NULL, "QoS");
 	if (!sp) {
+		bdev->internal.qos = NULL;
 		return;
 	}
 
