@@ -69,6 +69,8 @@ if [ ! -f "$CONF_PATH" ]; then
 	exit 1
 fi
 
+cd ~
+
 source "$CONF_PATH"
 
 jobs=$(($(nproc)*2))
@@ -81,19 +83,15 @@ if $INSTALL; then
     sudo dnf install -y git
 fi
 
-cd ~
-mkdir -p spdk_repo
+mkdir -p spdk_repo/output
 
-cd spdk_repo
-mkdir -p output
-if [ -d spdk ]; then
+if [ -d spdk_repo/spdk ]; then
     echo "spdk source already present, not cloning"
 else
-    git clone "${GIT_REPO_SPDK}"
+    git -C spdk_repo clone "${GIT_REPO_SPDK}"
 fi
-cd spdk
-git config submodule.dpdk.url "${GIT_REPO_DPDK}"
-git submodule update --init --recursive
+git -C spdk_repo/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
+git -C spdk_repo/spdk submodule update --init --recursive
 
 if $INSTALL; then
     sudo ./scripts/pkgdep.sh
@@ -138,8 +136,6 @@ if $INSTALL; then
     sshfs
 fi
 
-cd ~
-
 if echo $CONF | grep -q librxe; then
     # rxe_cfg is used in the NVMe-oF tests
     # The librxe-dev repository provides a command line tool called rxe_cfg which makes it
@@ -154,11 +150,9 @@ if echo $CONF | grep -q librxe; then
             git clone "${GIT_REPO_LIBRXE}"
         fi
 
-        cd librxe-dev
-        ./configure --libdir=/usr/lib64/ --prefix=
-        make -j${jobs}
-        sudo make install
-        cd ~
+        ./librxe-dev/configure --libdir=/usr/lib64/ --prefix=
+        make -C librxe-dev -j${jobs}
+        sudo make -C librxe-dev install
     fi
 fi
 
@@ -171,28 +165,23 @@ if echo $CONF | grep -q iscsi; then
     OPEN_ISCSI_VER='iscsiadm version 6.2.0.874'
     if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
         if [ ! -d open-iscsi-install ]; then
-            mkdir -p open-iscsi-install
-            cd open-iscsi-install
-            sudo dnf download --source iscsi-initiator-utils
-            rpm2cpio $(ls) | cpio -idmv
-            mkdir -p patches
-            mv 00* patches/
-            git clone "${GIT_REPO_OPEN_ISCSI}"
-
-            cd open-iscsi
+            mkdir -p open-iscsi-install/patches
+            sudo dnf download --downloaddir=./open-iscsi-install --source iscsi-initiator-utils
+            rpm2cpio open-iscsi-install/$(ls ~/open-iscsi-install) | cpio -D open-iscsi-install -idmv
+            mv open-iscsi-install/00* open-iscsi-install/patches/
+            git clone "${GIT_REPO_OPEN_ISCSI}" open-iscsi-install/open-iscsi
 
             # the configurations of username and email are needed for applying patches to iscsiadm.
-            git config user.name none
-            git config user.email none
+            git -C open-iscsi-install/open-iscsi config user.name none
+            git -C open-iscsi-install/open-iscsi config user.email none
 
-            git checkout 86e8892
-            for patch in `ls ../patches`; do
-                git am ../patches/$patch
+            git -C open-iscsi-install/open-iscsi checkout 86e8892
+            for patch in `ls open-iscsi-install/patches`; do
+                git -C open-iscsi-install/open-iscsi am ../patches/$patch
             done
-            sed -i '427s/.*/-1);/' usr/session_info.c
-            make -j${jobs}
-            sudo make install
-            cd ~
+            sed -i '427s/.*/-1);/' open-iscsi-install/open-iscsi/usr/session_info.c
+            make -C open-iscsi-install/open-iscsi -j${jobs}
+            sudo make -C open-iscsi-install/open-iscsi install
         else
             echo "custom open-iscsi install located, not reinstalling"
         fi
@@ -205,7 +194,7 @@ if echo $CONF | grep -q rocksdb; then
 
     # Rocksdb is installed for use with the blobfs tests.
     if [ ! -d /usr/src/rocksdb ]; then
-	git clone "${GIT_REPO_ROCKSDB}"
+        git clone "${GIT_REPO_ROCKSDB}"
         git -C ./rocksdb checkout spdk-v5.6.1
         sudo mv rocksdb /usr/src/
     else
@@ -225,19 +214,16 @@ if echo $CONF | grep -q fio; then
             sudo mv fio /usr/src/
         fi
         (
-            cd /usr/src/fio &&
-            git checkout master &&
-            git pull &&
-            git checkout fio-3.3 &&
-            make -j${jobs} &&
-            sudo make install
+            git -C /usr/src/fio checkout master &&
+            git -C /usr/src/fio pull &&
+            git -C /usr/src/fio checkout fio-3.3 &&
+            make -C /usr/src/fio -j${jobs} &&
+            sudo make -C /usr/src/fio install
         )
     else
         echo "fio already in /usr/src/fio. Not installing"
     fi
 fi
-
-cd ~
 
 if echo $CONF | grep -q flamegraph; then
     # Flamegraph is used when printing out timing graphs for the tests.
@@ -254,14 +240,11 @@ if echo $CONF | grep -q qemu; then
     # Qemu is used in the vhost tests.
     SPDK_QEMU_BRANCH=spdk-2.12
     mkdir -p qemu
-    cd qemu
-    if [ ! -d "$SPDK_QEMU_BRANCH" ]; then
-        git clone "${GIT_REPO_QEMU}" -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
+    if [ ! -d "qemu/$SPDK_QEMU_BRANCH" ]; then
+        git -C ./qemu clone "${GIT_REPO_QEMU}" -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
     else
         echo "qemu already checked out. Skipping"
     fi
-
-    cd "$SPDK_QEMU_BRANCH"
 
     declare -a opt_params=("--prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH")
 
@@ -273,13 +256,12 @@ if echo $CONF | grep -q qemu; then
         fi
     fi
 
-    ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa
+    # The qemu configure script places several output files in the CWD.
+    (cd qemu/$SPDK_QEMU_BRANCH && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
 
-    make -j${jobs}
-    sudo make install
+    make -C ./qemu/$SPDK_QEMU_BRANCH -j${jobs}
+    sudo make -C ./qemu/$SPDK_QEMU_BRANCH install
 fi
-
-cd ~
 
 if echo $CONF | grep -q vpp; then
     # Vector packet processing (VPP) is installed for use with iSCSI tests.
@@ -291,15 +273,14 @@ if echo $CONF | grep -q vpp; then
         echo "%_topdir  $HOME/vpp_setup/src/rpm" >> ~/.rpmmacros
         sudo dnf install perl-generators
         mkdir -p ~/vpp_setup/src/rpm
-        cd ~/vpp_setup/src/rpm
-        mkdir -p BUILD RPMS SOURCES SPECS SRPMS
-        dnf download --source redhat-rpm-config
-        rpm -ivh redhat-rpm-config*
-        sed -i s/"Requires: (annobin if gcc)"//g SPECS/redhat-rpm-config.spec
-        rpmbuild -ba SPECS/*.spec
+        mkdir -p vpp_setup/src/rpm/BUILD vpp_setup/src/rpm/RPMS vpp_setup/src/rpm/SOURCES \
+        vpp_setup/src/rpm/SPECS vpp_setup/src/rpm/SRPMS
+        dnf download --downloaddir=./vpp_setup/src/rpm --source redhat-rpm-config
+        rpm -ivh ~/vpp_setup/src/rpm/redhat-rpm-config*
+        sed -i s/"Requires: (annobin if gcc)"//g ~/vpp_setup/src/rpm/SPECS/redhat-rpm-config.spec
+        rpmbuild -ba ~/vpp_setup/src/rpm/SPECS/*.spec
         sudo dnf remove -y --noautoremove redhat-rpm-config
-        sudo rpm -Uvh RPMS/noarch/*
-        cd -
+        sudo rpm -Uvh ~/vpp_setup/src/rpm/RPMS/noarch/*
     fi
 
     if [ -d vpp ]; then
@@ -311,29 +292,26 @@ if echo $CONF | grep -q vpp; then
         fi
     else
         git clone "${GIT_REPO_VPP}"
-        cd vpp
-        git checkout v18.01.1
+        git -C ./vpp checkout v18.01.1
         # VPP 18.01.1 does not support OpenSSL 1.1.
         # For compilation, a compatibility package is used temporarily.
         sudo dnf install -y --allowerasing compat-openssl10-devel
         # Installing required dependencies for building VPP
-        yes | make install-dep
+        yes | make -C ./vpp install-dep
 
-        make pkg-rpm -j${jobs}
+        make -C ./vpp pkg-rpm -j${jobs}
         # Reinstall latest OpenSSL devel package.
         sudo dnf install -y --allowerasing openssl-devel
-        cd build-root
         sudo dnf install -y \
-            ./vpp-lib-18.01.1-release.x86_64.rpm \
-            ./vpp-devel-18.01.1-release.x86_64.rpm \
-            ./vpp-18.01.1-release.x86_64.rpm
+            ./vpp/build_root/vpp-lib-18.01.1-release.x86_64.rpm \
+            ./vpp/build_root/vpp-devel-18.01.1-release.x86_64.rpm \
+            ./vpp/build_root/vpp-18.01.1-release.x86_64.rpm
         # Since hugepage configuration is done via spdk/scripts/setup.sh,
         # this default config is not needed.
         #
         # NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
         # very low count and cause issues with hugepage total sizes above 1GB.
         sudo rm -f /etc/sysctl.d/80-vpp.conf
-        cd ~
     fi
 fi
 
@@ -353,11 +331,9 @@ if echo $CONF | grep -q libiscsi; then
     else
         echo "libiscsi already checked out. Skipping"
     fi
-    cd libiscsi
-    ./autogen.sh
-    ./configure --prefix=/usr/local/libiscsi
-    make -j${jobs}
-    sudo make install
+    ( cd libiscsi && ./autogen.sh &&  ./configure --prefix=/usr/local/libiscsi)
+    make -C ./libiscsi -j${jobs}
+    sudo make -C ./libiscsi install
 fi
 
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
