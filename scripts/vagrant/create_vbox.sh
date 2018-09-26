@@ -15,7 +15,7 @@ SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
 # The command line help
 display_help() {
 	echo
-	echo " Usage: ${0##*/} [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrl] <distro>"
+	echo " Usage: ${0##*/} [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrld] <distro>"
 	echo
 	echo "  distro = <centos7 | ubuntu16 | ubuntu18 | fedora26 | fedora27 | freebsd11> "
 	echo
@@ -28,6 +28,7 @@ display_help() {
 	echo "  --vhost-vm-dir=<path>     directory where to put vhost dependencies in VM"
 	echo "  -r dry-run"
 	echo "  -l use a local copy of spdk, don't try to rsync from the host."
+	echo "  -d deploy a test vm by provisioning all prerequisites for spdk autotest"
 	echo "  -h help"
 	echo "  -v verbose"
 	echo
@@ -48,12 +49,13 @@ VERBOSE=0
 HELP=0
 COPY_SPDK_DIR=1
 DRY_RUN=0
+DEPLOY_TEST_VM=0
 SPDK_VAGRANT_DISTRO="distro"
 SPDK_VAGRANT_VMCPU=4
 SPDK_VAGRANT_VMRAM=4096
 OPTIND=1
 
-while getopts ":n:s:x:p:vrlh-:" opt; do
+while getopts ":n:s:x:p:vrldh-:" opt; do
 	case "${opt}" in
 		-)
 		case "${OPTARG}" in
@@ -88,6 +90,9 @@ while getopts ":n:s:x:p:vrlh-:" opt; do
 		;;
 		l)
 			COPY_SPDK_DIR=0
+		;;
+		d)
+			DEPLOY_TEST_VM=1
 		;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
@@ -127,6 +132,11 @@ case "$SPDK_VAGRANT_DISTRO" in
 	;;
 esac
 
+if ! echo "$SPDK_VAGRANT_DISTRO" | grep -q fedora && [ $DEPLOY_TEST_VM -eq 1 ]; then
+	echo "Warning: Test machine deployment is only available on fedora distros. Disabling it for this build"
+	DEPLOY_TEST_VM=0
+fi
+
 if [ ${VERBOSE} = 1 ]; then
 	echo
 	echo DIR=${DIR}
@@ -148,6 +158,7 @@ export SPDK_VAGRANT_VMCPU
 export SPDK_VAGRANT_VMRAM
 export SPDK_DIR
 export COPY_SPDK_DIR
+export DEPLOY_TEST_VM
 
 if [ -n "$PROVIDER" ]; then
     provider="--provider=${PROVIDER}"

@@ -47,6 +47,14 @@ Vagrant.configure(2) do |config|
     config.vm.provision  "file", source: "~/.gitconfig", destination: ".gitconfig"
   end
 
+  # Copy the tsocks configuration file for use when installing some spdk test pool dependencies
+  if File.file?("/etc/tsocks.conf")
+    config.vm.provision  "file", source: "/etc/tsocks.conf", destination: "tsocks.conf"
+    config.vm.provision "shell", inline: "sudo mv tsocks.conf /etc/tsocks.conf"
+    config.vm.provision "shell", inline: "sudo chown root:wheel /etc/tsocks.conf"
+    config.vm.provision "shell", inline: "sudo chmod 644 /etc/tsocks.conf"
+  end
+
   # vagrant-cachier caches apt/yum etc to speed subsequent
   # vagrant up
   # to enable, run
@@ -122,6 +130,15 @@ Vagrant.configure(2) do |config|
   # rsync the spdk directory if provision hasn't happened yet
   if ENV['COPY_SPDK_DIR'] == "1" && spdk_dir != "none"
     config.vm.synced_folder "#{spdk_dir}", "/home/vagrant/spdk_repo/spdk", type: "rsync", rsync__auto: false
+  end
+
+  # provision the vm with all of the necessary spdk dependencies for running the autorun.sh tests
+  if ENV['DEPLOY_TEST_VM'] == "1" && spdk_dir != "none"
+    config.vm.provision "shell" do |setup|
+      setup.path = "#{spdk_dir}/test/common/config/vm_setup.sh"
+      setup.privileged = false
+      setup.args = ["-u", "-i"]
+    end
   end
 
   if vhost_host_dir != "none"
