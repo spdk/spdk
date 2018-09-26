@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4037966f_b7698da3",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-26T07:07:26Z",
+      "side": 1,
+      "message": "I feel like the error message wouldn\u0027t satisfy me if I was preparing an spdk setup for the first time and stopped on this. It\u0027s something we can improve later though.\n\nThere\u0027s a typo in the message - it should be libpmempool, not libmempool.\n\nAlso, the package is already in the 18.10 repositories - https://launchpad.net/ubuntu/cosmic/+package/libpmempool-dev\n(cosmic \u003d 18.10)\nCould we try to `apt-get install libpmempool-dev` and exit with an error msg only if it failed? There\u0027s no need to make assumptions whether the package is available.",
+      "revId": "40003ec03b6ca94f12432f875937c6ab82bac4dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
