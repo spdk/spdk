@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a833c110_c70a8c5a",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-26T21:04:47Z",
+      "side": 1,
+      "message": "Why was \"config\" added to the PHONY line?   I don\u0027t see a \"config:\" target.",
+      "revId": "778660ee464cc9935e070ac57348429023a96abe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
