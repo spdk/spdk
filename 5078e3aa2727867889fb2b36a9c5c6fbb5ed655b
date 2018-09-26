@@ -71,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "eeb712a3_37fdde63",
+        "filename": "README.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T08:21:01Z",
+      "side": 1,
+      "message": "Not really. It would require to use \u0027\u003d\u0027 instead of \u0027?\u003d\u0027 which is not a big deal.",
+      "parentUuid": "6ecf9790_1e6ac1c6",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8dd59d28_59bddff4",
         "filename": "configure",
         "patchSetId": 18
@@ -88,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "96b97523_c357cf8e",
+        "filename": "configure",
+        "patchSetId": 18
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T08:21:01Z",
+      "side": 1,
+      "message": "Probably yes, but I really like sanity check in lines 376-384.   If ./CONFIG is changed as you suggested this check currently won\u0027t be possible.",
+      "parentUuid": "8dd59d28_59bddff4",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b779b75_4f03a9b4",
         "filename": "configure",
         "patchSetId": 18
@@ -99,6 +135,24 @@
       "writtenOn": "2018-09-25T19:53:01Z",
       "side": 1,
       "message": "Wouldn\u0027t it be simpler to just echo the values in the CONFIG array out to a blank file, rather than copying CONFIG and doing sed operations?",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76bb6686_57794c23",
+        "filename": "configure",
+        "patchSetId": 18
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T08:21:01Z",
+      "side": 1,
+      "message": "Yes it would be simpler but reasons to have in this form are:\n\n1. Preserve all comment in mk/config.mk from ./CONFIG\n2. Make possible to do the check from lines 376-384",
+      "parentUuid": "8b779b75_4f03a9b4",
       "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -133,6 +187,24 @@
       "writtenOn": "2018-09-25T22:41:51Z",
       "side": 1,
       "message": "Please remember to put:\ngit checkout env.spdk.mk in a trap or somewhere that you know it will always be executed, otherwise you\u0027ll risk failing future builds with the dirtied files in them. e.g.\nhttps://ci.spdk.io/spdk/builds/review/c750088fba6b6fac8bd8226291f9d8d306dbe766.1537912461\n https://ci.spdk.io/spdk-jenkins/public_build/autotest-per-patch_12016.html\nI have reset these machines, but before you upload again, please double check to make sure you clean up any changes you make to nvme-cli",
+      "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d91ec372_1285a2ff",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-26T08:21:01Z",
+      "side": 1,
+      "message": "I will drop this change and disable nvme-cli tests till pointed patch is merged.",
+      "parentUuid": "71174da3_037ffc78",
       "revId": "5078e3aa2727867889fb2b36a9c5c6fbb5ed655b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
