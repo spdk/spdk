@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d87f1321_6030b957",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-26T00:04:15Z",
+      "side": 1,
+      "message": "The patch is good but this function is for multiple instances. Preparing another function for single instance may be reasonable. \n\nHow about the following as an alternative idea?\n\nint\n_spdk_rpc_get_vhost_controller(struct spdk_json_write_ctx *w, struct spdk_vhost_dev *vdev)\n{\n  uint32_t delay_base_us, iops_threshold;\n\n  spdk_vhost_get_coalescing(vdev, \u0026delay_base_us, \u0026iops_threshold);\n\n  spdk_json_write_object_begin(w);\n\n  spdk_json_write_named_string(w, \"ctrlr\", spdk_vhost_dev_get_name(vdev));\n  spdk_json_write_named_string_fmt(w, \"cpumask\", \"0x%s\", spdk_cpuset_fmt(vdev-\u003ecpumask));\n  spdk_json_write_named_uint32(w, \"delay_base_us\", delay_base_us);\n  spdk_json_write_named_uint32(w, \"iops_threshold\", iops_threshold);\n  spdk_json_write_named_string(w, \"socket\", vdev-\u003epath);\n\n  spdk_json_write_named_object_begin(w, \"backend_specific\");\n  spdk_vhost_dump_info_json(vdev, w);\n  spdk_json_write_object_end(w);\n\n  spdk_json_write_object_end(w);\n}\n\n\nint\nspdk_rpc_get_vhost_controller_cb(struct spdk_vhost_dev *vdev, void *arg)\n{\n  struct rpc_get_vhost_ctrlrs *ctx \u003d arg;\n\n  assert(ctx-\u003ename !\u003d NULL);\n\n  if (vdev \u003d\u003d NULL) {\n    spdk_jsonrpc_send_error_response(ctx-\u003erequest, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(ENODEV));\n    goto free_name_ctx;\n  }\n\n  ctx-\u003ew \u003d spdk_jsonrpc_begin_result(request);\n  if (ctx-\u003ew \u003d\u003d NULL) {\n    goto free_name_ctx;\n  }\n\n  spdk_json_write_array_begin(ctx-\u003ew);\n  _spdk_rpc_get_vhost_controller(ctx-\u003ew, vdev);\n  spdk_json_write_array_end(ctx-\u003ew);\n\n  spdk_jsonrpc_end_result(ctx-\u003erequest, ctx-\u003ew);\n\nfree_name_ctx:\n  free(ctx-\u003ename);\n  free(ctx);\n  return 0;\n}\n  \nstatic int\nspdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)\n{\n  struct rpc_get_vhost_ctrlrs *ctx \u003d arg;\n\n  assert(ctx-\u003ename \u003d\u003d NULL);\n\n  if (vdev \u003d\u003d NULL) {\n    spdk_json_write_array_end(ctx-\u003ew);\n    spdk_jsonrpc_end_result(ctx-\u003erequest, ctx-\u003ew);\n    free(ctx);\n    return 0;\n  }\n\n  _spdk_rpc_get_vhost_controller(ctx-\u003ew, vdev);\n  return 0;\n}",
+      "range": {
+        "startLine": 460,
+        "startChar": 0,
+        "endLine": 460,
+        "endChar": 33
+      },
+      "revId": "2e234db616235b0c5d5e225b15d1cb731b90740a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
