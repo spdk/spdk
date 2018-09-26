@@ -22,6 +22,30 @@
       "revId": "e3b996eb36455b7a3b1bd152545de2f4f968944a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26650fc4_6f7aab3b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-26T16:00:41Z",
+      "side": 1,
+      "message": "The idea is that it is only valid to set the hooks one time, at the beginning of time. Maybe we should attempt to enforce that condition instead?",
+      "parentUuid": "53f92c46_31768f09",
+      "range": {
+        "startLine": 250,
+        "startChar": 5,
+        "endLine": 250,
+        "endChar": 17
+      },
+      "revId": "e3b996eb36455b7a3b1bd152545de2f4f968944a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
