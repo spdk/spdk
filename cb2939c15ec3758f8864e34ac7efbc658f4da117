@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecc1c5a2_02ea1e86",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-26T16:54:45Z",
+      "side": 1,
+      "message": "Name RAID1? RAID0 I think is what you meant :)",
+      "revId": "cb2939c15ec3758f8864e34ac7efbc658f4da117",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7abcae37_2369b277",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-26T16:54:45Z",
+      "side": 1,
+      "message": "Raid0",
+      "revId": "cb2939c15ec3758f8864e34ac7efbc658f4da117",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
