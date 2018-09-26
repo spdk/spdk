@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c50a7c64_d36af409",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-26T07:36:41Z",
+      "side": 1,
+      "message": "For docs I\u0027d use \"distribution\" and save \"distro\" for use inside the scripts",
+      "range": {
+        "startLine": 30,
+        "startChar": 63,
+        "endLine": 30,
+        "endChar": 69
+      },
+      "revId": "18f6be196b45981928f422ae0289f9b9e6fce8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c034355_befe8dc3",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-26T07:36:41Z",
+      "side": 1,
+      "message": "Is line break needed here? In github .md viewer it\u0027s not respected but in my local editor it shows as short funny line:\n\nFor additional support,\n(rest of text)",
+      "revId": "18f6be196b45981928f422ae0289f9b9e6fce8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "506d3400_f2685ae2",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-26T07:36:41Z",
+      "side": 1,
+      "message": "pkgdep?",
+      "range": {
+        "startLine": 138,
+        "startChar": 47,
+        "endLine": 138,
+        "endChar": 54
+      },
+      "revId": "18f6be196b45981928f422ae0289f9b9e6fce8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
