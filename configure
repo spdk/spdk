@@ -220,20 +220,20 @@ for i in "$@"; do
 			;;
 		--with-fio=*)
 			check_dir "$i"
-			FIO_SOURCE_DIR="${i#*=}"
+			CONFIG_FIO_SOURCE_DIR="${i#*=}"
 			CONFIG_FIO_PLUGIN=y
 			;;
 		--without-fio)
-			FIO_SOURCE_DIR=
+			CONFIG_FIO_SOURCE_DIR=
 			CONFIG_FIO_PLUGIN=n
 			;;
 		--with-vtune=*)
 			check_dir "$i"
-			VTUNE_SOURCE_DIR="${i#*=}"
+			CONFIG_VTUNE_DIR="${i#*=}"
 			CONFIG_VTUNE=y
 			;;
 		--without-vtune)
-			VTUNE_SOURCE_DIR=
+			CONFIG_VTUNE_DIR=
 			CONFIG_VTUNE=n
 			;;
 		--)
@@ -271,14 +271,14 @@ else
 fi
 
 if [ "$CONFIG_FIO_PLUGIN" = "y" ]; then
-	if [ -z "$FIO_SOURCE_DIR" ]; then
+	if [ -z "$CONFIG_FIO_SOURCE_DIR" ]; then
 		echo "When fio is enabled, you must specify the fio directory using --with-fio=path"
 		exit 1
 	fi
 fi
 
 if [ "$CONFIG_VTUNE" = "y" ]; then
-	if [ -z "$VTUNE_SOURCE_DIR" ]; then
+	if [ -z "$CONFIG_VTUNE_DIR" ]; then
 		echo "When VTune is enabled, you must specify the VTune directory using --with-vtune=path"
 		exit 1
 	fi
@@ -411,8 +411,8 @@ fi
 if [ -n "$CONFIG_FIO_PLUGIN" ]; then
 	echo "CONFIG_FIO_PLUGIN?=$CONFIG_FIO_PLUGIN" >> CONFIG.local
 fi
-if [ -n "$FIO_SOURCE_DIR" ]; then
-	echo "FIO_SOURCE_DIR?=$FIO_SOURCE_DIR" >> CONFIG.local
+if [ -n "$CONFIG_FIO_SOURCE_DIR" ]; then
+	echo "CONFIG_FIO_SOURCE_DIR?=$CONFIG_FIO_SOURCE_DIR" >> CONFIG.local
 fi
 if [ -n "$CONFIG_RDMA" ]; then
 	echo "CONFIG_RDMA?=$CONFIG_RDMA" >> CONFIG.local
@@ -432,8 +432,8 @@ fi
 if [ -n "$CONFIG_VTUNE" ]; then
 	echo "CONFIG_VTUNE?=$CONFIG_VTUNE" >> CONFIG.local
 fi
-if [ -n "$VTUNE_SOURCE_DIR" ]; then
-	echo "VTUNE_SOURCE_DIR?=$VTUNE_SOURCE_DIR" >> CONFIG.local
+if [ -n "$CONFIG_VTUNE_DIR" ]; then
+	echo "CONFIG_VTUNE_DIR?=$CONFIG_VTUNE_DIR" >> CONFIG.local
 fi
 
 # Environment variables
