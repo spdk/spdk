@@ -46,6 +46,30 @@
       "revId": "a388086fad5939cfe208516b4e3d9db697b77031",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60cb5638_8ead2ae3",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-26T07:17:30Z",
+      "side": 1,
+      "message": "As Darek says.",
+      "parentUuid": "ad80c155_729d7bf1",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 2
+      },
+      "revId": "a388086fad5939cfe208516b4e3d9db697b77031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
