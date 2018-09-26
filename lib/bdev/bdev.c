@@ -969,6 +969,9 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 	}
 
 	_spdk_bdev_finish_unregister_bdevs_iter(NULL, 0);
+
+	g_bdev_mgr.init_complete = false;
+	g_bdev_mgr.module_init_complete = false;
 }
 
 static struct spdk_bdev_io *
