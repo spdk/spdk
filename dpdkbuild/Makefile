@@ -98,11 +98,15 @@ else
 DPDK_CFLAGS += -Wno-error
 endif
 
+ifeq ($(SPDK_ROOT_DIR)/dpdk/build,$(CONFIG_DPDK_DIR))
 $(SPDK_ROOT_DIR)/dpdk/build: $(INTEL_IPSEC_MB_LIB)
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG) $(DPDK_OPTS)
 
 all: $(SPDK_ROOT_DIR)/dpdk/build $(INTEL_IPSEC_MB_LIB)
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" MAKEFLAGS="T=$(DPDK_CONFIG) -j$(NPROC)" $(DPDK_OPTS)
+else
+all: $(INTEL_IPSEC_MB_LIB)
+endif
 
 ifeq ($(CONFIG_CRYPTO),y)
 $(SPDK_ROOT_DIR)/intel-ipsec-mb/libIPSec_MB.a:

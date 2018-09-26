@@ -44,11 +44,9 @@ DIRS-$(CONFIG_TESTS) += test
 .PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk cc_version cxx_version
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
-ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
 ifneq ($(SKIP_DPDK_BUILD),1)
 DPDKBUILD = dpdkbuild
 DIRS-y += dpdkbuild
-endif
 endif
 endif
 
