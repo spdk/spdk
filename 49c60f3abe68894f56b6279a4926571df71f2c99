@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d93d1f9d_71a96be1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 20
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-26T17:05:02Z",
+      "side": 1,
+      "message": "s/angruments/arguments/",
+      "revId": "49c60f3abe68894f56b6279a4926571df71f2c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44873941_6e4ef0af",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 20
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-26T17:05:02Z",
+      "side": 1,
+      "message": "s/scatering/scattering/",
+      "revId": "49c60f3abe68894f56b6279a4926571df71f2c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f5dc74e_88129cd8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 20
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-26T17:05:02Z",
+      "side": 1,
+      "message": "s/gencofnig/genconfig/",
+      "revId": "49c60f3abe68894f56b6279a4926571df71f2c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
