@@ -102,39 +102,40 @@ if $INSTALL; then
         sudo dnf install -y tsocks
     fi
 
-    sudo dnf install -y valgrind
-    sudo dnf install -y jq
-    sudo dnf install -y nvme-cli
-    sudo dnf install -y ceph
-    sudo dnf install -y gdb
-    sudo dnf install -y fio
-    sudo dnf install -y librbd-devel
-    sudo dnf install -y kernel-devel
-    sudo dnf install -y gflags-devel
-    sudo dnf install -y libasan
-    sudo dnf install -y libubsan
-    sudo dnf install -y autoconf
-    sudo dnf install -y automake
-    sudo dnf install -y libtool
-    sudo dnf install -y libmount-devel
-    sudo dnf install -y iscsi-initiator-utils
-    sudo dnf install -y isns-utils-devel
-    sudo dnf install -y pmempool
-    sudo dnf install -y perl-open
-    sudo dnf install -y glib2-devel
-    sudo dnf install -y pixman-devel
-    sudo dnf install -y astyle-devel
-    sudo dnf install -y elfutils
-    sudo dnf install -y elfutils-libelf-devel
-    sudo dnf install -y flex
-    sudo dnf install -y bison
-    sudo dnf install -y targetcli
-    sudo dnf install -y perl-Switch
-    sudo dnf install -y librdmacm-utils
-    sudo dnf install -y libibverbs-utils
-    sudo dnf install -y gdisk
-    sudo dnf install -y socat
-    sudo dnf install -y sshfs
+    sudo dnf install -y \
+    valgrind \
+    jq \
+    nvme-cli \
+    ceph \
+    gdb \
+    fio \
+    librbd-devel \
+    kernel-devel \
+    gflags-devel \
+    libasan \
+    libubsan \
+    autoconf \
+    automake \
+    libtool \
+    libmount-devel \
+    iscsi-initiator-utils \
+    isns-utils-devel \
+    pmempool \
+    perl-open \
+    glib2-devel \
+    pixman-devel \
+    astyle-devel \
+    elfutils \
+    elfutils-libelf-devel \
+    flex \
+    bison \
+    targetcli \
+    perl-Switch \
+    librdmacm-utils \
+    libibverbs-utils \
+    gdisk \
+    socat \
+    sshfs
 fi
 
 cd ~
