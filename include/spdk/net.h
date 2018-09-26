@@ -83,16 +83,35 @@ int spdk_interface_init(void);
 void spdk_interface_destroy(void);
 
 /**
+ * Net framework initialization callback.
+ *
+ * \param cb_arg Callback argument.
+ * \param rc 0 if net framework initialized successfully or negative errno if it failed.
+ */
+typedef void (*spdk_net_init_cb)(void *cb_arg, int rc);
+
+/**
+ * Net framework finish callback.
+ *
+ * \param cb_arg Callback argument.
+ */
+typedef void (*spdk_net_fini_cb)(void *cb_arg);
+
+void spdk_net_framework_init_next(int rc);
+
+/**
  * Start all registered frameworks.
  *
  * \return 0 on success.
  */
-int spdk_net_framework_start(void);
+void spdk_net_framework_start(spdk_net_init_cb cb_fn, void *cb_arg);
+
+void spdk_net_framework_fini_next(void);
 
 /**
  * Stop all registered frameworks.
  */
-void spdk_net_framework_fini(void);
+void spdk_net_framework_fini(spdk_net_fini_cb cb_fn, void *cb_arg);
 
 #ifdef __cplusplus
 }
