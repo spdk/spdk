@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10983c73_90283362",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-26T15:46:39Z",
+      "side": 1,
+      "message": "out of curiosity: what\u0027s this for?",
+      "range": {
+        "startLine": 201,
+        "startChar": 2,
+        "endLine": 201,
+        "endChar": 16
+      },
+      "revId": "6f9a7736cc9aa852953367ca10cda77b9794392c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6b93efb_93bbfd7a",
+        "filename": "scripts/vagrant/create_virtio_img.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-26T15:46:39Z",
+      "side": 1,
+      "message": "wrong indentation",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 4
+      },
+      "revId": "6f9a7736cc9aa852953367ca10cda77b9794392c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fce92181_5eb6ba65",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-26T15:46:39Z",
+      "side": 0,
+      "message": "i think this deserves a separate patch. It may break something, and once we find out it will be easier to revert.",
+      "range": {
+        "startLine": 710,
+        "startChar": 91,
+        "endLine": 710,
+        "endChar": 96
+      },
+      "revId": "b4041a477d90714f31bda88da91cf8bb3160114d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
