@@ -90,6 +90,8 @@
   # Y is the NSID (starts at 1).
   TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
   TransportID "trtype:PCIe traddr:0000:01:00.0" Nvme1
+  TransportID "trtype:PCIe traddr:0000:02:00.0" Nvme2
+  TransportID "trtype:PCIe traddr:0000:03:00.0" Nvme3
 
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
@@ -122,6 +124,19 @@
   # leaving the rest of the device inaccessible
   Split Malloc3 8 1
 
+# The RAID virtual block device based on pre-configured block device.
+[RAID1]
+  # Unique name of this RAID device.
+  Name Raid0
+  # RAID level, only raid level 0 is supported.
+  RaidLevel 0
+  # Strip size in KB.
+  StripSize 64
+  # Number of pre-configured bdevs.
+  NumDevices 2
+  # Pre-configured bdevs name.
+  Devices Nvme2n1 Nvme3n1
+
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
 # - Between 1 and 255 Listen directives are allowed. This defines
@@ -151,6 +166,7 @@
   MaxNamespaces 20
   Namespace Nvme0n1 1
   Namespace Nvme1n1 2
+  Namespace Raid0
 
 # Multiple subsystems are allowed.
 # Namespaces backed by non-NVMe devices
