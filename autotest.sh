@@ -110,6 +110,7 @@ if [ $SPDK_TEST_EVENT -eq 1 ]; then
 	run_test suite test/event/event.sh
 fi
 
+export SPDK_TEST_NVME_CLI=0
 if [ $SPDK_TEST_NVME -eq 1 ]; then
 	run_test suite test/nvme/nvme.sh
 	if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
