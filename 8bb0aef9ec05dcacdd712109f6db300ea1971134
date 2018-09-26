@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ed213d5_de8d80c1",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1220,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-26T08:37:11Z",
+      "side": 1,
+      "message": "It\u0027s better to have two APIs here, such as spdk_nvme_ctrlr_cmd_sec_send/receive with the callbacks. CHANGELOG.md need to be updated too for any new added APIs.",
+      "revId": "8bb0aef9ec05dcacdd712109f6db300ea1971134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03f5696f_fabbef00",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2448,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-26T08:37:11Z",
+      "side": 1,
+      "message": "We don\u0027t need this function for now, it may needed with your example tool together.",
+      "revId": "8bb0aef9ec05dcacdd712109f6db300ea1971134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85aae104_f3f63372",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-26T08:37:11Z",
+      "side": 1,
+      "message": "Security Send/Receive should be two APIs, you can make this function static and wrapper another two APIs.",
+      "revId": "8bb0aef9ec05dcacdd712109f6db300ea1971134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
