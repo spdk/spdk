@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f84705c_d131c7fc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 44
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:27:01Z",
+      "side": 1,
+      "message": "I still don\u0027t think this is correct.  It would be better to directly look at bits in the opcode to try to determine this.  See the NVMe specification - section 6, table for \"Opcode for NVM Commands\".\n\nBits 01:00 in opcode show the data transfer direction.  If bit 1 is set, it should be considered a read command.  Then this may help cover vendor-specific commands too.",
+      "revId": "a83ea43a7b60fb21b90353e1d93de5435aed165c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b515ae4_3a387906",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 44
+      },
+      "lineNbr": 1106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:27:01Z",
+      "side": 1,
+      "message": "Sorry - I should have been more clear what I meant by function pointer.\n\nI meant that each limit type defines its own function.  It is stored with the rate_limits structure.\n\nThen the main bdev qos code does not need to have all of these checks for different rate limit types.",
+      "revId": "a83ea43a7b60fb21b90353e1d93de5435aed165c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
