@@ -22,6 +22,30 @@
       "revId": "a388086fad5939cfe208516b4e3d9db697b77031",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0d51400_85ec2ccc",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-26T06:31:38Z",
+      "side": 1,
+      "message": "They do, but it\u0027s misleading to see an error message that is actually expected. There is also the entire usage description printed, so it bloats the log a bit.",
+      "parentUuid": "ad80c155_729d7bf1",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 2
+      },
+      "revId": "a388086fad5939cfe208516b4e3d9db697b77031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
