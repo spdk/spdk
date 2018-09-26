@@ -38,7 +38,7 @@ CONFIG_PREFIX?=/usr/local
 CONFIG_DEBUG?=n
 
 # Build with support of backtrace printing in log messages. Requires libunwind.
-#CONFIG_LOG_BACKTRACE?=n
+CONFIG_LOG_BACKTRACE?=n
 
 # Treat warnings as errors (fail the build on any warning).
 CONFIG_WERROR?=n
@@ -69,17 +69,18 @@ CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env_dpdk
 # installation.
 CONFIG_DPDK_DIR?=$(SPDK_ROOT_DIR)/dpdk/build
 
-# Build SPDK FIO plugin. Requires FIO_SOURCE_DIR set to a valid
+# Build SPDK FIO plugin. Requires CONFIG_FIO_SOURCE_DIR set to a valid
 # fio source code directory.
 CONFIG_FIO_PLUGIN?=n
 
 # This directory should contain the source code directory for fio
 # which is required for building the SPDK FIO plugin.
-FIO_SOURCE_DIR?=/usr/src/fio
+CONFIG_FIO_SOURCE_DIR?=/usr/src/fio
 
 # Enable RDMA support for the NVMf target.
 # Requires ibverbs development libraries.
 CONFIG_RDMA?=n
+CONFIG_RDMA_SEND_WITH_INVAL?=n
 
 # Build Ceph RBD support in bdev modules
 # Requires librbd development libraries
@@ -93,6 +94,7 @@ CONFIG_VIRTIO?=y
 
 # Build with PMDK backends
 CONFIG_PMDK?=n
+CONFIG_PMDK_DIR?=
 
 # Build with VPP
 CONFIG_VPP?=n
@@ -105,3 +107,4 @@ CONFIG_CRYPTO?=n
 
 # Build spdk shared libraries in addition to the static ones.
 CONFIG_SHARED?=n
+CONFIG_VTUNE_DIR?=
