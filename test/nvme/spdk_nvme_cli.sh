@@ -33,7 +33,7 @@ ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
 bdfs=$(iter_pci_class_code 01 08 02)
 bdf=$(echo $bdfs|awk '{ print $1 }')
 
-if [[ -s $rootdir/CONFIG.local ]] && grep CONFIG_LOG_BACKTRACE $rootdir/CONFIG.local -q; then
+if [[ -s $rootdir/CONFIG.local ]] && grep 'CONFIG_LOG_BACKTRACE\?=y' $rootdir/CONFIG.local -q; then
 	nvme_cli_ldflags='LDFLAGS=-lunwind'
 fi
 
