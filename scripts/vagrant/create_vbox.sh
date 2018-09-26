@@ -11,11 +11,12 @@ VAGRANT_TARGET="$PWD"
 
 DIR="$( cd "$( dirname $0 )" && pwd )"
 SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
+COPY_SPDK_DIR=1
 
 # The command line help
 display_help() {
 	echo
-	echo " Usage: ${0##*/} [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvr] <distro>"
+	echo " Usage: ${0##*/} [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrl] <distro>"
 	echo
 	echo "  distro = <centos7 | ubuntu16 | ubuntu18 | fedora26 | fedora27 | freebsd11> "
 	echo
@@ -27,6 +28,7 @@ display_help() {
 	echo "                            (test VM qcow image, fio binary, ssh keys)"
 	echo "  --vhost-vm-dir=<path>     directory where to put vhost dependencies in VM"
 	echo "  -r dry-run"
+	echo "  -l use a local copy of spdk, don't try to rsync from the host."
 	echo "  -h help"
 	echo "  -v verbose"
 	echo
@@ -51,7 +53,7 @@ SPDK_VAGRANT_VMCPU=4
 SPDK_VAGRANT_VMRAM=4096
 OPTIND=1
 
-while getopts ":n:s:x:p:vrh-:" opt; do
+while getopts ":n:s:x:p:vrlh-:" opt; do
 	case "${opt}" in
 		-)
 		case "${OPTARG}" in
@@ -83,6 +85,9 @@ while getopts ":n:s:x:p:vrh-:" opt; do
 		h)
 			display_help >&2
 			exit 0
+		;;
+		l)
+			COPY_SPDK_DIR=0
 		;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
@@ -142,6 +147,7 @@ export SPDK_VAGRANT_HTTP_PROXY
 export SPDK_VAGRANT_VMCPU
 export SPDK_VAGRANT_VMRAM
 export SPDK_DIR
+export COPY_SPDK_DIR
 
 if [ -n "$PROVIDER" ]; then
     provider="--provider=${PROVIDER}"
