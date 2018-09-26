@@ -120,7 +120,7 @@ Vagrant.configure(2) do |config|
   end
 
   # rsync the spdk directory if provision hasn't happened yet
-  if spdk_dir != "none"
+  if ENV['COPY_SPDK_DIR'] == "1" && spdk_dir != "none"
     config.vm.synced_folder "#{spdk_dir}", "/home/vagrant/spdk_repo/spdk", type: "rsync", rsync__auto: false
   end
 
