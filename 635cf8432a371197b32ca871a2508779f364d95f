@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52785757_8b05b748",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1039,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:09:01Z",
+      "side": 1,
+      "message": "I don\u0027t think we should limit NVME_ADMIN commands.",
+      "revId": "635cf8432a371197b32ca871a2508779f364d95f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4892cbff_ddd9e29f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1078,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:09:01Z",
+      "side": 1,
+      "message": "could we pick one value - either 0 or UINT64_MAX - to mean that there is no limit specified?  i would prefer that to always having to check for two different values\n\nmight also be good to have something like\n\n#define BDEV_QOS_LIMIT_NOT_DEFINED UINT64_MAX (or 0)",
+      "revId": "635cf8432a371197b32ca871a2508779f364d95f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91d107f5_48b81383",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:09:01Z",
+      "side": 1,
+      "message": "can this just return here?  then no_more_ios can be removed, and the if (no_more_ios \u003d\u003d true) check can be removed too",
+      "revId": "635cf8432a371197b32ca871a2508779f364d95f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "702e82ff_a2f2db4a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1440,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:09:01Z",
+      "side": 1,
+      "message": "I think \"max_per_timeslice\" would be more clear",
+      "revId": "635cf8432a371197b32ca871a2508779f364d95f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e720f5f_26af54b7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1555,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:09:01Z",
+      "side": 1,
+      "message": "This section isn\u0027t clear to me.  This seems to be changing the functionality a bit - before we set the io/byte_remaining_this_timeslice here, but now we don\u0027t do that anymore.\n\nChecking for 0 and then changing to UINT64_MAX could be simplified too - if we could just treat 0 as the undefined limit, that would be better and more clear.",
+      "revId": "635cf8432a371197b32ca871a2508779f364d95f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4bfbb4b_f7042f60",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 3043,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-26T22:09:01Z",
+      "side": 1,
+      "message": "is this code (3043-3052) needed?\n\nNUM_RATE_LIMIT_TYPES \u003d\u003d 2; if both are set, then this loop will break with i \u003d\u003d NUM_RATE_LIMIT_TYPES, and the if statement following will return as if there\u0027s an error",
+      "revId": "635cf8432a371197b32ca871a2508779f364d95f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
