@@ -84,6 +84,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_LVOL=0}; export SPDK_TEST_LVOL
 : ${SPDK_TEST_JSON=0}; export SPDK_TEST_JSON
 : ${SPDK_TEST_REDUCE=0}; export SPDK_TEST_REDUCE
+: ${SPDK_RUN_VPP=1}; export SPDK_RUN_VPP
 : ${SPDK_RUN_ASAN=0}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=0}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=0}; export SPDK_RUN_INSTALLED_DPDK
@@ -130,6 +131,16 @@ fi
 
 if [ "$(uname -s)" = "Linux" ]; then
 	config_params+=' --enable-coverage'
+	if [ $SPDK_RUN_VPP -eq 1 ]; then
+		VPP_PATH="/home/sys_sgci/vpp/build-root/install-vpp_debug-native/vpp/"
+		if [ -d "${VPP_PATH}" ]; then
+			export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${VPP_PATH}/lib/
+			export PATH=${PATH}:${VPP_PATH}/bin/
+			config_params+=" --with-vpp=${VPP_PATH}"
+		else
+			SPDK_RUN_VPP=0
+		fi
+	fi
 fi
 
 # By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.
