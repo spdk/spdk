@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29cec5de_adf92c61",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-26T21:04:02Z",
+      "side": 1,
+      "message": "s/Transfor/Transform/",
+      "revId": "b13d0ccf9f0412d00359901b780c6212e89e346b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9e7401d_53a6749d",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-09-26T21:04:02Z",
+      "side": 1,
+      "message": "I see that you eliminated this extra line in a follow-on patch -- the \"move config.h\" one.",
+      "revId": "b13d0ccf9f0412d00359901b780c6212e89e346b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
