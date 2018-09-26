@@ -353,10 +353,15 @@ hello_sock_shutdown_cb(void)
  * Our initial event that kicks off everything from main().
  */
 static void
-hello_start(void *arg1, void *arg2)
+hello_start(void *arg1, int rc)
 {
 	struct hello_context_t *ctx = arg1;
-	int rc = 0;
+
+	if (rc) {
+		SPDK_ERRLOG("ERROR starting application\n");
+		spdk_app_stop(-1);
+		return;
+	}
 
 	SPDK_NOTICELOG("Successfully started the application\n");
 
@@ -370,6 +375,12 @@ hello_start(void *arg1, void *arg2)
 		spdk_app_stop(-1);
 		return;
 	}
+}
+
+static void
+start_net_framework(void *arg1, void *arg2)
+{
+	spdk_net_framework_start(hello_start, arg1);
 }
 
 int
@@ -394,18 +405,11 @@ main(int argc, char **argv)
 	hello_context.port = g_port;
 	hello_context.verbose = g_verbose;
 
-	rc = spdk_net_framework_start();
-	if (rc) {
-		SPDK_ERRLOG("ERROR starting application\n");
-		goto end;
-	}
-
-	rc = spdk_app_start(&opts, hello_start, &hello_context, NULL);
+	rc = spdk_app_start(&opts, start_net_framework, &hello_context, NULL);
 	if (rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}
 
-end:
 	SPDK_NOTICELOG("Exiting from application\n");
 
 	if (hello_context.verbose) {
@@ -413,7 +417,7 @@ end:
 		       hello_context.bytes_in, hello_context.bytes_out);
 	}
 
-	spdk_net_framework_fini();
+	spdk_net_framework_fini(NULL, NULL);
 
 	/* Gracefully close out all of the SPDK subsystems. */
 	spdk_app_fini();
