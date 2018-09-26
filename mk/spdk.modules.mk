@@ -80,11 +80,9 @@ SOCK_MODULES_LIST = sock_posix
 ifeq ($(CONFIG_VPP),y)
 SYS_LIBS += -Wl,--whole-archive
 ifneq ($(CONFIG_VPP_DIR),)
-SYS_LIBS += -l:libvppinfra.a -l:libsvm.a -l:libvapiclient.a
-SYS_LIBS += -l:libvppcom.a -l:libvlibmemoryclient.a
-else
-SYS_LIBS += -lvppcom
+SYS_LIBS += -L$(CONFIG_VPP_DIR)/lib
 endif
+SYS_LIBS += -lvppinfra -lsvm -lvlibmemoryclient
 SYS_LIBS += -Wl,--no-whole-archive
 SOCK_MODULES_LIST += sock_vpp
 endif
