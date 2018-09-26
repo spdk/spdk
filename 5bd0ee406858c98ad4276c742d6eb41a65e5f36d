@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c509259b_14ef80d0",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 908,
+      "author": {
+        "id": 1011884
+      },
+      "writtenOn": "2018-09-26T05:12:19Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "9475c090_15ced6e9",
+      "range": {
+        "startLine": 907,
+        "startChar": 0,
+        "endLine": 908,
+        "endChar": 45
+      },
+      "revId": "5bd0ee406858c98ad4276c742d6eb41a65e5f36d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d10d0e06_38d47b77",
         "filename": "lib/bdev/split/vbdev_split.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-26T04:37:54Z",
       "side": 1,
       "message": "Will you revert this change?\n\nIt looks that you took this comment from other existing file. \"we\u0027d like passed to us\" will be correct.",
+      "range": {
+        "startLine": 555,
+        "startChar": 46,
+        "endLine": 555,
+        "endChar": 69
+      },
+      "revId": "5bd0ee406858c98ad4276c742d6eb41a65e5f36d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63542c54_9c2ef599",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011884
+      },
+      "writtenOn": "2018-09-26T05:12:19Z",
+      "side": 1,
+      "message": "Yes, i feel like the same. And you are right, i copy the comment from other file...",
+      "parentUuid": "d10d0e06_38d47b77",
       "range": {
         "startLine": 555,
         "startChar": 46,
