@@ -72,6 +72,8 @@ struct hello_context_t {
 	struct spdk_poller *poller_in;
 	struct spdk_poller *poller_out;
 	struct spdk_poller *time_out;
+
+	int rc;
 };
 
 /*
@@ -106,6 +108,12 @@ static void hello_sock_parse_arg(int ch, char *arg)
 	}
 }
 
+void hello_sock_net_fini_cb(void *cb_arg)
+{
+	struct hello_context_t *ctx = cb_arg;
+	spdk_app_stop(ctx->rc);
+}
+
 static int
 hello_sock_close_timeout_poll(void *arg)
 {
@@ -114,9 +122,19 @@ hello_sock_close_timeout_poll(void *arg)
 
 	spdk_poller_unregister(&ctx->time_out);
 	spdk_poller_unregister(&ctx->poller_in);
+	spdk_poller_unregister(&ctx->poller_out);
 	spdk_sock_close(&ctx->sock);
 
-	spdk_app_stop(0);
+	spdk_net_framework_fini(hello_sock_net_fini_cb, arg);
+	return 0;
+}
+
+static int
+hello_sock_quit(struct hello_context_t *ctx, int rc)
+{
+	ctx->rc = rc;
+	ctx->time_out = spdk_poller_register(hello_sock_close_timeout_poll, ctx,
+					     CLOSE_TIMEOUT_US);
 	return 0;
 }
 
@@ -164,11 +182,7 @@ hello_sock_writev_poll(void *arg)
 	if (n == 0 || !g_is_running) {
 		/* EOF */
 		SPDK_NOTICELOG("Closing connection...\n");
-
-		ctx->time_out = spdk_poller_register(hello_sock_close_timeout_poll, ctx,
-						     CLOSE_TIMEOUT_US);
-
-		spdk_poller_unregister(&ctx->poller_out);
+		hello_sock_quit(ctx, 0);
 		return 0;
 	}
 	if (n > 0) {
@@ -264,11 +278,8 @@ hello_sock_accept_poll(void *arg)
 	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
 
 	if (!g_is_running) {
-		spdk_poller_unregister(&ctx->poller_in);
-		spdk_poller_unregister(&ctx->poller_out);
-		spdk_sock_close(&ctx->sock);
 		spdk_sock_group_close(&ctx->group);
-		spdk_app_stop(0);
+		hello_sock_quit(ctx, 0);
 		return 0;
 	}
 
@@ -276,7 +287,12 @@ hello_sock_accept_poll(void *arg)
 		sock = spdk_sock_accept(ctx->sock);
 		if (sock != NULL) {
 
-			spdk_sock_getaddr(sock, saddr, sizeof(saddr), caddr, sizeof(caddr));
+			rc = spdk_sock_getaddr(sock, saddr, sizeof(saddr), caddr, sizeof(caddr));
+			if (rc < 0) {
+				SPDK_ERRLOG("Cannot get connection addresses\n");
+				spdk_sock_close(&ctx->sock);
+				return -1;
+			}
 
 			SPDK_NOTICELOG("Accepting a new connection from %s to %s\n",
 				       caddr, saddr);
@@ -349,14 +365,20 @@ hello_sock_shutdown_cb(void)
 {
 	g_is_running = false;
 }
+
 /*
  * Our initial event that kicks off everything from main().
  */
 static void
-hello_start(void *arg1, void *arg2)
+hello_start(void *arg1, int rc)
 {
 	struct hello_context_t *ctx = arg1;
-	int rc = 0;
+
+	if (rc) {
+		SPDK_ERRLOG("ERROR starting application\n");
+		spdk_app_stop(-1);
+		return;
+	}
 
 	SPDK_NOTICELOG("Successfully started the application\n");
 
@@ -370,6 +392,12 @@ hello_start(void *arg1, void *arg2)
 		spdk_app_stop(-1);
 		return;
 	}
+}
+
+static void
+start_net_framework(void *arg1, void *arg2)
+{
+	spdk_net_framework_start(hello_start, arg1);
 }
 
 int
@@ -394,26 +422,17 @@ main(int argc, char **argv)
 	hello_context.port = g_port;
 	hello_context.verbose = g_verbose;
 
-	rc = spdk_net_framework_start();
-	if (rc) {
-		SPDK_ERRLOG("ERROR starting application\n");
-		goto end;
-	}
-
-	rc = spdk_app_start(&opts, hello_start, &hello_context, NULL);
+	rc = spdk_app_start(&opts, start_net_framework, &hello_context, NULL);
 	if (rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}
 
-end:
 	SPDK_NOTICELOG("Exiting from application\n");
 
 	if (hello_context.verbose) {
 		printf("** %d bytes received, %d bytes sent **\n",
 		       hello_context.bytes_in, hello_context.bytes_out);
 	}
-
-	spdk_net_framework_fini();
 
 	/* Gracefully close out all of the SPDK subsystems. */
 	spdk_app_fini();
