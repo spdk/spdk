@@ -38,29 +38,76 @@
 static STAILQ_HEAD(, spdk_net_framework) g_net_frameworks =
 	STAILQ_HEAD_INITIALIZER(g_net_frameworks);
 
-int spdk_net_framework_start(void)
-{
-	struct spdk_net_framework *net_framework = NULL;
-	int rc;
+static spdk_net_init_cb g_init_cb_fn = NULL;
+static void *g_init_cb_arg = NULL;
 
-	STAILQ_FOREACH_FROM(net_framework, &g_net_frameworks, link) {
-		rc = net_framework->init();
-		if (rc != 0) {
-			SPDK_ERRLOG("Net framework %s failed to initalize\n", net_framework->name);
-			return rc;
-		}
+static spdk_net_fini_cb g_fini_cb_fn = NULL;
+static void *g_fini_cb_arg = NULL;
+
+struct spdk_net_framework *g_next_net_framework = NULL;
+
+void spdk_net_framework_init_next(int rc)
+{
+	if (rc) {
+		SPDK_ERRLOG("Net framework %s failed to initalize with error %d\n", g_next_net_framework->name, rc);
+		g_init_cb_fn(g_init_cb_arg, rc);
+		return;
 	}
 
-	return 0;
+	if (g_next_net_framework == NULL) {
+		g_next_net_framework = STAILQ_FIRST(&g_net_frameworks);
+	} else {
+		g_next_net_framework = STAILQ_NEXT(g_next_net_framework, link);
+	}
+
+	if (g_next_net_framework == NULL || STAILQ_EMPTY(&g_net_frameworks)) {
+		g_init_cb_fn(g_init_cb_arg, 0);
+		return;
+	}
+
+	if (g_next_net_framework->init) {
+		g_next_net_framework->init();
+	} else {
+		spdk_net_framework_init_next(0);
+	}
 }
 
-void spdk_net_framework_fini(void)
+void spdk_net_framework_start(spdk_net_init_cb cb_fn, void *cb_arg)
 {
-	struct spdk_net_framework *net_framework = NULL;
+	g_init_cb_fn = cb_fn;
+	g_init_cb_arg = cb_arg;
 
-	STAILQ_FOREACH_FROM(net_framework, &g_net_frameworks, link) {
-		net_framework->fini();
+	spdk_net_framework_init_next(0);
+}
+
+void spdk_net_framework_fini_next(void)
+{
+	if (g_next_net_framework == NULL) {
+		g_next_net_framework = STAILQ_FIRST(&g_net_frameworks);
+	} else {
+		g_next_net_framework = STAILQ_NEXT(g_next_net_framework, link);
 	}
+
+	if (g_next_net_framework == NULL || STAILQ_EMPTY(&g_net_frameworks)) {
+		if (g_fini_cb_fn) {
+			g_fini_cb_fn(g_fini_cb_arg);
+		}
+		return;
+	}
+
+	if (g_next_net_framework->fini) {
+		g_next_net_framework->fini();
+	} else {
+		spdk_net_framework_fini_next();
+	}
+}
+
+void spdk_net_framework_fini(spdk_net_fini_cb cb_fn, void *cb_arg)
+{
+	g_fini_cb_fn = cb_fn;
+	g_fini_cb_arg = cb_arg;
+
+	spdk_net_framework_fini_next();
 }
 
 void
