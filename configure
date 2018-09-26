@@ -519,6 +519,18 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 	fi
 fi
 
+if [[ "${CONFIG[VPP]}" = "y" ]]; then
+	if [ ! -z "${CONFIG[VPP_DIR]}" ]; then
+		VPP_CFLAGS="-L${CONFIG[VPP_DIR]}/lib -I${CONFIG[VPP_DIR]}/include"
+	fi
+	if ! echo -e '#include <vnet/session/application_interface.h>\nint main(void) { return 0; }\n' \
+		| $BUILD_CMD ${VPP_CFLAGS} -lvppinfra -lsvm -lvlibmemoryclient - 2>/dev/null; then
+		echo --with-vpp requires installed vpp.
+		echo Please install then re-run this script.
+		exit 1
+	fi
+fi
+
 if [[ "${CONFIG[RBD]}" = "y" ]]; then
 	if ! echo -e '#include <rbd/librbd.h>\n#include <rados/librados.h>\n' \
 		'int main(void) { return 0; }\n' \
