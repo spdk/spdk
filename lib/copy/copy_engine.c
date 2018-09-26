@@ -220,6 +220,14 @@ copy_engine_mem_init(void)
 	return 0;
 }
 
+static int
+copy_engine_mem_fini(void)
+{
+	spdk_io_device_unregister(&memcpy_copy_engine, NULL);
+
+	spdk_copy_engine_module_finish();
+}
+
 static void
 spdk_copy_engine_module_initialize(void)
 {
@@ -283,6 +291,7 @@ spdk_copy_engine_finish(spdk_copy_fini_cb cb_fn, void *cb_arg)
 	g_fini_cb_fn = cb_fn;
 	g_fini_cb_arg = cb_arg;
 
+	spdk_io_device_unregister(&spdk_copy_module_list, NULL);
 	spdk_copy_engine_module_finish();
 }
 
@@ -298,4 +307,4 @@ spdk_copy_engine_config_text(FILE *fp)
 	}
 }
 
-SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, NULL, NULL, copy_engine_mem_get_ctx_size)
+SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, copy_engine_mem_fini, NULL, copy_engine_mem_get_ctx_size)
