@@ -25,7 +25,6 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 UPGRADE=false
 INSTALL=false
 CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli"
-CONF_PATH="${VM_SETUP_PATH}/vm_setup.conf"
 
 function install_rxe_cfg()
 {
@@ -288,14 +287,28 @@ while getopts 'iuht:c:-:' optchar; do
     esac
 done
 
-if [ ! -f "$CONF_PATH" ]; then
-	echo Configuration file does not exist: "$CONF_PATH"
-	exit 1
+if [ ! -z "$CONF_PATH" ]; then
+    if [ ! -f "$CONF_PATH" ]; then
+        echo Configuration file does not exist: "$CONF_PATH"
+        exit 1
+    else
+        source "$CONF_PATH"
+    fi
 fi
 
 cd ~
 
-source "$CONF_PATH"
+: ${GIT_REPO_SPDK=https://review.gerrithub.io/spdk/spdk}; export GIT_REPO_SPDK
+: ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}; export GIT_REPO_DPDK
+: ${GIT_REPO_LIBRXE=https://github.com/SoftRoCE/librxe-dev.git}; export GIT_REPO_LIBRXE
+: ${GIT_REPO_OPEN_ISCSI=https://github.com/open-iscsi/open-iscsi}; export GIT_REPO_OPEN_ISCSI
+: ${GIT_REPO_ROCKSDB=https://review.gerrithub.io/spdk/rocksdb}; export GIT_REPO_ROCKSDB
+: ${GIT_REPO_FIO=http://git.kernel.dk/fio.git}; export GIT_REPO_FIO
+: ${GIT_REPO_FLAMEGRAPH=https://github.com/brendangregg/FlameGraph.git}; export GIT_REPO_FLAMEGRAPH
+: ${GIT_REPO_QEMU=https://github.com/spdk/qemu}; export GIT_REPO_QEMU
+: ${GIT_REPO_VPP=https://gerrit.fd.io/r/vpp}; export GIT_REPO_VPP
+: ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}; export GIT_REPO_LIBISCSI
+: ${GIT_REPO_SPDK_NVME_CLI=https://github.com/spdk/nvme-cli}; export GIT_REPO_SPDK_NVME_CLI
 
 jobs=$(($(nproc)*2))
 
