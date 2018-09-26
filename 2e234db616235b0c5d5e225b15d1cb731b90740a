@@ -22,6 +22,30 @@
       "revId": "2e234db616235b0c5d5e225b15d1cb731b90740a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6e4a560_6972d5e8",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-09-26T01:29:20Z",
+      "side": 1,
+      "message": "Reasonable suggestion, done in patch set #5",
+      "parentUuid": "d87f1321_6030b957",
+      "range": {
+        "startLine": 460,
+        "startChar": 0,
+        "endLine": 460,
+        "endChar": 33
+      },
+      "revId": "2e234db616235b0c5d5e225b15d1cb731b90740a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
