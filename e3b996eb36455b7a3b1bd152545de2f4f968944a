@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53f92c46_31768f09",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-26T15:29:54Z",
+      "side": 1,
+      "message": "can we check against rctrlr-\u003ehooks.get_ibv_pd here to:\n 1) make the code more readable\n 2) avoid a possible data race. g_nvme_hooks can be modified by another thread and there\u0027s no synchronization here\n\n(the same would apply to all other places where we check against g_nvme_hooks)",
+      "range": {
+        "startLine": 250,
+        "startChar": 5,
+        "endLine": 250,
+        "endChar": 17
+      },
+      "revId": "e3b996eb36455b7a3b1bd152545de2f4f968944a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
