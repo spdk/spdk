@@ -218,11 +218,11 @@ for i in "$@"; do
 			;;
 		--with-fio=*)
 			check_dir "$i"
-			FIO_SOURCE_DIR="${i#*=}"
+			CONFIG_FIO_SOURCE_DIR="${i#*=}"
 			CONFIG_FIO_PLUGIN=y
 			;;
 		--without-fio)
-			FIO_SOURCE_DIR=
+			CONFIG_FIO_SOURCE_DIR=
 			CONFIG_FIO_PLUGIN=n
 			;;
 		--with-vtune=*)
@@ -278,7 +278,7 @@ else
 fi
 
 if [ "$CONFIG_FIO_PLUGIN" = "y" ]; then
-	if [ -z "$FIO_SOURCE_DIR" ]; then
+	if [ -z "$CONFIG_FIO_SOURCE_DIR" ]; then
 		echo "When fio is enabled, you must specify the fio directory using --with-fio=path"
 		exit 1
 	fi
@@ -418,8 +418,8 @@ fi
 if [ -n "$CONFIG_FIO_PLUGIN" ]; then
 	echo "CONFIG_FIO_PLUGIN?=$CONFIG_FIO_PLUGIN" >> CONFIG.local
 fi
-if [ -n "$FIO_SOURCE_DIR" ]; then
-	echo "FIO_SOURCE_DIR?=$FIO_SOURCE_DIR" >> CONFIG.local
+if [ -n "$CONFIG_FIO_SOURCE_DIR" ]; then
+	echo "CONFIG_FIO_SOURCE_DIR?=$CONFIG_FIO_SOURCE_DIR" >> CONFIG.local
 fi
 if [ -n "$CONFIG_RDMA" ]; then
 	echo "CONFIG_RDMA?=$CONFIG_RDMA" >> CONFIG.local
