@@ -289,12 +289,20 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0) && RTE_VERSION < RTE_VERSION_NUM(18, 8, 0, 0)
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0) && RTE_VERSION < RTE_VERSION_NUM(18, 5, 1, 0)
 	/* SPDK holds off with using the new memory management model just yet */
 	args = spdk_push_arg(args, &argcount, _sprintf_alloc("--legacy-mem"));
 	if (args == NULL) {
 		return -1;
 	}
+#elif RTE_VERSION >= RTE_VERSION_NUM(18, 05, 1, 0)
+	/* TODO: With dynamic memory management DPDK takes much less time to initialize
+	 * and that makes some of our tests occasionally fail. If PCI NVMe controllers
+	 * are attached too soon after being reset (in our case by a different SPDK application)
+	 * they might fail to initialize. We already have a 500ms usleep in spdk_pci_device_init(),
+	 * but increasing it to 1.5s/2s to handle those rare cases is not really an option.
+	 */
+	sleep(2);
 #endif
 
 	if (opts->num_pci_addr) {
