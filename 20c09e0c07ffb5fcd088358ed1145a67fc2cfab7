@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbb74a7d_28dff808",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-27T12:42:45Z",
+      "side": 1,
+      "message": "I think these variables will not be substituted due to single quotes used in trap line",
+      "range": {
+        "startLine": 54,
+        "startChar": 19,
+        "endLine": 54,
+        "endChar": 47
+      },
+      "revId": "20c09e0c07ffb5fcd088358ed1145a67fc2cfab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "927aecb5_965dfae0",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-27T12:42:45Z",
+      "side": 1,
+      "message": "Perhaps it\u0027d be better to do just a simple overwrite (\"\u003e\") on first redirection. That way youre sure that any leftovers from previous runs (if there are any) will be overwritten.",
+      "range": {
+        "startLine": 72,
+        "startChar": 44,
+        "endLine": 72,
+        "endChar": 46
+      },
+      "revId": "20c09e0c07ffb5fcd088358ed1145a67fc2cfab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
