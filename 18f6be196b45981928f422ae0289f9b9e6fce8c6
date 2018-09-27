@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "88ec2ab8_45a00044",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-09-27T06:57:55Z",
+      "side": 1,
+      "message": "Originally I made \"distro\" to match command line argument in the script. But you are right, will change that.",
+      "parentUuid": "c50a7c64_d36af409",
+      "range": {
+        "startLine": 30,
+        "startChar": 63,
+        "endLine": 30,
+        "endChar": 69
+      },
+      "revId": "18f6be196b45981928f422ae0289f9b9e6fce8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c034355_befe8dc3",
         "filename": "doc/vagrant.md",
         "patchSetId": 2
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "79b71c9b_af7e82cd",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-09-27T06:57:55Z",
+      "side": 1,
+      "message": "Yea, it shouldn\u0027t be like that. Fixing",
+      "parentUuid": "2c034355_befe8dc3",
+      "revId": "18f6be196b45981928f422ae0289f9b9e6fce8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "506d3400_f2685ae2",
         "filename": "doc/vagrant.md",
         "patchSetId": 2
@@ -53,6 +95,30 @@
       "writtenOn": "2018-09-26T07:36:41Z",
       "side": 1,
       "message": "pkgdep?",
+      "range": {
+        "startLine": 138,
+        "startChar": 47,
+        "endLine": 138,
+        "endChar": 54
+      },
+      "revId": "18f6be196b45981928f422ae0289f9b9e6fce8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f0efb6c_f90d9147",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-09-27T06:57:55Z",
+      "side": 1,
+      "message": "for sure!",
+      "parentUuid": "506d3400_f2685ae2",
       "range": {
         "startLine": 138,
         "startChar": 47,
