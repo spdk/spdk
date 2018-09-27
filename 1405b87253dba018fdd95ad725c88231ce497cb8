@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "029cec2d_79a07d76",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-27T17:25:28Z",
+      "side": 1,
+      "message": "How does this perform on freebsd? Since that file doesn\u0027t exist, does it cause provisioning to exit early?",
+      "revId": "1405b87253dba018fdd95ad725c88231ce497cb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
