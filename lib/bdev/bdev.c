@@ -1132,6 +1132,25 @@ static void
 _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 static void
+_spdk_bdev_io_split_with_payload(void *_bdev_io);
+
+static void
+_spdk_bdev_io_split_queue_io(struct spdk_bdev_io *bdev_io)
+{
+	int rc;
+
+	bdev_io->internal.waitq_entry.bdev = bdev_io->bdev;
+	bdev_io->internal.waitq_entry.cb_fn = _spdk_bdev_io_split_with_payload;
+	bdev_io->internal.waitq_entry.cb_arg = bdev_io;
+	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, spdk_io_channel_from_ctx(bdev_io->internal.ch),
+				     &bdev_io->internal.waitq_entry);
+	if (rc != 0) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+	}
+}
+
+static void
 _spdk_bdev_io_split_with_payload(void *_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io = _bdev_io;
@@ -1206,11 +1225,7 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 		bdev_io->u.bdev.split_current_offset_blocks += to_next_boundary;
 		bdev_io->u.bdev.split_remaining_num_blocks -= to_next_boundary;
 	} else if (rc == -ENOMEM) {
-		bdev_io->internal.waitq_entry.bdev = bdev_io->bdev;
-		bdev_io->internal.waitq_entry.cb_fn = _spdk_bdev_io_split_with_payload;
-		bdev_io->internal.waitq_entry.cb_arg = bdev_io;
-		spdk_bdev_queue_io_wait(bdev_io->bdev, spdk_io_channel_from_ctx(bdev_io->internal.ch),
-					&bdev_io->internal.waitq_entry);
+		_spdk_bdev_io_split_queue_io(bdev_io);
 	} else {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
