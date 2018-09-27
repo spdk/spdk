@@ -16,6 +16,24 @@
       "revId": "778660ee464cc9935e070ac57348429023a96abe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72c25071_d7d56dca",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-27T06:30:51Z",
+      "side": 1,
+      "message": "I had config target for testing and forget to remove it :)",
+      "parentUuid": "a833c110_c70a8c5a",
+      "revId": "778660ee464cc9935e070ac57348429023a96abe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
