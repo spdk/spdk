@@ -16,6 +16,24 @@
       "revId": "69ee90938e16f09af2c633d87cc249089bac4be4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9e77b0a_64fbe1ef",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1221,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-27T07:48:45Z",
+      "side": 1,
+      "message": "Thank you. I added two intermediate patches before this patch.",
+      "parentUuid": "22cb772c_87d4f501",
+      "revId": "69ee90938e16f09af2c633d87cc249089bac4be4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
