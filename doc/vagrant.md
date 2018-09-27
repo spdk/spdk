@@ -5,11 +5,10 @@
 [Vagrant](https://www.vagrantup.com/) provides a quick way to get a basic
 NVMe enabled virtual machine sandbox running without the need for any
 special hardware.
-The Vagrant environment for SPDK has support for Ubuntu 16.04 and
-CentOS 7.2. This environment requires Vagrant 1.9.4 or newer and
+The Vagrant environment for SPDK has support for CentOS 7, Ubuntu 16.04,
+Ubuntu 18.04, Fedora26, Fedora28 and FreeBSD11. 
+This environment requires Vagrant 1.9.4 or newer and
 VirtualBox 5.1 or newer with the matching VirtualBox extension pack.
-
-The VM builds SPDK and DPDK from source which are located at `/spdk`.
 
 Note: If you are behind a corporate firewall, set `http_proxy` and `https_proxy` in
 your environment before trying to start up the VM.  Also make sure that you
