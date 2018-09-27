@@ -1036,7 +1036,8 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 			 const char *crypto_pmd, const char *key)
 {
 	struct bdev_names *name;
-	int rc;
+	int rc, j;
+	bool found = false;
 
 	name = calloc(1, sizeof(struct bdev_names));
 	if (!name) {
@@ -1064,6 +1065,17 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 		rc = -ENOMEM;
 		goto error_alloc_dname;
 	}
+	for (j = 0; j < MAX_NUM_DRV_TYPES ; j++) {
+		if (strcmp(crypto_pmd, g_driver_names[j]) == 0) {
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		SPDK_ERRLOG("invalid crypto PMD type %s\n", crypto_pmd);
+		rc = -EINVAL;
+		goto error_invalid_pmd;
+	}
 
 	name->key = strdup(key);
 	if (!name->key) {
@@ -1084,6 +1096,7 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 	/* Error cleanup paths. */
 error_invalid_key:
 error_alloc_key:
+error_invalid_pmd:
 	free(name->drv_name);
 error_alloc_dname:
 	free(name->vbdev_name);
@@ -1151,8 +1164,7 @@ vbdev_crypto_init(void)
 	const char *conf_bdev_name = NULL;
 	const char *conf_vbdev_name = NULL;
 	const char *crypto_pmd = NULL;
-	bool found = false;
-	int i, j;
+	int i;
 	int rc = 0;
 	const char *key = NULL;
 
@@ -1189,17 +1201,6 @@ vbdev_crypto_init(void)
 		crypto_pmd = spdk_conf_section_get_nmval(sp, "CRY", i, 3);
 		if (!crypto_pmd) {
 			SPDK_ERRLOG("crypto configuration missing driver type\n");
-			return -EINVAL;
-		}
-
-		for (j = 0; j < MAX_NUM_DRV_TYPES ; j++) {
-			if (strcmp(crypto_pmd, g_driver_names[j]) == 0) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			SPDK_ERRLOG("crypto configuration invalid PMD type\n");
 			return -EINVAL;
 		}
 
