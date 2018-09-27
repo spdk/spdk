@@ -86,6 +86,24 @@
       "revId": "097f2efc42734d82c25873dc321d278be5610dc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf66daf4_724aee61",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-27T10:14:42Z",
+      "side": 1,
+      "message": "PawelW pointed me to that comment just now. Sorry, I missed it.\n---\nVhost-NVMe by design doesn\u0027t support multiple devices per target. For Vhost-NVMe there\u0027s not much point in having separate target and device structs like Vhost-SCSI/Block does, so there\u0027s just one combined - the same that we had so far.\n\nVhost-SCSI/Block keeps a vdev structure inside their device struct. Vhost-NVMe doesn\u0027t have one - it uses spdk_vhost_dev structure directly.\n\nI\u0027m thinking we don\u0027t actually need that vdev pointer here and could remove it. We could use vtgt.vdev in this patch, and TAILQ_FIRST(\u0026vtgt.vdevs) in later ones.",
+      "parentUuid": "4bcd4ae9_8eab6d60",
+      "revId": "097f2efc42734d82c25873dc321d278be5610dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
