@@ -40,6 +40,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
+#include "spdk/config.h"
 #include "spdk/assert.h"
 #include "spdk/thread.h"
 #include "spdk/nvmf.h"

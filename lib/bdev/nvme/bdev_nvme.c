@@ -35,6 +35,7 @@
 
 #include "bdev_nvme.h"
 
+#include "spdk/config.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/bdev.h"

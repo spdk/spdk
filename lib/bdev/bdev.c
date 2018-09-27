@@ -36,6 +36,7 @@
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
 
+#include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/thread.h"
