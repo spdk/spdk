@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22c2d236_f7e5058d",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T17:12:33Z",
+      "side": 1,
+      "message": "SPKD \u003d\u003e SPDK",
+      "revId": "37655f6a12e622bbc326bc729f128a7b06c77943",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b29995a2_29d73ff8",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T17:12:33Z",
+      "side": 1,
+      "message": "completely",
+      "revId": "37655f6a12e622bbc326bc729f128a7b06c77943",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7aa77d8_f5b83c6e",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T17:12:33Z",
+      "side": 1,
+      "message": "even if it is supported.",
+      "revId": "37655f6a12e622bbc326bc729f128a7b06c77943",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3db965ab_a8901567",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T17:12:33Z",
+      "side": 1,
+      "message": "This function has no effect",
+      "revId": "37655f6a12e622bbc326bc729f128a7b06c77943",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bad4adec_79415f86",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T17:12:33Z",
+      "side": 1,
+      "message": "completely",
+      "revId": "37655f6a12e622bbc326bc729f128a7b06c77943",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
