@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b12e2102_16ee1604",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-27T22:58:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c0a9b5eb_cfbe4c9d",
+      "revId": "9e5ae4c57a7ff42bc94a38fa1e7880f9af53311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f086d852_bf6e2aa8",
         "filename": "scripts/vagrant/Vagrantfile",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-27T21:48:04Z",
       "side": 1,
       "message": "I\u0027m curious - what does this do?  I would think vm_setup.sh has to be run in privileged mode",
+      "revId": "9e5ae4c57a7ff42bc94a38fa1e7880f9af53311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27a0e16e_43ace0ab",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-27T22:58:22Z",
+      "side": 1,
+      "message": "vm_setup.sh should actually be invoked as the user that will be enrolled as the agent in the build pool. There are explicit calls to sudo from within the script, but it relies on the users home directory for where to place src files and ownership thereof.\n\nIt may actually make sense to change the way we invoke vm_setup.sh in the future, but that is how it works currently.",
+      "parentUuid": "f086d852_bf6e2aa8",
       "revId": "9e5ae4c57a7ff42bc94a38fa1e7880f9af53311e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "767bd4c3_ce042640",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-27T22:58:22Z",
+      "side": 1,
+      "message": "You\u0027re right, that is kind of tacky. I think I will move all of them to one place.",
+      "parentUuid": "d93f86fb_2ff21f0c",
+      "revId": "9e5ae4c57a7ff42bc94a38fa1e7880f9af53311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e39b9118_0a74b3f0",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-09-27T21:48:04Z",
       "side": 1,
       "message": "extra semicolon can be removed",
+      "revId": "9e5ae4c57a7ff42bc94a38fa1e7880f9af53311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e2ffb28_02525ee0",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-27T22:58:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e39b9118_0a74b3f0",
       "revId": "9e5ae4c57a7ff42bc94a38fa1e7880f9af53311e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
