@@ -34,6 +34,7 @@
 #ifndef __NVME_INTERNAL_H__
 #define __NVME_INTERNAL_H__
 
+#include "spdk/config.h"
 #include "spdk/likely.h"
 #include "spdk/stdinc.h"
 
