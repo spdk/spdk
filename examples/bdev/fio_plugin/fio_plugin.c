@@ -664,7 +664,7 @@ static struct fio_option options[] = {
 		.lname		= "SPDK configuration file",
 		.type		= FIO_OPT_STR_STORE,
 		.off1		= offsetof(struct spdk_fio_options, conf),
-		.help		= "An SPDK configuration file",
+		.help		= "A SPDK configuration file",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
