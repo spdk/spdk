@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb7aa7d8_fb947140",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-27T13:06:52Z",
+      "side": 1,
+      "message": "Maybe it would be better to have them run \u0027/scripts/vagrant/create_vbox.sh -h\u0027 to see a list of operating systems instead of putting them here, then we don\u0027t have to worry about someone adding one in the future and forgetting to update the docs",
+      "revId": "16cd207ef51f4b03783de5b0f44052b66d209f75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
