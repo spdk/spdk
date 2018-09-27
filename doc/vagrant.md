@@ -5,11 +5,10 @@
 [Vagrant](https://www.vagrantup.com/) provides a quick way to get a basic
 NVMe enabled virtual machine sandbox running without the need for any
 special hardware.
-The Vagrant environment for SPDK has support for Ubuntu 16.04 and
-CentOS 7.2. This environment requires Vagrant 1.9.4 or newer and
+The Vagrant environment for SPDK has support for a variety of Linux distributions as well as FreeBSD.
+Run scripts/vagrant/create_vbox.sh -h to see the complete list.
+This environment requires Vagrant 1.9.4 or newer and
 VirtualBox 5.1 or newer with the matching VirtualBox extension pack.
-
-The VM builds SPDK and DPDK from source which are located at `/spdk`.
 
 Note: If you are behind a corporate firewall, set `http_proxy` and `https_proxy` in
 your environment before trying to start up the VM.  Also make sure that you
@@ -27,7 +26,7 @@ In case you want use kvm/libvirt you should also install `vagrant-libvirt`
 
 To create a configured VM with vagrant you need to run `create_vbox.sh` script.
 
-Basically, the script will create a new sub-directory based on distro you choose,
+Basically, the script will create a new sub-directory based on distribution you choose,
 copy the vagrant configuration file (a.k.a. `Vagrantfile`) to it,
 and run `vagrant up` with some settings defined by the script arguments.
 
@@ -39,9 +38,8 @@ By default, the VM created is configured with:
 In order to modify some advanced settings like provisioning and rsyncing,
 you may want to change Vagrantfile source.
 
-For additional support,
-use the Vagrant help function to learn how to destroy, restart, etc.  Further
-below is sample output from a successful VM launch and execution of the NVMe hello
+For additional support, use the Vagrant help function to learn how to destroy, restart, etc.
+Further below is sample output from a successful VM launch and execution of the NVMe hello
 world example application.
 
 ~~~{.sh}
@@ -135,7 +133,7 @@ Compiling SPDK and running an example.
 ~~~{.sh}
 vagrant@vagrant:~/spdk_repo/spdk$ sudo apt update
 <<output trimmed>>
-vagrant@vagrant:~/spdk_repo/spdk$ sudo scripts/spdkdep.sh
+vagrant@vagrant:~/spdk_repo/spdk$ sudo scripts/pkgdep.sh
 <<output trimmed>>
 
 vagrant@vagrant:~/spdk_repo/spdk$ ./configure
