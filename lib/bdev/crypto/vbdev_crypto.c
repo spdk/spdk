@@ -443,6 +443,8 @@ crypto_dev_poller(void *args)
 	struct spdk_bdev_io *bdev_io = NULL;
 	struct crypto_bdev_io *io_ctx = NULL;
 	struct rte_crypto_op *dequeued_ops[MAX_DEQUEUE_BURST_SIZE];
+	struct rte_crypto_op *mbufs_to_free[2 * MAX_DEQUEUE_BURST_SIZE];
+	int num_mbufs = 0;
 
 	/* Each run of the poller will get just what the device has available
 	 * at the moment we call it, we don't check again after draining the
@@ -474,15 +476,13 @@ crypto_dev_poller(void *args)
 		io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
 		assert(io_ctx->cryop_cnt_remaining > 0);
 
-		/* return the associated src_mbufs */
-		dequeued_ops[i]->sym->m_src->userdata = NULL;
-		spdk_mempool_put(g_mbuf_mp, dequeued_ops[i]->sym->m_src);
-
-		/* For encryption, free the mbuf we used to encrypt, the data buffer
-		 * will be freed on write completion.
+		/* Return the associated src and dst mbufs by collecting them into
+		 * an array that we can use the bulk API to free after the loop.
 		 */
+		dequeued_ops[i]->sym->m_src->userdata = NULL;
+		mbufs_to_free[num_mbufs++] = (void *)dequeued_ops[i]->sym->m_src;
 		if (dequeued_ops[i]->sym->m_dst) {
-			spdk_mempool_put(g_mbuf_mp, dequeued_ops[i]->sym->m_dst);
+			mbufs_to_free[num_mbufs++] = (void *)dequeued_ops[i]->sym->m_dst;
 		}
 
 		/* done encrypting, complete the bdev_io */
@@ -495,10 +495,19 @@ crypto_dev_poller(void *args)
 			rte_cryptodev_sym_session_clear(cdev_id, dequeued_ops[i]->sym->session);
 			rte_cryptodev_sym_session_free(dequeued_ops[i]->sym->session);
 		}
-
-		/* Free the operation */
-		rte_crypto_op_free(dequeued_ops[i]);
 	}
+
+	/* Now bulk free both mbufs and crypto operations. */
+	if (num_dequeued_ops > 0) {
+		rte_mempool_put_bulk(g_crypto_op_mp,
+				     (void **)dequeued_ops,
+				     num_dequeued_ops);
+		assert(num_mbufs > 0);
+		spdk_mempool_put_bulk(g_mbuf_mp,
+				      (void **)mbufs_to_free,
+				      num_mbufs);
+	}
+
 	return num_dequeued_ops;
 }
 
