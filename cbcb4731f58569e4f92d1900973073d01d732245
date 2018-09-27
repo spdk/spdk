@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be1056d4_f3472ced",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T22:15:40Z",
+      "side": 1,
+      "message": "I don\u0027t think we need to initialize the array to 0/NULL.  We know how many we fill out via num_mbufs.  That would save us the extra CPU cycles to zero this array on the stack.",
+      "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91bae647_63e30389",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T22:15:40Z",
+      "side": 1,
+      "message": "reutrn \u003d\u003e return\n\nI\u0027m fine with referencing the DPDK thread stuff but I don\u0027t think it\u0027s necessary - having it just in the commit message is fine.  I think in general doing the bulk operation is better - even if we didn\u0027t have this DPDK thread issue.",
+      "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "758e09bd_de3d9f74",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T22:15:40Z",
+      "side": 1,
+      "message": "Ideally there would be an rte_crypto_op_free_bulk function in the API.  Can you take a note to ask Fiona to do this when she gets here?  :-)",
+      "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abfb995f_3afbcd23",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T22:15:40Z",
+      "side": 1,
+      "message": "Should we have a separate if (num_bufs \u003e 0) check for this?  I know it\u0027s not possible for one to be \u003e 0 without the other but I had to spend a few seconds to confirm.",
+      "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
