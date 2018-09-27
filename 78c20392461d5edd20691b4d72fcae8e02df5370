@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7d54527_38d4064f",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T20:26:54Z",
+      "side": 1,
+      "message": "let\u0027s spell these out - security instead of sec\n\nthat\u0027s more consistent with other functions like this - for example, we spell out spdk_nvme_ns_cmd_dataset_management instead of abbreviating dataset or management",
+      "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d1b86f6_6e7ee4dd",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T20:26:54Z",
+      "side": 1,
+      "message": "filed \u003d\u003e field?",
+      "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad996f8c_61e08e58",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1119,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T20:26:54Z",
+      "side": 1,
+      "message": "Should we put the parameters in secp, spsp, nssf order?  that is the order they are listed in the spec.\n\nI think it\u0027s OK like this - I was just reviewing the spec as reading this patch and noticed the different order.  I think it is more natural to list the protocol first, then the specifics for that protocol.\n\nSame for security_send below.",
+      "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca16413b_edaea5f5",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T20:26:54Z",
+      "side": 1,
+      "message": "filed \u003d\u003e field?",
+      "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c12fc6a_d5f5c0e3",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T20:26:54Z",
+      "side": 1,
+      "message": "Shouldn\u0027t the last parameter be false?  it\u0027s host_to_controller - for security receive the data is coming from the controller to the host.\n\nI\u0027m surprised Changpeng didn\u0027t find this.  :-)",
+      "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
