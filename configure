@@ -392,10 +392,10 @@ done
 rm -f mk/config.mk.bak
 
 # Environment variables
-[ -n "$CFLAGS" ] && echo "CFLAGS?=$CFLAGS" >> mk/config.mk
-[ -n "$CXXFLAGS" ] && echo "CXXFLAGS?=$CXXFLAGS" >> mk/config.mk
-[ -n "$LDFLAGS" ] && echo "LDFLAGS?=$LDFLAGS" >> mk/config.mk
-[ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> mk/config.mk
+[ -n "$CFLAGS" ] && echo "CFLAGS?=$CFLAGS" > mk/cc.flags.mk
+[ -n "$CXXFLAGS" ] && echo "CXXFLAGS?=$CXXFLAGS" >> mk/cc.flags.mk
+[ -n "$LDFLAGS" ] && echo "LDFLAGS?=$LDFLAGS" >> mk/cc.flags.mk
+[ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> mk/cc.flags.mk
 
 echo "done."
 

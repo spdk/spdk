@@ -37,7 +37,7 @@ $(error mk/config.mk file not found. Please run configure before build)
 endif
 
 include $(SPDK_ROOT_DIR)/mk/config.mk
-
+-include $(SPDK_ROOT_DIR)/mk/cc.flags.mk
 -include $(SPDK_ROOT_DIR)/mk/cc.mk
 
 ifneq ($(V),1)
