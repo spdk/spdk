@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "793dadc3_a3a18d96",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T21:51:08Z",
+      "side": 1,
+      "message": "linux \u003d\u003e Linux",
+      "revId": "6965e44c7a30e76259bbd2d6016ca2c837f9d975",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6438bd62_6298c840",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T21:51:08Z",
+      "side": 1,
+      "message": "fedora28 should be added here",
+      "revId": "6965e44c7a30e76259bbd2d6016ca2c837f9d975",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
