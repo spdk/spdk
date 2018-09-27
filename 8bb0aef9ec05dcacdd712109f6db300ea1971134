@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "825b0a62_2b4341bf",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1220,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-27T01:50:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8ed213d5_de8d80c1",
+      "revId": "8bb0aef9ec05dcacdd712109f6db300ea1971134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "03f5696f_fabbef00",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "2534b8af_ab1cb944",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2448,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-27T01:50:30Z",
+      "side": 1,
+      "message": "Done. Thanks for reviewing my code.",
+      "parentUuid": "03f5696f_fabbef00",
+      "revId": "8bb0aef9ec05dcacdd712109f6db300ea1971134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "85aae104_f3f63372",
         "filename": "lib/nvme/nvme_ctrlr_cmd.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2018-09-26T08:37:11Z",
       "side": 1,
       "message": "Security Send/Receive should be two APIs, you can make this function static and wrapper another two APIs.",
+      "revId": "8bb0aef9ec05dcacdd712109f6db300ea1971134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5be2d346_3af1a3b1",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-27T01:50:30Z",
+      "side": 1,
+      "message": "Just use two separate functions. Done",
+      "parentUuid": "85aae104_f3f63372",
       "revId": "8bb0aef9ec05dcacdd712109f6db300ea1971134",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
