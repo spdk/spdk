@@ -2145,11 +2145,18 @@ spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
+	struct spdk_nvme_ns *ns;
+
 	if (nsid < 1 || nsid > ctrlr->num_ns) {
 		return NULL;
 	}
 
-	return &ctrlr->ns[nsid - 1];
+	ns = &ctrlr->ns[nsid - 1];
+	if (ns->id > 0) {
+		return ns;
+	} else {
+		return NULL;
+	}
 }
 
 struct spdk_pci_device *
