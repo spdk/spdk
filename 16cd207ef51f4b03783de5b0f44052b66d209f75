@@ -16,6 +16,24 @@
       "revId": "16cd207ef51f4b03783de5b0f44052b66d209f75",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5f2d5a5_a5e3a708",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-27T16:58:39Z",
+      "side": 1,
+      "message": "Agreed.  Maybe soften this to something like:\n\nThe Vagrant environment for SPDK has support for a variety of Linux distributions as well as FreeBSD.  Run scripts/vagrant/create_vbox.sh -h to see the complete list.\n\nRest of the changes in this patch look good.",
+      "parentUuid": "cb7aa7d8_fb947140",
+      "revId": "16cd207ef51f4b03783de5b0f44052b66d209f75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
