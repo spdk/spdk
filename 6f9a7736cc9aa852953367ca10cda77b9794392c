@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "662faa47_63f2d064",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-27T07:52:40Z",
+      "side": 1,
+      "message": "You\u0027re right - I can and I probably should, but I don\u0027t like it. Here\u0027s why:\n\nThe line for adding a virtio blk will look like this:\nlibvirt.storage :file, :size \u003d\u003e \"128\", :path \u003d\u003e \"virtio_blk.img\", :allow_existing \u003d\u003e true, :type \u003d\u003e \"raw\"\n\"Path\" is relative to current storage pool of libvirt (/var/lib/libvirt/images) and you cannot give any absolute paths as an argument. Here\u0027s an error output:\nLibvirt Provider:\n* absolute volume paths like \u0027/var/lib/libvirt/images/virtio_blk.img\u0027 not yet supported.\n\nWhat\u0027s worse - is that you cannot even specify relative paths like \"some_folder/virtio.img\" as / character is not allowed in \"path\" field. Strange.",
+      "parentUuid": "55ecaabe_41d4f5d6",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 13
+      },
+      "revId": "6f9a7736cc9aa852953367ca10cda77b9794392c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10983c73_90283362",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "97481197_f782813b",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-27T07:52:40Z",
+      "side": 1,
+      "message": "After you update grub options then, well, you have to restart the system:P",
+      "parentUuid": "10983c73_90283362",
+      "range": {
+        "startLine": 201,
+        "startChar": 2,
+        "endLine": 201,
+        "endChar": 16
+      },
+      "revId": "6f9a7736cc9aa852953367ca10cda77b9794392c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d6b93efb_93bbfd7a",
         "filename": "scripts/vagrant/create_virtio_img.sh",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2018-09-26T15:46:39Z",
       "side": 1,
       "message": "wrong indentation",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 4
+      },
+      "revId": "6f9a7736cc9aa852953367ca10cda77b9794392c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "638bfc53_d6500924",
+        "filename": "scripts/vagrant/create_virtio_img.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-27T07:52:40Z",
+      "side": 1,
+      "message": "Done.\nEagle eye;)",
+      "parentUuid": "d6b93efb_93bbfd7a",
       "range": {
         "startLine": 7,
         "startChar": 0,
