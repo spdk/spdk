@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a7fb18d8_aedc1fd8",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-27T03:50:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b1b67d7_7673423d",
+      "revId": "ab3761331585ee0f57325119b6f963a47db4a1e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d2ca070e_c7d9e940",
         "filename": "lib/nvme/nvme_ctrlr_cmd.c",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "3872a52c_6d7c931d",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-27T03:50:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d2ca070e_c7d9e940",
+      "revId": "ab3761331585ee0f57325119b6f963a47db4a1e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d2b5c870_bda5ad6f",
         "filename": "lib/nvme/nvme_ctrlr_cmd.c",
         "patchSetId": 4
@@ -47,6 +83,24 @@
       "writtenOn": "2018-09-27T02:37:56Z",
       "side": 1,
       "message": "Consider using same code style as other APIs: payload and payload_size",
+      "revId": "ab3761331585ee0f57325119b6f963a47db4a1e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "531f25df_5958c863",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-27T03:50:20Z",
+      "side": 1,
+      "message": "Done. Thanks for reviewing my code",
+      "parentUuid": "d2b5c870_bda5ad6f",
       "revId": "ab3761331585ee0f57325119b6f963a47db4a1e9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
