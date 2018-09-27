@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70a1b312_b8643100",
+        "filename": "doc/vagrant.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-09-27T07:37:42Z",
+      "side": 1,
+      "message": "Trailing whitespace:P",
+      "range": {
+        "startLine": 9,
+        "startChar": 47,
+        "endLine": 9,
+        "endChar": 48
+      },
+      "revId": "d8ebe913b2d723e2684b000c78c7575d85a5ba4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
