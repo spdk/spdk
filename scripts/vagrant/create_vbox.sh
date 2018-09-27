@@ -122,6 +122,9 @@ case "$SPDK_VAGRANT_DISTRO" in
 	fedora27)
 		export SPDK_VAGRANT_DISTRO
 	;;
+	fedora28)
+		export SPDK_VAGRANT_DISTRO
+	;;
 	freebsd11)
 		export SPDK_VAGRANT_DISTRO
 	;;
