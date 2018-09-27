@@ -128,7 +128,7 @@ static void _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, vo
 static void _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void vbdev_crypto_examine(struct spdk_bdev *bdev);
-static void vbdev_crypto_claim(struct spdk_bdev *bdev);
+static int vbdev_crypto_claim(struct spdk_bdev *bdev);
 
 /* list of crypto_bdev names and their base bdevs via configuration file.
  * Used so we can parse the conf once at init and use this list in examine().
@@ -1135,7 +1135,11 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 		return 0;
 	}
 
-	vbdev_crypto_claim(bdev);
+	rc = vbdev_crypto_claim(bdev);
+	if (rc) {
+		SPDK_ERRLOG("Error claiming bdev\n");
+		return rc;
+	}
 
 	rc = vbdev_crypto_init_crypto_drivers();
 	if (rc) {
@@ -1338,12 +1342,12 @@ static struct spdk_bdev_module crypto_if = {
 
 SPDK_BDEV_MODULE_REGISTER(&crypto_if)
 
-static void
+static int
 vbdev_crypto_claim(struct spdk_bdev *bdev)
 {
 	struct bdev_names *name;
 	struct vbdev_crypto *vbdev;
-	int rc;
+	int rc = 0;
 
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the crypto_bdev & bdev accordingly.
@@ -1357,7 +1361,8 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		vbdev = calloc(1, sizeof(struct vbdev_crypto));
 		if (!vbdev) {
 			SPDK_ERRLOG("could not allocate crypto_bdev\n");
-			break;
+			rc = -ENOMEM;
+			goto error_vbdev_alloc;
 		}
 
 		/* The base bdev that we're attaching to. */
@@ -1365,18 +1370,21 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		vbdev->crypto_bdev.name = strdup(name->vbdev_name);
 		if (!vbdev->crypto_bdev.name) {
 			SPDK_ERRLOG("could not allocate crypto_bdev name\n");
+			rc = -ENOMEM;
 			goto error_bdev_name;
 		}
 
 		vbdev->key = strdup(name->key);
 		if (!vbdev->key) {
 			SPDK_ERRLOG("could not allocate crypto_bdev key\n");
+			rc = -ENOMEM;
 			goto error_alloc_key;
 		}
 
 		vbdev->drv_name = strdup(name->drv_name);
 		if (!vbdev->drv_name) {
 			SPDK_ERRLOG("could not allocate crypto_bdev drv_name\n");
+			rc = -ENOMEM;
 			goto error_drv_name;
 		}
 
@@ -1423,7 +1431,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		SPDK_NOTICELOG("registered crypto_bdev for: %s\n", name->vbdev_name);
 	}
 
-	return;
+	return rc;
 
 	/* Error cleanup paths. */
 error_claim:
@@ -1438,6 +1446,8 @@ error_alloc_key:
 	free(vbdev->crypto_bdev.name);
 error_bdev_name:
 	free(vbdev);
+error_vbdev_alloc:
+	return rc;
 }
 
 /* RPC entry for deleting a crypto vbdev. */
@@ -1484,7 +1494,12 @@ vbdev_crypto_examine(struct spdk_bdev *bdev)
 	struct vbdev_crypto *crypto_bdev, *tmp;
 	int rc;
 
-	vbdev_crypto_claim(bdev);
+	rc = vbdev_crypto_claim(bdev);
+	if (rc) {
+		SPDK_ERRLOG("could not claim bdev\n");
+		spdk_bdev_module_examine_done(&crypto_if);
+		return;
+	}
 
 	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
 		if (strcmp(crypto_bdev->base_bdev->name, bdev->name) == 0) {
