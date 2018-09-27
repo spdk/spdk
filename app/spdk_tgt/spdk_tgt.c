@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/vhost.h"
