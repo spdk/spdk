@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22cb772c_87d4f501",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1221,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-27T02:08:40Z",
+      "side": 1,
+      "message": "this seems a little odd, don\u0027t remember seeing it before, that you have a catch all else if rc is not 0 and then assert that is no memory and queue.  Maybe have the else be an elseif and then add a catch all else at the end that throws a real error?",
+      "revId": "69ee90938e16f09af2c633d87cc249089bac4be4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
