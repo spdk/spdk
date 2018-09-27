@@ -37,6 +37,7 @@
 #include "common/lib/ut_multithread.c"
 #include "unit/lib/json_mock.c"
 
+#include "spdk/config.h"
 /* HACK: disable VTune integration so the unit test doesn't need VTune headers and libs to build */
 #undef SPDK_CONFIG_VTUNE
 

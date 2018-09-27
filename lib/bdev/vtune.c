@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/config.h"
 #if SPDK_CONFIG_VTUNE
 
 /* Disable warnings triggered by the VTune code */
