@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "29a3db34_20282fad",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-09-27T17:43:53Z",
+      "side": 1,
+      "message": "Here is a thought, instead of creating these disks ourselves, could we create them using the managers (libvirt, or vbox) and then attach the drives created natively by the provider? That way we wouldn\u0027t have to manage the path variable. I think we lose some control there of where everything is located, but I don\u0027t have a big problem with that. If we leave the creation and mounting up to the provider, then I think we could cut down on some of the external scripts.\nIt seems like the libvirt.storage command is built for this since it only allows you to specify the name of the backing file, not the path. It looks like vbox handles it in a similar way  (http://zacklalanne.me/using-vagrant-to-virtualize-multiple-hard-drives/ random blog post from google).",
+      "parentUuid": "662faa47_63f2d064",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 13
+      },
+      "revId": "6f9a7736cc9aa852953367ca10cda77b9794392c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10983c73_90283362",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 3
