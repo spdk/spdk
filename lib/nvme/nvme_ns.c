@@ -142,7 +142,16 @@ spdk_nvme_ns_get_id(struct spdk_nvme_ns *ns)
 bool
 spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns)
 {
-	const struct spdk_nvme_ns_data *nsdata = _nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data *nsdata = NULL;
+
+	/*
+	 * According to the spec, valid NS has non-zero id.
+	 */
+	if (ns->id == 0) {
+		return false;
+	}
+
+	nsdata = _nvme_ns_get_data(ns);
 
 	/*
 	 * According to the spec, Identify Namespace will return a zero-filled structure for
