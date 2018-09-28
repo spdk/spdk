@@ -89,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "9f4cce6a_cf8f3495",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1737,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-28T20:53:33Z",
+      "side": 1,
+      "message": "In the future we will have some threads that do not have poll groups.  For example, maybe we set aside some threads to do crypto or compression in software.  These threads would not be doing an NVMe-oF work.\n\nIf you use the spdk_for_each_channel on the target object, then you are assured it will only be run on threads that have a poll group.",
+      "parentUuid": "d8e588c6_caedae71",
+      "revId": "b335c6d0947499b4fa0acf93014b432a724d8c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b288f6c3_b5d4d7aa",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
