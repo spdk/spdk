@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6ec09271_663260e9",
+        "filename": "autobuild.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-28T13:39:45Z",
+      "side": 1,
+      "message": "to produce mk/config.mk for makefile that is including it. see mk/spdk.common.mk",
+      "parentUuid": "855cccc4_c24dd106",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 26
+      },
+      "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9434c7f3_ee2edc47",
         "filename": "configure",
         "patchSetId": 21
@@ -36,6 +60,42 @@
       "writtenOn": "2018-09-28T11:56:42Z",
       "side": 1,
       "message": "ok, Pawel. OK.",
+      "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ebed059_c611d296",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-28T13:39:45Z",
+      "side": 1,
+      "message": "It could be something like this http://www.ex-parrot.com/~pdw/Mail-RFC822-Address.html",
+      "parentUuid": "9434c7f3_ee2edc47",
+      "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c45b43b7_d01df226",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-28T13:39:45Z",
+      "side": 1,
+      "message": "What? ;) It could be something like this http://www.ex-parrot.com/~pdw/Mail-RFC822-Address.html",
+      "parentUuid": "9434c7f3_ee2edc47",
       "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -59,6 +119,24 @@
     },
     {
       "key": {
+        "uuid": "3bf34cef_9198d4f4",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-28T13:39:45Z",
+      "side": 1,
+      "message": "Returns all key instead of values from CONFIG",
+      "parentUuid": "dc69b110_fea98415",
+      "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1557392f_e6f27717",
         "filename": "configure",
         "patchSetId": 21
@@ -70,6 +148,24 @@
       "writtenOn": "2018-09-28T11:56:42Z",
       "side": 1,
       "message": "extra newline",
+      "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5dd7a42d_4e2194c5",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-28T13:39:45Z",
+      "side": 1,
+      "message": "This extra newline is intentional.",
+      "parentUuid": "1557392f_e6f27717",
       "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
