@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "855cccc4_c24dd106",
+        "filename": "autobuild.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-28T11:56:42Z",
+      "side": 1,
+      "message": "why do we add that here? Is mk/config.mk needed for something additional in here?\n\nWe already run configure in #35 in #66",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 26
+      },
+      "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9434c7f3_ee2edc47",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-28T11:56:42Z",
+      "side": 1,
+      "message": "ok, Pawel. OK.",
+      "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc69b110_fea98415",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-28T11:56:42Z",
+      "side": 1,
+      "message": "what does that exclamation mark do?",
+      "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1557392f_e6f27717",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-09-28T11:56:42Z",
+      "side": 1,
+      "message": "extra newline",
+      "revId": "dddcd35ed8895fc8dbc4c0e8b78c5bd27ebedecd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
