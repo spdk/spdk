@@ -1073,6 +1073,7 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 		error_offset = offsetof(struct spdk_nvme_tcp_ic_resp, maxh2cdata);
 		goto end;
 	}
+
 	tqpair->maxh2cdata = ic_resp->maxh2cdata;
 
 	if (ic_resp->cpda > SPDK_NVME_TCP_CPDA_MAX) {
@@ -1596,9 +1597,9 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 	ic_req->maxr2t = NVME_TCP_MAX_R2T_DEFAULT - 1;
 	ic_req->hpda = NVME_TCP_HPDA_DEFAULT;
 
-	/* Currently, always enable it here for debuging */
-	ic_req->dgst.bits.hdgst_enable = 1;
-	ic_req->dgst.bits.ddgst_enable = 1;
+	/* Do not enable the header or data digest enabling */
+	ic_req->dgst.bits.hdgst_enable = 0;
+	ic_req->dgst.bits.ddgst_enable = 0;
 
 	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_send_icreq_complete, tqpair);
 
