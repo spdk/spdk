@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ef463e7_8d671055",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-28T12:14:37Z",
+      "side": 1,
+      "message": "This method use construct_nvmf_subsystem which is deprecated.\nYou should use something like that:\nnvmf_subsystem_create (nqn, serial_number, allow_any_host)\nnvmf_subsystem_add_ns (nqn, namespace)\nnvmf_subsystem_add_listener (nqn, -t rdma, -a listen_addresses)\nor create separate commands like: create, add_namespace and add_listener",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 76
+      },
+      "revId": "a62e55a023b2709922b8442ad29bc88d31867952",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21f3c831_30a2c28d",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-28T12:14:37Z",
+      "side": 1,
+      "message": "This method is deprecated, please use nvmf_subsystem_create",
+      "range": {
+        "startLine": 266,
+        "startChar": 17,
+        "endLine": 266,
+        "endChar": 41
+      },
+      "revId": "a62e55a023b2709922b8442ad29bc88d31867952",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
