@@ -3485,14 +3485,8 @@ _spdk_bdev_write_zero_buffer_next(void *_bdev_io)
 		bdev_io->u.bdev.split_remaining_num_blocks -= num_blocks;
 		bdev_io->u.bdev.split_current_offset_blocks += num_blocks;
 	} else if (rc == -ENOMEM) {
-		bdev_io->internal.waitq_entry.bdev = bdev_io->bdev;
-		bdev_io->internal.waitq_entry.cb_fn = _spdk_bdev_write_zero_buffer_next;
-		bdev_io->internal.waitq_entry.cb_arg = bdev_io;
-		spdk_bdev_queue_io_wait(bdev_io->bdev, spdk_io_channel_from_ctx(bdev_io->internal.ch),
-					&bdev_io->internal.waitq_entry);
+		_spdk_bdev_queue_io_wait_with_cb(bdev_io, _spdk_bdev_write_zero_buffer_next);
 	} else {
-		/* This should never happen. */
-		assert(false);
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 	}
