@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "abbed006_0d5e77a7",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-09-28T11:05:06Z",
+      "side": 1,
+      "message": "hi, Pawel, \nMy understanding on your comments is that it doesn\u0027t require new change. Is it right?",
+      "parentUuid": "825e657e_e7de8eb4",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 53
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d639973d_235a1ebe",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 20
