@@ -34,6 +34,24 @@
       "revId": "715550dbc7afe9312ffbc9cca855761d5d7fd89c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00172081_b8307994",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T10:41:35Z",
+      "side": 1,
+      "message": "If this case is asserted, bdev_io_wait_test will fail unexpectedly. split io test will check the contents of io but ios are issued for preparation in bdev_io_wait_test. Hence this case is handled as normal.",
+      "parentUuid": "c39dede8_a0bcf6a2",
+      "revId": "715550dbc7afe9312ffbc9cca855761d5d7fd89c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
