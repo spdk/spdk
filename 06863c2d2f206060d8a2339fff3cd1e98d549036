@@ -16,6 +16,52 @@
       "revId": "06863c2d2f206060d8a2339fff3cd1e98d549036",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96f08d58_0630d962",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T03:20:58Z",
+      "side": 1,
+      "message": "I ask a question. ns-\u003eid \u003d\u003d 0 is probable?\n\nif ns-\u003eid is 0, _nvme_ns_get_data() will access out of the nsdata array. this case should be asserted in _nvme_ns_get_data()?",
+      "range": {
+        "startLine": 150,
+        "startChar": 1,
+        "endLine": 150,
+        "endChar": 19
+      },
+      "revId": "06863c2d2f206060d8a2339fff3cd1e98d549036",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0777be83_aac39637",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T03:20:58Z",
+      "side": 1,
+      "message": "already checked here.",
+      "range": {
+        "startLine": 300,
+        "startChar": 1,
+        "endLine": 300,
+        "endChar": 16
+      },
+      "revId": "06863c2d2f206060d8a2339fff3cd1e98d549036",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
