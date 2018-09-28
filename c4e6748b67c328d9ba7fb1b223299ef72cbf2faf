@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bcbc8f5_56db2907",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T00:34:48Z",
+      "side": 1,
+      "message": "blocklen is derived from io_ctx-\u003ecrypto_bdev-\u003ecrypto_bdev.blocklen here but is derived from bdev_io-\u003ebdev-\u003eblocklen at the line 534. Both will be the same value. Can we consolidate to either one?",
+      "range": {
+        "startLine": 515,
+        "startChar": 23,
+        "endLine": 515,
+        "endChar": 64
+      },
+      "revId": "c4e6748b67c328d9ba7fb1b223299ef72cbf2faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12676ae1_51fd6851",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T00:34:48Z",
+      "side": 1,
+      "message": "cryop_cnt can be used here.",
+      "range": {
+        "startLine": 516,
+        "startChar": 25,
+        "endLine": 516,
+        "endChar": 51
+      },
+      "revId": "c4e6748b67c328d9ba7fb1b223299ef72cbf2faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f95e091_a1a07cca",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T00:34:48Z",
+      "side": 1,
+      "message": "If the comment at the line 515 is correct, total_length can be substituted here?",
+      "range": {
+        "startLine": 534,
+        "startChar": 9,
+        "endLine": 534,
+        "endChar": 61
+      },
+      "revId": "c4e6748b67c328d9ba7fb1b223299ef72cbf2faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d901ae2e_05febe0d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T00:34:48Z",
+      "side": 1,
+      "message": "operations.",
+      "range": {
+        "startLine": 621,
+        "startChar": 14,
+        "endLine": 621,
+        "endChar": 25
+      },
+      "revId": "c4e6748b67c328d9ba7fb1b223299ef72cbf2faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
