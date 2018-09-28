@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fff21d99_28dd33b3",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2155,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-28T07:38:39Z",
+      "side": 1,
+      "message": "No need to check NSID here, for now the NSID is not valid.",
+      "revId": "f6412f584913c3740eced8ba1faf7afe628215f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9845f501_49d554e6",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-28T07:38:39Z",
+      "side": 1,
+      "message": "The API is only valid after IDENTIFY NS command, for most callers in SPDK we can use spdk_nvme_ctrlr_is_active_ns() instead, for now adding a check here make sense to me.",
+      "revId": "f6412f584913c3740eced8ba1faf7afe628215f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
