@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "531598cd_f047ab19",
+        "filename": "Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-28T19:15:33Z",
+      "side": 1,
+      "message": "I have no hope of reviewing these sed commands in detail.  :)\n\nBut I guess my question is - doesn\u0027t using this sed stuff make all of this harder for everyone to understand?  I feel like the Python script is in general more understandable to the average (and even above-average) SPDK developer.",
+      "revId": "5df33b5c3777e456e5b5c9c992e310b915a07c52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
