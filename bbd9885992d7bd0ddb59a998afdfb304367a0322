@@ -72,6 +72,53 @@
     },
     {
       "key": {
+        "uuid": "1e7b2068_285a25a4",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T06:00:28Z",
+      "side": 1,
+      "message": "Thank you, \n\nI found this is used later in the patch series. But this function is not used publicly in this patch yet. Hence removing static later is easy to review.\n\nnoun, noun, verb is not easy for me.\nHow about nvme_ns_update_identify_data()? or nvme_ns_set_identify_data() ? This may fit with the role of this function?",
+      "parentUuid": "7b6748f4_764f874f",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 28
+      },
+      "revId": "bbd9885992d7bd0ddb59a998afdfb304367a0322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01515f96_f6737d2d",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T06:00:28Z",
+      "side": 1,
+      "message": "this is not used publicly yet. Hence I think adding static may be better.",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 3
+      },
+      "revId": "bbd9885992d7bd0ddb59a998afdfb304367a0322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd3fbc62_e4ed3276",
         "filename": "lib/nvme/nvme_ns.c",
         "patchSetId": 4
@@ -107,6 +154,30 @@
       "side": 1,
       "message": "Namespace ID can valid even the Namespace is in inactive state, so I think it make more sense to set them here.",
       "parentUuid": "dd3fbc62_e4ed3276",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 13
+      },
+      "revId": "bbd9885992d7bd0ddb59a998afdfb304367a0322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bc34c60_c8ea0c74",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T06:00:28Z",
+      "side": 1,
+      "message": "OK, but the ns passed by parameter is got by spdk_nvme_ctrlr_get_ns(ctrlr, id). However ns-\u003ectrlr and ns-\u003eid were overwritten here.\n\nHonestly I don\u0027t feel easy and the original implementation is reasonable. Bringing them into the original position, i.e., nvme_ns_construct(ns, id, ctrlr) will break the patch series?",
+      "parentUuid": "4227a90b_5aac770d",
       "range": {
         "startLine": 107,
         "startChar": 0,
