@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46a09805_5a93e070",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-28T23:22:54Z",
+      "side": 0,
+      "message": "should wait_time variable be removed?",
+      "revId": "ca12cb3097bd9cab1e60f320d239477318b12f61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
