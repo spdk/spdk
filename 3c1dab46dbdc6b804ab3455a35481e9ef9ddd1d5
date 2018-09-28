@@ -16,6 +16,24 @@
       "revId": "3c1dab46dbdc6b804ab3455a35481e9ef9ddd1d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a080cfc_f07a716c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1498,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-28T00:59:25Z",
+      "side": 1,
+      "message": "Damned defective keyboard :)",
+      "parentUuid": "2ce7b23e_06633939",
+      "revId": "3c1dab46dbdc6b804ab3455a35481e9ef9ddd1d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
