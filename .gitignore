@@ -18,7 +18,7 @@ tags
 cscope.out
 dpdk-*
 CUnit-Memory-Dump.xml
-config.h
+include/spdk/config.h
 CONFIG.local
 *VC.db
 .vscode
