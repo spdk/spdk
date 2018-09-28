@@ -41,7 +41,7 @@ DIRS-$(CONFIG_SHARED) += shared_lib
 DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
 
-.PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk cc_version cxx_version
+.PHONY: all clean $(DIRS-y) include/spdk/config.h CONFIG.local mk/cc.mk cc_version cxx_version
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
@@ -61,7 +61,7 @@ endif
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
-	$(Q)rm -f config.h
+	$(Q)rm -f include/spdk/config.h
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
@@ -74,14 +74,14 @@ examples: $(LIB)
 pkgdep:
 	sh ./scripts/pkgdep.sh
 
-$(DIRS-y): mk/cc.mk config.h
+$(DIRS-y): mk/cc.mk include/spdk/config.h
 
 mk/cc.mk:
 	$(Q)scripts/detect_cc.sh --cc=$(CC) --cxx=$(CXX) --lto=$(CONFIG_LTO) > $@.tmp; \
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 
-config.h: CONFIG CONFIG.local scripts/genconfig.py
+include/spdk/config.h: CONFIG CONFIG.local scripts/genconfig.py
 	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
 	test -z "$$PYCMD" && PYCMD=python ; \
 	echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
