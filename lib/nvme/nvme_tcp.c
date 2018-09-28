@@ -1313,7 +1313,9 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 		error_offset = offsetof(struct spdk_nvme_tcp_ic_resp, maxh2cdata);
 		goto end;
 	}
-	tqpair->maxh2cdata = ic_resp->maxh2cdata;
+
+	//kernel use 0 base's value, it is not correct though
+	tqpair->maxh2cdata = ic_resp->maxh2cdata + 1;
 
 	if (ic_resp->cpda > NVME_TCP_CPDA_MAX) {
 		SPDK_ERRLOG("Expected ICResp cpda <=%u, got %u\n", NVME_TCP_CPDA_MAX, ic_resp->cpda);
@@ -1834,7 +1836,7 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 	ic_req->hpda = NVME_TCP_HPDA_DEFAULT;
 
 	/* Currently, always enable it here for debuging */
-	ic_req->dgst.bits.hdgst_enable = 1;
+	ic_req->dgst.bits.hdgst_enable = 0;
 	ic_req->dgst.bits.ddgst_enable = 1;
 
 	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_send_icreq_complete, tqpair);
