@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90f41916_8efbbe7d",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T04:46:56Z",
+      "side": 1,
+      "message": "why static is removed?",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 4
+      },
+      "revId": "bbd9885992d7bd0ddb59a998afdfb304367a0322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dae13ca1_05aff75c",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T04:46:56Z",
+      "side": 1,
+      "message": "this function initializes most data of struct spdk_nvme_ns.\n\nI feel _nvme_ns_construct() may sound natural.",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 28
+      },
+      "revId": "bbd9885992d7bd0ddb59a998afdfb304367a0322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd3fbc62_e4ed3276",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T04:46:56Z",
+      "side": 1,
+      "message": "Do we have to set them here? Moving them into nvme_ns_identify_data_update() or to the line 122 is possible?",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 13
+      },
+      "revId": "bbd9885992d7bd0ddb59a998afdfb304367a0322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86706774_a0616a9b",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T04:46:56Z",
+      "side": 1,
+      "message": "Do we have to return here?\nAdditionally if you take the above comment, you will be able to remove nvme_ns_destruct() ?",
+      "revId": "bbd9885992d7bd0ddb59a998afdfb304367a0322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
