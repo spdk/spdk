@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4212ea72_ca89a423",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-28T02:47:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d7d54527_38d4064f",
+      "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d1b86f6_6e7ee4dd",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 5
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "3253b905_8693cc01",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1109,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-28T02:47:45Z",
+      "side": 1,
+      "message": "Done. Sorry for the typo",
+      "parentUuid": "4d1b86f6_6e7ee4dd",
+      "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ad996f8c_61e08e58",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 5
@@ -47,6 +83,24 @@
       "writtenOn": "2018-09-27T20:26:54Z",
       "side": 1,
       "message": "Should we put the parameters in secp, spsp, nssf order?  that is the order they are listed in the spec.\n\nI think it\u0027s OK like this - I was just reviewing the spec as reading this patch and noticed the different order.  I think it is more natural to list the protocol first, then the specifics for that protocol.\n\nSame for security_send below.",
+      "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00c9d0e3_c8ad881c",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1119,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-28T02:47:45Z",
+      "side": 1,
+      "message": "I think you made your point. Fixed.",
+      "parentUuid": "ad996f8c_61e08e58",
       "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -99,6 +153,24 @@
       "side": 1,
       "message": "oh~~, no, I didn\u0027t notice this, :).",
       "parentUuid": "8c12fc6a_d5f5c0e3",
+      "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2ed4761_07666397",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-09-28T02:47:45Z",
+      "side": 1,
+      "message": "Done. Thank you guys for reviewing my code.",
+      "parentUuid": "bd7d2410_c98e8189",
       "revId": "78c20392461d5edd20691b4d72fcae8e02df5370",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
