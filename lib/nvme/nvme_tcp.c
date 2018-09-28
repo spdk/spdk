@@ -1807,7 +1807,7 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 	ic_req->hpda = NVME_TCP_HPDA_DEFAULT;
 
 	/* Currently, always enable it here for debuging */
-	ic_req->dgst.bits.hdgst_enable = 1;
+	ic_req->dgst.bits.hdgst_enable = 0;
 	ic_req->dgst.bits.ddgst_enable = 1;
 
 	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_send_icreq_complete, tqpair);
