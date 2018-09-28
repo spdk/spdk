@@ -16,6 +16,24 @@
       "revId": "715550dbc7afe9312ffbc9cca855761d5d7fd89c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c39dede8_a0bcf6a2",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-09-28T09:15:49Z",
+      "side": 1,
+      "message": "No this is the normal case. Before this patch, \"if (ch-\u003eexpected_length \u003d\u003d 0)\" took the role. \n\nAfter this patch, checking if ch-\u003eexpected_io is empty does the role instead.",
+      "parentUuid": "316ce8b4_649896e0",
+      "revId": "715550dbc7afe9312ffbc9cca855761d5d7fd89c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
