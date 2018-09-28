@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "384f34d3_b5336e7d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-28T17:31:00Z",
+      "side": 1,
+      "message": "I agree with the file permission change, but it seems like it should be a separate patch.\n\nHow did you end up with execute permission on these files anyway? This actually seems like something we should be checking for in scripts/setup.sh.",
+      "revId": "98ef80abadedd6ac3cab972b97e32afcb0f7c7fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
