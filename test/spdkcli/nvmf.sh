@@ -2,6 +2,7 @@
 set -xe
 
 MATCH_FILE="spdkcli_nvmf.test"
+SPDKCLI_BRANCH="/nvmf"
 testdir=$(readlink -f $(dirname $0))
 . $testdir/common.sh
 . $testdir/../nvmf/common.sh
@@ -56,7 +57,7 @@ $spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/namespaces create Mall
 timing_exit spdkcli_create_nvmf_config
 
 timing_enter spdkcli_check_match
-#check_match
+check_match
 timing_exit spdkcli_check_match
 
 timing_enter spdkcli_clear_nvmf_config
