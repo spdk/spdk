@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e37d6d17_3b94fb8e",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-28T21:26:20Z",
+      "side": 1,
+      "message": "I suppose this is OK - but can we do this only for primary processes?  We depend on secondary processes running very fast in our tests - this would add a 2 second delay to each of them.",
+      "revId": "277e0308d99a23b49eb5e20a13a2eb92e441d66a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
