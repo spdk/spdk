@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2e1c27b8_e6d3426a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1139,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-28T12:59:56Z",
+      "side": 1,
+      "message": "Agree, good additional improvement patch for later, thanks!",
+      "parentUuid": "1cb074bf_6820afc9",
+      "range": {
+        "startLine": 1139,
+        "startChar": 2,
+        "endLine": 1139,
+        "endChar": 39
+      },
+      "revId": "3c1dab46dbdc6b804ab3455a35481e9ef9ddd1d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd4d89aa_abaa162d",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-28T07:58:45Z",
       "side": 1,
       "message": "Maybe for another patch but I would change this to \"duplicate\" or \"copy\"",
+      "range": {
+        "startLine": 1362,
+        "startChar": 26,
+        "endLine": 1362,
+        "endChar": 34
+      },
+      "revId": "3c1dab46dbdc6b804ab3455a35481e9ef9ddd1d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c391b4b_e7710879",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1362,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-28T12:59:56Z",
+      "side": 1,
+      "message": "I think allocate makes more sense here",
+      "parentUuid": "cd4d89aa_abaa162d",
       "range": {
         "startLine": 1362,
         "startChar": 26,
@@ -77,6 +125,24 @@
       "side": 1,
       "message": "Damned defective keyboard :)",
       "parentUuid": "2ce7b23e_06633939",
+      "revId": "3c1dab46dbdc6b804ab3455a35481e9ef9ddd1d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8028a34c_e480be79",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1498,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-28T12:59:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a080cfc_f07a716c",
       "revId": "3c1dab46dbdc6b804ab3455a35481e9ef9ddd1d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
