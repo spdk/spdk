@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a6e05c3c_f3d2d27e",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-28T13:41:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be1056d4_f3472ced",
+      "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91bae647_63e30389",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-27T22:15:40Z",
       "side": 1,
       "message": "reutrn \u003d\u003e return\n\nI\u0027m fine with referencing the DPDK thread stuff but I don\u0027t think it\u0027s necessary - having it just in the commit message is fine.  I think in general doing the bulk operation is better - even if we didn\u0027t have this DPDK thread issue.",
+      "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa02cfa9_474b5e8d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-28T13:41:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "91bae647_63e30389",
       "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "8a1ca12a_6ffd6f31",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-28T13:41:13Z",
+      "side": 1,
+      "message": "I\u0027ll email her now so I don\u0027t forget :)",
+      "parentUuid": "758e09bd_de3d9f74",
+      "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "abfb995f_3afbcd23",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-09-27T22:15:40Z",
       "side": 1,
       "message": "Should we have a separate if (num_bufs \u003e 0) check for this?  I know it\u0027s not possible for one to be \u003e 0 without the other but I had to spend a few seconds to confirm.",
+      "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79aa6ca1_a00716d4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-09-28T13:41:13Z",
+      "side": 1,
+      "message": "I\u0027ll throw in an assert, this should be impossible",
+      "parentUuid": "abfb995f_3afbcd23",
       "revId": "cbcb4731f58569e4f92d1900973073d01d732245",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
