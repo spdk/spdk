@@ -79,7 +79,7 @@ DPDK_LIB_LIST += rte_bus_pci
 endif
 
 ifeq ($(CONFIG_CRYPTO),y)
-DPDK_LIB_LIST += rte_cryptodev rte_reorder rte_bus_vdev rte_pmd_aesni_mb rte_mbuf
+DPDK_LIB_LIST += rte_cryptodev rte_reorder rte_bus_vdev rte_pmd_aesni_mb rte_pmd_qat rte_mbuf
 endif
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
