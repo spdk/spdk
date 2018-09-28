@@ -939,7 +939,7 @@ _spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	if (TAILQ_EMPTY(&g_bdev_mgr.bdevs)) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Done unregistering bdevs\n");
 		/*
-		 * Bdev module finish need to be deffered as we might be in the middle of some context
+		 * Bdev module finish need to be deferred as we might be in the middle of some context
 		 * (like bdev part free) that will use this bdev (or private bdev driver ctx data)
 		 * after returning.
 		 */
@@ -948,10 +948,31 @@ _spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	}
 
 	/*
-	 * Unregister the last bdev in the list.  The last bdev in the list should be a bdev
-	 * that has no bdevs that depend on it.
+	 * Unregister the last bdev in the list which is not claimed.  In general, vbdevs are registered
+	 * after their base bdevs - so starting at the end of the list is most optimal.  But there are cases
+	 * such as RAID expansion or multipath which could violate this assumption.  So just skip a bdev if
+	 * its still claimed - we'll eventually get back to it once the claim is eventually released.
 	 */
 	bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
+	while (bdev->internal.claim_module != NULL) {
+		bdev = TAILQ_PREV(bdev, spdk_bdev_list, internal.link);
+		if (bdev == NULL) {
+			/* This should never happen.  It means that there are still bdevs that need to
+			 * be unregistered, but all of them are still claimed.
+			 * TODO: there are still some cases such as RAID hot spares that aren't possible
+			 * in SPDK today but could cause this condition.  It will require making the
+			 * fini_start() module callback asynchronous, which would allow modules to release
+			 * any bdevs they were claiming internally but not associated with any vbdev.
+			 *
+			 * Just stop unregistered bdevs in this case, rather than forcibly unregistering
+			 * them while claimed (which acts as a hotplug event).
+			 */
+			assert(false);
+			SPDK_ERRLOG("all remaining bdevs are claimed!\n");
+			spdk_thread_send_msg(spdk_get_thread(), spdk_bdev_module_finish_iter, NULL);
+			return;
+		}
+	}
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Unregistering bdev '%s'\n", bdev->name);
 	spdk_bdev_unregister(bdev, _spdk_bdev_finish_unregister_bdevs_iter, bdev);
 }
