@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "1cb074bf_6820afc9",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1139,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-28T07:58:45Z",
+      "side": 1,
+      "message": "It would be great to have more descriptive error in console like \"[crypto bdev name]: Error claiming bdev \u0027[bdev name]\u0027: error string (error code)\".\n\nThe same is for other messages. This can help debuging configuration errors.",
+      "range": {
+        "startLine": 1139,
+        "startChar": 2,
+        "endLine": 1139,
+        "endChar": 39
+      },
+      "revId": "3c1dab46dbdc6b804ab3455a35481e9ef9ddd1d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd4d89aa_abaa162d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1362,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-09-28T07:58:45Z",
+      "side": 1,
+      "message": "Maybe for another patch but I would change this to \"duplicate\" or \"copy\"",
+      "range": {
+        "startLine": 1362,
+        "startChar": 26,
+        "endLine": 1362,
+        "endChar": 34
+      },
+      "revId": "3c1dab46dbdc6b804ab3455a35481e9ef9ddd1d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ce7b23e_06633939",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 3
