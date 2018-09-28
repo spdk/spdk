@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4e0947e_3c527145",
+        "filename": "configure",
+        "patchSetId": 47
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-09-28T18:46:25Z",
+      "side": 1,
+      "message": "Since we assume POSIX support throughout the code base, I don\u0027t think we actually need this. Let\u0027s just make TCP always enabled.",
+      "revId": "d90141056dc14b5b4fdf744d989704c8d2d23137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
