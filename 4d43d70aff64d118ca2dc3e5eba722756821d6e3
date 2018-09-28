@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cbdd70e_be1c0c9f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1343,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-09-28T20:16:44Z",
+      "side": 1,
+      "message": "I think this is OK.  But I really don\u0027t like this part of just returning if nvme_ctrlr_identify_active_ns() fails.  But that issue was there before - not related to this patch.\n\nI think we should clean it up though.  Maybe we need to allocate the spdk_nvme_ns_list() when the controller is created.  Define a max number of namespaces that we support per controller (4096?).  Then allocate that memory up front - and the whole controller never is initialized if we can\u0027t allocate it.\n\nCould you look at that after this series is done?",
+      "revId": "4d43d70aff64d118ca2dc3e5eba722756821d6e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
