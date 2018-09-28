@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "316ce8b4_649896e0",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-28T08:51:07Z",
+      "side": 1,
+      "message": "Can we use assert here ?",
+      "revId": "715550dbc7afe9312ffbc9cca855761d5d7fd89c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
