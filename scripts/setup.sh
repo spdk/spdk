@@ -163,16 +163,69 @@ function get_virtio_names_from_bdf {
 	eval "$2='$virtio_names'"
 }
 
-function configure_linux_pci {
-	driver_name=vfio-pci
+function determinate_linux_driver_type() {
+	pci_dev="$1"
 	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
 		# No IOMMU. Use uio.
 		driver_name=uio_pci_generic
+		return
 	fi
 
+	# check iommu passthrought in GRUB cmdline
+	iommupassthrough=$(grep -i "iommu.passthrough.*1" /proc/cmdline | wc -l)
+	iommupt=$(grep -i "iommu.*pt" /proc/cmdline | wc -l)
+
+	filelist=$(ls -R /sys/kernel/iommu_groups)
+	for file in $filelist
+	do
+		if [ "$file" == "$pci_dev" ]; then
+			if [[ $iommupassthrough > 0 ]] || [[ $iommupt > 0 ]] ; then
+				# IOMMU is configured but is passthrough
+				select_driver=2
+				break
+			fi
+			# IOMMU is configured
+			select_driver=1
+			break
+		fi
+	done
+
+	if [ $select_driver == 1 ] ; then
+		driver_name=vfio-pci
+	else
+		echo -e "Choose kernel driver type:"
+		echo -e "  1: vfio-pci"
+		echo -e "  2: uio_pci_generic"
+		echo -e "Please choose: \c"
+		while :
+		do
+			read drv_type
+			case $drv_type in
+			1)
+				driver_name=vfio-pci
+				break
+				;;
+			2)
+				driver_name=uio_pci_generic
+				break
+				;;
+			*)
+				echo "Please select 1 or 2"
+				echo -e "Please choose: \c"
+				;;
+			esac
+		done
+	fi
+}
+
+function configure_linux_pci {
+	driver_name=''
 	# NVMe
-	modprobe $driver_name || true
 	for bdf in $(iter_pci_class_code 01 08 02); do
+		if [ -z "$driver_name" ]; then
+			determinate_linux_driver_type "$bdf"
+			modprobe $driver_name || true
+		fi
 		blkname=''
 		get_nvme_name_from_bdf "$bdf" blkname
 		if pci_can_bind $bdf == "0" ; then
@@ -199,6 +252,10 @@ function configure_linux_pci {
 
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+			if [ -z "$driver_name" ]; then
+				determinate_linux_driver_type "$bdf"
+				modprobe $driver_name || true
+			fi
 			if pci_can_bind $bdf == "0" ; then
 				echo "Skipping un-whitelisted I/OAT device at $bdf"
 				continue
@@ -216,6 +273,10 @@ function configure_linux_pci {
 
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
+			if [ -z "$driver_name" ]; then
+				determinate_linux_driver_type "$bdf"
+				modprobe $driver_name || true
+			fi
 			if pci_can_bind $bdf == "0" ; then
 				echo "Skipping un-whitelisted Virtio device at $bdf"
 				continue
