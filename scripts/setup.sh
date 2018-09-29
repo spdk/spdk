@@ -53,6 +53,9 @@ function usage()
 	echo "                  PCI_BLACKLIST has precedence over PCI_WHITELIST."
 	echo "TARGET_USER       User that will own hugepage mountpoint directory and vfio groups."
 	echo "                  By default the current user will be used."
+	echo "DRIVER_OVERRIDE   Disable automatic vfio-pci/uio_pci_generic selection and forcefully"
+	echo "                  bind devices to the given driver."
+	echo "                  E.g. DRIVER_OVERRIDE=uio_pci_generic or DRIVER_OVERRIDE=vfio-pci"
 	exit 0
 }
 
@@ -163,14 +166,18 @@ function get_virtio_names_from_bdf {
 }
 
 function configure_linux_pci {
-	driver_name=vfio-pci
-	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
-		# No IOMMU. Use uio.
-		driver_name=uio_pci_generic
+	if [ -z "${DRIVER_OVERRIDE}" ]; then
+		driver_name=vfio-pci
+		if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
+			# No IOMMU. Use uio.
+			driver_name=uio_pci_generic
+		fi
+	else
+		driver_name="${DRIVER_OVERRIDE}"
 	fi
 
 	# NVMe
-	modprobe $driver_name || true
+	modprobe $driver_name
 	for bdf in $(iter_all_pci_class_code 01 08 02); do
 		blkname=''
 		get_nvme_name_from_bdf "$bdf" blkname
@@ -202,6 +209,7 @@ function configure_linux_pci {
 				pci_dev_echo "$bdf" "Skipping un-whitelisted I/OAT device"
 				continue
 			fi
+
 			linux_bind_driver "$bdf" "$driver_name"
 		done
 	done
