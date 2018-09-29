@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "058c304f_946bcec3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 44
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-29T08:30:39Z",
+      "side": 1,
+      "message": "Got it. So that just to check the bit 1 according to the Spec. I will change the operate of \"\u003d\u003d\" to \"\u0026\" in this case.",
+      "parentUuid": "8f84705c_d131c7fc",
+      "revId": "a83ea43a7b60fb21b90353e1d93de5435aed165c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b515ae4_3a387906",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 44
@@ -30,6 +48,24 @@
       "writtenOn": "2018-09-26T22:27:01Z",
       "side": 1,
       "message": "Sorry - I should have been more clear what I meant by function pointer.\n\nI meant that each limit type defines its own function.  It is stored with the rate_limits structure.\n\nThen the main bdev qos code does not need to have all of these checks for different rate limit types.",
+      "revId": "a83ea43a7b60fb21b90353e1d93de5435aed165c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c07a5fb9_083c171b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 44
+      },
+      "lineNbr": 1106,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-09-29T08:30:39Z",
+      "side": 1,
+      "message": "Let me change it accordingly. Thanks.",
+      "parentUuid": "8b515ae4_3a387906",
       "revId": "a83ea43a7b60fb21b90353e1d93de5435aed165c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
