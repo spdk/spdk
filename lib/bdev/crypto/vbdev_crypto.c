@@ -1040,6 +1040,17 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 	int rc, j;
 	bool found = false;
 
+	TAILQ_FOREACH(name, &g_bdev_names, link) {
+		if (strcmp(name->bdev_name, bdev_name) != 0) {
+			SPDK_NOTICELOG("duplicate bdev in config %s, ignoring!\n", bdev_name);
+			return 0;
+		}
+		if (strcmp(name->vbdev_name, vbdev_name) != 0) {
+			SPDK_NOTICELOG("duplicate vbdev in config %s, ignoring!\n", vbdev_name);
+			return 0;
+		}
+	}
+
 	name = calloc(1, sizeof(struct bdev_names));
 	if (!name) {
 		SPDK_ERRLOG("could not allocate bdev_names\n");
@@ -1394,7 +1405,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		TAILQ_INSERT_TAIL(&g_vbdev_crypto, vbdev, link);
 
 		spdk_io_device_register(vbdev, crypto_bdev_ch_create_cb, crypto_bdev_ch_destroy_cb,
-					sizeof(struct crypto_io_channel), name->bdev_name);
+					sizeof(struct crypto_io_channel), vbdev->crypto_bdev.name);
 
 		rc = spdk_bdev_open(bdev, true, vbdev_crypto_examine_hotremove_cb,
 				    bdev, &vbdev->base_desc);
