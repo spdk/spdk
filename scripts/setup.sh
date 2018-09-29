@@ -49,6 +49,9 @@ function usage()
 	echo "                  If empty or unset, all PCI devices will be bound."
 	echo "TARGET_USER       User that will own hugepage mountpoint directory and vfio groups."
 	echo "                  By default the current user will be used."
+	echo "DRIVER_OVERRIDE   Identify the drvier binding to the device in the PCI_WHITELIST."
+	echo "                  Support two kernel drivers, i.e. uio_pci_generic and vfio-pci."
+	echo "                  E.g. DRIVER_OVERRIDE=uio_pci_generic"
 	exit 0
 }
 
@@ -81,6 +84,22 @@ function pci_can_bind() {
 			 return 1
 		fi
 	done
+	return 0
+}
+
+function driver_for_pci_whitelist() {
+	driver_name_whitelist=''
+	if [[ ${#DRIVER_OVERRIDE[@]} == 0 ]]; then
+		# no identified driver, bind drvier by SPDK automatically
+		return 1
+	fi
+
+	if [[ ${#DRIVER_OVERRIDE[@]} -gt 1 ]]; then
+		echo "Please identify one kernle driver, i.e. uio_pci_generic or vfio-pci."
+		return 2
+	fi
+
+	driver_name_whitelist=${DRIVER_OVERRIDE[0]}
 	return 0
 }
 
@@ -185,7 +204,12 @@ function configure_linux_pci {
 			mountpoints="0"
 		fi
 		if [ "$mountpoints" = "0" ]; then
-			linux_bind_driver "$bdf" "$driver_name"
+			if driver_for_pci_whitelist == "0" ; then
+				modprobe $driver_name_whitelist
+				linux_bind_driver "$bdf" "$driver_name_whitelist"
+			else
+				linux_bind_driver "$bdf" "$driver_name"
+			fi
 		else
 			echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
 		fi
@@ -203,7 +227,12 @@ function configure_linux_pci {
 				echo "Skipping un-whitelisted I/OAT device at $bdf"
 				continue
 			fi
-			linux_bind_driver "$bdf" "$driver_name"
+			if driver_for_pci_whitelist == "0" ; then
+				modprobe $driver_name_whitelist
+				linux_bind_driver "$bdf" "$driver_name_whitelist"
+			else
+				linux_bind_driver "$bdf" "$driver_name"
+			fi
 		done
 	done
 	rm $TMP
@@ -229,7 +258,12 @@ function configure_linux_pci {
 				fi
 			done
 
-			linux_bind_driver "$bdf" "$driver_name"
+			if driver_for_pci_whitelist == "0" ; then
+				modprobe $driver_name_whitelist
+				linux_bind_driver "$bdf" "$driver_name_whitelist"
+			else
+				linux_bind_driver "$bdf" "$driver_name"
+			fi
 		done
 	done
 	rm $TMP
@@ -551,6 +585,7 @@ fi
 
 : ${HUGEMEM:=2048}
 : ${PCI_WHITELIST:=""}
+: ${DRIVER_OVERRIDE:=""}
 
 if [ -n "$NVME_WHITELIST" ]; then
 	PCI_WHITELIST="$PCI_WHITELIST $NVME_WHITELIST"
@@ -561,6 +596,7 @@ if [ -n "$SKIP_PCI" ]; then
 fi
 
 declare -a PCI_WHITELIST=(${PCI_WHITELIST})
+declare -a DRIVER_OVERRIDE=(${DRIVER_OVERRIDE})
 
 if [ -z "$TARGET_USER" ]; then
 	TARGET_USER="$SUDO_USER"
