@@ -16,6 +16,24 @@
       "revId": "4d43d70aff64d118ca2dc3e5eba722756821d6e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa6c8330_1e7797a8",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1343,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-09-29T00:55:13Z",
+      "side": 1,
+      "message": "Sure, I will refactor this part after the series is done.",
+      "parentUuid": "0cbdd70e_be1c0c9f",
+      "revId": "4d43d70aff64d118ca2dc3e5eba722756821d6e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
