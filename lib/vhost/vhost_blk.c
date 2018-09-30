@@ -71,6 +71,7 @@ struct spdk_vhost_blk_dev {
 	struct spdk_bdev_desc *bdev_desc;
 	struct spdk_io_channel *bdev_io_channel;
 	struct spdk_poller *requestq_poller;
+	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
 	bool readonly;
 };
 
@@ -588,17 +589,10 @@ out:
 	return rc;
 }
 
-struct spdk_vhost_dev_destroy_ctx {
-	struct spdk_vhost_blk_dev *bvdev;
-	struct spdk_poller *poller;
-	void *event_ctx;
-};
-
 static int
 destroy_device_poller_cb(void *arg)
 {
-	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
-	struct spdk_vhost_blk_dev *bvdev = ctx->bvdev;
+	struct spdk_vhost_blk_dev *bvdev = arg;
 	int i;
 
 	if (bvdev->vdev.task_cnt > 0) {
@@ -618,10 +612,8 @@ destroy_device_poller_cb(void *arg)
 	}
 
 	free_task_pool(bvdev);
-
-	spdk_poller_unregister(&ctx->poller);
-	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
-	spdk_dma_free(ctx);
+	spdk_poller_unregister(&bvdev->destroy_ctx.poller);
+	spdk_vhost_dev_backend_event_done(bvdev->destroy_ctx.event_ctx, 0);
 
 	return -1;
 }
@@ -630,7 +622,6 @@ static int
 spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
 
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
@@ -638,18 +629,10 @@ spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 		goto err;
 	}
 
-	destroy_ctx = spdk_dma_zmalloc(sizeof(*destroy_ctx), SPDK_CACHE_LINE_SIZE, NULL);
-	if (destroy_ctx == NULL) {
-		SPDK_ERRLOG("Failed to alloc memory for destroying device.\n");
-		goto err;
-	}
-
-	destroy_ctx->bvdev = bvdev;
-	destroy_ctx->event_ctx = event_ctx;
-
+	bvdev->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&bvdev->requestq_poller);
-	destroy_ctx->poller = spdk_poller_register(destroy_device_poller_cb,
-			      destroy_ctx, 1000);
+	bvdev->destroy_ctx.poller = spdk_poller_register(destroy_device_poller_cb,
+				    bvdev, 1000);
 	return 0;
 
 err:
