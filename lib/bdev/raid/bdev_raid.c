@@ -1498,8 +1498,14 @@ raid_bdev_remove_base_bdev(void *ctx)
 	assert(raid_bdev->base_bdev_info[i].desc);
 	raid_bdev->base_bdev_info[i].remove_scheduled = true;
 
-	if (raid_bdev->destruct_called == true && raid_bdev->base_bdev_info[i].bdev != NULL) {
-		/* As raid bdev is already unregistered, so cleanup should be done here itself */
+	if ((raid_bdev->destruct_called == true ||
+	     raid_bdev->state == RAID_BDEV_STATE_CONFIGURING ||
+	     raid_bdev->state == RAID_BDEV_STATE_OFFLINE) &&
+	    raid_bdev->base_bdev_info[i].bdev != NULL) {
+		/*
+		 * As raid bdev is not registered yet or already unregistered, so cleanup
+		 * should be done here itself
+		 */
 		raid_bdev_free_base_bdev_resource(raid_bdev, i);
 		if (raid_bdev->num_base_bdevs_discovered == 0) {
 			/* Since there is no base bdev for this raid, so free the raid device */
