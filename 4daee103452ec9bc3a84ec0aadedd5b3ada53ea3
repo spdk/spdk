@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a099543_0d4346b7",
+        "filename": "test/spdkcli/iscsi.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-30T22:48:51Z",
+      "side": 1,
+      "message": "/iscsi",
+      "range": {
+        "startLine": 6,
+        "startChar": 16,
+        "endLine": 6,
+        "endChar": 30
+      },
+      "revId": "4daee103452ec9bc3a84ec0aadedd5b3ada53ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8523dfb_34e25b7c",
+        "filename": "test/spdkcli/iscsi.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-09-30T22:48:51Z",
+      "side": 1,
+      "message": "spdkcli_iscsi",
+      "range": {
+        "startLine": 11,
+        "startChar": 13,
+        "endLine": 11,
+        "endChar": 25
+      },
+      "revId": "4daee103452ec9bc3a84ec0aadedd5b3ada53ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
