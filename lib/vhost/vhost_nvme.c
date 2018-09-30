@@ -139,6 +139,7 @@ struct spdk_vhost_nvme_dev {
 	TAILQ_ENTRY(spdk_vhost_nvme_dev) tailq;
 	STAILQ_HEAD(, spdk_vhost_nvme_task) free_tasks;
 	struct spdk_poller *requestq_poller;
+	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
 };
 
 static const struct spdk_vhost_dev_backend spdk_vhost_nvme_device_backend;
@@ -1025,17 +1026,10 @@ bdev_remove_cb(void *remove_ctx)
 	spdk_vhost_nvme_deactive_ns(ns);
 }
 
-struct spdk_vhost_dev_destroy_ctx {
-	struct spdk_vhost_nvme_dev *bvdev;
-	struct spdk_poller *poller;
-	void *event_ctx;
-};
-
 static int
 destroy_device_poller_cb(void *arg)
 {
-	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
-	struct spdk_vhost_nvme_dev *nvme = ctx->bvdev;
+	struct spdk_vhost_nvme_dev *nvme = arg;
 	struct spdk_vhost_nvme_dev *dev, *tmp;
 	struct spdk_vhost_nvme_ns *ns_dev;
 	uint32_t i;
@@ -1058,9 +1052,8 @@ destroy_device_poller_cb(void *arg)
 		}
 	}
 
-	spdk_poller_unregister(&ctx->poller);
-	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
-	free(ctx);
+	spdk_poller_unregister(&nvme->destroy_ctx.poller);
+	spdk_vhost_dev_backend_event_done(nvme->destroy_ctx.event_ctx, 0);
 
 	return -1;
 }
@@ -1071,7 +1064,6 @@ static int
 spdk_vhost_nvme_stop_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
-	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
 
 	if (nvme == NULL) {
 		return -1;
@@ -1080,23 +1072,11 @@ spdk_vhost_nvme_stop_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 	free_task_pool(nvme);
 	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vdev->vid, vdev->path);
 
-	destroy_ctx = malloc(sizeof(*destroy_ctx));
-	if (destroy_ctx == NULL) {
-		SPDK_ERRLOG("Failed to alloc memory for destroying device.\n");
-		goto err;
-	}
-
-	destroy_ctx->bvdev = nvme;
-	destroy_ctx->event_ctx = event_ctx;
-
+	nvme->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&nvme->requestq_poller);
-	destroy_ctx->poller = spdk_poller_register(destroy_device_poller_cb, destroy_ctx, 1000);
+	nvme->destroy_ctx.poller = spdk_poller_register(destroy_device_poller_cb, nvme, 1000);
 
 	return 0;
-
-err:
-	spdk_vhost_dev_backend_event_done(event_ctx, -1);
-	return -1;
 }
 
 static void

@@ -176,6 +176,11 @@ struct spdk_vhost_dev {
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
 
+struct spdk_vhost_dev_destroy_ctx {
+	struct spdk_poller *poller;
+	void *event_ctx;
+};
+
 struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len);
