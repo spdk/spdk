@@ -1587,9 +1587,9 @@ raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg)
 
 		_rc = raid_bdev_add_base_device(raid_cfg, base_bdev, i);
 		if (_rc != 0) {
-			SPDK_ERRLOG("Failed to add base bdev %s to RAID bdev %s: %s",
+			SPDK_ERRLOG("Failed to add base bdev %s to RAID bdev %s: %s\n",
 				    raid_cfg->base_bdev[i].name, raid_cfg->name,
-				    spdk_strerror(-rc));
+				    spdk_strerror(-_rc));
 			if (rc == 0) {
 				rc = _rc;
 			}
