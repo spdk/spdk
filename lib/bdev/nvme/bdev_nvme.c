@@ -982,7 +982,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	nvme_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
-					  g_opts.nvme_adminq_poll_period_us);
+					  0);
 
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
