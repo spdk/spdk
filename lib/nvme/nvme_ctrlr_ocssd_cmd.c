@@ -50,6 +50,11 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 				return true;
 			}
 		}
+		if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL) {
+			//TODO: add additional check for intel oc device
+			return true;
+
+		}
 	}
 	return false;
 }
