@@ -1,0 +1,293 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93bcd4ca_09956a12",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "I am not sure if it is ok to expose ocssd io types for non open-channel nvme devices?",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1ce131a_9e680039",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "When looking at comment\u0027s format in file, I think \"Vector Write\" should be lower case.",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73d9c4f5_4a583514",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 975,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "There is already spdk_bdev_writev and spdk_bdev_readv in bdev interface. \nI think that it might be confusing.\nMaybe better use some prefix for ocssd related functions?\ne.g.\nspdk_bdev_ocssd_writev?",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83608790_4e79746e",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 976,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "buffer-\u003ebuf",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6803e8a4_20401689",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "to read into",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aebe0a30_712dade1",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "as above",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a580fede_dcc57483",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "Please see comment from line 975",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63534507_0a81e1f8",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1019,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "An array of chunk info.",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd9cf3cb_7f5890e7",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1032,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "maybe better name would be spdk_bdev_ocssd_resetv?",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f353c4c0_d9a8ecaf",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "Would be more convenient to use if spdk_ocssd_chunk_information_entry* used instead of void*",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aae8ff1d_8d4ed0bf",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1060,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "maybe better name would be spdk_bdev_ocssd_copyv?",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15619e2f_5002646a",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "Maybe buf would be better name?",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bdc5ae3_f9941685",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "Maybe mb_buf would be better name?",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1d7b82e_96244aa9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2664,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "align comment",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dada7469_24b13590",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2734,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "align comment",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe8bb902_44166d62",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2078,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "maybe move to line 693 (near nvmelib_fn_table)",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29a0b627_c240372c",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2081,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-10-01T13:39:54Z",
+      "side": 1,
+      "message": "align",
+      "revId": "634ee005ad1117097315765da9a4c6de50935d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
