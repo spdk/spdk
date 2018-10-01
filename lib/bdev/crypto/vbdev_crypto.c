@@ -1403,7 +1403,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		TAILQ_INSERT_TAIL(&g_vbdev_crypto, vbdev, link);
 
 		spdk_io_device_register(vbdev, crypto_bdev_ch_create_cb, crypto_bdev_ch_destroy_cb,
-					sizeof(struct crypto_io_channel), name->bdev_name);
+					sizeof(struct crypto_io_channel), vbdev->crypto_bdev.name);
 
 		rc = spdk_bdev_open(bdev, true, vbdev_crypto_examine_hotremove_cb,
 				    bdev, &vbdev->base_desc);
