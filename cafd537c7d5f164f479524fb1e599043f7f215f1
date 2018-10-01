@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3d3810f_b0491246",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-01T16:42:53Z",
+      "side": 0,
+      "message": "I think your entire patch could be boiled down to just adding these 4 lines right here to the original code:\n\ngrep -i -E \u0027 iommu\u003dpt | iommu\\.passthrough\u003d1 \u0027 /proc/cmdline\nif [ $? -eq 0 ]; then\n    driver_name\u003duio_pci_generic\nfi",
+      "revId": "cafd537c7d5f164f479524fb1e599043f7f215f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
