@@ -395,6 +395,67 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
+static bool
+spdk_is_iov_aligned(struct iovec *iov, int iovcnt, uint32_t alignment)
+{
+	int i;
+	uintptr_t iov_base;
+
+	for (i = 0; i < iovcnt; i++) {
+		iov_base = (uintptr_t)iov[i].iov_base;
+		if ((iov_base & (alignment - 1)) != 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static void _prepare_aligned_buf(struct iovec *iov, int iovcnt, void *buf)
+{
+	/**
+	if (buf == NULL) {
+		*len = -1;
+		return NULL;
+	}
+
+	pos = buf;
+	for (i = 0; i < task->iovcnt; i++) {
+		memcpy(pos, iovs[i].iov_base, iovs[i].iov_len);
+		pos += iovs[i].iov_len;
+	} */
+}
+
+static void _copy_from_aligned_buf(struct iovec *iov, int iovcnt, void *buf)
+{
+	/*
+	if (buf == NULL) {
+		*len = -1;
+		return NULL;
+	}
+
+	for (i = 0; i < task->iovcnt; i++) {
+		len = spdk_min(iovs[i].iov_len, buf_left);
+		buf_left -= len;
+		memcpy(iovs[i].iov_base, pos, len);
+		pos += len;
+	} */
+}
+
+void
+spdk_bdev_io_aligned_buf(struct spdk_bdev_io *bdev_io, uint64_t alignment)
+{
+	if (!spdk_is_iov_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment)) {
+		// TODO: Mark this bdev_io as double buffered
+		// TODO: figure out actual length of the request
+		bdev_io->internal.double_buffered = true;
+		bdev_io->internal.buf = spdk_dma_malloc(bdev_io->internal.buf_len, 0, NULL);
+
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+			_prepare_aligned_buf(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, bdev_io->internal.buf);
+		}
+	}
+}
+
 void
 spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
 {
@@ -2941,6 +3002,11 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			return;
 		}
 	} else {
+		if (bdev_io->internal.double_buffered == true) {
+			_copy_from_aligned_buf(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, bdev_io->internal.buf);
+			spdk_dma_free(bdev_io->internal.buf);
+		}
+
 		assert(bdev_ch->io_outstanding > 0);
 		assert(shared_resource->io_outstanding > 0);
 		bdev_ch->io_outstanding--;

@@ -483,6 +483,9 @@ struct spdk_bdev_io {
 		/** requested size of the buffer associated with this I/O */
 		uint64_t buf_len;
 
+		/** determines if the request is double buffered */
+		uint8_t double_buffered;
+
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
 
@@ -670,6 +673,16 @@ void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb 
  *
  */
 void spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len);
+
+/**
+ * Request aligned buffer for specified bdev_io.
+ * If user provided buffer is not aligned, new buffer is allocated.
+ *
+ * \param bdev_io I/O to set the buffer on.
+ * \param alignment
+ *
+ */
+void spdk_bdev_io_aligned_buf(struct spdk_bdev_io *bdev_io, uint64_t alignment);
 
 /**
  * Complete a bdev_io

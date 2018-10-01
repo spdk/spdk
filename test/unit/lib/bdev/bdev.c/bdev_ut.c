@@ -178,6 +178,17 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 	free(expected_io);
 }
 
+
+static void
+stub_submit_request_check_alignment(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
+{
+
+	//spdk_bdev_io_aligned_buf(bdev_io, 4096);
+	//CU_ASSERT(_is_iov_aligned(bdev_io->internal.buf));
+	stub_submit_request(_ch, bdev_io);
+}
+
+
 static uint32_t
 stub_complete_io(uint32_t num_to_complete)
 {
@@ -1054,6 +1065,99 @@ bdev_io_split(void)
 	spdk_bdev_finish(bdev_fini_cb, NULL);
 }
 
+static void
+bdev_io_alignment(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 20,
+		.bdev_io_cache_size = 2,
+	};
+	int rc;
+	void *buf;
+	struct iovec iov;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	fn_table.submit_request = stub_submit_request_check_alignment;
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	/* Create aligned buffer */
+
+	rc = posix_memalign(&buf, 4096, 8192);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Pass aligned single buffer */
+	rc = spdk_bdev_read_blocks(desc, io_ch, buf, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	stub_complete_io(1);
+
+	/* Pass unaligned single buffer */
+	rc = spdk_bdev_read_blocks(desc, io_ch, buf + 5, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	stub_complete_io(1);
+
+	/* Pass aligned single buffer */
+	rc = spdk_bdev_write_blocks(desc, io_ch, buf, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	stub_complete_io(1);
+
+	/* Pass unaligned single buffer */
+	rc = spdk_bdev_write_blocks(desc, io_ch, buf + 5, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	stub_complete_io(1);
+
+	iov.iov_base = buf;
+	iov.iov_len = 512;
+
+	/* Pass aligned iov */
+	rc = spdk_bdev_readv(desc, io_ch, &iov, 1, 0, 512, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	stub_complete_io(1);
+
+	/* Pass aligned iov */
+	rc = spdk_bdev_writev(desc, io_ch, &iov, 1, 0, 512, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	stub_complete_io(1);
+
+	iov.iov_base = buf + 5;
+
+	/* Pass unaligned iov */
+	rc = spdk_bdev_readv(desc, io_ch, &iov, 1, 0, 512, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	stub_complete_io(1);
+
+	/* Pass unaligned iov */
+	rc = spdk_bdev_writev(desc, io_ch, &iov, 1, 0, 512, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	stub_complete_io(1);
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+
+	free(buf);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1079,7 +1183,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "get_device_stat", get_device_stat_test) == NULL ||
 		CU_add_test(suite, "bdev_io_wait", bdev_io_wait_test) == NULL ||
 		CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test) == NULL ||
-		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL
+		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
+		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
