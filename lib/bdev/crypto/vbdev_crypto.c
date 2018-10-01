@@ -1129,7 +1129,7 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 	bdev = spdk_bdev_get_by_name(bdev_name);
 
 	rc = vbdev_crypto_insert_name(bdev_name, vbdev_name, crypto_pmd, key);
-	if (rc != 0) {
+	if (rc) {
 		return rc;
 	}
 
@@ -1139,13 +1139,11 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 
 	rc = vbdev_crypto_claim(bdev);
 	if (rc) {
-		SPDK_ERRLOG("Error claiming bdev\n");
 		return rc;
 	}
 
 	rc = vbdev_crypto_init_crypto_drivers();
 	if (rc) {
-		SPDK_ERRLOG("Error setting up crypto devices\n");
 		return rc;
 	}
 
@@ -1484,12 +1482,7 @@ vbdev_crypto_examine(struct spdk_bdev *bdev)
 	struct vbdev_crypto *crypto_bdev, *tmp;
 	int rc;
 
-	rc = vbdev_crypto_claim(bdev);
-	if (rc) {
-		SPDK_ERRLOG("could not claim bdev\n");
-		spdk_bdev_module_examine_done(&crypto_if);
-		return;
-	}
+	vbdev_crypto_claim(bdev);
 
 	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
 		if (strcmp(crypto_bdev->base_bdev->name, bdev->name) == 0) {
