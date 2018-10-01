@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3dc0f506_7632a0df",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-01T20:13:18Z",
+      "side": 1,
+      "message": "This loop actually takes a decent amount of time to run - 15 seconds or so. If anyone has any ideas on how to make it faster I\u0027d appreciate it. I think calling file on line 23 on each entry is where the slowdown is.",
+      "revId": "a4ff16d7068a13f84c32f8bf276366d65e1de196",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
