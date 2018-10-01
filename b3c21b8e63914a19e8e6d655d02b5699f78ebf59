@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53236b03_44f9ffa3",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-01T02:20:24Z",
+      "side": 1,
+      "message": "This function is OK if removed in the patch series. But do we have to check spdk_nvme_cpl_is_error(\u0026status.cpl) in this function?\n\nnvme_ctrlr_identify_id_desc() and nvme_ctrlr_identify_ns_async_done() check spdk_nvme_cpl_is_error(\u0026status.cpl).",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 22
+      },
+      "revId": "b3c21b8e63914a19e8e6d655d02b5699f78ebf59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cc4471b_2a1c1d05",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-01T02:20:24Z",
+      "side": 1,
+      "message": "What is done is almost identical between nvme_ctrlr_identify_ns() and nvme_ctrlr_identify_id_desc(). However the code flow is not similar.\n\nIs it possible to make nvme_ctrlr_identify_ns() look like nvme_ctrlr_identify_id_desc() or opposite?\nSeparate patch is of course OK.",
+      "range": {
+        "startLine": 128,
+        "startChar": 0,
+        "endLine": 128,
+        "endChar": 27
+      },
+      "revId": "b3c21b8e63914a19e8e6d655d02b5699f78ebf59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
