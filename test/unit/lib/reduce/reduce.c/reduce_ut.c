@@ -44,6 +44,7 @@ static int g_ziperrno;
 static char *g_volatile_pm_buf;
 static char *g_persistent_pm_buf;
 static bool g_backing_dev_closed;
+static char *g_backing_dev_buf;
 
 static void
 sync_pm_buf(const void *addr, size_t length)
@@ -242,17 +243,77 @@ init_failure(void)
 }
 
 static void
+backing_dev_readv(struct spdk_reduce_backing_dev *backing_dev, struct iovec *iov, int iovcnt,
+		  uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+{
+	char *offset;
+	int i;
+
+	offset = g_backing_dev_buf + lba * backing_dev->blocklen;
+	for (i = 0; i < iovcnt; i++) {
+		memcpy(iov[i].iov_base, offset, iov[i].iov_len);
+		offset += iov[i].iov_len;
+	}
+	args->cb_fn(args->cb_arg, 0);
+}
+
+static void
+backing_dev_writev(struct spdk_reduce_backing_dev *backing_dev, struct iovec *iov, int iovcnt,
+		   uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+{
+	char *offset;
+	int i;
+
+	offset = g_backing_dev_buf + lba * backing_dev->blocklen;
+	for (i = 0; i < iovcnt; i++) {
+		memcpy(offset, iov[i].iov_base, iov[i].iov_len);
+		offset += iov[i].iov_len;
+	}
+	args->cb_fn(args->cb_arg, 0);
+}
+
+static void
+backing_dev_unmap(struct spdk_reduce_backing_dev *backing_dev,
+		  uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+{
+	char *offset;
+
+	offset = g_backing_dev_buf + lba * backing_dev->blocklen;
+	memset(offset, 0, lba_count * backing_dev->blocklen);
+	args->cb_fn(args->cb_arg, 0);
+}
+
+static void
 backing_dev_close(struct spdk_reduce_backing_dev *backing_dev)
 {
 	g_backing_dev_closed = true;
 }
 
 static void
+backing_dev_destroy(struct spdk_reduce_backing_dev *backing_dev)
+{
+	/* We don't free this during backing_dev_close so that we can test init/unload/load
+	 *  scenarios.
+	 */
+	free(g_backing_dev_buf);
+	g_backing_dev_buf = NULL;
+}
+
+static void
 backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce_vol_params *params)
 {
+	int64_t size;
+
+	size = spdk_reduce_get_backing_device_size(params);
 	backing_dev->blocklen = params->backing_io_unit_size;
-	backing_dev->blockcnt = spdk_reduce_get_backing_device_size(params) / backing_dev->blocklen;
+	backing_dev->blockcnt = size / backing_dev->blocklen;
+	backing_dev->readv = backing_dev_readv;
+	backing_dev->writev = backing_dev_writev;
+	backing_dev->unmap = backing_dev_unmap;
 	backing_dev->close = backing_dev_close;
+
+	g_backing_dev_buf = calloc(1, size);
+	SPDK_CU_ASSERT_FATAL(g_backing_dev_buf != NULL);
 }
 
 static void
@@ -289,6 +350,7 @@ init_md(void)
 	CU_ASSERT(g_volatile_pm_buf == NULL);
 
 	pm_file_destroy();
+	backing_dev_destroy(&backing_dev);
 }
 
 int
