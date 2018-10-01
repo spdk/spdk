@@ -25,6 +25,47 @@
     },
     {
       "key": {
+        "uuid": "01bef228_807edad4",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-01T01:30:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c29750b8_e4deefe9",
+      "range": {
+        "startLine": 399,
+        "startChar": 16,
+        "endLine": 399,
+        "endChar": 27
+      },
+      "revId": "f3d04d11cc701439db8ea2a0a4b105f7ea354c4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e96f6271_3c54d308",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1212,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-01T01:30:07Z",
+      "side": 1,
+      "message": "I applied your guidance here too.",
+      "revId": "f3d04d11cc701439db8ea2a0a4b105f7ea354c4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14af91dd_aad20b22",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 24
@@ -36,6 +77,30 @@
       "writtenOn": "2018-09-28T13:53:05Z",
       "side": 1,
       "message": "what happens if there were child I/O submitted already? Won\u0027t we finish the parent_io prematurely here?\n\nI can see that the last child I/O will call `parent_io-\u003einternal.cb` if `parent_io-\u003einternal.status !\u003d SPDK_BDEV_IO_STATUS_SUCCESS`, so shouldn\u0027t we wrap this bdev_io-\u003einternal.cb call with a `if (split_outstanding \u003d\u003d 0)`?\n\nBasically:\n * if there were child I/O submitted, then just set bdev_io-\u003einternal.status to FAILED here.\n   _spdk_bdev_io_split_done will wait for all child I/O to complete and will call parent_io-\u003einternal.cb afterwards\n * if there were no child I/O submitted yet, then also call bdev_io-\u003einternal.cb directly from here.",
+      "range": {
+        "startLine": 1247,
+        "startChar": 4,
+        "endLine": 1247,
+        "endChar": 71
+      },
+      "revId": "f3d04d11cc701439db8ea2a0a4b105f7ea354c4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3f4e8bc_4fd6f468",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1247,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-01T01:30:07Z",
+      "side": 1,
+      "message": "Hi Darek,\n\nThank you, all make sense to me! I updated the patch based on your great guidance.",
+      "parentUuid": "14af91dd_aad20b22",
       "range": {
         "startLine": 1247,
         "startChar": 4,
