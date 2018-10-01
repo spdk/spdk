@@ -38,7 +38,7 @@ $spdkcli_job "/iscsi ls" "Malloc" True
 timing_exit spdkcli_create_iscsi_config
 
 timing_enter spdkcli_check_match
-#check_match
+check_match
 timing_exit spdkcli_check_match
 
 timing_enter spdkcli_clear_iscsi_config
