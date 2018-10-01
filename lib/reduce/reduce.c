@@ -373,6 +373,127 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 				 &init_ctx->backing_cb_args);
 }
 
+static void
+_load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
+{
+	struct reduce_init_load_ctx *load_ctx = cb_arg;
+	struct spdk_reduce_vol *vol = load_ctx->vol;
+	struct spdk_reduce_vol_params *params = &vol->backing_super->params;
+	int64_t size, size_needed;
+	size_t mapped_len;
+	int rc;
+
+	if (memcmp(vol->backing_super->signature,
+		   SPDK_REDUCE_SIGNATURE,
+		   sizeof(vol->backing_super->signature)) != 0) {
+		/* This backing device isn't a libreduce backing device. */
+		rc = -EILSEQ;
+		goto error;
+	}
+
+	size_needed = spdk_reduce_get_backing_device_size(params);
+	size = vol->backing_dev->blockcnt * vol->backing_dev->blocklen;
+	if (size_needed > size) {
+		SPDK_ERRLOG("backing device size %" PRIi64 " but %" PRIi64 " expected\n",
+			    size, size_needed);
+		rc = -EILSEQ;
+		goto error;
+	}
+
+	memcpy(vol->pm_file.path, load_ctx->path, sizeof(vol->pm_file.path));
+	vol->pm_file.size = spdk_reduce_get_pm_file_size(params);
+	vol->pm_file.pm_buf = pmem_map_file(vol->pm_file.path, vol->pm_file.size,
+					    0, 0, &mapped_len, &vol->pm_file.pm_is_pmem);
+	if (vol->pm_file.pm_buf == NULL) {
+		SPDK_ERRLOG("could not pmem_map_file(%s): %s\n", vol->pm_file.path, strerror(errno));
+		rc = -errno;
+		goto error;
+	}
+
+	if (vol->pm_file.size != mapped_len) {
+		SPDK_ERRLOG("could not map entire pmem file (size=%" PRIu64 " mapped=%" PRIu64 ")\n",
+			    vol->pm_file.size, mapped_len);
+		rc = -ENOMEM;
+		goto error;
+	}
+
+	memcpy(&vol->uuid, &params->uuid, sizeof(params->uuid));
+
+	load_ctx->cb_fn(load_ctx->cb_arg, vol, 0);
+	spdk_dma_free(load_ctx->path);
+	free(load_ctx);
+	return;
+
+error:
+	load_ctx->cb_fn(load_ctx->cb_arg, NULL, rc);
+	spdk_dma_free(load_ctx->path);
+	free(load_ctx);
+	spdk_dma_free(vol->backing_super);
+	free(vol);
+}
+
+void
+spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
+		     spdk_reduce_vol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_reduce_vol *vol;
+	struct reduce_init_load_ctx *load_ctx;
+
+	if (backing_dev->close == NULL || backing_dev->readv == NULL ||
+	    backing_dev->writev == NULL || backing_dev->unmap == NULL) {
+		SPDK_ERRLOG("backing_dev function pointer not specified\n");
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
+	vol = calloc(1, sizeof(*vol));
+	if (vol == NULL) {
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	vol->backing_super = spdk_dma_zmalloc(sizeof(*vol->backing_super), 64, NULL);
+	if (vol->backing_super == NULL) {
+		free(vol);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	vol->backing_dev = backing_dev;
+
+	load_ctx = calloc(1, sizeof(*load_ctx));
+	if (load_ctx == NULL) {
+		spdk_dma_free(vol->backing_super);
+		free(vol);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	load_ctx->path = spdk_dma_zmalloc(REDUCE_PATH_MAX, 64, NULL);
+	if (load_ctx->path == NULL) {
+		free(load_ctx);
+		spdk_dma_free(vol->backing_super);
+		free(vol);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	load_ctx->vol = vol;
+	load_ctx->cb_fn = cb_fn;
+	load_ctx->cb_arg = cb_arg;
+
+	load_ctx->iov[0].iov_base = vol->backing_super;
+	load_ctx->iov[0].iov_len = sizeof(*vol->backing_super);
+	load_ctx->iov[1].iov_base = load_ctx->path;
+	load_ctx->iov[1].iov_len = REDUCE_PATH_MAX;
+	load_ctx->backing_cb_args.cb_fn = _load_read_super_and_path_cpl;
+	load_ctx->backing_cb_args.cb_arg = load_ctx;
+	vol->backing_dev->readv(vol->backing_dev, load_ctx->iov, 2, 0,
+				(sizeof(*vol->backing_super) + REDUCE_PATH_MAX) /
+				vol->backing_dev->blocklen,
+				&load_ctx->backing_cb_args);
+}
+
 void
 spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
