@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88afba54_56ef0e86",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 31
+      },
+      "lineNbr": 4341,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-01T13:54:10Z",
+      "side": 1,
+      "message": "I can\u0027t figure out what is sent here so the user will also have a problem.\nCan you briefly describe what is the command and what data you are sending here?\n\nIt would be awesome if you could provide simple Python script and `struct.pack` to produce these data.",
+      "range": {
+        "startLine": 4341,
+        "startChar": 15,
+        "endLine": 4341,
+        "endChar": 103
+      },
+      "revId": "f4bd24142541cd88f2976049a0048d41cc47c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11d19cf5_307fd67c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 31
+      },
+      "lineNbr": 4354,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-01T13:54:10Z",
+      "side": 1,
+      "message": "Also this deserves for explanation.",
+      "range": {
+        "startLine": 4353,
+        "startChar": 2,
+        "endLine": 4354,
+        "endChar": 94
+      },
+      "revId": "f4bd24142541cd88f2976049a0048d41cc47c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96e15497_ea4ac930",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-01T13:54:10Z",
+      "side": 1,
+      "message": "I have seriouse doubts how you can assert that data buffer is long enought for current req-\u003ecmd. I mean, if in cmd you have READ cmd of N blocks but data_len is less than N * blk_len you have buffer overflow. Since data buffer is allocated from huge pages it is very likely you don\u0027t even notice this and will have random segfaluts somwhere later in the code. The same is valid for WRITES but this time you can write random data (or crash).\n\nYou need to validate buffer length somehow.",
+      "range": {
+        "startLine": 185,
+        "startChar": 8,
+        "endLine": 185,
+        "endChar": 33
+      },
+      "revId": "f4bd24142541cd88f2976049a0048d41cc47c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e212c01_ab29e2e5",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-01T13:54:10Z",
+      "side": 1,
+      "message": "Sorry but this part keep haunting me down.\n\nCan you pls modify spdk_base64_urlsafe_decode() and encode functions to obey max length parameter (you can do this in separate patch). I mean that for spdk_base64_decode(), if dst_len is less than required length the string is still decoded but is not written to `*dst`. At the end actual length of decoded data is returned.\n\nWhy I pointing this out here? If spdk_base64_decode obey max length, you don\u0027t have to allocate cmdbuf at all. The same will be true for other users who know exactly how long the buffer should be. Also, it will be easier to throw an error if it is not equal to expected length.",
+      "range": {
+        "startLine": 239,
+        "startChar": 0,
+        "endLine": 248,
+        "endChar": 57
+      },
+      "revId": "f4bd24142541cd88f2976049a0048d41cc47c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74d5a649_970cb7c7",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-01T13:54:10Z",
+      "side": 1,
+      "message": "When you will send next version, pls move these function in place of forward declarations. There is no need to have them here.",
+      "range": {
+        "startLine": 454,
+        "startChar": 0,
+        "endLine": 455,
+        "endChar": 65
+      },
+      "revId": "f4bd24142541cd88f2976049a0048d41cc47c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "873274d1_48863903",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-01T13:54:10Z",
+      "side": 1,
+      "message": "nbytes is uint32_t already.",
+      "range": {
+        "startLine": 475,
+        "startChar": 9,
+        "endLine": 475,
+        "endChar": 19
+      },
+      "revId": "f4bd24142541cd88f2976049a0048d41cc47c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc8678e3_9ea33376",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-01T13:54:10Z",
+      "side": 1,
+      "message": "nbytes is uint32_t already.",
+      "range": {
+        "startLine": 499,
+        "startChar": 3,
+        "endLine": 499,
+        "endChar": 13
+      },
+      "revId": "f4bd24142541cd88f2976049a0048d41cc47c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
