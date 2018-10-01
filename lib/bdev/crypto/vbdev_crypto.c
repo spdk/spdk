@@ -1487,8 +1487,6 @@ vbdev_crypto_examine(struct spdk_bdev *bdev)
 	rc = vbdev_crypto_claim(bdev);
 	if (rc) {
 		SPDK_ERRLOG("could not claim bdev\n");
-		spdk_bdev_module_examine_done(&crypto_if);
-		return;
 	}
 
 	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
