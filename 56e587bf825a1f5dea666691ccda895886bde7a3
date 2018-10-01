@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11511201_66172e8b",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1506,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-01T08:48:53Z",
+      "side": 1,
+      "message": "As raid bdev is not registered yet or already unregistered, so ...\n\nAdding \"yet\" may make the logic a little easier to understand.\n\nBesides, if you don\u0027t mind, we may usually see the following style.\n\nif ((raid_bdev-\u003edestruct_called \u003d\u003d true ||\n     raid_bdev-\u003estate \u003d\u003d RAID_BDEV_STATE_CONFIGURING ||\n     raid_bdev-\u003estate \u003d\u003d RAID_BDEV_STATE_OFFLINE) \u0026\u0026\n    raid_bdev-\u003ebase_bdev_info[i].bdev !\u003d NULL) {",
+      "range": {
+        "startLine": 1506,
+        "startChar": 5,
+        "endLine": 1506,
+        "endChar": 59
+      },
+      "revId": "56e587bf825a1f5dea666691ccda895886bde7a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
