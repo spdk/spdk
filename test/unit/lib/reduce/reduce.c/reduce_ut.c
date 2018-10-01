@@ -353,6 +353,43 @@ init_md(void)
 	backing_dev_destroy(&backing_dev);
 }
 
+static void
+init_backing_dev(void)
+{
+	struct spdk_reduce_vol_params params = {};
+	struct spdk_reduce_vol_params *persistent_params;
+	struct spdk_reduce_backing_dev backing_dev = {};
+	struct spdk_reduce_pm_file pm_file = {};
+
+	params.vol_size = 1024 * 1024; /* 1MB */
+	params.chunk_size = 16 * 1024;
+	params.backing_io_unit_size = 512;
+	spdk_uuid_generate(&params.uuid);
+
+	backing_dev_init(&backing_dev, &params);
+	pm_file_init(&pm_file, &params);
+
+	g_vol = NULL;
+	g_ziperrno = -1;
+	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+	/* Confirm that libreduce persisted the params to the backing device. */
+	CU_ASSERT(memcmp(g_backing_dev_buf, SPDK_REDUCE_SIGNATURE, 8) == 0);
+	persistent_params = (struct spdk_reduce_vol_params *)(g_backing_dev_buf + 8);
+	CU_ASSERT(memcmp(persistent_params, &params, sizeof(params)) == 0);
+	CU_ASSERT(backing_dev.close != NULL);
+
+	g_ziperrno = -1;
+	g_backing_dev_closed = false;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_backing_dev_closed == true);
+
+	pm_file_destroy();
+	backing_dev_destroy(&backing_dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -373,7 +410,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "get_pm_file_size", get_pm_file_size) == NULL ||
 		CU_add_test(suite, "get_backing_device_size", get_backing_device_size) == NULL ||
 		CU_add_test(suite, "init_failure", init_failure) == NULL ||
-		CU_add_test(suite, "init_md", init_md) == NULL
+		CU_add_test(suite, "init_md", init_md) == NULL ||
+		CU_add_test(suite, "init_backing_dev", init_backing_dev) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
