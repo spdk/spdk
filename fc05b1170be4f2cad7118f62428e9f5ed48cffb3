@@ -139,6 +139,41 @@
       "revId": "fc05b1170be4f2cad7118f62428e9f5ed48cffb3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab93e893_fc75c863",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 76
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-01T16:48:12Z",
+      "side": 1,
+      "message": "If the user does not input it, then we should not pass the parameter at all.",
+      "parentUuid": "e4da0ee6_b858cdfc",
+      "revId": "fc05b1170be4f2cad7118f62428e9f5ed48cffb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca217e7c_166da311",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 76
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-01T16:48:12Z",
+      "side": 1,
+      "message": "We can set default values to None here.  For example, see set_bdev_options() at beginning of this file.\n\nThis allows you to remove the default\u003d-1 in scripts/rpc.py.",
+      "revId": "fc05b1170be4f2cad7118f62428e9f5ed48cffb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
