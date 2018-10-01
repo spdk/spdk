@@ -205,7 +205,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	if (backing_dev->close == NULL) {
+	if (backing_dev->close == NULL || backing_dev->readv == NULL ||
+	    backing_dev->writev == NULL || backing_dev->unmap == NULL) {
 		SPDK_ERRLOG("backing_dev function pointer not specified\n");
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
