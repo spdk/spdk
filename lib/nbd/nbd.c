@@ -656,8 +656,7 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 		ret = write_to_socket(nbd->spdk_sp_fd, (char *)&io->resp + io->offset,
 				      sizeof(io->resp) - io->offset);
 		if (ret <= 0) {
-			TAILQ_INSERT_HEAD(&nbd->executed_io_list, io, tailq);
-			return ret;
+			goto reinsert;
 		}
 
 		io->offset += ret;
@@ -679,8 +678,7 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 	if (io->state == NBD_IO_XMIT_PAYLOAD) {
 		ret = write_to_socket(nbd->spdk_sp_fd, io->payload + io->offset, io->payload_size - io->offset);
 		if (ret <= 0) {
-			TAILQ_INSERT_HEAD(&nbd->executed_io_list, io, tailq);
-			return ret;
+			goto reinsert;
 		}
 
 		io->offset += ret;
@@ -692,8 +690,9 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 		}
 	}
 
+reinsert:
 	TAILQ_INSERT_HEAD(&nbd->executed_io_list, io, tailq);
-	return 0;
+	return ret;
 }
 
 static int
