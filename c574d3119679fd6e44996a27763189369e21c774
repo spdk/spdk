@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd72edef_617f985a",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-01T16:23:20Z",
+      "side": 1,
+      "message": "It is still not clear to me why scan-build thinks there is an issue here.  But I am OK with this \"solution\".\n\nIt would be good to add a comment before the TAILQ_REMOVE though - maybe:\n\n\"Remove IO from list now assuming it will be completed.  It will be inserted back to the head if it cannot be completed.  This approach is specifically taken to work around a scan-build use-after-free mischaracterization.\"",
+      "revId": "c574d3119679fd6e44996a27763189369e21c774",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
