@@ -8,6 +8,51 @@ set -e
 
 rc=0
 
+echo -n "Checking file permissions..."
+
+while read -r perm _res0 _res1 path; do
+	if [ ! -f "$path" ]; then
+		continue
+	fi
+
+	fname=$(basename -- "$path")
+
+	case ${fname##*.} in
+		c|h|cpp|cc|cxx|hh|hpp|md|html|js|json|svg|Doxyfile|yml|LICENSE|README|conf|in|Makefile|mk|gitignore|go|txt)
+			# These file types should never be executable
+			if [ "$perm" -eq 100755 ]; then
+				echo "ERROR: $path is marked executable but is a code file."
+				rc=1
+			fi
+		;;
+		*)
+			shebang=$(head -n 1 $path | cut -c1-3)
+
+			# git only tracks the execute bit, so will only ever return 755 or 644 as the permission.
+			if [ "$perm" -eq 100755 ]; then
+				# If the file has execute permission, it should start with a shebang.
+				if [ "$shebang" != "#!/" ]; then
+					echo "ERROR: $path is marked executable but does not start with a shebang."
+					rc=1
+				fi
+			else
+				# If the file doesnot have execute permissions, it should not start with a shebang.
+				if [ "$shebang" = "#!/" ]; then
+					echo "ERROR: $path is not marked executable but starts with a shebang."
+					rc=1
+				fi
+			fi
+		;;
+	esac
+
+done <<< $(git grep -I --name-only --untracked -e . | git ls-files -s)
+
+if [ $rc -eq 0 ]; then
+	echo " OK"
+fi
+
+exit 0
+
 if hash astyle; then
 	echo -n "Checking coding style..."
 	if [ "$(astyle -V)" \< "Artistic Style Version 3" ]

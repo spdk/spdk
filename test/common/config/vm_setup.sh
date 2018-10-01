@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
 
 # Virtual Machine environment requirements:
 # 8 GiB of RAM (for DPDK)
