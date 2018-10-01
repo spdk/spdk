@@ -8,6 +8,52 @@ set -e
 
 rc=0
 
+echo -n "Checking file permissions..."
+
+while read -r fileinfo; do
+	info=($fileinfo)
+	perm=${info[0]}
+	fname=${info[3]}
+
+	if [ ! -f "$fname" ]; then
+		continue
+	fi
+
+	set +e
+	file -i "$fname" | grep "charset=binary"
+	binary=$?
+	set -e
+
+	if [ $binary -eq 0 ]; then
+		# Binary files should be executable
+		if [ "$perm" -ne 100755 ]; then
+			echo "ERROR: $fname is a binary file but is not executable."
+			rc=1
+		fi
+	else
+		shebang=$(head -n 1 $fname | cut -c1-3)
+
+		# git only tracks the execute bit, so will only ever return 755 or 644 as the permission.
+		if [ "$perm" -eq 100755 ]; then
+			# If the file has execute permission, it should start with a shebang.
+			if [ "$shebang" != "#!/" ]; then
+				echo "ERROR: $fname is marked executable but does not start with a shebang."
+				rc=1
+			fi
+		else
+			# If the file doesnot have execute permissions, it should not start with a shebang.
+			if [ "$shebang" = "#!/" ]; then
+				echo "ERROR: $fname is not marked executable but starts with a shebang."
+				rc=1
+			fi
+		fi
+	fi
+done <<< $(git ls-files -s)
+
+if [ $rc -eq 0 ]; then
+	echo " OK"
+fi
+
 if hash astyle; then
 	echo -n "Checking coding style..."
 	if [ "$(astyle -V)" \< "Artistic Style Version 3" ]
