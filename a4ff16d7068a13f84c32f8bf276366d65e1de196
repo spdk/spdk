@@ -16,6 +16,24 @@
       "revId": "a4ff16d7068a13f84c32f8bf276366d65e1de196",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "765b6845_8df4238b",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-01T20:20:00Z",
+      "side": 1,
+      "message": "Could you try calling file just once with the full list of filenames?  Then parse the two lists in parallel.  No idea if that ends up being faster or not.",
+      "parentUuid": "3dc0f506_7632a0df",
+      "revId": "a4ff16d7068a13f84c32f8bf276366d65e1de196",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
