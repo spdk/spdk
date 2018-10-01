@@ -22,6 +22,30 @@
       "revId": "56e587bf825a1f5dea666691ccda895886bde7a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1603af07_e88a765f",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1506,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-10-01T09:18:44Z",
+      "side": 1,
+      "message": "Done, and done.",
+      "parentUuid": "11511201_66172e8b",
+      "range": {
+        "startLine": 1506,
+        "startChar": 5,
+        "endLine": 1506,
+        "endChar": 59
+      },
+      "revId": "56e587bf825a1f5dea666691ccda895886bde7a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
