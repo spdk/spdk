@@ -3,7 +3,7 @@
 set -xe
 
 MATCH_FILE="spdkcli_iscsi.test"
-SPDKCLI_BRANCH="/bdevs/pmemblk"
+SPDKCLI_BRANCH="/iscsi"
 testdir=$(readlink -f $(dirname $0))
 . $testdir/common.sh
 . $testdir/../iscsi_tgt/common.sh
@@ -38,7 +38,7 @@ $spdkcli_job "/iscsi ls" "Malloc" True
 timing_exit spdkcli_create_iscsi_config
 
 timing_enter spdkcli_check_match
-#check_match
+check_match
 timing_exit spdkcli_check_match
 
 timing_enter spdkcli_clear_iscsi_config
