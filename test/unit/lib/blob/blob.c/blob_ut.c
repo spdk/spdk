@@ -5775,6 +5775,60 @@ blob_io_unit(void)
 	g_blobid = 0;
 }
 
+static void
+blob_io_unit_compatiblity(void)
+{
+	struct spdk_bs_opts bsopts;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_super_block *super;
+
+	/* Create dev with 512 bytes io unit size */
+
+	spdk_bs_opts_init(&bsopts);
+	bsopts.cluster_sz = SPDK_BS_PAGE_SIZE * 4; // 8 * 4 = 32 io_unit
+	snprintf(bsopts.bstype.bstype, sizeof(bsopts.bstype.bstype), "TESTTYPE");
+
+	/* Try to initialize a new blob store with unsupported io_unit */
+	dev = init_dev();
+	dev->blocklen = 512;
+	dev->blockcnt =  DEV_BUFFER_SIZE / dev->blocklen;
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &bsopts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	CU_ASSERT(spdk_bs_get_io_unit_size(g_bs) == 512);
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Modify super block to behave like older version.
+	 * Check if loaded io unit size equals SPDK_BS_PAGE_SIZE */
+	super = (struct spdk_bs_super_block *)&g_dev_buffer[0];
+	super->iolen = 0;
+	super->crc = _spdk_blob_md_page_calc_crc(super);
+
+	dev = init_dev();
+	dev->blocklen = 512;
+	dev->blockcnt =  DEV_BUFFER_SIZE / dev->blocklen;
+
+	spdk_bs_load(dev, &bsopts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	CU_ASSERT(spdk_bs_get_io_unit_size(g_bs) == SPDK_BS_PAGE_SIZE);
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -5841,7 +5895,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_snapshot_freeze_io", blob_snapshot_freeze_io) == NULL ||
 		CU_add_test(suite, "blob_operation_split_rw", blob_operation_split_rw) == NULL ||
 		CU_add_test(suite, "blob_operation_split_rw_iov", blob_operation_split_rw_iov) == NULL ||
-		CU_add_test(suite, "blob_io_unit", blob_io_unit) == NULL
+		CU_add_test(suite, "blob_io_unit", blob_io_unit) == NULL ||
+		CU_add_test(suite, "blob_io_unit_compatiblity", blob_io_unit_compatiblity) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

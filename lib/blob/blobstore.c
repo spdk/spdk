@@ -1746,7 +1746,7 @@ _spdk_blob_request_submit_op_split_next(void *cb_arg, int bserrno)
 	ctx->io_units_remaining -= op_length;
 	ctx->io_unit_offset += op_length;
 	if (op_type == SPDK_BLOB_WRITE || op_type == SPDK_BLOB_READ) {
-		ctx->curr_payload += op_length * blob->bs->dev->blocklen;
+		ctx->curr_payload += op_length * blob->bs->iolen;
 	}
 
 	switch (op_type) {
@@ -2001,7 +2001,7 @@ _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 	 *  byte_count will keep track of how many bytes remaining until orig_iov and orig_iovoff will
 	 *  point to the current position in the I/O sequence.
 	 */
-	byte_count = ctx->io_units_done * blob->bs->dev->blocklen;
+	byte_count = ctx->io_units_done * blob->bs->iolen;
 	orig_iov = &ctx->orig_iov[0];
 	orig_iovoff = 0;
 	while (byte_count > 0) {
@@ -2018,7 +2018,7 @@ _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 	 * Build an iov array for the next I/O in the sequence.  byte_count will keep track of how many
 	 *  bytes of this next I/O remain to be accounted for in the new iov array.
 	 */
-	byte_count = io_units_count * blob->bs->dev->blocklen;
+	byte_count = io_units_count * blob->bs->iolen;
 	iov = &ctx->iov[0];
 	iovcnt = 0;
 	while (byte_count > 0) {
@@ -2463,6 +2463,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_b
 	bs->pages_per_cluster = bs->cluster_sz / SPDK_BS_PAGE_SIZE;
 	bs->num_free_clusters = bs->total_clusters;
 	bs->used_clusters = spdk_bit_array_create(bs->total_clusters);
+	bs->iolen = dev->blocklen;
 	if (bs->used_clusters == NULL) {
 		free(bs);
 		return -ENOMEM;
@@ -3098,11 +3099,16 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
 	}
 
+	if (ctx->super->iolen == 0) {
+		ctx->super->iolen = SPDK_BS_PAGE_SIZE;
+	}
+
 	/* Parse the super block */
 	ctx->bs->clean = 1;
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
 	ctx->bs->total_clusters = ctx->super->size / ctx->super->cluster_size;
 	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
+	ctx->bs->iolen = ctx->super->iolen;
 	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);
 	if (rc < 0) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
@@ -3592,6 +3598,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->super_blob = bs->super_blob;
 	ctx->super->clean = 0;
 	ctx->super->cluster_size = bs->cluster_sz;
+	ctx->super->iolen = bs->iolen;
 	memcpy(&ctx->super->bstype, &bs->bstype, sizeof(bs->bstype));
 
 	/* Calculate how many pages the metadata consumes at the front
@@ -3974,7 +3981,7 @@ spdk_bs_get_page_size(struct spdk_blob_store *bs)
 uint64_t
 spdk_bs_get_io_unit_size(struct spdk_blob_store *bs)
 {
-	return bs->dev->blocklen;
+	return bs->iolen;
 }
 
 uint64_t

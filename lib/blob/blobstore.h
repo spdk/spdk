@@ -173,6 +173,7 @@ struct spdk_blob_store {
 	uint64_t			total_data_clusters;
 	uint64_t			num_free_clusters;
 	uint64_t			pages_per_cluster;
+	uint32_t			iolen;
 
 	spdk_blob_id			super_blob;
 	struct spdk_bs_type		bstype;
@@ -344,8 +345,9 @@ struct spdk_bs_super_block {
 	uint32_t	used_blobid_mask_len; /* Count, in pages */
 
 	uint64_t        size; /* size of blobstore in bytes */
+	uint32_t        iolen; /* Size of io unit in bytes */
 
-	uint8_t         reserved[4004];
+	uint8_t         reserved[4000];
 	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");
@@ -403,7 +405,7 @@ _spdk_bs_dev_page_to_lba(struct spdk_bs_dev *bs_dev, uint64_t page)
 static inline uint64_t
 _spdk_bs_io_unit_per_page(struct spdk_blob_store *bs)
 {
-	return SPDK_BS_PAGE_SIZE / bs->dev->blocklen;
+	return SPDK_BS_PAGE_SIZE / bs->iolen;
 }
 
 static inline uint64_t
