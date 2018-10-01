@@ -195,7 +195,7 @@ unload_cb(void *cb_arg, int ziperrno)
 }
 
 static void
-init(void)
+init_failure(void)
 {
 	struct spdk_reduce_vol_params params = {};
 	struct spdk_reduce_backing_dev backing_dev = {};
@@ -236,21 +236,7 @@ init(void)
 	CU_ASSERT(g_ziperrno == -EINVAL);
 	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
 
-	/* Now specify a uuid.  spdk_reduce_vol_init() should then pass. */
-	spdk_uuid_generate(&params.uuid);
-
-	g_vol = NULL;
-	g_ziperrno = -1;
-	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
-	CU_ASSERT(spdk_uuid_compare(&params.uuid, &g_vol->uuid) == 0);
-
-	g_ziperrno = -1;
-	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
-	CU_ASSERT(g_volatile_pm_buf == NULL);
-
+	pm_file_close(&pm_file);
 	pm_file_destroy();
 }
 
@@ -309,7 +295,7 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "get_pm_file_size", get_pm_file_size) == NULL ||
 		CU_add_test(suite, "get_backing_device_size", get_backing_device_size) == NULL ||
-		CU_add_test(suite, "init", init) == NULL ||
+		CU_add_test(suite, "init_failure", init_failure) == NULL ||
 		CU_add_test(suite, "init_md", init_md) == NULL
 	) {
 		CU_cleanup_registry();
