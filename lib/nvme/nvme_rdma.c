@@ -58,13 +58,22 @@
 #define NVME_RDMA_RW_BUFFER_SIZE 131072
 
 /*
-NVME RDMA qpair Resource Defaults
+ * NVME RDMA qpair Resource Defaults
  */
 #define NVME_RDMA_DEFAULT_TX_SGE		2
 #define NVME_RDMA_DEFAULT_RX_SGE		1
 
+
+/* Max number of NVMe-oF SGL descriptors supported by the host */
+#define NVME_RDMA_MAX_SGL_DESCRIPTORS		16
+
+struct spdk_nvme_rdma_sgl_descriptor_list {
+	struct spdk_nvme_sgl_descriptor sgl_list[NVME_RDMA_MAX_SGL_DESCRIPTORS];
+};
+
 /* Mapping from virtual address to ibv_mr pointer for a protection domain */
-struct spdk_nvme_rdma_mr_map {
+struct spdk_nvme_rdma_mr_map
+{
 	struct ibv_pd				*pd;
 	struct spdk_mem_map			*map;
 	uint64_t				ref;
@@ -107,6 +116,15 @@ struct nvme_rdma_qpair {
 
 	/* Memory region describing all cmds for this qpair */
 	struct ibv_mr				*cmd_mr;
+
+	/*
+	 * 2 dimensional array of NVMe sgl descriptors registered as RDMA message buffers.
+	 * Indexed by rdma_deq->id. Each array is of depth NVME_RDMA_MAX_SGL_DESCRIPTORS.
+	 */
+
+	struct spdk_nvme_rdma_sgl_descriptor_list	*nvmf_sgl;
+
+	struct ibv_mr				*nvmf_sgl_mr;
 
 	struct spdk_nvme_rdma_mr_map		*mr_map;
 
@@ -376,6 +394,9 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 
 	free(rqpair->rdma_reqs);
 	rqpair->rdma_reqs = NULL;
+
+	free(rqpair->nvmf_sgl);
+	rqpair->nvmf_sgl = NULL;
 }
 
 static int
@@ -401,6 +422,14 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 		SPDK_ERRLOG("Unable to register cmd_mr\n");
 		goto fail;
 	}
+
+	rqpair->nvmf_sgl = calloc(rqpair->num_entries, sizeof(*rqpair->nvmf_sgl));
+	if (!rqpair->nvmf_sgl) {
+		SPDK_ERRLOG("Unable to register nvmf_sgl\n");
+		goto fail;
+	}
+
+	rqpair->nvmf_sgl_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->nvmf_sgl, rqpair->num_entries * sizeof(*rqpair->nvmf_sgl));
 
 	TAILQ_INIT(&rqpair->free_reqs);
 	TAILQ_INIT(&rqpair->outstanding_reqs);
@@ -915,11 +944,13 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 			    struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct nvme_request *req = rdma_req->req;
+	struct spdk_nvme_sgl_descriptor *nvmf_sgl = rqpair->nvmf_sgl[rdma_req->id].sgl_list;
+	struct ibv_sge *sge_nvmf_sgl_segment = &rdma_req->send_sgl[1];
 	struct ibv_mr *mr;
 	void *virt_addr;
-	uint64_t requested_size;
-	uint32_t length;
-	int rc;
+	uint64_t remaining_size;
+	uint32_t sge_length, mr_length;
+	int rc, max_num_sgl, nvmf_sgl_index = 0;
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
@@ -927,30 +958,62 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	assert(req->payload.next_sge_fn != NULL);
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
+	max_num_sgl = spdk_min(req->qpair->ctrlr->max_sges, NVME_RDMA_MAX_SGL_DESCRIPTORS);
+
 	/* TODO: for now, we only support a single SGL entry */
-	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
-	if (rc) {
+	remaining_size = req->payload_size;
+	do {
+		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &sge_length);
+		if (rc) {
+			return -1;
+		}
+
+		sge_length = spdk_min(remaining_size, sge_length);
+		mr_length = sge_length;
+
+		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
+							     (uint64_t *)&mr_length);
+
+		if (mr == NULL || mr_length < sge_length) {
+			return -1;
+		}
+
+		nvmf_sgl->keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+		nvmf_sgl->keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+		nvmf_sgl->keyed.length = sge_length;
+		nvmf_sgl->keyed.key = mr->rkey;
+		nvmf_sgl->address = (uint64_t)virt_addr;
+
+		remaining_size -= sge_length;
+		virt_addr += sge_length;
+		nvmf_sgl_index++;
+		nvmf_sgl++;
+	} while (nvmf_sgl_index < max_num_sgl && remaining_size > 0);
+
+	/* Should be impossible if we did our sgl checks properly up the stack, but do a sanity check here.*/
+	if (remaining_size > 0) {
 		return -1;
 	}
 
-	if (length < req->payload_size) {
-		SPDK_ERRLOG("multi-element SGL currently not supported for RDMA\n");
-		return -1;
-	}
-	requested_size = req->payload_size;
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
-			&requested_size);
-	if (mr == NULL || requested_size < req->payload_size) {
-		return -1;
-	}
-
-	rdma_req->send_wr.num_sge = 1;
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
-	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
-	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
-	req->cmd.dptr.sgl1.keyed.length = req->payload_size;
-	req->cmd.dptr.sgl1.keyed.key = mr->rkey;
-	req->cmd.dptr.sgl1.address = (uint64_t)virt_addr;
+
+	if (nvmf_sgl_index == 1) {
+		rdma_req->send_wr.num_sge = 1;
+		req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+		req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+		req->cmd.dptr.sgl1.keyed.length = req->payload_size;
+		req->cmd.dptr.sgl1.keyed.key = mr->rkey;
+		req->cmd.dptr.sgl1.address = (uint64_t)virt_addr;
+	} else {
+		rdma_req->send_wr.num_sge = 2;
+		sge_nvmf_sgl_segment->addr = (uint64_t)rqpair->nvmf_sgl[rdma_req->id].sgl_list;
+		sge_nvmf_sgl_segment->length = nvmf_sgl_index * sizeof(struct spdk_nvme_sgl_descriptor);
+		sge_nvmf_sgl_segment->lkey = rqpair->nvmf_sgl_mr->lkey;
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+		req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
+		req->cmd.dptr.sgl1.unkeyed.length = nvmf_sgl_index * sizeof(struct spdk_nvme_sgl_descriptor);
+		req->cmd.dptr.sgl1.address = (uint64_t)0;
+	}
 
 	return 0;
 }
@@ -1531,7 +1594,7 @@ nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	 *  added, this should return ctrlr->cdata.nvmf_specific.msdbd
 	 *  instead.
 	 */
-	return 1;
+	return spdk_min(ctrlr->max_sges, NVME_RDMA_MAX_SGL_DESCRIPTORS);
 }
 
 void *
