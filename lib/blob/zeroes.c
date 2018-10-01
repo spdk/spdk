@@ -103,7 +103,7 @@ zeroes_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 
 static struct spdk_bs_dev g_zeroes_bs_dev = {
 	.blockcnt = UINT64_MAX,
-	.blocklen = SPDK_BS_PAGE_SIZE,
+	.blocklen = 512,
 	.create_channel = NULL,
 	.destroy_channel = NULL,
 	.destroy = zeroes_destroy,

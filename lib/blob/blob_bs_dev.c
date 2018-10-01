@@ -133,8 +133,8 @@ spdk_bs_create_blob_bs_dev(struct spdk_blob *blob)
 	}
 	/* snapshot blob */
 	b->bs_dev.blockcnt = blob->active.num_clusters *
-			     blob->bs->pages_per_cluster;
-	b->bs_dev.blocklen = SPDK_BS_PAGE_SIZE;
+			     blob->bs->pages_per_cluster * _spdk_bs_io_unit_per_page(blob->bs);
+	b->bs_dev.blocklen = spdk_bs_get_io_unit_size(blob->bs);
 	b->bs_dev.create_channel = NULL;
 	b->bs_dev.destroy_channel = NULL;
 	b->bs_dev.destroy = blob_bs_dev_destroy;
