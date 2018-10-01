@@ -200,6 +200,13 @@ init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
 }
 
 static void
+load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
+{
+	g_vol = vol;
+	g_ziperrno = ziperrno;
+}
+
+static void
 unload_cb(void *cb_arg, int ziperrno)
 {
 	g_ziperrno = ziperrno;
@@ -397,6 +404,49 @@ init_backing_dev(void)
 	backing_dev_destroy(&backing_dev);
 }
 
+static void
+load(void)
+{
+	struct spdk_reduce_vol_params params = {};
+	struct spdk_reduce_backing_dev backing_dev = {};
+	char pmem_file_path[REDUCE_PATH_MAX];
+
+	params.vol_size = 1024 * 1024; /* 1MB */
+	params.chunk_size = 16 * 1024;
+	params.backing_io_unit_size = 512;
+	spdk_uuid_generate(&params.uuid);
+
+	backing_dev_init(&backing_dev, &params);
+
+	g_vol = NULL;
+	g_ziperrno = -1;
+	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+	SPDK_CU_ASSERT_FATAL(g_path != NULL);
+	memcpy(pmem_file_path, g_path, sizeof(pmem_file_path));
+
+	g_ziperrno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+
+	g_vol = NULL;
+	g_path = NULL;
+	g_ziperrno = -1;
+	spdk_reduce_vol_load(&backing_dev, load_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+	SPDK_CU_ASSERT_FATAL(g_path != NULL);
+	CU_ASSERT(strncmp(g_path, pmem_file_path, sizeof(pmem_file_path)) == 0);
+
+	g_ziperrno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_ziperrno == 0);
+
+	persistent_pm_buf_destroy();
+	backing_dev_destroy(&backing_dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -418,7 +468,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "get_backing_device_size", get_backing_device_size) == NULL ||
 		CU_add_test(suite, "init_failure", init_failure) == NULL ||
 		CU_add_test(suite, "init_md", init_md) == NULL ||
-		CU_add_test(suite, "init_backing_dev", init_backing_dev) == NULL
+		CU_add_test(suite, "init_backing_dev", init_backing_dev) == NULL ||
+		CU_add_test(suite, "load", load) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
