@@ -205,6 +205,12 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
+	if (backing_dev->close == NULL) {
+		SPDK_ERRLOG("backing_dev function pointer not specified\n");
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
 	vol = calloc(1, sizeof(*vol));
 	if (vol == NULL) {
 		cb_fn(cb_arg, NULL, -ENOMEM);
@@ -242,6 +248,8 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 	if (vol->pm_file.close != NULL) {
 		vol->pm_file.close(&vol->pm_file);
 	}
+
+	vol->backing_dev->close(vol->backing_dev);
 
 	free(vol);
 	cb_fn(cb_arg, 0);
