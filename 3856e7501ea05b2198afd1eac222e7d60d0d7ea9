@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "808e6cf1_01f3eef8",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-01T22:06:12Z",
+      "side": 1,
+      "message": "It now runs in \u003c3 seconds, but it doesn\u0027t do the check that binary files are executable. We don\u0027t have any binary files checked into the repository anyway.",
+      "revId": "3856e7501ea05b2198afd1eac222e7d60d0d7ea9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
