@@ -1053,6 +1053,24 @@ bdev_io_split(void)
 	spdk_bdev_finish(bdev_fini_cb, NULL);
 }
 
+
+static void
+bdev_io_alignment(void)
+{
+	/* Create bdev with mock read/write */
+	/* Create unaligned buffer */
+
+	/* Call read/write */
+
+	/** In mocked read/write functions:
+	 *   - call spdk_bdev_io_aligned_buf
+	 *   - check if internal buf is aligned
+	 */
+
+	/* Check if data is consistent after copying to final buffer */
+
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1078,7 +1096,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "get_device_stat", get_device_stat_test) == NULL ||
 		CU_add_test(suite, "bdev_io_wait", bdev_io_wait_test) == NULL ||
 		CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test) == NULL ||
-		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL
+		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
+		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
