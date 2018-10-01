@@ -45,6 +45,9 @@
 
 #define SPDK_REDUCE_SIGNATURE "SPDKREDU"
 
+/* Offset into the backing device where the persistent memory file's path is stored. */
+#define REDUCE_BACKING_DEV_PATH_OFFSET	4096
+
 /* Structure written to offset 0 of both the pm file and the backing device. */
 struct spdk_reduce_vol_superblock {
 	uint8_t				signature[8];
@@ -171,6 +174,7 @@ struct reduce_init_load_ctx {
 	spdk_reduce_vol_op_with_handle_complete	cb_fn;
 	void					*cb_arg;
 	struct iovec				iov[2];
+	void					*path;
 };
 
 static void
@@ -180,6 +184,22 @@ _init_write_super_cpl(void *cb_arg, int ziperrno)
 
 	init_ctx->cb_fn(init_ctx->cb_arg, init_ctx->vol, ziperrno);
 	free(init_ctx);
+}
+
+static void
+_init_write_path_cpl(void *cb_arg, int ziperrno)
+{
+	struct reduce_init_load_ctx *init_ctx = cb_arg;
+	struct spdk_reduce_vol *vol = init_ctx->vol;
+
+	spdk_dma_free(init_ctx->path);
+	init_ctx->iov[0].iov_base = vol->backing_super;
+	init_ctx->iov[0].iov_len = sizeof(*vol->backing_super);
+	init_ctx->backing_cb_args.cb_fn = _init_write_super_cpl;
+	init_ctx->backing_cb_args.cb_arg = init_ctx;
+	vol->backing_dev->writev(vol->backing_dev, init_ctx->iov, 1,
+				 0, sizeof(*vol->backing_super) / vol->backing_dev->blocklen,
+				 &init_ctx->backing_cb_args);
 }
 
 void
@@ -255,6 +275,15 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
+	init_ctx->path = spdk_dma_zmalloc(REDUCE_PATH_MAX, 64, NULL);
+	if (init_ctx->path == NULL) {
+		free(init_ctx);
+		spdk_dma_free(vol->backing_super);
+		free(vol);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
 	memcpy(&vol->uuid, &params->uuid, sizeof(params->uuid));
 	vol->backing_dev = backing_dev;
 
@@ -273,12 +302,20 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	init_ctx->vol = vol;
 	init_ctx->cb_fn = cb_fn;
 	init_ctx->cb_arg = cb_arg;
-	init_ctx->iov[0].iov_base = vol->backing_super;
-	init_ctx->iov[0].iov_len = sizeof(*vol->backing_super);
-	init_ctx->backing_cb_args.cb_fn = _init_write_super_cpl;
+
+	memcpy(init_ctx->path, vol->pm_file.path, REDUCE_PATH_MAX);
+	init_ctx->iov[0].iov_base = init_ctx->path;
+	init_ctx->iov[0].iov_len = REDUCE_PATH_MAX;
+	init_ctx->backing_cb_args.cb_fn = _init_write_path_cpl;
 	init_ctx->backing_cb_args.cb_arg = init_ctx;
+	/* Write path to offset 4K on backing device - just after where the super
+	 *  block will be written.  We wait until this is committed before writing the
+	 *  super block to guarantee we don't get the super block written without the
+	 *  the path if the system crashed in the middle of a write operation.
+	 */
 	vol->backing_dev->writev(vol->backing_dev, init_ctx->iov, 1,
-				 0, sizeof(*vol->backing_super) / vol->backing_dev->blocklen,
+				 REDUCE_BACKING_DEV_PATH_OFFSET / vol->backing_dev->blocklen,
+				 REDUCE_PATH_MAX / vol->backing_dev->blocklen,
 				 &init_ctx->backing_cb_args);
 }
 

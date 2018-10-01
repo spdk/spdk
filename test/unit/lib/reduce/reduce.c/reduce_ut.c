@@ -46,6 +46,8 @@ static char *g_persistent_pm_buf;
 static bool g_backing_dev_closed;
 static char *g_backing_dev_buf;
 
+#define TEST_MD_PATH "/tmp/meta.data"
+
 static void
 sync_pm_buf(const void *addr, size_t length)
 {
@@ -176,6 +178,9 @@ pm_file_init(struct spdk_reduce_pm_file *pm_file, struct spdk_reduce_vol_params 
 	CU_ASSERT(g_volatile_pm_buf == NULL);
 	g_volatile_pm_buf = calloc(1, pm_file->size);
 	SPDK_CU_ASSERT_FATAL(g_volatile_pm_buf != NULL);
+
+	memcpy(pm_file->path, TEST_MD_PATH, strlen(TEST_MD_PATH));
+	pm_file->path[strlen(TEST_MD_PATH)] = '\0';
 
 	pm_file->pm_buf = g_volatile_pm_buf;
 	pm_file->close = pm_file_close;
@@ -379,6 +384,12 @@ init_backing_dev(void)
 	persistent_params = (struct spdk_reduce_vol_params *)(g_backing_dev_buf + 8);
 	CU_ASSERT(memcmp(persistent_params, &params, sizeof(params)) == 0);
 	CU_ASSERT(backing_dev.close != NULL);
+	/* Confirm that the path to the persistent memory metadata file was persisted to
+	 *  the backing device.
+	 */
+	CU_ASSERT(strncmp(TEST_MD_PATH,
+			  g_backing_dev_buf + REDUCE_BACKING_DEV_PATH_OFFSET,
+			  REDUCE_PATH_MAX) == 0);
 
 	g_ziperrno = -1;
 	g_backing_dev_closed = false;
