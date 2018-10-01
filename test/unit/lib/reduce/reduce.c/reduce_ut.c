@@ -43,6 +43,7 @@ static struct spdk_reduce_vol *g_vol;
 static int g_ziperrno;
 static char *g_volatile_pm_buf;
 static char *g_persistent_pm_buf;
+static bool g_backing_dev_closed;
 
 static void
 sync_pm_buf(const void *addr, size_t length)
@@ -241,10 +242,17 @@ init_failure(void)
 }
 
 static void
+backing_dev_close(struct spdk_reduce_backing_dev *backing_dev)
+{
+	g_backing_dev_closed = true;
+}
+
+static void
 backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce_vol_params *params)
 {
 	backing_dev->blocklen = params->backing_io_unit_size;
 	backing_dev->blockcnt = spdk_reduce_get_backing_device_size(params) / backing_dev->blocklen;
+	backing_dev->close = backing_dev_close;
 }
 
 static void
@@ -274,8 +282,10 @@ init_md(void)
 	CU_ASSERT(memcmp(persistent_params, &params, sizeof(params)) == 0);
 
 	g_ziperrno = -1;
+	g_backing_dev_closed = false;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
 	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_backing_dev_closed == true);
 	CU_ASSERT(g_volatile_pm_buf == NULL);
 
 	pm_file_destroy();
