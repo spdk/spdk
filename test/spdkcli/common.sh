@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 set -xe
 
 testdir=$(readlink -f $(dirname $0))
