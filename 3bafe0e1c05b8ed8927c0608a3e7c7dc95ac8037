@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "227f1039_934bda23",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-01T08:32:43Z",
+      "side": 1,
+      "message": "Yes, in library you should use standard logging facility.",
+      "parentUuid": "abbed006_0d5e77a7",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 53
+      },
+      "revId": "3bafe0e1c05b8ed8927c0608a3e7c7dc95ac8037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d639973d_235a1ebe",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 20
