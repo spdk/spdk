@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/reduce.h"
+#include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 
@@ -53,9 +54,10 @@ struct spdk_reduce_vol_superblock {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_superblock) == 4096, "size incorrect");
 
 struct spdk_reduce_vol {
-	struct spdk_uuid		uuid;
-	struct spdk_reduce_pm_file	pm_file;
-	struct spdk_reduce_backing_dev	*backing_dev;
+	struct spdk_uuid			uuid;
+	struct spdk_reduce_pm_file		pm_file;
+	struct spdk_reduce_backing_dev		*backing_dev;
+	struct spdk_reduce_vol_superblock	*backing_super;
 };
 
 /*
@@ -163,6 +165,23 @@ spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params)
 	return total_backing_size;
 }
 
+struct reduce_init_load_ctx {
+	struct spdk_reduce_vol			*vol;
+	struct spdk_reduce_vol_cb_args		backing_cb_args;
+	spdk_reduce_vol_op_with_handle_complete	cb_fn;
+	void					*cb_arg;
+	struct iovec				iov;
+};
+
+static void
+_init_write_super_cpl(void *cb_arg, int ziperrno)
+{
+	struct reduce_init_load_ctx *init_ctx = cb_arg;
+
+	init_ctx->cb_fn(init_ctx->cb_arg, init_ctx->vol, ziperrno);
+	free(init_ctx);
+}
+
 void
 spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		     struct spdk_reduce_backing_dev *backing_dev,
@@ -171,6 +190,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 {
 	struct spdk_reduce_vol *vol;
 	struct spdk_reduce_vol_superblock *pm_super;
+	struct reduce_init_load_ctx *init_ctx;
 	int64_t size, size_needed;
 	int rc;
 
@@ -220,19 +240,47 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 
 	memcpy(&vol->pm_file, pm_file, sizeof(*pm_file));
 
+	vol->backing_super = spdk_dma_zmalloc(sizeof(*vol->backing_super), 0, NULL);
+	if (vol->backing_super == NULL) {
+		free(vol);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	init_ctx = calloc(1, sizeof(*init_ctx));
+	if (init_ctx == NULL) {
+		spdk_dma_free(vol->backing_super);
+		free(vol);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
 	memcpy(&vol->uuid, &params->uuid, sizeof(params->uuid));
 	vol->backing_dev = backing_dev;
-	pm_super = (struct spdk_reduce_vol_superblock *)vol->pm_file.pm_buf;
 
-	memcpy(pm_super->signature, SPDK_REDUCE_SIGNATURE, 8);
-	memcpy(&pm_super->params, params, sizeof(*params));
+	memcpy(vol->backing_super->signature, SPDK_REDUCE_SIGNATURE,
+	       sizeof(vol->backing_super->signature));
+	memcpy(&vol->backing_super->params, params, sizeof(*params));
+
+	pm_super = (struct spdk_reduce_vol_superblock *)vol->pm_file.pm_buf;
+	memcpy(pm_super, vol->backing_super, sizeof(*vol->backing_super));
+
 	if (vol->pm_file.pm_is_pmem) {
 		pmem_persist(pm_super, sizeof(*pm_super));
 	} else {
 		pmem_msync(pm_super, sizeof(*pm_super));
 	}
 
-	cb_fn(cb_arg, vol, 0);
+	init_ctx->vol = vol;
+	init_ctx->cb_fn = cb_fn;
+	init_ctx->cb_arg = cb_arg;
+	init_ctx->iov.iov_base = vol->backing_super;
+	init_ctx->iov.iov_len = sizeof(*vol->backing_super);
+	init_ctx->backing_cb_args.cb_fn = _init_write_super_cpl;
+	init_ctx->backing_cb_args.cb_arg = init_ctx;
+	vol->backing_dev->writev(vol->backing_dev, &init_ctx->iov, 1,
+				 0, sizeof(*vol->backing_super) / vol->backing_dev->blocklen,
+				 &init_ctx->backing_cb_args);
 }
 
 void
@@ -252,6 +300,7 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 
 	vol->backing_dev->close(vol->backing_dev);
 
+	spdk_dma_free(vol->backing_super);
 	free(vol);
 	cb_fn(cb_arg, 0);
 }
