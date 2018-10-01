@@ -241,6 +241,13 @@ init_failure(void)
 }
 
 static void
+backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce_vol_params *params)
+{
+	backing_dev->blocklen = params->backing_io_unit_size;
+	backing_dev->blockcnt = spdk_reduce_get_backing_device_size(params) / backing_dev->blocklen;
+}
+
+static void
 init_md(void)
 {
 	struct spdk_reduce_vol_params params = {};
@@ -248,14 +255,12 @@ init_md(void)
 	struct spdk_reduce_backing_dev backing_dev = {};
 	struct spdk_reduce_pm_file pm_file = {};
 
-	backing_dev.blocklen = 512;
-
 	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
-	params.backing_io_unit_size = backing_dev.blocklen;
+	params.backing_io_unit_size = 512;
 	spdk_uuid_generate(&params.uuid);
 
-	backing_dev.blockcnt = spdk_reduce_get_backing_device_size(&params) / backing_dev.blocklen;
+	backing_dev_init(&backing_dev, &params);
 	pm_file_init(&pm_file, &params);
 
 	g_vol = NULL;
