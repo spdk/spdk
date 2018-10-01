@@ -16,6 +16,24 @@
       "revId": "c574d3119679fd6e44996a27763189369e21c774",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87b364ce_273e0b75",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-01T23:16:14Z",
+      "side": 1,
+      "message": "This fix came from my intuition and the reason is not clear to me too. Adding that comment is nice.",
+      "parentUuid": "bd72edef_617f985a",
+      "revId": "c574d3119679fd6e44996a27763189369e21c774",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
