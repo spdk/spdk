@@ -648,6 +648,7 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 	if (io == NULL) {
 		return 0;
 	}
+	TAILQ_REMOVE(&nbd->executed_io_list, io, tailq);
 
 	/* resp error and handler are already set in io_done */
 
@@ -655,6 +656,7 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 		ret = write_to_socket(nbd->spdk_sp_fd, (char *)&io->resp + io->offset,
 				      sizeof(io->resp) - io->offset);
 		if (ret <= 0) {
+			TAILQ_INSERT_HEAD(&nbd->executed_io_list, io, tailq);
 			return ret;
 		}
 
@@ -666,7 +668,6 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 
 			/* transmit payload only when NBD_CMD_READ with no resp error */
 			if (from_be32(&io->req.type) != NBD_CMD_READ || io->resp.error != 0) {
-				TAILQ_REMOVE(&nbd->executed_io_list, io, tailq);
 				spdk_put_nbd_io(nbd, io);
 				return 0;
 			} else {
@@ -678,6 +679,7 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 	if (io->state == NBD_IO_XMIT_PAYLOAD) {
 		ret = write_to_socket(nbd->spdk_sp_fd, io->payload + io->offset, io->payload_size - io->offset);
 		if (ret <= 0) {
+			TAILQ_INSERT_HEAD(&nbd->executed_io_list, io, tailq);
 			return ret;
 		}
 
@@ -685,7 +687,6 @@ spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 
 		/* read payload is fully transmitted */
 		if (io->offset == io->payload_size) {
-			TAILQ_REMOVE(&nbd->executed_io_list, io, tailq);
 			spdk_put_nbd_io(nbd, io);
 		}
 	}
