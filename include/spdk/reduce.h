@@ -142,6 +142,17 @@ void spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 			  void *cb_arg);
 
 /**
+ * Load an existing libreduce compressed volume.
+ *
+ * \param backing_dev Structure describing the backing device containing the compressed volume.
+ * \param cb_fn Callback function to signal completion of the loading process.
+ * \param cb_arg Argument to pass to the callback function.
+ */
+void spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
+			  spdk_reduce_vol_op_with_handle_complete cb_fn,
+			  void *cb_arg);
+
+/**
  * Unload a previously initialized or loaded libreduce compressed volume.
  *
  * \param vol Volume to unload.
