@@ -46,6 +46,30 @@
       "revId": "999f2f2e351d3a3dfaf67b1929702d26cd8e1606",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68cbbdfe_409c2488",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1503,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-02T02:44:13Z",
+      "side": 1,
+      "message": "Well, No.\n\nCurrent offline state was not clear to me and I highlighted this transition by https://github.com/spdk/spdk/commit/924a099540d9f70d1ab471589b28bbf4cc398132#diff-bf70569e0b1c6f8190f99d71270528d2.\n\nAbout the configuring state, your patch may be OK.\n\nBut we haven\u0027t differentiated offline_by_normal_deconfigure and offline_by_failed_deconfigure yet.\nAbout the offline state, further investigation will be necessary. Kunal\u0027s input will be helpful after your vacation.\n\nIf I have any chance to do, I will put my update on this patch.",
+      "parentUuid": "4755f0c6_8040fb61",
+      "range": {
+        "startLine": 1503,
+        "startChar": 26,
+        "endLine": 1503,
+        "endChar": 49
+      },
+      "revId": "999f2f2e351d3a3dfaf67b1929702d26cd8e1606",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
