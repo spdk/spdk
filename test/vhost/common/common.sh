@@ -909,6 +909,8 @@ function vm_wait_for_boot()
 		done
 		echo ""
 		notice "VM$vm_num ready"
+		#Change Timeout for stopping services to prevent lengthy powerdowns
+		vm_ssh $vm_num "echo 'DefaultTimeoutStopSec=10' >> /etc/systemd/system.conf; systemctl daemon-reexec"
 	done
 
 	notice "all VMs ready"
