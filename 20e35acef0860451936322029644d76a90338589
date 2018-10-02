@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3b23f27a_ad535166",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1014914
+      },
+      "writtenOn": "2018-10-02T03:52:02Z",
+      "side": 1,
+      "message": "Thanks! Will update.",
+      "parentUuid": "a0957862_ce714d6e",
+      "revId": "20e35acef0860451936322029644d76a90338589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77fec576_467357d4",
         "filename": "scripts/setup.sh",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-01T16:42:53Z",
       "side": 1,
       "message": "Is there any reason to make this check have wildcards in it? Can\u0027t you make it more specific? Also, you should probably put spaces around it so that it doesn\u0027t get a partial match with another parameter, if one is ever added.\n\ngrep -i \" iommu\\.passthrough\u003d1 \"",
+      "revId": "20e35acef0860451936322029644d76a90338589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c872671_a8dab2a6",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1014914
+      },
+      "writtenOn": "2018-10-02T03:52:02Z",
+      "side": 1,
+      "message": "Yes, the wildcards are redundant. Will update. Thanks!",
+      "parentUuid": "77fec576_467357d4",
       "revId": "20e35acef0860451936322029644d76a90338589",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -64,6 +100,24 @@
       "writtenOn": "2018-10-01T16:42:53Z",
       "side": 1,
       "message": "I don\u0027t see the purpose of this loop. If the device appears in $filelist, but either iommupassthrough or iommupt are set, it uses uio_pci_generic. If the device does not appear in $filelist, it uses uio_pci_generic. So can\u0027t you just write this as:\n\nif [[ $iommupassthrough \u003e 0 ]] || [[ $iommupt \u003e 0 ]]; then\n    driver_name\u003duio_pci_generic\nfi",
+      "revId": "20e35acef0860451936322029644d76a90338589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95a2ddf5_bce6498e",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1014914
+      },
+      "writtenOn": "2018-10-02T03:52:02Z",
+      "side": 1,
+      "message": "If the IOMMU is enabled, but either iommupassthrough or iommupt are set, the user can bind either \"uio_pci_generic\" or \"vfio-pci\" kernel drivers with the PCI device. The loop can deal with the case and allow the user to choose.",
+      "parentUuid": "eadea0b3_19b96f06",
       "revId": "20e35acef0860451936322029644d76a90338589",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
