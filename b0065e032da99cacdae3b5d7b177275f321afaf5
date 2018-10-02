@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb912a3c_fa584828",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1489,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-02T22:58:16Z",
+      "side": 1,
+      "message": "Should we still print out this error message?\n\nI\u0027m looking at this more and it seems there\u0027s a bit of duplication between this function and create_crypto_disk.  create_crypto_disk() still returns if vbdev_crypto_claim() returns an error code.  Should we also change create_crypto_disk(), for the case where someone hand creates a \u0027bad\u0027 JSON-RPC file, specifying the same base bdev more than once?",
+      "revId": "b0065e032da99cacdae3b5d7b177275f321afaf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
