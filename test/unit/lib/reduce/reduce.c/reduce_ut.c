@@ -324,6 +324,7 @@ init_md(void)
 	struct spdk_reduce_vol_params *persistent_params;
 	struct spdk_reduce_backing_dev backing_dev = {};
 	struct spdk_uuid uuid;
+	uint64_t *entry;
 
 	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
@@ -340,6 +341,14 @@ init_md(void)
 	CU_ASSERT(memcmp(g_persistent_pm_buf, SPDK_REDUCE_SIGNATURE, 8) == 0);
 	persistent_params = (struct spdk_reduce_vol_params *)(g_persistent_pm_buf + 8);
 	CU_ASSERT(memcmp(persistent_params, &params, sizeof(params)) == 0);
+	/* Now confirm that contents of pm_file after the superblock have been initialized
+	 *  to REDUCE_EMPTY_MAP_ENTRY.
+	 */
+	entry = (uint64_t *)(g_persistent_pm_buf + sizeof(struct spdk_reduce_vol_superblock));
+	while (entry != (uint64_t *)(g_persistent_pm_buf + g_vol->pm_file.size)) {
+		CU_ASSERT(*entry == REDUCE_EMPTY_MAP_ENTRY);
+		entry++;
+	}
 
 	/* Check that the pm file path was constructed correctly.  It should be in
 	 * the form:

@@ -48,6 +48,8 @@
 /* Offset into the backing device where the persistent memory file's path is stored. */
 #define REDUCE_BACKING_DEV_PATH_OFFSET	4096
 
+#define REDUCE_EMPTY_MAP_ENTRY	-1ULL
+
 /* Structure written to offset 0 of both the pm file and the backing device. */
 struct spdk_reduce_vol_superblock {
 	uint8_t				signature[8];
@@ -74,6 +76,10 @@ struct spdk_reduce_vol {
 	struct spdk_reduce_pm_file		pm_file;
 	struct spdk_reduce_backing_dev		*backing_dev;
 	struct spdk_reduce_vol_superblock	*backing_super;
+
+	struct spdk_reduce_vol_superblock	*pm_super;
+	uint64_t				*pm_logical_map;
+	uint64_t				*pm_chunk_maps;
 };
 
 /*
@@ -228,7 +234,6 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		     spdk_reduce_vol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_reduce_vol *vol;
-	struct spdk_reduce_vol_superblock *pm_super;
 	struct reduce_init_load_ctx *init_ctx;
 	int64_t size, size_needed;
 	size_t mapped_len;
@@ -344,13 +349,24 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	       sizeof(vol->backing_super->signature));
 	memcpy(&vol->backing_super->params, params, sizeof(*params));
 
-	pm_super = (struct spdk_reduce_vol_superblock *)vol->pm_file.pm_buf;
-	memcpy(pm_super, vol->backing_super, sizeof(*vol->backing_super));
+	/* Superblock is at the beginning of the pm file. */
+	vol->pm_super = (struct spdk_reduce_vol_superblock *)vol->pm_file.pm_buf;
 
+	/* Logical map immediately follows the super block. */
+	vol->pm_logical_map = (uint64_t *)(vol->pm_super + 1);
+
+	/* Chunks maps follow the logical map. */
+	vol->pm_chunk_maps = vol->pm_logical_map + (params->vol_size / params->chunk_size);
+
+	memcpy(vol->pm_super, vol->backing_super, sizeof(*vol->backing_super));
+	/* Writing 0xFF's is equivalent of filling it all with SPDK_EMPTY_MAP_ENTRY.
+	 * Note that this writes 0xFF to not just the logical map but the chunk maps as well.
+	 */
+	memset(vol->pm_logical_map, 0xFF, vol->pm_file.size - sizeof(*vol->backing_super));
 	if (vol->pm_file.pm_is_pmem) {
-		pmem_persist(pm_super, sizeof(*pm_super));
+		pmem_persist(vol->pm_file.pm_buf, vol->pm_file.size);
 	} else {
-		pmem_msync(pm_super, sizeof(*pm_super));
+		pmem_msync(vol->pm_file.pm_buf, vol->pm_file.size);
 	}
 
 	init_ctx->vol = vol;
