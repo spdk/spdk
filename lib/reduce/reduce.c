@@ -106,6 +106,16 @@ struct spdk_reduce_vol {
  */
 #define REDUCE_NUM_EXTRA_CHUNKS 128
 
+static void
+_reduce_persist(struct spdk_reduce_vol *vol, const void *addr, size_t len)
+{
+	if (vol->pm_file.pm_is_pmem) {
+		pmem_persist(addr, len);
+	} else {
+		pmem_msync(addr, len);
+	}
+}
+
 static inline uint64_t
 divide_round_up(uint64_t num, uint64_t divisor)
 {
@@ -478,11 +488,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	 * Note that this writes 0xFF to not just the logical map but the chunk maps as well.
 	 */
 	memset(vol->pm_logical_map, 0xFF, vol->pm_file.size - sizeof(*vol->backing_super));
-	if (vol->pm_file.pm_is_pmem) {
-		pmem_persist(vol->pm_file.pm_buf, vol->pm_file.size);
-	} else {
-		pmem_msync(vol->pm_file.pm_buf, vol->pm_file.size);
-	}
+	_reduce_persist(vol, vol->pm_file.pm_buf, vol->pm_file.size);
 
 	init_ctx->vol = vol;
 	init_ctx->cb_fn = cb_fn;
