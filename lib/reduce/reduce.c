@@ -51,6 +51,8 @@
 
 #define REDUCE_EMPTY_MAP_ENTRY	-1ULL
 
+#define REDUCE_NUM_VOL_REQUESTS	256
+
 /* Structure written to offset 0 of both the pm file and the backing device. */
 struct spdk_reduce_vol_superblock {
 	uint8_t				signature[8];
@@ -72,18 +74,24 @@ struct spdk_reduce_pm_file {
 	uint64_t		size;
 };
 
+struct spdk_reduce_vol_request {
+	TAILQ_ENTRY(spdk_reduce_vol_request)	tailq;
+};
+
 struct spdk_reduce_vol {
 	struct spdk_reduce_vol_params		params;
 	struct spdk_reduce_pm_file		pm_file;
 	struct spdk_reduce_backing_dev		*backing_dev;
 	struct spdk_reduce_vol_superblock	*backing_super;
-
 	struct spdk_reduce_vol_superblock	*pm_super;
 	uint64_t				*pm_logical_map;
 	uint64_t				*pm_chunk_maps;
 
 	struct spdk_bit_array			*allocated_chunk_maps;
 	struct spdk_bit_array			*allocated_backing_io_units;
+
+	struct spdk_reduce_vol_request		*request_mem;
+	TAILQ_HEAD(, spdk_reduce_vol_request)	requests;
 };
 
 /*
@@ -219,6 +227,24 @@ struct reduce_init_load_ctx {
 	void					*path;
 };
 
+static int
+_allocate_vol_requests(struct spdk_reduce_vol *vol)
+{
+	struct spdk_reduce_vol_request *req;
+	int i;
+
+	vol->request_mem = calloc(REDUCE_NUM_VOL_REQUESTS, sizeof(*req));
+	if (vol->request_mem == NULL) {
+		return -ENOMEM;
+	}
+
+	for (i = 0; i < REDUCE_NUM_VOL_REQUESTS; i++) {
+		TAILQ_INSERT_HEAD(&vol->requests, &vol->request_mem[i], tailq);
+	}
+
+	return 0;
+}
+
 static void
 _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx)
 {
@@ -226,6 +252,7 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 		spdk_dma_free(vol->backing_super);
 		spdk_bit_array_free(&vol->allocated_chunk_maps);
 		spdk_bit_array_free(&vol->allocated_backing_io_units);
+		free(vol->request_mem);
 		free(vol);
 	}
 
@@ -239,6 +266,14 @@ static void
 _init_write_super_cpl(void *cb_arg, int ziperrno)
 {
 	struct reduce_init_load_ctx *init_ctx = cb_arg;
+	int rc;
+
+	rc = _allocate_vol_requests(init_ctx->vol);
+	if (rc != 0) {
+		init_ctx->cb_fn(init_ctx->cb_arg, NULL, rc);
+		_init_load_cleanup(init_ctx->vol, init_ctx);
+		return;
+	}
 
 	init_ctx->cb_fn(init_ctx->cb_arg, init_ctx->vol, ziperrno);
 	/* Only clean up the ctx - the vol has been passed to the application
@@ -486,6 +521,11 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 		SPDK_ERRLOG("could not map entire pmem file (size=%" PRIu64 " mapped=%" PRIu64 ")\n",
 			    vol->pm_file.size, mapped_len);
 		rc = -ENOMEM;
+		goto error;
+	}
+
+	rc = _allocate_vol_requests(vol);
+	if (rc != 0) {
 		goto error;
 	}
 
