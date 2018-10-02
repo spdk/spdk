@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20fab2e3_c6b74368",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-02T22:17:39Z",
+      "side": 1,
+      "message": "We need to mention somewhere here or at the beginning of the loop that this TC is the IOPS/Core TC for all 3 workloads.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 46
+      },
+      "revId": "84f5788674eba271e887db28a19c026d4de3d790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57e4507a_a396531f",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-02T22:17:39Z",
+      "side": 1,
+      "message": "Why? Please mention we are doing this to avoid preconditioning between test.",
+      "range": {
+        "startLine": 29,
+        "startChar": 4,
+        "endLine": 29,
+        "endChar": 59
+      },
+      "revId": "84f5788674eba271e887db28a19c026d4de3d790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "098af5dc_89ed5084",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-02T22:17:39Z",
+      "side": 1,
+      "message": "One concern I have here is NUMA. \nWhen we do the test manually, we try to ensure NUMA locality. Especially when removing the SSDs from the test we will remove the ones on a different NUMA node before those on the same NUMA node as the fio job.",
+      "range": {
+        "startLine": 33,
+        "startChar": 3,
+        "endLine": 33,
+        "endChar": 20
+      },
+      "revId": "84f5788674eba271e887db28a19c026d4de3d790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e5f72da_18c4a44a",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-02T22:17:39Z",
+      "side": 1,
+      "message": "Add a little more information here describing the test cases. Something like \nThe purpose of this test case is to demonstrate the I/O throughput scalability of SPDK with the addition of more CPU cores to perform I/O. The test scales the number of CPU cores used as follow; 1, 2, 4, 6 and 10.",
+      "range": {
+        "startLine": 25,
+        "startChar": 3,
+        "endLine": 25,
+        "endChar": 44
+      },
+      "revId": "84f5788674eba271e887db28a19c026d4de3d790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
