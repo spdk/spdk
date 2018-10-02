@@ -81,6 +81,7 @@ struct spdk_reduce_vol_request {
 
 struct spdk_reduce_vol {
 	struct spdk_reduce_vol_params		params;
+	uint32_t				backing_io_units_per_chunk;
 	struct spdk_reduce_pm_file		pm_file;
 	struct spdk_reduce_backing_dev		*backing_dev;
 	struct spdk_reduce_vol_superblock	*backing_super;
@@ -325,7 +326,7 @@ _allocate_bit_arrays(struct spdk_reduce_vol *vol)
 		return -ENOMEM;
 	}
 
-	/* Set backing block bits associated with metadata. */
+	/* Set backing io unit bits associated with metadata. */
 	spdk_bit_array_set(vol->allocated_backing_io_units, 0);
 	spdk_bit_array_set(vol->allocated_backing_io_units, 1);
 
@@ -446,6 +447,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
+	vol->backing_io_units_per_chunk = params->chunk_size / params->backing_io_unit_size;
 	memcpy(&vol->params, params, sizeof(*params));
 
 	rc = _allocate_bit_arrays(vol);
@@ -512,6 +514,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 	}
 
 	memcpy(&vol->params, &vol->backing_super->params, sizeof(vol->params));
+	vol->backing_io_units_per_chunk = vol->params.chunk_size / vol->params.backing_io_unit_size;
 
 	rc = _allocate_bit_arrays(vol);
 	if (rc != 0) {
