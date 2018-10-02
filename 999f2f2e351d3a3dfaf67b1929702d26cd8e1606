@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c38595a0_c4705d56",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1503,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-02T00:16:27Z",
+      "side": 1,
+      "message": "It looks that this breaks current normal behavior. We should remove the case that the RAID bdev went offline by the following raid_bdev_configure() in this function.",
+      "range": {
+        "startLine": 1503,
+        "startChar": 26,
+        "endLine": 1503,
+        "endChar": 49
+      },
+      "revId": "999f2f2e351d3a3dfaf67b1929702d26cd8e1606",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
