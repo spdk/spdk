@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4af1086d_75a8a53d",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-02T23:43:00Z",
+      "side": 1,
+      "message": "Hi Zahra,\n\nThis should be:\n\n#ifdef SPDK_CONFIG_RDMA\nif (trtype \u003d\u003d SPDK_NVME_TRANSPORT_RDMA) {\n  nvme_rdma_init_hooks(hooks);\n}\n#endif\n\nThis ensures it only gets called when the trtype was specified correctly.\n\nThere is also no need to pass the trtype to nvme_rdma_init_hooks.  So let\u0027s remove the trtype from its function signature.\n\nThe rest of the patch looks good.\n\nThanks!\n\n-Jim",
+      "revId": "dc1bcfa0361ce09857feaeaf0fe1a578d2431248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
