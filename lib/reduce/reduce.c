@@ -36,6 +36,7 @@
 #include "spdk/reduce.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
+#include "spdk/bit_array.h"
 #include "spdk_internal/log.h"
 
 #include "libpmem.h"
@@ -80,6 +81,9 @@ struct spdk_reduce_vol {
 	struct spdk_reduce_vol_superblock	*pm_super;
 	uint64_t				*pm_logical_map;
 	uint64_t				*pm_chunk_maps;
+
+	struct spdk_bit_array			*allocated_chunk_maps;
+	struct spdk_bit_array			*allocated_backing_io_units;
 };
 
 /*
@@ -220,6 +224,8 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 {
 	if (vol != NULL) {
 		spdk_dma_free(vol->backing_super);
+		spdk_bit_array_free(&vol->allocated_chunk_maps);
+		spdk_bit_array_free(&vol->allocated_backing_io_units);
 		free(vol);
 	}
 
@@ -254,6 +260,27 @@ _init_write_path_cpl(void *cb_arg, int ziperrno)
 	vol->backing_dev->writev(vol->backing_dev, init_ctx->iov, 1,
 				 0, sizeof(*vol->backing_super) / vol->backing_dev->blocklen,
 				 &init_ctx->backing_cb_args);
+}
+
+static int
+_allocate_bit_arrays(struct spdk_reduce_vol *vol)
+{
+	uint64_t total_chunks, total_backing_io_units;
+
+	total_chunks = _get_total_chunks(vol->params.vol_size, vol->params.chunk_size);
+	vol->allocated_chunk_maps = spdk_bit_array_create(total_chunks);
+	total_backing_io_units = total_chunks * (vol->params.chunk_size / vol->params.backing_io_unit_size);
+	vol->allocated_backing_io_units = spdk_bit_array_create(total_backing_io_units);
+
+	if (vol->allocated_chunk_maps == NULL || vol->allocated_backing_io_units == NULL) {
+		return -ENOMEM;
+	}
+
+	/* Set backing block bits associated with metadata. */
+	spdk_bit_array_set(vol->allocated_backing_io_units, 0);
+	spdk_bit_array_set(vol->allocated_backing_io_units, 1);
+
+	return 0;
 }
 
 void
@@ -365,6 +392,14 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	}
 
 	memcpy(&vol->params, params, sizeof(*params));
+
+	rc = _allocate_bit_arrays(vol);
+	if (rc != 0) {
+		_init_load_cleanup(vol, NULL);
+		cb_fn(cb_arg, NULL, rc);
+		return;
+	}
+
 	vol->backing_dev = backing_dev;
 
 	memcpy(vol->backing_super->signature, SPDK_REDUCE_SIGNATURE,
@@ -422,6 +457,12 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 	}
 
 	memcpy(&vol->params, &vol->backing_super->params, sizeof(vol->params));
+
+	rc = _allocate_bit_arrays(vol);
+	if (rc != 0) {
+		goto error;
+	}
+
 	size_needed = spdk_reduce_get_backing_device_size(&vol->params);
 	size = vol->backing_dev->blockcnt * vol->backing_dev->blocklen;
 	if (size_needed > size) {
