@@ -171,4 +171,22 @@ void spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 			    spdk_reduce_vol_op_complete cb_fn,
 			    void *cb_arg);
 
+/**
+ * Write data to a libreduce compressed volume.
+ *
+ * This function will only write to logical blocks on the comparessed volume that
+ * fall within the same chunk.
+ *
+ * \param vol Volume to write data.
+ * \param iov iovec array describing the data to be written
+ * \param iovcnt Number of elements in the iovec array
+ * \param offset Offset (in logical blocks) to write the data on the compressed volume
+ * \param length Length (in logical blocks) of the data to write
+ * \param cb_fn Callback function to signal completion of the writev operation.
+ * \param cb_arg Argument to pass to the callback function.
+ */
+void spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
+			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			    spdk_reduce_vol_op_complete cb_fn, void *cb_arg);
+
 #endif /* SPDK_REDUCE_H_ */

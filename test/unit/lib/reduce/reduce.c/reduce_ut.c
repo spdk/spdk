@@ -469,6 +469,112 @@ load(void)
 	backing_dev_destroy(&backing_dev);
 }
 
+static uint64_t
+_vol_get_chunk_map_index(struct spdk_reduce_vol *vol, uint64_t offset)
+{
+	uint64_t logical_map_index = offset / vol->logical_blocks_per_chunk;
+
+	return vol->pm_logical_map[logical_map_index];
+}
+
+static uint64_t *
+_vol_get_chunk_map(struct spdk_reduce_vol *vol, uint64_t chunk_map_index)
+{
+	return &vol->pm_chunk_maps[chunk_map_index * vol->backing_io_units_per_chunk];
+}
+
+static void
+write_cb(void *arg, int reduce_errno)
+{
+	g_reduce_errno = reduce_errno;
+}
+
+static void
+write_maps(void)
+{
+	struct spdk_reduce_vol_params params = {};
+	struct spdk_reduce_backing_dev backing_dev = {};
+	struct iovec iov;
+	char buf[16 * 1024]; /* chunk size */
+	uint32_t i;
+	uint64_t old_chunk0_map_index, new_chunk0_map_index;
+	uint64_t *old_chunk0_map, *new_chunk0_map;
+
+	params.vol_size = 1024 * 1024; /* 1MB */
+	params.chunk_size = 16 * 1024;
+	params.backing_io_unit_size = 4096;
+	params.logical_block_size = 512;
+	spdk_uuid_generate(&params.uuid);
+
+	backing_dev_init(&backing_dev, &params);
+
+	g_vol = NULL;
+	g_reduce_errno = -1;
+	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+
+	for (i = 0; i < g_vol->params.vol_size / g_vol->params.chunk_size; i++) {
+		CU_ASSERT(_vol_get_chunk_map_index(g_vol, i) == REDUCE_EMPTY_MAP_ENTRY);
+	}
+
+	iov.iov_base = buf;
+	iov.iov_len = params.logical_block_size;
+	g_reduce_errno = -1;
+	spdk_reduce_vol_writev(g_vol, &iov, 1, 0, 1, write_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	old_chunk0_map_index = _vol_get_chunk_map_index(g_vol, 0);
+	CU_ASSERT(old_chunk0_map_index != REDUCE_EMPTY_MAP_ENTRY);
+	CU_ASSERT(spdk_bit_array_get(g_vol->allocated_chunk_maps, old_chunk0_map_index) == true);
+
+	old_chunk0_map = _vol_get_chunk_map(g_vol, old_chunk0_map_index);
+	for (i = 0; i < g_vol->backing_io_units_per_chunk; i++) {
+		CU_ASSERT(old_chunk0_map[i] != REDUCE_EMPTY_MAP_ENTRY);
+		CU_ASSERT(spdk_bit_array_get(g_vol->allocated_backing_io_units, old_chunk0_map[i]) == true);
+	}
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_writev(g_vol, &iov, 1, 0, 1, write_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	new_chunk0_map_index = _vol_get_chunk_map_index(g_vol, 0);
+	CU_ASSERT(new_chunk0_map_index != REDUCE_EMPTY_MAP_ENTRY);
+	CU_ASSERT(new_chunk0_map_index != old_chunk0_map_index);
+	CU_ASSERT(spdk_bit_array_get(g_vol->allocated_chunk_maps, new_chunk0_map_index) == true);
+	CU_ASSERT(spdk_bit_array_get(g_vol->allocated_chunk_maps, old_chunk0_map_index) == false);
+
+	for (i = 0; i < g_vol->backing_io_units_per_chunk; i++) {
+		CU_ASSERT(spdk_bit_array_get(g_vol->allocated_backing_io_units, old_chunk0_map[i]) == false);
+	}
+
+	new_chunk0_map = _vol_get_chunk_map(g_vol, new_chunk0_map_index);
+	for (i = 0; i < g_vol->backing_io_units_per_chunk; i++) {
+		CU_ASSERT(new_chunk0_map[i] != REDUCE_EMPTY_MAP_ENTRY);
+		CU_ASSERT(spdk_bit_array_get(g_vol->allocated_backing_io_units, new_chunk0_map[i]) == true);
+	}
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	g_vol = NULL;
+	g_reduce_errno = -1;
+	spdk_reduce_vol_load(&backing_dev, load_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+	CU_ASSERT(g_vol->params.vol_size == params.vol_size);
+	CU_ASSERT(g_vol->params.chunk_size == params.chunk_size);
+	CU_ASSERT(g_vol->params.backing_io_unit_size == params.backing_io_unit_size);
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	persistent_pm_buf_destroy();
+	backing_dev_destroy(&backing_dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -491,7 +597,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "init_failure", init_failure) == NULL ||
 		CU_add_test(suite, "init_md", init_md) == NULL ||
 		CU_add_test(suite, "init_backing_dev", init_backing_dev) == NULL ||
-		CU_add_test(suite, "load", load) == NULL
+		CU_add_test(suite, "load", load) == NULL ||
+		CU_add_test(suite, "write_maps", write_maps) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
