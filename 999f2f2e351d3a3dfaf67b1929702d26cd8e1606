@@ -22,6 +22,30 @@
       "revId": "999f2f2e351d3a3dfaf67b1929702d26cd8e1606",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4755f0c6_8040fb61",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1503,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-10-02T02:26:06Z",
+      "side": 1,
+      "message": "Did you mistype \"raid_bdev_deconfigure()\" with \"raid_bdev_configre()\"? If we remove the case that RAID bdev went offline, we may have to remove following code in raid_bdev_configure:\n\n    raid_bdev-\u003estate \u003d RAID_BDEV_STATE_OFFLINE;\n    TAILQ_REMOVE(\u0026g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);\n    TAILQ_INSERT_TAIL(\u0026g_spdk_raid_bdev_offline_list, raid_bdev, state_link);\n\nI\u0027m in vacation during Chinese National Day, I will check my patch when I back to work.",
+      "parentUuid": "c38595a0_c4705d56",
+      "range": {
+        "startLine": 1503,
+        "startChar": 26,
+        "endLine": 1503,
+        "endChar": 49
+      },
+      "revId": "999f2f2e351d3a3dfaf67b1929702d26cd8e1606",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
