@@ -216,12 +216,29 @@ struct reduce_init_load_ctx {
 };
 
 static void
+_init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx)
+{
+	if (vol != NULL) {
+		spdk_dma_free(vol->backing_super);
+		free(vol);
+	}
+
+	if (ctx != NULL) {
+		spdk_dma_free(ctx->path);
+		free(ctx);
+	}
+}
+
+static void
 _init_write_super_cpl(void *cb_arg, int ziperrno)
 {
 	struct reduce_init_load_ctx *init_ctx = cb_arg;
 
 	init_ctx->cb_fn(init_ctx->cb_arg, init_ctx->vol, ziperrno);
-	free(init_ctx);
+	/* Only clean up the ctx - the vol has been passed to the application
+	 *  for use now that initialization was successful.
+	 */
+	_init_load_cleanup(NULL, init_ctx);
 }
 
 static void
@@ -230,7 +247,6 @@ _init_write_path_cpl(void *cb_arg, int ziperrno)
 	struct reduce_init_load_ctx *init_ctx = cb_arg;
 	struct spdk_reduce_vol *vol = init_ctx->vol;
 
-	spdk_dma_free(init_ctx->path);
 	init_ctx->iov[0].iov_base = vol->backing_super;
 	init_ctx->iov[0].iov_len = sizeof(*vol->backing_super);
 	init_ctx->backing_cb_args.cb_fn = _init_write_super_cpl;
@@ -301,25 +317,22 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 
 	vol->backing_super = spdk_dma_zmalloc(sizeof(*vol->backing_super), 0, NULL);
 	if (vol->backing_super == NULL) {
-		free(vol);
 		cb_fn(cb_arg, NULL, -ENOMEM);
+		_init_load_cleanup(vol, NULL);
 		return;
 	}
 
 	init_ctx = calloc(1, sizeof(*init_ctx));
 	if (init_ctx == NULL) {
-		spdk_dma_free(vol->backing_super);
-		free(vol);
 		cb_fn(cb_arg, NULL, -ENOMEM);
+		_init_load_cleanup(vol, NULL);
 		return;
 	}
 
 	init_ctx->path = spdk_dma_zmalloc(REDUCE_PATH_MAX, 0, NULL);
 	if (init_ctx->path == NULL) {
-		free(init_ctx);
-		spdk_dma_free(vol->backing_super);
-		free(vol);
 		cb_fn(cb_arg, NULL, -ENOMEM);
+		_init_load_cleanup(vol, init_ctx);
 		return;
 	}
 
@@ -338,20 +351,16 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	if (vol->pm_file.pm_buf == NULL) {
 		SPDK_ERRLOG("could not pmem_map_file(%s): %s\n",
 			    vol->pm_file.path, strerror(errno));
-		free(init_ctx);
-		spdk_dma_free(vol->backing_super);
-		free(vol);
 		cb_fn(cb_arg, NULL, -errno);
+		_init_load_cleanup(vol, init_ctx);
 		return;
 	}
 
 	if (vol->pm_file.size != mapped_len) {
 		SPDK_ERRLOG("could not map entire pmem file (size=%" PRIu64 " mapped=%" PRIu64 ")\n",
 			    vol->pm_file.size, mapped_len);
-		free(init_ctx);
-		spdk_dma_free(vol->backing_super);
-		free(vol);
 		cb_fn(cb_arg, NULL, -ENOMEM);
+		_init_load_cleanup(vol, init_ctx);
 		return;
 	}
 
@@ -441,16 +450,15 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 
 	_initialize_vol_pm_pointers(vol);
 	load_ctx->cb_fn(load_ctx->cb_arg, vol, 0);
-	spdk_dma_free(load_ctx->path);
-	free(load_ctx);
+	/* Only clean up the ctx - the vol has been passed to the application
+	 *  for use now that volume load was successful.
+	 */
+	_init_load_cleanup(NULL, load_ctx);
 	return;
 
 error:
 	load_ctx->cb_fn(load_ctx->cb_arg, NULL, rc);
-	spdk_dma_free(load_ctx->path);
-	free(load_ctx);
-	spdk_dma_free(vol->backing_super);
-	free(vol);
+	_init_load_cleanup(vol, load_ctx);
 }
 
 void
@@ -475,7 +483,7 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 
 	vol->backing_super = spdk_dma_zmalloc(sizeof(*vol->backing_super), 64, NULL);
 	if (vol->backing_super == NULL) {
-		free(vol);
+		_init_load_cleanup(vol, NULL);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
@@ -484,17 +492,14 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 
 	load_ctx = calloc(1, sizeof(*load_ctx));
 	if (load_ctx == NULL) {
-		spdk_dma_free(vol->backing_super);
-		free(vol);
+		_init_load_cleanup(vol, NULL);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
 
 	load_ctx->path = spdk_dma_zmalloc(REDUCE_PATH_MAX, 64, NULL);
 	if (load_ctx->path == NULL) {
-		free(load_ctx);
-		spdk_dma_free(vol->backing_super);
-		free(vol);
+		_init_load_cleanup(vol, load_ctx);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
@@ -530,8 +535,7 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 
 	vol->backing_dev->close(vol->backing_dev);
 
-	spdk_dma_free(vol->backing_super);
-	free(vol);
+	_init_load_cleanup(vol, NULL);
 	cb_fn(cb_arg, 0);
 }
 
