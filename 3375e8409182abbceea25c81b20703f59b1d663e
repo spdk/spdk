@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e683cc4_7d3b8fa5",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-02T23:12:02Z",
+      "side": 1,
+      "message": "Is this error message accurate?  I think a failure here more indicates a problem in getting the listen_trid itself, rather than anything related to permissions on the subsystem.",
+      "revId": "3375e8409182abbceea25c81b20703f59b1d663e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
