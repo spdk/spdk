@@ -193,6 +193,19 @@ spdk_reduce_vol_get_uuid(struct spdk_reduce_vol *vol)
 	return &vol->params.uuid;
 }
 
+static void
+_initialize_vol_pm_pointers(struct spdk_reduce_vol *vol)
+{
+	/* Superblock is at the beginning of the pm file. */
+	vol->pm_super = (struct spdk_reduce_vol_superblock *)vol->pm_file.pm_buf;
+
+	/* Logical map immediately follows the super block. */
+	vol->pm_logical_map = (uint64_t *)(vol->pm_super + 1);
+
+	/* Chunks maps follow the logical map. */
+	vol->pm_chunk_maps = vol->pm_logical_map + (vol->params.vol_size / vol->params.chunk_size);
+}
+
 struct reduce_init_load_ctx {
 	struct spdk_reduce_vol			*vol;
 	struct spdk_reduce_vol_cb_args		backing_cb_args;
@@ -349,14 +362,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	       sizeof(vol->backing_super->signature));
 	memcpy(&vol->backing_super->params, params, sizeof(*params));
 
-	/* Superblock is at the beginning of the pm file. */
-	vol->pm_super = (struct spdk_reduce_vol_superblock *)vol->pm_file.pm_buf;
-
-	/* Logical map immediately follows the super block. */
-	vol->pm_logical_map = (uint64_t *)(vol->pm_super + 1);
-
-	/* Chunks maps follow the logical map. */
-	vol->pm_chunk_maps = vol->pm_logical_map + (params->vol_size / params->chunk_size);
+	_initialize_vol_pm_pointers(vol);
 
 	memcpy(vol->pm_super, vol->backing_super, sizeof(*vol->backing_super));
 	/* Writing 0xFF's is equivalent of filling it all with SPDK_EMPTY_MAP_ENTRY.
@@ -433,6 +439,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 		goto error;
 	}
 
+	_initialize_vol_pm_pointers(vol);
 	load_ctx->cb_fn(load_ctx->cb_arg, vol, 0);
 	spdk_dma_free(load_ctx->path);
 	free(load_ctx);
