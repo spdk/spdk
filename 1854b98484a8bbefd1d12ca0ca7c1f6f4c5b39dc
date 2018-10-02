@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dc991b7_e2709528",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1706,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T20:39:29Z",
+      "side": 1,
+      "message": "As I suggested elsewhere, I think this reads a lot better with this function name change:\n\n_spdk_bs_back_dev_io_unit -\u003e _spdk_bs_io_unit_to_back_dev_lba",
+      "revId": "1854b98484a8bbefd1d12ca0ca7c1f6f4c5b39dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "102eb548_1e65ff65",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T20:39:29Z",
+      "side": 1,
+      "message": "This is called io_unit everywhere else.",
+      "revId": "1854b98484a8bbefd1d12ca0ca7c1f6f4c5b39dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36c50fb7_95159994",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T20:39:29Z",
+      "side": 1,
+      "message": "The two conversions should have become:\n\n_spdk_bs_io_unit_to_back_dev_lba\n_spdk_bs_io_unit_from_back_dev_lba (although this one should have been written the other way around from the beginning - _spdk_bs_back_dev_lba_to_io_unit).",
+      "revId": "1854b98484a8bbefd1d12ca0ca7c1f6f4c5b39dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
