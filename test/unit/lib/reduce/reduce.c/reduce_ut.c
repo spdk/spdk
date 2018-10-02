@@ -447,6 +447,9 @@ load(void)
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
 	SPDK_CU_ASSERT_FATAL(g_path != NULL);
 	CU_ASSERT(strncmp(g_path, pmem_file_path, sizeof(pmem_file_path)) == 0);
+	CU_ASSERT(g_vol->params.vol_size == params.vol_size);
+	CU_ASSERT(g_vol->params.chunk_size == params.chunk_size);
+	CU_ASSERT(g_vol->params.backing_io_unit_size == params.backing_io_unit_size);
 
 	g_ziperrno = -1;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
