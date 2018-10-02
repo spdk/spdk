@@ -75,6 +75,7 @@ struct spdk_reduce_pm_file {
 };
 
 struct spdk_reduce_vol_request {
+	uint8_t					*buf;
 	TAILQ_ENTRY(spdk_reduce_vol_request)	tailq;
 };
 
@@ -92,6 +93,7 @@ struct spdk_reduce_vol {
 
 	struct spdk_reduce_vol_request		*request_mem;
 	TAILQ_HEAD(, spdk_reduce_vol_request)	requests;
+	uint8_t					*bufspace;
 };
 
 /*
@@ -236,13 +238,21 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	struct spdk_reduce_vol_request *req;
 	int i;
 
+	vol->bufspace = spdk_dma_malloc(REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size, 64, NULL);
+	if (vol->bufspace == NULL) {
+		return -ENOMEM;
+	}
+
 	vol->request_mem = calloc(REDUCE_NUM_VOL_REQUESTS, sizeof(*req));
 	if (vol->request_mem == NULL) {
+		free(vol->bufspace);
 		return -ENOMEM;
 	}
 
 	for (i = 0; i < REDUCE_NUM_VOL_REQUESTS; i++) {
-		TAILQ_INSERT_HEAD(&vol->requests, &vol->request_mem[i], tailq);
+		req = &vol->request_mem[i];
+		TAILQ_INSERT_HEAD(&vol->requests, req, tailq);
+		req->buf = vol->bufspace + i * vol->params.chunk_size;
 	}
 
 	return 0;
@@ -261,6 +271,7 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 		spdk_bit_array_free(&vol->allocated_chunk_maps);
 		spdk_bit_array_free(&vol->allocated_backing_io_units);
 		free(vol->request_mem);
+		spdk_dma_free(vol->bufspace);
 		free(vol);
 	}
 }
