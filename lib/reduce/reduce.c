@@ -57,7 +57,7 @@
 struct spdk_reduce_vol_superblock {
 	uint8_t				signature[8];
 	struct spdk_reduce_vol_params	params;
-	uint8_t				reserved[4056];
+	uint8_t				reserved[4048];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_superblock) == 4096, "size incorrect");
 
@@ -82,6 +82,7 @@ struct spdk_reduce_vol_request {
 struct spdk_reduce_vol {
 	struct spdk_reduce_vol_params		params;
 	uint32_t				backing_io_units_per_chunk;
+	uint32_t				logical_blocks_per_chunk;
 	struct spdk_reduce_pm_file		pm_file;
 	struct spdk_reduce_backing_dev		*backing_dev;
 	struct spdk_reduce_vol_superblock	*backing_super;
@@ -149,13 +150,19 @@ _get_pm_total_chunks_size(uint64_t vol_size, uint64_t chunk_size, uint64_t backi
 static int
 _validate_vol_params(struct spdk_reduce_vol_params *params)
 {
-	if (params->vol_size == 0 || params->chunk_size == 0 || params->backing_io_unit_size == 0) {
+	if (params->vol_size == 0 || params->chunk_size == 0 ||
+	    params->backing_io_unit_size == 0 || params->logical_block_size == 0) {
 		return -EINVAL;
 	}
 
 	/* Chunk size must be an even multiple of the backing io unit size. */
 	if ((params->chunk_size % params->backing_io_unit_size) != 0) {
 		return -EINVAL;
+	}
+
+	/* Chunk size must be an even multiple of the logical block size. */
+	if ((params->chunk_size % params->logical_block_size) != 0) {
+		return -1;
 	}
 
 	/* Volume size must be an even multiple of the chunk size. */
@@ -448,6 +455,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	}
 
 	vol->backing_io_units_per_chunk = params->chunk_size / params->backing_io_unit_size;
+	vol->logical_blocks_per_chunk = params->chunk_size / params->logical_block_size;
 	memcpy(&vol->params, params, sizeof(*params));
 
 	rc = _allocate_bit_arrays(vol);
@@ -515,6 +523,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 
 	memcpy(&vol->params, &vol->backing_super->params, sizeof(vol->params));
 	vol->backing_io_units_per_chunk = vol->params.chunk_size / vol->params.backing_io_unit_size;
+	vol->logical_blocks_per_chunk = vol->params.chunk_size / vol->params.logical_block_size;
 
 	rc = _allocate_bit_arrays(vol);
 	if (rc != 0) {
