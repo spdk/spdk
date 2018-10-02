@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e4c08f8_f7546894",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 893,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-02T23:57:49Z",
+      "side": 1,
+      "message": "if you add X: here, it means this is an option specific to bdevperf - and then you shouldn\u0027t add it to event.h and app.c\n\nyou\u0027ll need to add handling of this option in bdevperf_parse_arg (you\u0027ve already added it to bdevperf_usage)\n\nlet\u0027s also not add export_file to opts since this is bdevperf specific - just make it a global",
+      "revId": "0992c18112540eae530d1418a35983503faa6cad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
