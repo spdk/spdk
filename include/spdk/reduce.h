@@ -55,9 +55,17 @@ struct spdk_reduce_vol_params {
 	uint32_t		backing_io_unit_size;
 
 	/**
+	 * Size in bytes of a logical block.  This is the unit in
+	 *  which users read or write data to the compressed volume.
+	 *  Must be greater than 0.
+	 */
+	uint32_t		logical_block_size;
+
+	/**
 	 * Size in bytes of a chunk on the compressed volume.  This
 	 *  is the unit in which data is compressed.  Must be an even
-	 *  multiple of backing_io_unit_size.  Must be greater than 0.
+	 *  multiple of backing_io_unit_size and logical_block_size.
+	 *  Must be greater than 0.
 	 */
 	uint32_t		chunk_size;
 

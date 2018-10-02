@@ -123,6 +123,7 @@ get_backing_device_size(void)
 	params.vol_size = 0;
 	params.chunk_size = 0;
 	params.backing_io_unit_size = 0;
+	params.logical_block_size = 512;
 	CU_ASSERT(spdk_reduce_get_backing_device_size(&params) == -EINVAL);
 
 	/*
@@ -223,6 +224,7 @@ init_failure(void)
 	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = backing_dev.blocklen;
+	params.logical_block_size = 512;
 
 	/* backing_dev and pm_file have an invalid size.  This should fail. */
 	g_vol = NULL;
@@ -329,6 +331,7 @@ init_md(void)
 	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 512;
+	params.logical_block_size = 512;
 
 	backing_dev_init(&backing_dev, &params);
 
@@ -380,6 +383,7 @@ init_backing_dev(void)
 	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 512;
+	params.logical_block_size = 512;
 	spdk_uuid_generate(&params.uuid);
 
 	backing_dev_init(&backing_dev, &params);
@@ -423,6 +427,7 @@ load(void)
 	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 512;
+	params.logical_block_size = 512;
 	spdk_uuid_generate(&params.uuid);
 
 	backing_dev_init(&backing_dev, &params);
