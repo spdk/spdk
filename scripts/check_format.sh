@@ -115,6 +115,34 @@ else
 fi
 rm -f eofnl.log
 
+echo -n "Checking file permissions..."
+rm -f perms.log
+for f in $(git ls-files); do
+	perm_owner_group=( $(ls -ld $f | cut -d ' ' -f 1,3,4) )
+	if [[ "${perm_owner_group[1]}" != "${perm_owner_group[2]}" ]]; then
+		echo "$f: owner ($owner) != group ($group)" >> perms.log
+	fi
+
+	perms="${perm_owner_group[0]}"
+	case ${f##*.} in
+		c|h|cpp|cc|cxx|hh|hpp)
+			# Check if file is executable
+			if [[ "${perms:3:1}${perms:6:1}${perms:9:1}" != '---' ]]; then
+				echo "$f: executable source file" >> perms.log
+			fi
+			;;
+	esac
+done
+
+if [[ -s perms.log ]]; then
+	echo "failed"
+	cat perms.log
+	exit 1
+fi
+
+rm -f perms.log
+echo "OK"
+
 echo -n "Checking for POSIX includes..."
 git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/vhost/rte_vhost*/**' ':!scripts/posix.txt' > scripts/posix.log || true
 if [ -s scripts/posix.log ]; then
