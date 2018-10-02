@@ -174,6 +174,24 @@
       "revId": "fc05b1170be4f2cad7118f62428e9f5ed48cffb3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7ee1089_542c6b48",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 76
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-02T01:37:00Z",
+      "side": 1,
+      "message": "I had this implementation at patch 68 and noticed the problem after upgrading to python3.\n\nYou can check below difference\n\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/416511/68..76/scripts/rpc/bdev.pyhttps://review.gerrithub.io/#/c/spdk/spdk/+/416511/68..76/scripts/rpc/bdev.py\n\n\u003d\u003d The build error here as following \u003d\u003d\nSo that I change the parameter type to init and have the default value of -1 to detect if user does not set the related parameter. Line 513 (if rw_ios_per_sec \u003e\u003d 0:) is the key place to \ndetect whether user input a valid value (0: disable, \u003e0: enable \u0026 adjust).\n\nhttps://ci.spdk.io/spdk-jenkins/results/autotest-per-patch/builds/11587/archive/RBD_autotest/build.log\n\n 00:46:15\t# /var/jenkins/workspace/RBD_BlobFS_tests/RBD_autotest/spdk/scripts/rpc.py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 20000\nTraceback (most recent call last):\n  File \"/var/jenkins/workspace/RBD_BlobFS_tests/RBD_autotest/spdk/scripts/rpc.py\", line 1785, in \u003cmodule\u003e\n    args.func(args)\n  File \"/var/jenkins/workspace/RBD_BlobFS_tests/RBD_autotest/spdk/scripts/rpc.py\", line 21, in rpc_cmd\n    func(*args, **kwargs)\n  File \"/var/jenkins/workspace/RBD_BlobFS_tests/RBD_autotest/spdk/scripts/rpc.py\", line 456, in set_bdev_qos_limit\n    rw_mbytes_per_sec\u003dargs.rw_mbytes_per_sec)\n  File \"/var/jenkins/workspace/RBD_BlobFS_tests/RBD_autotest/spdk/scripts/rpc/bdev.py\", line 515, in set_bdev_qos_limit\n    if rw_mbytes_per_sec \u003e\u003d 0:\nTypeError: \u0027\u003e\u003d\u0027 not supported between instances of \u0027NoneType\u0027 and \u0027int\u0027",
+      "parentUuid": "ca217e7c_166da311",
+      "revId": "fc05b1170be4f2cad7118f62428e9f5ed48cffb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
