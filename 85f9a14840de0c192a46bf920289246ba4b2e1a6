@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d68cd1a5_990ed8e1",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "spdk_nvme_rdma_sgl_segment? That\u0027s the terminology used in the spec",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "537a7310_0784bcc3",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "Another way you could have done this is to define a new structure like so:\n\nstruct spdk_nvmf_cmd {\n    struct spdk_nvme_cmd cmd;\n    struct spdk_nvme_sgl_descriptor sgl[NVME_RDMA_MAX_SGL_DESCRIPTORS];\n};\n\nThen, allocate an array of these instead of an array of just the spdk_nvme_cmds. This strategy is slightly better for a couple of reasons:\n\n1) You minimize the number of memory registrations you perform (fewer ibv_mr objects), which are limited by a cap at the RNIC\n2) You minimize the number of callocs and frees you must perform.\n3) The memory for the command happens to be 64 bytes (one cache line). The array of sgl elements happens to be exactly 4 cache lines. That means each command stays aligned to cache line boundaries. This is also true in your scheme below, I\u0027m just pointing out that the way above isn\u0027t worse.",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5192f9b8_135018ed",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "This is technically a 2D array if you look at the memory layout, but because you created an intermediate struct it\u0027s just a 1D array of struct spdk_nvme_rdma_sgl_descriptor_list structures. You can probably simplify the comment here.",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2150077_39df3df9",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "nvme_rdma_ctrlr_get_max_sges()?",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45a2ae0b_611f4f82",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "Does this comment need to be updated or removed?",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b3958bd_203e73bc",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "I assume you plan to handle this case via splitting in the future",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf719c53_07f2a401",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "Maybe name this variable \"num_sgl_desc\" - it\u0027s just a count of the number of descriptors in this list.",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a25b5376_0640463a",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "A comment here along the lines of \"If only one SGL Descriptor is required, embed it directly in the command.\" would be good. You can make it even more obvious by doing a memcpy of the first element in nvmf_sgl to req-\u003ecmd.dptr.sgl1 here.",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93cc7951_06b89928",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "A comment along the lines of \"If more than one SGL Descriptor is required, embed an SGL descriptor into the command that describes the location of the remaining SGL descriptors.\"",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "964bbb5f_84a1a7ec",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "If you use the strategy I outlined above where the commands and the sgl\u0027s are allocated in a single contiguous region, you\u0027d only actually need 1 RDMA SGL element to perform the send here. You\u0027ll still have to update it\u0027s length appropriately.",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bf22638_87ee607b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1596,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-02T17:42:54Z",
+      "side": 1,
+      "message": "Update this comment",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
