@@ -16,6 +16,24 @@
       "revId": "5df33b5c3777e456e5b5c9c992e310b915a07c52",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df265a2b_eb83fa1c",
+        "filename": "Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-02T16:09:44Z",
+      "side": 1,
+      "message": "Sure, but in this python script there is almost the same regex  as here :P\n\nAnyway, the idea begind this patch is to remove python scripts from build chain.",
+      "parentUuid": "531598cd_f047ab19",
+      "revId": "5df33b5c3777e456e5b5c9c992e310b915a07c52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
