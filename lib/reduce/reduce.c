@@ -72,7 +72,7 @@ struct spdk_reduce_pm_file {
 };
 
 struct spdk_reduce_vol {
-	struct spdk_uuid			uuid;
+	struct spdk_reduce_vol_params		params;
 	struct spdk_reduce_pm_file		pm_file;
 	struct spdk_reduce_backing_dev		*backing_dev;
 	struct spdk_reduce_vol_superblock	*backing_super;
@@ -190,7 +190,7 @@ spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params)
 const struct spdk_uuid *
 spdk_reduce_vol_get_uuid(struct spdk_reduce_vol *vol)
 {
-	return &vol->uuid;
+	return &vol->params.uuid;
 }
 
 struct reduce_init_load_ctx {
@@ -342,7 +342,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	memcpy(&vol->uuid, &params->uuid, sizeof(params->uuid));
+	memcpy(&vol->params, params, sizeof(*params));
 	vol->backing_dev = backing_dev;
 
 	memcpy(vol->backing_super->signature, SPDK_REDUCE_SIGNATURE,
@@ -394,7 +394,6 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 {
 	struct reduce_init_load_ctx *load_ctx = cb_arg;
 	struct spdk_reduce_vol *vol = load_ctx->vol;
-	struct spdk_reduce_vol_params *params = &vol->backing_super->params;
 	int64_t size, size_needed;
 	size_t mapped_len;
 	int rc;
@@ -407,7 +406,8 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 		goto error;
 	}
 
-	size_needed = spdk_reduce_get_backing_device_size(params);
+	memcpy(&vol->params, &vol->backing_super->params, sizeof(vol->params));
+	size_needed = spdk_reduce_get_backing_device_size(&vol->params);
 	size = vol->backing_dev->blockcnt * vol->backing_dev->blocklen;
 	if (size_needed > size) {
 		SPDK_ERRLOG("backing device size %" PRIi64 " but %" PRIi64 " expected\n",
@@ -417,7 +417,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 	}
 
 	memcpy(vol->pm_file.path, load_ctx->path, sizeof(vol->pm_file.path));
-	vol->pm_file.size = spdk_reduce_get_pm_file_size(params);
+	vol->pm_file.size = spdk_reduce_get_pm_file_size(&vol->params);
 	vol->pm_file.pm_buf = pmem_map_file(vol->pm_file.path, vol->pm_file.size,
 					    0, 0, &mapped_len, &vol->pm_file.pm_is_pmem);
 	if (vol->pm_file.pm_buf == NULL) {
@@ -432,8 +432,6 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 		rc = -ENOMEM;
 		goto error;
 	}
-
-	memcpy(&vol->uuid, &params->uuid, sizeof(params->uuid));
 
 	load_ctx->cb_fn(load_ctx->cb_arg, vol, 0);
 	spdk_dma_free(load_ctx->path);
