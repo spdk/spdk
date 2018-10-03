@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d831668_d1aecece",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 83
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-03T08:03:18Z",
+      "side": 1,
+      "message": "This is to check whether the user has set this optional parameter and also it is valid \u003e\u003d0.",
+      "range": {
+        "startLine": 513,
+        "startChar": 7,
+        "endLine": 513,
+        "endChar": 57
+      },
+      "revId": "1903b52581dba91d809aeb710d24cd8e1c55291a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
