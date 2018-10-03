@@ -66,6 +66,18 @@
  */
 #define REG_MAP_NOTIFY_START	(1ULL << 63)
 
+#define _2MB_OFFSET(ptr)	(((uintptr_t)(ptr)) &  (0x200000 - 1))
+
+/* 9 bits for the offset within 2MB boundaries (in 4KB pages). */
+#define REG_MAP_OFFSET_SHIFT	0
+#define REG_MAP_OFFSET(reg)	(((reg) >> REG_MAP_OFFSET_SHIFT) & 0x1ff)
+
+/* 9 bits for the size within 2MB boundaries (in 4KB pages) */
+#define REG_MAP_SIZE_SHIFT	9
+/* treat size 0 as full 2MB */
+#define REG_MAP_SIZE_RAW(reg)	(((reg) >> REG_MAP_SIZE_SHIFT) & 0x1ff)
+#define REG_MAP_SIZE(reg)	(((((reg) >> REG_MAP_SIZE_SHIFT) - 1) & 0x1ff) + 1)
+
 /* Translation of a single 2MB page. */
 struct map_2mb {
 	uint64_t translation_2mb;
@@ -98,7 +110,9 @@ struct spdk_mem_map {
 
 /* Registrations map. The 64 bit translations are bit fields with the
  * following layout (starting with the low bits):
- *    0 - 61 : reserved
+ *    0 -  8 : offset in 4KB pages
+ *    9 - 17 : size in 4KB pages
+ *   18 - 61 : reserved
  *   62 - 63 : flags
  */
 static struct spdk_mem_map *g_mem_reg_map;
@@ -117,6 +131,7 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 	uint64_t contig_start = 0;
 	uint64_t contig_end = 0;
 	struct map_1gb *map_1gb;
+	uint64_t reg;
 	int rc;
 
 	if (!g_mem_reg_map) {
@@ -147,16 +162,17 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 		}
 
 		for (idx_1gb = 0; idx_1gb < sizeof(map_1gb->map) / sizeof(map_1gb->map[0]); idx_1gb++) {
-			if ((map_1gb->map[idx_1gb].translation_2mb & REG_MAP_REGISTERED) &&
-			    (contig_start == 0 || (map_1gb->map[idx_1gb].translation_2mb & REG_MAP_NOTIFY_START) == 0)) {
+			reg = map_1gb->map[idx_1gb].translation_2mb;
+			if ((reg & REG_MAP_REGISTERED) &&
+			    (contig_start == 0 || (reg & REG_MAP_NOTIFY_START) == 0)) {
 				/* Rebuild the virtual address from the indexes */
 				uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
 				if (contig_start == 0) {
-					contig_start = vaddr;
+					contig_start = vaddr + REG_MAP_OFFSET(reg);
 				}
 
-				contig_end = vaddr + VALUE_2MB;
+				contig_end = vaddr + REG_MAP_SIZE(reg);
 			} else {
 				if (contig_start != 0) {
 					/* End of of a virtually contiguous range */
@@ -207,15 +223,16 @@ err_unregister:
 		}
 
 		for (; idx_1gb < UINT64_MAX; idx_1gb--) {
-			if ((map_1gb->map[idx_1gb].translation_2mb & REG_MAP_REGISTERED) &&
-			    (contig_end == 0 || (map_1gb->map[idx_1gb].translation_2mb & REG_MAP_NOTIFY_START) == 0)) {
+			reg = map_1gb->map[idx_1gb].translation_2mb;
+			if ((reg & REG_MAP_REGISTERED) &&
+			    (contig_end == 0 || (reg & REG_MAP_NOTIFY_START) == 0)) {
 				/* Rebuild the virtual address from the indexes */
 				uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
 				if (contig_end == 0) {
-					contig_end = vaddr + VALUE_2MB;
+					contig_end = vaddr + REG_MAP_SIZE(reg);
 				}
-				contig_start = vaddr;
+				contig_start = vaddr + REG_MAP_OFFSET(reg);
 			} else {
 				if (contig_end != 0) {
 					/* End of of a virtually contiguous range */
@@ -318,7 +335,7 @@ spdk_mem_register(void *vaddr, size_t len)
 		return -EINVAL;
 	}
 
-	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+	if (((uintptr_t)vaddr & MASK_4KB) || (len & MASK_4KB)) {
 		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;
@@ -330,8 +347,8 @@ spdk_mem_register(void *vaddr, size_t len)
 
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
 
-	seg_vaddr = vaddr;
-	seg_len = len;
+	seg_vaddr = (void *)((uintptr_t)vaddr & ~(VALUE_2MB - 1));
+	seg_len = (len + VALUE_2MB - 1) & ~(VALUE_2MB - 1);
 	while (seg_len > 0) {
 		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
 		if (reg & REG_MAP_REGISTERED) {
@@ -345,11 +362,15 @@ spdk_mem_register(void *vaddr, size_t len)
 	seg_vaddr = vaddr;
 	seg_len = 0;
 	while (len > 0) {
-		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB,
-					     seg_len == 0 ? REG_MAP_REGISTERED | REG_MAP_NOTIFY_START : REG_MAP_REGISTERED);
-		seg_len += VALUE_2MB;
-		vaddr += VALUE_2MB;
-		len -= VALUE_2MB;
+		reg = seg_len == 0 ? REG_MAP_REGISTERED | REG_MAP_NOTIFY_START : REG_MAP_REGISTERED;
+		reg |= ((uintptr_t)vaddr & (VALUE_2MB - 1)) >> 12;
+		reg |= len > VALUE_2MB ? 0 : (((((uintptr_t)vaddr + len) & (VALUE_2MB - 1)) >> 12) << 9);
+		spdk_mem_map_set_translation(g_mem_reg_map,
+					     (uint64_t)(((uintptr_t)vaddr & ~(VALUE_2MB - 1))),
+					     VALUE_2MB, reg);
+		seg_len += spdk_min(len, VALUE_2MB - _2MB_OFFSET(vaddr));
+		len -= spdk_min(len, VALUE_2MB - _2MB_OFFSET(vaddr));
+		vaddr += VALUE_2MB - _2MB_OFFSET(vaddr);
 	}
 
 	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
@@ -378,7 +399,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 		return -EINVAL;
 	}
 
-	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+	if (((uintptr_t)vaddr & MASK_4KB) || (len & MASK_4KB)) {
 		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
 			    __func__, vaddr, len);
 		return -EINVAL;
@@ -396,7 +417,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 		return -ERANGE;
 	}
 
-	seg_vaddr = vaddr;
+	seg_vaddr = (void *)((uintptr_t)vaddr & ~(VALUE_2MB - 1));
 	seg_len = len;
 	while (seg_len > 0) {
 		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
@@ -406,14 +427,17 @@ spdk_mem_unregister(void *vaddr, size_t len)
 		}
 
 		seg_vaddr += VALUE_2MB;
-		seg_len -= VALUE_2MB;
+		seg_len -= spdk_min(seg_len, VALUE_2MB);
 	}
 
 	newreg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
 	/* If the next page is registered, it must be a start of a region as well,
 	 * otherwise we'd be unregistering only a part of a region.
 	 */
-	if ((newreg & REG_MAP_NOTIFY_START) == 0 && (newreg & REG_MAP_REGISTERED)) {
+	uint64_t newsize = REG_MAP_SIZE_RAW(reg) << 12;
+	uint64_t cursize = (((uintptr_t)vaddr + len) & (VALUE_2MB - 1));
+	if (((newreg & REG_MAP_NOTIFY_START) == 0 && (newreg & REG_MAP_REGISTERED)) ||
+	    newsize != cursize) {
 		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 		return -ERANGE;
 	}
@@ -421,8 +445,8 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	seg_len = 0;
 
 	while (len > 0) {
-		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr, NULL);
-		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, 0);
+		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr & ~(VALUE_2MB - 1), NULL);
+		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr & ~(VALUE_2MB - 1), VALUE_2MB, 0);
 
 		if (seg_len > 0 && (reg & REG_MAP_NOTIFY_START)) {
 			TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
@@ -433,14 +457,15 @@ spdk_mem_unregister(void *vaddr, size_t len)
 				}
 			}
 
-			seg_vaddr = vaddr + VALUE_2MB;
+			seg_vaddr = vaddr + VALUE_2MB - _2MB_OFFSET(vaddr);
 			seg_len = 0;
 		} else {
-			seg_len += VALUE_2MB;
+			seg_len += spdk_min(len, VALUE_2MB - _2MB_OFFSET(vaddr));
 		}
 
-		vaddr += VALUE_2MB;
-		len -= VALUE_2MB;
+		size_t buflen = spdk_min(len, VALUE_2MB - _2MB_OFFSET(vaddr));
+		vaddr += buflen;
+		len -= buflen;
 	}
 
 	if (seg_len > 0) {

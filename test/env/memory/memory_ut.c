@@ -66,8 +66,8 @@ test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 {
 	uint32_t i, end;
 
-	SPDK_CU_ASSERT_FATAL(((uintptr_t)vaddr & MASK_2MB) == 0);
-	SPDK_CU_ASSERT_FATAL((len & MASK_2MB) == 0);
+	SPDK_CU_ASSERT_FATAL(((uintptr_t)vaddr & MASK_4KB) == 0);
+	SPDK_CU_ASSERT_FATAL((len & MASK_4KB) == 0);
 
 	/*
 	 * This is a test requirement - the bit array we use to verify
@@ -76,15 +76,17 @@ test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	SPDK_CU_ASSERT_FATAL((uintptr_t)vaddr < (VALUE_2MB * PAGE_ARRAY_SIZE));
 
 	i = (uintptr_t)vaddr >> SHIFT_2MB;
-	end = i + (len >> SHIFT_2MB);
+	end = i + (((len + VALUE_2MB - 1) & ~(VALUE_2MB - 1)) >> SHIFT_2MB);
 	for (; i < end; i++) {
 		switch (action) {
 		case SPDK_MEM_MAP_NOTIFY_REGISTER:
+			fprintf(stderr, "reg %p-%p (size: %zu)\n", vaddr, vaddr + len, len);
 			/* This page should not already be registered */
 			SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(g_page_array, i) == false);
 			SPDK_CU_ASSERT_FATAL(spdk_bit_array_set(g_page_array, i) == 0);
 			break;
 		case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+			fprintf(stderr, "unreg %p-%p (size: %zu)\n", vaddr, vaddr + len, len);
 			SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(g_page_array, i) == true);
 			spdk_bit_array_clear(g_page_array, i);
 			break;
@@ -211,11 +213,11 @@ test_mem_map_registration(void)
 	rc =  spdk_mem_unregister((void *)VALUE_2MB, VALUE_2MB);
 	CU_ASSERT(rc == -EINVAL);
 
-	/* Register non-2MB multiple size */
+	/* Register non-4KB multiple size */
 	rc = spdk_mem_register((void *)VALUE_2MB, 1234);
 	CU_ASSERT(rc == -EINVAL);
 
-	/* Register region that isn't 2MB aligned */
+	/* Register region that isn't 4KB aligned */
 	rc = spdk_mem_register((void *)1234, VALUE_2MB);
 	CU_ASSERT(rc == -EINVAL);
 
@@ -249,6 +251,33 @@ test_mem_map_registration(void)
 
 	/* Unregister the entire address range */
 	rc = spdk_mem_unregister((void *)0, 3 * VALUE_2MB);
+	CU_ASSERT(rc == 0);
+
+	/* Register region that is 4KB aligned */
+	rc = spdk_mem_register((void *)0, 2 * VALUE_4KB);
+	CU_ASSERT(rc == 0);
+
+	/* Register region that is collides with another 4KB mapping */
+	rc = spdk_mem_register((void *)0, VALUE_4KB);
+	CU_ASSERT(rc == -EBUSY);
+
+	/* Register region that doesn't collide with any other 4KB mapping,
+	 * but is within 2MB region of another mapping
+	 * - we don't support that yet
+	 */
+	rc = spdk_mem_register((void *)(3 * VALUE_4KB), VALUE_4KB);
+	CU_ASSERT(rc == -EBUSY);
+
+	/* Unregister the 4KB aligned mapping */
+	rc = spdk_mem_unregister((void *)0, 2 * VALUE_4KB);
+	CU_ASSERT(rc == 0);
+
+	/* Register a huge 4KB aligned mapping that spans multiple 2MB regions */
+	rc = spdk_mem_register((void *)(8 * VALUE_4KB), 2 * VALUE_2MB + 4 * VALUE_4KB);
+	CU_ASSERT(rc == 0);
+
+	/* Unregister the 4KB aligned mapping */
+	rc = spdk_mem_unregister((void *)(8 * VALUE_4KB), 2 * VALUE_2MB + 4 * VALUE_4KB);
 	CU_ASSERT(rc == 0);
 
 	spdk_mem_map_free(&map);

@@ -68,6 +68,7 @@ extern struct rte_pci_bus rte_pci_bus;
 
 #define SHIFT_4KB	12 /* (1 << 12) == 4KB */
 #define MASK_4KB	((1ULL << SHIFT_4KB) - 1)
+#define VALUE_4KB	(1 << SHIFT_4KB)
 
 struct spdk_pci_enum_ctx {
 	struct rte_pci_driver	driver;
