@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5c11ac0_b7137178",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-03T17:43:54Z",
+      "side": 1,
+      "message": "This is unused",
+      "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebd682e7_a4c9b00e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 929,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-03T17:43:54Z",
+      "side": 1,
+      "message": "I think, for reasons that will become clear below, we should capture a struct spdk_nvmf_cmd *cmd \u003d rqpair-\u003ecmds[rdma_req-\u003eid] here instead of just the SGL.",
+      "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3351a1fe_e6aeabe2",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-03T17:43:54Z",
+      "side": 1,
+      "message": "I think this may end up being clearer if it is written as a for loop. It makes it more obvious that you\u0027re filling out an SGL one element at a time.\n\nfor (num_sgl_desc \u003d 0; num_sgl_desc \u003c max_num_sgl; num_sgl_desc++) {\n\n    ...\n\n    cmd-\u003esgl[num_sgl_desc].keyed.type \u003d SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;\n    cmd-\u003esgl[num_sgl_desc].keyed.subtype \u003d SPDK_NVME_SGL_SUBTYPE_ADDRESS;\n    ...\n\n\n    virt_addr +\u003d sge_length;\n    if (remaining_size \u003d\u003d 0) {\n        break;\n    }\n}",
+      "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f28d19b_d4b51e9d",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-03T17:43:54Z",
+      "side": 1,
+      "message": "Move comment into else section",
+      "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
