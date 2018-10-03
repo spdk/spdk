@@ -22,6 +22,30 @@
       "revId": "1903b52581dba91d809aeb710d24cd8e1c55291a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b26dbb6_9e4a3c7f",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 83
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-03T22:42:00Z",
+      "side": 1,
+      "message": "I think we can let the application do the verification.  There are many parameters in our RPCs where we let the application verify the data rather than trying to enforce it on the Python side.\n\nIf user passes a negative value via RPC, spdk_json_decode_uint64 should fail to decode it.",
+      "parentUuid": "1d831668_d1aecece",
+      "range": {
+        "startLine": 513,
+        "startChar": 7,
+        "endLine": 513,
+        "endChar": 57
+      },
+      "revId": "1903b52581dba91d809aeb710d24cd8e1c55291a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
