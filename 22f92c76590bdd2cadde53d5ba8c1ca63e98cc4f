@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe4cbd90_1f95b22e",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-03T18:54:15Z",
+      "side": 1,
+      "message": "changpeng mentioned this earlier - but the comment above needs to be fixed since now we\u0027re doing 4 subsystems",
+      "revId": "22f92c76590bdd2cadde53d5ba8c1ca63e98cc4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e80bbc6_713add7d",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-03T18:54:15Z",
+      "side": 1,
+      "message": "just a thought - but would it be potentially more stressful to disconnect in the reverse order that we connected?  we would kind of sort of get a varying amount of time between the corresponding connect/disconnects - subsystem 4 would have a very short period of time, subsystem 3 a bit more, etc.",
+      "revId": "22f92c76590bdd2cadde53d5ba8c1ca63e98cc4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
