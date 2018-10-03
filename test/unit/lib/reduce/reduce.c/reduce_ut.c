@@ -308,12 +308,13 @@ backing_dev_destroy(struct spdk_reduce_backing_dev *backing_dev)
 }
 
 static void
-backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce_vol_params *params)
+backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce_vol_params *params,
+		 uint32_t backing_blocklen)
 {
 	int64_t size;
 
 	size = spdk_reduce_get_backing_device_size(params);
-	backing_dev->blocklen = params->backing_io_unit_size;
+	backing_dev->blocklen = backing_blocklen;
 	backing_dev->blockcnt = size / backing_dev->blocklen;
 	backing_dev->readv = backing_dev_readv;
 	backing_dev->writev = backing_dev_writev;
@@ -338,7 +339,7 @@ init_md(void)
 	params.backing_io_unit_size = 512;
 	params.logical_block_size = 512;
 
-	backing_dev_init(&backing_dev, &params);
+	backing_dev_init(&backing_dev, &params, 512);
 
 	g_vol = NULL;
 	g_reduce_errno = -1;
@@ -379,7 +380,7 @@ init_md(void)
 }
 
 static void
-init_backing_dev(void)
+_init_backing_dev(uint32_t backing_blocklen)
 {
 	struct spdk_reduce_vol_params params = {};
 	struct spdk_reduce_vol_params *persistent_params;
@@ -391,7 +392,7 @@ init_backing_dev(void)
 	params.logical_block_size = 512;
 	spdk_uuid_generate(&params.uuid);
 
-	backing_dev_init(&backing_dev, &params);
+	backing_dev_init(&backing_dev, &params, backing_blocklen);
 
 	g_vol = NULL;
 	g_path = NULL;
@@ -423,7 +424,14 @@ init_backing_dev(void)
 }
 
 static void
-load(void)
+init_backing_dev(void)
+{
+	_init_backing_dev(512);
+	_init_backing_dev(4096);
+}
+
+static void
+_load(uint32_t backing_blocklen)
 {
 	struct spdk_reduce_vol_params params = {};
 	struct spdk_reduce_backing_dev backing_dev = {};
@@ -435,7 +443,7 @@ load(void)
 	params.logical_block_size = 512;
 	spdk_uuid_generate(&params.uuid);
 
-	backing_dev_init(&backing_dev, &params);
+	backing_dev_init(&backing_dev, &params, backing_blocklen);
 
 	g_vol = NULL;
 	g_reduce_errno = -1;
@@ -469,6 +477,13 @@ load(void)
 	backing_dev_destroy(&backing_dev);
 }
 
+static void
+load(void)
+{
+	_load(512);
+	_load(4096);
+}
+
 static uint64_t
 _vol_get_chunk_map_index(struct spdk_reduce_vol *vol, uint64_t offset)
 {
@@ -496,7 +511,7 @@ read_cb(void *arg, int reduce_errno)
 }
 
 static void
-write_maps(void)
+_write_maps(uint32_t backing_blocklen)
 {
 	struct spdk_reduce_vol_params params = {};
 	struct spdk_reduce_backing_dev backing_dev = {};
@@ -512,7 +527,7 @@ write_maps(void)
 	params.logical_block_size = 512;
 	spdk_uuid_generate(&params.uuid);
 
-	backing_dev_init(&backing_dev, &params);
+	backing_dev_init(&backing_dev, &params, backing_blocklen);
 
 	g_vol = NULL;
 	g_reduce_errno = -1;
@@ -581,9 +596,15 @@ write_maps(void)
 	backing_dev_destroy(&backing_dev);
 }
 
+static void
+write_maps(void)
+{
+	_write_maps(512);
+	_write_maps(4096);
+}
 
 static void
-read_write(void)
+_read_write(uint32_t backing_blocklen)
 {
 	struct spdk_reduce_vol_params params = {};
 	struct spdk_reduce_backing_dev backing_dev = {};
@@ -598,7 +619,7 @@ read_write(void)
 	params.logical_block_size = 512;
 	spdk_uuid_generate(&params.uuid);
 
-	backing_dev_init(&backing_dev, &params);
+	backing_dev_init(&backing_dev, &params, backing_blocklen);
 
 	g_vol = NULL;
 	g_reduce_errno = -1;
@@ -653,6 +674,13 @@ read_write(void)
 
 	persistent_pm_buf_destroy();
 	backing_dev_destroy(&backing_dev);
+}
+
+static void
+read_write(void)
+{
+	_read_write(512);
+	_read_write(4096);
 }
 
 int
