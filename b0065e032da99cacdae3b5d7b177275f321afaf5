@@ -52,6 +52,24 @@
       "revId": "b0065e032da99cacdae3b5d7b177275f321afaf5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f5f2cf1_36b57101",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1489,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-03T17:40:07Z",
+      "side": 1,
+      "message": "Oh yeah, the print.  I\u0027ll look for more like this as well.  thanks",
+      "parentUuid": "3b9f397f_9adae3a4",
+      "revId": "b0065e032da99cacdae3b5d7b177275f321afaf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
