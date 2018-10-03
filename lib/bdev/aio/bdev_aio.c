@@ -128,6 +128,8 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
 	int rc;
 
+	spdk_bdev_io_aligned_buf(spdk_bdev_io_from_ctx(aio_task), fdisk->disk.blocklen);
+
 	io_prep_preadv(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
@@ -158,6 +160,8 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	struct iocb *iocb = &aio_task->iocb;
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
 	int rc;
+
+	spdk_bdev_io_aligned_buf(spdk_bdev_io_from_ctx(aio_task), fdisk->disk.blocklen);
 
 	io_prep_pwritev(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
