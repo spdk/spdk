@@ -3,6 +3,8 @@
 
 	spdk_*;
 	rte_vhost_*;
+	rte_zmalloc;
+	rte_free;
 	virt*;
 	SPDK_LOG*;
 	g_subsystems;
