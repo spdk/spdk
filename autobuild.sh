@@ -14,6 +14,8 @@ cd $rootdir
 date -u
 git describe --tags
 
+./configure $config_params
+
 # Print some test system info out for the log
 echo "** START ** Info for Hostname: $HOSTNAME"
 uname -a
