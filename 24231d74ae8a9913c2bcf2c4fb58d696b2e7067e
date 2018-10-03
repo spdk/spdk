@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fb47a8b_2a201273",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-03T16:40:40Z",
+      "side": 1,
+      "message": "This cuts the execution time in half",
+      "revId": "24231d74ae8a9913c2bcf2c4fb58d696b2e7067e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
