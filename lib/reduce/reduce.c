@@ -76,9 +76,11 @@ struct spdk_reduce_pm_file {
 
 struct spdk_reduce_vol_request {
 	uint8_t					*buf;
+	struct iovec				*buf_iov;
 	struct iovec				*iov;
 	struct spdk_reduce_vol			*vol;
 	int					iovcnt;
+	int					num_backing_ops;
 	uint64_t				offset;
 	uint64_t				length;
 	uint64_t				chunk_map_index;
@@ -86,11 +88,13 @@ struct spdk_reduce_vol_request {
 	spdk_reduce_vol_op_complete		cb_fn;
 	void					*cb_arg;
 	TAILQ_ENTRY(spdk_reduce_vol_request)	tailq;
+	struct spdk_reduce_vol_cb_args		backing_cb_args;
 };
 
 struct spdk_reduce_vol {
 	struct spdk_reduce_vol_params		params;
 	uint32_t				backing_io_units_per_chunk;
+	uint32_t				backing_lba_per_io_unit;
 	uint32_t				logical_blocks_per_chunk;
 	struct spdk_reduce_pm_file		pm_file;
 	struct spdk_reduce_backing_dev		*backing_dev;
@@ -105,6 +109,7 @@ struct spdk_reduce_vol {
 	struct spdk_reduce_vol_request		*request_mem;
 	TAILQ_HEAD(, spdk_reduce_vol_request)	requests;
 	uint8_t					*bufspace;
+	struct iovec				*buf_iov_mem;
 };
 
 /*
@@ -282,9 +287,18 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 		return -ENOMEM;
 	}
 
+	vol->buf_iov_mem = calloc(REDUCE_NUM_VOL_REQUESTS,
+				  sizeof(struct iovec) * vol->backing_io_units_per_chunk);
+	if (vol->buf_iov_mem == NULL) {
+		free(vol->request_mem);
+		free(vol->bufspace);
+		return -ENOMEM;
+	}
+
 	for (i = 0; i < REDUCE_NUM_VOL_REQUESTS; i++) {
 		req = &vol->request_mem[i];
 		TAILQ_INSERT_HEAD(&vol->requests, req, tailq);
+		req->buf_iov = &vol->buf_iov_mem[i * vol->backing_io_units_per_chunk];
 		req->buf = vol->bufspace + i * vol->params.chunk_size;
 	}
 
@@ -481,6 +495,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 
 	vol->backing_io_units_per_chunk = params->chunk_size / params->backing_io_unit_size;
 	vol->logical_blocks_per_chunk = params->chunk_size / params->logical_block_size;
+	vol->backing_lba_per_io_unit = params->backing_io_unit_size / backing_dev->blocklen;
 	memcpy(&vol->params, params, sizeof(*params));
 
 	rc = _allocate_bit_arrays(vol);
@@ -545,6 +560,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 	memcpy(&vol->params, &vol->backing_super->params, sizeof(vol->params));
 	vol->backing_io_units_per_chunk = vol->params.chunk_size / vol->params.backing_io_unit_size;
 	vol->logical_blocks_per_chunk = vol->params.chunk_size / vol->params.logical_block_size;
+	vol->backing_lba_per_io_unit = vol->params.backing_io_unit_size / vol->backing_dev->blocklen;
 
 	rc = _allocate_bit_arrays(vol);
 	if (rc != 0) {
@@ -702,6 +718,11 @@ _write__complete_req(void *_req, int ziperrno)
 	uint64_t *old_chunk;
 	uint32_t i;
 
+	assert(req->num_backing_ops > 0);
+	if (--req->num_backing_ops > 0) {
+		return;
+	}
+
 	logical_map_index = req->offset / vol->logical_blocks_per_chunk;
 
 	old_chunk_map_index = vol->pm_logical_map[logical_map_index];
@@ -733,6 +754,30 @@ _write__complete_req(void *_req, int ziperrno)
 }
 
 static void
+_issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *vol,
+		   reduce_request_fn next_fn, bool is_write)
+{
+	uint32_t i;
+
+	req->num_backing_ops = vol->backing_io_units_per_chunk;
+	req->backing_cb_args.cb_fn = next_fn;
+	req->backing_cb_args.cb_arg = req;
+	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
+		req->buf_iov[i].iov_base = req->buf + i * vol->params.backing_io_unit_size;
+		req->buf_iov[i].iov_len = vol->params.backing_io_unit_size;
+		if (is_write) {
+			vol->backing_dev->writev(vol->backing_dev, &req->buf_iov[i], 1,
+						 req->chunk[i] * vol->backing_lba_per_io_unit,
+						 vol->backing_lba_per_io_unit, &req->backing_cb_args);
+		} else {
+			vol->backing_dev->readv(vol->backing_dev, &req->buf_iov[i], 1,
+						req->chunk[i] * vol->backing_lba_per_io_unit,
+						vol->backing_lba_per_io_unit, &req->backing_cb_args);
+		}
+	}
+}
+
+static void
 _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
 {
 	struct spdk_reduce_vol *vol = req->vol;
@@ -757,21 +802,136 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 		spdk_bit_array_set(vol->allocated_backing_io_units, req->chunk[i]);
 	}
 
-	next_fn(req, 0);
+	_issue_backing_ops(req, vol, next_fn, true /* write */);
 }
 
 static void
 _write__read_done(void *_req, int ziperrno)
 {
 	struct spdk_reduce_vol_request *req = _req;
+	uint64_t chunk_offset;
+	uint8_t *buf;
+	int i;
+
+	assert(req->num_backing_ops > 0);
+	if (--req->num_backing_ops > 0) {
+		return;
+	}
+
+	chunk_offset = req->offset % req->vol->logical_blocks_per_chunk;
+	buf = req->buf + chunk_offset * req->vol->params.logical_block_size;
+	for (i = 0; i < req->iovcnt; i++) {
+		memcpy(buf, req->iov[i].iov_base, req->iov[i].iov_len);
+		buf += req->iov[i].iov_len;
+	}
 
 	_reduce_vol_write_chunk(req, _write__complete_req);
 }
 
 static void
+_read__read_done(void *_req, int ziperrno)
+{
+	struct spdk_reduce_vol_request *req = _req;
+	uint64_t chunk_offset;
+	uint8_t *buf;
+	int i;
+
+	assert(req->num_backing_ops > 0);
+	if (--req->num_backing_ops > 0) {
+		return;
+	}
+
+	chunk_offset = req->offset % req->vol->logical_blocks_per_chunk;
+	buf = req->buf + chunk_offset * req->vol->params.logical_block_size;
+	for (i = 0; i < req->iovcnt; i++) {
+		memcpy(req->iov[i].iov_base, buf, req->iov[i].iov_len);
+		buf += req->iov[i].iov_len;
+	}
+	_reduce_vol_complete_req(req, 0);
+}
+
+static void
 _reduce_vol_read_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
 {
-	next_fn(req, 0);
+	struct spdk_reduce_vol *vol = req->vol;
+	uint64_t chunk;
+
+	chunk = req->offset / vol->logical_blocks_per_chunk;
+	req->chunk_map_index = vol->pm_logical_map[chunk];
+	assert(req->chunk_map_index != UINT32_MAX);
+
+	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
+	_issue_backing_ops(req, vol, next_fn, false /* read */);
+}
+
+static bool
+_iov_array_is_valid(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt,
+		    uint64_t length)
+{
+	uint64_t size = 0;
+	int i;
+
+	for (i = 0; i < iovcnt; i++) {
+		size += iov[i].iov_len;
+	}
+
+	return size == (length * vol->params.logical_block_size);
+}
+
+void
+spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
+		      struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+		      spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_reduce_vol_request *req;
+	uint64_t chunk;
+	int i;
+
+	if (length == 0) {
+		cb_fn(cb_arg, 0);
+		return;
+	}
+
+	if (_request_spans_chunk_boundary(vol, offset, length)) {
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	if (!_iov_array_is_valid(vol, iov, iovcnt, length)) {
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	chunk = offset / vol->logical_blocks_per_chunk;
+	if (vol->pm_logical_map[chunk] == REDUCE_EMPTY_MAP_ENTRY) {
+		/*
+		 * This chunk hasn't been allocated.  So treat the data as all
+		 * zeroes for this chunk - do the memset and immediately complete
+		 * the operation.
+		 */
+		for (i = 0; i < iovcnt; i++) {
+			memset(iov[i].iov_base, 0, iov[i].iov_len);
+		}
+		cb_fn(cb_arg, 0);
+		return;
+	}
+
+	req = TAILQ_FIRST(&vol->requests);
+	if (req == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	TAILQ_REMOVE(&vol->requests, req, tailq);
+	req->vol = vol;
+	req->iov = iov;
+	req->iovcnt = iovcnt;
+	req->offset = offset;
+	req->length = length;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	_reduce_vol_read_chunk(req, _read__read_done);
 }
 
 void
@@ -780,9 +940,22 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_reduce_vol_request *req;
-	uint64_t chunk;
+	uint64_t chunk, chunk_offset;
+	uint32_t lbsize, lb_per_chunk;
+	int i;
+	uint8_t *buf;
+
+	if (length == 0) {
+		cb_fn(cb_arg, 0);
+		return;
+	}
 
 	if (_request_spans_chunk_boundary(vol, offset, length)) {
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	if (!_iov_array_is_valid(vol, iov, iovcnt, length)) {
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
@@ -812,6 +985,23 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 		return;
 	}
 
+	buf = req->buf;
+	lbsize = vol->params.logical_block_size;
+	lb_per_chunk = vol->logical_blocks_per_chunk;
+	/* Note: we must zero out parts of req->buf not specified by this write operation. */
+	chunk_offset = offset % lb_per_chunk;
+	if (chunk_offset != 0) {
+		memset(buf, 0, chunk_offset * lbsize);
+		buf += chunk_offset * lbsize;
+	}
+	for (i = 0; i < iovcnt; i++) {
+		memcpy(buf, iov[i].iov_base, iov[i].iov_len);
+		buf += iov[i].iov_len;
+	}
+	chunk_offset += length;
+	if (chunk_offset != lb_per_chunk) {
+		memset(buf, 0, (lb_per_chunk - chunk_offset) * lbsize);
+	}
 	_reduce_vol_write_chunk(req, _write__complete_req);
 }
 
