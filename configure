@@ -66,6 +66,14 @@ function usage()
 	echo ""
 }
 
+# Load default values
+# Convert config to sourcable configuration file
+sed -r 's/CONFIG_([[:alnum:]_]+)\?=(.*)/CONFIG[\1]=\2/g' CONFIG > CONFIG.sh
+declare -A CONFIG
+source CONFIG.sh
+rm CONFIG.sh
+
+
 function check_dir() {
 	arg="$1"
 	dir="${arg#*=}"
@@ -82,70 +90,70 @@ for i in "$@"; do
 			exit 0
 			;;
 		--prefix=*)
-			CONFIG_PREFIX="${i#*=}"
+			CONFIG[PREFIX]="${i#*=}"
 			;;
 		--enable-debug)
-			CONFIG_DEBUG=y
+			CONFIG[DEBUG]=y
 			;;
 		--disable-debug)
-			CONFIG_DEBUG=n
+			CONFIG[DEBUG]=n
 			;;
 		--enable-log-bt)
-			CONFIG_LOG_BACKTRACE=y
+			CONFIG[LOG_BACKTRACE]=y
 			;;
 		--disable-log-bt)
-			CONFIG_LOG_BACKTRACE=n
+			CONFIG[LOG_BACKTRACE]=n
 			;;
 		--enable-asan)
-			CONFIG_ASAN=y
+			CONFIG[ASAN]=y
 			;;
 		--disable-asan)
-			CONFIG_ASAN=n
+			CONFIG[ASAN]=n
 			;;
 		--enable-ubsan)
-			CONFIG_UBSAN=y
+			CONFIG[UBSAN]=y
 			;;
 		--disable-ubsan)
-			CONFIG_UBSAN=n
+			CONFIG[UBSAN]=n
 			;;
 		--enable-tsan)
-			CONFIG_TSAN=y
+			CONFIG[TSAN]=y
 			;;
 		--disable-tsan)
-			CONFIG_TSAN=n
+			CONFIG[TSAN]=n
 			;;
 		--enable-coverage)
-			CONFIG_COVERAGE=y
+			CONFIG[COVERAGE]=y
 			;;
 		--disable-coverage)
-			CONFIG_COVERAGE=n
+			CONFIG[COVERAGE]=n
 			;;
 		--enable-lto)
-			CONFIG_LTO=y
+			CONFIG[LTO]=y
 			;;
 		--disable-lto)
-			CONFIG_LTO=n
+			CONFIG[LTO]=n
 			;;
 		--enable-tests)
-			CONFIG_TESTS=y
+			CONFIG[TESTS]=y
 			;;
 		--disable-tests)
-			CONFIG_TESTS=n
+			CONFIG[TESTS]=n
 			;;
 		--enable-werror)
-			CONFIG_WERROR=y
+			CONFIG[WERROR]=y
 			;;
 		--disable-werror)
-			CONFIG_WERROR=n
+			CONFIG[WERROR]=n
 			;;
 		--with-env=*)
-			CONFIG_ENV="${i#*=}"
+			CONFIG[ENV]="${i#*=}"
 			;;
 		--with-rbd)
-			CONFIG_RBD=y
+			CONFIG[RBD]=y
 			;;
 		--without-rbd)
-			CONFIG_RBD=n
+			CONFIG[RBD]=n
 			;;
 		--with-raid)
 			echo "--with-raid option ignored and is now deprecated.  RAID module is always enabled."
@@ -154,87 +162,88 @@ for i in "$@"; do
 			echo "--without-raid option ignored and is now deprecated.  RAID module is always enabled."
 			;;
 		--with-rdma)
-			CONFIG_RDMA=y
+			CONFIG[RDMA]=y
 			;;
 		--without-rdma)
-			CONFIG_RDMA=n
+			CONFIG[RDMA]=n
 			;;
 		--with-shared)
-			CONFIG_SHARED=y
+			CONFIG[SHARED]=y
 			;;
 		--without-shared)
-			CONFIG_SHARED=n
+			CONFIG[SHARED]=n
 			;;
 		--with-iscsi-initiator)
-			CONFIG_ISCSI_INITIATOR=y
+			CONFIG[ISCSI_INITIATOR]=y
 			;;
 		--without-iscsi-initiator)
-			CONFIG_ISCSI_INITIATOR=n
+			CONFIG[ISCSI_INITIATOR]=n
 			;;
 		--with-dpdk=*)
 			check_dir "$i"
-			CONFIG_DPDK_DIR=$(readlink -f ${i#*=})
+			CONFIG[DPDK_DIR]=$(readlink -f ${i#*=})
 			;;
 		--without-dpdk)
-			CONFIG_DPDK_DIR=
+			CONFIG[DPDK_DIR]=
 			;;
 		--with-crypto)
-			CONFIG_CRYPTO=y
+			CONFIG[CRYPTO]=y
 			;;
 		--without-crypto)
-			CONFIG_CRYPTO=n
+			CONFIG[CRYPTO]=n
 			;;
 		--with-vhost)
-			CONFIG_VHOST=y
+			CONFIG[VHOST]=y
 			;;
 		--without-vhost)
-			CONFIG_VHOST=n
+			CONFIG[VHOST]=n
 			;;
 		--with-virtio)
-			CONFIG_VIRTIO=y
+			CONFIG[VIRTIO]=y
 			;;
 		--without-virtio)
-			CONFIG_VIRTIO=n
+			CONFIG[VIRTIO]=n
 			;;
 		--with-pmdk)
-			CONFIG_PMDK=y
+			CONFIG[PMDK]=y
+			CONFIG[PMDK_DIR]=""
 			;;
 		--with-pmdk=*)
-			CONFIG_PMDK=y
+			CONFIG[PMDK]=y
 			check_dir "$i"
-			CONFIG_PMDK_DIR=$(readlink -f ${i#*=})
+			CONFIG[PMDK_DIR]=$(readlink -f ${i#*=})
 			;;
 		--without-pmdk)
-			CONFIG_PMDK=n
+			CONFIG[PMDK]=n
 			;;
 		--with-vpp)
-			CONFIG_VPP=y
+			CONFIG[VPP]=y
 			;;
 		--with-vpp=*)
-			CONFIG_VPP=y
+			CONFIG[VPP]=y
 			check_dir "$i"
-			CONFIG_VPP_DIR=$(readlink -f ${i#*=})
+			CONFIG[VPP_DIR]=$(readlink -f ${i#*=})
 			;;
 		--without-vpp)
-			CONFIG_VPP=n
+			CONFIG[VPP]=n
 			;;
 		--with-fio=*)
 			check_dir "$i"
-			CONFIG_FIO_SOURCE_DIR="${i#*=}"
-			CONFIG_FIO_PLUGIN=y
+			CONFIG[FIO_SOURCE_DIR]="${i#*=}"
+			CONFIG[FIO_PLUGIN]=y
 			;;
 		--without-fio)
-			CONFIG_FIO_SOURCE_DIR=
-			CONFIG_FIO_PLUGIN=n
+			CONFIG[FIO_SOURCE_DIR]=
+			CONFIG[FIO_PLUGIN]=n
 			;;
 		--with-vtune=*)
 			check_dir "$i"
-			CONFIG_VTUNE_DIR="${i#*=}"
-			CONFIG_VTUNE=y
+			CONFIG[VTUNE_DIR]="${i#*=}"
+			CONFIG[VTUNE]=y
 			;;
 		--without-vtune)
-			CONFIG_VTUNE_DIR=
-			CONFIG_VTUNE=n
+			CONFIG[VTUNE_DIR]=
+			CONFIG[VTUNE]=n
 			;;
 		--)
 			break
@@ -246,58 +255,64 @@ for i in "$@"; do
 	esac
 done
 
-if [ -z "$CONFIG_ENV" ]; then
-	if [ -z "$CONFIG_DPDK_DIR" ]; then
-		rootdir=$(readlink -f $(dirname $0))
+if [ -z "${CONFIG[ENV]}" ]; then
+	rootdir=$(readlink -f $(dirname $0))
+	CONFIG[ENV]=$rootdir/lib/env_dpdk
+	echo "Using default SPDK env in ${CONFIG[ENV]}"
+	if [ -z "${CONFIG[DPDK_DIR]}" ]; then
 		if [ ! -f "$rootdir"/dpdk/config/common_spdk ]; then
 			echo "DPDK not found; please specify --with-dpdk=<path> or run:"
 			echo
 			echo "  git submodule update --init"
 			exit 1
+		else
+			CONFIG[DPDK_DIR]="${rootdir}/dpdk/build"
+			echo "Using default DPDK in ${CONFIG[DPDK_DIR]}"
 		fi
-		CONFIG_DPDK_DIR="$rootdir"/dpdk/build
 	fi
 else
-	if [ "$CONFIG_VHOST" = "y" ]; then
+	if [ "${CONFIG[VHOST]}" = "y" ]; then
 		echo "Vhost is only supported when using the default DPDK environment. Disabling it."
 	fi
 	# Always disable vhost, but only print the error message if the user explicitly turned it on.
-	CONFIG_VHOST="n"
-	if [ "$CONFIG_VIRTIO" = "y" ]; then
+	CONFIG[VHOST]="n"
+	if [ "${CONFIG[VIRTIO]}" = "y" ]; then
 		echo "Virtio is only supported when using the default DPDK environment. Disabling it."
 	fi
 	# Always disable virtio, but only print the error message if the user explicitly turned it on.
-	CONFIG_VIRTIO="n"
+	CONFIG[VIRTIO]="n"
 fi
 
-if [ "$CONFIG_FIO_PLUGIN" = "y" ]; then
-	if [ -z "$CONFIG_FIO_SOURCE_DIR" ]; then
+if [ "${CONFIG[FIO_PLUGIN]}" = "y" ]; then
+	if [ -z "${CONFIG[FIO_SOURCE_DIR]}" ]; then
 		echo "When fio is enabled, you must specify the fio directory using --with-fio=path"
 		exit 1
 	fi
+else
+	CONFIG[FIO_SOURCE_DIR]=
 fi
 
-if [ "$CONFIG_VTUNE" = "y" ]; then
-	if [ -z "$CONFIG_VTUNE_DIR" ]; then
+if [ "${CONFIG[VTUNE]}" = "y" ]; then
+	if [ -z "${CONFIG[VTUNE_DIR]}" ]; then
 		echo "When VTune is enabled, you must specify the VTune directory using --with-vtune=path"
 		exit 1
 	fi
 fi
 
-if [ "$CONFIG_ASAN" = "y" -a "$CONFIG_TSAN" = "y" ]; then
+if [ "${CONFIG[ASAN]}" = "y" -a "${CONFIG[TSAN]}" = "y" ]; then
 	echo "ERROR: ASAN and TSAN cannot be enabled at the same time."
 	exit 1
 fi
 
 if [[ "$OSTYPE" == "freebsd"* ]]; then
 	# FreeBSD doesn't support all configurations
-	if [[ "$CONFIG_COVERAGE" == "y" ]]; then
+	if [[ "${CONFIG[COVERAGE]}" == "y" ]]; then
 		echo "ERROR: CONFIG_COVERAGE not available on FreeBSD"
 		exit 1
 	fi
 fi
 
-if [ "$CONFIG_RDMA" = "y" ]; then
+if [ "${CONFIG[RDMA]}" = "y" ]; then
 	if [ "$OSTYPE" != "FreeBSD"* ]; then
 		ibv_lib_file="$(readlink -f /usr/lib64/libibverbs.so)" || true
 		if [ -z $ibv_lib_file ]; then
@@ -307,9 +322,9 @@ if [ "$CONFIG_RDMA" = "y" ]; then
 		ibv_maj_ver=`echo $ibv_ver_str | cut -d. -f3`
 		ibv_min_ver=`echo $ibv_ver_str | cut -d. -f4`
 		if [[ "$ibv_maj_var" > 1 || ("$ibv_maj_ver" -eq 1 && "$ibv_min_ver" -ge 1) ]]; then
-			CONFIG_RDMA_SEND_WITH_INVAL="y"
+			CONFIG[RDMA_SEND_WITH_INVAL]="y"
 		else
-			CONFIG_RDMA_SEND_WITH_INVAL="n"
+			CONFIG[RDMA_SEND_WITH_INVAL]="n"
 			echo "
 *******************************************************************************
 WARNING: The Infiniband Verbs opcode Send With Invalidate is either not
@@ -328,7 +343,7 @@ than or equal to 4.14 will see significantly reduced performance.
 	fi
 fi
 
-if [[ "$CONFIG_CRYPTO" = "y" ]]; then
+if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 	echo NOTE: Crypto is currently marked as experimental.  Do not use in production.
 	set +e
 	nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
@@ -348,93 +363,12 @@ if [[ "$CONFIG_CRYPTO" = "y" ]]; then
 fi
 
 echo -n "Creating CONFIG.local..."
-
-# Write the configuration file
-rm -f CONFIG.local
-if [ -n "$CONFIG_PREFIX" ]; then
-	echo "CONFIG_PREFIX?=$CONFIG_PREFIX" >> CONFIG.local
-fi
-if [ -n "$CONFIG_DEBUG" ]; then
-	echo "CONFIG_DEBUG?=$CONFIG_DEBUG" >> CONFIG.local
-fi
-if [ -n "$CONFIG_LOG_BACKTRACE" ]; then
-	echo "CONFIG_LOG_BACKTRACE?=$CONFIG_LOG_BACKTRACE" >> CONFIG.local
-fi
-if [ -n "$CONFIG_WERROR" ]; then
-	echo "CONFIG_WERROR?=$CONFIG_WERROR" >> CONFIG.local
-fi
-if [ -n "$CONFIG_COVERAGE" ]; then
-	echo "CONFIG_COVERAGE?=$CONFIG_COVERAGE" >> CONFIG.local
-fi
-if [ -n "$CONFIG_LTO" ]; then
-	echo "CONFIG_LTO?=$CONFIG_LTO" >> CONFIG.local
-fi
-if [ -n "$CONFIG_TESTS" ]; then
-	echo "CONFIG_TESTS?=$CONFIG_TESTS" >> CONFIG.local
-fi
-if [ -n "$CONFIG_ASAN" ]; then
-	echo "CONFIG_ASAN?=$CONFIG_ASAN" >> CONFIG.local
-fi
-if [ -n "$CONFIG_UBSAN" ]; then
-	echo "CONFIG_UBSAN?=$CONFIG_UBSAN" >> CONFIG.local
-fi
-if [ -n "$CONFIG_TSAN" ]; then
-	echo "CONFIG_TSAN?=$CONFIG_TSAN" >> CONFIG.local
-fi
-if [ -n "$CONFIG_ENV" ]; then
-	echo "CONFIG_ENV?=$CONFIG_ENV" >> CONFIG.local
-fi
-if [ -n "$CONFIG_DPDK_DIR" ]; then
-	echo "CONFIG_DPDK_DIR?=$CONFIG_DPDK_DIR" >> CONFIG.local
-fi
-if [ -n "$CONFIG_CRYPTO" ]; then
-	echo "CONFIG_CRYPTO?=$CONFIG_CRYPTO" >> CONFIG.local
-fi
-if [ -n "$CONFIG_VHOST" ]; then
-	echo "CONFIG_VHOST?=$CONFIG_VHOST" >> CONFIG.local
-fi
-if [ -n "$CONFIG_VIRTIO" ]; then
-	echo "CONFIG_VIRTIO?=$CONFIG_VIRTIO" >> CONFIG.local
-fi
-if [ -n "$CONFIG_PMDK" ]; then
-	echo "CONFIG_PMDK?=$CONFIG_PMDK" >> CONFIG.local
-fi
-if [ -n "$CONFIG_PMDK_DIR" ]; then
-	echo "CONFIG_PMDK_DIR?=$CONFIG_PMDK_DIR" >> CONFIG.local
-fi
-if [ -n "$CONFIG_VPP" ]; then
-	echo "CONFIG_VPP?=$CONFIG_VPP" >> CONFIG.local
-fi
-if [ -n "$CONFIG_VPP_DIR" ]; then
-	echo "CONFIG_VPP_DIR?=$CONFIG_VPP_DIR" >> CONFIG.local
-fi
-if [ -n "$CONFIG_FIO_PLUGIN" ]; then
-	echo "CONFIG_FIO_PLUGIN?=$CONFIG_FIO_PLUGIN" >> CONFIG.local
-fi
-if [ -n "$CONFIG_FIO_SOURCE_DIR" ]; then
-	echo "CONFIG_FIO_SOURCE_DIR?=$CONFIG_FIO_SOURCE_DIR" >> CONFIG.local
-fi
-if [ -n "$CONFIG_RDMA" ]; then
-	echo "CONFIG_RDMA?=$CONFIG_RDMA" >> CONFIG.local
-fi
-if [ -n "$CONFIG_RDMA_SEND_WITH_INVAL" ]; then
-	echo "CONFIG_RDMA_SEND_WITH_INVAL?=$CONFIG_RDMA_SEND_WITH_INVAL" >> CONFIG.local
-fi
-if [ -n "$CONFIG_SHARED" ]; then
-	echo "CONFIG_SHARED?=$CONFIG_SHARED" >> CONFIG.local
-fi
-if [ -n "$CONFIG_ISCSI_INITIATOR" ]; then
-	echo "CONFIG_ISCSI_INITIATOR?=$CONFIG_ISCSI_INITIATOR" >> CONFIG.local
-fi
-if [ -n "$CONFIG_RBD" ]; then
-	echo "CONFIG_RBD?=$CONFIG_RBD" >> CONFIG.local
-fi
-if [ -n "$CONFIG_VTUNE" ]; then
-	echo "CONFIG_VTUNE?=$CONFIG_VTUNE" >> CONFIG.local
-fi
-if [ -n "$CONFIG_VTUNE_DIR" ]; then
-	echo "CONFIG_VTUNE_DIR?=$CONFIG_VTUNE_DIR" >> CONFIG.local
-fi
+cp -f CONFIG CONFIG.local
+for key in ${!CONFIG[@]}; do
+	sed -i.bak -r "s#^\s*CONFIG_${key}\?=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" CONFIG.local
+done
+# On FreeBSD sed -i 'SUFFIX' - SUFFIX is mandatory. So no way but to delete the backed file.
+rm -f CONFIG.local.bak
 
 # Environment variables
 if [ -n "$CFLAGS" ]; then
