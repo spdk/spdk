@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "194060bf_62ce9ed1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-03T11:31:13Z",
+      "side": 1,
+      "message": "This is script that starts RPC over HTTP server, right?\nHow to use it, what kind of tool should I use to send commands to that http server?\nIs non encrypted http user/password not a concern?",
+      "range": {
+        "startLine": 7,
+        "startChar": 8,
+        "endLine": 8,
+        "endChar": 0
+      },
+      "revId": "c2894d25552f918bf1aa61ce125655f9de99a473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
