@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "79122cc8_d7eebebd",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "removed this struct in favor of your embedded approach.",
+      "parentUuid": "d68cd1a5_990ed8e1",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "537a7310_0784bcc3",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-02T17:42:54Z",
       "side": 1,
       "message": "Another way you could have done this is to define a new structure like so:\n\nstruct spdk_nvmf_cmd {\n    struct spdk_nvme_cmd cmd;\n    struct spdk_nvme_sgl_descriptor sgl[NVME_RDMA_MAX_SGL_DESCRIPTORS];\n};\n\nThen, allocate an array of these instead of an array of just the spdk_nvme_cmds. This strategy is slightly better for a couple of reasons:\n\n1) You minimize the number of memory registrations you perform (fewer ibv_mr objects), which are limited by a cap at the RNIC\n2) You minimize the number of callocs and frees you must perform.\n3) The memory for the command happens to be 64 bytes (one cache line). The array of sgl elements happens to be exactly 4 cache lines. That means each command stays aligned to cache line boundaries. This is also true in your scheme below, I\u0027m just pointing out that the way above isn\u0027t worse.",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4a4e24a_3c1c2c9f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "That is cleaner. Thanks!",
+      "parentUuid": "537a7310_0784bcc3",
       "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7cbf49ef_6f11cbfe",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5192f9b8_135018ed",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2150077_39df3df9",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2018-10-02T17:42:54Z",
       "side": 1,
       "message": "nvme_rdma_ctrlr_get_max_sges()?",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90ab855c_a2599ced",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "Thanks for making me take a closer look at this. ctrlr-\u003emax_sges is actually set off of nvme_rdma_ctrlr_get_max_sges so I had set up a circular dependency. I changed the definition of that function.",
+      "parentUuid": "e2150077_39df3df9",
       "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "e25b4f28_9a8b5ffe",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "45a2ae0b_611f4f82",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b3958bd_203e73bc",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
@@ -98,6 +188,24 @@
       "writtenOn": "2018-10-02T17:42:54Z",
       "side": 1,
       "message": "I assume you plan to handle this case via splitting in the future",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5aac136_f438d14e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "I do, I think it will be a little involved though, because we already tell the ulp how many SGEs we support, so if it sends down 16 SGEs and we end up splitting one of them, we now have too many SGEs to submit in our command capsule. So I was going to think through that.",
+      "parentUuid": "6b3958bd_203e73bc",
       "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -138,6 +246,24 @@
     },
     {
       "key": {
+        "uuid": "7f1deeb5_345bd45c",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a25b5376_0640463a",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93cc7951_06b89928",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
@@ -149,6 +275,24 @@
       "writtenOn": "2018-10-02T17:42:54Z",
       "side": 1,
       "message": "A comment along the lines of \"If more than one SGL Descriptor is required, embed an SGL descriptor into the command that describes the location of the remaining SGL descriptors.\"",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23f34d9a_b9df295b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "93cc7951_06b89928",
       "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -172,6 +316,24 @@
     },
     {
       "key": {
+        "uuid": "6a6fa2e0_580cf0ab",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "Yeah, I like that better.",
+      "parentUuid": "964bbb5f_84a1a7ec",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3bf22638_87ee607b",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
@@ -183,6 +345,24 @@
       "writtenOn": "2018-10-02T17:42:54Z",
       "side": 1,
       "message": "Update this comment",
+      "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1097698a_1939df65",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1596,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-03T15:44:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3bf22638_87ee607b",
       "revId": "85f9a14840de0c192a46bf920289246ba4b2e1a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
