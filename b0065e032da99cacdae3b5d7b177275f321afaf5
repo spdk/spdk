@@ -34,6 +34,24 @@
       "revId": "b0065e032da99cacdae3b5d7b177275f321afaf5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b9f397f_9adae3a4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1489,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-03T17:21:52Z",
+      "side": 1,
+      "message": "I see the one on line 1142 was deleted - should this one here (line 1489) be deleted too?",
+      "parentUuid": "e1bff933_8833ccb2",
+      "revId": "b0065e032da99cacdae3b5d7b177275f321afaf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
