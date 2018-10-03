@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "d791319f_42d377f3",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-03T00:16:26Z",
+      "side": 1,
+      "message": "Hi Xiaodong,\n\nWe discussed this in the community meeting today.  The behavior you have here is similar to how the kernel does ioctl passthrough.  If insufficient data buffers are provided to the SSD, the SSD should fail the command.\n\nCould you test this with a couple of Intel NVMe SSDs - maybe P3700 and Optane?  You can do this with your RPC code, or some other way.\n\nBasically do something like issue a 32KB read command, but only program the NVMe SQE+PRP list for 16KB of data.  Let\u0027s see what kind of error message the SSD returns.",
+      "parentUuid": "1d40bb7f_5cb44918",
+      "range": {
+        "startLine": 185,
+        "startChar": 8,
+        "endLine": 185,
+        "endChar": 33
+      },
+      "revId": "f4bd24142541cd88f2976049a0048d41cc47c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e212c01_ab29e2e5",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 31
