@@ -16,6 +16,24 @@
       "revId": "b0065e032da99cacdae3b5d7b177275f321afaf5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1bff933_8833ccb2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1489,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-03T16:14:33Z",
+      "side": 1,
+      "message": "This code will already correctly handle that case as is (just tested to make extra sure)\n\nBut yeah, the error message is redundant, error messages will print in the claim routine, deleted",
+      "parentUuid": "cb912a3c_fa584828",
+      "revId": "b0065e032da99cacdae3b5d7b177275f321afaf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
