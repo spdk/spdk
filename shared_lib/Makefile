@@ -46,7 +46,7 @@ SPDK_SHARED_LIBS := $(filter-out $(IGNORED_LIBS), $(sort $(notdir $(wildcard $(S
 
 $(SHARED_REALNAME_LIB):
 	$(Q)echo "  SO $(notdir $@)"; \
-	echo "GROUP ( $(SPDK_SHARED_LIBS) )" > $(SHARED_REALNAME_LIB)
+	echo "GROUP ( AS_NEEDED ( $(SPDK_SHARED_LIBS) ) )" > $(SHARED_REALNAME_LIB)
 
 $(SHARED_LINKED_LIB) : $(SHARED_REALNAME_LIB)
 	$(Q)echo "  SYMLINK $(notdir $@)"; $(BUILD_LINKERNAME_LIB)
