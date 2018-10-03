@@ -16,6 +16,29 @@
       "revId": "1405b87253dba018fdd95ad725c88231ce497cb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33e959ad_eb8067fe",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-10-03T07:55:02Z",
+      "side": 1,
+      "message": "Was the \u0027+\u0027 sign intentional? If not then please remove it.",
+      "range": {
+        "startLine": 152,
+        "startChar": 59,
+        "endLine": 152,
+        "endChar": 80
+      },
+      "revId": "1405b87253dba018fdd95ad725c88231ce497cb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
