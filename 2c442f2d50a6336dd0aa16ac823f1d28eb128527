@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7427ff4e_8f55a020",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-03T08:26:59Z",
+      "side": 1,
+      "message": "Maybe I could use one of existing fields?",
+      "range": {
+        "startLine": 487,
+        "startChar": 7,
+        "endLine": 487,
+        "endChar": 22
+      },
+      "revId": "2c442f2d50a6336dd0aa16ac823f1d28eb128527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "448bade6_d98c6084",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-03T08:26:59Z",
+      "side": 1,
+      "message": "Maybe I should follow logic defined in spdk_bdev_io_get_buf and specify cb_fn here as well?\n\nThis way buffer allocation may be postponed",
+      "range": {
+        "startLine": 685,
+        "startChar": 5,
+        "endLine": 685,
+        "endChar": 29
+      },
+      "revId": "2c442f2d50a6336dd0aa16ac823f1d28eb128527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
