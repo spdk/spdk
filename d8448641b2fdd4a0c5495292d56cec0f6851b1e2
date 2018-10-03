@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "fdd8328c_27099b99",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-03T11:06:30Z",
+      "side": 1,
+      "message": "What is going to happend to lvolstore on such raid after destroy_raid_bdev?\nWith big enough strip size lvolstore metadata can survive and spdk might try to load it from Nvme0n1.\n\nI think we should destroy_lvol_store before destroying raid.",
+      "range": {
+        "startLine": 96,
+        "startChar": 8,
+        "endLine": 96,
+        "endChar": 25
+      },
+      "revId": "d8448641b2fdd4a0c5495292d56cec0f6851b1e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b18413af_63a3a68e",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 3
