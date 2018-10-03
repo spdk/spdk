@@ -325,23 +325,16 @@ bdev_aio_reset(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 
 static void bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	bdev_aio_readv((struct file_disk *)bdev_io->bdev->ctxt,
-		       ch,
-		       (struct bdev_aio_task *)bdev_io->driver_ctx,
-		       bdev_io->u.bdev.iovs,
-		       bdev_io->u.bdev.iovcnt,
-		       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
-		       bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
-}
-
-static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
-{
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, bdev_aio_get_buf_cb,
-				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
-		return 0;
-
+		bdev_aio_readv((struct file_disk *)bdev_io->bdev->ctxt,
+			       ch,
+			       (struct bdev_aio_task *)bdev_io->driver_ctx,
+			       bdev_io->u.bdev.iovs,
+			       bdev_io->u.bdev.iovcnt,
+			       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+			       bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		bdev_aio_writev((struct file_disk *)bdev_io->bdev->ctxt,
 				ch,
@@ -350,6 +343,19 @@ static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 				bdev_io->u.bdev.iovcnt,
 				bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
 				bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+		break;
+	default:
+		SPDK_ERRLOG("Wrong io type\n");
+	}
+}
+
+static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		spdk_bdev_io_get_buf(bdev_io, bdev_aio_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		bdev_aio_flush((struct file_disk *)bdev_io->bdev->ctxt,
