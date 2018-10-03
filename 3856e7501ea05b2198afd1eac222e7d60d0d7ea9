@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "77a18a3b_fded7f0e",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-03T10:20:43Z",
+      "side": 1,
+      "message": "you can read directly into perm and fname using\n\n  read -r perm _foo0 _foo1 file",
+      "range": {
+        "startLine": 13,
+        "startChar": 6,
+        "endLine": 13,
+        "endChar": 22
+      },
+      "revId": "3856e7501ea05b2198afd1eac222e7d60d0d7ea9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56c1da09_f1c9595e",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-03T10:20:43Z",
+      "side": 1,
+      "message": "Don\u0027t think we need to check source files for shebang lines.\n\nMore, we should explicitly forbid marking source, makefiles, mk files as executable regardless of shebang line.\n\nThis will also void need of checking these files for shebang so it will execute much faster.",
+      "range": {
+        "startLine": 22,
+        "startChar": 1,
+        "endLine": 22,
+        "endChar": 40
+      },
+      "revId": "3856e7501ea05b2198afd1eac222e7d60d0d7ea9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "808e6cf1_01f3eef8",
         "filename": "scripts/check_format.sh",
         "patchSetId": 2
