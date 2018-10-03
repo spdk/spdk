@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "911698dd_0f969129",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-03T04:24:22Z",
+      "side": 1,
+      "message": "I think we should change this to the CPU mask so that we can do NUMA alignment when setting up the fio jobs",
+      "range": {
+        "startLine": 185,
+        "startChar": 3,
+        "endLine": 185,
+        "endChar": 34
+      },
+      "revId": "b41b2ba944b65a8e4d4f111d06b20fe3d141d078",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25b6b147_f7069962",
+        "filename": "test/nvme/perf/perf_tc4.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-03T04:24:22Z",
+      "side": 1,
+      "message": "For Cliffdales, the QD goes up to 256. QD\u003d128 is not sufficient to saturate Cliffdales",
+      "range": {
+        "startLine": 11,
+        "startChar": 4,
+        "endLine": 11,
+        "endChar": 25
+      },
+      "revId": "b41b2ba944b65a8e4d4f111d06b20fe3d141d078",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "581ce2c5_2db0a772",
+        "filename": "test/nvme/perf/perf_tc4.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-03T04:24:22Z",
+      "side": 1,
+      "message": "This function needs to be updated to do NUMA alignment so that when we are doing a TC like this one the NVMe SSDs assigned are NUMA aligned as much as possible.",
+      "range": {
+        "startLine": 29,
+        "startChar": 13,
+        "endLine": 29,
+        "endChar": 32
+      },
+      "revId": "b41b2ba944b65a8e4d4f111d06b20fe3d141d078",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
