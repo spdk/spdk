@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7853d41c_eae9edee",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-03T04:15:32Z",
+      "side": 1,
+      "message": "Your calling this function to precondition the NVMe SSDs, but the function uses the pvsynch2 ioengine. That engine is synchronous and I think will take much longer to finish the preconditioning. I think you should use libaio for preconditioning to move this along faster.",
+      "range": {
+        "startLine": 81,
+        "startChar": 2,
+        "endLine": 81,
+        "endChar": 14
+      },
+      "revId": "36282317bcc2fcaa479c024dce10b0911fd0e191",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e3e3679_1377bd1c",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-03T04:15:32Z",
+      "side": 1,
+      "message": "I don\u0027t think you want to make these options the default for kernel test runs. These options are for hybrid polling. Outside of the hybrid-polling test we should be using libaio ioengine.",
+      "range": {
+        "startLine": 150,
+        "startChar": 52,
+        "endLine": 150,
+        "endChar": 82
+      },
+      "revId": "36282317bcc2fcaa479c024dce10b0911fd0e191",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4054e3d_33dc4540",
+        "filename": "test/nvme/perf/perf_tc3.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-03T04:15:32Z",
+      "side": 1,
+      "message": "Please add some more information here about the test.\nSomething like\nLatency test comparing Linux Kernel with classic and hybrid polling latency vs SPDK latency",
+      "range": {
+        "startLine": 45,
+        "startChar": 2,
+        "endLine": 45,
+        "endChar": 60
+      },
+      "revId": "36282317bcc2fcaa479c024dce10b0911fd0e191",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8087d193_fe97d986",
+        "filename": "test/nvme/perf/perf_tc3.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-03T04:15:32Z",
+      "side": 1,
+      "message": "Why are calling this function here?",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 19
+      },
+      "revId": "36282317bcc2fcaa479c024dce10b0911fd0e191",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
