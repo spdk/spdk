@@ -364,6 +364,18 @@ if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 	fi
 fi
 
+# We are now ready to generate final configuration. But first do sanity
+# check to see if all keys in CONFIG array have its reflection in CONFIG file.
+if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+\?=" CONFIG) -ne ${#CONFIG[@]} ]; then
+	echo ""
+	echo "BUG: Some configuration options are not present in CONFIG file. Please update this file."
+	echo "Missing options in CONFIG (+) file and in current config (-): "
+	diff -u --label "CONFIG file" --label "CONFIG[@]" \
+		<(sed -r -e '/^\s*$/d; /^\s*#.*/d; s/(CONFIG_[[:alnum:]_]+)\?=.*/\1/g' CONFIG | sort) \
+		<(printf "CONFIG_%s\n" ${!CONFIG[@]} | sort)
+	exit 1
+fi
+
 echo -n "Creating CONFIG.local..."
 cp -f CONFIG CONFIG.local
 for key in ${!CONFIG[@]}; do
