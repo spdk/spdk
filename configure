@@ -2,6 +2,8 @@
 
 set -e
 
+trap 'echo -e "\n\nConfiguration failed\n\n" >&2' ERR
+
 function usage()
 {
 	echo "'configure' configures SPDK to compile on supported platforms."
