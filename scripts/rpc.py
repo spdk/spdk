@@ -1281,7 +1281,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        in_capsule_data_size=args.in_capsule_data_size,
                                        max_io_size=args.max_io_size,
                                        io_unit_size=args.io_unit_size,
-                                       max_aq_depth=args.max_aq_depth)
+                                       max_aq_depth=args.max_aq_depth,
+                                       max_srq_depth=args.max_srq_depth)
 
     p = subparsers.add_parser('nvmf_create_transport', help='Create NVMf transport')
     p.add_argument('-t', '--trtype', help='Transport type (ex. RDMA)', type=str, required=True)
@@ -1291,6 +1292,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
     p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
     p.add_argument('-a', '--max-aq-depth', help='Max number of admin cmds per AQ', type=int)
+    p.add_argument('-s', '--max-srq-depth', help='Max number of outstanding I/O per shared receive queue', type=int)
     p.set_defaults(func=nvmf_create_transport)
 
     @call_cmd

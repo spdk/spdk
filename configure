@@ -52,6 +52,8 @@ function usage()
 	echo "                           No path required."
 	echo " rdma                      [disabled]"
 	echo "                           No path required."
+	echo " rdma-srq                  [disabled]"
+	echo "                           No path required."
 	echo " shared                    Required to build spdk shared libraries."
 	echo "                           No path required."
 	echo " iscsi-initiator           [disabled]"
@@ -168,6 +170,12 @@ for i in "$@"; do
 			;;
 		--without-rdma)
 			CONFIG[RDMA]=n
+			;;
+		--with-rdma-srq)
+			CONFIG[RDMA_SRQ]=y
+			;;
+		--without-rdma-srq)
+			CONFIG[RDMA_SRQ]=n
 			;;
 		--with-shared)
 			CONFIG[SHARED]=y

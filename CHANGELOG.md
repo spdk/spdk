@@ -63,6 +63,14 @@ specified. This default has been removed. Users must now explicitly specify
 the location of this file to load CHAP shared secrets from a file, or use
 the related iSCSI RPC methods to add them at runtime.
 
+### NVMe-oF Target
+New `configure` options `--with-rdma-srq` and `--without-rdma-srq` [default],
+provide the capability to enable or disable shared receive queue support
+in RDMA transport for NVMe-oF target.
+Size of shared receive queue is defined by transport configuration file parameter
+`MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
+Default size is 4096.
+
 ### Miscellaneous
 
 The ReactorMask config file parameter has been deprecated.  Users should

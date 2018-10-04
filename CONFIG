@@ -81,6 +81,7 @@ CONFIG_FIO_SOURCE_DIR?=/usr/src/fio
 # Requires ibverbs development libraries.
 CONFIG_RDMA?=n
 CONFIG_RDMA_SEND_WITH_INVAL?=n
+CONFIG_RDMA_SRQ?=n
 
 # Build Ceph RBD support in bdev modules
 # Requires librbd development libraries

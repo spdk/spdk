@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -521,6 +521,10 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 	val = spdk_conf_section_get_intval(ctx->sp, "MaxAQDepth");
 	if (val >= 0) {
 		opts.max_aq_depth = val;
+	}
+	val = spdk_conf_section_get_intval(ctx->sp, "MaxSRQDepth");
+	if (val >= 0) {
+		opts.max_srq_depth = val;
 	}
 
 	transport = spdk_nvmf_transport_create(trtype, &opts);
