@@ -46,6 +46,30 @@
       "revId": "1903b52581dba91d809aeb710d24cd8e1c55291a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffbdb480_b000b5a3",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 83
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-04T00:05:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2b26dbb6_9e4a3c7f",
+      "range": {
+        "startLine": 513,
+        "startChar": 7,
+        "endLine": 513,
+        "endChar": 57
+      },
+      "revId": "1903b52581dba91d809aeb710d24cd8e1c55291a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
