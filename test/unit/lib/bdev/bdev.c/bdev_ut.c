@@ -300,7 +300,7 @@ allocate_bdev(char *name)
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
 	bdev->module = &bdev_ut_if;
-	bdev->blockcnt = 256;
+	bdev->blockcnt = 1024;
 	bdev->blocklen = 512;
 
 	rc = spdk_bdev_register(bdev);
@@ -886,24 +886,15 @@ bdev_io_split(void)
 	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 2 * 512), 6 * 512);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
-	/* spdk_bdev_read_blocks will submit the first child immediately.*/
+	/* spdk_bdev_read_blocks will submit the two children immediately.*/
 	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 14, 8, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
 
-	/* The second child will get submitted once the first child is completed by
-	 * stub_complete_io().
-	 */
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
-	/* Complete the second child I/O.  This should result in our callback getting
-	 * invoked since the parent I/O is now complete.
-	 */
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
 	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
 
 	/* Now set up a more complex, multi-vector command that needs to be split,
 	 *  including splitting iovecs.
@@ -934,16 +925,8 @@ bdev_io_split(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
 
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
-	CU_ASSERT(g_io_done == false);
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
-	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 3);
+	stub_complete_io(3);
 	CU_ASSERT(g_io_done == true);
 
 	/* Test multi vector command that needs to be split by strip and then needs to be
@@ -983,6 +966,7 @@ bdev_io_split(void)
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
 
 	/* Test multi vector command that needs to be split by strip and then needs to be
 	 * split further due to the capacity of child iovs, but fails to split. The cause
@@ -1066,6 +1050,7 @@ bdev_io_split_with_io_wait(void)
 		.bdev_io_pool_size = 2,
 		.bdev_io_cache_size = 1,
 	};
+	struct iovec iov[3];
 	struct ut_expected_io *expected_io;
 	int rc;
 
@@ -1094,7 +1079,6 @@ bdev_io_split_with_io_wait(void)
 	 *  Child - Offset 14, length 2, payload 0xF000
 	 *  Child - Offset 16, length 6, payload 0xF000 + 2 * 512
 	 *
-	 * This I/O will consume three spdk_bdev_io.
 	 * Set up the expected values before calling spdk_bdev_read_blocks
 	 */
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 14, 2, 1);
@@ -1104,6 +1088,10 @@ bdev_io_split_with_io_wait(void)
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 16, 6, 1);
 	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 2 * 512), 6 * 512);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* The following children will be submitted sequentially due to the capacity of
+	 * spdk_bdev_io.
+	 */
 
 	/* The first child I/O will be queued to wait until an spdk_bdev_io becomes available */
 	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 14, 8, io_done, NULL);
@@ -1125,6 +1113,56 @@ bdev_io_split_with_io_wait(void)
 	 */
 	stub_complete_io(1);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	/* Now set up a more complex, multi-vector command that needs to be split,
+	 *  including splitting iovecs.
+	 */
+	iov[0].iov_base = (void *)0x10000;
+	iov[0].iov_len = 512;
+	iov[1].iov_base = (void *)0x20000;
+	iov[1].iov_len = 20 * 512;
+	iov[2].iov_base = (void *)0x30000;
+	iov[2].iov_len = 11 * 512;
+
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 14, 2, 2);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0x10000, 512);
+	ut_expected_io_set_iov(expected_io, 1, (void *)0x20000, 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 16, 16, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)(0x20000 + 512), 16 * 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 32, 14, 2);
+	ut_expected_io_set_iov(expected_io, 0, (void *)(0x20000 + 17 * 512), 3 * 512);
+	ut_expected_io_set_iov(expected_io, 1, (void *)0x30000, 11 * 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_writev_blocks(desc, io_ch, iov, 3, 14, 32, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	/* The following children will be submitted sequentially due to the capacity of
+	 * spdk_bdev_io.
+	 */
+
+	/* Completing the first child will submit the second child */
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == false);
+
+	/* Completing the second child will submit the third child */
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == false);
+
+	/* Completing the third child will result in our callback getting invoked
+	 * since the parent I/O is now complete.
+	 */
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_bdev_ut_channel->expected_io));
 

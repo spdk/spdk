@@ -1208,9 +1208,9 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 	struct spdk_bdev_io *bdev_io = _bdev_io;
 	uint64_t current_offset, remaining, bytes_handled;
 	uint32_t blocklen, to_next_boundary, to_next_boundary_bytes;
-	struct iovec *parent_iov;
-	uint64_t parent_iov_offset, child_iov_len;
-	uint32_t child_iovcnt;
+	struct iovec *parent_iov, *iov;
+	uint64_t parent_iov_offset, iov_len;
+	uint32_t child_iovcnt, iovcnt;
 	int rc;
 
 	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
@@ -1230,57 +1230,83 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 		break;
 	}
 
-	to_next_boundary = _to_next_boundary(current_offset, bdev_io->bdev->optimal_io_boundary);
-	to_next_boundary = spdk_min(remaining, to_next_boundary);
-	to_next_boundary_bytes = to_next_boundary * blocklen;
 	child_iovcnt = 0;
-	while (to_next_boundary_bytes > 0 && child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
-		child_iov_len = spdk_min(to_next_boundary_bytes, parent_iov->iov_len - parent_iov_offset);
-		to_next_boundary_bytes -= child_iov_len;
+	while (remaining > 0 && child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
+		to_next_boundary = _to_next_boundary(current_offset, bdev_io->bdev->optimal_io_boundary);
+		to_next_boundary = spdk_min(remaining, to_next_boundary);
+		to_next_boundary_bytes = to_next_boundary * blocklen;
+		iov = &bdev_io->child_iov[child_iovcnt];
+		iovcnt = 0;
+		while (to_next_boundary_bytes > 0 && child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
+			iov_len = spdk_min(to_next_boundary_bytes, parent_iov->iov_len - parent_iov_offset);
+			to_next_boundary_bytes -= iov_len;
 
-		bdev_io->child_iov[child_iovcnt].iov_base = parent_iov->iov_base + parent_iov_offset;
-		bdev_io->child_iov[child_iovcnt].iov_len = child_iov_len;
+			bdev_io->child_iov[child_iovcnt].iov_base = parent_iov->iov_base + parent_iov_offset;
+			bdev_io->child_iov[child_iovcnt].iov_len = iov_len;
 
-		parent_iov++;
-		parent_iov_offset = 0;
-		child_iovcnt++;
-	}
+			if (iov_len < parent_iov->iov_len - parent_iov_offset) {
+				parent_iov_offset += iov_len;
+			} else {
+				parent_iov++;
+				parent_iov_offset = 0;
+			}
+			child_iovcnt++;
+			iovcnt++;
+		}
 
-	if (to_next_boundary_bytes > 0) {
-		/* We had to stop this child I/O early because we ran out of
-		 *  child_iov space.  Make sure the iovs collected are valid and
-		 *  then adjust to_next_boundary before starting the child I/O.
-		 */
-		if ((to_next_boundary_bytes % blocklen) != 0) {
-			SPDK_ERRLOG("Remaining %" PRIu32 " is not multiple of block size %" PRIu32 "\n",
-				    to_next_boundary_bytes, blocklen);
-			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-			bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+		if (to_next_boundary_bytes > 0) {
+			/* We had to stop this child I/O early because we ran out of
+			 *  child_iov space.  Make sure the iovs collected are valid and
+			 *  then adjust to_next_boundary before starting the child I/O.
+			 */
+			if ((to_next_boundary_bytes % blocklen) != 0) {
+				SPDK_ERRLOG("Remaining %" PRIu32 " is not multiple of block size %" PRIu32 "\n",
+					    to_next_boundary_bytes, blocklen);
+				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+				if (bdev_io->u.bdev.split_outstanding == 0) {
+					bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+				}
+				return;
+			}
+			to_next_boundary -= to_next_boundary_bytes / blocklen;
+		}
+
+		bdev_io->u.bdev.split_outstanding++;
+
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+			rc = spdk_bdev_readv_blocks(bdev_io->internal.desc,
+						    spdk_io_channel_from_ctx(bdev_io->internal.ch),
+						    iov, iovcnt, current_offset, to_next_boundary,
+						    _spdk_bdev_io_split_done, bdev_io);
+		} else {
+			rc = spdk_bdev_writev_blocks(bdev_io->internal.desc,
+						     spdk_io_channel_from_ctx(bdev_io->internal.ch),
+						     iov, iovcnt, current_offset, to_next_boundary,
+						     _spdk_bdev_io_split_done, bdev_io);
+		}
+
+		if (rc == 0) {
+			current_offset += to_next_boundary;
+			remaining -= to_next_boundary;
+			bdev_io->u.bdev.split_current_offset_blocks = current_offset;
+			bdev_io->u.bdev.split_remaining_num_blocks = remaining;
+		} else {
+			bdev_io->u.bdev.split_outstanding--;
+			if (rc == -ENOMEM) {
+				if (bdev_io->u.bdev.split_outstanding == 0) {
+					/* No I/O is outstanding. Hence we should wait here. */
+					_spdk_bdev_queue_io_wait_with_cb(bdev_io,
+									 _spdk_bdev_io_split_with_payload);
+				}
+			} else {
+				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+				if (bdev_io->u.bdev.split_outstanding == 0) {
+					bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+				}
+			}
+
 			return;
 		}
-		to_next_boundary -= to_next_boundary_bytes / blocklen;
-	}
-
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		rc = spdk_bdev_readv_blocks(bdev_io->internal.desc,
-					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
-					    bdev_io->child_iov, child_iovcnt, current_offset, to_next_boundary,
-					    _spdk_bdev_io_split_done, bdev_io);
-	} else {
-		rc = spdk_bdev_writev_blocks(bdev_io->internal.desc,
-					     spdk_io_channel_from_ctx(bdev_io->internal.ch),
-					     bdev_io->child_iov, child_iovcnt, current_offset, to_next_boundary,
-					     _spdk_bdev_io_split_done, bdev_io);
-	}
-
-	if (rc == 0) {
-		bdev_io->u.bdev.split_current_offset_blocks += to_next_boundary;
-		bdev_io->u.bdev.split_remaining_num_blocks -= to_next_boundary;
-	} else if (rc == -ENOMEM) {
-		_spdk_bdev_queue_io_wait_with_cb(bdev_io, _spdk_bdev_io_split_with_payload);
-	} else {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 	}
 }
 
@@ -1293,13 +1319,20 @@ _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 
 	if (!success) {
 		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		parent_io->internal.cb(parent_io, false, parent_io->internal.caller_ctx);
+	}
+	parent_io->u.bdev.split_outstanding--;
+	if (parent_io->u.bdev.split_outstanding != 0) {
 		return;
 	}
 
-	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
-		parent_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		parent_io->internal.cb(parent_io, true, parent_io->internal.caller_ctx);
+	/*
+	 * Parent I/O finishes when all blocks are consumed or there is any failure of
+	 * child I/O and no outstanding child I/O.
+	 */
+	if (parent_io->u.bdev.split_remaining_num_blocks == 0 ||
+	    parent_io->internal.status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		parent_io->internal.cb(parent_io, parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
+				       parent_io->internal.caller_ctx);
 		return;
 	}
 
@@ -1317,6 +1350,8 @@ _spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 
 	bdev_io->u.bdev.split_current_offset_blocks = bdev_io->u.bdev.offset_blocks;
 	bdev_io->u.bdev.split_remaining_num_blocks = bdev_io->u.bdev.num_blocks;
+	bdev_io->u.bdev.split_outstanding = 0;
+	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	_spdk_bdev_io_split_with_payload(bdev_io);
 }
