@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd106037_8b4b6cb5",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-04T17:57:33Z",
+      "side": 1,
+      "message": "Are you sure this is ready for review? :P",
+      "range": {
+        "startLine": 884,
+        "startChar": 1,
+        "endLine": 884,
+        "endChar": 6
+      },
+      "revId": "9ac3b6e6995fe5092957dbfc8d077d4d5f6e4af7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
