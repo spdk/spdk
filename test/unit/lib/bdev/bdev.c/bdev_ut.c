@@ -1054,6 +1054,86 @@ bdev_io_split(void)
 	spdk_bdev_finish(bdev_fini_cb, NULL);
 }
 
+static void
+bdev_io_split_with_io_wait(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *channel;
+	struct spdk_bdev_mgmt_channel *mgmt_ch;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 2,
+		.bdev_io_cache_size = 1,
+	};
+	struct ut_expected_io *expected_io;
+	int rc;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+	channel = spdk_io_channel_get_ctx(io_ch);
+	mgmt_ch = channel->shared_resource->mgmt_ch;
+
+	bdev->optimal_io_boundary = 16;
+	bdev->split_on_optimal_io_boundary = true;
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	/* Now test that a single-vector command is split correctly.
+	 * Offset 14, length 8, payload 0xF000
+	 *  Child - Offset 14, length 2, payload 0xF000
+	 *  Child - Offset 16, length 6, payload 0xF000 + 2 * 512
+	 *
+	 * This I/O will consume three spdk_bdev_io.
+	 * Set up the expected values before calling spdk_bdev_read_blocks
+	 */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 14, 2, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0xF000, 2 * 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 16, 6, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 2 * 512), 6 * 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* The first child I/O will be queued to wait until an spdk_bdev_io becomes available */
+	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 14, 8, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!TAILQ_EMPTY(&mgmt_ch->io_wait_queue));
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
+	/* Completing the first read I/O will submit the first child */
+	stub_complete_io(1);
+	CU_ASSERT(TAILQ_EMPTY(&mgmt_ch->io_wait_queue));
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
+	/* Completing the first child will submit the second child */
+	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
+	/* Complete the second child I/O.  This should result in our callback getting
+	 * invoked since the parent I/O is now complete.
+	 */
+	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_bdev_ut_channel->expected_io));
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1079,7 +1159,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "get_device_stat", get_device_stat_test) == NULL ||
 		CU_add_test(suite, "bdev_io_wait", bdev_io_wait_test) == NULL ||
 		CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test) == NULL ||
-		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL
+		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
+		CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
