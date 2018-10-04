@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -71,6 +71,7 @@ struct spdk_nvmf_transport_opts {
 	uint32_t io_unit_size;
 	uint32_t max_aq_depth;
 	uint32_t num_shared_buffers;
+	uint32_t max_srq_depth;
 };
 
 /**
