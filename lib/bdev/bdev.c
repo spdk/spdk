@@ -1208,8 +1208,8 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 	struct spdk_bdev_io *bdev_io = _bdev_io;
 	uint64_t current_offset, remaining, bytes_handled;
 	uint32_t blocklen, to_next_boundary, to_next_boundary_bytes;
-	struct iovec *parent_iov, *iov;
-	uint64_t parent_iov_offset, iov_len;
+	struct iovec *iov;
+	uint64_t parent_iov_idx = 0, parent_iov_offset = 0, iov_len;
 	uint32_t child_iovcnt, iovcnt;
 	int rc;
 
@@ -1217,13 +1217,11 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 	current_offset = bdev_io->u.bdev.split_current_offset_blocks;
 	blocklen = bdev_io->bdev->blocklen;
 	bytes_handled = (current_offset - bdev_io->u.bdev.offset_blocks) * blocklen;
-	parent_iov = &bdev_io->u.bdev.iovs[0];
-	parent_iov_offset = 0;
 
 	while (bytes_handled > 0) {
-		if (bytes_handled >= parent_iov->iov_len) {
-			bytes_handled -= parent_iov->iov_len;
-			parent_iov++;
+		if (bytes_handled >= bdev_io->u.bdev.iovs[parent_iov_idx].iov_len) {
+			bytes_handled -= bdev_io->u.bdev.iovs[parent_iov_idx].iov_len;
+			parent_iov_idx++;
 			continue;
 		}
 		parent_iov_offset += bytes_handled;
@@ -1238,17 +1236,18 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 		iov = &bdev_io->child_iov[child_iovcnt];
 		iovcnt = 0;
 		while (to_next_boundary_bytes > 0 && child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
-			iov_len = parent_iov->iov_len - parent_iov_offset;
+			iov_len = bdev_io->u.bdev.iovs[parent_iov_idx].iov_len - parent_iov_offset;
 			iov_len = spdk_min(to_next_boundary_bytes, iov_len);
 			to_next_boundary_bytes -= iov_len;
 
-			bdev_io->child_iov[child_iovcnt].iov_base = parent_iov->iov_base + parent_iov_offset;
+			bdev_io->child_iov[child_iovcnt].iov_base = bdev_io->u.bdev.iovs[parent_iov_idx].iov_base
+					+ parent_iov_offset;
 			bdev_io->child_iov[child_iovcnt].iov_len = iov_len;
 
-			if (iov_len < parent_iov->iov_len - parent_iov_offset) {
+			if (iov_len < bdev_io->u.bdev.iovs[parent_iov_idx].iov_len - parent_iov_offset) {
 				parent_iov_offset += iov_len;
 			} else {
-				parent_iov++;
+				parent_iov_idx++;
 				parent_iov_offset = 0;
 			}
 			child_iovcnt++;
