@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c8d40ce4_d9162d03",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-04T16:44:09Z",
+      "side": 1,
+      "message": "During our testing with the SPDK fio plugin we have found that the IODEPTH is a function of the number of NVMe devices you have in the job.\nFor example, say you configure an fio job with 4 NVMe bdevs as follows\n\n[filename1]\nfilename\u003dNvme1n1\nfilename\u003dNvme2n1\nfilename\u003dNvme3n1\nfilename\u003dNvme4n1\n\nIf you want to test with QD\u003dX per device, you need to run fio with the iodepth\u003d4X. This gets really interesting when you start getting into test cases where you don\u0027t have the same number of NVMe devices in all the jobs.\n\nYou will need to add the capability to multiply the QD by the number of devices in the job",
+      "range": {
+        "startLine": 83,
+        "startChar": 40,
+        "endLine": 83,
+        "endChar": 66
+      },
+      "revId": "693e5cb6744eb83fe5910fe20271cda79742a60a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
