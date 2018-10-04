@@ -22,6 +22,30 @@
       "revId": "c2894d25552f918bf1aa61ce125655f9de99a473",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c675893d_cc9371a2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-04T12:01:15Z",
+      "side": 1,
+      "message": "I\u0027ve created patch that updates SPDK documentation about description and usage of this feature: https://review.gerrithub.io/#/c/spdk/spdk/+/428007\n\nUser may use both - http or https - with this script.",
+      "parentUuid": "194060bf_62ce9ed1",
+      "range": {
+        "startLine": 7,
+        "startChar": 8,
+        "endLine": 8,
+        "endChar": 0
+      },
+      "revId": "c2894d25552f918bf1aa61ce125655f9de99a473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
