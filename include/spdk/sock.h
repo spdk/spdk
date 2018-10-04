@@ -61,6 +61,17 @@ struct spdk_sock_group;
 int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen);
 
 /**
+ * Get client or server port of the given socket.
+ *
+ * \param sock Socket to get address.
+ * \param port A pointer to the buffer to hold the port of socket.
+ * \param is_client To state whether it is a client or socket.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_sock_getport(struct spdk_sock *sock, uint16_t *port, bool is_client);
+
+/**
  * Create a socket, connect the socket to the specified address and port (of the
  * server), and then return the socket. This function is used by client.
  *

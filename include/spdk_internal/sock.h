@@ -69,6 +69,7 @@ struct spdk_net_impl {
 	const char *name;
 
 	int (*getaddr)(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen);
+	int (*getport)(struct spdk_sock *sock, uint16_t *port, bool is_client);
 	struct spdk_sock *(*connect)(const char *ip, int port);
 	struct spdk_sock *(*listen)(const char *ip, int port);
 	struct spdk_sock *(*accept)(struct spdk_sock *sock);
