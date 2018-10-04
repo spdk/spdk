@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d42ec9d3_f4d87870",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-04T20:33:41Z",
+      "side": 1,
+      "message": "I don\u0027t think using seg_len works here. If you imagine the case where you are registering a large buffer that is a subset of a region that was previously registered, you\u0027ll end up inserting the NOTIFY_START flag in the middle of the region.\n\nI\u0027m totally fine with putting a check up top that for the first segment being registered, the notify start flag is set if the ref count is greater than 0 that blocks this problem case, if you want.",
+      "revId": "df27dd1576ab66363afcdfa24fc99209d608390b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
