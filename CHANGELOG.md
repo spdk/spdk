@@ -29,6 +29,13 @@ prior to calling `spdk_nvmf_tgt_listen`.
 Related to the previous change, the rpc `set_nvmf_target_options` has been renamed to
 `set_nvmf_target_max_subsystems` to indicate that this is the only target option available for the user to edit.
 
+New `configure` options `--with-rdma-srq` and `--without-rdma-srq` [default],
+provide the capability to enable or disable shared receive queue support
+in RDMA transport for NVMe-oF target.
+Size of shared receive queue is defined by transport configuration file parameter
+`MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
+Default size is 4096.
+
 ### nvmf
 
 Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
