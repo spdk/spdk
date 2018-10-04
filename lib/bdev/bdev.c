@@ -1235,7 +1235,8 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 	to_next_boundary_bytes = to_next_boundary * blocklen;
 	child_iovcnt = 0;
 	while (to_next_boundary_bytes > 0 && child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
-		child_iov_len = spdk_min(to_next_boundary_bytes, parent_iov->iov_len - parent_iov_offset);
+		child_iov_len = parent_iov->iov_len - parent_iov_offset;
+		child_iov_len = spdk_min(to_next_boundary_bytes, child_iov_len);
 		to_next_boundary_bytes -= child_iov_len;
 
 		bdev_io->child_iov[child_iovcnt].iov_base = parent_iov->iov_base + parent_iov_offset;
