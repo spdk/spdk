@@ -718,7 +718,7 @@ static void
 bdev_io_wait_test(void)
 {
 	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_opts bdev_opts = {
 		.bdev_io_pool_size = 4,
@@ -736,7 +736,7 @@ bdev_io_wait_test(void)
 
 	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc != NULL);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 
@@ -826,7 +826,7 @@ static void
 bdev_io_split(void)
 {
 	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_opts bdev_opts = {
 		.bdev_io_pool_size = 512,
@@ -845,7 +845,7 @@ bdev_io_split(void)
 
 	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc != NULL);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 
