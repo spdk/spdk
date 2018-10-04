@@ -1206,42 +1206,41 @@ static void
 _spdk_bdev_io_split_with_payload(void *_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io = _bdev_io;
-	uint64_t current_offset, remaining, bytes_handled;
+	uint64_t current_offset, remaining;
 	uint32_t blocklen, to_next_boundary, to_next_boundary_bytes;
 	struct iovec *parent_iov;
 	uint64_t parent_iov_offset, child_iov_len;
-	uint32_t child_iovcnt;
+	uint32_t parent_iovpos, parent_iovcnt, child_iovcnt;
 	int rc;
 
 	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
 	current_offset = bdev_io->u.bdev.split_current_offset_blocks;
 	blocklen = bdev_io->bdev->blocklen;
-	bytes_handled = (current_offset - bdev_io->u.bdev.offset_blocks) * blocklen;
-	parent_iov = &bdev_io->u.bdev.iovs[0];
-	parent_iov_offset = 0;
+	parent_iov_offset = (current_offset - bdev_io->u.bdev.offset_blocks) * blocklen;
+	parent_iovcnt = bdev_io->u.bdev.iovcnt;
 
-	while (bytes_handled > 0) {
-		if (bytes_handled >= parent_iov->iov_len) {
-			bytes_handled -= parent_iov->iov_len;
-			parent_iov++;
-			continue;
+	for (parent_iovpos = 0; parent_iovpos < parent_iovcnt; parent_iovpos++) {
+		parent_iov = &bdev_io->u.bdev.iovs[parent_iovpos];
+		if (parent_iov_offset < parent_iov->iov_len) {
+			break;
 		}
-		parent_iov_offset += bytes_handled;
-		break;
+		parent_iov_offset -= parent_iov->iov_len;
 	}
 
 	to_next_boundary = _to_next_boundary(current_offset, bdev_io->bdev->optimal_io_boundary);
 	to_next_boundary = spdk_min(remaining, to_next_boundary);
 	to_next_boundary_bytes = to_next_boundary * blocklen;
 	child_iovcnt = 0;
-	while (to_next_boundary_bytes > 0 && child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
+	while (to_next_boundary_bytes > 0 && parent_iovpos < parent_iovcnt &&
+	       child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
+		parent_iov = &bdev_io->u.bdev.iovs[parent_iovpos];
 		child_iov_len = spdk_min(to_next_boundary_bytes, parent_iov->iov_len - parent_iov_offset);
 		to_next_boundary_bytes -= child_iov_len;
 
 		bdev_io->child_iov[child_iovcnt].iov_base = parent_iov->iov_base + parent_iov_offset;
 		bdev_io->child_iov[child_iovcnt].iov_len = child_iov_len;
 
-		parent_iov++;
+		parent_iovpos++;
 		parent_iov_offset = 0;
 		child_iovcnt++;
 	}
