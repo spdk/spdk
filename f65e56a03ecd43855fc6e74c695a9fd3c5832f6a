@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a78b272e_2baf1d8b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-04T23:15:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5c11ac0_b7137178",
+      "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ebd682e7_a4c9b00e",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-03T17:43:54Z",
       "side": 1,
       "message": "I think, for reasons that will become clear below, we should capture a struct spdk_nvmf_cmd *cmd \u003d rqpair-\u003ecmds[rdma_req-\u003eid] here instead of just the SGL.",
+      "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a43c9711_2de2cdfc",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 929,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-04T23:15:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ebd682e7_a4c9b00e",
       "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "acb4a0de_44780a16",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-04T23:15:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3351a1fe_e6aeabe2",
+      "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f28d19b_d4b51e9d",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 5
@@ -64,6 +118,24 @@
       "writtenOn": "2018-10-03T17:43:54Z",
       "side": 1,
       "message": "Move comment into else section",
+      "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eafeb633_eab9e81f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-04T23:15:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f28d19b_d4b51e9d",
       "revId": "f65e56a03ecd43855fc6e74c695a9fd3c5832f6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
