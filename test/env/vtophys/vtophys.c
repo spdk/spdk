@@ -35,6 +35,11 @@
 
 #include "spdk/env.h"
 
+#define DEFAULT_TRANSLATION	0xDEADBEEF0BADF00DULL
+
+static struct spdk_mem_map *g_mem_map;
+static void *g_last_registered_vaddr;
+
 static int
 vtophys_negative_test(void)
 {
@@ -120,6 +125,8 @@ test_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
 		action_str = "register";
+		g_last_registered_vaddr = vaddr;
+		spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)vaddr);
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
 		action_str = "unregister";
@@ -131,25 +138,91 @@ test_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 static int
+test_map_notify_fail(void *cb_ctx, struct spdk_mem_map *map,
+		     enum spdk_mem_map_notify_action action,
+		     void *vaddr, size_t size)
+{
+
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		if (vaddr == g_last_registered_vaddr) {
+			/* Test the error handling */
+			spdk_mem_map_clear_translation(g_mem_map, (uint64_t)vaddr, size);
+			return -1;
+		}
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		/* Clear the same region in the other mem_map to be able to
+		 * verify that there was no memory left still registered after
+		 * the mem_map creation failure.
+		 */
+		spdk_mem_map_clear_translation(g_mem_map, (uint64_t)vaddr, size);
+		break;
+	}
+
+	return 0;
+}
+
+static int
+test_map_notify_verify(void *cb_ctx, struct spdk_mem_map *map,
+		       enum spdk_mem_map_notify_action action,
+		       void *vaddr, size_t size)
+{
+	uint64_t reg, reg_size;
+
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		reg = spdk_mem_map_translate(g_mem_map, (uint64_t)vaddr, &reg_size);
+		if (reg != DEFAULT_TRANSLATION) {
+			return -1;
+		}
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		break;
+	}
+
+	return 0;
+}
+
+static int
 mem_map_test(void)
 {
 	struct spdk_mem_map *map;
-	uint64_t default_translation = 0xDEADBEEF0BADF00D;
-	const struct spdk_mem_map_ops test_map_ops = {
+	struct spdk_mem_map_ops test_map_ops = {
 		.notify_cb = test_map_notify,
 		.are_contiguous = NULL
 	};
 
+	g_mem_map = spdk_mem_map_alloc(DEFAULT_TRANSLATION, &test_map_ops, NULL);
+	if (g_mem_map == NULL) {
+		return 1;
+	}
 
-	map = spdk_mem_map_alloc(default_translation, &test_map_ops, NULL);
+	test_map_ops.notify_cb = test_map_notify_fail;
+	map = spdk_mem_map_alloc(DEFAULT_TRANSLATION, &test_map_ops, NULL);
+	if (map != NULL) {
+		printf("Err: successfully created incomplete mem_map\n");
+		spdk_mem_map_free(&map);
+		spdk_mem_map_free(&g_mem_map);
+		return 1;
+	}
+
+	/* Register another map to walk through all memory regions
+	 * again and verify that all of them were unregistered by
+	 * the failed mem_map alloc above.
+	 */
+	test_map_ops.notify_cb = test_map_notify_verify;
+	map = spdk_mem_map_alloc(DEFAULT_TRANSLATION, &test_map_ops, NULL);
 	if (map == NULL) {
+		printf("Err: failed mem_map creation leaked memory registrations\n");
+		spdk_mem_map_free(&g_mem_map);
 		return 1;
 	}
 
 	spdk_mem_map_free(&map);
+	spdk_mem_map_free(&g_mem_map);
 	return 0;
 }
-
 
 int
 main(int argc, char **argv)

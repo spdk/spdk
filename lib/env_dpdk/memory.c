@@ -95,27 +95,18 @@ static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
  * Walk the currently registered memory via the main memory registration map
  * and call the new map's notify callback for each virtually contiguous region.
  */
-static void
+static int
 spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action action)
 {
 	size_t idx_256tb;
+	uint64_t idx_1gb;
 	uint64_t contig_start = 0;
 	uint64_t contig_end = 0;
-
-#define END_RANGE()										\
-	do {											\
-		if (contig_start != 0) {							\
-			/* End of of a virtually contiguous range */				\
-			map->ops.notify_cb(map->cb_ctx, map, action,				\
-				       (void *)contig_start,					\
-				       contig_end - contig_start + 2 * 1024 * 1024);		\
-		}										\
-		contig_start = 0;								\
-	} while (0)
-
+	struct map_1gb *map_1gb;
+	int rc;
 
 	if (!g_mem_reg_map) {
-		return;
+		return -EINVAL;
 	}
 
 	/* Hold the memory registration map mutex so no new registrations can be added while we are looping. */
@@ -124,11 +115,20 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 	for (idx_256tb = 0;
 	     idx_256tb < sizeof(g_mem_reg_map->map_256tb.map) / sizeof(g_mem_reg_map->map_256tb.map[0]);
 	     idx_256tb++) {
-		const struct map_1gb *map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb];
-		uint64_t idx_1gb;
+		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb];
 
 		if (!map_1gb) {
-			END_RANGE();
+			if (contig_start != 0) {
+				/* End of of a virtually contiguous range */
+				rc = map->ops.notify_cb(map->cb_ctx, map, action,
+							(void *)contig_start,
+							contig_end - contig_start + VALUE_2MB);
+				/* Don't bother handling unregister failures. It can't be any worse */
+				if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
+					goto err_unregister;
+				}
+			}
+			contig_start = 0;
 			continue;
 		}
 
@@ -140,20 +140,84 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 				if (contig_start == 0) {
 					contig_start = vaddr;
 				}
+
 				contig_end = vaddr;
 			} else {
-				END_RANGE();
+				if (contig_start != 0) {
+					/* End of of a virtually contiguous range */
+					rc = map->ops.notify_cb(map->cb_ctx, map, action,
+								(void *)contig_start,
+								contig_end - contig_start + VALUE_2MB);
+					/* Don't bother handling unregister failures. It can't be any worse */
+					if (rc != 0 && action == SPDK_MEM_MAP_NOTIFY_REGISTER) {
+						goto err_unregister;
+					}
+				}
+				contig_start = 0;
 			}
 		}
 	}
 
 	pthread_mutex_unlock(&g_mem_reg_map->mutex);
+	return 0;
+
+err_unregister:
+	/* Unwind to the first empty translation so we don't unregister
+	 * a region that just failed to register.
+	 */
+	idx_256tb = MAP_256TB_IDX((contig_start >> SHIFT_2MB) - 1);
+	idx_1gb = MAP_1GB_IDX((contig_start >> SHIFT_2MB) - 1);
+	contig_start = 0;
+	contig_end = 0;
+
+	/* Unregister any memory we managed to register before the failure */
+	for (; idx_256tb < SIZE_MAX; idx_256tb--) {
+		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb];
+
+		if (!map_1gb) {
+			if (contig_end != 0) {
+				/* End of of a virtually contiguous range */
+				map->ops.notify_cb(map->cb_ctx, map,
+						   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
+						   (void *)contig_start,
+						   contig_end - contig_start + VALUE_2MB);
+			}
+			contig_end = 0;
+			continue;
+		}
+
+		for (; idx_1gb < UINT64_MAX; idx_1gb--) {
+			if (map_1gb->map[idx_1gb].translation_2mb != 0) {
+				/* Rebuild the virtual address from the indexes */
+				uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
+
+				if (contig_end == 0) {
+					contig_end = vaddr;
+				}
+				contig_start = vaddr;
+			} else {
+				if (contig_end != 0) {
+					/* End of of a virtually contiguous range */
+					map->ops.notify_cb(map->cb_ctx, map,
+							   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
+							   (void *)contig_start,
+							   contig_end - contig_start + VALUE_2MB);
+				}
+				contig_end = 0;
+			}
+		}
+		idx_1gb = sizeof(map_1gb->map) / sizeof(map_1gb->map[0]) - 1;
+	}
+
+	pthread_mutex_unlock(&g_mem_reg_map->mutex);
+	return rc;
 }
 
 struct spdk_mem_map *
 spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *ops, void *cb_ctx)
 {
 	struct spdk_mem_map *map;
+	int rc;
 
 	map = calloc(1, sizeof(*map));
 	if (map == NULL) {
@@ -174,7 +238,14 @@ spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
 
 	if (ops && ops->notify_cb) {
-		spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_REGISTER);
+		rc = spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_REGISTER);
+		if (rc != 0) {
+			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+			DEBUG_PRINT("Initial mem_map notify failed\n");
+			pthread_mutex_destroy(&map->mutex);
+			free(map);
+			return NULL;
+		}
 		TAILQ_INSERT_TAIL(&g_spdk_mem_maps, map, tailq);
 	}
 
