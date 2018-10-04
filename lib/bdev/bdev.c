@@ -1514,7 +1514,9 @@ spdk_bdev_channel_poll_qos(void *arg)
 		}
 	}
 
-	_spdk_bdev_qos_io_submit(qos->ch);
+	if (qos->thread) {
+		_spdk_bdev_qos_io_submit(qos->ch);
+	}
 
 	return -1;
 }
@@ -1790,6 +1792,7 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 	} else {
 		spdk_thread_send_msg(old_qos->thread, spdk_bdev_qos_channel_destroy,
 				     old_qos);
+		old_qos->thread = NULL;
 	}
 
 	/* It is safe to continue with destroying the bdev even though the QoS channel hasn't
