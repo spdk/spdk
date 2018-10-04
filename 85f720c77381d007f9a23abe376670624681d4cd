@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49b0601d_d03f3db7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 4286,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-04T14:49:14Z",
+      "side": 1,
+      "message": "that provides http server which listens for JSON objects from users",
+      "range": {
+        "startLine": 4286,
+        "startChar": 54,
+        "endLine": 4286,
+        "endChar": 73
+      },
+      "revId": "85f720c77381d007f9a23abe376670624681d4cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c439a37f_9a0c9a1f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 4300,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-04T14:49:14Z",
+      "side": 1,
+      "message": "Is it possible to listen on all addresses on local machine? (0.0.0.0?)",
+      "range": {
+        "startLine": 4300,
+        "startChar": 28,
+        "endLine": 4300,
+        "endChar": 40
+      },
+      "revId": "85f720c77381d007f9a23abe376670624681d4cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ddd244a2_c0de33af",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 4332,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-04T14:49:14Z",
+      "side": 1,
+      "message": "maybe we should provide client.py in our repo as well?",
+      "range": {
+        "startLine": 4332,
+        "startChar": 0,
+        "endLine": 4332,
+        "endChar": 16
+      },
+      "revId": "85f720c77381d007f9a23abe376670624681d4cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
