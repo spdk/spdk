@@ -205,6 +205,13 @@ spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *cadd
 	return 0;
 }
 
+static int
+spdk_posix_vpp_getport(struct spdk_sock *_sock, uint16_t *port, bool is_client)
+{
+	SPDK_ERRLOG("To be added later\n");
+	return -1;
+}
+
 enum spdk_vpp_create_type {
 	SPDK_SOCK_CREATE_LISTEN,
 	SPDK_SOCK_CREATE_CONNECT,
@@ -586,6 +593,7 @@ spdk_vpp_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 
 static struct spdk_net_impl g_vpp_net_impl = {
 	.name		= "vpp",
+	.getport	= spdk_vpp_sock_getport,
 	.getaddr	= spdk_vpp_sock_getaddr,
 	.connect	= spdk_vpp_sock_connect,
 	.listen		= spdk_vpp_sock_listen,

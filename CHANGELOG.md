@@ -97,6 +97,12 @@ scripts/config_converter.py. Example how this script can be used:
 cat old_format.ini | scripts/config_converter.py > new_json_format.json
 ~~~
 
+### Socket
+
+Add a spdk_sock_getport API. This api is used to get the port of the
+given socket. If is_client is true, it returns the client side port of the
+socket; Otherwise, it returns the server side port of the socket.
+
 ## v18.07:
 
 ### bdev

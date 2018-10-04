@@ -142,6 +142,45 @@ spdk_posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *ca
 	return 0;
 }
 
+static int
+spdk_posix_sock_getport(struct spdk_sock *_sock, uint16_t *port, bool is_client)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	struct sockaddr_storage sa;
+	socklen_t salen;
+	int rc;
+
+	assert(sock != NULL);
+
+	memset(&sa, 0, sizeof sa);
+	salen = sizeof sa;
+
+	if (is_client) {
+		rc = getpeername(sock->fd, (struct sockaddr *) &sa, &salen);
+		if (rc != 0) {
+			SPDK_ERRLOG("getpeername() failed (errno=%d)\n", errno);
+			return -1;
+		}
+	} else {
+		rc = getsockname(sock->fd, (struct sockaddr *) &sa, &salen);
+		if (rc != 0) {
+			SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
+			return -1;
+		}
+	}
+
+	if (sa.ss_family == AF_INET) {
+		*port = htons(((struct sockaddr_in *) &sa)->sin_port);
+	} else if (sa.ss_family == AF_INET6) {
+		*port = htons(((struct sockaddr_in6 *) &sa)->sin6_port);
+	} else {
+		return -1;
+	}
+
+	return 0;
+}
+
+
 enum spdk_posix_sock_create_type {
 	SPDK_SOCK_CREATE_LISTEN,
 	SPDK_SOCK_CREATE_CONNECT,
@@ -557,6 +596,7 @@ spdk_posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 
 static struct spdk_net_impl g_posix_net_impl = {
 	.name		= "posix",
+	.getport	= spdk_posix_sock_getport,
 	.getaddr	= spdk_posix_sock_getaddr,
 	.connect	= spdk_posix_sock_connect,
 	.listen		= spdk_posix_sock_listen,

@@ -41,6 +41,12 @@
 static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
 
 int
+spdk_sock_getport(struct spdk_sock *sock, uint16_t *port, bool is_client)
+{
+	return sock->net_impl->getport(sock, port, is_client);
+}
+
+int
 spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen)
 {
 	return sock->net_impl->getaddr(sock, saddr, slen, caddr, clen);
