@@ -22,6 +22,30 @@
       "revId": "2f2051f0f597297fde764f22b68200a446f0d9df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4fe0174_2aec86b4",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-04T22:59:50Z",
+      "side": 1,
+      "message": "both before and after  :-)\n\nin this case though, Ben is saying that we will do a bunch of connects here, then will killprocess on line 85 which will cause the disconnects",
+      "parentUuid": "74bf5990_caf4f217",
+      "range": {
+        "startLine": 73,
+        "startChar": 35,
+        "endLine": 73,
+        "endChar": 41
+      },
+      "revId": "2f2051f0f597297fde764f22b68200a446f0d9df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
