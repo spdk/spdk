@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab4ff0e1_4bad483d",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1604,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-04T22:03:59Z",
+      "side": 1,
+      "message": "maybe this is important, maybe it\u0027s a nit\n\nbut should we make the global the actual structure, and not a pointer?  then we don\u0027t have to worry about someone stupidly filling this out on their stack and passing it to us",
+      "revId": "68619943b05675046db1507a84bde8851f3c8f41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
