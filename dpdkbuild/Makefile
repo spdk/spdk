@@ -64,7 +64,7 @@ endif
 ifeq ($(TARGET_MACHINE),aarch64)
 DPDK_CONFIG := arm64-armv8a
 else
-DPDK_CONFIG := spdk
+DPDK_CONFIG := $(TARGET_MACHINE)-native
 endif
 
 ifeq ($(OS),Linux)
