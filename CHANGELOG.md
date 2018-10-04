@@ -56,6 +56,13 @@ and also update the related rpc function nvmf_create_transport, to make this
 configurable parameter available to users. The `num_shared_buffers` is used to
 configure the shared buffer numbers of the transport used by RDMA or TCP transport.
 
+New `configure` options `--with-rdma-srq` and `--without-rdma-srq` [default],
+provide the capability to enable or disable shared receive queue support
+in RDMA transport for NVMe-oF target.
+Size of shared receive queue is defined by transport configuration file parameter
+`MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
+Default size is 4096.
+
 ### nvmf
 
 Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
