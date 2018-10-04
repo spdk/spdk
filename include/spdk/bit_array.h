@@ -63,6 +63,8 @@ uint32_t spdk_bit_array_capacity(const struct spdk_bit_array *ba);
  *
  * \param num_bits Number of bits that the bit array is sized to hold.
  *
+ * All bits in the array will be cleared.
+ *
  * \return a pointer to the new bit array.
  */
 struct spdk_bit_array *spdk_bit_array_create(uint32_t num_bits);
