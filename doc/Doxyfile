@@ -815,6 +815,7 @@ INPUT                  += \
                          ioat.md \
                          iscsi.md \
                          jsonrpc.md \
+                         jsonrpc_proxy.md \
                          lvol.md \
                          memory.md \
                          nvme.md \

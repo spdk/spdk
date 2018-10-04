@@ -7,3 +7,4 @@
 - @subpage bdev
 - @subpage blobfs
 - @subpage jsonrpc
+- @subpage jsonrpc_proxy
