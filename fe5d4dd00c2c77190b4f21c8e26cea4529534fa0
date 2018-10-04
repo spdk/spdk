@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41c144b7_c6ed37bb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 962,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-04T21:55:58Z",
+      "side": 1,
+      "message": "Hi Piotr,\n\nHow was this patch tested?\n\noptimal_io_boundary is in terms of blocks, but spdk_bs_get_cluster_size is in terms of bytes.\n\nSo this patch won\u0027t break anything, it just won\u0027t split in a lot of cases where we want it to.\n\n-Jim",
+      "revId": "fe5d4dd00c2c77190b4f21c8e26cea4529534fa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
