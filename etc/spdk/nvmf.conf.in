@@ -99,6 +99,9 @@
   # Set the number of shared buffers to be cached per poll group
   #BufCacheSize 32
 
+  # Set the maximum number outstanding I/O per shared receive queue. Relevant only for RDMA transport
+  #MaxSRQDepth 4096
+
 [Transport]
   # Set TCP transport type.
   Type TCP
