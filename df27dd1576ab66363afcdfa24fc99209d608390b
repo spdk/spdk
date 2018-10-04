@@ -16,6 +16,24 @@
       "revId": "df27dd1576ab66363afcdfa24fc99209d608390b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d66e275_451d9104",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-04T21:14:15Z",
+      "side": 1,
+      "message": "I see now that you do end up putting that check at the top later on in the patch series, so this is fine.",
+      "parentUuid": "d42ec9d3_f4d87870",
+      "revId": "df27dd1576ab66363afcdfa24fc99209d608390b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
