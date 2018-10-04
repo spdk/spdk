@@ -35,6 +35,13 @@ to be performed on the thread at given time.
 An new API `spdk_bdev_get_data_block_size` has been added to get size of data
 block except for metadata.
 
+### NVMe-oF Target
+
+Support for per-device shared receive queues in the RDMA transport has been added.
+The size of a shared receive queue is defined by transport configuration file parameter
+`MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
+Default size is 4096.
+
 ## v19.01:
 
 ### ocf bdev
