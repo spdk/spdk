@@ -1514,6 +1514,11 @@ spdk_bdev_channel_poll_qos(void *arg)
 	uint64_t now = spdk_get_ticks();
 	int i;
 
+	/* In the middle of QoS destroy, just return. */
+	if (qos->thread == NULL) {
+		return -1;
+	}
+
 	if (now < (qos->last_timeslice + qos->timeslice_size)) {
 		/* We received our callback earlier than expected - return
 		 *  immediately and wait to do accounting until at least one
@@ -1819,6 +1824,7 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 	} else {
 		spdk_thread_send_msg(old_qos->thread, spdk_bdev_qos_channel_destroy,
 				     old_qos);
+		old_qos->thread = NULL;
 	}
 
 	/* It is safe to continue with destroying the bdev even though the QoS channel hasn't
