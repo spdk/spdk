@@ -262,7 +262,7 @@ if [ -z "${CONFIG[ENV]}" ]; then
 	CONFIG[ENV]=$rootdir/lib/env_dpdk
 	echo "Using default SPDK env in ${CONFIG[ENV]}"
 	if [ -z "${CONFIG[DPDK_DIR]}" ]; then
-		if [ ! -f "$rootdir"/dpdk/config/common_spdk ]; then
+		if [ ! -f "$rootdir"/dpdk/config/common_base ]; then
 			echo "DPDK not found; please specify --with-dpdk=<path> or run:"
 			echo
 			echo "  git submodule update --init"
