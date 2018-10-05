@@ -51,8 +51,6 @@ if [ $rc -eq 0 ]; then
 	echo " OK"
 fi
 
-exit 0
-
 if hash astyle; then
 	echo -n "Checking coding style..."
 	if [ "$(astyle -V)" \< "Artistic Style Version 3" ]
