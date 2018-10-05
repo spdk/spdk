@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e9ce3d95_04f7f2bf",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T22:09:04Z",
+      "side": 1,
+      "message": "We probably should check the error, but I think Changpeng just moved this code directly from nvme_ns_set_identify_data() to here.  The original code also did not check for error (even though it should have).  So I think this is OK for now.",
+      "parentUuid": "53236b03_44f9ffa3",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 22
+      },
+      "revId": "b3c21b8e63914a19e8e6d655d02b5699f78ebf59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cc4471b_2a1c1d05",
         "filename": "lib/nvme/nvme_ns.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-01T02:20:24Z",
       "side": 1,
       "message": "What is done is almost identical between nvme_ctrlr_identify_ns() and nvme_ctrlr_identify_id_desc(). However the code flow is not similar.\n\nIs it possible to make nvme_ctrlr_identify_ns() look like nvme_ctrlr_identify_id_desc() or opposite?\nSeparate patch is of course OK.",
+      "range": {
+        "startLine": 128,
+        "startChar": 0,
+        "endLine": 128,
+        "endChar": 27
+      },
+      "revId": "b3c21b8e63914a19e8e6d655d02b5699f78ebf59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e45c3df5_0a4076ea",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T22:09:04Z",
+      "side": 1,
+      "message": "Yeah - I think we should do this in a separate patch.\n\nIt would also be simpler to do something like:\n\nmemset(xxx)\nif (version \u003c 1.3 or quirks does not include IDENTIFY_CNS) {\n  DEBUGLOG();\n  return 0;\n}\n\nThis will make the rest of the code easier to make similar to identify_ns like Shuhei suggested.",
+      "parentUuid": "7cc4471b_2a1c1d05",
       "range": {
         "startLine": 128,
         "startChar": 0,
