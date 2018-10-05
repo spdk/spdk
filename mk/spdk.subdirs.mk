@@ -35,3 +35,20 @@ $(DIRS-y) :
 	$(Q)$(MAKE) -C $@ S=$S$(S:%=/)$@ $(MAKECMDGOALS) $(MAKESUBDIRFLAGS)
 
 install: all $(DIRS-y)
+
+.PHONY: cflags libs
+
+.libs_only_other:
+	$(Q)echo -n '$(SYS_LIBS) '
+	$(Q)if [ "$(CONFIG_SHARED)" = "y" ]; then \
+		echo -n '-lspdk '; \
+	fi
+
+.ldflags:
+	$(Q)echo -n '$(LDFLAGS) '
+
+cflags:
+	$(Q)echo '$(CFLAGS)'
+
+ldflags: .ldflags .libs_only_other
+	$(Q)echo ''
