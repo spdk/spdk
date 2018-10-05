@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60634d14_1ba87c64",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T20:53:17Z",
+      "side": 1,
+      "message": "this comment should be deleted, or make the assert uncommented",
+      "revId": "9165128e8082cea25a98c89368ba6ea04a52a649",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c8681c2_00d8020d",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T20:53:17Z",
+      "side": 1,
+      "message": "this comment should be deleted, or make the assert uncommented",
+      "revId": "9165128e8082cea25a98c89368ba6ea04a52a649",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
