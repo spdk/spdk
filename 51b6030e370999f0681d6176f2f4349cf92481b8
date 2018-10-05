@@ -22,6 +22,30 @@
       "revId": "51b6030e370999f0681d6176f2f4349cf92481b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "609f98fc_c1857321",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-05T03:33:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "35c40439_35886b1b",
+      "range": {
+        "startLine": 201,
+        "startChar": 29,
+        "endLine": 201,
+        "endChar": 32
+      },
+      "revId": "51b6030e370999f0681d6176f2f4349cf92481b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
