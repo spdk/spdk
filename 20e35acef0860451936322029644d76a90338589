@@ -147,6 +147,30 @@
     },
     {
       "key": {
+        "uuid": "aaef7712_c9738dd5",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1014914
+      },
+      "writtenOn": "2018-10-05T12:42:16Z",
+      "side": 1,
+      "message": "I think we can change \"modprobe $driver_name || true\" to \"modprobe $driver_name\" to detect the kennel module absent.",
+      "parentUuid": "f28bbd5e_b5137840",
+      "range": {
+        "startLine": 196,
+        "startChar": 2,
+        "endLine": 196,
+        "endChar": 38
+      },
+      "revId": "20e35acef0860451936322029644d76a90338589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ce202a2_da6c5c75",
         "filename": "scripts/setup.sh",
         "patchSetId": 1
@@ -158,6 +182,30 @@
       "writtenOn": "2018-10-02T06:59:34Z",
       "side": 1,
       "message": "setup.sh is run as part of autotest.sh used to run tests suites in automated fashion.\nAdding an interactive \"read\" statement to setup.sh also makes autotest.sh stop on user input as well and stops tests execution.",
+      "range": {
+        "startLine": 202,
+        "startChar": 3,
+        "endLine": 202,
+        "endChar": 16
+      },
+      "revId": "20e35acef0860451936322029644d76a90338589",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d8a68a1_baad0a79",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1014914
+      },
+      "writtenOn": "2018-10-05T12:42:16Z",
+      "side": 1,
+      "message": "Thanks a lot for the comment. Maybe we could define 6 seconds timer to control the input. If there was no any input, select \"uio_pci_generic\" by default. I have validated it in my test bed, the \"autotest.sh\" scripts works well. If you think it is acceptable, I will add the timer in the next version. Thanks!",
+      "parentUuid": "0ce202a2_da6c5c75",
       "range": {
         "startLine": 202,
         "startChar": 3,
