@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65583633_0c56f470",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-05T20:51:35Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we eliminate this line now?   That is, remove libspdk_rte_vhost.so from the IGNORED_LIBS list owing to 427808 in this series which uses the AS_NEEDED construct?   That way, if someone does want to use this the functionality in libspdk_rte_vhost via libspdk.so, then they can providing they properly specify the additional DPDK libs or their own env libs?",
+      "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
