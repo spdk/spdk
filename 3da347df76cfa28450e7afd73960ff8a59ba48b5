@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "512fc9f6_774e5df0",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-05T18:32:57Z",
+      "side": 1,
+      "message": "I think you should rename spdk_jsonrpc_client_conn to just spdk_jsonrpc_client.",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b83260d3_31cb56ab",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-05T18:32:57Z",
+      "side": 1,
+      "message": "I think you should name this function \"spdk_jsonrpc_client_create_request\"",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87caa109_eb3dd932",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-05T18:32:57Z",
+      "side": 1,
+      "message": "This function should take the spdk_jsonrpc_client_request object as an argument too. Right now I think you have just a single request object allocated in the client, but ultimately we\u0027re going to want to allow for many requests that overlap in time. We don\u0027t have to code that up right away, but we should make the API work for that case at least.",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28e98485_e9a8f724",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-05T18:32:57Z",
+      "side": 1,
+      "message": "Consider dynamically allocating the requests so there can be more than one.",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4736939_d539ab7b",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-05T18:32:57Z",
+      "side": 1,
+      "message": "broaden isn\u0027t a bad word, but a better word would be \"expand\" or \"grow\"",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
