@@ -133,10 +133,10 @@ test_find(void)
 	/* Verify that find_first_set and find_first_clear work for each starting position */
 	for (i = 0; i < 256; i++) {
 		CU_ASSERT(spdk_bit_array_find_first_set(ba, i) == i);
-		CU_ASSERT(spdk_bit_array_find_first_clear(ba, i) == 256);
+		CU_ASSERT(spdk_bit_array_find_first_clear(ba, i) == UINT32_MAX);
 	}
 	CU_ASSERT(spdk_bit_array_find_first_set(ba, 256) == UINT32_MAX);
-	CU_ASSERT(spdk_bit_array_find_first_clear(ba, 256) == 256);
+	CU_ASSERT(spdk_bit_array_find_first_clear(ba, 256) == UINT32_MAX);
 
 	/* Clear bits 0 through 31 */
 	for (i = 0; i < 32; i++) {
@@ -150,7 +150,7 @@ test_find(void)
 
 	for (i = 32; i < 256; i++) {
 		CU_ASSERT(spdk_bit_array_find_first_set(ba, i) == i);
-		CU_ASSERT(spdk_bit_array_find_first_clear(ba, i) == 256);
+		CU_ASSERT(spdk_bit_array_find_first_clear(ba, i) == UINT32_MAX);
 	}
 
 	/* Clear bit 255 */
@@ -166,7 +166,7 @@ test_find(void)
 		CU_ASSERT(spdk_bit_array_find_first_clear(ba, i) == 255);
 	}
 
-	CU_ASSERT(spdk_bit_array_find_first_clear(ba, 256) == 256);
+	CU_ASSERT(spdk_bit_array_find_first_clear(ba, 256) == UINT32_MAX);
 
 	spdk_bit_array_free(&ba);
 }

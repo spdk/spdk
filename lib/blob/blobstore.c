@@ -109,7 +109,7 @@ _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 	*lowest_free_cluster = spdk_bit_array_find_first_clear(blob->bs->used_clusters,
 			       *lowest_free_cluster);
-	if (*lowest_free_cluster >= blob->bs->total_clusters) {
+	if (*lowest_free_cluster == UINT32_MAX) {
 		/* No more free clusters. Cannot satisfy the request */
 		pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 		return -ENOSPC;
@@ -1338,7 +1338,7 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 		lfc = 0;
 		for (i = num_clusters; i < sz; i++) {
 			lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
-			if (lfc >= bs->total_clusters) {
+			if (lfc == UINT32_MAX) {
 				/* No more free clusters. Cannot satisfy the request */
 				return -ENOSPC;
 			}
@@ -1421,7 +1421,7 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 	/* Note that this loop starts at one. The first page location is fixed by the blobid. */
 	for (i = 1; i < blob->active.num_pages; i++) {
 		page_num = spdk_bit_array_find_first_clear(bs->used_md_pages, page_num);
-		if (page_num >= spdk_bit_array_capacity(bs->used_md_pages)) {
+		if (page_num == UINT32_MAX) {
 			_spdk_blob_persist_complete(seq, ctx, -ENOMEM);
 			return;
 		}
@@ -4106,7 +4106,7 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 	assert(spdk_get_thread() == bs->md_thread);
 
 	page_idx = spdk_bit_array_find_first_clear(bs->used_md_pages, 0);
-	if (page_idx >= spdk_bit_array_capacity(bs->used_md_pages)) {
+	if (page_idx == UINT32_MAX) {
 		cb_fn(cb_arg, 0, -ENOMEM);
 		return;
 	}
@@ -4780,7 +4780,7 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 	for (i = 0; i < _blob->active.num_clusters; i++) {
 		if (_spdk_bs_cluster_needs_allocation(_blob, i, ctx->allocate_all)) {
 			lfc = spdk_bit_array_find_first_clear(_blob->bs->used_clusters, lfc);
-			if (lfc >= _blob->bs->total_clusters) {
+			if (lfc == UINT32_MAX) {
 				/* No more free clusters. Cannot satisfy the request */
 				_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -ENOSPC);
 				return;

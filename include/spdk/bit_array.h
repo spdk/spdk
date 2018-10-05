@@ -151,9 +151,7 @@ uint32_t spdk_bit_array_find_first_set(const struct spdk_bit_array *ba, uint32_t
  * \param start_bit_index The bit index from which to start searching (0 to start
  * from the beginning of the array).
  *
- * \return the index of the first cleared bit. Bits beyond the current size of
- * the array are implicitly cleared, so if all bits within the current size are
- * set, this function will return the current number of bits + 1.
+ * \return the index of the first cleared bit. If no bits are cleared, returns UINT32_MAX.
  */
 uint32_t spdk_bit_array_find_first_clear(const struct spdk_bit_array *ba, uint32_t start_bit_index);
 
