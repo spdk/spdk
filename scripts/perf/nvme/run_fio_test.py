@@ -19,10 +19,11 @@ import csv
 import itertools
 from shutil import copyfile
 import json
+import time
 
 # Populate test parameters into these lists to run different workloads
 # The configuration below runs QD 1 & 128. To add QD 32 set q_depth=['1', '32', '128']
-q_depth = ['1', '128']
+q_depth = ['1', '128', '64']
 # io_size specifies the size in bytes of the IO workload.
 # To add 64K IOs set io_size = ['4096', '65536']
 io_size = ['4096']
@@ -31,7 +32,7 @@ mix = ['100']
 core_mask = ['0x1']
 # run_time parameter specifies how long to run each test.
 # Set run_time = ['600'] to run the test for 10 minutes
-run_time = ['60']
+run_time = ['5']
 # iter_num parameter is used to run the test multiple times.
 # set iter_num = ['1', '2', '3'] to repeat each test 3 times
 iter_num = ['1']
@@ -44,9 +45,10 @@ def run_fio(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_time_sec
     # Call fio
     path_to_fio_conf = config_file_for_test
     path_to_ioengine = sys.argv[2]
+    time.sleep(3)
     command = "BLK_SIZE=" + str(io_size_bytes) + " RW=" + str(workload) + " MIX=" + str(rw_mix) \
         + " IODEPTH=" + str(qd) + " RUNTIME=" + str(run_time_sec) + " IOENGINE=" + path_to_ioengine \
-        + " fio " + str(path_to_fio_conf) + " -output=" + string + " -output-format=json"
+        + " /usr/src/fio/fio " + str(path_to_fio_conf) + " --output=" + string + " --output-format=json"
     output = subprocess.check_output(command, shell=True)
 
     print("Finished Test: IO Size={} QD={} Mix={} CPU Mask={}".format(io_size_bytes, qd, rw_mix, cpu_mask))
@@ -116,7 +118,7 @@ def get_nvme_devices_count():
 
 
 def get_nvme_devices_bdf():
-    output = check_output('lspci | grep -i Non | awk \'{print $1}\'', shell=True)
+    output = check_output('lspci | grep -i Non | awk \'{print $1}\'', shell=True).decode("utf-8")
     output = output.split()
     return output
 
