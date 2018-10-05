@@ -116,7 +116,7 @@ def get_nvme_devices_count():
 
 
 def get_nvme_devices_bdf():
-    output = check_output('lspci | grep -i Non | awk \'{print $1}\'', shell=True)
+    output = check_output('lspci | grep -i Non | awk \'{print $1}\'', shell=True).decode("utf-8")
     output = output.split()
     return output
 
