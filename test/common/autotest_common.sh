@@ -101,6 +101,13 @@ if [ `uname -s` = "Linux" ]; then
 	export HUGEMEM=8192
 fi
 
+# BlobFS tests require at least 5GB of memory on socket #0, so instead of
+# distributing hugepages 50/50 between two sockets, allocate them all on
+# the first one.
+if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+        export HUGENODE=0
+fi
+
 DEFAULT_RPC_ADDR=/var/tmp/spdk.sock
 
 case `uname` in
