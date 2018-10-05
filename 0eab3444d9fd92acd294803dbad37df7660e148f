@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8f92b52_08efc2a8",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 4284,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T22:42:57Z",
+      "side": 1,
+      "message": "I\u0027m wondering if we should make a separate file for this utility.  This document is really intended only for JSON-RPC descriptions.  You could create a new file (jsonrpc_proxy.md?) and then plumb it into doc/user_guides.md.",
+      "revId": "0eab3444d9fd92acd294803dbad37df7660e148f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
