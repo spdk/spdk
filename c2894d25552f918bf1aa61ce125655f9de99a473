@@ -46,6 +46,23 @@
       "revId": "c2894d25552f918bf1aa61ce125655f9de99a473",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74251c27_ac4f5e5d",
+        "filename": "scripts/remote_rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T22:40:27Z",
+      "side": 1,
+      "message": "response_to_bytes?  or maybe respond_to_bytes",
+      "revId": "c2894d25552f918bf1aa61ce125655f9de99a473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
