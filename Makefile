@@ -97,4 +97,16 @@ cc_version: mk/cc.mk
 cxx_version: mk/cc.mk
 	$(Q)echo "SPDK using CXX=$(CXX)"; $(CXX) -v
 
+.libs_only_other:
+	$(Q)echo -n '$(SYS_LIBS) '
+	$(Q)if [ "$(CONFIG_SHARED)" = "y" ]; then \
+		echo -n '-lspdk '; \
+	fi
+
+.ldflags:
+	$(Q)echo -n '$(LDFLAGS) '
+
+ldflags: .ldflags .libs_only_other
+	$(Q)echo ''
+
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
