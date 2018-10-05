@@ -16,6 +16,24 @@
       "revId": "c0cf909c2e09b2c6c8cd28b6ae5799273b7838e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db3666f7_cd7bc806",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-05T12:52:39Z",
+      "side": 1,
+      "message": "Agree. Abandoning.",
+      "parentUuid": "d2247c29_e30077cd",
+      "revId": "c0cf909c2e09b2c6c8cd28b6ae5799273b7838e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
