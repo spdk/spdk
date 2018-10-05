@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8a510e7_4078ffa9",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T22:58:13Z",
+      "side": 1,
+      "message": "I would remove line 425.  There\u0027s no reason to initialize it here since you now have to set it explicitly every time a request is sent.",
+      "revId": "4f6f1eb64a08a6de369b1262a4f73c86a2e04bbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59782669_f0a9ff7b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T22:58:13Z",
+      "side": 1,
+      "message": "I think this would be easier to understand as a while loop.  It took me a while to figure out why we had to do an extra num_sgl_desc++ after this loop.\n\nsomething like:\n\nnum_sgl_desc \u003d 0;\nwhile (remaining_size \u003e 0 \u0026\u0026 num_sgl_desc \u003c max_num_sgl) {\n}",
+      "revId": "4f6f1eb64a08a6de369b1262a4f73c86a2e04bbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
