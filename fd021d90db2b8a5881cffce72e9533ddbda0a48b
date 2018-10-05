@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e943608e_4277e088",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T22:22:57Z",
+      "side": 1,
+      "message": "nvme_ctrlr_connect_poll?\n\nshould definitely have \"ctrlr\" in the name - we are operating on the ctrlr here",
+      "revId": "fd021d90db2b8a5881cffce72e9533ddbda0a48b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6d999ef_9cb46445",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 591,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T22:22:57Z",
+      "side": 1,
+      "message": "this can just be spdk_process_is_primary || trtype !\u003d TRANSPORT_PCIE",
+      "revId": "fd021d90db2b8a5881cffce72e9533ddbda0a48b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d805c62_f14f93ea",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-05T22:22:57Z",
+      "side": 1,
+      "message": "this can be simplified to (spdk_process_is_primary || trtype !\u003d TRANSPORT_PCIE)",
+      "revId": "fd021d90db2b8a5881cffce72e9533ddbda0a48b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
