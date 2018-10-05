@@ -33,12 +33,8 @@ ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
 bdfs=$(iter_pci_class_code 01 08 02)
 bdf=$(echo $bdfs|awk '{ print $1 }')
 
-if [[ -s $rootdir/CONFIG.local ]] && grep 'CONFIG_LOG_BACKTRACE\?=y' $rootdir/CONFIG.local -q; then
-	nvme_cli_ldflags='LDFLAGS=-lunwind'
-fi
-
 cd $spdk_nvme_cli
-make clean && make -j$(nproc) $nvme_cli_ldflags
+make clean && make -j$(nproc) LDFLAGS="$(make -s -C $spdk_nvme_cli/spdk ldflags)"
 sed -i 's/spdk=0/spdk=1/g' spdk.conf
 sed -i 's/shm_id=1/shm_id=0/g' spdk.conf
 ./nvme list
