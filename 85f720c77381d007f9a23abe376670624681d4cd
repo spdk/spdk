@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "553d1ab2_ecb2e78e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 4286,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-05T08:21:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "49b0601d_d03f3db7",
+      "range": {
+        "startLine": 4286,
+        "startChar": 54,
+        "endLine": 4286,
+        "endChar": 73
+      },
+      "revId": "85f720c77381d007f9a23abe376670624681d4cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c439a37f_9a0c9a1f",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "48e4a21f_a59e4702",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 4300,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-05T08:21:36Z",
+      "side": 1,
+      "message": "No. IP address is used to find interface on which script should listen.",
+      "parentUuid": "c439a37f_9a0c9a1f",
+      "range": {
+        "startLine": 4300,
+        "startChar": 28,
+        "endLine": 4300,
+        "endChar": 40
+      },
+      "revId": "85f720c77381d007f9a23abe376670624681d4cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ddd244a2_c0de33af",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2018-10-04T14:49:14Z",
       "side": 1,
       "message": "maybe we should provide client.py in our repo as well?",
+      "range": {
+        "startLine": 4332,
+        "startChar": 0,
+        "endLine": 4332,
+        "endChar": 16
+      },
+      "revId": "85f720c77381d007f9a23abe376670624681d4cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1c88262_5650c762",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 4332,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-05T08:21:36Z",
+      "side": 1,
+      "message": "This client is useless by itself as it does not provide any functionality. It is only an example how to implement client side.",
+      "parentUuid": "ddd244a2_c0de33af",
       "range": {
         "startLine": 4332,
         "startChar": 0,
