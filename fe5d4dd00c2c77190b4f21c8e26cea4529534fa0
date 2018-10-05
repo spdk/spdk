@@ -34,6 +34,24 @@
       "revId": "fe5d4dd00c2c77190b4f21c8e26cea4529534fa0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19534ee3_9e05e632",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 962,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-05T13:08:05Z",
+      "side": 1,
+      "message": "Actually I don\u0027t have a good idea to test this patch. Splitting happens on bdev layer, so there is now good way to test it in lvol layer. Do you have some good ideas for testing this part of code?",
+      "parentUuid": "db2996ab_93e33009",
+      "revId": "fe5d4dd00c2c77190b4f21c8e26cea4529534fa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
