@@ -97,7 +97,11 @@ spdk_bit_array_resize(struct spdk_bit_array **bap, uint32_t num_bits)
 	uint32_t old_word_count, new_word_count;
 	size_t new_size;
 
-	if (!bap) {
+	/*
+	 * Max number of bits allowed is UINT32_MAX - 1, because we use UINT32_MAX to denote
+	 * when a set or cleared bit cannot be found.
+	 */
+	if (!bap || num_bits == UINT32_MAX) {
 		return -EINVAL;
 	}
 
@@ -269,7 +273,19 @@ spdk_bit_array_find_first_set(const struct spdk_bit_array *ba, uint32_t start_bi
 uint32_t
 spdk_bit_array_find_first_clear(const struct spdk_bit_array *ba, uint32_t start_bit_index)
 {
-	return _spdk_bit_array_find_first(ba, start_bit_index, SPDK_BIT_ARRAY_WORD_C(-1));
+	uint32_t bit_index;
+
+	bit_index = _spdk_bit_array_find_first(ba, start_bit_index, SPDK_BIT_ARRAY_WORD_C(-1));
+
+	/*
+	 * If we ran off the end of the array and found the 0 bit in the extra word,
+	 * return UINT32_MAX to indicate no actual 0 bits were found.
+	 */
+	if (bit_index >= ba->bit_count) {
+		bit_index = UINT32_MAX;
+	}
+
+	return bit_index;
 }
 
 uint32_t
