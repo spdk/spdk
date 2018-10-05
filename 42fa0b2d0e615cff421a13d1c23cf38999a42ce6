@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccaae1da_f9102670",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-05T19:10:59Z",
+      "side": 1,
+      "message": "So I like the idea of a mode that produces machine readable output a lot. However, I\u0027d like to suggest a slightly different approach that hopefully fits into the rest of our technology stack a little bit more seemlessly.\n\n1) I don\u0027t think it should output to a file. Just make it output in machine readable format to stdout. The user can redirect that to a file, if they so choose.\n\n2) What if we output JSON instead of CSV? Specifically, a JSON dictionary. JSON is a lot nicer to work with due to the \u0027jq\u0027 command line tool, which lets us write queries to grab particular things out of the output very easily. We use \u0027jq\u0027 all over in our tests already. If the user really wants to process the JSON into a CSV file for use in Excel, for example, jq even has a \"convert to CSV\" option that\u0027s really slick.",
+      "revId": "42fa0b2d0e615cff421a13d1c23cf38999a42ce6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
