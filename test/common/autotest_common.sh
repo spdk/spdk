@@ -16,7 +16,7 @@ ulimit -c unlimited
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
 
-: ${RUN_NIGHTLY_FAILING:=0}
+: ${RUN_NIGHTLY_FAILING:=1}
 export RUN_NIGHTLY_FAILING
 
 if [[ ! -z $1 ]]; then
@@ -696,3 +696,4 @@ function freebsd_update_contigmem_mod()
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+DATE='Sun Oct  7 05:01:12 MST 2018'
