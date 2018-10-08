@@ -16,6 +16,24 @@
       "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e15ac16_b6af99b3",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-08T10:32:26Z",
+      "side": 1,
+      "message": "libspdk_rte_vhost.so shouldn\u0027t be produced at all. Nor the static \u0027.a\u0027 lib. We should link lib/vhost/rte_vhost/*.o into spdk_vhost[.so|.a] lib explicitly as this is not independednt library.",
+      "parentUuid": "65583633_0c56f470",
+      "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
