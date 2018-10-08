@@ -89,14 +89,17 @@ if [ $nasm_ver -lt "21202" ]; then
 else
 	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
 	if [ "$ipsec" == "" ]; then
-		if [ -d "$rootdir/intel-ipsec-mb" ]; then
+		cd $rootdir
+		have_ipsec_submodule="$(git submodule status | grep intel-ipsec-mb)"
+		if [ "$have_ipsec_submodule" != "" ]; then
+			git submodule update --init --recursive
 			cd $rootdir/intel-ipsec-mb
 			make
 			make install
 			cd -
 		else
-			echo "The intel-ipsec-mb submodule has not been cloned and will not be installed."
-			echo "To enable crypto, run 'git submodule update --init' and then run this script again."
+			echo "The intel-ipsec-mb submodule does not exist in your spdk repo. There may be some issue with your repository."
+			echo "If you are working out of tree and plan to use crypto, please make sure to include the ipsec submodule."
 		fi
 	fi
 fi
