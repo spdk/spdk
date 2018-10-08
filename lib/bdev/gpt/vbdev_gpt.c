@@ -51,12 +51,13 @@
 
 static int vbdev_gpt_init(void);
 static void vbdev_gpt_examine(struct spdk_bdev *bdev);
+static int vbdev_gpt_get_ctx_size(void);
 
 static struct spdk_bdev_module gpt_if = {
 	.name = "gpt",
 	.module_init = vbdev_gpt_init,
 	.examine_disk = vbdev_gpt_examine,
-
+	.get_ctx_size = vbdev_gpt_get_ctx_size,
 };
 SPDK_BDEV_MODULE_REGISTER(&gpt_if)
 
@@ -77,6 +78,14 @@ struct gpt_disk {
 
 struct gpt_channel {
 	struct spdk_bdev_part_channel	part_ch;
+};
+
+struct vbdev_gpt_bdev_io {
+	struct spdk_io_channel *ch;
+	struct spdk_bdev_io *bdev_io;
+
+	/* for bdev_io_wait */
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
 
 static SPDK_BDEV_PART_TAILQ g_gpt_disks = TAILQ_HEAD_INITIALIZER(g_gpt_disks);
@@ -157,13 +166,45 @@ vbdev_gpt_destruct(void *ctx)
 }
 
 static void
+vbdev_gpt_resubmit_io(void *arg)
+{
+	struct vbdev_gpt_bdev_io *io_ctx = (struct vbdev_gpt_bdev_io *)arg;
+
+	vbdev_gpt_submit_request(io_ctx->ch, io_ctx->bdev_io);
+}
+
+static void
+vbdev_gpt_queue_io(struct vbdev_gpt_bdev_io *io_ctx)
+{
+	int rc;
+
+	io_ctx->bdev_io_wait.bdev = io_ctx->bdev_io->bdev;
+	io_ctx->bdev_io_wait.cb_fn = vbdev_gpt_resubmit_io;
+	io_ctx->bdev_io_wait.cb_arg = io_ctx;
+
+	rc = spdk_bdev_queue_io_wait(io_ctx->bdev_io->bdev,
+				     io_ctx->ch, &io_ctx->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in vbdev_gpt_queue_io, rc=%d\n", rc);
+		spdk_bdev_io_complete(io_ctx->bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static void
 vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct gpt_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct vbdev_gpt_bdev_io *io_ctx = (struct vbdev_gpt_bdev_io *)bdev_io->driver_ctx;
 	int rc;
 
 	rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
-	if (rc) {
+
+	if (rc == -ENOMEM) {
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "gpt: no memory, queue io.\n");
+		io_ctx->ch = _ch;
+		io_ctx->bdev_io = bdev_io;
+		vbdev_gpt_queue_io(io_ctx);
+	} else if (rc) {
 		SPDK_ERRLOG("gpt: error on bdev_io submission, rc=%d.\n", rc);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
@@ -409,6 +450,12 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 		spdk_bdev_module_examine_done(&gpt_if);
 		SPDK_ERRLOG("Failed to read info from bdev %s\n", spdk_bdev_get_name(bdev));
 	}
+}
+
+static int
+vbdev_gpt_get_ctx_size(void)
+{
+	return sizeof(struct vbdev_gpt_bdev_io);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_gpt", SPDK_LOG_VBDEV_GPT)
