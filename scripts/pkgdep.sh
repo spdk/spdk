@@ -89,7 +89,9 @@ if [ $nasm_ver -lt "21202" ]; then
 else
 	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
 	if [ "$ipsec" == "" ]; then
-		if [ -d "$rootdir/intel-ipsec-mb" ]; then
+		have_ipsec_submodule="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
+		if [ "$have_ipsec_submodule" != "" ]; then
+			git submodule update --init --recursive
 			cd $rootdir/intel-ipsec-mb
 			make
 			make install
