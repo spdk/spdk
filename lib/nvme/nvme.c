@@ -711,7 +711,7 @@ spdk_nvme_transport_id_adrfam_str(enum spdk_nvmf_adrfam adrfam)
 int
 spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *str)
 {
-	const char *sep;
+	const char *sep, *sep1;
 	const char *whitespace = " \t\n";
 	size_t key_len, val_len;
 	char key[32];
@@ -730,6 +730,11 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 			if (!sep) {
 				SPDK_ERRLOG("Key without ':' or '=' separator\n");
 				return -EINVAL;
+			}
+		} else {
+			sep1 = strchr(str, '=');
+			if ((sep1 != NULL) && (sep1 < sep)) {
+				sep = sep1;
 			}
 		}
 
