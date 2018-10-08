@@ -297,9 +297,8 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	TAILQ_INIT(&conn->queued_datain_tasks);
 	memset(&conn->open_lun_descs, 0, sizeof(conn->open_lun_descs));
 
-	rc = spdk_sock_getaddr(sock, conn->target_addr,
-			       sizeof conn->target_addr,
-			       conn->initiator_addr, sizeof conn->initiator_addr);
+	rc = spdk_sock_getaddr(sock, conn->target_addr, sizeof conn->target_addr, NULL,
+			       conn->initiator_addr, sizeof conn->initiator_addr, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_getaddr() failed\n");
 		goto error_return;
