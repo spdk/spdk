@@ -44,7 +44,10 @@ enum raid_bdev_state {
 	/* raid bdev is ready and is seen by upper layers */
 	RAID_BDEV_STATE_ONLINE,
 
-	/* raid bdev is configuring, not all underlying bdevs are present */
+	/*
+	 * raid bdev is configuring, not all underlying bdevs are present.
+	 * And can't be seen by upper layers.
+	 */
 	RAID_BDEV_STATE_CONFIGURING,
 
 	/*
