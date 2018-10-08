@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba625319_5a9cc797",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-08T22:55:47Z",
+      "side": 1,
+      "message": "let\u0027s just check if the header file exists under intel_ipsec_mb directory instead, rather than implicitly doing the submodule init for the user\n\ndocs already say they should init the submodule before running pkgdep",
+      "revId": "c76395ba4fb246e9c13b4984fab819fa1ba7dddf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
