@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2e4016db_abc6ba0b",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-08T08:21:40Z",
+      "side": 1,
+      "message": "Done, added a conditional",
+      "parentUuid": "029cec2d_79a07d76",
+      "revId": "1405b87253dba018fdd95ad725c88231ce497cb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "33e959ad_eb8067fe",
         "filename": "scripts/vagrant/Vagrantfile",
         "patchSetId": 4
@@ -30,6 +48,30 @@
       "writtenOn": "2018-10-03T07:55:02Z",
       "side": 1,
       "message": "Was the \u0027+\u0027 sign intentional? If not then please remove it.",
+      "range": {
+        "startLine": 152,
+        "startChar": 59,
+        "endLine": 152,
+        "endChar": 80
+      },
+      "revId": "1405b87253dba018fdd95ad725c88231ce497cb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88a2e3a2_4faf9409",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-08T08:21:40Z",
+      "side": 1,
+      "message": "Yes, it\u0027s intentional.",
+      "parentUuid": "33e959ad_eb8067fe",
       "range": {
         "startLine": 152,
         "startChar": 59,

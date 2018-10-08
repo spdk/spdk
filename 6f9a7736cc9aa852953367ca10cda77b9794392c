@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "f453ec17_0a28bba1",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-08T08:21:40Z",
+      "side": 1,
+      "message": "Done, switched to method provided by libvirt provider.\n\n\u003e  I think we lose some control there of where everything is located, but I don\u0027t have a big problem with that.\nThis CAN be an issue later - when for example you\u0027d like to run multiple VMs using the same storage file. BUt we\u0027ll handle this issue when we get to this point.",
+      "parentUuid": "29a3db34_20282fad",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 13
+      },
+      "revId": "6f9a7736cc9aa852953367ca10cda77b9794392c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10983c73_90283362",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 3
