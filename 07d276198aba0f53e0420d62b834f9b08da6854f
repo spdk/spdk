@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "6434da2e_9e3c9b47",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 10
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-08T10:48:38Z",
+      "side": 1,
+      "message": "Reading makefiles if hard enought so can you inline this into install target directly?",
+      "range": {
+        "startLine": 271,
+        "startChar": 0,
+        "endLine": 275,
+        "endChar": 98
+      },
+      "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65583633_0c56f470",
         "filename": "shared_lib/Makefile",
         "patchSetId": 10
