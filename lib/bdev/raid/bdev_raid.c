@@ -1360,8 +1360,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 			 * have same blocklen
 			 */
 			SPDK_ERRLOG("Blocklen of various bdevs not matching\n");
-			rc = -EINVAL;
-			goto offline;
+			return -EINVAL;
 		}
 	}
 
@@ -1404,12 +1403,13 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		rc = spdk_bdev_register(raid_bdev_gen);
 		if (rc != 0) {
 			/*
-			 * If failed to register raid bdev to bdev layer, make raid bdev offline
-			 * and add to offline list
+			 * If failed to register raid bdev to bdev layer, make raid bdev
+			 * stay at the configuring state.
 			 */
 			SPDK_ERRLOG("Unable to register pooled bdev\n");
 			spdk_io_device_unregister(raid_bdev, NULL);
-			goto offline;
+			raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
+			return rc;
 		}
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev generic %p\n", raid_bdev_gen);
 		TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
@@ -1419,12 +1419,6 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	}
 
 	return 0;
-
-offline:
-	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-	TAILQ_REMOVE(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
-	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_offline_list, raid_bdev, state_link);
-	return rc;
 }
 
 /*
