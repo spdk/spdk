@@ -97,6 +97,11 @@ scripts/config_converter.py. Example how this script can be used:
 cat old_format.ini | scripts/config_converter.py > new_json_format.json
 ~~~
 
+### Sock
+
+Update the spdk_sock_get_addr function, to get the port info of the server
+and client side.
+
 ## v18.07:
 
 ### bdev

@@ -199,7 +199,7 @@ hello_sock_connect(struct hello_context_t *ctx)
 		return -1;
 	}
 
-	rc = spdk_sock_getaddr(ctx->sock, saddr, sizeof(saddr), caddr, sizeof(caddr));
+	rc = spdk_sock_getaddr(ctx->sock, saddr, sizeof(saddr), NULL, caddr, sizeof(caddr), NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("Cannot get connection addresses\n");
 		spdk_sock_close(&ctx->sock);
@@ -276,7 +276,7 @@ hello_sock_accept_poll(void *arg)
 		sock = spdk_sock_accept(ctx->sock);
 		if (sock != NULL) {
 
-			spdk_sock_getaddr(sock, saddr, sizeof(saddr), caddr, sizeof(caddr));
+			spdk_sock_getaddr(sock, saddr, sizeof(saddr), NULL, caddr, sizeof(caddr), NULL);
 
 			SPDK_NOTICELOG("Accepting a new connection from %s to %s\n",
 				       caddr, saddr);

@@ -87,7 +87,8 @@ spdk_event_call(struct spdk_event *event)
 }
 
 int
-spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen)
+spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
+		  char *caddr, int clen, uint16_t *cport)
 {
 	return 0;
 }

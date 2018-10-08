@@ -89,7 +89,8 @@ get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 #define __posix_group_impl(group) (struct spdk_posix_sock_group_impl *)group
 
 static int
-spdk_posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *caddr, int clen)
+spdk_posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
+			char *caddr, int clen, uint16_t *cport)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	struct sockaddr_storage sa;
@@ -125,6 +126,14 @@ spdk_posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *ca
 		return -1;
 	}
 
+	if (sport) {
+		if (sa.ss_family == AF_INET) {
+			*sport = htons(((struct sockaddr_in *) &sa)->sin_port);
+		} else if (sa.ss_family == AF_INET6) {
+			*sport = htons(((struct sockaddr_in6 *) &sa)->sin6_port);
+		}
+	}
+
 	memset(&sa, 0, sizeof sa);
 	salen = sizeof sa;
 	rc = getpeername(sock->fd, (struct sockaddr *) &sa, &salen);
@@ -137,6 +146,14 @@ spdk_posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *ca
 	if (rc != 0) {
 		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", errno);
 		return -1;
+	}
+
+	if (cport) {
+		if (sa.ss_family == AF_INET) {
+			*cport = htons(((struct sockaddr_in *) &sa)->sin_port);
+		} else if (sa.ss_family == AF_INET6) {
+			*cport = htons(((struct sockaddr_in6 *) &sa)->sin6_port);
+		}
 	}
 
 	return 0;
