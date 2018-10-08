@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "0dbbaf2c_7b7a191d",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1014787
+      },
+      "writtenOn": "2018-10-08T03:01:58Z",
+      "side": 1,
+      "message": "queue_depth can \u003e io_cnt",
+      "parentUuid": "350a124c_568da6be",
+      "range": {
+        "startLine": 770,
+        "startChar": 1,
+        "endLine": 770,
+        "endChar": 59
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1e9f48c_8b35aa46",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 10
@@ -59,6 +83,30 @@
       "writtenOn": "2018-09-25T05:25:01Z",
       "side": 1,
       "message": "What you want to do is to ensure ns_ctx-\u003eio_cnt is more than opts.io_queue_requests?\n\nIf so, perf should fail here.",
+      "range": {
+        "startLine": 833,
+        "startChar": 0,
+        "endLine": 836,
+        "endChar": 3
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3ca52ec_52c4f624",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1014787
+      },
+      "writtenOn": "2018-10-08T03:01:58Z",
+      "side": 1,
+      "message": "?? not understand about the comment.\nio_queue_requests is the length of req_buf.",
+      "parentUuid": "b1e9f48c_8b35aa46",
       "range": {
         "startLine": 833,
         "startChar": 0,
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "9d090268_e284a2c4",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1014787
+      },
+      "writtenOn": "2018-10-08T03:01:58Z",
+      "side": 1,
+      "message": "befere the while, done_cnt \u003d 0; see line 902",
+      "parentUuid": "2e266579_4fa1ba09",
+      "range": {
+        "startLine": 904,
+        "startChar": 7,
+        "endLine": 904,
+        "endChar": 26
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41515d57_aa6303e1",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 10
@@ -151,6 +223,30 @@
       "writtenOn": "2018-09-25T05:25:01Z",
       "side": 1,
       "message": "Each namespace stops IO dispatch when it completes the IO count. ?",
+      "range": {
+        "startLine": 950,
+        "startChar": 39,
+        "endLine": 950,
+        "endChar": 72
+      },
+      "revId": "ed1f0058132050a9550b14258f223b41ed81049a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76d929b3_4e5ff82a",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1014787
+      },
+      "writtenOn": "2018-10-08T03:01:58Z",
+      "side": 1,
+      "message": "Yes. I really want is just that send a few Reads to check the device healthy.\nHere, it is simpler to dispatch IO_Cnt per NS.",
+      "parentUuid": "bdce549d_8f651de5",
       "range": {
         "startLine": 950,
         "startChar": 39,
