@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8e44817_38ae86e6",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 5
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-08T22:56:20Z",
+      "side": 1,
+      "message": "So I may have been a little rash in suggesting this route. It looks like this methodology is exporting both of them as virtio-blk disks, and support for describing virtio-scsi disks has not yet made its way fully to the libvirt-vagrant plugin. https://github.com/vagrant-libvirt/vagrant-libvirt/pull/692\nSo after all that, I think you were right in the first place to use the qemu lines directly since the plugins aren\u0027t up to snuff. (Well VirtualBox may be, I didn\u0027t research it all the way to see if we could specify the drivers.)\n\nHow exactly are the virtio disks used in the vhost initiator tests? I tried looking at the tests, but couldn\u0027t find them.",
+      "revId": "8d3915e868b896e797e36c4693fabcb7dd92d5c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
