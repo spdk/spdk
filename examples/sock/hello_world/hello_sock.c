@@ -190,6 +190,7 @@ hello_sock_connect(struct hello_context_t *ctx)
 {
 	int rc;
 	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
+	uint16_t cport, sport;
 
 	SPDK_NOTICELOG("Connecting to the server on %s:%d\n", ctx->host, ctx->port);
 
@@ -199,14 +200,14 @@ hello_sock_connect(struct hello_context_t *ctx)
 		return -1;
 	}
 
-	rc = spdk_sock_getaddr(ctx->sock, saddr, sizeof(saddr), caddr, sizeof(caddr));
+	rc = spdk_sock_getaddr(ctx->sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
 	if (rc < 0) {
 		SPDK_ERRLOG("Cannot get connection addresses\n");
 		spdk_sock_close(&ctx->sock);
 		return -1;
 	}
 
-	SPDK_NOTICELOG("Connection accepted from %s to %s\n", caddr, saddr);
+	SPDK_NOTICELOG("Connection accepted from (%s, %hu) to (%s, %hu)\n", caddr, cport, saddr, sport);
 
 	fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
 
@@ -262,6 +263,7 @@ hello_sock_accept_poll(void *arg)
 	int rc;
 	int count = 0;
 	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
+	uint16_t cport, sport;
 
 	if (!g_is_running) {
 		spdk_poller_unregister(&ctx->poller_in);
@@ -275,11 +277,10 @@ hello_sock_accept_poll(void *arg)
 	while (1) {
 		sock = spdk_sock_accept(ctx->sock);
 		if (sock != NULL) {
+			spdk_sock_getaddr(sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
 
-			spdk_sock_getaddr(sock, saddr, sizeof(saddr), caddr, sizeof(caddr));
-
-			SPDK_NOTICELOG("Accepting a new connection from %s to %s\n",
-				       caddr, saddr);
+			SPDK_NOTICELOG("Accepting a new connection from (%s, %hu) to (%s, %hu)\n",
+				       caddr, cport, saddr, sport);
 
 			rc = spdk_sock_group_add_sock(ctx->group, sock,
 						      hello_sock_cb, ctx);

@@ -53,12 +53,15 @@ struct spdk_sock_group;
  * \param sock Socket to get address.
  * \param saddr A pointer to the buffer to hold the address of server.
  * \param slen Length of the buffer 'saddr'.
+ * \param sport A pointer(May be NULL) to the buffer to hold the port info of server.
  * \param caddr A pointer to the buffer to hold the address of client.
  * \param clen Length of the buffer 'caddr'.
+ * \param cport A pointer(May be NULL) to the buffer to hold the port info of server.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen);
+int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
+		      char *caddr, int clen, uint16_t *cport);
 
 /**
  * Create a socket, connect the socket to the specified address and port (of the

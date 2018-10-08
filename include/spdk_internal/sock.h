@@ -68,7 +68,8 @@ struct spdk_sock_group_impl {
 struct spdk_net_impl {
 	const char *name;
 
-	int (*getaddr)(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen);
+	int (*getaddr)(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport, char *caddr,
+		       int clen, uint16_t *cport);
 	struct spdk_sock *(*connect)(const char *ip, int port);
 	struct spdk_sock *(*listen)(const char *ip, int port);
 	struct spdk_sock *(*accept)(struct spdk_sock *sock);

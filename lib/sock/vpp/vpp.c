@@ -160,7 +160,8 @@ getpeername_vpp(int sock, struct sockaddr *addr, socklen_t *len)
 }
 
 static int
-spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *caddr, int clen)
+spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
+		      char *caddr, int clen, uint16_t *cport)
 {
 	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
 	struct sockaddr sa;
@@ -186,6 +187,14 @@ spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *cadd
 		return -1;
 	}
 
+	if (sport) {
+		if (sa.ss_family == AF_INET) {
+			*sport = ntohs(((struct sockaddr_in *) &sa)->sin_port);
+		} else if (sa.ss_family == AF_INET6) {
+			*sport = ntohs(((struct sockaddr_in6 *) &sa)->sin6_port);
+		}
+	}
+
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
 	rc = getpeername_vpp(sock->fd, &sa, &salen);
@@ -200,6 +209,14 @@ spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *cadd
 		/* Errno already set by get_addr_str() */
 		SPDK_ERRLOG("get_addr_str() failed (errno=%d)\n", errno);
 		return -1;
+	}
+
+	if (cport) {
+		if (sa.ss_family == AF_INET) {
+			*cport = ntohs(((struct sockaddr_in *) &sa)->sin_port);
+		} else if (sa.ss_family == AF_INET6) {
+			*cport = ntohs(((struct sockaddr_in6 *) &sa)->sin6_port);
+		}
 	}
 
 	return 0;
