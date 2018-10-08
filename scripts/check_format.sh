@@ -45,7 +45,7 @@ while read -r perm _res0 _res1 path; do
 		;;
 	esac
 
-done <<< $(git grep -I --name-only --untracked -e . | git ls-files -s)
+done <<< "$(git grep -I --name-only --untracked -e . | git ls-files -s)"
 
 if [ $rc -eq 0 ]; then
 	echo " OK"
