@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "11d57244_1a22c7cf",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 10
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-08T21:39:19Z",
+      "side": 1,
+      "message": "This gets called from spdk.lib.mk and the shared_lib Makefile. Since it would be duplicated code, I\u0027d rather not inline it in both places.",
+      "parentUuid": "6434da2e_9e3c9b47",
+      "range": {
+        "startLine": 271,
+        "startChar": 0,
+        "endLine": 275,
+        "endChar": 98
+      },
+      "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65583633_0c56f470",
         "filename": "shared_lib/Makefile",
         "patchSetId": 10
@@ -54,6 +78,24 @@
       "side": 1,
       "message": "libspdk_rte_vhost.so shouldn\u0027t be produced at all. Nor the static \u0027.a\u0027 lib. We should link lib/vhost/rte_vhost/*.o into spdk_vhost[.so|.a] lib explicitly as this is not independednt library.",
       "parentUuid": "65583633_0c56f470",
+      "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a0a9481_cd52b64c",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-08T21:39:19Z",
+      "side": 1,
+      "message": "Thanks for the input Pawel, After a couple conversations I had with Ben and Lance on Friday, I think we are going to do a lot of consolidation of libraries. The legacy behavior has been to create a library for each directory under the lib folder. I think this worked a year ago, but it is time for a refresh. In this change I will remove libspdk_rte_vhost from the ignored libs list, and in a subsequent consolidation patch, I will consolidate it into the vhost library.",
+      "parentUuid": "5e15ac16_b6af99b3",
       "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
