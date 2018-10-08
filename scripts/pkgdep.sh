@@ -89,7 +89,8 @@ if [ $nasm_ver -lt "21202" ]; then
 else
 	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
 	if [ "$ipsec" == "" ]; then
-		if [ -d "$rootdir/intel-ipsec-mb" ]; then
+		ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
+		if [ "$ipsec_submodule_cloned" != "" ]; then
 			cd $rootdir/intel-ipsec-mb
 			make
 			make install
