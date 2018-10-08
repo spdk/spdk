@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "17a49615_f14b504b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-08T15:37:53Z",
+      "side": 1,
+      "message": "Good point. Thanks.",
+      "parentUuid": "f8a510e7_4078ffa9",
+      "revId": "4f6f1eb64a08a6de369b1262a4f73c86a2e04bbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59782669_f0a9ff7b",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-05T22:58:13Z",
       "side": 1,
       "message": "I think this would be easier to understand as a while loop.  It took me a while to figure out why we had to do an extra num_sgl_desc++ after this loop.\n\nsomething like:\n\nnum_sgl_desc \u003d 0;\nwhile (remaining_size \u003e 0 \u0026\u0026 num_sgl_desc \u003c max_num_sgl) {\n}",
+      "revId": "4f6f1eb64a08a6de369b1262a4f73c86a2e04bbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4828bc51_94e36751",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-08T15:37:53Z",
+      "side": 1,
+      "message": "Haha Ben said the opposite a couple of patch sets ago. He said the for loop made it more obvious that I was filling out an SGL one entry at a time. I think that the semantic change of referencing the SGEs in terms of the SGL accomplishes that. I think I will change it back to the do while loop I had originally. That felt the most natural to me.",
+      "parentUuid": "59782669_f0a9ff7b",
       "revId": "4f6f1eb64a08a6de369b1262a4f73c86a2e04bbd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
