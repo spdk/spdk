@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9defac0a_e2557b2b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-08T04:47:04Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "59974df0_a8c99352",
+      "range": {
+        "startLine": 1022,
+        "startChar": 19,
+        "endLine": 1022,
+        "endChar": 28
+      },
+      "revId": "2cd0afc433d66f41d2ce96423cccfd85cef73938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ebee733_c93c6aed",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-01T02:12:46Z",
       "side": 1,
       "message": "return value should be checked here too?\n\nrc \u003d nvme_ctrlr_identify_ns_async(ns);\nif (rc) {\n  nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR ,...)",
+      "range": {
+        "startLine": 1030,
+        "startChar": 1,
+        "endLine": 1030,
+        "endChar": 41
+      },
+      "revId": "2cd0afc433d66f41d2ce96423cccfd85cef73938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "907a04b6_c1d8c54d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-08T04:47:04Z",
+      "side": 1,
+      "message": "check the return code or not makes no difference here, I can add the check here to make it more readable.",
+      "parentUuid": "5ebee733_c93c6aed",
       "range": {
         "startLine": 1030,
         "startChar": 1,
