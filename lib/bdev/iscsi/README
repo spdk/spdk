@@ -2,6 +2,8 @@ This is a very rough initial cut at an SPDK iSCSI initiator bdev module.  It
 only performs operations (connect, login, read cap, read/write).
 But this passes basic verify tests with bdevperf and with fio.
 
+Be sure to build SPDK using --with-iscsi-initiator configure option.
+
 Configuration file for iSCSI initiator is in the following format.
 Note that the "/0" at the end means "LUN 0".
 
