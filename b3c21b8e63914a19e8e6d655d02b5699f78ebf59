@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "54e9e4fc_0608ae34",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-08T04:35:08Z",
+      "side": 1,
+      "message": "Hi Shuhei, actually spdk_nvme_wait_for_completion_robust_lock() will check the completion status inside this function, so we don\u0027t need to check it again.",
+      "parentUuid": "53236b03_44f9ffa3",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 22
+      },
+      "revId": "b3c21b8e63914a19e8e6d655d02b5699f78ebf59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cc4471b_2a1c1d05",
         "filename": "lib/nvme/nvme_ns.c",
         "patchSetId": 5
