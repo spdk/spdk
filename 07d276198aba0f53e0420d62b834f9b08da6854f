@@ -117,6 +117,24 @@
       "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bc4edda_5e166eaf",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-08T23:15:27Z",
+      "side": 1,
+      "message": "Thanks for pointing that out Lance. I think that the goal with consolidating the shared libraries will be to only combine libraries that aren\u0027t really useful/functional on their own. rte_vhost and vhost are a good example of that. I will be cognizant of your point when trying to consolidate the libraries in a way that works for everyone.",
+      "parentUuid": "097ea392_5a4c65c4",
+      "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
