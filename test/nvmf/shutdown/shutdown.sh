@@ -64,6 +64,11 @@ for ((x=0; x<5;x++)); do
 	for i in `seq 1 $num_subsystems`; do
 		nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 	done
+
+	for d in $(lsblk -l -o NAME | grep -p nvme); do
+		waitforblk $d
+	done
+
 	# Disconnect the subsystems in reverse order
 	for i in `seq $num_subsystems -1 1`; do
 		nvme disconnect -n nqn.2016-06.io.spdk:cnode${i}
