@@ -17,7 +17,7 @@ for arg in sys.argv:
 
 defs = {}
 try:
-    with open("CONFIG.local") as f:
+    with open("mk/config.mk") as f:
         for line in f:
             line = line.strip()
             if not comment.match(line):
@@ -37,7 +37,7 @@ try:
                         strval = val.replace('"', '\"')
                         defs["SPDK_{0}".format(var)] = strval
 except IOError:
-    print("CONFIG.local not found")
+    print("mk/config.mk not found")
 
 for key, value in sorted(defs.items()):
     if value == 0:
