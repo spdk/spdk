@@ -99,6 +99,24 @@
       "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "097ea392_5a4c65c4",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-08T21:54:25Z",
+      "side": 1,
+      "message": "Seth, with respect to the future, we need to ensure we take a very careful approach to the library consolidation.  I am supporting an internal customer seeking to minimize their software footprint when using the SPDK.   They are using a very limited subset of the SPDK now and so I\u0027d like to minimize the risk (or scope) of breaking their build as well as pulling in bigger chunks than they will ever need.",
+      "parentUuid": "5a0a9481_cd52b64c",
+      "revId": "07d276198aba0f53e0420d62b834f9b08da6854f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
