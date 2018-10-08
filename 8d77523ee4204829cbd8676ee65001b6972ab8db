@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64f4e675_b31efca2",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-08T11:30:50Z",
+      "side": 1,
+      "message": "No such option as \"-p\", at least not in all flavors of grep installed on distros (fc26, fc27 and ubu16 don\u0027t have it).\nCheck your log here:\nhttps://ci.spdk.io/spdk/builds/review/8d77523ee4204829cbd8676ee65001b6972ab8db.1538996409/fedora-03/build.log\n\n\u003e   11:31:12\t# lsblk -l -o NAME\n\u003e   11:31:12\t# grep -p nvme\n\u003e grep: invalid option -- \u0027p\u0027\n\u003e Usage: grep [OPTION]... PATTERN [FILE]...\n\u003e Try \u0027grep --help\u0027 for more information.\n\nThis also shows why piping output can be sometimes misleading. You got a +1 from TP even though your command failed. Ideally we\u0027d use set -o pipefail here.\n\n\nI\u0027d move waitforblk directly into first connect loop. Waitforblk does exactly what you do (lsblk + grep) with timeout as well.",
+      "range": {
+        "startLine": 68,
+        "startChar": 31,
+        "endLine": 68,
+        "endChar": 43
+      },
+      "revId": "8d77523ee4204829cbd8676ee65001b6972ab8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
