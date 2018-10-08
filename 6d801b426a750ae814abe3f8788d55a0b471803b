@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f2a7537_7c73ab08",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "You may also print out port numbers here.",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "301f6abb_bd1d7cc7",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "As above.",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4ad23c1_902f62be",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "htons -\u003e ntohs",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aabb43a2_f47f0f25",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "htons -\u003e ntohs",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f5ada18_3f9e4253",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "htons -\u003e ntohs",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "93439abd_108cfaa4",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "htons -\u003e ntohs",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9a012de_32a74dd1",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "You should to use here (and in a few other places) ntohs instead of htons for clarity and better code readability.",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "772c7fa2_d5082e28",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "htons -\u003e ntohs",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c403a633_c8981403",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "htons -\u003e ntohs",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6026ce52_1bef3602",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-10-08T15:57:40Z",
+      "side": 1,
+      "message": "htons -\u003e ntohs",
+      "revId": "6d801b426a750ae814abe3f8788d55a0b471803b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
