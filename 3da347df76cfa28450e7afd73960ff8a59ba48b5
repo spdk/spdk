@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ef7a2979_2eb3b6ed",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-08T02:28:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "512fc9f6_774e5df0",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b83260d3_31cb56ab",
         "filename": "include/spdk/jsonrpc.h",
         "patchSetId": 25
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-05T18:32:57Z",
       "side": 1,
       "message": "I think you should name this function \"spdk_jsonrpc_client_create_request\"",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45badc2f_63cc3f78",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-08T02:28:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b83260d3_31cb56ab",
       "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c1ccaf8d_e6461ce4",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-08T02:28:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "87caa109_eb3dd932",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "28e98485_e9a8f724",
         "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
         "patchSetId": 25
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "d8c9daa3_caad74a4",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-08T02:28:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28e98485_e9a8f724",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4736939_d539ab7b",
         "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
         "patchSetId": 25
@@ -81,6 +153,24 @@
       "writtenOn": "2018-10-05T18:32:57Z",
       "side": 1,
       "message": "broaden isn\u0027t a bad word, but a better word would be \"expand\" or \"grow\"",
+      "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c909c1a_205fe6b1",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-08T02:28:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b4736939_d539ab7b",
       "revId": "3da347df76cfa28450e7afd73960ff8a59ba48b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
