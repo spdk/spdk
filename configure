@@ -390,9 +390,6 @@ rm -f mk/config.mk.bak
 [ -n "$LDFLAGS" ] && echo "LDFLAGS?=$LDFLAGS" >> mk/config.mk
 [ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> mk/config.mk
 
-# When nvme-cli repo will be update this link can be removed
-ln -fs mk/config.mk CONFIG.local
-
 echo "done."
 
 if [[ "$OSTYPE" == "freebsd"* ]]; then
