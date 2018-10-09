@@ -204,6 +204,12 @@ struct spdk_nvmf_rdma_recv {
 	TAILQ_ENTRY(spdk_nvmf_rdma_recv) link;
 };
 
+struct spdk_nvmf_rdma_request_data {
+	struct ibv_send_wr		wr;
+	struct ibv_sge			sgl[SPDK_NVMF_MAX_SGL_ENTRIES];
+	void				*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
+};
+
 struct spdk_nvmf_rdma_request {
 	struct spdk_nvmf_request		req;
 	bool					data_from_pool;
@@ -217,11 +223,7 @@ struct spdk_nvmf_rdma_request {
 		struct	ibv_sge			sgl[NVMF_DEFAULT_TX_SGE];
 	} rsp;
 
-	struct {
-		struct ibv_send_wr		wr;
-		struct ibv_sge			sgl[SPDK_NVMF_MAX_SGL_ENTRIES];
-		void				*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
-	} data;
+	struct spdk_nvmf_rdma_request_data	data;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
@@ -343,6 +345,8 @@ struct spdk_nvmf_rdma_transport {
 	struct rdma_event_channel	*event_channel;
 
 	struct spdk_mempool		*data_buf_pool;
+
+	struct spdk_mempool		*data_wr_pool;
 
 	pthread_mutex_t			lock;
 
@@ -1734,6 +1738,17 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
+	rtransport->data_wr_pool = spdk_mempool_create("spdk_nvmf_rdma",
+				   opts->max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES,
+				   sizeof(struct spdk_nvmf_rdma_request_data),
+				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+				   SPDK_ENV_SOCKET_ID_ANY);
+	if (!rtransport->data_wr_pool) {
+		SPDK_ERRLOG("Unable to allocate work request pool for poll group\n");
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
+		return NULL;
+	}
+
 	contexts = rdma_get_devices(NULL);
 	if (contexts == NULL) {
 		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
@@ -1881,7 +1896,17 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 		}
 	}
 
+	if (rtransport->data_wr_pool != NULL) {
+		if (spdk_mempool_count(rtransport->data_wr_pool) !=
+		    (transport->opts.max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES)) {
+			SPDK_ERRLOG("transport wr pool count is %zu but should be %u\n",
+				    spdk_mempool_count(rtransport->data_wr_pool),
+				    transport->opts.max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES);
+		}
+	}
+
 	spdk_mempool_free(rtransport->data_buf_pool);
+	spdk_mempool_free(rtransport->data_wr_pool);
 	spdk_io_device_unregister(rtransport, NULL);
 	pthread_mutex_destroy(&rtransport->lock);
 	free(rtransport);
