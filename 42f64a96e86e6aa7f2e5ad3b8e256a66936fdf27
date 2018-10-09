@@ -70,6 +70,23 @@
       "revId": "42f64a96e86e6aa7f2e5ad3b8e256a66936fdf27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37487058_c82e3dd4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1517,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T20:54:34Z",
+      "side": 1,
+      "message": "if qos-\u003ethread \u003d\u003d NULL, should we just return immediately at the beginning of this function?\n\ni do not see a reason to do all of this work in lines 1498-1515 if qos-\u003ethread is NULL",
+      "revId": "42f64a96e86e6aa7f2e5ad3b8e256a66936fdf27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
