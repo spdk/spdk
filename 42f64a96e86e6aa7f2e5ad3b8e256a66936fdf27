@@ -52,6 +52,24 @@
       "revId": "42f64a96e86e6aa7f2e5ad3b8e256a66936fdf27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ff73080_66a4eee6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-09T12:44:51Z",
+      "side": 1,
+      "message": "From my own idea, just not try to make it complex, in the spdk_bdev_channel_poll_qos(), the QoS structure is always valid and accessing its related members will be always ok. Since the bdev is to be destroyed, so that try to avoid calling the related _spdk_bdev_qos_io_submit(). As you mentioned, your proposed fix with a QoS pointer could have no problem here. Would like to hear other reviewers\u0027 comment.\n\nOverall, would like to thank you for noticing this issue and raising the fix.",
+      "parentUuid": "0bd42a0d_00322568",
+      "revId": "42f64a96e86e6aa7f2e5ad3b8e256a66936fdf27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
