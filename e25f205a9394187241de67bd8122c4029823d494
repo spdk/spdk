@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dff22bd_ac6423e0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T14:50:11Z",
+      "side": 1,
+      "message": "smll \u003d\u003e small\nudpate \u003d\u003e update",
+      "revId": "e25f205a9394187241de67bd8122c4029823d494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
