@@ -4,6 +4,7 @@ from rpc.client import print_dict, JSONRPCException
 
 import argparse
 import rpc
+import sys
 
 try:
     from shlex import quote
@@ -59,6 +60,7 @@ if __name__ == "__main__":
     @call_cmd
     def save_config(args):
         rpc.save_config(args.client,
+                        sys.stdout,
                         indent=args.indent)
 
     p = subparsers.add_parser('save_config', help="""Write current (live) configuration of SPDK subsystems and targets to stdout.
@@ -69,7 +71,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def load_config(args):
-        rpc.load_config(args.client)
+        rpc.load_config(args.client, sys.stdin)
 
     p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and targets using JSON RPC read from stdin.""")
     p.set_defaults(func=load_config)
@@ -77,6 +79,7 @@ if __name__ == "__main__":
     @call_cmd
     def save_subsystem_config(args):
         rpc.save_subsystem_config(args.client,
+                                  sys.stdout,
                                   indent=args.indent,
                                   name=args.name)
 
@@ -89,7 +92,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def load_subsystem_config(args):
-        rpc.load_subsystem_config(args.client)
+        rpc.load_subsystem_config(args.client,
+                                  sys.stdin)
 
     p = subparsers.add_parser('load_subsystem_config', help="""Configure SPDK subsystem using JSON RPC read from stdin.""")
     p.set_defaults(func=load_subsystem_config)
