@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb5dba08_2e6ad938",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T23:14:52Z",
+      "side": 1,
+      "message": "witch \u003d\u003e which",
+      "revId": "175abca530ffdb63805cc400358da92ca09e9480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15f9e784_0a0c7ae0",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T23:14:52Z",
+      "side": 1,
+      "message": "One of my concerns here is that by using a 64MB malloc disk, it means we will only use the first 64MB of the associated NVMe namespace.\n\nThe help instructions at the beginning of this script also would need to be changed based on the RAID additions here.\n\nI guess I would like input from those who have developed this script before we commit these changes.  I\u0027ve added Pawel/Karol/Tomek to this review.",
+      "revId": "175abca530ffdb63805cc400358da92ca09e9480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
