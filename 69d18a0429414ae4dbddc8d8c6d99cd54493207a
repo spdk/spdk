@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50e6de6c_135a1f82",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T19:00:08Z",
+      "side": 1,
+      "message": "Maybe we should remove this line, and wait to set state \u003d RAID_BDEV_STATE_ONLINE until after rc is checked here.  Then we completely avoid changing to ONLINE and then changing it back to CONFIGURING.",
+      "revId": "69d18a0429414ae4dbddc8d8c6d99cd54493207a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
