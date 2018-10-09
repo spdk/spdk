@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "509cac24_cb9c8441",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3125,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T20:58:08Z",
+      "side": 1,
+      "message": "I think I would prefer to explicitly set this to NULL when it is freed (see spdk_bdev_fini).",
+      "revId": "3897c94c96b289cd05e7236fcd5494c0f358ddb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
