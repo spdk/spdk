@@ -16,6 +16,24 @@
       "revId": "ee352b77ddafa6a3e0f4366b45fb70521e69b87d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de7f605c_6b509c35",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-09T05:00:01Z",
+      "side": 1,
+      "message": "We can\u0027t remove it unless the vhost-user spec is updated. SET_MEM_TABLE doesn\u0027t require a reply right now and we desperately need this workaround to use the hotplugged memory right away.",
+      "parentUuid": "a1dfea13_2cb0aa44",
+      "revId": "ee352b77ddafa6a3e0f4366b45fb70521e69b87d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
