@@ -204,6 +204,12 @@ struct spdk_nvmf_rdma_recv {
 	TAILQ_ENTRY(spdk_nvmf_rdma_recv) link;
 };
 
+struct spdk_nvmf_rdma_request_data {
+	struct ibv_send_wr		wr;
+	struct ibv_sge			sgl[SPDK_NVMF_MAX_SGL_ENTRIES];
+	void				*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
+};
+
 struct spdk_nvmf_rdma_request {
 	struct spdk_nvmf_request		req;
 	bool					data_from_pool;
@@ -217,11 +223,7 @@ struct spdk_nvmf_rdma_request {
 		struct	ibv_sge			sgl[NVMF_DEFAULT_TX_SGE];
 	} rsp;
 
-	struct {
-		struct ibv_send_wr		wr;
-		struct ibv_sge			sgl[SPDK_NVMF_MAX_SGL_ENTRIES];
-		void				*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
-	} data;
+	struct spdk_nvmf_rdma_request_data	data;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
