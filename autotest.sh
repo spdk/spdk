@@ -79,6 +79,10 @@ timing_enter nvmf_setup
 rdma_device_init
 timing_exit nvmf_setup
 
+if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+	./scripts/qat_setup.sh
+fi
+
 #####################
 # Unit Tests
 #####################
