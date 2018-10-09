@@ -16,6 +16,24 @@
       "revId": "69d18a0429414ae4dbddc8d8c6d99cd54493207a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d5bca68_87c45192",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-10-09T23:28:24Z",
+      "side": 1,
+      "message": "If we set state \u003d ONLINE after spdk_bdev_register() succeeds, then assert(raid_bdev-\u003estate \u003d\u003d RAID_BDEV_STATE_ONLINE) in raid_bdev_create_cb() may failed. Someone may create channel between spdk_bdev_register() and set state \u003d ONLINE, Test-POOL found this error before:\n    hello_bdev: bdev_raid.c:93: raid_bdev_create_cb: Assertion `raid_bdev-\u003estate \u003d\u003d RAID_BDEV_STATE_ONLINE\u0027 failed.\nsee https://ci.spdk.io/spdk/builds/review/6b298c5fe3711925ecc3f40234c5290d3e883e94.1538990702/",
+      "parentUuid": "50e6de6c_135a1f82",
+      "revId": "69d18a0429414ae4dbddc8d8c6d99cd54493207a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
