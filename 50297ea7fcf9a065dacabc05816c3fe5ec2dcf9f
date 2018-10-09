@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a1af481_c2b49fc3",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T23:23:14Z",
+      "side": 1,
+      "message": "This seems a bit fragile - depends on their being no nvme devices attached before this loop executes.\n\nIs there a way to use nvme list to get the block device name associated with the NQN?  That might be a good helper routine to put into one of the common script files - something like \"nvmf_waitforblk\"?",
+      "revId": "50297ea7fcf9a065dacabc05816c3fe5ec2dcf9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
