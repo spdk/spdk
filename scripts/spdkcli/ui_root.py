@@ -3,6 +3,7 @@ from .ui_node_nvmf import UINVMf
 from .ui_node_iscsi import UIISCSI
 import rpc.client
 import rpc
+import sys
 from functools import wraps
 
 
@@ -62,6 +63,21 @@ class UIRoot(UINode):
         if rpc.start_subsystem_init(self.client):
             self.is_init = True
             self.refresh()
+
+    def ui_command_load_config(self, filename):
+        with open(filename, "r") as fd:
+            rpc.load_config(self.client, fd)
+
+    def ui_command_load_subsystem_config(self, filename):
+        with open(filename, "w") as fd:
+            rpc.load_subsystem_config(self.client, fd)
+
+    def ui_command_save_config(self, filename, subsystem=None,  indent=2):
+        with open(filename, "w") as fd:
+            if subsystem:
+                rpc.save_subsystem_config(self.client, fd, indent, subsystem)
+            else:
+                rpc.save_config(self.client, fd, indent)
 
     def get_rpc_methods(self, current=False):
         return rpc.get_rpc_methods(self.client, current=current)
