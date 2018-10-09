@@ -22,6 +22,30 @@
       "revId": "12f21d14db6d5f56d73d50269cacb72187400097",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fcbd877_4bdf0b67",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-09T04:07:51Z",
+      "side": 0,
+      "message": "Sorry, this comment was wrong.",
+      "parentUuid": "afee99ca_84db62a5",
+      "range": {
+        "startLine": 981,
+        "startChar": 2,
+        "endLine": 981,
+        "endChar": 24
+      },
+      "revId": "12f21d14db6d5f56d73d50269cacb72187400097",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

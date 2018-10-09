@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b39a5e2d_5622afb0",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 977,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-09T04:07:51Z",
+      "side": 1,
+      "message": "How about porting the following comments here from nvme_ctrlr_identify_ns()?\n\n/* This can occur if the namespace is not active. Simply zero the\n * namespace data. */",
+      "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "629fc21b_59eb7a8c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-09T04:07:51Z",
+      "side": 1,
+      "message": "Maybe \"move on\" here too.",
+      "range": {
+        "startLine": 983,
+        "startChar": 4,
+        "endLine": 983,
+        "endChar": 11
+      },
+      "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
