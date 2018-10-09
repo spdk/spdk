@@ -105,6 +105,8 @@ struct bdev_ut_channel {
 };
 
 static bool g_io_done;
+static uint64_t g_alignment;
+static struct spdk_bdev_io *g_bdev_io;
 static enum spdk_bdev_io_status g_io_status;
 static uint32_t g_bdev_ut_io_device;
 static struct bdev_ut_channel *g_bdev_ut_channel;
@@ -139,6 +141,8 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 	struct ut_expected_io *expected_io;
 	struct iovec *iov, *expected_iov;
 	int i;
+
+	g_bdev_io = bdev_io;
 
 	TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
 	ch->outstanding_io_count++;
@@ -1172,6 +1176,111 @@ bdev_io_split_with_io_wait(void)
 	spdk_bdev_finish(bdev_fini_cb, NULL);
 }
 
+static void
+stub_submit_request_aligned_buffer(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
+{
+	spdk_bdev_io_get_aligned_buf(bdev_io, stub_submit_request,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen, g_alignment);
+
+}
+
+static void
+bdev_io_alignment(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 20,
+		.bdev_io_cache_size = 2,
+	};
+	int rc;
+	void *buf;
+	struct iovec iov;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	fn_table.submit_request = stub_submit_request_aligned_buffer;
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	g_alignment = 0;
+
+	/* Create aligned buffer */
+
+	rc = posix_memalign(&buf, 4096, 8192);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Pass aligned single buffer */
+	rc = spdk_bdev_read_blocks(desc, io_ch, buf, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	stub_complete_io(1);
+
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt,
+				    g_bdev_io->internal.alignment));
+
+	/* Pass unaligned single buffer with no alignment required */
+	g_alignment = 0;
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, buf + 4, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_io->internal.buffered_iovcnt == 0);
+	stub_complete_io(1);
+	CU_ASSERT(g_bdev_io->u.bdev.iovs[0].iov_base == buf + 4);
+
+	rc = spdk_bdev_write_blocks(desc, io_ch, buf + 4, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_io->internal.buffered_iovcnt == 0);
+	stub_complete_io(1);
+	CU_ASSERT(g_bdev_io->u.bdev.iovs[0].iov_base == buf + 4);
+
+	/* Pass unaligned single buffer with 512 alignment required */
+	g_alignment = 512;
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, buf + 4, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_io->internal.buffered_iovcnt == 1);
+	stub_complete_io(1);
+
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt, g_alignment));
+
+	rc = spdk_bdev_write_blocks(desc, io_ch, buf + 4, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_io->internal.buffered_iovcnt == 1);
+	stub_complete_io(1);
+	CU_ASSERT(_are_iovs_aligned(g_bdev_io->u.bdev.iovs, g_bdev_io->u.bdev.iovcnt, g_alignment));
+
+	iov.iov_base = buf;
+	iov.iov_len = 512;
+
+	g_alignment = 0;
+
+	/* Pass aligned iov */
+	rc = spdk_bdev_readv(desc, io_ch, &iov, 1, 0, 512, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_io->internal.buffered_iovcnt == 0);
+	stub_complete_io(1);
+	CU_ASSERT(g_bdev_io->u.bdev.iovs[0].iov_base == iov.iov_base);
+
+	/* TODO: check unaligned iovs */
+	/* TODO: check other alignments like 4k */
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+
+	free(buf);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1198,7 +1307,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_io_wait", bdev_io_wait_test) == NULL ||
 		CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test) == NULL ||
 		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
-		CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait) == NULL
+		CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait) == NULL ||
+		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
