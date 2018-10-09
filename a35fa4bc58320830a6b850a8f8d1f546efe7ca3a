@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67b26070_be3ec9b6",
+        "filename": "lib/copy/copy_engine.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:13:52Z",
+      "side": 1,
+      "message": "I don\u0027t think we should call spdk_copy_engine_module_finish() here.  It\u0027s already done in spdk_copy_engine_finish.  I don\u0027t think we want spdk_copy_engine_module_finish() to get called twice.\n\nI do think we should add a static void spdk_memcpy_unregister() function though - similar to spdk_memcpy_register earlier in this file.  Basically it would just set mem_copy_engine to NULL.",
+      "revId": "a35fa4bc58320830a6b850a8f8d1f546efe7ca3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
