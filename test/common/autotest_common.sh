@@ -683,6 +683,9 @@ function autotest_cleanup()
 {
 	$rootdir/scripts/setup.sh reset
 	$rootdir/scripts/setup.sh cleanup
+	if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+		rmmod $DEPENDENCY_DIR/igb_uio || true
+	fi
 }
 
 function freebsd_update_contigmem_mod()
