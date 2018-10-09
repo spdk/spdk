@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eac93ecc_3cd3beea",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 840,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-09T07:58:23Z",
+      "side": 1,
+      "message": "Maybe we can have another specific patch for this change. It is to make sure when we send the first batch of IOs (based on g_queue_depth), there is enough io queue requests. This seems not directly relate to this IO count change.",
+      "range": {
+        "startLine": 837,
+        "startChar": 0,
+        "endLine": 840,
+        "endChar": 3
+      },
+      "revId": "5399f7ba07d89ca7302c6ff6e899abe4042ffac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ac31f1c_7d4ec1e5",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-09T07:58:23Z",
+      "side": 1,
+      "message": "maybe have a local variable after tsc_end at line 871, like tsc_now, here\n\ntsc_now \u003d spdk_get_ticks();\nif (tsc_now \u003e tsc_end) {\n}\n\nAnd at line 933, just g_time_used_tsc \u003d tsc_now - tsc_start?\n\nThus the g_time_used_tsc could be more precise.",
+      "range": {
+        "startLine": 917,
+        "startChar": 6,
+        "endLine": 917,
+        "endChar": 20
+      },
+      "revId": "5399f7ba07d89ca7302c6ff6e899abe4042ffac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
