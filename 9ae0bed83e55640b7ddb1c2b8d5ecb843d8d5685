@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a511064_4c33033f",
+        "filename": ".gitignore",
+        "patchSetId": 28
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:29:49Z",
+      "side": 1,
+      "message": "CONFIG.local can be removed while you\u0027re here",
+      "revId": "9ae0bed83e55640b7ddb1c2b8d5ecb843d8d5685",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3990c519_b9e6764e",
+        "filename": "README.md",
+        "patchSetId": 28
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:29:49Z",
+      "side": 1,
+      "message": "in the Makefile configuration file",
+      "revId": "9ae0bed83e55640b7ddb1c2b8d5ecb843d8d5685",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c21d99a1_1557c27e",
+        "filename": "autobuild.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:29:49Z",
+      "side": 1,
+      "message": "Do we need this here if we just did it on line 17?",
+      "revId": "9ae0bed83e55640b7ddb1c2b8d5ecb843d8d5685",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
