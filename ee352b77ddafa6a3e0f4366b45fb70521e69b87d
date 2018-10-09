@@ -34,6 +34,24 @@
       "revId": "ee352b77ddafa6a3e0f4366b45fb70521e69b87d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0508f763_d7bb5fbb",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-09T05:28:02Z",
+      "side": 1,
+      "message": "SPDK vhost target already hardcoded the feature bit VHOST_USER_PROTOCOL_F_REPLY_ACK, so you can enable it for SET_MEM_TABLE message here.  Does it make sense ?",
+      "parentUuid": "de7f605c_6b509c35",
+      "revId": "ee352b77ddafa6a3e0f4366b45fb70521e69b87d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
