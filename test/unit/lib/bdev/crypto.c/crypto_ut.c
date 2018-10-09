@@ -205,6 +205,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	cb(g_bdev_io, !ut_spdk_bdev_reset, cb_arg);
+	g_crypto_ch->reset_io = cb_arg;
 	return ut_spdk_bdev_reset;
 }
 
@@ -320,6 +321,7 @@ test_setup(void)
 	g_crypto_ch->device_qp = &g_dev_qp;
 	g_test_config = calloc(1, sizeof(struct rte_config));
 	g_test_config->lcore_count = 1;
+	TAILQ_INIT(&g_crypto_ch->pending_ios);
 
 	/* Allocate a real mbuf pool so we can test error paths */
 	g_mbuf_mp = spdk_mempool_create("mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
@@ -379,6 +381,7 @@ test_error_paths(void)
 	/* same thing but switch to reads to test error path in _crypto_complete_io() */
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	TAILQ_INSERT_TAIL(&g_crypto_ch->pending_ios, g_bdev_io, module_link);
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
 	/* Now with the read_blocks failing */
@@ -698,11 +701,13 @@ test_passthru(void)
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
 	MOCK_SET(spdk_bdev_reset, 0);
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	MOCK_SET(spdk_bdev_reset, -1);
+	CU_ASSERT(g_bdev_io == g_crypto_ch->reset_io);
+	MOCK_CLEAR(spdk_bdev_reset);
+	/* Reset still outstanding, should fail this or any IO. */
+	g_bdev_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
-	MOCK_CLEAR(spdk_bdev_reset);
+	g_crypto_ch->reset_io = NULL;
 
 	/* We should never get a WZ command, we report that we don't support it. */
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
