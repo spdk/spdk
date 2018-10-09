@@ -53,6 +53,17 @@ log_test(void)
 	spdk_log_set_level(SPDK_LOG_DEBUG);
 	CU_ASSERT_EQUAL(spdk_log_get_level(), SPDK_LOG_DEBUG);
 
+	spdk_log_set_print_level(SPDK_LOG_ERROR);
+	CU_ASSERT_EQUAL(spdk_log_get_print_level(), SPDK_LOG_ERROR);
+	spdk_log_set_print_level(SPDK_LOG_WARN);
+	CU_ASSERT_EQUAL(spdk_log_get_print_level(), SPDK_LOG_WARN);
+	spdk_log_set_print_level(SPDK_LOG_NOTICE);
+	CU_ASSERT_EQUAL(spdk_log_get_print_level(), SPDK_LOG_NOTICE);
+	spdk_log_set_print_level(SPDK_LOG_INFO);
+	CU_ASSERT_EQUAL(spdk_log_get_print_level(), SPDK_LOG_INFO);
+	spdk_log_set_print_level(SPDK_LOG_DEBUG);
+	CU_ASSERT_EQUAL(spdk_log_get_print_level(), SPDK_LOG_DEBUG);
+
 #ifdef DEBUG
 	CU_ASSERT(spdk_log_get_trace_flag("log") == false);
 
