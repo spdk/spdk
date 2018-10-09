@@ -3,6 +3,7 @@ from .ui_node_nvmf import UINVMf
 from .ui_node_iscsi import UIISCSI
 import rpc.client
 import rpc
+import os
 from functools import wraps
 
 
@@ -62,6 +63,28 @@ class UIRoot(UINode):
         if rpc.start_subsystem_init(self.client):
             self.is_init = True
             self.refresh()
+
+    def ui_command_load_config(self, filename):
+        cur_path = os.path.dirname(os.path.abspath(__file__))
+        rpc_py = os.path.join(cur_path, "../rpc.py")
+        rpc_cmd = "cat %s | %c load_config" % (filename, rpc_py)
+        os.system(rpc_cmd)
+
+    def ui_command_load_subsystem_config(self, filename):
+        cur_path = os.path.dirname(os.path.abspath(__file__))
+        rpc_py = os.path.join(cur_path, "../rpc.py")
+        rpc_cmd = "cat %s | %c load_subsystem_config" % (filename, rpc_py)
+        os.system(rpc_cmd)
+
+    def ui_command_save_config(self, filename, subsystem=None,  indent=2):
+        cur_path = os.path.dirname(os.path.abspath(__file__))
+        rpc_py = os.path.join(cur_path, "../rpc.py")
+        if subsystem:
+            rpc_cmd = "%s save_subsystem_config --name=%s --indent=%s >> %s" % \
+                (rpc_py, subsystem, indent, filename)
+        else:
+            rpc_cmd = "%s save_config --indent=%s >> %s" % (rpc_py, indent, filename)
+        os.system(rpc_cmd)
 
     def get_rpc_methods(self, current=False):
         return rpc.get_rpc_methods(self.client, current=current)
