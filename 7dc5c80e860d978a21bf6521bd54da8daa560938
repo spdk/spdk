@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d6bc59e_72c772f9",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-09T12:26:32Z",
+      "side": 1,
+      "message": "Can you pls add a way of doing no blocking spdk_jsonrpc_client_recv_response() call? Currently it is extremely hard to use this function in SPDK as we are using polling mode.",
+      "range": {
+        "startLine": 238,
+        "startChar": 22,
+        "endLine": 238,
+        "endChar": 23
+      },
+      "revId": "7dc5c80e860d978a21bf6521bd54da8daa560938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3d2fbd5_f6f9e0ba",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-09T12:26:32Z",
+      "side": 1,
+      "message": "I doubt that doing final parsing should be part of this function. In my mind this function could only receive the response (what ever it is) and only validate if it is valid JSON RPC object. Then the user can parse the response by itself.\n\nSo parser_fn and parser_ctx can be removed.",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 245,
+        "endChar": 33
+      },
+      "revId": "7dc5c80e860d978a21bf6521bd54da8daa560938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9f211fd_c4c4f5a0",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-09T12:26:32Z",
+      "side": 1,
+      "message": "-\u003e -errno",
+      "range": {
+        "startLine": 255,
+        "startChar": 11,
+        "endLine": 255,
+        "endChar": 16
+      },
+      "revId": "7dc5c80e860d978a21bf6521bd54da8daa560938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12acb33a_c313d83b",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-09T12:26:32Z",
+      "side": 1,
+      "message": "-\u003e expand",
+      "range": {
+        "startLine": 273,
+        "startChar": 0,
+        "endLine": 273,
+        "endChar": 0
+      },
+      "revId": "7dc5c80e860d978a21bf6521bd54da8daa560938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c2794ef_3572c332",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-09T12:26:32Z",
+      "side": 1,
+      "message": "You could return SPDK_JSON_PARSE_* from this function so no need to map SPDK_JSON_PARSE_* to -1,0 or 1.",
+      "range": {
+        "startLine": 143,
+        "startChar": 0,
+        "endLine": 145,
+        "endChar": 33
+      },
+      "revId": "7dc5c80e860d978a21bf6521bd54da8daa560938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
