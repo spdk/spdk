@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1c7722ca_85e59075",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 977,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-09T18:07:30Z",
+      "side": 1,
+      "message": "I don\u0027t think there is ever a scenario where a SPDK_NVME_IDENTIFY_NS command should fail, as long as the nsid is valid. If there isn\u0027t any reason this should fail, we should move to the error state here.",
+      "parentUuid": "b39a5e2d_5622afb0",
+      "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "629fc21b_59eb7a8c",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 8
@@ -36,6 +54,40 @@
         "endLine": 983,
         "endChar": 11
       },
+      "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "467ddae7_a7b8c22f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 999,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-09T18:07:30Z",
+      "side": 1,
+      "message": "We haven\u0027t been putting the word \"async\" in any of the other function names. I think you should just name this \"nvme_ctrlr_identify_ns\".",
+      "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13cd803f_fb1e71c3",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-09T18:07:30Z",
+      "side": 1,
+      "message": "Why does this need to become public?",
       "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
