@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0eb5cbd5_7d08ce6e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-09T18:21:08Z",
+      "side": 1,
+      "message": "Instead of initializing num_sgl_desc to 0 at the top of the function, can you initialize it to 0 here?",
+      "revId": "56ce685f86a9eaf088a851a9ba4526080e26d8bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37f0f75d_75cb47b4",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 9
