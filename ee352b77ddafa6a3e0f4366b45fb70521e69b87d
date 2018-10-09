@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1dfea13_2cb0aa44",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-09T04:41:04Z",
+      "side": 1,
+      "message": "I think you can put this into a separate patch, actually we don\u0027t need this message at all here, I believe you will remove this workaround after your rte_vhost2 patches.  SET_MEM_TABLE really needs a reply.",
+      "revId": "ee352b77ddafa6a3e0f4366b45fb70521e69b87d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
