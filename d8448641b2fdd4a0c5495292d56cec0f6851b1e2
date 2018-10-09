@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "274fd27a_fd3474c6",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-10-09T05:31:11Z",
+      "side": 1,
+      "message": "Hi Piotr,\nThanks for reviewing this patch.\nI think the lvol_store has been destroyed in function \"clean_lvol_cfg\" in line 94 before destroying the raid.",
+      "parentUuid": "fdd8328c_27099b99",
+      "range": {
+        "startLine": 96,
+        "startChar": 8,
+        "endLine": 96,
+        "endChar": 25
+      },
+      "revId": "d8448641b2fdd4a0c5495292d56cec0f6851b1e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b18413af_63a3a68e",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-20T07:14:01Z",
       "side": 1,
       "message": "which is based on ?",
+      "range": {
+        "startLine": 139,
+        "startChar": 49,
+        "endLine": 139,
+        "endChar": 60
+      },
+      "revId": "d8448641b2fdd4a0c5495292d56cec0f6851b1e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b01bb9e4_2a612ec4",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-10-09T05:31:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b18413af_63a3a68e",
       "range": {
         "startLine": 139,
         "startChar": 49,
