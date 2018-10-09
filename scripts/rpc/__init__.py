@@ -34,16 +34,16 @@ def get_rpc_methods(client, current=None):
     return client.call('get_rpc_methods', params)
 
 
-def _json_dump(config, indent):
+def _json_dump(config, fd, indent):
     if indent is None:
         indent = 2
     elif indent < 0:
         indent = None
-    json.dump(config, sys.stdout, indent=indent)
-    sys.stdout.write('\n')
+    json.dump(config, fd, indent=indent)
+    fd.write('\n')
 
 
-def save_config(client, indent=2):
+def save_config(client, fd, indent=2):
     """Write current (live) configuration of SPDK subsystems and targets to stdout.
     Args:
         indent: Indent level. Value less than 0 mean compact mode.
@@ -60,15 +60,15 @@ def save_config(client, indent=2):
         }
         config['subsystems'].append(cfg)
 
-    _json_dump(config, indent)
+    _json_dump(config, fd, indent)
 
 
-def load_config(client):
+def load_config(client, fd):
     """Configure SPDK subsystems and targets using JSON RPC read from stdin.
     Args:
         none
     """
-    json_config = json.load(sys.stdin)
+    json_config = json.load(fd)
 
     # remove subsystems with no config
     subsystems = json_config['subsystems']
@@ -112,7 +112,7 @@ def load_config(client):
         print("Some configs were skipped because the RPC state that can call them passed over.")
 
 
-def save_subsystem_config(client, indent=2, name=None):
+def save_subsystem_config(client, fd, indent=2, name=None):
     """Write current (live) configuration of SPDK subsystem to stdout.
     Args:
         indent: Indent level. Value less than 0 mean compact mode.
@@ -123,15 +123,15 @@ def save_subsystem_config(client, indent=2, name=None):
         'config': client.call('get_subsystem_config', {"name": name})
     }
 
-    _json_dump(cfg, indent)
+    _json_dump(cfg, fd, indent)
 
 
-def load_subsystem_config(client):
+def load_subsystem_config(client, fd):
     """Configure SPDK subsystem using JSON RPC read from stdin.
     Args:
         none
     """
-    subsystem = json.load(sys.stdin)
+    subsystem = json.load(fd)
 
     if not subsystem['config']:
         return
