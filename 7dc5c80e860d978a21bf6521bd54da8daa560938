@@ -94,6 +94,29 @@
     },
     {
       "key": {
+        "uuid": "c277d3fc_92188372",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-09T12:29:14Z",
+      "side": 1,
+      "message": "This is unused in this version but can be used for non blocking mode.",
+      "range": {
+        "startLine": 114,
+        "startChar": 8,
+        "endLine": 114,
+        "endChar": 19
+      },
+      "revId": "7dc5c80e860d978a21bf6521bd54da8daa560938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1c2794ef_3572c332",
         "filename": "lib/jsonrpc/jsonrpc_internal.h",
         "patchSetId": 26
