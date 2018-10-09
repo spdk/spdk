@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f09c2ff_e2e8d6f0",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-09T09:17:10Z",
+      "side": 1,
+      "message": "You will be able to return here with -EINVAL.",
+      "range": {
+        "startLine": 1364,
+        "startChar": 8,
+        "endLine": 1364,
+        "endChar": 15
+      },
+      "revId": "1244037b3063d9909a2349bd263fc9bcf7f1ff9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6531847_23042ee4",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1406,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-09T09:17:10Z",
+      "side": 1,
+      "message": "You may be able to add \"and stay at the configuring state\" ?",
+      "range": {
+        "startLine": 1406,
+        "startChar": 46,
+        "endLine": 1406,
+        "endChar": 47
+      },
+      "revId": "1244037b3063d9909a2349bd263fc9bcf7f1ff9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aad67eb5_05d91df9",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1409,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-09T09:17:10Z",
+      "side": 1,
+      "message": "You will be able to return here with rc.",
+      "range": {
+        "startLine": 1409,
+        "startChar": 3,
+        "endLine": 1409,
+        "endChar": 16
+      },
+      "revId": "1244037b3063d9909a2349bd263fc9bcf7f1ff9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84b30a63_4a8063ea",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1426,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-09T09:17:10Z",
+      "side": 1,
+      "message": "You may be able to remove entirely.",
+      "range": {
+        "startLine": 1420,
+        "startChar": 0,
+        "endLine": 1426,
+        "endChar": 11
+      },
+      "revId": "1244037b3063d9909a2349bd263fc9bcf7f1ff9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
