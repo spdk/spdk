@@ -16,6 +16,24 @@
       "revId": "56ce685f86a9eaf088a851a9ba4526080e26d8bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6731b8f2_8ad82da1",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 968,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T18:19:37Z",
+      "side": 1,
+      "message": "Good catch Changpeng.  Yes - this should be removed.  I totally missed that.",
+      "parentUuid": "37f0f75d_75cb47b4",
+      "revId": "56ce685f86a9eaf088a851a9ba4526080e26d8bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
