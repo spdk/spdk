@@ -16,6 +16,24 @@
       "revId": "42f64a96e86e6aa7f2e5ad3b8e256a66936fdf27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b65d6c0_7513029f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-09T09:50:55Z",
+      "side": 1,
+      "message": "Based on the calling stack as following which is on the same thread (reactor0)\n\n\u003d\u003d4243\u003d\u003dERROR: AddressSanitizer: heap-use-after-free on address 0x61200000b240 at pc 0x0000005c281b bp 0x7ffdd8bbcec0 sp 0x7ffdd8bbceb0\nREAD of size 8 at 0x61200000b240 thread T0 (reactor_0)\n    #0 0x5c281a in _spdk_bdev_qos_io_submit /home/sys_sgsw/build_pool/agent/repo/lib/bdev/bdev.c:1244\n    #1 0x5c90e1 in spdk_bdev_channel_poll_qos /home/sys_sgsw/build_pool/agent/repo/lib/bdev/bdev.c:1679\n    #2 0x59bac6 in _spdk_reactor_run /home/sys_sgsw/build_pool/agent/repo/lib/event/reactor.c:537\n\u003csnip...\u003e\n\n0x61200000b240 is located 256 bytes inside of 304-byte region [0x61200000b140,0x61200000b270)\nfreed by thread T0 (reactor_0) here:\n    #0 0x7f1d4e1b92ca in __interceptor_free (/usr/lib/x86_64-linux-gnu/libasan.so.2+0x982ca)\n    #1 0x5de638 in spdk_bdev_fini /home/sys_sgsw/build_pool/agent/repo/lib/bdev/bdev.c:3411\n    #2 0x5dfe95 in spdk_bdev_unregister /home/sys_sgsw/build_pool/agent/repo/lib/bdev/bdev.c:3547\n    #3 0x5c006d in _spdk_bdev_finish_unregister_bdevs_iter /home/sys_sgsw/build_pool/agent/repo/lib/bdev/bdev.c:995\n    #4 0x5de54e in spdk_bdev_destroy_cb /home/sys_sgsw/build_pool/agent/repo/lib/bdev/bdev.c:3401\n    #5 0x5ac630 in _finish_unregister /home/sys_sgsw/build_pool/agent/repo/lib/thread/thread.c:402\n    #6 0x597876 in _spdk_reactor_msg_passed /home/sys_sgsw/build_pool/agent/repo/lib/event/reactor.c:218\n    #7 0x5976ed in _spdk_event_queue_run_batch /home/sys_sgsw/build_pool/agent/repo/lib/event/reactor.c:205\n    #8 0x59a9f5 in _spdk_reactor_run /home/sys_sgsw/build_pool/agent/repo/lib/event/reactor.c:502\n\u003csnip...\u003e\n\npreviously allocated by thread T0 (reactor_0) here:\n    #0 0x7f1d4e1b979a in __interceptor_calloc (/usr/lib/x86_64-linux-gnu/libasan.so.2+0x9879a)\n    #1 0x5cc5f9 in spdk_bdev_qos_destroy /home/sys_sgsw/build_pool/agent/repo/lib/bdev/bdev.c:1926\n    #2 0x5e1263 in spdk_bdev_close /home/sys_sgsw/build_pool/agent/repo/lib/bdev/bdev.c:3622\n    #3 0x50d4cd in vbdev_passthru_destruct /home/sys_sgsw/build_pool/agent/repo/lib/bdev/passthru/vbdev_passthru.c:128\n    #4 0x5de4a1 in spdk_bdev_destroy_cb /home/sys_sgsw/build_pool/agent/repo/lib/bdev/bdev.c:3396\n    #5 0x5ac630 in _finish_unregister /home/sys_sgsw/build_pool/agent/repo/lib/thread/thread.c:402\n    #6 0x597876 in _spdk_reactor_msg_passed /home/sys_sgsw/build_pool/agent/repo/lib/event/reactor.c:218\n    #7 0x5976ed in _spdk_event_queue_run_batch /home/sys_sgsw/build_pool/agent/repo/lib/event/reactor.c:205\n    #8 0x59a9f5 in _spdk_reactor_run /home/sys_sgsw/build_pool/agent/repo/lib/event/reactor.c:502\n\u003csnip...\u003e\n\n1. spdk_bdev_qos_destroy() called, the new_qos has bee allocated and bdev-\u003einternal.qos \u003d new_qos to swap old_qos. Meanwhile an event is queued to call spdk_bdev_qos_channel_destroy() later where it points to the old_qos and the QoS poller will also be unregisterred there\n\n2. The spdk_bdev_fini() called, and bdev-\u003einternal.qos freed\nwhich will be later dereferenced by spdk_bdev_channel_poll_qos()\n\n3. The event of spdk_bdev_qos_channel_destroy() is not executed.\n\n4. The event of spdk_bdev_channel_poll_qos() is executed whose context is the old_qos and the poller has not been unregistered from spdk_bdev_qos_channel_destroy() and old_qos is not freed either. So that no problem so far. When _spdk_bdev_qos_io_submit() is called with the ch parameter, it tried to reference the bdev-\u003einternal.qos which has been freed at Step2, the NULL problem hit.\n\nI knew your fix is trying to have a local variable of QoS so that it will not try to reference the bdev-\u003einternal.qos which is swapped to new_qos and freed later. However it still try to the bdev structure if there is queued IO (although it should not happen).\n\nMy fix here is in the handling of Step 1 when calling spdk_bdev_qos_destroy(), set the qos-\u003ethread to NULL immediately so that when the async events are handled later, it just check the valid thread to avoid calling _spdk_bdev_qos_io_submit() at all.\n\nThe race here is the execution sequence of spdk_bdev_qos_channel_destroy() and spdk_bdev_channel_poll_qos().",
+      "parentUuid": "9584bafb_8b6c11ea",
+      "revId": "42f64a96e86e6aa7f2e5ad3b8e256a66936fdf27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
