@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2445f0ac_7370fc7a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:51:10Z",
+      "side": 1,
+      "message": "Two additional parameters were added to spdk_sock_get_addr() for the server port and client port.  These parameters are named \"sport\" and \"cport\" respectively.",
+      "revId": "cba441779f392e1a1ab274b69ab321a934089299",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "630d783c_d4661347",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:51:10Z",
+      "side": 1,
+      "message": "Add \"May be NULL.\"",
+      "revId": "cba441779f392e1a1ab274b69ab321a934089299",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "635728ae_f36e37f9",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:51:10Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "cba441779f392e1a1ab274b69ab321a934089299",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
