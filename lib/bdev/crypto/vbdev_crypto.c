@@ -169,10 +169,15 @@ static struct rte_mempool *g_crypto_op_mp = NULL;	/* crypto operations, must be 
  * and the poller for this thread.
  */
 struct crypto_io_channel {
-	struct spdk_io_channel		*base_ch;		/* IO channel of base device */
-	struct spdk_poller		*poller;		/* completion poller */
-	struct device_qp		*device_qp;		/* unique device/qp combination for this channel */
+	struct spdk_io_channel		*base_ch;	/* IO channel of base device */
+	struct spdk_poller		*poller;	/* completion poller */
+	struct device_qp		*device_qp;	/* unique device/qp combination for this channel */
+	TAILQ_HEAD(, spdk_bdev_io)	pending_ios;	/* outstanding IO in this layer */
+	struct spdk_io_channel_iter	*iter;		/* used with for_each_channel in reset */
 };
+
+/* If a reset is in progress, this is the reset bdev_io, if not it is NULL */
+static struct spdk_bdev_io *g_reset_io = NULL;
 
 /* This is the crypto per IO context that the bdev layer allocates for us opaquely and attaches to
  * each IO for us.
@@ -392,41 +397,47 @@ _crypto_operation_complete(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev_io *free_me = io_ctx->read_io;
 	int rc = 0;
 
-	if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 
-			/* Complete the original IO and then free the one that we created
-			 * as a result of issuing an IO via submit_reqeust.
-			 */
+		/* Complete the original IO and then free the one that we created
+		 * as a result of issuing an IO via submit_reqeust.
+		 */
+		if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-			spdk_bdev_free_io(free_me);
-
-		} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-
-			/* Write the encrypted data. */
-			rc = spdk_bdev_writev_blocks(crypto_bdev->base_desc, crypto_ch->base_ch,
-						     &io_ctx->cry_iov, 1, io_ctx->cry_offset_blocks,
-						     io_ctx->cry_num_blocks, _complete_internal_write,
-						     bdev_io);
 		} else {
+			SPDK_ERRLOG("Issue with decryption on bdev_io %p\n", bdev_io);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+		TAILQ_REMOVE(&crypto_ch->pending_ios, bdev_io, module_link);
+		spdk_bdev_free_io(free_me);
 
-			/* Something really went haywire if this function got called with a type
-			 * other than read or write.
-			 */
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+
+		if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
+			/* Write the encrypted data. */
+			if (spdk_bdev_writev_blocks(crypto_bdev->base_desc, crypto_ch->base_ch,
+						    &io_ctx->cry_iov, 1, io_ctx->cry_offset_blocks,
+						    io_ctx->cry_num_blocks, _complete_internal_write,
+						    bdev_io)) {
+
+				SPDK_ERRLOG("Issue submitting post encryption write on bdev_io %p\n", bdev_io);
+				rc = -1;
+			}
+		} else {
+			SPDK_ERRLOG("Issue with encryption on bdev_io %p\n", bdev_io);
 			rc = -1;
 		}
+
 	} else {
-		/* If the poller found that one of the crypto ops had failed as part of this
-		 * bdev_io it would have updated the internal status indicate failure.
-		 */
+		SPDK_ERRLOG("unknown bdev type %u on crypto operation completion\n",
+			    bdev_io->type);
 		rc = -1;
 	}
 
-	if (rc != 0) {
-		SPDK_ERRLOG("ERROR on crypto operation completion!\n");
+	if (rc) {
+		TAILQ_REMOVE(&crypto_ch->pending_ios, bdev_io, module_link);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
-
 }
 
 /* This is the poller for the crypto device. It uses a single API to dequeue whatever is ready at
@@ -488,6 +499,13 @@ crypto_dev_poller(void *args)
 		/* done encrypting, complete the bdev_io */
 		if (--io_ctx->cryop_cnt_remaining == 0) {
 
+			/* If we're completing this with an outstanding reset we need
+			 * to fail it.
+			 */
+			if (g_reset_io) {
+				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+			}
+
 			/* Complete the IO */
 			_crypto_operation_complete(bdev_io);
 
@@ -506,6 +524,16 @@ crypto_dev_poller(void *args)
 		spdk_mempool_put_bulk(g_mbuf_mp,
 				      (void **)mbufs_to_free,
 				      num_mbufs);
+	}
+
+	/* If the channel iter is not NULL, we need to continue to poll
+	 * until the pending list is empty, then we can move on to the
+	 * next channel.
+	 */
+	if (crypto_ch->iter && TAILQ_EMPTY(&crypto_ch->pending_ios)) {
+		SPDK_NOTICELOG("Channel %p has been quiesced.\n", crypto_ch);
+		spdk_for_each_channel_continue(crypto_ch->iter, 0);
+		crypto_ch->iter = NULL;
 	}
 
 	return num_dequeued_ops;
@@ -730,6 +758,9 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		}
 	} while (enqueued < cryop_cnt);
 
+	/* Add this bdev_io to our outstanding list. */
+	TAILQ_INSERT_TAIL(&crypto_ch->pending_ios, bdev_io, module_link);
+
 	return rc;
 
 	/* Error cleanup paths. */
@@ -756,16 +787,53 @@ error_get_dst:
 	return rc;
 }
 
+/* This function is called per channel to quiesce IOs before completing a
+ * bdev reset that we received.
+ */
+static void
+_ch_quiesce(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct crypto_io_channel *crypto_ch = spdk_io_channel_get_ctx(ch);
+
+	crypto_ch->iter = i;
+	crypto_dev_poller(crypto_ch);
+}
+
+/* This function is called after all channels have been quiesced following
+ * a bdev reset.
+ */
+static void
+_ch_quiesce_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct crypto_bdev_io *io_ctx = spdk_io_channel_iter_get_ctx(i);
+
+	assert(TAILQ_EMPTY(&io_ctx->crypto_ch->pending_ios));
+
+	spdk_bdev_io_complete(g_reset_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	spdk_bdev_free_io(io_ctx->orig_io);
+	g_reset_io = NULL;
+}
+
 /* Completion callback for IO that were issued from this bdev other than read/write.
  * They have their own for readability.
  */
 static void
 _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_bdev_io *orig_io = cb_arg;
+	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)cb_arg;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 
-	spdk_bdev_io_complete(orig_io, status);
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET && g_reset_io) {
+		io_ctx->orig_io = bdev_io;
+		spdk_for_each_channel(io_ctx->crypto_bdev,
+				      _ch_quiesce,
+				      io_ctx,
+				      _ch_quiesce_done);
+		return;
+	}
+
+	spdk_bdev_io_complete(io_ctx->orig_io, status);
 	spdk_bdev_free_io(bdev_io);
 }
 
@@ -776,9 +844,11 @@ _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	struct spdk_bdev_io *orig_io = cb_arg;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 	struct crypto_bdev_io *orig_ctx = (struct crypto_bdev_io *)orig_io->driver_ctx;
+	struct crypto_io_channel *crypto_ch = orig_ctx->crypto_ch;
 
 	spdk_dma_free(orig_ctx->cry_iov.iov_base);
 	spdk_bdev_io_complete(orig_io, status);
+	TAILQ_REMOVE(&crypto_ch->pending_ios, orig_io, module_link);
 	spdk_bdev_free_io(bdev_io);
 }
 
@@ -788,6 +858,7 @@ _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 {
 	struct spdk_bdev_io *orig_io = cb_arg;
 	struct crypto_bdev_io *orig_ctx = (struct crypto_bdev_io *)orig_io->driver_ctx;
+	struct crypto_io_channel *crypto_ch = orig_ctx->crypto_ch;
 
 	if (success) {
 
@@ -797,11 +868,13 @@ _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		if (_crypto_operation(orig_io, RTE_CRYPTO_CIPHER_OP_DECRYPT)) {
 			SPDK_ERRLOG("ERROR decrypting");
 			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+			TAILQ_REMOVE(&crypto_ch->pending_ios, orig_io, module_link);
 			spdk_bdev_free_io(bdev_io);
 		}
 	} else {
 		SPDK_ERRLOG("ERROR on read prior to decrypting");
 		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		TAILQ_REMOVE(&crypto_ch->pending_ios, orig_io, module_link);
 		spdk_bdev_free_io(bdev_io);
 	}
 }
@@ -870,8 +943,9 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 					    _complete_internal_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		rc = spdk_bdev_reset(crypto_bdev->base_desc, crypto_ch->base_ch,
-				     _complete_internal_io, bdev_io);
+		g_reset_io = bdev_io;
+		spdk_bdev_reset(crypto_bdev->base_desc, io_ctx->crypto_ch->base_ch,
+				_complete_internal_io, io_ctx);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	default:
@@ -1019,6 +1093,10 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	}
 	pthread_mutex_unlock(&g_device_qp_lock);
 	assert(crypto_ch->device_qp);
+
+	/* We use this queue to track outstanding IO in our lyaer. */
+	TAILQ_INIT(&crypto_ch->pending_ios);
+
 	return 0;
 }
 
