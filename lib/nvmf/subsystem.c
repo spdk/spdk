@@ -712,6 +712,24 @@ spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host)
 	return host->nqn;
 }
 
+int
+spdk_nvmf_subsystem_set_offload(struct spdk_nvmf_subsystem *subsystem, bool offload)
+{
+	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
+		return -EAGAIN;
+	}
+
+	subsystem->offload = offload;
+
+	return 0;
+}
+
+bool
+spdk_nvmf_subsystem_get_offload(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->offload;
+}
+
 static struct spdk_nvmf_listener *
 _spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
 				   const struct spdk_nvme_transport_id *trid)

@@ -51,7 +51,7 @@ function usage()
 	echo " rbd                       [disabled]"
 	echo "                           No path required."
 	echo " rdma                      [disabled]"
-	echo "                           No path required."
+	echo "                           Path to RDMA library build/install directory may be optionally specified. If no path has been provided system libraries will be used."
 	echo " rdma-srq                  [disabled]"
 	echo "                           No path required."
 	echo " shared                    Required to build spdk shared libraries."
@@ -168,6 +168,11 @@ for i in "$@"; do
 		--with-rdma)
 			CONFIG[RDMA]=y
 			;;
+		--with-rdma=*)
+			CONFIG_RDMA=y
+			check_dir "$i"
+			CONFIG_RDMA_DIR=$(readlink -f ${i#*=})
+			;;
 		--without-rdma)
 			CONFIG[RDMA]=n
 			;;
@@ -176,6 +181,12 @@ for i in "$@"; do
 			;;
 		--without-rdma-srq)
 			CONFIG[RDMA_SRQ]=n
+			;;
+		--with-nvmf-offload)
+			CONFIG[NVMF_OFFLOAD]=y
+			;;
+		--without-nvmf-offload)
+			CONFIG[NVMF_OFFLOAD]=n
 			;;
 		--with-shared)
 			CONFIG[SHARED]=y

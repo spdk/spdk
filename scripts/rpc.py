@@ -1371,7 +1371,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        nqn=args.nqn,
                                        serial_number=args.serial_number,
                                        allow_any_host=args.allow_any_host,
-                                       max_namespaces=args.max_namespaces)
+                                       max_namespaces=args.max_namespaces,
+                                       offload=args.offload)
 
     p = subparsers.add_parser('nvmf_subsystem_create', help='Create an NVMe-oF subsystem')
     p.add_argument('nqn', help='Subsystem NQN (ASCII)')
@@ -1381,6 +1382,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
     p.add_argument("-m", "--max-namespaces", help="Maximum number of namespaces allowed",
                    type=int, default=0)
+    p.add_argument("-o", "--offload", action='store_true', help="Enable offload to HCA for this subsystem")
     p.set_defaults(func=nvmf_subsystem_create)
 
     @call_cmd

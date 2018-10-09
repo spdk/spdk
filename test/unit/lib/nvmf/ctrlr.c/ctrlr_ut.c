@@ -137,6 +137,10 @@ DEFINE_STUB(spdk_nvmf_subsystem_listener_allowed,
 	    bool,
 	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvme_transport_id *trid),
 	    true);
+DEFINE_STUB(spdk_nvmf_subsystem_get_offload,
+	    bool,
+	    (const struct spdk_nvmf_subsystem *subsystem),
+	    false);
 
 static void
 ctrlr_ut_pass_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)

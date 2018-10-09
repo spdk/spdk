@@ -248,6 +248,9 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 	}
 	spdk_json_write_array_end(w);
 
+	spdk_json_write_name(w, "offload");
+	spdk_json_write_bool(w, spdk_nvmf_subsystem_get_offload(subsystem));
+
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		struct spdk_nvmf_ns *ns;
 		struct spdk_nvmf_ns_opts ns_opts;
@@ -334,6 +337,7 @@ struct rpc_subsystem_create {
 	char *serial_number;
 	uint32_t max_namespaces;
 	bool allow_any_host;
+	bool offload;
 };
 
 static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
@@ -341,6 +345,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
 	{"serial_number", offsetof(struct rpc_subsystem_create, serial_number), spdk_json_decode_string, true},
 	{"max_namespaces", offsetof(struct rpc_subsystem_create, max_namespaces), spdk_json_decode_uint32, true},
 	{"allow_any_host", offsetof(struct rpc_subsystem_create, allow_any_host), spdk_json_decode_bool, true},
+	{"offload", offsetof(struct rpc_subsystem_create, offload), spdk_json_decode_bool, true},
 };
 
 static void
@@ -392,6 +397,7 @@ spdk_rpc_nvmf_subsystem_create(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
+	spdk_nvmf_subsystem_set_offload(subsystem, req->offload);
 
 	free(req->nqn);
 	free(req->serial_number);

@@ -160,7 +160,8 @@ def nvmf_subsystem_create(client,
                           nqn,
                           serial_number,
                           allow_any_host=False,
-                          max_namespaces=0):
+                          max_namespaces=0,
+                          offload=False):
     """Construct an NVMe over Fabrics target subsystem.
 
     Args:
@@ -168,6 +169,7 @@ def nvmf_subsystem_create(client,
         serial_number: Serial number of virtual controller.
         allow_any_host: Allow any host (True) or enforce allowed host whitelist (False). Default: False.
         max_namespaces: Maximum number of namespaces that can be attached to the subsystem (optional). Default: 0 (Unlimited).
+        offload: Enable offload to HCA for the subsystem (optional). Default: False.
 
     Returns:
         True or False
@@ -184,6 +186,9 @@ def nvmf_subsystem_create(client,
 
     if max_namespaces:
         params['max_namespaces'] = max_namespaces
+
+    if offload:
+        params['offload'] = offload
 
     return client.call('nvmf_subsystem_create', params)
 

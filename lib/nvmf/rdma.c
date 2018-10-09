@@ -49,6 +49,12 @@
 #include "spdk/trace.h"
 #include "spdk/util.h"
 
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+#include "../bdev/nvme/bdev_nvme.h"
+#include "../nvme/nvme_pcie.h"
+#include "rdma_verbs_offload.h"
+#endif
+
 #include "spdk_internal/log.h"
 
 /*
@@ -227,6 +233,20 @@ struct spdk_nvmf_rdma_request {
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
 
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+struct spdk_nvmf_rdma_offload_ctrlr {
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvme_qpair *nvme_io_qpair;
+	struct ibv_nvme_ctrl *nvme_ctrlr;
+	struct nvme_ctrl_attrs attrs;
+	struct spdk_nvmf_rdma_poller *poller;
+
+	uint32_t refcnt;
+
+	TAILQ_ENTRY(spdk_nvmf_rdma_offload_ctrlr) link;
+};
+#endif
+
 struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_qpair			qpair;
 
@@ -303,6 +323,10 @@ struct spdk_nvmf_rdma_qpair {
 	 * qpair.
 	 */
 	uint32_t				refcnt;
+
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+	struct spdk_nvmf_rdma_offload_ctrlr	*offload_ctrlr;
+#endif
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -347,6 +371,13 @@ struct spdk_nvmf_rdma_poller {
 	 */
 	void					*bufs;
 	struct ibv_mr				*bufs_mr;
+
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+	/* Staging buffer for offload */
+	void					*staging_buf;
+	struct ibv_mr				*staging_buf_mr;
+	TAILQ_HEAD(, spdk_nvmf_rdma_offload_ctrlr)	offload_ctrlrs;
+#endif
 #endif
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
@@ -363,6 +394,9 @@ struct spdk_nvmf_rdma_poll_group {
 /* Assuming rdma_cm uses just one protection domain per ibv_context. */
 struct spdk_nvmf_rdma_device {
 	struct ibv_device_attr			attr;
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+	struct ibv_device_attr_ex		attr_ex;
+#endif
 	struct ibv_context			*context;
 
 	struct spdk_mem_map			*map;
@@ -400,6 +434,11 @@ struct spdk_nvmf_rdma_mgmt_channel {
 	/* Requests that are waiting to obtain a data buffer */
 	TAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_data_buf_queue;
 };
+
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+static int
+spdk_nvmf_rdma_release_offload_ctrlr(struct spdk_nvmf_rdma_offload_ctrlr *offload_ctrlr);
+#endif
 
 static inline void
 spdk_nvmf_rdma_qpair_inc_refcnt(struct spdk_nvmf_rdma_qpair *rqpair)
@@ -651,6 +690,12 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	if (rqpair->refcnt > 0) {
 		return;
 	}
+
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+	if (rqpair->offload_ctrlr) {
+		spdk_nvmf_rdma_release_offload_ctrlr(rqpair->offload_ctrlr);
+	}
+#endif
 
 	if (rqpair->poller) {
 		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
@@ -1876,13 +1921,47 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 			break;
 		}
 		device->context = contexts[i];
+#ifndef SPDK_CONFIG_NVMF_OFFLOAD
 		rc = ibv_query_device(device->context, &device->attr);
+#else
+		rc = ibv_query_device_ext(device->context, NULL, &device->attr_ex);
+		memcpy(&device->attr, &device->attr_ex.orig_attr, sizeof(device->attr));
+#endif
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
 			free(device);
 			break;
 
 		}
+
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+		SPDK_ERRLOG("Device %s NVMF caps\n"
+			    "\toffload_type_dc=%u\n"
+			    "\toffload_type_rc=%u\n"
+			    "\tmax_backend_ctrls_total=%u\n"
+			    "\tmax_srq_backend_ctrls=%u\n"
+			    "\tmax_srq_namespaces=%u\n"
+			    "\tmin_staging_buf_size=%u\n"
+			    "\tmax_io_sz=%u\n"
+			    "\tmax_nvme_queue_depth=%u\n"
+			    "\tmin_nvme_queue_depth=%u\n"
+			    "\tmax_ioccsz=%u\n"
+			    "\tmin_ioccsz=%u\n"
+			    "\tmax_icdoff=%u\n",
+			    ibv_get_device_name(device->context->device),
+			    device->attr_ex.nvmf_caps.offload_type_dc,
+			    device->attr_ex.nvmf_caps.offload_type_rc,
+			    device->attr_ex.nvmf_caps.max_backend_ctrls_total,
+			    device->attr_ex.nvmf_caps.max_srq_backend_ctrls,
+			    device->attr_ex.nvmf_caps.max_srq_namespaces,
+			    device->attr_ex.nvmf_caps.min_staging_buf_size,
+			    device->attr_ex.nvmf_caps.max_io_sz,
+			    device->attr_ex.nvmf_caps.max_nvme_queue_depth,
+			    device->attr_ex.nvmf_caps.min_nvme_queue_depth,
+			    device->attr_ex.nvmf_caps.max_ioccsz,
+			    device->attr_ex.nvmf_caps.min_ioccsz,
+			    device->attr_ex.nvmf_caps.max_icdoff);
+#endif
 
 #ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
 		if ((device->attr.device_cap_flags & IBV_DEVICE_MEM_MGT_EXTENSIONS) == 0) {
@@ -2581,7 +2660,11 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 	struct spdk_nvmf_rdma_device		*device;
 #ifdef SPDK_CONFIG_RDMA_SRQ
 	int					i, rc;
+#ifndef SPDK_CONFIG_NVMF_OFFLOAD
 	struct ibv_srq_init_attr		srq_init_attr;
+#else
+	struct ibv_srq_init_attr_ext		srq_init_attr_ex;
+#endif
 	struct spdk_nvmf_rdma_recv		*rdma_recv;
 	struct spdk_nvmf_rdma_request		*rdma_req;
 #endif
@@ -2610,6 +2693,9 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		poller->group = rgroup;
 
 		TAILQ_INIT(&poller->qpairs);
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+		TAILQ_INIT(&poller->offload_ctrlrs);
+#endif
 
 		poller->cq = ibv_create_cq(device->context, NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
 		if (!poller->cq) {
@@ -2622,22 +2708,78 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 #ifdef SPDK_CONFIG_RDMA_SRQ
 		poller->max_srq_depth = transport->opts.max_srq_depth;
 
+#ifndef SPDK_CONFIG_NVMF_OFFLOAD
 		memset(&srq_init_attr, 0, sizeof(struct ibv_srq_init_attr));
 		srq_init_attr.attr.max_wr = poller->max_srq_depth;
 		srq_init_attr.attr.max_sge = NVMF_DEFAULT_RX_SGE;
 		poller->srq = ibv_create_srq(device->pd, &srq_init_attr);
+#else
+		/* @todo: it should be checked somewhere that device supports offload */
+		/* @todo: staging buffer length shall be configurable or calculated somehow */
+#define DEFAULT_STAGING_BUFFER_LENGTH 4*1024*1024
+		poller->staging_buf = spdk_dma_zmalloc(DEFAULT_STAGING_BUFFER_LENGTH,
+						       0x1000,
+						       NULL);
+		if (!poller->staging_buf) {
+			SPDK_ERRLOG("Failed to allocate staging buffer\n");
+			spdk_nvmf_rdma_poll_group_destroy(&rgroup->group);
+			pthread_mutex_unlock(&rtransport->lock);
+			return NULL;
+		}
+
+		/* @todo: check if access rights are correct */
+		poller->staging_buf_mr = ibv_reg_mr(device->pd,
+						    poller->staging_buf,
+						    DEFAULT_STAGING_BUFFER_LENGTH,
+						    IBV_ACCESS_LOCAL_WRITE);
+		if (!poller->staging_buf_mr) {
+			SPDK_ERRLOG("Failed to register staging buffer memory region\n");
+			spdk_nvmf_rdma_poll_group_destroy(&rgroup->group);
+			pthread_mutex_unlock(&rtransport->lock);
+			return NULL;
+		}
+
+		memset(&srq_init_attr_ex, 0, sizeof(struct ibv_srq_init_attr_ext));
+		srq_init_attr_ex.attr.max_wr = poller->max_srq_depth;
+		srq_init_attr_ex.attr.max_sge = NVMF_DEFAULT_RX_SGE;
+		srq_init_attr_ex.srq_type = IBV_SRQT_NVMF;
+		srq_init_attr_ex.pd =
+			device->pd; /* @todo: ibv_create_srq_ex doesn't work without PD for some reason. Need to debug */
+		/* @todo: check where to take these values from */
+		/* @todo: what if some operations are not supported by HCA */
+		srq_init_attr_ex.nvmf_attr.offload_ops = IBV_NVMF_OPS_READ_WRITE_FLUSH;
+		srq_init_attr_ex.nvmf_attr.max_namespaces = 256;
+		srq_init_attr_ex.nvmf_attr.nvme_log_page_sz = 1;
+		srq_init_attr_ex.nvmf_attr.ioccsz = 4096;
+		srq_init_attr_ex.nvmf_attr.icdoff = 0;
+		srq_init_attr_ex.nvmf_attr.max_io_sz = 128 * 1024;
+		srq_init_attr_ex.nvmf_attr.nvme_queue_depth = transport->opts.max_queue_depth;
+		srq_init_attr_ex.nvmf_attr.staging_buf.mr = poller->staging_buf_mr;
+		srq_init_attr_ex.nvmf_attr.staging_buf.addr = poller->staging_buf;
+		srq_init_attr_ex.nvmf_attr.staging_buf.len = DEFAULT_STAGING_BUFFER_LENGTH;
+		srq_init_attr_ex.comp_mask = IBV_SRQ_INIT_ATTR_TYPE |
+					     IBV_SRQ_INIT_ATTR_PD | IBV_SRQ_INIT_ATTR_NVMF;
+		poller->srq = ibv_create_srq_ext(device->context, &srq_init_attr_ex);
+#endif
 		if (!poller->srq) {
 			SPDK_ERRLOG("Unable to create shared receive queue, errno %d\n", errno);
 			spdk_nvmf_rdma_poll_group_destroy(&rgroup->group);
 			pthread_mutex_unlock(&rtransport->lock);
 			return NULL;
 		}
+#ifndef SPDK_CONFIG_NVMF_OFFLOAD
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Created RDMA SRQ %p: max_wr %u, max_sge %u, srq_limit %u\n",
 			      poller->srq,
 			      srq_init_attr.attr.max_wr,
 			      srq_init_attr.attr.max_sge,
 			      srq_init_attr.attr.srq_limit);
-
+#else
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Created RDMA offload SRQ %p: max_wr %u, max_sge %u, srq_limit %u\n",
+			      poller->srq,
+			      srq_init_attr_ex.attr.max_wr,
+			      srq_init_attr_ex.attr.max_sge,
+			      srq_init_attr_ex.attr.srq_limit);
+#endif
 		poller->reqs = calloc(poller->max_srq_depth, sizeof(*poller->reqs));
 		poller->recvs = calloc(poller->max_srq_depth, sizeof(*poller->recvs));
 		poller->cmds = spdk_dma_zmalloc(poller->max_srq_depth * sizeof(*poller->cmds),
@@ -2809,6 +2951,13 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		spdk_dma_free(poller->bufs);
 		free(poller->reqs);
 		free(poller->recvs);
+
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+		if (poller->staging_buf_mr) {
+			ibv_dereg_mr(poller->staging_buf_mr);
+		}
+		spdk_dma_free(poller->staging_buf);
+#endif
 #endif
 
 		if (poller->cq) {
@@ -3259,6 +3408,249 @@ spdk_nvmf_rdma_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 	return spdk_nvmf_rdma_trid_from_cm_id(rqpair->listen_id, trid, false);
 }
 
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+static void
+spdk_nvmf_rdma_destroy_offload_ctrlr(struct spdk_nvmf_rdma_offload_ctrlr *offload_ctrlr)
+{
+	struct spdk_nvmf_rdma_poller	*rpoller;
+	struct nvme_ctrl_attrs		*ctrlr_attrs;
+	struct spdk_nvmf_ns		*ns;
+	int				rc;
+
+	rpoller = offload_ctrlr->poller;
+
+	if (0 != offload_ctrlr->refcnt) {
+		SPDK_ERRLOG("Destroying offload controller with non-zero references\n");
+	}
+
+	if (offload_ctrlr->nvme_ctrlr) {
+		ns = spdk_nvmf_subsystem_get_first_ns(offload_ctrlr->subsystem);
+		if (ns) {
+			rc = ibv_unmap_nvmf_nsid(offload_ctrlr->nvme_ctrlr,
+						 spdk_nvmf_ns_get_id(ns));
+			if (rc) {
+				SPDK_ERRLOG("Failed to unmap NVMf namespace, errno %d\n", rc);
+			}
+		} else {
+			SPDK_ERRLOG("No namespaces in subsystem\n");
+		}
+
+		rc = ibv_srq_remove_nvme_ctrl(rpoller->srq, offload_ctrlr->nvme_ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("Failed to remove NVMe controller, errno %d\n", rc);
+		}
+	}
+
+	ctrlr_attrs = &offload_ctrlr->attrs;
+	if (ctrlr_attrs->sq_buf.mr) {
+		ibv_dereg_mr(ctrlr_attrs->sq_buf.mr);
+	}
+	if (ctrlr_attrs->cq_buf.mr) {
+		ibv_dereg_mr(ctrlr_attrs->cq_buf.mr);
+	}
+	if (ctrlr_attrs->sqdb.mr) {
+		ibv_dereg_mr(ctrlr_attrs->sqdb.mr);
+	}
+	if (ctrlr_attrs->cqdb.mr) {
+		ibv_dereg_mr(ctrlr_attrs->cqdb.mr);
+	}
+
+	if (offload_ctrlr->nvme_io_qpair) {
+		rc = spdk_nvme_ctrlr_free_io_qpair(offload_ctrlr->nvme_io_qpair);
+		if (rc) {
+			SPDK_ERRLOG("Failed to free NVMe PCIe queue pair\n");
+		}
+	}
+
+	TAILQ_REMOVE(&rpoller->offload_ctrlrs, offload_ctrlr, link);
+	free(offload_ctrlr);
+}
+
+static struct spdk_nvmf_rdma_offload_ctrlr *
+spdk_nvmf_rdma_create_offload_ctrlr(struct spdk_nvmf_rdma_poller *rpoller,
+				    struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_rdma_offload_ctrlr	*offload_ctrlr;
+	struct nvme_ctrl_attrs			*ctrlr_attrs;
+	struct spdk_nvmf_ns			*ns;
+	struct nvme_bdev			*nvme_bdev;
+	struct nvme_pcie_qpair			*pqpair;
+	int					rc;
+
+	/* @todo: what if subsystem contains multiple namespaces? */
+	ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
+	if (!ns) {
+		SPDK_ERRLOG("No namespaces in subsystem\n");
+		return NULL;
+	}
+	/* @todo: Is there a better way to check BDEV type? */
+	if (0 != strcmp(ns->bdev->module->name, "nvme")) {
+		SPDK_ERRLOG("Offload is only supported for NVMe devices %d\n",
+			    nvme_bdev->nvme_ctrlr->trid.trtype);
+		return NULL;
+	}
+	nvme_bdev = SPDK_CONTAINEROF(ns->bdev, struct nvme_bdev, disk);
+
+	if (nvme_bdev->nvme_ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		SPDK_ERRLOG("Offload is not supported for NVMe transport %d\n",
+			    nvme_bdev->nvme_ctrlr->trid.trtype);
+		return NULL;
+	}
+
+	offload_ctrlr = calloc(1, sizeof(*offload_ctrlr));
+	if (!offload_ctrlr) {
+		SPDK_ERRLOG("Could not allocate memory for offload controller\n");
+		return NULL;
+	}
+
+	offload_ctrlr->poller = rpoller;
+	offload_ctrlr->subsystem = subsystem;
+	/* @todo: this should be safe since we work from the poll group thread but need to check */
+	TAILQ_INSERT_TAIL(&rpoller->offload_ctrlrs, offload_ctrlr, link);
+
+	/* @todo: This NVMe function allocates lots of extra stuff which is not needed for offload. */
+	offload_ctrlr->nvme_io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(nvme_bdev->nvme_ctrlr->ctrlr,
+				       NULL,
+				       0);
+	if (!offload_ctrlr->nvme_io_qpair) {
+		SPDK_ERRLOG("Failed to create PCIe NVMe IO queue pair\n");
+		spdk_nvmf_rdma_destroy_offload_ctrlr(offload_ctrlr);
+		return NULL;
+	}
+	pqpair = SPDK_CONTAINEROF(offload_ctrlr->nvme_io_qpair, struct nvme_pcie_qpair, qpair);
+
+	ctrlr_attrs = &offload_ctrlr->attrs;
+	/* @todo: there are also bus addresses for CMB. Check if we should use it. */
+	/* @todo: check access rights */
+	ctrlr_attrs->sq_buf.addr = pqpair->cmd;
+	ctrlr_attrs->sq_buf.len = pqpair->num_entries * sizeof(struct spdk_nvme_cmd);
+	ctrlr_attrs->sq_buf.mr = ibv_reg_mr(rpoller->device->pd,
+					    ctrlr_attrs->sq_buf.addr,
+					    ctrlr_attrs->sq_buf.len,
+					    IBV_ACCESS_LOCAL_WRITE);
+	ctrlr_attrs->cq_buf.addr = pqpair->cpl;
+	ctrlr_attrs->cq_buf.len = pqpair->num_entries * sizeof(struct spdk_nvme_cpl);
+	ctrlr_attrs->cq_buf.mr = ibv_reg_mr(rpoller->device->pd,
+					    ctrlr_attrs->cq_buf.addr,
+					    ctrlr_attrs->cq_buf.len,
+					    IBV_ACCESS_LOCAL_WRITE);
+	/* @todo: doorbell MRs registration fails. Uncomment when fixed. */
+	/* ctrlr_attrs->sqdb.addr = pqpair->sq_tdbl; */
+	/* ctrlr_attrs->sqdb.len = sizeof(*pqpair->sq_tdbl); */
+	/* ctrlr_attrs->sqdb.mr = ibv_reg_mr(rpoller->device->pd, */
+	/* 				  ctrlr_attrs->sqdb.addr, */
+	/* 				  ctrlr_attrs->sqdb.len, */
+	/* 				  IBV_ACCESS_LOCAL_WRITE); */
+	/* ctrlr_attrs->cqdb.addr = pqpair->cq_hdbl; */
+	/* ctrlr_attrs->cqdb.len = sizeof(*pqpair->cq_hdbl); */
+	/* ctrlr_attrs->cqdb.mr = ibv_reg_mr(rpoller->device->pd, */
+	/* 				  ctrlr_attrs->cqdb.addr, */
+	/* 				  ctrlr_attrs->cqdb.len, */
+	/* 				  IBV_ACCESS_LOCAL_WRITE); */
+
+	if (!ctrlr_attrs->sq_buf.mr ||
+	    !ctrlr_attrs->cq_buf.mr/*  || */ /* @todo: Uncomment when fixed */
+	    /* !ctrlr_attrs->sqdb.mr || */
+	    /* !ctrlr_attrs->cqdb.mr */) {
+		SPDK_ERRLOG("Failed to register memory regions for NVMe IO qpair\n");
+		spdk_nvmf_rdma_destroy_offload_ctrlr(offload_ctrlr);
+		return NULL;
+	}
+
+	ctrlr_attrs->sqdb_ini = pqpair->sq_tail;
+	ctrlr_attrs->cqdb_ini = pqpair->cq_head;
+	ctrlr_attrs->cmd_timeout_ms = 1000; /* @todo: make configurable? */
+
+	offload_ctrlr->nvme_ctrlr = ibv_srq_create_nvme_ctrl(rpoller->srq, &offload_ctrlr->attrs);
+	if (!offload_ctrlr->nvme_ctrlr) {
+		SPDK_ERRLOG("Failed to create NVMe controller for offload, errno %d\n", errno);
+		spdk_nvmf_rdma_destroy_offload_ctrlr(offload_ctrlr);
+		return NULL;
+	}
+
+	/* @todo: check lba size argument */
+	rc = ibv_map_nvmf_nsid(offload_ctrlr->nvme_ctrlr,
+			       spdk_nvmf_ns_get_id(ns),
+			       nvme_bdev->ns->extended_lba_size,
+			       nvme_bdev->ns->id);
+	if (rc) {
+		SPDK_ERRLOG("Failed to map NVMf namespace, errno %d\n", rc);
+		spdk_nvmf_rdma_destroy_offload_ctrlr(offload_ctrlr);
+		return NULL;
+	}
+
+	return offload_ctrlr;
+}
+
+static struct spdk_nvmf_rdma_offload_ctrlr *
+spdk_nvmf_rdma_get_offload_ctrlr(struct spdk_nvmf_rdma_poller *rpoller,
+				 struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_rdma_offload_ctrlr *offload_ctrlr, *ctrlr_tmp;
+	TAILQ_FOREACH_SAFE(offload_ctrlr, &rpoller->offload_ctrlrs, link, ctrlr_tmp) {
+		if (offload_ctrlr->subsystem == subsystem) {
+			/* @todo: check if multi-threading should be considered here */
+			++offload_ctrlr->refcnt;
+			return offload_ctrlr;
+		}
+	}
+
+	/* Requested offload controller does not exist yet. */
+	offload_ctrlr = spdk_nvmf_rdma_create_offload_ctrlr(rpoller, subsystem);
+	if (!offload_ctrlr) {
+		SPDK_ERRLOG("Failed to create offload controller\n");
+		return NULL;
+	}
+	++offload_ctrlr->refcnt;
+	return offload_ctrlr;
+}
+
+static int
+spdk_nvmf_rdma_release_offload_ctrlr(struct spdk_nvmf_rdma_offload_ctrlr *offload_ctrlr)
+{
+	/* @todo: check if multi-threading should be considered here */
+	--offload_ctrlr->refcnt;
+	if (0 == offload_ctrlr->refcnt) {
+		spdk_nvmf_rdma_destroy_offload_ctrlr(offload_ctrlr);
+	}
+	return 0;
+}
+
+static int
+spdk_nvmf_rdma_qpair_enable_offload(struct spdk_nvmf_qpair *qpair,
+				    struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair;
+	struct spdk_nvmf_rdma_poller *rpoller;
+	struct spdk_nvmf_rdma_offload_ctrlr *offload_ctrlr;
+	int rc;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rpoller = rqpair->poller;
+
+	if (!rpoller->device->attr_ex.nvmf_caps.offload_type_rc) {
+		SPDK_ERRLOG("RDMA device does not support offload\n");
+		return -1;
+	}
+
+	offload_ctrlr = spdk_nvmf_rdma_get_offload_ctrlr(rpoller, subsystem);
+	if (!offload_ctrlr) {
+		SPDK_ERRLOG("Failed to get offload controller\n");
+		return -1;
+	}
+
+	rc = ibv_qp_set_nvmf(rqpair->cm_id->qp, IBV_QP_NVMF_ATTR_FLAG_ENABLE);
+	if (rc) {
+		SPDK_ERRLOG("Failed to enable offload for RDMA QP\n");
+		spdk_nvmf_rdma_release_offload_ctrlr(offload_ctrlr);
+		return -1;
+	}
+
+	rqpair->offload_ctrlr = offload_ctrlr;
+	return 0;
+}
+#endif
+
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.type = SPDK_NVME_TRANSPORT_RDMA,
 	.opts_init = spdk_nvmf_rdma_opts_init,
@@ -3284,7 +3676,9 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.qpair_get_peer_trid = spdk_nvmf_rdma_qpair_get_peer_trid,
 	.qpair_get_local_trid = spdk_nvmf_rdma_qpair_get_local_trid,
 	.qpair_get_listen_trid = spdk_nvmf_rdma_qpair_get_listen_trid,
-
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+	.qpair_enable_offload = spdk_nvmf_rdma_qpair_enable_offload,
+#endif
 };
 
 SPDK_LOG_REGISTER_COMPONENT("rdma", SPDK_LOG_RDMA)

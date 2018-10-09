@@ -214,6 +214,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	int ret;
 	int lcore;
 	bool allow_any_host;
+	bool offload;
 	const char *sn;
 	struct spdk_nvmf_subsystem *subsystem;
 	int num_ns;
@@ -400,6 +401,9 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	allow_any_host = spdk_conf_section_get_boolval(sp, "AllowAnyHost", false);
 	spdk_nvmf_subsystem_set_allow_any_host(subsystem, allow_any_host);
+
+	offload = spdk_conf_section_get_boolval(sp, "Offload", false);
+	spdk_nvmf_subsystem_set_offload(subsystem, offload);
 
 done:
 	return (subsystem != NULL);

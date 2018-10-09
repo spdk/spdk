@@ -36,6 +36,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/config.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
 
@@ -153,6 +154,14 @@ struct spdk_nvmf_transport_ops {
 	 */
 	int (*qpair_get_listen_trid)(struct spdk_nvmf_qpair *qpair,
 				     struct spdk_nvme_transport_id *trid);
+
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+	/*
+	 * Enable offload for the queue pair.
+	 */
+	int (*qpair_enable_offload)(struct spdk_nvmf_qpair *qpair,
+				    struct spdk_nvmf_subsystem *subsystem);
+#endif
 };
 
 

@@ -457,6 +457,28 @@ struct spdk_nvmf_host *spdk_nvmf_subsystem_get_next_host(struct spdk_nvmf_subsys
 const char *spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host);
 
 /**
+ * Set whether a subsystem should be offloaded to underlying transport.
+ *
+ * May only be performed on subsystems in the INACTIVE state.
+ *
+ * \param subsystem Subsystem to modify.
+ * \param offload true to offload this subsystem.
+ *
+ * \return 0 on success, or negated errno value on failure.
+ */
+int spdk_nvmf_subsystem_set_offload(struct spdk_nvmf_subsystem *subsystem,
+				    bool offload);
+
+/**
+ * Check whether a subsystem should be offloaded to underlying transport.
+ *
+ * \param subsystem Subsystem to modify.
+ *
+ * \return true if subsystem should be offloaded.
+ */
+bool spdk_nvmf_subsystem_get_offload(const struct spdk_nvmf_subsystem *subsystem);
+
+/**
  * Accept new connections on the address provided.
  *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.

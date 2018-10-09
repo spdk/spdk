@@ -124,6 +124,10 @@ COMMON_CFLAGS += -I$(CONFIG_VPP_DIR)/include
 endif
 
 ifeq ($(CONFIG_RDMA),y)
+ifneq ($(CONFIG_RDMA_DIR),)
+LIBS += -L$(CONFIG_RDMA_DIR)/lib64
+COMMON_CFLAGS += -I$(CONFIG_RDMA_DIR)/include
+endif
 SYS_LIBS += -libverbs -lrdmacm
 endif
 

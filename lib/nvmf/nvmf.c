@@ -338,6 +338,7 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
 	spdk_json_write_named_bool(w, "allow_any_host", spdk_nvmf_subsystem_get_allow_any_host(subsystem));
+	spdk_json_write_named_bool(w, "offload", spdk_nvmf_subsystem_get_offload(subsystem));
 	spdk_json_write_named_string(w, "serial_number", spdk_nvmf_subsystem_get_sn(subsystem));
 
 	max_namespaces = spdk_nvmf_subsystem_get_max_namespaces(subsystem);

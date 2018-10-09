@@ -424,6 +424,14 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 	} else {
+#ifdef SPDK_CONFIG_NVMF_OFFLOAD
+		if (spdk_nvmf_subsystem_get_offload(subsystem)) {
+			if (qpair->transport->ops->qpair_enable_offload(qpair, subsystem)) {
+				SPDK_ERRLOG("Failed to enable offload\n");
+				/* @todo: shall we abort the connection in this case? */
+			}
+		}
+#endif
 		spdk_thread_send_msg(subsystem->thread, _spdk_nvmf_ctrlr_add_io_qpair, req);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	}
