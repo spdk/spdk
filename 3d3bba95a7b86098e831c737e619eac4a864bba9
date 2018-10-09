@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99f0dfad_cd0527bc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3194,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:04:52Z",
+      "side": 1,
+      "message": "Do you see a case where claim_module is not set to NULL?  spdk_bdev_module_release_bdev() already sets it to NULL.  I\u0027d like to know more why that NULL assignment doesn\u0027t work.",
+      "revId": "3d3bba95a7b86098e831c737e619eac4a864bba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1adb0031_44e98c82",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:04:52Z",
+      "side": 1,
+      "message": "I think we should unregister the poller when the bdev is shutdown/destroyed instead.  spdk_poller_unregister will then automatically set this to NULL.",
+      "revId": "3d3bba95a7b86098e831c737e619eac4a864bba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ccca6db_1f654e76",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3197,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:04:52Z",
+      "side": 1,
+      "message": "base_bdevs and base_bdevs_cnt were removed a couple of months ago.",
+      "revId": "3d3bba95a7b86098e831c737e619eac4a864bba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c0918b0_b53d0ffb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3246,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:04:52Z",
+      "side": 1,
+      "message": "Oh - you set this to NULL here.  Can we delete the previous patch in this series then?",
+      "revId": "3d3bba95a7b86098e831c737e619eac4a864bba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
