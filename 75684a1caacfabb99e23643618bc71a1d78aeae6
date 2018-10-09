@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b2383ac9_7165e907",
+        "filename": "mk/spdk.subdirs.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T21:23:40Z",
+      "side": 1,
+      "message": "I\u0027m just curious - why put this in spdk.subdirs.mk?  This doesn\u0027t seem to have anything to do with subdirs.  Could we just put this in the top level spdk makefile?",
+      "revId": "75684a1caacfabb99e23643618bc71a1d78aeae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
