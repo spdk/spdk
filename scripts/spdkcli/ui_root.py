@@ -63,6 +63,22 @@ class UIRoot(UINode):
             self.is_init = True
             self.refresh()
 
+    def ui_command_load_config(self, filename):
+        with open(filename, "r") as fd:
+            rpc.load_config(self.client, fd)
+
+    def ui_command_load_subsystem_config(self, filename):
+        with open(filename, "r") as fd:
+            rpc.load_subsystem_config(self.client, fd)
+
+    def ui_command_save_config(self, filename, indent=2):
+        with open(filename, "w") as fd:
+            rpc.save_config(self.client, fd, indent)
+
+    def ui_command_save_subsystem_config(self, filename, subsystem, indent=2):
+        with open(filename, "w") as fd:
+            rpc.save_subsystem_config(self.client, fd, indent, subsystem)
+
     def get_rpc_methods(self, current=False):
         return rpc.get_rpc_methods(self.client, current=current)
 
