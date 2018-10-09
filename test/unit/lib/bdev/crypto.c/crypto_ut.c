@@ -52,7 +52,6 @@ DEFINE_STUB(spdk_conf_section_get_nval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx), NULL);
 DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
-
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *g_bdev_io));
 DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
@@ -130,9 +129,9 @@ uint16_t g_dequeue_mock;
 uint16_t g_enqueue_mock;
 unsigned ut_rte_crypto_op_bulk_alloc;
 int ut_rte_crypto_op_attach_sym_session = 0;
-
 int ut_rte_cryptodev_info_get = 0;
 bool ut_rte_cryptodev_info_get_mocked = false;
+
 void
 rte_cryptodev_info_get(uint8_t dev_id, struct rte_cryptodev_info *dev_info)
 {
@@ -320,6 +319,7 @@ test_setup(void)
 	g_crypto_ch->device_qp = &g_dev_qp;
 	g_test_config = calloc(1, sizeof(struct rte_config));
 	g_test_config->lcore_count = 1;
+	TAILQ_INIT(&g_crypto_ch->pending_ios);
 
 	/* Allocate a real mbuf pool so we can test error paths */
 	g_mbuf_mp = spdk_mempool_create("mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
@@ -379,6 +379,7 @@ test_error_paths(void)
 	/* same thing but switch to reads to test error path in _crypto_complete_io() */
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	TAILQ_INSERT_TAIL(&g_crypto_ch->pending_ios, g_bdev_io, module_link);
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
 	/* Now with the read_blocks failing */
@@ -698,11 +699,11 @@ test_passthru(void)
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
 	MOCK_SET(spdk_bdev_reset, 0);
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	MOCK_SET(spdk_bdev_reset, -1);
+	MOCK_CLEAR(spdk_bdev_reset);
+	/* Reset still outstanding, should fail this or any IO. */
+	g_bdev_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
-	MOCK_CLEAR(spdk_bdev_reset);
 
 	/* We should never get a WZ command, we report that we don't support it. */
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
