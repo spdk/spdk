@@ -77,6 +77,24 @@
     },
     {
       "key": {
+        "uuid": "d52c3fdf_c0004ce3",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 999,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-09T18:11:25Z",
+      "side": 1,
+      "message": "I see - nvme_ctrlr_identify_ns is already defined in nvme_ns.c. How about you make nvme_ctrlr_identify_ns take a callback and context and call that function here? Then you also don\u0027t have to make the set identify data function public.",
+      "parentUuid": "467ddae7_a7b8c22f",
+      "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13cd803f_fb1e71c3",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 8
