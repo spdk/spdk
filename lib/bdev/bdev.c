@@ -1130,11 +1130,10 @@ _spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, uint64_t io_size_in_byte
 }
 
 static void
-_spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
+_spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos)
 {
 	struct spdk_bdev_io		*bdev_io = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
-	struct spdk_bdev_qos		*qos = bdev->internal.qos;
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 	int				i;
 	bool				to_limit_io;
@@ -1381,7 +1380,7 @@ _spdk_bdev_io_submit(void *ctx)
 		bdev_ch->io_outstanding--;
 		shared_resource->io_outstanding--;
 		TAILQ_INSERT_TAIL(&bdev->internal.qos->queued, bdev_io, internal.link);
-		_spdk_bdev_qos_io_submit(bdev_ch);
+		_spdk_bdev_qos_io_submit(bdev_ch, bdev->internal.qos);
 	} else {
 		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -1544,7 +1543,7 @@ spdk_bdev_channel_poll_qos(void *arg)
 		}
 	}
 
-	_spdk_bdev_qos_io_submit(qos->ch);
+	_spdk_bdev_qos_io_submit(qos->ch, qos);
 
 	return -1;
 }
