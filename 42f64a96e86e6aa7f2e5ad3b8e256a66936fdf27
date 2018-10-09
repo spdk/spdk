@@ -34,6 +34,24 @@
       "revId": "42f64a96e86e6aa7f2e5ad3b8e256a66936fdf27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0bd42a0d_00322568",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-10-09T10:32:14Z",
+      "side": 1,
+      "message": "\u003e \n\u003e I knew your fix is trying to have a local variable of QoS so that it will not try to reference the bdev-\u003einternal.qos which is swapped to new_qos and freed later. However it still try to the bdev structure if there is queued IO (although it should not happen).\n\u003e \n\nI don\u0027t understand why spdk_bdev_channel_poll_qos() can\u0027t access bdev struct. In my opinion, the bdev struct won\u0027t be destroyed until the final channel is put.",
+      "parentUuid": "5b65d6c0_7513029f",
+      "revId": "42f64a96e86e6aa7f2e5ad3b8e256a66936fdf27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
