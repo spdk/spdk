@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41dafb69_1a26ec42",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-09T13:07:11Z",
+      "side": 1,
+      "message": "Please make sure that script write appropriate message if number of arguments \u003c 5",
+      "range": {
+        "startLine": 105,
+        "startChar": 4,
+        "endLine": 105,
+        "endChar": 49
+      },
+      "revId": "6e1596446a5771f1aa51057c28a0b28a20c22aee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24da7e60_289fc29b",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-09T13:07:11Z",
+      "side": 1,
+      "message": "Maybe we could keep just a hash (like hashlib.sha256) of key and only compare hashes? It would definitely increase security.",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 98
+      },
+      "revId": "6e1596446a5771f1aa51057c28a0b28a20c22aee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
