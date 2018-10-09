@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a42eb08e_da164583",
+        "filename": "doc/Doxyfile",
+        "patchSetId": 8
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T18:56:57Z",
+      "side": 1,
+      "message": "This should be moved up to between ssd_internals and userspace - we try to keep this list alphabetized (see comment on line 801).",
+      "revId": "e5171a7c5898e27cca138fce8609d2aa80ae5655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3811a14_62b2015d",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T18:56:57Z",
+      "side": 1,
+      "message": "...recommended the SPDK applications are deployed with PCI devices attached to the `vfio-pci` kernel driver.",
+      "revId": "e5171a7c5898e27cca138fce8609d2aa80ae5655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef110cdf_5bf3e65e",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T18:56:57Z",
+      "side": 1,
+      "message": "I\u0027m not sure of the use of \"charged\" here.  Maybe it should read:\n\nBut if the devices must be attached to the `uio_pci_generic` driver...",
+      "revId": "e5171a7c5898e27cca138fce8609d2aa80ae5655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "094f4bf5_d9011fbc",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-09T18:56:57Z",
+      "side": 1,
+      "message": "charges \u003d\u003e changes?",
+      "revId": "e5171a7c5898e27cca138fce8609d2aa80ae5655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
