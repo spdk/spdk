@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9584bafb_8b6c11ea",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-10-09T09:20:17Z",
+      "side": 1,
+      "message": "I think this shouldn\u0027t be the reason of heap-use-after-free.\n\nIf spdk_bdev_channel_poll_qos() executed before spdk_bdev_qos_channel_destroy(), it is safe for spdk_bdev_channel_poll_qos(), just like comments in spdk_bdev_qos_destroy() said:\n\n        /* It is safe to continue with destroying the bdev even though the QoS channel hasn\u0027t\n         * been destroyed yet. The destruction path will end up waiting for the final\n         * channel to be put before it releases resources. */\n\nAnd if spdk_bdev_qos_channel_destroy() executed before spdk_bdev_channel_poll_qos(), the former will unregister poller and spdk_bdev_channel_poll_qos() will never be called.",
+      "revId": "42f64a96e86e6aa7f2e5ad3b8e256a66936fdf27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
