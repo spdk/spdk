@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fe77b6a_6fdeefbf",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-09T20:52:07Z",
+      "side": 1,
+      "message": "I wonder if we should change our DPDK fork to build this file and then pull it in so we don\u0027t ever get out of sync on versions?",
+      "revId": "eeee2c745a7af15a89ab95ba6adddd55fccd97dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02962229_c0a1922e",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-09T20:52:07Z",
+      "side": 1,
+      "message": "Lets add a note here indicating which card, specifically, that we are testing with in CI and this script supports. We are using the Intel QAT 8970. I\u0027m not sure if other versions need different binaries or not but that\u0027s outside of the scope of SPDK, just want to make sure if someone reads our CI setup script to figure out how to get QAT working that they know which card we use",
+      "revId": "eeee2c745a7af15a89ab95ba6adddd55fccd97dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73ae7af3_53cea4ef",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-09T20:52:07Z",
+      "side": 1,
+      "message": "I believe this is the kernel driver, lets be specific and mention that",
+      "revId": "eeee2c745a7af15a89ab95ba6adddd55fccd97dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc786f7c_91f32134",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-09T20:52:07Z",
+      "side": 1,
+      "message": "what are we cleaning up?",
+      "revId": "eeee2c745a7af15a89ab95ba6adddd55fccd97dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f474e419_a8b9ebd3",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-09T20:52:07Z",
+      "side": 1,
+      "message": "we should probably send the output from this to never never land since it doesn\u0027t make any sense and may confuse people, we can decide once this runs and we see the logs",
+      "revId": "eeee2c745a7af15a89ab95ba6adddd55fccd97dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
