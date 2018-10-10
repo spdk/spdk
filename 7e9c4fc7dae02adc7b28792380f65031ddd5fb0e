@@ -131,6 +131,24 @@
     },
     {
       "key": {
+        "uuid": "f9d0061c_60db4b10",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 999,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-10T03:05:23Z",
+      "side": 1,
+      "message": "I think it through, I think adding a callback will need extra helper function, it will not make the code more readable.  what\u0027s your opinion?",
+      "parentUuid": "d52c3fdf_c0004ce3",
+      "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13cd803f_fb1e71c3",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 8
