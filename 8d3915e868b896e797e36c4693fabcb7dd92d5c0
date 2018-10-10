@@ -16,6 +16,24 @@
       "revId": "8d3915e868b896e797e36c4693fabcb7dd92d5c0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5be3eab_dae82828",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 5
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-10T07:03:07Z",
+      "side": 1,
+      "message": "Reverting back to version from PS4. YOu\u0027re right - using methods from plugin gives us only virtio blk devices, I didn\u0027t notice that.\n\nActually virtio disks are not used directly in vhost initiator test itself, but rather in SPDK_TEST_VHOST_INIT block when we are testing saving/loading json config.\n./test/vhost/initiator/json_config.sh, lines 15-16.",
+      "parentUuid": "e8e44817_38ae86e6",
+      "revId": "8d3915e868b896e797e36c4693fabcb7dd92d5c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
