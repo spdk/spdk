@@ -1541,7 +1541,7 @@ and a starting point in development of new bdev type.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-passthru_bdev_name      | Required | string      | Bdev name
+name                    | Required | string      | Bdev name
 base_bdev_name          | Required | string      | Base bdev name
 
 ### Result
@@ -1556,7 +1556,7 @@ Example request:
 {
   "params": {
     "base_bdev_name": "Malloc0",
-    "passthru_bdev_name": "Passsthru0"
+    "name": "Passsthru0"
   },
   "jsonrpc": "2.0",
   "method": "construct_passthru_bdev",

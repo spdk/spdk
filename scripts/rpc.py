@@ -388,12 +388,12 @@ if __name__ == "__main__":
     def construct_passthru_bdev(args):
         print(rpc.bdev.construct_passthru_bdev(args.client,
                                                base_bdev_name=args.base_bdev_name,
-                                               passthru_bdev_name=args.passthru_bdev_name))
+                                               name=args.name))
 
     p = subparsers.add_parser('construct_passthru_bdev',
                               help='Add a pass through bdev on existing bdev')
     p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
-    p.add_argument('-p', '--passthru-bdev-name', help="Name of the pass through bdev", required=True)
+    p.add_argument('-p', '--name', help="Name of the pass through bdev", required=True)
     p.set_defaults(func=construct_passthru_bdev)
 
     @call_cmd
