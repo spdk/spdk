@@ -860,7 +860,6 @@ static int
 nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 				      struct spdk_nvme_rdma_req *rdma_req)
 {
-	struct ibv_sge *sge_inline = &rdma_req->send_sgl[1];
 	struct nvme_request *req = rdma_req->req;
 	struct ibv_mr *mr;
 	void *payload;
@@ -884,9 +883,9 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 	 * the NVMe command. */
 	rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
 
-	sge_inline->addr = (uint64_t)payload;
-	sge_inline->length = (uint32_t)req->payload_size;
-	sge_inline->lkey = mr->lkey;
+	rdma_req->send_sgl[1].addr = (uint64_t)payload;
+	rdma_req->send_sgl[1].length = (uint32_t)req->payload_size;
+	rdma_req->send_sgl[1].lkey = mr->lkey;
 
 	/* The RDMA SGL contains two elements. The first describes
 	 * the NVMe command and the second describes the data
@@ -1048,7 +1047,6 @@ static int
 nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 				   struct spdk_nvme_rdma_req *rdma_req)
 {
-	struct ibv_sge *sge_inline = &rdma_req->send_sgl[1];
 	struct nvme_request *req = rdma_req->req;
 	struct ibv_mr *mr;
 	uint32_t length;
@@ -1086,9 +1084,9 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	 * the NVMe command. */
 	rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
 
-	sge_inline->addr = (uint64_t)virt_addr;
-	sge_inline->length = (uint32_t)req->payload_size;
-	sge_inline->lkey = mr->lkey;
+	rdma_req->send_sgl[1].addr = (uint64_t)virt_addr;
+	rdma_req->send_sgl[1].length = (uint32_t)req->payload_size;
+	rdma_req->send_sgl[1].lkey = mr->lkey;
 
 	/* The RDMA SGL contains two elements. The first describes
 	 * the NVMe command and the second describes the data
