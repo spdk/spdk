@@ -22,6 +22,29 @@
       "revId": "49ae627363d11a1b534690020a527a52b0683071",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6111bb83_100a26b2",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-10T08:29:59Z",
+      "side": 1,
+      "message": "Why calling bash to call python?",
+      "range": {
+        "startLine": 70,
+        "startChar": 19,
+        "endLine": 70,
+        "endChar": 42
+      },
+      "revId": "49ae627363d11a1b534690020a527a52b0683071",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
