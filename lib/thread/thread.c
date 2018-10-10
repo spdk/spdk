@@ -73,7 +73,7 @@ struct io_device {
 static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
 
 struct spdk_msg {
-	spdk_thread_fn		fn;
+	spdk_msg_fn		fn;
 	void			*arg;
 };
 
@@ -466,7 +466,7 @@ spdk_thread_get_name(const struct spdk_thread *thread)
 }
 
 void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
+spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
 {
 	struct spdk_msg *msg;
 	int rc;
@@ -590,11 +590,11 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 
 struct call_thread {
 	struct spdk_thread *cur_thread;
-	spdk_thread_fn fn;
+	spdk_msg_fn fn;
 	void *ctx;
 
 	struct spdk_thread *orig_thread;
-	spdk_thread_fn cpl;
+	spdk_msg_fn cpl;
 };
 
 static void
@@ -622,7 +622,7 @@ spdk_on_thread(void *ctx)
 }
 
 void
-spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
+spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 {
 	struct call_thread *ct;
 	struct spdk_thread *thread;
