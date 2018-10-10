@@ -120,6 +120,122 @@ def spdk_tgt_start(args):
     # proc.wait()
 
 
+# Kernel Target functions
+def kernel_tgt_gen_nullblock_conf(address):
+    nvmet_cfg = {
+        "ports": [],
+        "hosts": [],
+        "subsystems": [],
+    }
+
+    nvmet_cfg["subsystems"].append({
+        "allowed_hosts": [],
+        "attr": {
+            "allow_any_host": "1",
+            "version": "1.3"
+        },
+        "namespaces": [
+            {
+                "device": {
+                    "path": "/dev/nullb0",
+                    "uuid": "%s" % uuid.uuid4()
+                },
+                "enable": 1,
+                "nsid": 1
+            }
+        ],
+        "nqn": "nqn.2018-09.io.spdk:cnode1"
+    })
+
+    nvmet_cfg["ports"].append({
+        "addr": {
+            "adrfam": "ipv4",
+            "traddr": address,
+            "trsvcid": "4420",
+            "trtype": "rdma"
+        },
+        "portid": 1,
+        "referrals": [],
+        "subsystems": ["nqn.2018-09.io.spdk:cnode1"]
+    })
+
+    with open("kernel.conf", 'w') as fh:
+        fh.write(json.dumps(nvmet_cfg, indent=2))
+
+
+def kernel_tgt_gen_subsystem_conf(nvme_list, address_list):
+
+    nvmet_cfg = {
+        "ports": [],
+        "hosts": [],
+        "subsystems": [],
+    }
+
+    # Split disks between NIC IP's
+    disks_per_ip = int(len(nvme_list) / len(address_list))
+    disk_chunks = [nvme_list[i*disks_per_ip:disks_per_ip + disks_per_ip*i] for i in range(0, len(address_list))]
+
+    subsys_no = 1
+    for ip, chunk in zip(address_list, disk_chunks):
+        for disk in chunk:
+            nvmet_cfg["subsystems"].append({
+                "allowed_hosts": [],
+                "attr": {
+                    "allow_any_host": "1",
+                    "version": "1.3"
+                },
+                "namespaces": [
+                    {
+                        "device": {
+                            "path": disk,
+                            "uuid": "%s" % uuid.uuid4()
+                        },
+                        "enable": 1,
+                        "nsid": subsys_no
+                    }
+                ],
+                "nqn": "nqn.2018-09.io.spdk:cnode%s" % subsys_no
+            })
+
+            nvmet_cfg["ports"].append({
+                "addr": {
+                    "adrfam": "ipv4",
+                    "traddr": ip,
+                    "trsvcid": "%s" % (4420 + subsys_no),
+                    "trtype": "rdma"
+                },
+                "portid": subsys_no,
+                "referrals": [],
+                "subsystems": ["nqn.2018-09.io.spdk:cnode%s" % subsys_no]
+            })
+            subsys_no += 1
+
+    with open("kernel.conf", "w") as fh:
+        fh.write(json.dumps(nvmet_cfg, indent=2))
+    pass
+
+
+def kernel_tgt_run(args):
+    print("Configuring kernel NVMeOF Target")
+    address = args.address.split(",")
+
+    if args.use_null_block:
+        print("Configuring with null block device.")
+        if len(address) > 1:
+            print("Testing with null block limited to single RDMA NIC.")
+            print("Please specify only 1 IP address.")
+            exit(1)
+            kernel_tgt_gen_nullblock_conf(address[0])
+    else:
+        print("Configuring with NVMe drives.")
+        nvme_list = get_nvme_devices()
+        kernel_tgt_gen_subsystem_conf(nvme_list, address)
+
+    nvmet_command("clear", args.path)
+    nvmet_command("restore kernel.conf", args.path)
+    print("Done configuring kernel NVMeOF Target")
+
+
 script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 spdk_dir = os.path.abspath(os.path.join(script_dir, "../../../"))
 
@@ -139,6 +255,17 @@ subparser_spdk_tgt.add_argument("--use-null-block", default=False, type=bool,
                                 help="Use single null block bdev instead of NVMe drives for test."
                                      "Used for latency tests.")
 subparser_spdk_tgt.set_defaults(func=spdk_tgt_start)
+
+subparser_kernel_tgt = subparsers.add_parser('kernel_tgt', help="Run kernel NVMeOF target configuration")
+subparser_kernel_tgt.add_argument("-a", "--address", default="0x1", type=str,
+                                  help="Comma separated NIC IP addresses to use for subsystems construction.")
+subparser_kernel_tgt.add_argument("--use-null-block", default=False, type=bool,
+                                  help="Use single null block bdev instead of NVMe drives for test."
+                                       "Used for latency tests.")
+subparser_kernel_tgt.add_argument("--path", default=None, type=str,
+                                  help="Path to directory with nvmetcli script. If not provided"
+                                       "then default system package will be used.")
+subparser_kernel_tgt.set_defaults(func=kernel_tgt_run)
 
 
 args = parser.parse_args()

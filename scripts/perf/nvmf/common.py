@@ -31,6 +31,14 @@ def get_nvme_devices_bdf():
     return output
 
 
+def get_nvme_devices():
+    print("Getting kernel NVMe names")
+    output = check_output("lsblk -o NAME -nlp", shell=True).decode(encoding="utf-8")
+    output = [x for x in output.split("\n") if "nvme" in x]
+    print("Done getting kernel NVMe names")
+    return output
+
+
 def gen_core_mask(num_cpus, numa_list):
     cpu_per_socket = check_output('lscpu | grep -oP "per socket:\s+\K\d+"', shell=True).decode("utf-8")
     cpu_per_socket = int(cpu_per_socket)
@@ -42,6 +50,14 @@ def gen_core_mask(num_cpus, numa_list):
     cpu_list = [str(x) for x in cpu_list]
     cpu_list = "[" + ",".join(cpu_list) + "]"
     return cpu_list
+
+
+def nvmet_command(command, dir_path=None):
+    if dir_path:
+        nvmetcli_path = os.path.join(dir_path, "nvmetcli")
+    else:
+        nvmetcli_path = "nvmetcli"
+    return check_output("%s %s" % (nvmetcli_path, command), shell=True).decode(encoding="utf-8")
 
 
 def parse_results(output_dir="."):
@@ -113,6 +129,31 @@ def discover_subsystems(address_list):
     subsystems = filter(lambda x: x[-1] in address_list, subsystems)
     subsystems = list(subsystems)
 
+    return subsystems
+
+
+# TODO: Kernel target behaves differently than SPDK target
+# It does not allow multiple subsystems to be located on the same
+# IP / Port pair so it's not possible to discover multiple subsystems at once.
+# Need to check for open subsystems.
+def discover_kernel_subsystems(address_list):
+    num_nvmes = range(0, 9)
+    nvme_discover_output = ""
+    for ip, subsys_no in product(address_list, num_nvmes):
+        nvme_discover_cmd = ["sudo", "nvme", "discover", "-t rdma", "-s %s" % (4421 + subsys_no), "-a %s" % ip]
+        nvme_discover_cmd = " ".join(nvme_discover_cmd)
+        try:
+            out = check_output(nvme_discover_cmd, shell=True).decode(encoding="utf-8")
+            nvme_discover_output = "\n".join([nvme_discover_output, out])
+        except:
+            pass
+
+    subsystems = re.findall(r'trsvcid:\s(\d+)\s+'  # get svcid number
+                            r'subnqn:\s+([a-zA-Z0-9\.\-\:]+)\s+'  # get NQN id
+                            r'traddr:\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})',  # get IP address
+                            nvme_discover_output)  # from nvme discovery output
+    subsystems = filter(lambda x: x[-1] in address_list, subsystems)
+    subsystems = list(subsystems)
     return subsystems
 
 
