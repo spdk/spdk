@@ -1233,7 +1233,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
 		cdata->nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
 		cdata->nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
-		cdata->nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
+		cdata->nvmf_specific.msdbd =
+			SPDK_NVMF_MAX_SGL_ENTRIES; /* target supports up to SPDK_NVMF_MAX_SGL_ENTRY descriptors */
 
 		/* TODO: this should be set by the transport */
 		cdata->nvmf_specific.ioccsz += transport->opts.in_capsule_data_size / 16;
