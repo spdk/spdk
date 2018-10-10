@@ -302,6 +302,7 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	socklen_t			salen;
 	int				rc;
 	struct spdk_posix_sock		*new_sock;
+	int flag;
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
@@ -318,6 +319,14 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	if (new_sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
 		close(rc);
+		return NULL;
+	}
+
+	flag = fcntl(rc, F_GETFL);
+	if (!(flag & O_NONBLOCK) && (fcntl(rc, F_SETFL, flag | O_NONBLOCK)) < 0) {
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", rc, errno);
+		close(rc);
+		free(new_sock);
 		return NULL;
 	}
 
