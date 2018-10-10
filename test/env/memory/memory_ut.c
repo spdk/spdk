@@ -406,12 +406,16 @@ test_mem_map_registration(void)
 static void
 test_mem_map_registration_adjacent(void)
 {
-	struct spdk_mem_map *map;
+	struct spdk_mem_map *map, *newmap;
 	uint64_t default_translation = 0xDEADBEEF0BADF00D;
 	uintptr_t vaddr;
 	unsigned i;
 	size_t notify_len[PAGE_ARRAY_SIZE] = {0};
 	size_t chunk_len[] = { 2, 1, 3, 2, 1, 1 };
+
+	map = spdk_mem_map_alloc(default_translation,
+				 &test_map_ops_notify_checklen, notify_len);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
 
 	vaddr = 0;
 	for (i = 0; i < SPDK_COUNTOF(chunk_len); i++) {
@@ -421,11 +425,11 @@ test_mem_map_registration_adjacent(void)
 	}
 
 	/* Verify the memory is translated in the same chunks it was registered */
-	map = spdk_mem_map_alloc(default_translation,
-				 &test_map_ops_notify_checklen, notify_len);
-	SPDK_CU_ASSERT_FATAL(map != NULL);
-	spdk_mem_map_free(&map);
-	CU_ASSERT(map == NULL);
+	newmap = spdk_mem_map_alloc(default_translation,
+				    &test_map_ops_notify_checklen, notify_len);
+	SPDK_CU_ASSERT_FATAL(newmap != NULL);
+	spdk_mem_map_free(&newmap);
+	CU_ASSERT(newmap == NULL);
 
 	vaddr = 0;
 	for (i = 0; i < SPDK_COUNTOF(chunk_len); i++) {
@@ -433,6 +437,20 @@ test_mem_map_registration_adjacent(void)
 		spdk_mem_unregister((void *)vaddr, notify_len[vaddr / VALUE_2MB]);
 		vaddr += notify_len[vaddr / VALUE_2MB];
 	}
+
+	/* Register all chunks again just to unregister them again, but this
+	 * time with only a single unregister() call.
+	 */
+	vaddr = 0;
+	for (i = 0; i < SPDK_COUNTOF(chunk_len); i++) {
+		notify_len[vaddr / VALUE_2MB] = chunk_len[i] * VALUE_2MB;
+		spdk_mem_register((void *)vaddr, notify_len[vaddr / VALUE_2MB]);
+		vaddr += notify_len[vaddr / VALUE_2MB];
+	}
+	spdk_mem_unregister(0, vaddr);
+
+	spdk_mem_map_free(&map);
+	CU_ASSERT(map == NULL);
 }
 
 int
