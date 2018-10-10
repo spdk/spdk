@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c282e489_c4f80ecf",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-10T08:14:17Z",
+      "side": 1,
+      "message": "No need *free* in line 69.",
+      "revId": "1f0fc020c853e35a730efec1d94fc70e84b6d83c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
