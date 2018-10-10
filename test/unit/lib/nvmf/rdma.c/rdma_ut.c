@@ -137,6 +137,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	rdma_req.req.qpair = &rqpair.qpair;
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
+	rtransport.data_wr_pool = NULL;
+	rtransport.transport.data_buf_pool = NULL;
 
 	device.attr.device_cap_flags = 0;
 	g_rdma_mr.lkey = 0xABCD;
