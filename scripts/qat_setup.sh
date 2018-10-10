@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
 rootdir=$(readlink -f $(dirname $0))/..
+igb_driverdir=$rootdir/dpdk/build/build/kernel/igb_uio/
 source "$rootdir/test/common/autotest_common.sh"
 
 set +x
 
-# This script requires an igb_uio kernel module binary located at $DEPENDENCY_DIR/igb_uio.ko
+# This script requires an igb_uio kernel module binary located at $igb_driverdir/igb_uio.ko
 # Please also note that this script is not intended to be comprehensive or production quality.
 # It supports configuring a single card (the Intel QAT 8970) for use with the SPDK
 
@@ -68,7 +69,7 @@ modprobe uio
 
 # Insert the dpdk uio kernel module.
 if ! lsmod | grep -q igb_uio; then
-	if ! insmod $DEPENDENCY_DIR/igb_uio.ko; then
+	if ! insmod $igb_driverdir/igb_uio.ko; then
 		echo "Unable to insert the igb_uio kernel module. Aborting."
 		exit 1
 	fi
