@@ -34,6 +34,24 @@
       "revId": "69d18a0429414ae4dbddc8d8c6d99cd54493207a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7801e0a2_78688adb",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-10T00:20:18Z",
+      "side": 1,
+      "message": "Hi,\n\nexamine operation of GPT bdev got IO channel of the RAID bdev to read from the RAID bdev and raid_bdev_create_cb() was called on behalf of that.\n\nPlease see https://spdk.io/doc/bdev.html#bdev_ug_gpt for GPT bdev. GPT bdev runs to create virtual bdevs corresponding to GPT partitions for every bdev registration.\n\nRead IO by GPT bdev is normal IO. Insertion to the configured list may have to be done before calling spdk_io_device_register() too.",
+      "parentUuid": "1d5bca68_87c45192",
+      "revId": "69d18a0429414ae4dbddc8d8c6d99cd54493207a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
