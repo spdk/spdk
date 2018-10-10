@@ -16,6 +16,24 @@
       "revId": "eedec4b80b3c1faeed3aa3e7a874c41e2a9e5e10",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d3e95ad_72c3ee1c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1518,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-10-10T08:56:52Z",
+      "side": 1,
+      "message": "Gang:\nYou once said \"Since the bdev is to be destroyed, so that try to avoid calling the related _spdk_bdev_qos_io_submit()\". Set qos-\u003ethread to NULL cannot stop spdk_bdev_channel_poll_qos() from accessing bdev that is going to be destroyed, because the threads that set qos-\u003ethread to NULL and check qos-\u003ethread are different.",
+      "parentUuid": "58a62904_e65c9758",
+      "revId": "eedec4b80b3c1faeed3aa3e7a874c41e2a9e5e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
