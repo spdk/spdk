@@ -58,6 +58,7 @@ DEFINE_STUB(rte_memseg_contig_walk, int, (rte_memseg_contig_walk_t func, void *a
 
 #define PAGE_ARRAY_SIZE (100)
 static struct spdk_bit_array *g_page_array;
+static void *g_vaddr_to_fail = (void *)UINT64_MAX;
 
 static int
 test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
@@ -97,6 +98,31 @@ test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 static int
+test_mem_map_notify_fail(void *cb_ctx, struct spdk_mem_map *map,
+			 enum spdk_mem_map_notify_action action, void *vaddr, size_t size)
+{
+	struct spdk_mem_map *reg_map = cb_ctx;
+
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		if (vaddr == g_vaddr_to_fail) {
+			/* Test the error handling. */
+			return -1;
+		}
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		/* Clear the same region in the other mem_map to be able to
+		 * verify that there was no memory left still registered after
+		 * the mem_map creation failure.
+		 */
+		spdk_mem_map_clear_translation(reg_map, (uint64_t)vaddr, size);
+		break;
+	}
+
+	return 0;
+}
+
+static int
 test_check_regions_contiguous(uint64_t addr1, uint64_t addr2)
 {
 	return addr1 == addr2;
@@ -112,14 +138,51 @@ const struct spdk_mem_map_ops test_mem_map_ops_no_contig = {
 	.are_contiguous = NULL
 };
 
+struct spdk_mem_map_ops test_map_ops_notify_fail = {
+	.notify_cb = test_mem_map_notify_fail,
+	.are_contiguous = NULL
+};
+
 static void
 test_mem_map_alloc_free(void)
 {
-	struct spdk_mem_map *map;
+	struct spdk_mem_map *map, *failed_map;
 	uint64_t default_translation = 0xDEADBEEF0BADF00D;
+	int i;
 
 	map = spdk_mem_map_alloc(default_translation, &test_mem_map_ops, NULL);
 	SPDK_CU_ASSERT_FATAL(map != NULL);
+	spdk_mem_map_free(&map);
+	CU_ASSERT(map == NULL);
+
+	map = spdk_mem_map_alloc(default_translation, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+
+	/* Register some memory for the initial memory walk in
+	 * spdk_mem_map_alloc(). We'll fail registering the last region
+	 * and will check if the mem_map cleaned up all its previously
+	 * initialized translations.
+	 */
+	for (i = 0; i < 5; i++) {
+		spdk_mem_register((void *)(uintptr_t)(2 * i * VALUE_2MB), VALUE_2MB);
+	}
+
+	/* The last region */
+	g_vaddr_to_fail = (void *)(8 * VALUE_2MB);
+	failed_map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_fail, map);
+	CU_ASSERT(failed_map == NULL);
+
+	for (i = 0; i < 4; i++) {
+		uint64_t reg, size = VALUE_2MB;
+
+		reg = spdk_mem_map_translate(map, 2 * i * VALUE_2MB, &size);
+		/* check if `failed_map` didn't leave any translations behind */
+		CU_ASSERT(reg == default_translation);
+	}
+
+	for (i = 0; i < 5; i++) {
+		spdk_mem_unregister((void *)(uintptr_t)(2 * i * VALUE_2MB), VALUE_2MB);
+	}
 
 	spdk_mem_map_free(&map);
 	CU_ASSERT(map == NULL);
