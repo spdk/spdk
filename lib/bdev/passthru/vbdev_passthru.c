@@ -616,13 +616,17 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 	int rc = 0;
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (!bdev) {
-		return -1;
+
+	/* Insert the bdev into our global name list even if it doesn't exist yet,
+	 * it may show up soon...
+	 */
+	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name);
+	if (rc) {
+		return rc;
 	}
 
-	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name);
-	if (rc != 0) {
-		return rc;
+	if (!bdev) {
+		return 0;
 	}
 
 	vbdev_passthru_register(bdev);
