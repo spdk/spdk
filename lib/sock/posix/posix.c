@@ -331,6 +331,12 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 		return NULL;
 	}
 
+	if (fcntl(rc, F_SETFL, flag | O_NONBLOCK) < 0) {
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", rc, errno);
+		close(rc);
+		return NULL;
+	}
+
 	new_sock = calloc(1, sizeof(*sock));
 	if (new_sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
