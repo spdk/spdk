@@ -366,19 +366,19 @@ def delete_pmem_bdev(client, name):
     return client.call('delete_pmem_bdev', params)
 
 
-def construct_passthru_bdev(client, base_bdev_name, passthru_bdev_name):
+def construct_passthru_bdev(client, base_bdev_name, name):
     """Construct a pass-through block device.
 
     Args:
         base_bdev_name: name of the existing bdev
-        passthru_bdev_name: name of block device
+        name: name of block device
 
     Returns:
         Name of created block device.
     """
     params = {
         'base_bdev_name': base_bdev_name,
-        'passthru_bdev_name': passthru_bdev_name,
+        'name':name,
     }
     return client.call('construct_passthru_bdev', params)
 

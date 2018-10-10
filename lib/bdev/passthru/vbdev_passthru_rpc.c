@@ -40,7 +40,7 @@
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_passthru {
 	char *base_bdev_name;
-	char *passthru_bdev_name;
+	char *name;
 };
 
 /* Free the allocated memory resource after the RPC handling. */
@@ -48,13 +48,13 @@ static void
 free_rpc_construct_passthru(struct rpc_construct_passthru *r)
 {
 	free(r->base_bdev_name);
-	free(r->passthru_bdev_name);
+	free(r->name);
 }
 
 /* Structure to decode the input parameters for this RPC method. */
 static const struct spdk_json_object_decoder rpc_construct_passthru_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_passthru, base_bdev_name), spdk_json_decode_string},
-	{"passthru_bdev_name", offsetof(struct rpc_construct_passthru, passthru_bdev_name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_construct_passthru, name), spdk_json_decode_string},
 };
 
 /* Decode the parameters for this RPC method and properly construct the passthru
@@ -75,7 +75,7 @@ spdk_rpc_construct_passthru_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = create_passthru_disk(req.base_bdev_name, req.passthru_bdev_name);
+	rc = create_passthru_disk(req.base_bdev_name, req.name);
 	if (rc != 0) {
 		goto invalid;
 	}
@@ -86,7 +86,7 @@ spdk_rpc_construct_passthru_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_json_write_string(w, req.passthru_bdev_name);
+	spdk_json_write_string(w, req.name);
 	spdk_jsonrpc_end_result(request, w);
 	free_rpc_construct_passthru(&req);
 	return;
