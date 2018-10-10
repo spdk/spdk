@@ -152,6 +152,8 @@ function create_bdev_subsystem_config() {
 		$rpc_py construct_malloc_bdev 8 1024 --name Malloc3
 		$rpc_py construct_crypto_bdev -b Malloc3 -c CryMalloc3 -d crypto_aesni_mb -k 0123456789123456
 	fi
+	$rpc_py construct_malloc_bdev 8 1024 --name Malloc4
+	$rpc_py construct_passthru_bdev -b Malloc4 -p PTMalloc4
 	$rpc_py construct_error_bdev Malloc2
 	if [ $(uname -s) = Linux ]; then
 		dd if=/dev/zero of=/tmp/sample_aio bs=2048 count=5000
