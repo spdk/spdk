@@ -62,7 +62,7 @@ DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t po
 				   uint32_t size, uint64_t object_id, uint64_t arg1));
 
 static void
-_bdev_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+_bdev_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
 {
 	fn(ctx);
 }

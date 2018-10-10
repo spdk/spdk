@@ -1142,7 +1142,7 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 struct set_nvme_hotplug_ctx {
 	uint64_t period_us;
 	bool enabled;
-	spdk_thread_fn fn;
+	spdk_msg_fn fn;
 	void *fn_ctx;
 };
 
@@ -1166,7 +1166,7 @@ set_nvme_hotplug_period_cb(void *_ctx)
 }
 
 int
-spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_thread_fn cb, void *cb_ctx)
+spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx)
 {
 	struct set_nvme_hotplug_ctx *ctx;
 

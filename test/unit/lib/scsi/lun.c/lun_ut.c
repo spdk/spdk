@@ -76,7 +76,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 }
 
 DEFINE_STUB_V(spdk_thread_send_msg,
-	      (const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx));
+	      (const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx));
 
 struct spdk_trace_histories *g_trace_histories;
 
