@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e032a0f4_ac24bb05",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-10T08:26:24Z",
+      "side": 1,
+      "message": "Python running bash to run python?\nWe need to go deeper:) https://allisonmaruska.files.wordpress.com/2015/10/we-need-to-go-deeper.jpg\n\nsava_config / load_config is available after importing scripts/rpc. Can you try that?",
+      "range": {
+        "startLine": 68,
+        "startChar": 8,
+        "endLine": 70,
+        "endChar": 64
+      },
+      "revId": "49ae627363d11a1b534690020a527a52b0683071",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
