@@ -111,3 +111,6 @@ CONFIG_SHARED?=n
 # Build with VTune suport.
 CONFIG_VTUNE?=n
 CONFIG_VTUNE_DIR?=
+
+# Build the dpdk igb_uio driver
+CONFIG_IGB_UIO_DRIVER?=n
