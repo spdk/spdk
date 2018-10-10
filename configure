@@ -40,6 +40,8 @@ function usage()
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
 	echo " fio                       Required to build fio_plugin."
 	echo "                           example: /usr/src/fio"
+	echo "igb-uio-driver             Required on some sustems to use qat modules"
+	echo "                           No path required"
 	echo " vhost                     Required to build vhost target."
 	echo "                           No path required."
 	echo " virtio                    Required to build vhost initiator (Virtio) bdev module."
@@ -247,6 +249,12 @@ for i in "$@"; do
 			CONFIG[VTUNE_DIR]=
 			CONFIG[VTUNE]=n
 			;;
+		--with-igb-uio-driver)
+		CONFIG[IGB_UIO_DRIVER]=y
+		;;
+		--without-igb-uio-driver)
+		CONFIG[IGB_UIO_DRIVER]=n
+		;;
 		--)
 			break
 			;;
