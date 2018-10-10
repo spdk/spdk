@@ -469,9 +469,15 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS,
 
 	/**
-	 * Get Identify Namespace Identification Descriptor.
+	 * Get Identify Namespace Identification Descriptors.
 	 */
 	NVME_CTRLR_STATE_IDENTIFY_ID_DESCS,
+
+	/**
+	 * Waiting for the Identify Namespace Identification
+	 * Descriptors to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS,
 
 	/**
 	 * Configure AER of the controller.
@@ -807,7 +813,6 @@ int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
 
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
-int	nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);
 int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 			  struct spdk_nvme_ctrlr *ctrlr);
