@@ -54,6 +54,8 @@ rte_eal_get_configuration(void)
 DEFINE_STUB(rte_mem_event_callback_register, int, (const char *name, rte_mem_event_callback_t clb,
 		void *arg), 0);
 DEFINE_STUB(rte_memseg_contig_walk, int, (rte_memseg_contig_walk_t func, void *arg), 0);
+DEFINE_STUB(rte_mem_virt2memseg, struct rte_memseg *, (const void *addr,
+		const struct rte_memseg_list *msl), NULL);
 #endif
 
 #define PAGE_ARRAY_SIZE (100)
