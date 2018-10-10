@@ -459,7 +459,7 @@ spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 }
 
 static void
-_lvol_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+_lvol_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
 {
 	fn(ctx);
 }

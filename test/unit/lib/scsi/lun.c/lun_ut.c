@@ -67,7 +67,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 }
 
 void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
+spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
 {
 }
 
