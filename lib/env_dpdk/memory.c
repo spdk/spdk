@@ -655,7 +655,17 @@ memory_hotplug_cb(enum rte_mem_event event_type,
 		  const void *addr, size_t len, void *arg)
 {
 	if (event_type == RTE_MEM_EVENT_ALLOC) {
-		spdk_mem_register((void *)addr, len);
+		while (len > 0) {
+			struct rte_memseg *seg;
+
+			seg = rte_mem_virt2memseg(addr, NULL);
+			assert(seg != NULL);
+			assert(len >= seg->hugepage_sz);
+
+			spdk_mem_register((void *)seg->addr, seg->hugepage_sz);
+			addr = (void *)((uintptr_t)addr + seg->hugepage_sz);
+			len -= seg->hugepage_sz;
+		}
 	} else if (event_type == RTE_MEM_EVENT_FREE) {
 		spdk_mem_unregister((void *)addr, len);
 	}
