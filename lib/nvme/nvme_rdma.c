@@ -543,6 +543,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	param.private_data = &request_data;
 	param.private_data_len = sizeof(request_data);
 	param.retry_count = 7;
+	param.rnr_retry_count = 7;
 
 	ret = rdma_connect(rqpair->cm_id, &param);
 	if (ret) {
