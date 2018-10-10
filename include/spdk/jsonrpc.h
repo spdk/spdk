@@ -83,19 +83,6 @@ typedef void (*spdk_jsonrpc_handle_request_fn)(
 	const struct spdk_json_val *params);
 
 /**
- * Function for specific RPC method response parsing handlers.
- *
- * \param parser_ctx context where analysis are put.
- * \param result json values responsed to this method.
- *
- * \return 0 on success.
- *         SPDK_JSON_PARSE_INVALID on failure.
- */
-typedef int (*spdk_jsonrpc_client_response_parser)(
-	void *parser_ctx,
-	const struct spdk_json_val *result);
-
-/**
  * Create a JSON-RPC server listening on the required address.
  *
  * \param domain Socket family.
@@ -205,13 +192,29 @@ void spdk_jsonrpc_end_request(struct spdk_jsonrpc_client_request *request,
 /**
  * Connect to the specified RPC server.
  *
+ * If the connection cannot be established immediately and O_NONBLOCK is set for
+ * the file descriptor for the socket, spdk_jsonrpc_client_connected_check should
+ * be used to check whether connection is ready.
+ *
  * \param rpc_sock_addr RPC socket address.
  * \param addr_family Protocol families of address.
+ * \param non_block whether set the connection socket in none block mode.
  *
  * \return JSON-RPC client on success, NULL on failure.
  */
 struct spdk_jsonrpc_client *spdk_jsonrpc_client_connect(const char *rpc_sock_addr,
-		int addr_family);
+		int addr_family, bool non_block);
+
+/*
+ * Check whether connection of client is ready.
+ *
+ * \param client JSON-RPC client.
+ *
+ * \return 1 Client is connected;
+ *         0 Client is in connecting;
+ *         -1 On error.
+ */
+int spdk_jsonrpc_client_connected_check(struct spdk_jsonrpc_client *client);
 
 /**
  * Close the JSON-RPC client.
@@ -242,6 +245,9 @@ void spdk_jsonrpc_client_free_request(
  * \param req JSON-RPC request.
  *
  * \return 0 on success.
+ *         -EAGAIN Indicate request hasn't been sent out in non_block mode.
+ *         Other negative value Failed to send request
+ *
  */
 int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
 				     struct spdk_jsonrpc_client_request *req);
@@ -250,14 +256,14 @@ int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
  * Receive the JSON-RPC response in JSON-RPC client.
  *
  * \param client JSON-RPC client.
- * \param parser_fn Specific function used to parse the result inside response.
- * \param parser_ctx Parameter for parser_fn.
+ * \param result JSON values response to one request.
  *
  * \return 0 on success.
+ *         -EAGAIN Indicate request hasn't been received completely in non_block mode.
+ *         Other negative value Failed to send request
  */
 int spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client,
-				      spdk_jsonrpc_client_response_parser parser_fn,
-				      void *parser_ctx);
+				      struct spdk_json_val **result);
 
 #ifdef __cplusplus
 }
