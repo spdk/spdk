@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 rootdir=$(readlink -f $(dirname $0))/..
+igb_driverdir=$rootdir/dpdk/build/build/kernel/igb_uio/
 source "$rootdir/test/common/autotest_common.sh"
 
 set +x
@@ -68,7 +69,7 @@ modprobe uio
 
 # Insert the dpdk uio kernel module.
 if ! lsmod | grep -q igb_uio; then
-	if ! insmod $DEPENDENCY_DIR/igb_uio.ko; then
+	if ! insmod $igb_driverdir/igb_uio.ko; then
 		echo "Unable to insert the igb_uio kernel module. Aborting."
 		exit 1
 	fi
