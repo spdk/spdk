@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58a62904_e65c9758",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1518,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-10-10T03:08:31Z",
+      "side": 1,
+      "message": "The thread that runs spdk_bdev_channel_poll_qos() is different from thread that set qos-\u003ethread to NULL (i.e. spdk_bdev_qos_destroy()). In other words, we can\u0027t guarantee the spdk_bdev_channel_poll_qos() and spdk_bdev_qos_destroy() are executed sequentially. Am I right?",
+      "revId": "eedec4b80b3c1faeed3aa3e7a874c41e2a9e5e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
