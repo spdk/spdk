@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0bde0232_0acda1c2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3194,
+      "author": {
+        "id": 1014226
+      },
+      "writtenOn": "2018-10-10T14:53:12Z",
+      "side": 1,
+      "message": "I am looping on:\n- start reactor\n- construct subsystem\n- create bdevs\n- map to subsystem\n- IO\n- unmap from subsystem\n- remove bdevs\n- delete subsystem\n- stop reactor\n\ncrashed on 2nd iteration. I\u0027ll check why spdk_bdev_module_release_bdev didn\u0027t do the trick",
+      "parentUuid": "99f0dfad_cd0527bc",
+      "revId": "3d3bba95a7b86098e831c737e619eac4a864bba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1adb0031_44e98c82",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 1
