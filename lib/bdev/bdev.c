@@ -1033,6 +1033,11 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io != NULL);
 	assert(bdev_io->internal.status != SPDK_BDEV_IO_STATUS_PENDING);
 
+	/* This is an addhoc solution, should be solved later */
+	if (ch == NULL) {
+		return;
+	}
+
 	if (bdev_io->internal.buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
 	}
