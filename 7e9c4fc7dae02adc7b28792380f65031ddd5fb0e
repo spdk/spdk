@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "2ff498a4_9abc6702",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 977,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-10T00:48:59Z",
+      "side": 1,
+      "message": "Indeed, even with inactive NSID, the command will just return zeroed data.",
+      "parentUuid": "1c7722ca_85e59075",
+      "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "629fc21b_59eb7a8c",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 8
@@ -89,6 +107,24 @@
       "side": 1,
       "message": "I see - nvme_ctrlr_identify_ns is already defined in nvme_ns.c. How about you make nvme_ctrlr_identify_ns take a callback and context and call that function here? Then you also don\u0027t have to make the set identify data function public.",
       "parentUuid": "467ddae7_a7b8c22f",
+      "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05a30afd_2ea9e9c6",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 999,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-10T00:48:59Z",
+      "side": 1,
+      "message": "ok, I will think about that.",
+      "parentUuid": "d52c3fdf_c0004ce3",
       "revId": "7e9c4fc7dae02adc7b28792380f65031ddd5fb0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
