@@ -1633,7 +1633,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
 #define SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE 131072
-#define SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE 131072
+#define SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE (SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE / SPDK_NVMF_MAX_SGL_ENTRIES)
 
 static void
 spdk_nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -1723,9 +1723,10 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
+	/* The maximum number of buffers we will need for a given request is equal to just less than double the number of SGL elements */
 	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
-				    opts->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
-				    opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
+				    opts->max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES * 2,
+				    opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!rtransport->data_buf_pool) {
@@ -1874,7 +1875,7 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 
 	if (rtransport->data_buf_pool != NULL) {
 		if (spdk_mempool_count(rtransport->data_buf_pool) !=
-		    (transport->opts.max_queue_depth * 4)) {
+		    (transport->opts.max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES * 2)) {
 			SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
 				    spdk_mempool_count(rtransport->data_buf_pool),
 				    transport->opts.max_queue_depth * 4);
