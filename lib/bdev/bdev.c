@@ -1129,13 +1129,13 @@ _spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, uint64_t io_size_in_byte
 	}
 }
 
-static void
+static int
 _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos)
 {
 	struct spdk_bdev_io		*bdev_io = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
-	int				i;
+	int				i, submitted_ios = 0;
 	bool				to_limit_io;
 	uint64_t			io_size_in_byte;
 
@@ -1143,7 +1143,7 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos
 		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 			if (qos->rate_limits[i].max_per_timeslice > 0 &&
 			    (qos->rate_limits[i].remaining_this_timeslice <= 0)) {
-				return;
+				return submitted_ios;
 			}
 		}
 
@@ -1157,7 +1157,10 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos
 			_spdk_bdev_qos_update_per_io(qos, io_size_in_byte);
 		}
 		bdev->fn_table->submit_request(ch->channel, bdev_io);
+		submitted_ios++;
 	}
+
+	return submitted_ios;
 }
 
 static void
@@ -1512,7 +1515,7 @@ spdk_bdev_channel_poll_qos(void *arg)
 {
 	struct spdk_bdev_qos *qos = arg;
 	uint64_t now = spdk_get_ticks();
-	int i;
+	int i, submitted_ios;
 
 	if (now < (qos->last_timeslice + qos->timeslice_size)) {
 		/* We received our callback earlier than expected - return
@@ -1543,9 +1546,9 @@ spdk_bdev_channel_poll_qos(void *arg)
 		}
 	}
 
-	_spdk_bdev_qos_io_submit(qos->ch, qos);
+	submitted_ios = _spdk_bdev_qos_io_submit(qos->ch, qos);
 
-	return -1;
+	return submitted_ios;
 }
 
 static void
