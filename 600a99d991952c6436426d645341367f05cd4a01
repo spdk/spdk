@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8ac7351_e00aa112",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-10T23:18:05Z",
+      "side": 1,
+      "message": "if connecting is a boolean, you should use false here instead of 0.",
+      "revId": "600a99d991952c6436426d645341367f05cd4a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
