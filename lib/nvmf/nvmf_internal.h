@@ -152,7 +152,7 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
-	struct iovec			iov[SPDK_NVMF_MAX_SGL_ENTRIES];
+	struct iovec			iov[SPDK_NVMF_MAX_SGL_ENTRIES * 2];
 	uint32_t			iovcnt;
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 
