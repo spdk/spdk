@@ -929,8 +929,8 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	struct spdk_nvmf_cmd *cmd = &rqpair->cmds[rdma_req->id];
 	struct ibv_mr *mr = NULL;
 	void *virt_addr;
-	uint64_t remaining_size;
-	uint32_t sge_length, mr_length;
+	uint64_t remaining_size, mr_length;
+	uint32_t sge_length;
 	int rc, max_num_sgl, num_sgl_desc;
 
 	assert(req->payload_size != 0);
@@ -953,7 +953,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 		mr_length = sge_length;
 
 		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
-				(uint64_t *)&mr_length);
+				&mr_length);
 
 		if (mr == NULL || mr_length < sge_length) {
 			return -1;
