@@ -56,6 +56,7 @@ static void vbdev_passthru_get_spdk_running_config(FILE *fp);
 static int vbdev_passthru_get_ctx_size(void);
 static void vbdev_passthru_examine(struct spdk_bdev *bdev);
 static void vbdev_passthru_finish(void);
+static int vbdev_passthru_config_json(struct spdk_json_write_ctx *w);
 
 static struct spdk_bdev_module passthru_if = {
 	.name = "passthru",
@@ -63,7 +64,8 @@ static struct spdk_bdev_module passthru_if = {
 	.config_text = vbdev_passthru_get_spdk_running_config,
 	.get_ctx_size = vbdev_passthru_get_ctx_size,
 	.examine_config = vbdev_passthru_examine,
-	.module_fini = vbdev_passthru_finish
+	.module_fini = vbdev_passthru_finish,
+	.config_json = vbdev_passthru_config_json
 };
 
 SPDK_BDEV_MODULE_REGISTER(&passthru_if)
@@ -307,23 +309,36 @@ vbdev_passthru_get_io_channel(void *ctx)
 	return pt_ch;
 }
 
+/* This is the output for get_bdevs() for this vbdev */
 static int
-vbdev_passthru_info_config_json(void *ctx, struct spdk_json_write_ctx *write_ctx)
+vbdev_passthru_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct vbdev_passthru *pt_node = (struct vbdev_passthru *)ctx;
 
-	/* This is the output for get_bdevs() for this vbdev */
-	spdk_json_write_name(write_ctx, "passthru");
-	spdk_json_write_object_begin(write_ctx);
+	spdk_json_write_name(w, "passthru");
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&pt_node->pt_bdev));
+	spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(pt_node->base_bdev));
+	spdk_json_write_object_end(w);
 
-	spdk_json_write_name(write_ctx, "pt_bdev_name");
-	spdk_json_write_string(write_ctx, spdk_bdev_get_name(&pt_node->pt_bdev));
+	return 0;
+}
 
-	spdk_json_write_name(write_ctx, "base_bdev_name");
-	spdk_json_write_string(write_ctx, spdk_bdev_get_name(pt_node->base_bdev));
+/* This is used to generate JSON that can configure this module to its current state. */
+static int
+vbdev_passthru_config_json(struct spdk_json_write_ctx *w)
+{
+	struct vbdev_passthru *pt_node, *tmp;
 
-	spdk_json_write_object_end(write_ctx);
-
+	TAILQ_FOREACH_SAFE(pt_node, &g_pt_nodes, link, tmp) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "construct_passthru_bdev");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(pt_node->base_bdev));
+		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&pt_node->pt_bdev));
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+	}
 	return 0;
 }
 
@@ -473,20 +488,9 @@ vbdev_passthru_get_spdk_running_config(FILE *fp)
 
 /* Called when SPDK wants to output the bdev specific methods. */
 static void
-vbdev_passthru_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+vbdev_passthru_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
-	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(bdev, struct vbdev_passthru, pt_bdev);
-
-	spdk_json_write_object_begin(w);
-
-	spdk_json_write_named_string(w, "method", "construct_passthru_bdev");
-
-	spdk_json_write_named_object_begin(w, "params");
-	spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(pt_node->base_bdev));
-	spdk_json_write_named_string(w, "passthru_bdev_name", spdk_bdev_get_name(bdev));
-	spdk_json_write_object_end(w);
-
-	spdk_json_write_object_end(w);
+	/* No config per bdev needed */
 }
 
 /* When we register our bdev this is how we specify our entry points. */
@@ -495,8 +499,8 @@ static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.submit_request		= vbdev_passthru_submit_request,
 	.io_type_supported	= vbdev_passthru_io_type_supported,
 	.get_io_channel		= vbdev_passthru_get_io_channel,
-	.dump_info_json		= vbdev_passthru_info_config_json,
-	.write_config_json	= vbdev_passthru_write_json_config,
+	.dump_info_json		= vbdev_passthru_dump_info_json,
+	.write_config_json	= vbdev_passthru_write_config_json,
 };
 
 /* Called when the underlying base bdev goes away. */
