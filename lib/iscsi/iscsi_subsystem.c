@@ -1228,7 +1228,7 @@ iscsi_unregister_poll_group(void *ctx)
 }
 
 static void
-spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
+spdk_initialize_iscsi_poll_group(spdk_msg_fn cpl)
 {
 	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
 

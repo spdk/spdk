@@ -34,7 +34,7 @@
 bool g_scheduler_delay = false;
 
 struct scheduled_ops {
-	spdk_thread_fn	fn;
+	spdk_msg_fn	fn;
 	void		*ctx;
 
 	TAILQ_ENTRY(scheduled_ops)	ops_queue;
@@ -45,7 +45,7 @@ static TAILQ_HEAD(, scheduled_ops) g_scheduled_ops = TAILQ_HEAD_INITIALIZER(g_sc
 void _bs_flush_scheduler(uint32_t);
 
 static void
-_bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+_bs_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
 {
 	if (g_scheduler_delay) {
 		struct scheduled_ops *ops = calloc(1, sizeof(*ops));

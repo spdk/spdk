@@ -911,7 +911,7 @@ bdev_virtio_tmf_abort_ioerr_cb(void *ctx)
 static void
 bdev_virtio_tmf_abort(struct spdk_bdev_io *bdev_io, int status)
 {
-	spdk_thread_fn fn;
+	spdk_msg_fn fn;
 
 	if (status == -ENOMEM) {
 		fn = bdev_virtio_tmf_abort_nomem_cb;

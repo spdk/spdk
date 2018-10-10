@@ -64,7 +64,7 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 }
 
 static void
-_fs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+_fs_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
 {
 	fn(ctx);
 }

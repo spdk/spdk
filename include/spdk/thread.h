@@ -51,11 +51,11 @@ struct spdk_io_channel_iter;
 struct spdk_poller;
 
 /**
- * Callback function for a thread.
+ * A function that will be called on the target thread.
  *
  * \param ctx Context passed as arg to spdk_thread_pass_msg().
  */
-typedef void (*spdk_thread_fn)(void *ctx);
+typedef void (*spdk_msg_fn)(void *ctx);
 
 /**
  * Function to be called to pass a message to a thread.
@@ -64,7 +64,7 @@ typedef void (*spdk_thread_fn)(void *ctx);
  * \param ctx Context passed to fn.
  * \param thread_ctx Context for the thread.
  */
-typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
+typedef void (*spdk_thread_pass_msg)(spdk_msg_fn fn, void *ctx,
 				     void *thread_ctx);
 
 /**
@@ -179,7 +179,7 @@ void spdk_thread_lib_fini(void);
  * Initializes the calling thread for I/O channel allocation.
  *
  * \param msg_fn A function that may be called from any thread and is passed a function
- * pointer (spdk_thread_fn) that must be called on the same thread that spdk_allocate_thread
+ * pointer (spdk_msg_fn) that must be called on the same thread that spdk_allocate_thread
  * was called from.
  * DEPRECATED. Only used in tests. Pass NULL for this parameter.
  * \param start_poller_fn Function to be called to start a poller for the thread.
@@ -267,7 +267,7 @@ const char *spdk_thread_get_name(const struct spdk_thread *thread);
  * \param fn This function will be called on the given thread.
  * \param ctx This context will be passed to fn when called.
  */
-void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx);
+void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx);
 
 /**
  * Send a message to each thread, serially.
@@ -280,7 +280,7 @@ void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, v
  * \param cpl This will be called on the originating thread after `fn` has been
  * called on each thread.
  */
-void spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl);
+void spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl);
 
 /**
  * Register a poller on the current thread.
