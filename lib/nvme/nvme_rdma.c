@@ -543,11 +543,19 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	param.private_data = &request_data;
 	param.private_data_len = sizeof(request_data);
 	param.retry_count = 7;
+	param.rnr_retry_count = 7;
 
 	ret = rdma_connect(rqpair->cm_id, &param);
 	if (ret) {
-		SPDK_ERRLOG("nvme rdma connect error\n");
-		return ret;
+		/* Retry the connection with the RNR retry count set to 0.
+		 * Some targets do not support RNR. */
+		SPDK_NOTICELOG("Unable to enable RNR_RETRY. Attempting again with RNR_RETRY disabled.\n");
+		param.rnr_retry_count = 0;
+		ret = rdma_connect(rqpair->cm_id, &param);
+		if (ret) {
+			SPDK_ERRLOG("nvme rdma connect error\n");
+			return ret;
+		}
 	}
 
 	event = nvme_rdma_get_event(rqpair->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
