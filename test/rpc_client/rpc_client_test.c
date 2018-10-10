@@ -48,11 +48,9 @@ struct get_jsonrpc_methods_resp {
 };
 
 static int
-get_jsonrpc_method_json_parser(void *parser_ctx,
-			       const struct spdk_json_val *result)
+get_jsonrpc_method_json_parser(struct get_jsonrpc_methods_resp *resp,
+			       struct spdk_json_val *result)
 {
-	struct get_jsonrpc_methods_resp *resp = parser_ctx;
-
 	return spdk_json_decode_array(result, spdk_json_decode_string, resp->method_names,
 				      RPC_MAX_METHODS, &resp->method_num, sizeof(char *));
 }
@@ -64,6 +62,7 @@ spdk_jsonrpc_client_check_rpc_method(struct spdk_jsonrpc_client *client, char *m
 	struct get_jsonrpc_methods_resp resp = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_client_request *request;
+	struct spdk_json_val *result;
 
 	request = spdk_jsonrpc_client_create_request();
 	if (request == NULL) {
@@ -75,8 +74,12 @@ spdk_jsonrpc_client_check_rpc_method(struct spdk_jsonrpc_client *client, char *m
 	spdk_jsonrpc_client_send_request(client, request);
 	spdk_jsonrpc_client_free_request(request);
 
-	rc = spdk_jsonrpc_client_recv_response(client, get_jsonrpc_method_json_parser, &resp);
+	rc = spdk_jsonrpc_client_recv_response(client, &result);
+	if (rc) {
+		goto out;
+	}
 
+	rc = get_jsonrpc_method_json_parser(&resp, result);
 	if (rc) {
 		goto out;
 	}
@@ -105,7 +108,7 @@ int main(int argc, char **argv)
 	int rc;
 	char *method_name = "get_rpc_methods";
 
-	client = spdk_jsonrpc_client_connect(g_rpcsock_addr, g_addr_family);
+	client = spdk_jsonrpc_client_connect(g_rpcsock_addr, g_addr_family, false);
 	if (!client) {
 		return EXIT_FAILURE;
 	}
