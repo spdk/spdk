@@ -270,10 +270,12 @@ spdk_mem_map_free(struct spdk_mem_map **pmap)
 		return;
 	}
 
-	pthread_mutex_lock(&g_spdk_mem_map_mutex);
-	spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_UNREGISTER);
-	TAILQ_REMOVE(&g_spdk_mem_maps, map, tailq);
-	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+	if (map->ops.notify_cb) {
+		pthread_mutex_lock(&g_spdk_mem_map_mutex);
+		spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_UNREGISTER);
+		TAILQ_REMOVE(&g_spdk_mem_maps, map, tailq);
+		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+	}
 
 	for (i = 0; i < sizeof(map->map_256tb.map) / sizeof(map->map_256tb.map[0]); i++) {
 		free(map->map_256tb.map[i]);
