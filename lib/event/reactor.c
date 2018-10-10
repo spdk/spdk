@@ -420,7 +420,7 @@ spdk_reactor_add_tsc_stats(void *arg, int rc, uint64_t now)
 	if (rc == 0) {
 		/* Poller status idle */
 		tsc_stats->idle_tsc += now - reactor->tsc_last;
-	} else if (rc == 1) {
+	} else if (rc > 0) {
 		/* Poller status busy */
 		tsc_stats->busy_tsc += now - reactor->tsc_last;
 	} else {
