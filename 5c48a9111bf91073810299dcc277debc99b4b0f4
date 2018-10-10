@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe5858e6_723f11d4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 893,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-10T17:30:53Z",
+      "side": 1,
+      "message": "The bdev layer will ensure this never occurs. You don\u0027t need to worry about it.",
+      "revId": "5c48a9111bf91073810299dcc277debc99b4b0f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6a637dd_7bab3ce9",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-10T17:30:53Z",
+      "side": 1,
+      "message": "A reset applies to the entire device, not just this channel. What about the operations on the other channels? Their poller is looking at a different channel, so it won\u0027t see that this reset_io is set.",
+      "revId": "5c48a9111bf91073810299dcc277debc99b4b0f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
