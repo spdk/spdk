@@ -436,8 +436,8 @@ spdk_mem_unregister(void *vaddr, size_t len)
 				}
 			}
 
-			seg_vaddr = vaddr + VALUE_2MB;
-			seg_len = 0;
+			seg_vaddr = vaddr;
+			seg_len = VALUE_2MB;
 		} else {
 			seg_len += VALUE_2MB;
 		}
