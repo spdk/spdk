@@ -56,9 +56,7 @@ static const struct spdk_json_object_decoder jsonrpc_response_decoders[] = {
 };
 
 static int
-parse_single_response(struct spdk_json_val *values,
-		      spdk_jsonrpc_client_response_parser parser_fn,
-		      void *parser_ctx)
+parse_single_response(struct spdk_json_val *values, struct spdk_json_val **_result)
 {
 	struct jsonrpc_response resp = {};
 	int rc = 0;
@@ -85,11 +83,15 @@ done:
 		return SPDK_JSON_PARSE_INVALID;
 	}
 
-	return parser_fn(parser_ctx, resp.result);
+	if (_result) {
+		*_result = (struct spdk_json_val *)resp.result;
+	}
+	return 0;
 }
 
 int
-spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client, void *json, size_t size)
+spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client, void *json, size_t size,
+			    struct spdk_json_val **_result)
 {
 	ssize_t rc;
 	void *end = NULL;
@@ -125,7 +127,7 @@ spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client, void *json, size
 		return SPDK_JSON_PARSE_INVALID;
 	}
 
-	rc = parse_single_response(client->values, client->parser_fn, client->parser_ctx);
+	rc = parse_single_response(client->values, _result);
 
 	return rc;
 }

@@ -108,13 +108,13 @@ struct spdk_jsonrpc_client_request {
 
 struct spdk_jsonrpc_client {
 	int sockfd;
+	bool non_block;
+	bool connecting;
 
 	struct spdk_json_val values[SPDK_JSONRPC_MAX_VALUES];
 	size_t recv_buf_size;
+	size_t recv_offset;
 	uint8_t *recv_buf;
-
-	spdk_jsonrpc_client_response_parser parser_fn;
-	void *parser_ctx;
 };
 
 /* jsonrpc_server_tcp */
@@ -144,6 +144,6 @@ void spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request);
  *         SPDK_JSON_PARSE_INVALID if the provided data has invalid JSON syntax.
  */
 int spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client, void *json,
-				size_t size);
+				size_t size, struct spdk_json_val **result);
 
 #endif
