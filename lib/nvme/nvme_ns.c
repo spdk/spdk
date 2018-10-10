@@ -130,7 +130,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 	return 0;
 }
 
-int
+static int
 nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status      status;
