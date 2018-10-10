@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff27b148_fd89339f",
+        "filename": "scripts/vagrant/create_virtio_img.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-10T18:28:12Z",
+      "side": 1,
+      "message": "You mentioned earlier that we will run into the issue where we create multiple vms all with virtio images; to that end, I think we could probably make these filenames (if not the paths) configurable. \nI am imagining that after this change is in we will create a top level bash script that will call down to this script, then create_vbox.sh relying on the files for each test pool vm it creates.\n\nI am good if we do this in this patch, or in a later one when we have a better idea of what the calling script will look like.",
+      "revId": "7625c850d31dfa9337add88ff04dce63fc943bf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "885b8770_7a151381",
+        "filename": "scripts/vagrant/create_virtio_img.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-10T18:28:12Z",
+      "side": 1,
+      "message": "I get the following error when running this command:\nchcon: can\u0027t apply partial context to unlabeled file \u0027var/lib/libvirt/images/virtio_scsi.img\u0027\nchcon: can\u0027t apply partial context to unlabeled file \u0027var/lib/libvirt/images/virtio_blk.img\u0027\n\nOS: Fedora27\n\nI\u0027m not really familiar with SElinux practices, so I\u0027m not sure 100% what this command accomplishes, but I was able to properly configure the vm even with these commands failing.",
+      "revId": "7625c850d31dfa9337add88ff04dce63fc943bf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
