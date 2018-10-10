@@ -433,7 +433,6 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 		rdma_req->send_wr.opcode = IBV_WR_SEND;
 		rdma_req->send_wr.send_flags = IBV_SEND_SIGNALED;
 		rdma_req->send_wr.sg_list = rdma_req->send_sgl;
-		rdma_req->send_wr.num_sge = 1; /* Need to increment if inline */
 		rdma_req->send_wr.imm_data = 0;
 
 		TAILQ_INSERT_TAIL(&rqpair->free_reqs, rdma_req, link);
@@ -841,6 +840,9 @@ nvme_rdma_build_null_request(struct spdk_nvme_rdma_req *rdma_req)
 	 * the NVMe command. */
 	rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
 
+	/* The RDMA SGL needs one element describing the NVMe command. */
+	rdma_req->send_wr.num_sge = 1;
+
 	nvme_sgl = &req->cmd.dptr.sgl1;
 	nvme_sgl->keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	nvme_sgl->keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
@@ -886,6 +888,9 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 	sge_inline->length = (uint32_t)req->payload_size;
 	sge_inline->lkey = mr->lkey;
 
+	/* The RDMA SGL contains two elements. The first describes
+	 * the NVMe command and the second describes the data
+	 * payload. */
 	rdma_req->send_wr.num_sge = 2;
 
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
@@ -927,6 +932,7 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 	 * the NVMe command. */
 	rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
 
+	/* The RDMA SGL needs one element describing the NVMe command. */
 	rdma_req->send_wr.num_sge = 1;
 
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
@@ -997,6 +1003,9 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	}
 
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+
+	/* The RDMA SGL needs one element describing some portion
+	 * of the spdk_nvmf_cmd structure. */
 	rdma_req->send_wr.num_sge = 1;
 
 	/*
@@ -1081,6 +1090,9 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	sge_inline->length = (uint32_t)req->payload_size;
 	sge_inline->lkey = mr->lkey;
 
+	/* The RDMA SGL contains two elements. The first describes
+	 * the NVMe command and the second describes the data
+	 * payload. */
 	rdma_req->send_wr.num_sge = 2;
 
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
