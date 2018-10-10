@@ -830,7 +830,6 @@ static int
 nvme_rdma_build_null_request(struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct nvme_request *req = rdma_req->req;
-	struct spdk_nvme_sgl_descriptor *nvme_sgl;
 
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 
@@ -843,12 +842,11 @@ nvme_rdma_build_null_request(struct spdk_nvme_rdma_req *rdma_req)
 	/* The RDMA SGL needs one element describing the NVMe command. */
 	rdma_req->send_wr.num_sge = 1;
 
-	nvme_sgl = &req->cmd.dptr.sgl1;
-	nvme_sgl->keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
-	nvme_sgl->keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
-	nvme_sgl->keyed.length = 0;
-	nvme_sgl->keyed.key = 0;
-	nvme_sgl->address = 0;
+	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+	req->cmd.dptr.sgl1.keyed.length = 0;
+	req->cmd.dptr.sgl1.keyed.key = 0;
+	req->cmd.dptr.sgl1.address = 0;
 
 	return 0;
 }
