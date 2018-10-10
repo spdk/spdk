@@ -100,8 +100,8 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 {
 	size_t idx_256tb;
 	uint64_t idx_1gb;
-	uint64_t contig_start = 0;
-	uint64_t contig_end = 0;
+	uint64_t contig_start = UINT64_MAX;
+	uint64_t contig_end = UINT64_MAX;
 	struct map_1gb *map_1gb;
 	int rc;
 
@@ -118,7 +118,7 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb];
 
 		if (!map_1gb) {
-			if (contig_start != 0) {
+			if (contig_start != UINT64_MAX) {
 				/* End of of a virtually contiguous range */
 				rc = map->ops.notify_cb(map->cb_ctx, map, action,
 							(void *)contig_start,
@@ -128,7 +128,7 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 					goto err_unregister;
 				}
 			}
-			contig_start = 0;
+			contig_start = UINT64_MAX;
 			continue;
 		}
 
@@ -137,13 +137,13 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 				/* Rebuild the virtual address from the indexes */
 				uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
-				if (contig_start == 0) {
+				if (contig_start == UINT64_MAX) {
 					contig_start = vaddr;
 				}
 
 				contig_end = vaddr;
 			} else {
-				if (contig_start != 0) {
+				if (contig_start != UINT64_MAX) {
 					/* End of of a virtually contiguous range */
 					rc = map->ops.notify_cb(map->cb_ctx, map, action,
 								(void *)contig_start,
@@ -153,7 +153,7 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 						goto err_unregister;
 					}
 				}
-				contig_start = 0;
+				contig_start = UINT64_MAX;
 			}
 		}
 	}
@@ -167,22 +167,22 @@ err_unregister:
 	 */
 	idx_256tb = MAP_256TB_IDX((contig_start >> SHIFT_2MB) - 1);
 	idx_1gb = MAP_1GB_IDX((contig_start >> SHIFT_2MB) - 1);
-	contig_start = 0;
-	contig_end = 0;
+	contig_start = UINT64_MAX;
+	contig_end = UINT64_MAX;
 
 	/* Unregister any memory we managed to register before the failure */
 	for (; idx_256tb < SIZE_MAX; idx_256tb--) {
 		map_1gb = g_mem_reg_map->map_256tb.map[idx_256tb];
 
 		if (!map_1gb) {
-			if (contig_end != 0) {
+			if (contig_end != UINT64_MAX) {
 				/* End of of a virtually contiguous range */
 				map->ops.notify_cb(map->cb_ctx, map,
 						   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
 						   (void *)contig_start,
 						   contig_end - contig_start + VALUE_2MB);
 			}
-			contig_end = 0;
+			contig_end = UINT64_MAX;
 			continue;
 		}
 
@@ -191,19 +191,19 @@ err_unregister:
 				/* Rebuild the virtual address from the indexes */
 				uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
-				if (contig_end == 0) {
+				if (contig_end == UINT64_MAX) {
 					contig_end = vaddr;
 				}
 				contig_start = vaddr;
 			} else {
-				if (contig_end != 0) {
+				if (contig_end != UINT64_MAX) {
 					/* End of of a virtually contiguous range */
 					map->ops.notify_cb(map->cb_ctx, map,
 							   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
 							   (void *)contig_start,
 							   contig_end - contig_start + VALUE_2MB);
 				}
-				contig_end = 0;
+				contig_end = UINT64_MAX;
 			}
 		}
 		idx_1gb = sizeof(map_1gb->map) / sizeof(map_1gb->map[0]) - 1;
