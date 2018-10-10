@@ -381,7 +381,7 @@ spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 }
 
 void
-spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
+spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 {
 	fn(ctx);
 	cpl(ctx);
@@ -394,7 +394,7 @@ spdk_get_thread(void)
 }
 
 void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
+spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
 {
 	fn(ctx);
 }

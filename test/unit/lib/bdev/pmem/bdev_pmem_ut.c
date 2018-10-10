@@ -101,7 +101,7 @@ static const char *g_check_version_msg;
 static bool g_pmemblk_open_allow_open = true;
 
 static void
-_pmem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+_pmem_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
 {
 	fn(ctx);
 }

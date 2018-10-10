@@ -54,7 +54,7 @@ DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 512);
 
 static void
-_subsystem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+_subsystem_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
 {
 	fn(ctx);
 }

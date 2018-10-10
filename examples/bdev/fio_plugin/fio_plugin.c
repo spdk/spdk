@@ -56,7 +56,7 @@ struct spdk_fio_options {
 
 /* Used to pass messages between fio threads */
 struct spdk_fio_msg {
-	spdk_thread_fn	cb_fn;
+	spdk_msg_fn	cb_fn;
 	void		*cb_arg;
 };
 
@@ -106,7 +106,7 @@ static size_t spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
 #define SPDK_FIO_POLLING_TIMEOUT 1000000UL
 
 static void
-spdk_fio_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+spdk_fio_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
 {
 	struct spdk_fio_thread *thread = thread_ctx;
 	struct spdk_fio_msg *msg;

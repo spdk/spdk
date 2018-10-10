@@ -578,7 +578,7 @@ public:
 };
 
 static void
-_spdk_send_msg(__attribute__((unused)) spdk_thread_fn fn,
+_spdk_send_msg(__attribute__((unused)) spdk_msg_fn fn,
 	       __attribute__((unused)) void *ctx,
 	       __attribute__((unused)) void *thread_ctx)
 {

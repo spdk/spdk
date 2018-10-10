@@ -145,7 +145,7 @@ DEFINE_STUB(spdk_nvmf_transport_qpair_set_sqsize,
 	    0);
 
 static void
-ctrlr_ut_pass_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+ctrlr_ut_pass_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
 {
 	fn(ctx);
 }

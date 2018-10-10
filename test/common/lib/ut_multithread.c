@@ -46,7 +46,7 @@ void poll_threads(void);
 bool poll_thread(uintptr_t thread_id);
 
 struct ut_msg {
-	spdk_thread_fn		fn;
+	spdk_msg_fn		fn;
 	void			*ctx;
 	TAILQ_ENTRY(ut_msg)	link;
 };
