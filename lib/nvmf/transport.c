@@ -53,8 +53,8 @@ static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
 static inline const struct spdk_nvmf_transport_ops *
 spdk_nvmf_get_transport_ops(enum spdk_nvme_transport_type type)
 {
-	size_t i;
-	for (i = 0; i != NUM_TRANSPORTS; i++) {
+	int i;
+	for (i = 0; i < (int)NUM_TRANSPORTS; i++) {
 		if (g_transport_ops[i]->type == type) {
 			return g_transport_ops[i];
 		}
@@ -82,8 +82,9 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 
 	ops = spdk_nvmf_get_transport_ops(type);
 	if (!ops) {
-		SPDK_ERRLOG("Transport type %s unavailable.\n",
-			    spdk_nvme_transport_id_trtype_str(type));
+		const char *type_str = spdk_nvme_transport_id_trtype_str(type);
+		SPDK_ERRLOG("Transport type (%s) unavailable.\n",
+			    type_str ? type_str : "unknown");
 		return NULL;
 	}
 
