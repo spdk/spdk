@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e135a96_e95e6073",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:10:09Z",
+      "side": 1,
+      "message": "We expect this script is run by privileged user. so no need to check these basics.",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 86,
+        "endChar": 3
+      },
+      "revId": "e4973307584dd4ed68e147a0a5e02e1294b5b98a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4818a7f2_9e93d525",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:10:09Z",
+      "side": 1,
+      "message": "I don\u0027t know Arch at all so this makes me confused and little scared. Why why installling from source? Isn\u0027t these packages available in repo?",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 24
+      },
+      "revId": "e4973307584dd4ed68e147a0a5e02e1294b5b98a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b83a09a4_acf4fee2",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:10:09Z",
+      "side": 1,
+      "message": "no need sudo for all this file",
+      "range": {
+        "startLine": 108,
+        "startChar": 1,
+        "endLine": 108,
+        "endChar": 5
+      },
+      "revId": "e4973307584dd4ed68e147a0a5e02e1294b5b98a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
