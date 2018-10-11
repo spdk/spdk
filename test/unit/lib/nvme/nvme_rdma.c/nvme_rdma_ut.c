@@ -192,12 +192,12 @@ test_nvme_rdma_build_sgl_request(void)
 	rmap.map = map;
 
 	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	ctrlr.cdata.nvmf_specific.msdbd = 16;
 
 	rqpair.mr_map = &rmap;
 	rqpair.qpair.ctrlr = &ctrlr;
 	rqpair.cmds = &cmd;
 	cmd.sgl[0].address = 0x1111;
-
 	rdma_req.id = 0;
 	rdma_req.req = &req;
 
@@ -252,10 +252,10 @@ test_nvme_rdma_build_sgl_request(void)
 		CU_ASSERT(cmd.sgl[i].address == (uint64_t)bio.iovs[i].iov_base);
 	}
 
-	/* Test case 3: Multiple SGL, SGL larger than mr size. Expected: FAIL */
+	/* Test case 3: Multiple SGL, SGL 2X mr size. Expected: FAIL */
 	bio.iovpos = 0;
 	req.payload_offset = 0;
-	g_mr_size = 0x500;
+	g_mr_size = 0x800;
 	rc = nvme_rdma_build_sgl_request(&rqpair, &rdma_req);
 	SPDK_CU_ASSERT_FATAL(rc != 0);
 	CU_ASSERT(bio.iovpos == 1);
