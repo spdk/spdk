@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "26ddfccc_94cdb9ca",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 893,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-11T21:56:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fe5858e6_723f11d4",
+      "revId": "5c48a9111bf91073810299dcc277debc99b4b0f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c6a637dd_7bab3ce9",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-10T17:30:53Z",
       "side": 1,
       "message": "A reset applies to the entire device, not just this channel. What about the operations on the other channels? Their poller is looking at a different channel, so it won\u0027t see that this reset_io is set.",
+      "revId": "5c48a9111bf91073810299dcc277debc99b4b0f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f8d395f_38b067ef",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-11T21:56:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c6a637dd_7bab3ce9",
       "revId": "5c48a9111bf91073810299dcc277debc99b4b0f4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
