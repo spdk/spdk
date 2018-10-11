@@ -1136,12 +1136,14 @@ invalid_log_page:
 }
 
 static int
-spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_subsystem *subsystem,
+spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 			    struct spdk_nvme_cmd *cmd,
 			    struct spdk_nvme_cpl *rsp,
 			    struct spdk_nvme_ns_data *nsdata)
 {
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns;
+	uint32_t max_io_size = ctrlr->admin_qpair->transport->opts.max_io_size;
 
 	if (cmd->nsid == 0 || cmd->nsid > subsystem->max_nsid) {
 		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
@@ -1368,7 +1370,7 @@ spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 
 	switch (cns) {
 	case SPDK_NVME_IDENTIFY_NS:
-		return spdk_nvmf_ctrlr_identify_ns(subsystem, cmd, rsp, req->data);
+		return spdk_nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, req->data);
 	case SPDK_NVME_IDENTIFY_CTRLR:
 		return spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, req->data);
 	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
