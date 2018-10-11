@@ -481,11 +481,11 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Property Set CC Shutdown %u%ub!\n",
 				      cc.bits.shn >> 1, cc.bits.shn & 1);
 			ctrlr->vcprop.cc.bits.shn = cc.bits.shn;
-			ctrlr->vcprop.cc.bits.en = 0;
 			ctrlr->vcprop.csts.bits.rdy = 0;
 			ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 		} else if (cc.bits.shn == 0) {
 			ctrlr->vcprop.cc.bits.shn = 0;
+			ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_NORMAL;
 		} else {
 			SPDK_ERRLOG("Prop Set CC: Invalid SHN value %u%ub\n",
 				    cc.bits.shn >> 1, cc.bits.shn & 1);
@@ -796,6 +796,9 @@ spdk_nvmf_ctrlr_set_features_volatile_write_cache(struct spdk_nvmf_request *req)
 	ctrlr->feat.volatile_write_cache.raw = cmd->cdw11;
 	ctrlr->feat.volatile_write_cache.bits.reserved = 0;
 
+	if (!ctrlr->feat.volatile_write_cache.bits.wce) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Volatile Write Cache  is disabled\n");
+	}
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
@@ -810,6 +813,10 @@ spdk_nvmf_ctrlr_set_features_write_atomicity(struct spdk_nvmf_request *req)
 	ctrlr->feat.write_atomicity.raw = cmd->cdw11;
 	ctrlr->feat.write_atomicity.bits.reserved = 0;
 
+	if (ctrlr->feat.write_atomicity.bits.dn) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF,
+			      "Set Features -Write Atomicity  AWUN and NAWUN are not required and that the controller shall only honor AWUPF and NAWUPF\n");
+	}
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
