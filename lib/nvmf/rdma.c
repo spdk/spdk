@@ -2694,9 +2694,28 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	for (i = 0; i < reaped; i++) {
 		/* Handle error conditions */
 		if (wc[i].status) {
-			SPDK_WARNLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				     rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Completion Error on cq %p. Request: 0x%lu. Status: (%d) %s\n",
+				      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Opcode: %x QP Num: %u\n",
+				      wc[i].opcode, wc[i].qp_num);
+
 			error = true;
+
+			/* The RDMA specification says that both wr_id and qp_num are valid even in error cases. However, that's
+			 * not true in practice. These values are often junk. Instead of blindly casting wr_id to a pointer,
+			 * loop through each qpair and try to look it up by the qp_num. If the qp_num given is junk, we'll
+			 * just pretend this completion didn't happen. */
+			TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+				if (rqpair->cm_id->qp->qp_num == wc[i].qp_num) {
+					SPDK_NOTICELOG("Found qpair matching completion entry qp_num on qpair list.\n");
+					break;
+				}
+			}
+
+			if (rqpair == NULL) {
+				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No rqpair matches this qp_num. Ignore it.\n");
+				continue;
+			}
 
 			switch (wc[i].opcode) {
 			case IBV_WC_SEND:
