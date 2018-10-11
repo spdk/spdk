@@ -16,6 +16,23 @@
       "revId": "31f0cdc97a744069b94b4ee4eb12a2af936411dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c73057a6_ebfbfdfb",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1014365
+      },
+      "writtenOn": "2018-10-11T22:33:27Z",
+      "side": 1,
+      "message": "The transport \"opts_init\" function is used similarly to the spdk_nvmf_tgt_opts_init() function.  It\u0027s supposed to set the default values for those that aren\u0027t being set by the user (app). Also, the changes I made here were to provide backward compatibility with exiting apps. that still use the \"add listener\" functionality to create a transport.  However, this functionality should be deprecated and eventually removed in favor of using spdk_nvmf_transport_create() to create the transport.",
+      "revId": "31f0cdc97a744069b94b4ee4eb12a2af936411dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
