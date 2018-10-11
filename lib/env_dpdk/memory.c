@@ -235,9 +235,8 @@ spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *
 		map->ops = *ops;
 	}
 
-	pthread_mutex_lock(&g_spdk_mem_map_mutex);
-
 	if (ops && ops->notify_cb) {
+		pthread_mutex_lock(&g_spdk_mem_map_mutex);
 		rc = spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_REGISTER);
 		if (rc != 0) {
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
@@ -247,9 +246,8 @@ spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *
 			return NULL;
 		}
 		TAILQ_INSERT_TAIL(&g_spdk_mem_maps, map, tailq);
+		pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 	}
-
-	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 
 	return map;
 }
