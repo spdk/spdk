@@ -16,6 +16,24 @@
       "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1310abc5_ad2dcefa",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-11T19:46:33Z",
+      "side": 1,
+      "message": "So I just tested this, and I can bind the uio_pci_generic driver to the cards, but I get a fancy dmesg warning \"No IRQ assigned to device: no support for interrupts?\".\nI found the following under the DPDK docs: \"For some devices which lack support for legacy interrupts. e.g. virtual function (VF) devices, the igb_uio module may be needed in place of uio_pci_generic.\" https://doc.dpdk.org/guides/linux_gsg/linux_drivers.html\nSince the QAT cards are VF devices, we should probably use the igb_uio kernel driver.",
+      "parentUuid": "05e1f3f2_7cd483cb",
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
