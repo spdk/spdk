@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "51579275_57164505",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-11T23:36:10Z",
+      "side": 1,
+      "message": "How would we tell if the target opts had been set by the user? The only way I know how to do that is through the RPC. That just calls the generic opts init function and then changes some of the variables in the returned opts structure behind the scenes. We would have to do an explicit comparison between the tgt_opts and the default macros.\n\nWould there be anything wrong with just deprecating target opts entirely? It seems like keeping this structure could create more problems than it solves, especially as we scale up with the number of transports we support. Overloading a transport default with a custom target value could be dangerous/unwanted behavior.\nA specific example of this might be io_unit_size. This value may have different implications between TCP and RDMA in RDMA it is closely linked to the dma safe buffers we allocate to store data for transport between the two NICs. I don\u0027t know exactly what this value would mean to TCP, but it probably won\u0027t be that (just guessing here). If that number is significantly larger for TCP, overriding it in the tgt opts could cause us to run out of memory in an RDMA transport that adopts those target options (Not that anybody would necessarily run both transports in the same app, but it is a possibility).",
+      "parentUuid": "633c1c42_5f9c4034",
+      "revId": "31f0cdc97a744069b94b4ee4eb12a2af936411dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c73057a6_ebfbfdfb",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 2
