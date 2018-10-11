@@ -70,6 +70,24 @@
       "revId": "ee352b77ddafa6a3e0f4366b45fb70521e69b87d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7552241a_96540bac",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-11T17:37:52Z",
+      "side": 1,
+      "message": "\u003e (I\u0027m also not sure if the virtio driver handles F_REPLY_ACK currently.)\n\nAhh, that\u0027s right. I missed it before - Our virtio driver doesn\u0027t implement REPLY_ACK at all.",
+      "parentUuid": "1b6e06c5_3d1f4fc1",
+      "revId": "ee352b77ddafa6a3e0f4366b45fb70521e69b87d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
