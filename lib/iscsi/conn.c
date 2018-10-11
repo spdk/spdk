@@ -72,6 +72,7 @@ static void spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
 static void spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn);
 static void spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group,
 				    struct spdk_sock *sock);
+static int spdk_iscsi_conn_flush_pdus(void *_conn);
 
 static struct spdk_iscsi_conn *
 allocate_conn(void)
@@ -630,7 +631,7 @@ spdk_iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 	int lun_id = spdk_scsi_lun_get_id(lun);
 
 	spdk_clear_all_transfer_task(conn, lun);
-
+	spdk_iscsi_conn_flush_pdus(conn);
 	spdk_iscsi_conn_close_lun(conn, lun_id);
 }
 
