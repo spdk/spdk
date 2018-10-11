@@ -509,13 +509,15 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 	if (!transport) {
 		struct spdk_nvmf_transport_opts opts;
 
-		opts.max_queue_depth = tgt->opts.max_queue_depth;
-		opts.max_qpairs_per_ctrlr = tgt->opts.max_qpairs_per_ctrlr;
-		opts.in_capsule_data_size = tgt->opts.in_capsule_data_size;
-		opts.max_io_size = tgt->opts.max_io_size;
-		opts.io_unit_size = tgt->opts.io_unit_size;
-		/* use max_queue depth since tgt. opts. doesn't have max_aq_depth */
-		opts.max_aq_depth = tgt->opts.max_queue_depth;
+		if (!spdk_nvmf_transport_opts_init(trid->trtype, &opts)) {
+			opts.max_queue_depth = tgt->opts.max_queue_depth;
+			opts.max_qpairs_per_ctrlr = tgt->opts.max_qpairs_per_ctrlr;
+			opts.in_capsule_data_size = tgt->opts.in_capsule_data_size;
+			opts.max_io_size = tgt->opts.max_io_size;
+			opts.io_unit_size = tgt->opts.io_unit_size;
+			/* use max_queue depth since tgt. opts. doesn't have max_aq_depth */
+			opts.max_aq_depth = tgt->opts.max_queue_depth;
+		}
 
 		transport = spdk_nvmf_transport_create(trid->trtype, &opts);
 		if (!transport) {
