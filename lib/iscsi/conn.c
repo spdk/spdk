@@ -623,14 +623,53 @@ spdk_iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
 }
 
 static void
+_iscsi_conn_remove_lun(void *arg1, void *arg2)
+{
+	struct spdk_iscsi_conn *conn = arg1;
+	struct spdk_scsi_lun *lun = arg2;
+	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
+	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task;
+	int lun_id = spdk_scsi_lun_get_id(lun);
+
+	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
+		if (pdu->task && (lun == pdu->task->scsi.lun)) {
+			TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
+			spdk_iscsi_conn_free_pdu(conn, pdu);
+		}
+	}
+
+	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, tmp_pdu) {
+		if (pdu->task && (lun == pdu->task->scsi.lun)) {
+			TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
+			spdk_iscsi_task_put(pdu->task);
+			spdk_put_pdu(pdu);
+		}
+	}
+
+	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
+		if ((!iscsi_task->is_queued) && (lun == iscsi_task->scsi.lun)) {
+			TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
+			spdk_iscsi_task_put(iscsi_task);
+		}
+	}
+
+	spdk_clear_all_transfer_task(conn, lun);
+	spdk_iscsi_conn_close_lun(conn, lun_id);
+}
+
+static void
 spdk_iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 {
 	struct spdk_iscsi_conn *conn = remove_ctx;
-	int lun_id = spdk_scsi_lun_get_id(lun);
+	struct spdk_event *event;
 
-	spdk_clear_all_transfer_task(conn, lun);
-
-	spdk_iscsi_conn_close_lun(conn, lun_id);
+	event = spdk_event_allocate(conn->lcore, _iscsi_conn_remove_lun,
+				    conn, lun);
+	spdk_event_call(event);
 }
 
 static void
