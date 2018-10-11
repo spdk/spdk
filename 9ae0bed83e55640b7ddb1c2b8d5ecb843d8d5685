@@ -50,6 +50,24 @@
       "revId": "9ae0bed83e55640b7ddb1c2b8d5ecb843d8d5685",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95d0d62d_019c58cc",
+        "filename": "autobuild.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T15:39:51Z",
+      "side": 1,
+      "message": "Nope, it is added by mistake.",
+      "parentUuid": "c21d99a1_1557c27e",
+      "revId": "9ae0bed83e55640b7ddb1c2b8d5ecb843d8d5685",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
