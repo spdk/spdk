@@ -145,7 +145,8 @@ ctrlr_ut_pass_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 }
 
 int
-spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata)
+spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
+				 uint32_t max_io_size)
 {
 	uint64_t num_blocks;
 
