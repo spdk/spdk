@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "469b9567_57af63b6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T20:18:03Z",
+      "side": 1,
+      "message": "I think the init_complete and module_init_complete variables should probably be set to false here instead",
+      "revId": "3faf0651f95db3e781b0f84b96eca480e759e396",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c7597c0_8afa7987",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T20:18:03Z",
+      "side": 1,
+      "message": "should we wait until the finish is complete?  it is not valid to start a new init here - we have to wait until all of the bdevs have been unregistered and modules have been fini\u0027d",
+      "revId": "3faf0651f95db3e781b0f84b96eca480e759e396",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
