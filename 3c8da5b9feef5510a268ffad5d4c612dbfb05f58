@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "615c78e2_d2f99a71",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-11T18:38:54Z",
+      "side": 1,
+      "message": "This needs to be atomic.",
+      "revId": "3c8da5b9feef5510a268ffad5d4c612dbfb05f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2c8d7f4_c4c4629c",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-11T18:38:54Z",
+      "side": 1,
+      "message": "This function could be called from several threads at the same time, so it isn\u0027t safe to increment a global variable. You\u0027ll need an atomic.",
+      "revId": "3c8da5b9feef5510a268ffad5d4c612dbfb05f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
