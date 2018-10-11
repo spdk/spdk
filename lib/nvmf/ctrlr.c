@@ -796,6 +796,9 @@ spdk_nvmf_ctrlr_set_features_volatile_write_cache(struct spdk_nvmf_request *req)
 	ctrlr->feat.volatile_write_cache.raw = cmd->cdw11;
 	ctrlr->feat.volatile_write_cache.bits.reserved = 0;
 
+	if (!ctrlr->feat.volatile_write_cache.bits.wce) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Volatile Write Cache  is disabled\n");
+	}
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
