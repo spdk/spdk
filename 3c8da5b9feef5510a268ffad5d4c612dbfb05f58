@@ -33,6 +33,24 @@
       "revId": "3c8da5b9feef5510a268ffad5d4c612dbfb05f58",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f83d40d_542790bc",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-11T23:01:06Z",
+      "side": 1,
+      "message": "Shall I have another patch to address this atomic operation? This patch adds a check here.",
+      "parentUuid": "a2c8d7f4_c4c4629c",
+      "revId": "3c8da5b9feef5510a268ffad5d4c612dbfb05f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
