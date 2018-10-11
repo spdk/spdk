@@ -684,8 +684,14 @@ function freebsd_update_contigmem_mod()
 {
 	if [ `uname` = FreeBSD ]; then
 		kldunload contigmem.ko || true
-		cp -f $rootdir/dpdk/build/kmod/contigmem.ko /boot/modules/
-		cp -f $rootdir/dpdk/build/kmod/contigmem.ko /boot/kernel/
+		if [ ! -z "$WITH_DPDK_DIR" ]; then
+			echo "Warning: SPDK only works on FreeBSD with patches that only exist in SPDK's dpdk submodule"
+			cp -f "$WITH_DPDK_DIR/kmod/contigmem.ko" /boot/modules/
+			cp -f "$WITH_DPDK_DIR/kmod/contigmem.ko" /boot/kernel/
+		else
+			cp -f "$rootdir/dpdk/build/kmod/contigmem.ko" /boot/modules/
+			cp -f "$rootdir/dpdk/build/kmod/contigmem.ko" /boot/kernel/
+		fi
 	fi
 }
 
