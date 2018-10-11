@@ -33,8 +33,8 @@ pid=$!
 trap "killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
-$rpc_py set_nvmf_target_options -u 8192 -p 4
 $rpc_py start_subsystem_init
+$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
 timing_exit start_nvmf_tgt
 
 # Create subsystems

@@ -97,8 +97,8 @@ function migration_tc2_configure_vhost()
 	local nvmf_tgt_pid=$!
 	echo $nvmf_tgt_pid > $nvmf_dir/nvmf_tgt.pid
 	waitforlisten "$nvmf_tgt_pid" "$nvmf_dir/rpc.sock"
-	$rpc_nvmf set_nvmf_target_options -u 8192 -p 4
 	$rpc_nvmf start_subsystem_init
+	$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
 	$SPDK_BUILD_DIR/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 	timing_exit start_nvmf_tgt
 

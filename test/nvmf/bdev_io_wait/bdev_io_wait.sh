@@ -32,10 +32,10 @@ nvmfpid=$!
 trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
-$rpc_py set_nvmf_target_options -u 8192 -p 4
 # Minimal number of bdev io pool (5) and cache (1)
 $rpc_py set_bdev_options -p 5 -c 1
 $rpc_py start_subsystem_init
+$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
 timing_exit start_nvmf_tgt
 
 modprobe -v nvme-rdma
