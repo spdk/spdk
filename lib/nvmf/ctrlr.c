@@ -1143,6 +1143,8 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns;
+	uint32_t max_io_size;
+	int rc;
 
 	if (cmd->nsid == 0 || cmd->nsid > subsystem->max_nsid) {
 		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
@@ -1164,7 +1166,15 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	return spdk_nvmf_bdev_ctrlr_identify_ns(ns, nsdata);
+	rc = spdk_nvmf_bdev_ctrlr_identify_ns(ns, nsdata);
+
+	/* Due to bug in the Linux kernel NVMe driver we have to set noiob no larger than mdts */
+	max_io_size = ctrlr->admin_qpair->transport->opts.max_io_size;
+	if (nsdata->noiob > (max_io_size / spdk_align32pow2(nsdata->lbaf[0].lbads))) {
+		nsdata->noiob = max_io_size / spdk_align32pow2(nsdata->lbaf[0].lbads);
+	}
+
+	return rc;
 }
 
 static int
