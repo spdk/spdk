@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a87fb6d_daa171c9",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-11T02:52:38Z",
+      "side": 1,
+      "message": "I know DPDK user guide says QAT should bind to igb_uio kernel module, but I\u0027m wondering it can also be binded to uio_generic_pci module.",
+      "revId": "eb4c3f2b3457586b0f9c64f057f5c95b6217c223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
