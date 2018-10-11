@@ -52,6 +52,24 @@
       "revId": "ee352b77ddafa6a3e0f4366b45fb70521e69b87d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b6e06c5_3d1f4fc1",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T15:01:04Z",
+      "side": 1,
+      "message": "I think we still need to keep this GET_FEATURES call, for the case where REPLY_ACK feature has not been negotiated.\n\nI\u0027d rather keep this GET_FEATURES here for now - we can add support for REPLY_ACK later.  With this implementation, we know it will work for all vhost targets.\n\n(I\u0027m also not sure if the virtio driver handles F_REPLY_ACK currently.)",
+      "parentUuid": "0508f763_d7bb5fbb",
+      "revId": "ee352b77ddafa6a3e0f4366b45fb70521e69b87d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
