@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "141582ac_d2979db4",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:31:40Z",
+      "side": 1,
+      "message": "no needed as response is send back to user.",
+      "range": {
+        "startLine": 464,
+        "startChar": 2,
+        "endLine": 464,
+        "endChar": 50
+      },
+      "revId": "230f906e9a5e15820bc74c7ae8373b6a2725edd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18a88954_7870d7bf",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:31:40Z",
+      "side": 1,
+      "message": "pls implement decoder function and move this there. You can then skip defining free_rpc_nvme_device_list :)",
+      "range": {
+        "startLine": 470,
+        "startChar": 1,
+        "endLine": 481,
+        "endChar": 2
+      },
+      "revId": "230f906e9a5e15820bc74c7ae8373b6a2725edd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c34f1e9b_5e54b934",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:31:40Z",
+      "side": 1,
+      "message": "you can make nvme_rpc_dev_list_bdev_nvme() return \u0027char **\u0027 and hide all memory allocation/reallocation there but  it would be better to just inline it.",
+      "range": {
+        "startLine": 493,
+        "startChar": 2,
+        "endLine": 493,
+        "endChar": 29
+      },
+      "revId": "230f906e9a5e15820bc74c7ae8373b6a2725edd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5524bbd_505f80c9",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:31:40Z",
+      "side": 1,
+      "message": "Pls use JSON named API named to reduce size of this patch eg spdk_json_write_named_object_begin.",
+      "range": {
+        "startLine": 501,
+        "startChar": 1,
+        "endLine": 501,
+        "endChar": 29
+      },
+      "revId": "230f906e9a5e15820bc74c7ae8373b6a2725edd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69b13236_65fd26d4",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:31:40Z",
+      "side": 1,
+      "message": "man 3 free\n  ...\n  If ptr is NULL, no operation is performed.\n  ...",
+      "range": {
+        "startLine": 516,
+        "startChar": 1,
+        "endLine": 516,
+        "endChar": 20
+      },
+      "revId": "230f906e9a5e15820bc74c7ae8373b6a2725edd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e89c3d15_6018df71",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:31:40Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 524,
+        "startChar": 1,
+        "endLine": 524,
+        "endChar": 20
+      },
+      "revId": "230f906e9a5e15820bc74c7ae8373b6a2725edd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a4a7c67_a9e11016",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:31:40Z",
+      "side": 1,
+      "message": "why this function is deffined here instead of line 451?",
+      "range": {
+        "startLine": 610,
+        "startChar": 0,
+        "endLine": 611,
+        "endChar": 60
+      },
+      "revId": "230f906e9a5e15820bc74c7ae8373b6a2725edd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4c85b7d_102f84dc",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:31:40Z",
+      "side": 1,
+      "message": "why you just can\u0027t moved this  loop instead of for loop in lines 507 - 509",
+      "range": {
+        "startLine": 617,
+        "startChar": 0,
+        "endLine": 635,
+        "endChar": 2
+      },
+      "revId": "230f906e9a5e15820bc74c7ae8373b6a2725edd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
