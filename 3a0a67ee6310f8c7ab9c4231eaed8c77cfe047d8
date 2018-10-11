@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7823ee24_94030e0d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-11T17:01:00Z",
+      "side": 1,
+      "message": "This isn\u0027t a real NVMe controller that is being modified here. We\u0027re just emulating one. I think setting en to 0 here is the right behavior.",
+      "revId": "3a0a67ee6310f8c7ab9c4231eaed8c77cfe047d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "314f21c4_da97e5b1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-11T17:01:00Z",
+      "side": 1,
+      "message": "These debug prints are not related to the change to the register behavior above.",
+      "revId": "3a0a67ee6310f8c7ab9c4231eaed8c77cfe047d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a96c27f8_4689ac8e",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-11T17:01:00Z",
+      "side": 1,
+      "message": "This seems unrelated to the other fix.\n\nAlso, \"doesn\u0027t\" should actually be \"don\u0027t\"",
+      "revId": "3a0a67ee6310f8c7ab9c4231eaed8c77cfe047d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
