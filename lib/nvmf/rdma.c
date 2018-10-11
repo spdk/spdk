@@ -2520,6 +2520,23 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				      rpoller->send_cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
 
+			/* The RDMA specification says that both wr_id and qp_num are valid even in error cases.
+			 * However, RDMA stacks have bugs and we need to make sure our target does not crash.
+			 * Instead of blindly casting wr_id to a pointer, loop through each qpair and try to
+			 * look it up by the qp_num. If the qp_num given is junk, we'll just pretend this
+			 * completion didn't happen. */
+			TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+				if (rqpair->cm_id->qp->qp_num == wc[i].qp_num) {
+					SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Found qpair matching completion entry qp_num on qpair list.\n");
+					break;
+				}
+			}
+
+			if (rqpair == NULL) {
+				SPDK_WARNLOG("No rqpair matches this qp_num. Ignore it.\n");
+				continue;
+			}
+
 			rdma_req = get_rdma_req_from_wc(&wc[i]);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
@@ -2586,6 +2603,23 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on recv CQ %p, Request 0x%lu (%d): %s\n",
 				      rpoller->recv_cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
+
+			/* The RDMA specification says that both wr_id and qp_num are valid even in error cases.
+			 * However, RDMA stacks have bugs and we need to make sure our target does not crash.
+			 * Instead of blindly casting wr_id to a pointer, loop through each qpair and try to
+			 * look it up by the qp_num. If the qp_num given is junk, we'll just pretend this
+			 * completion didn't happen. */
+			TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+				if (rqpair->cm_id->qp->qp_num == wc[i].qp_num) {
+					SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Found qpair matching completion entry qp_num on qpair list.\n");
+					break;
+				}
+			}
+
+			if (rqpair == NULL) {
+				SPDK_WARNLOG("No rqpair matches this qp_num. Ignore it.\n");
+				continue;
+			}
 
 			rdma_recv = get_rdma_recv_from_wc(&wc[i]);
 			rqpair = rdma_recv->qpair;
