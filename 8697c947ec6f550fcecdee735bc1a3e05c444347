@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7c8a062_b81efddb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T22:57:33Z",
+      "side": 1,
+      "message": "let\u0027s pass 0 for alignment instead of 512\n\nthe aligned_buf (line 522) is only there today because of FIO; so in the normal case, where we don\u0027t need alignment, we can just use the buffer as-is\n\nif we pass 512 here, then the check on line 509 will result in never using the small pool for a 8KB IO",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4df35416_ab0aa16e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T22:57:33Z",
+      "side": 1,
+      "message": "in the iscsi to aio case, on a read, the iov_base will be NULL - spdk_is_iov_aligned will say that it is aligned and call the callback immediately, but a buffer needs to be allocated\n\nso I think this check needs to go into _spdk_bdev_io_get_buf instead - you\u0027re already passing the double_buffer true/false flag so it shouldn\u0027t be a problem to do it there instead",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b24903c_d4d460bc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3022,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T22:57:33Z",
+      "side": 1,
+      "message": "we only want to do this for read operations",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d5c8407_3e68f6a6",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T22:57:33Z",
+      "side": 1,
+      "message": "should this be uncommented?  otherwise I don\u0027t see where we are actually testing that the aligned buf worked",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8479766a_ae9d7c1a",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1192,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T22:57:33Z",
+      "side": 1,
+      "message": "this is a nit, but let\u0027s do buf + 4 or buf + 8 instead - we would never try to use a buffer that had a +5 alignment (NVMe for example would not even support such a buffer - it has to be at least 4-byte aligned)",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e30d1d2_cc8b5eaa",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1235,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T22:57:33Z",
+      "side": 1,
+      "message": "let\u0027s also add some cases where iov.iov_base \u003d NULL - that is what happens with iSCSI (and probably NVMe-oF in the future)",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
