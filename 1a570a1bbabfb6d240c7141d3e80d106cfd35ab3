@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16e03b00_ec8c5c36",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-11T01:56:42Z",
+      "side": 1,
+      "message": "It\u0027s better to check flags here.  Although other code doesn\u0027t do this check too.",
+      "revId": "1a570a1bbabfb6d240c7141d3e80d106cfd35ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
