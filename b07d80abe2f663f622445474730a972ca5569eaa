@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f562e37_55bc5ac4",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-11T22:36:09Z",
+      "side": 1,
+      "message": "do we still need sys package here?",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 10
+      },
+      "revId": "b07d80abe2f663f622445474730a972ca5569eaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
