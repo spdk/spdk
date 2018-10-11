@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "978c2540_483f778e",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-11T17:12:11Z",
+      "side": 1,
+      "message": "Instead of modifying this function, I think it fits better architecturally to leave this how it was, but in the function that calls this one adjust nsdata-\u003enoiob as necessary.",
+      "revId": "b99870dcd5a9cc23220e33a23c48ba4a5f35fb53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
