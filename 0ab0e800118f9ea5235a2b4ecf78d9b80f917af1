@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1120e719_63e37875",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3159,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-10-11T05:14:27Z",
+      "side": 1,
+      "message": "The bdev-\u003einternal.qos is initialized to NULL when bdev struct was created, otherwise the SPDK already crashed for thousand times. So you patch is unnecessary.",
+      "revId": "0ab0e800118f9ea5235a2b4ecf78d9b80f917af1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
