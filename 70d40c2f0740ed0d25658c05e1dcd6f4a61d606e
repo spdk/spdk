@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bebd829_79b9818c",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-11T16:56:02Z",
+      "side": 1,
+      "message": "See Jim\u0027s comment from the previous revision. There\u0027s no guarantee that the device created here will be named /dev/nvme0n1.\n\nMaybe try the \u0027nvme list\u0027 or \u0027nvme list-subsys\u0027 commands?",
+      "revId": "70d40c2f0740ed0d25658c05e1dcd6f4a61d606e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
