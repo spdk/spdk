@@ -688,9 +688,17 @@ function autotest_cleanup()
 function freebsd_update_contigmem_mod()
 {
 	if [ `uname` = FreeBSD ]; then
+		local contigmem_path
+
 		kldunload contigmem.ko || true
-		cp -f $rootdir/dpdk/build/kmod/contigmem.ko /boot/modules/
-		cp -f $rootdir/dpdk/build/kmod/contigmem.ko /boot/kernel/
+		if [ ! -z "$WITH_DPDK_DIR" ]; then
+			contigmem_path="$WITH_DPDK_DIR/kmod/contigmem.ko"
+		else
+			contigmem_path="$rootdir/dpdk/build/kmod/contigmem.ko"
+		fi
+
+		cp -f "$contigmem_path" /boot/modules/
+		cp -f "$contigmem_path" /boot/kernel/
 	fi
 }
 
