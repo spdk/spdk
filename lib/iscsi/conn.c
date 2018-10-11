@@ -627,10 +627,25 @@ static void
 spdk_iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 {
 	struct spdk_iscsi_conn *conn = remove_ctx;
+	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
 	int lun_id = spdk_scsi_lun_get_id(lun);
 
-	spdk_clear_all_transfer_task(conn, lun);
+	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
+		if (pdu->task && (lun == pdu->task->scsi.lun)) {
+			TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
+			spdk_iscsi_conn_free_pdu(conn, pdu);
+		}
+	}
 
+	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, tmp_pdu) {
+		if (pdu->task && (lun == pdu->task->scsi.lun)) {
+			TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
+			spdk_iscsi_task_put(pdu->task);
+			spdk_put_pdu(pdu);
+		}
+	}
+
+	spdk_clear_all_transfer_task(conn, lun);
 	spdk_iscsi_conn_close_lun(conn, lun_id);
 }
 
