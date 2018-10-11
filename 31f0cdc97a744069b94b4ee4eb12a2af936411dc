@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "633c1c42_5f9c4034",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-11T21:08:55Z",
+      "side": 1,
+      "message": "What if the user specifically set the global target options? Shouldn\u0027t that take precedence over default options of any type?",
+      "revId": "31f0cdc97a744069b94b4ee4eb12a2af936411dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
