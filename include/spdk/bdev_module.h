@@ -486,6 +486,9 @@ struct spdk_bdev_io {
 		/** requested size of the buffer associated with this I/O */
 		uint64_t buf_len;
 
+		/** buffer alignment */
+		uint64_t alignment;
+
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
 
