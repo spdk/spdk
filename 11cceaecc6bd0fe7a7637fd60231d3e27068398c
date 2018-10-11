@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05e1f3f2_7cd483cb",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-11T17:32:20Z",
+      "side": 1,
+      "message": "Have we tested if we can just use uio_pci_generic?",
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
