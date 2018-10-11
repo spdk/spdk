@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd7e7e23_892425d8",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-11T04:42:51Z",
+      "side": 1,
+      "message": "flag should be aligned with other variable names",
+      "revId": "e4415f706cba548451c4b236db96cda6dd0900bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
