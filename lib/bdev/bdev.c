@@ -425,7 +425,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 
 	bdev_io->internal.buf = NULL;
 
-	if (bdev_io->internal.buf_len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
+	if (bdev_io->internal.buf_len + bdev_io->internal.alignment <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &ch->need_buf_small;
 	} else {
@@ -438,7 +438,8 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	} else {
 		tmp = STAILQ_FIRST(stailq);
 
-		aligned_buf = (void *)(((uintptr_t)buf + 511) & ~511UL);
+		aligned_buf = (void *)(((uintptr_t)buf +
+					(bdev_io->internal.alignment - 1)) & ~(bdev_io->internal.alignment - 1));
 		spdk_bdev_io_set_buf(tmp, aligned_buf, tmp->internal.buf_len);
 
 		STAILQ_REMOVE_HEAD(stailq, internal.buf_link);
@@ -447,8 +448,9 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-void
-spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
+static void
+_spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len,
+		      uint64_t alignment)
 {
 	struct spdk_mempool *pool;
 	bdev_io_stailq_t *stailq;
@@ -469,7 +471,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 
 	bdev_io->internal.buf_len = len;
 	bdev_io->internal.get_buf_cb = cb;
-	if (len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
+	if (len + alignment <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &mgmt_ch->need_buf_small;
 	} else {
@@ -482,12 +484,21 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	if (!buf) {
 		STAILQ_INSERT_TAIL(stailq, bdev_io, internal.buf_link);
 	} else {
-		aligned_buf = (void *)(((uintptr_t)buf + 511) & ~511UL);
+		aligned_buf = (void *)(((uintptr_t)buf + (alignment - 1)) & ~(alignment - 1));
+
 		spdk_bdev_io_set_buf(bdev_io, aligned_buf, len);
 
+		bdev_io->internal.alignment = alignment;
 		bdev_io->internal.buf = buf;
 		bdev_io->internal.get_buf_cb(bdev_io->internal.ch->channel, bdev_io);
 	}
+}
+
+void
+spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
+{
+	/* Alignment is set to 512 due to bdev_aio tests, will be set to 0 in following patch */
+	_spdk_bdev_io_get_buf(bdev_io, cb, len, 512);
 }
 
 static int
@@ -809,7 +820,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	g_bdev_mgr.buf_small_pool = spdk_mempool_create(mempool_name,
 				    BUF_SMALL_POOL_SIZE,
-				    SPDK_BDEV_SMALL_BUF_MAX_SIZE + 512,
+				    SPDK_BDEV_SMALL_BUF_MAX_SIZE,
 				    cache_size,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_small_pool) {
@@ -823,7 +834,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	g_bdev_mgr.buf_large_pool = spdk_mempool_create(mempool_name,
 				    BUF_LARGE_POOL_SIZE,
-				    SPDK_BDEV_LARGE_BUF_MAX_SIZE + 512,
+				    SPDK_BDEV_LARGE_BUF_MAX_SIZE,
 				    cache_size,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_large_pool) {
