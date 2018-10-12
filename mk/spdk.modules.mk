@@ -31,16 +31,16 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-LVOL_MODULES_LIST = vbdev_lvol
-# Modules below are added as dependency for vbdev_lvol
+LVOL_MODULES_LIST = bdev_lvol
+# Modules below are added as dependency for bdev_lvol
 LVOL_MODULES_LIST += blob blob_bdev lvol
 
 BLOCKDEV_MODULES_LIST = $(LVOL_MODULES_LIST)
-BLOCKDEV_MODULES_LIST += bdev_malloc bdev_null bdev_nvme nvme vbdev_passthru vbdev_error vbdev_gpt vbdev_split
-BLOCKDEV_MODULES_LIST += vbdev_raid
+BLOCKDEV_MODULES_LIST += bdev_malloc bdev_null bdev_nvme nvme bdev_passthru bdev_error bdev_gpt bdev_split
+BLOCKDEV_MODULES_LIST += bdev_raid
 
 ifeq ($(CONFIG_CRYPTO),y)
-BLOCKDEV_MODULES_LIST += vbdev_crypto
+BLOCKDEV_MODULES_LIST += bdev_crypto
 endif
 
 ifeq ($(CONFIG_RDMA),y)

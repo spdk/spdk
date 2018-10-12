@@ -37,6 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 
 C_SRCS = vbdev_passthru.c vbdev_passthru_rpc.c
-LIBNAME = vbdev_passthru
+LIBNAME = bdev_passthru
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -37,6 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 CFLAGS += $(ENV_CFLAGS)
 
 C_SRCS = vbdev_crypto.c vbdev_crypto_rpc.c
-LIBNAME = vbdev_crypto
+LIBNAME = bdev_crypto
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

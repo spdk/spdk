@@ -36,6 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 C_SRCS = bdev_raid.c bdev_raid_rpc.c
-LIBNAME = vbdev_raid
+LIBNAME = bdev_raid
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
