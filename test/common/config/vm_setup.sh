@@ -21,6 +21,7 @@
 set -e
 
 VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
+ROOT_DIR=$PWD
 
 UPGRADE=false
 INSTALL=false
@@ -62,7 +63,7 @@ function install_iscsi_adm()
             if [ ! -d open-iscsi-install ]; then
                 mkdir -p open-iscsi-install/patches
                 sudo dnf download --downloaddir=./open-iscsi-install --source iscsi-initiator-utils
-                rpm2cpio open-iscsi-install/$(ls ~/open-iscsi-install) | cpio -D open-iscsi-install -idmv
+                rpm2cpio open-iscsi-install/$(ls open-iscsi-install) | cpio -D open-iscsi-install -idmv
                 mv open-iscsi-install/00* open-iscsi-install/patches/
                 git clone "${GIT_REPO_OPEN_ISCSI}" open-iscsi-install/open-iscsi
 
@@ -177,17 +178,17 @@ function install_vpp()
         if [ -d vpp_setup ]; then
             echo "vpp setup already done."
         else
-            echo "%_topdir  $HOME/vpp_setup/src/rpm" >> ~/.rpmmacros
+            echo "%_topdir  $ROOT_DIR/vpp_setup/src/rpm" >> ~/.rpmmacros
             sudo dnf install -y perl-generators
-            mkdir -p ~/vpp_setup/src/rpm
+            mkdir -p vpp_setup/src/rpm
             mkdir -p vpp_setup/src/rpm/BUILD vpp_setup/src/rpm/RPMS vpp_setup/src/rpm/SOURCES \
             vpp_setup/src/rpm/SPECS vpp_setup/src/rpm/SRPMS
             dnf download --downloaddir=./vpp_setup/src/rpm --source redhat-rpm-config
-            rpm -ivh ~/vpp_setup/src/rpm/redhat-rpm-config*
-            sed -i s/"Requires: (annobin if gcc)"//g ~/vpp_setup/src/rpm/SPECS/redhat-rpm-config.spec
-            rpmbuild -ba ~/vpp_setup/src/rpm/SPECS/*.spec
+            rpm -ivh vpp_setup/src/rpm/redhat-rpm-config*
+            sed -i s/"Requires: (annobin if gcc)"//g vpp_setup/src/rpm/SPECS/redhat-rpm-config.spec
+            rpmbuild -ba vpp_setup/src/rpm/SPECS/*.spec
             sudo dnf remove -y --noautoremove redhat-rpm-config
-            sudo rpm -Uvh ~/vpp_setup/src/rpm/RPMS/noarch/*
+            sudo rpm -Uvh vpp_setup/src/rpm/RPMS/noarch/*
         fi
 
         if [ -d vpp ]; then
@@ -297,8 +298,6 @@ if [ ! -z "$CONF_PATH" ]; then
     fi
 fi
 
-cd ~
-
 : ${GIT_REPO_SPDK=https://review.gerrithub.io/spdk/spdk}; export GIT_REPO_SPDK
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}; export GIT_REPO_DPDK
 : ${GIT_REPO_LIBRXE=https://github.com/SoftRoCE/librxe-dev.git}; export GIT_REPO_LIBRXE
@@ -321,18 +320,18 @@ if $INSTALL; then
     sudo dnf install -y git
 fi
 
-mkdir -p spdk_repo/output
+mkdir -p $ROOT_DIR/output
 
-if [ -d spdk_repo/spdk ]; then
+if [ -d $ROOT_DIR/spdk ]; then
     echo "spdk source already present, not cloning"
 else
-    git -C spdk_repo clone "${GIT_REPO_SPDK}"
+    git clone "${GIT_REPO_SPDK}"
 fi
-git -C spdk_repo/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
-git -C spdk_repo/spdk submodule update --init --recursive
+git -C $ROOT_DIR/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
+git -C $ROOT_DIR/spdk submodule update --init --recursive
 
 if $INSTALL; then
-    sudo ./scripts/pkgdep.sh
+    sudo $ROOT_DIR/spdk/scripts/pkgdep.sh
 
     if echo $CONF | grep -q tsocks; then
         sudo dnf install -y tsocks
