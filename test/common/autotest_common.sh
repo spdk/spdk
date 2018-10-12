@@ -83,11 +83,6 @@ if echo -e "#include <libunwind.h>\nint main(int argc, char *argv[]) {return 0;}
 	config_params+=' --enable-log-bt'
 fi
 
-# RAID is marked experimental and not built by default currently, since it does not
-#  support iov (meaning vhost will not work).  But enable it in the build here, to make
-#  sure it gets built and run against a limited set of use cases for now.
-config_params+=' --with-raid'
-
 if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 	config_params+=' --with-crypto'
 fi
