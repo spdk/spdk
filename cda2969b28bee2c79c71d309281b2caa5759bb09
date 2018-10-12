@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1a0493d_1eaa9aa5",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-10-12T21:28:44Z",
+      "side": 1,
+      "message": "Why do you want to su here?",
+      "revId": "cda2969b28bee2c79c71d309281b2caa5759bb09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
