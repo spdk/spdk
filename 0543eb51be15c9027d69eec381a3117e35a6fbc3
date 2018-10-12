@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "634ac199_3a29da1d",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-10-12T09:26:56Z",
+      "side": 1,
+      "message": "Currently, these statements are only executed by this function, so it seems not necessary at this time.",
+      "parentUuid": "d3ce2c6c_07622001",
+      "range": {
+        "startLine": 640,
+        "startChar": 0,
+        "endLine": 660,
+        "endChar": 2
+      },
+      "revId": "0543eb51be15c9027d69eec381a3117e35a6fbc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "871ddbaa_83e87d67",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 14
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "7c32823b_106ad970",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-10-12T09:26:56Z",
+      "side": 1,
+      "message": "Make sure this function is called by the same thread executing the conn.",
+      "parentUuid": "871ddbaa_83e87d67",
+      "range": {
+        "startLine": 673,
+        "startChar": 1,
+        "endLine": 673,
+        "endChar": 16
+      },
+      "revId": "0543eb51be15c9027d69eec381a3117e35a6fbc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ce89c19_3e874cc7",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 14
@@ -59,6 +107,30 @@
       "writtenOn": "2018-10-12T06:27:29Z",
       "side": 1,
       "message": "This addition looks good but should be done in a separate patch?",
+      "range": {
+        "startLine": 1351,
+        "startChar": 1,
+        "endLine": 1351,
+        "endChar": 45
+      },
+      "revId": "0543eb51be15c9027d69eec381a3117e35a6fbc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d471d56_3661318d",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1351,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-10-12T09:26:56Z",
+      "side": 1,
+      "message": "This is the key part to solve the hotplug issue, so I do not want to do it in another patch.",
+      "parentUuid": "7ce89c19_3e874cc7",
       "range": {
         "startLine": 1351,
         "startChar": 1,
