@@ -489,6 +489,10 @@ struct spdk_bdev_io {
 		/** requested alignment of the buffer associated with this I/O */
 		uint64_t alignment;
 
+		/** if the request is double buffered, store original reqest iovs here */
+		struct iovec *dbl_buf_iovs;
+		int dbl_buf_iovcnt;
+
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
 
@@ -663,6 +667,27 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
  * \c SPDK_BDEV_LARGE_BUF_MAX_SIZE.
  */
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
+
+/**
+ * Request aligned buffer for specified bdev_io. Allocation will happen
+ * only if existing buffer is not aligned. If allocated, the data will
+ * be copied from user buffer to allocated buffer on write path and
+ * the other way on read path. The buffer will be freed automatically
+ * on \c spdk_bdev_free_io() call. This call will never fail - in case
+ * of lack of memory given callback \c cb will be deferred until enough
+ * memory is freed.
+ *
+ * \param bdev_io I/O to set the buffer on.
+ * \param cb callback to be called when the buffer is allocated
+ * or the bdev_io has an SGL assigned already.
+ * \param len size of the buffer to allocate. In case the bdev_io
+ * doesn't have an SGL assigned this field must be no bigger than
+ * \c SPDK_BDEV_LARGE_BUF_MAX_SIZE.
+ * \param alignment Alignment of assigned buffer, this field must
+ * be no bigger than SPDK_BDEV_BUF_MAX_ALIGNMENT
+ */
+void spdk_bdev_io_get_aligned_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb,
+				  uint64_t len, uint64_t alignment);
 
 /**
  * Set the given buffer as the data buffer described by this bdev_io.
