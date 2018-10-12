@@ -70,7 +70,7 @@ spdk_jsonrpc_client_check_rpc_method(struct spdk_jsonrpc_client *client, char *m
 		return -ENOMEM;
 	}
 
-	w = spdk_jsonrpc_begin_request(request, "get_rpc_methods", 1);
+	w = spdk_jsonrpc_begin_request(request, 1, "get_rpc_methods");
 	spdk_jsonrpc_end_request(request, w);
 	spdk_jsonrpc_client_send_request(client, request);
 	spdk_jsonrpc_client_free_request(request);
