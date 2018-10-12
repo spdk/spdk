@@ -40,8 +40,8 @@
 /* HACK: disable VTune integration so the unit test doesn't need VTune headers and libs to build */
 #undef SPDK_CONFIG_VTUNE
 
-#include "bdev/bdev.c"
-#include "bdev/part.c"
+#include "bdev/core/bdev.c"
+#include "bdev/core/part.c"
 
 DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *, (struct spdk_conf *cp,
 		const char *name), NULL);
