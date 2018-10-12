@@ -2671,6 +2671,43 @@ spdk_nvmf_rdma_req_is_completing(struct spdk_nvmf_rdma_request *rdma_req)
 }
 #endif
 
+static bool
+spdk_nvmf_rdma_validate_wc(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_wc *wc)
+{
+	/* First check that the qp_num matches */
+	if (rqpair->cm_id->qp->qp_num != wc->qp_num) {
+		return false;
+	}
+
+	switch (wc->opcode) {
+	case IBV_WC_SEND:
+	case IBV_WC_RDMA_WRITE:
+	case IBV_WC_RDMA_READ:
+		if ((wc->wr_id < (uint64_t)rqpair->reqs) ||
+		    (wc->wr_id > ((uint64_t)rqpair->reqs + (rqpair->max_queue_depth * sizeof(
+					    struct spdk_nvmf_rdma_request))))) {
+			SPDK_WARNLOG("Completion entry matched qp_num %d, but wr_id (%lx) is out of range (%p)\n",
+				     wc->qp_num, wc->wr_id, rqpair->reqs);
+			return false;
+		}
+		break;
+
+	case IBV_WC_RECV:
+		if ((wc->wr_id < (uint64_t)rqpair->recvs) ||
+		    (wc->wr_id > ((uint64_t)rqpair->recvs + (rqpair->max_queue_depth * sizeof(
+					    struct spdk_nvmf_rdma_recv))))) {
+			SPDK_WARNLOG("Completion entry matched qp_num %d, but wr_id (%lx) is out of range (%p)\n",
+				     wc->qp_num, wc->wr_id, rqpair->recvs);
+			return false;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return true;
+}
+
 static int
 spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			   struct spdk_nvmf_rdma_poller *rpoller)
@@ -2706,8 +2743,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			 * loop through each qpair and try to look it up by the qp_num. If the qp_num given is junk, we'll
 			 * just pretend this completion didn't happen. */
 			TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
-				if (rqpair->cm_id->qp->qp_num == wc[i].qp_num) {
-					SPDK_NOTICELOG("Found qpair matching completion entry qp_num on qpair list.\n");
+				if (spdk_nvmf_rdma_validate_wc(rqpair, &wc[i])) {
+					SPDK_NOTICELOG("Found qpair matching completion entry on qpair list.\n");
 					break;
 				}
 			}
