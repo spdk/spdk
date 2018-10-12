@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3ce2c6c_07622001",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-12T06:27:29Z",
+      "side": 1,
+      "message": "It looks that\n\nFactoring out them to a helper function and appling to spdk_iscsi_conn_free_tasks is better.\n\nvoid _spdk_iscsi_conn_free_tasks(conn, lun)\n  TAILQ_FOREACH_SAFE(pdu, \u0026conn-\u003ewrite_pdu_list, tailq, tmp_pdu) {\n    if (pdu-\u003etask \u0026\u0026 (lun \u003d\u003d NULL || lun \u003d\u003d pdu-\u003etask-\u003escsi.lun)) {\n      TAILQ_REMOVE(\u0026conn-\u003ewrite_pdu_list, pdu, tailq);\n      spdk_iscsi_conn_free_pdu(conn, pdu);\n    }\n  }\n\n  TAILQ_FOREACH_SAFE(pdu, \u0026conn-\u003esnack_pdu_list, tailq, tmp_pdu) {\n    if (pdu-\u003etask \u0026\u0026 (lun \u003d\u003d NULL || lun \u003d\u003d pdu-\u003etask-\u003escsi.lun)) {\n      TAILQ_REMOVE(\u0026conn-\u003esnack_pdu_list, pdu, tailq);\n      spdk_iscsi_task_put(pdu-\u003etask);\n      spdk_put_pdu(pdu);\n    }\n  }\n\n  TAILQ_FOREACH_SAFE(iscsi_task, \u0026conn-\u003equeued_datain_tasks, link, tmp_iscsi_task) {\n    if ((!iscsi_task-\u003eis_queued) \u0026\u0026 (lun \u003d\u003d NULL || lun \u003d\u003d iscsi_task-\u003escsi.lun)) {\n      TAILQ_REMOVE(\u0026conn-\u003equeued_datain_tasks, iscsi_task, link);\n        spdk_iscsi_task_put(iscsi_task);\n    }\n  }",
+      "range": {
+        "startLine": 640,
+        "startChar": 0,
+        "endLine": 660,
+        "endChar": 2
+      },
+      "revId": "0543eb51be15c9027d69eec381a3117e35a6fbc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "871ddbaa_83e87d67",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-12T06:27:29Z",
+      "side": 1,
+      "message": "Why event call is necessary?",
+      "range": {
+        "startLine": 673,
+        "startChar": 1,
+        "endLine": 673,
+        "endChar": 16
+      },
+      "revId": "0543eb51be15c9027d69eec381a3117e35a6fbc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ce89c19_3e874cc7",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1351,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-12T06:27:29Z",
+      "side": 1,
+      "message": "This addition looks good but should be done in a separate patch?",
+      "range": {
+        "startLine": 1351,
+        "startChar": 1,
+        "endLine": 1351,
+        "endChar": 45
+      },
+      "revId": "0543eb51be15c9027d69eec381a3117e35a6fbc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
