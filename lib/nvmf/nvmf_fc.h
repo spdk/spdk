@@ -359,7 +359,7 @@ struct spdk_nvmf_fc_request {
 };
 
 SPDK_STATIC_ASSERT(!offsetof(struct spdk_nvmf_fc_request, req),
-		   "FC request and NVMF request address doesnt match.");
+		   "FC request and NVMF request address don't match.");
 
 /*
  * NVMF FC Association
