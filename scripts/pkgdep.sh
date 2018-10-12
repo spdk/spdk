@@ -92,7 +92,7 @@ else
 		ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
 		if [ "$ipsec_submodule_cloned" != "" ]; then
 			cd $rootdir/intel-ipsec-mb
-			make
+			su - $SUDO_USER -c 'make'
 			make install
 			cd -
 		else
