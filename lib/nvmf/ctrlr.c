@@ -486,6 +486,7 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
 			ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 		} else if (cc.bits.shn == 0) {
 			ctrlr->vcprop.cc.bits.shn = 0;
+			ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_NORMAL;
 		} else {
 			SPDK_ERRLOG("Prop Set CC: Invalid SHN value %u%ub\n",
 				    cc.bits.shn >> 1, cc.bits.shn & 1);
