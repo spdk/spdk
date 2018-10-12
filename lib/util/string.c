@@ -257,7 +257,7 @@ spdk_parse_ip_addr(char *ip, char **host, char **port)
 	char *p;
 
 	if (ip == NULL) {
-		return -1;
+		return -EINVAL;
 	}
 
 	*host = NULL;
@@ -267,7 +267,7 @@ spdk_parse_ip_addr(char *ip, char **host, char **port)
 		/* IPv6 */
 		p = strchr(ip, ']');
 		if (p == NULL) {
-			return -1;
+			return -EINVAL;
 		}
 		*host = &ip[1];
 		*p = '\0';
@@ -276,7 +276,7 @@ spdk_parse_ip_addr(char *ip, char **host, char **port)
 		if (*p == '\0') {
 			return 0;
 		} else if (*p != ':') {
-			return -1;
+			return -EINVAL;
 		}
 
 		p++;

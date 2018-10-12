@@ -168,7 +168,7 @@ size_t spdk_strlen_pad(const void *str, size_t size, int pad);
  * \param port Will point to the start of the port within ip. The string will be
  * null terminated.
  *
- * \return 0 on success. -1 on failure.
+ * \return 0 on success. -EINVAL on failure.
  */
 int spdk_parse_ip_addr(char *ip, char **host, char **port);
 
