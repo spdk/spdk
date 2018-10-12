@@ -35,13 +35,39 @@
 #include "jsonrpc_internal.h"
 
 struct jsonrpc_response {
-	char *version;
+	const struct spdk_json_val *version;
 	const struct spdk_json_val *id;
 	const struct spdk_json_val *result;
 };
 
 static int
-capture_val(const struct spdk_json_val *val, void *out)
+capture_string(const struct spdk_json_val *val, void *out)
+{
+	const struct spdk_json_val **vptr = out;
+
+	if (spdk_json_strequal(val, "2.0")) {
+		return SPDK_JSON_PARSE_INVALID;
+	}
+
+	*vptr = val;
+	return 0;
+}
+
+static int
+capture_id(const struct spdk_json_val *val, void *out)
+{
+	const struct spdk_json_val **vptr = out;
+
+	if (val->type != SPDK_JSON_VAL_STRING && val->type != SPDK_JSON_VAL_NUMBER) {
+		return SPDK_JSON_PARSE_INVALID;
+	}
+
+	*vptr = val;
+	return 0;
+}
+
+static int
+capture_any(const struct spdk_json_val *val, void *out)
 {
 	const struct spdk_json_val **vptr = out;
 
@@ -50,9 +76,9 @@ capture_val(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder jsonrpc_response_decoders[] = {
-	{"jsonrpc", offsetof(struct jsonrpc_response, version), spdk_json_decode_string},
-	{"id", offsetof(struct jsonrpc_response, id), capture_val},
-	{"result", offsetof(struct jsonrpc_response, result), capture_val},
+	{"jsonrpc", offsetof(struct jsonrpc_response, version), capture_string},
+	{"id", offsetof(struct jsonrpc_response, id), capture_id},
+	{"result", offsetof(struct jsonrpc_response, result), capture_any},
 };
 
 static int
@@ -61,27 +87,10 @@ parse_single_response(struct spdk_json_val *values,
 		      void *parser_ctx)
 {
 	struct jsonrpc_response resp = {};
-	int rc = 0;
 
 	if (spdk_json_decode_object(values, jsonrpc_response_decoders,
 				    SPDK_COUNTOF(jsonrpc_response_decoders),
 				    &resp)) {
-		rc = SPDK_JSON_PARSE_INVALID;
-		goto done;
-	}
-
-	if (strcmp(resp.version, "2.0")) {
-		rc = SPDK_JSON_PARSE_INVALID;
-		goto done;
-	}
-
-	if (resp.id->type != SPDK_JSON_VAL_STRING && resp.id->type != SPDK_JSON_VAL_NUMBER) {
-		rc = SPDK_JSON_PARSE_INVALID;
-	}
-
-done:
-	free(resp.version);
-	if (rc) {
 		return SPDK_JSON_PARSE_INVALID;
 	}
 
