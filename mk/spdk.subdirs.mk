@@ -31,7 +31,18 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+ALL_DEPDIRS := $(patsubst DEPDIRS-%,%,$(filter DEPDIRS-%,$(.VARIABLES)))
+
+define depdirs_rule
+$(DEPDIRS-$(1)):
+
+$(1): | $(DEPDIRS-$(1))
+
+endef
+
 $(DIRS-y) :
-	$(Q)$(MAKE) -C $@ S=$S$(S:%=/)$@ $(MAKECMDGOALS) $(MAKESUBDIRFLAGS)
+	$(Q)$(MAKE) -C $@ S=$S$(S:%=/)$@ $(MAKECMDGOALS)
+
+$(foreach dir,$(ALL_DEPDIRS),$(eval $(call depdirs_rule,$(dir))))
 
 install: all $(DIRS-y)
