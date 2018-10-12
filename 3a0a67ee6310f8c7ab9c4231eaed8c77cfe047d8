@@ -50,6 +50,24 @@
       "revId": "3a0a67ee6310f8c7ab9c4231eaed8c77cfe047d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e41b0c81_076278dc",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-10-12T08:09:27Z",
+      "side": 1,
+      "message": "ok, need to submit them to different patches.",
+      "parentUuid": "a96c27f8_4689ac8e",
+      "revId": "3a0a67ee6310f8c7ab9c4231eaed8c77cfe047d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
