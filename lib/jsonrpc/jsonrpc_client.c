@@ -167,8 +167,8 @@ jsonrpc_client_write_cb(void *cb_ctx, const void *data, size_t size)
 }
 
 struct spdk_json_write_ctx *
-spdk_jsonrpc_begin_request(struct spdk_jsonrpc_client_request *request, const char *method,
-			   int32_t id)
+spdk_jsonrpc_begin_request(struct spdk_jsonrpc_client_request *request, int32_t id,
+			   const char *method)
 {
 	struct spdk_json_write_ctx *w;
 
@@ -179,8 +179,14 @@ spdk_jsonrpc_begin_request(struct spdk_jsonrpc_client_request *request, const ch
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "jsonrpc", "2.0");
-	spdk_json_write_named_int32(w, "id", id);
-	spdk_json_write_named_string(w, "method", method);
+
+	if (id >= 0) {
+		spdk_json_write_named_int32(w, "id", id);
+	}
+
+	if (method) {
+		spdk_json_write_named_string(w, "method", method);
+	}
 
 	return w;
 }

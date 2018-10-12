@@ -182,16 +182,15 @@ void spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
  * on the request after writing the desired request object to the spdk_json_write_ctx.
  *
  * \param request JSON-RPC request.
- * \param method Name of the RPC method.
- * \param id ID index for the request.
+ * \param id ID index for the request. If < 0 skip ID.
+ * \param method Name of the RPC method. If NULL caller will have to create "method" key.
  *
  * \return JSON write context to write the parameter object to, or NULL if no
  * parameter is necessary.
  */
-struct spdk_json_write_ctx *spdk_jsonrpc_begin_request(
-	struct spdk_jsonrpc_client_request *request,
-	const char *method,
-	int32_t id);
+struct spdk_json_write_ctx *
+spdk_jsonrpc_begin_request(struct spdk_jsonrpc_client_request *request, int32_t id,
+			   const char *method);
 
 /**
  * Complete a JSON-RPC request.
