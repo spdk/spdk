@@ -84,6 +84,24 @@
     },
     {
       "key": {
+        "uuid": "551df952_13b3bff6",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-12T09:27:26Z",
+      "side": 1,
+      "message": "Got it",
+      "parentUuid": "3830e4a4_ad87bd77",
+      "revId": "dbc29f6269896ffde3a154abf98b3d927bf0ed62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "467151b2_f9539f5b",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 10
