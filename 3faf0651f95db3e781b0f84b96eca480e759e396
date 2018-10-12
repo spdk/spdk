@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1942fc71_00a5ca1b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1014226
+      },
+      "writtenOn": "2018-10-12T08:26:11Z",
+      "side": 1,
+      "message": "Fixed in latest patch set",
+      "parentUuid": "469b9567_57af63b6",
+      "revId": "3faf0651f95db3e781b0f84b96eca480e759e396",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5c7597c0_8afa7987",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
