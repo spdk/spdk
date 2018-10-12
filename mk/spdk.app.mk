@@ -55,7 +55,7 @@ SPDK_FILTER_LIB_LIST += $(filter spdk_mock,$(SPDK_LIB_LIST))
 SPDK_WHOLE_ARCHIVE_LIB_LIST = $(SPDK_FILTER_LIB_LIST)
 SPDK_REMAINING_LIB_LIST = $(filter-out $(SPDK_WHOLE_ARCHIVE_LIB_LIST),$(SPDK_LIB_LIST))
 
-SPDK_LIB_FILES = $(call spdk_lib_list_to_files,$(SPDK_LIB_LIST))
+SPDK_LIB_FILES = $(call spdk_lib_list_to_static_libs,$(SPDK_LIB_LIST))
 SPDK_LIB_LINKER_ARGS = \
 	-L$(SPDK_ROOT_DIR)/build/lib \
 	-Wl,--whole-archive \

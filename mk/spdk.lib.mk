@@ -34,7 +34,7 @@
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/shared_lib/spdk.map
-LIB := $(call spdk_lib_list_to_files,$(LIBNAME))
+LIB := $(call spdk_lib_list_to_static_libs,$(LIBNAME))
 SHARED_LINKED_LIB := $(subst .a,.so,$(LIB))
 SHARED_REALNAME_LIB := $(subst .so,.so.$(SO_SUFFIX_ALL),$(SHARED_LINKED_LIB))
 
