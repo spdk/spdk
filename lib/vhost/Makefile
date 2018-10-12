@@ -41,6 +41,7 @@ CFLAGS += $(ENV_CFLAGS)
 C_SRCS = vhost.c vhost_rpc.c vhost_scsi.c vhost_blk.c vhost_nvme.c
 
 LIBNAME = vhost
+SPDK_DEP_LIBNAMES = scsi
 
 DIRS-y += rte_vhost
 

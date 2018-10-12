@@ -34,7 +34,7 @@ timing_exit check_format
 $MAKE $MAKEFLAGS clean
 if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
 	./configure $config_params --with-shared
-	$MAKE $MAKEFLAGS
+	Q= $MAKE -j1
 	$MAKE $MAKEFLAGS clean
 	report_test_completion "shared_object_build"
 fi

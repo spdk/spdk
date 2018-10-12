@@ -41,6 +41,7 @@ ifeq ($(OS),Linux)
 DIRS-y += nbd
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
+DEPDIRS-vhost := scsi
 endif
 
 # If CONFIG_ENV is pointing at a directory in lib, build it.
@@ -49,6 +50,8 @@ ENV_NAME := $(notdir $(CONFIG_ENV))
 ifeq ($(abspath $(CONFIG_ENV)),$(SPDK_ROOT_DIR)/lib/$(ENV_NAME))
 DIRS-y += $(ENV_NAME)
 endif
+
+DEPDIRS-iscsi := scsi
 
 .PHONY: all clean $(DIRS-y)
 
