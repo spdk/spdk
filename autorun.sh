@@ -8,5 +8,5 @@ conf=~/autorun-spdk.conf
 
 # Runs agent scripts
 $rootdir/autobuild.sh "$conf"
-sudo $rootdir/autotest.sh "$conf"
+sudo WITH_DPDK_DIR="$WITH_DPDK_DIR" $rootdir/autotest.sh "$conf"
 $rootdir/autopackage.sh "$conf"
