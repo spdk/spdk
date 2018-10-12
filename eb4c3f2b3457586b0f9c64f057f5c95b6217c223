@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "1c6f2dcd_190f0295",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-12T17:42:30Z",
+      "side": 1,
+      "message": "The script is structured in such a way that changing the driver will require just a few lines.",
+      "parentUuid": "364a2a0a_4670ebe5",
+      "revId": "eb4c3f2b3457586b0f9c64f057f5c95b6217c223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1c6ac263_77a904da",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 1
@@ -48,6 +66,24 @@
       "writtenOn": "2018-10-12T17:20:56Z",
       "side": 1,
       "message": "replace DEPENDENCY_DIR here too?",
+      "revId": "eb4c3f2b3457586b0f9c64f057f5c95b6217c223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbc2a662_eb6991e6",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-12T17:42:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1c6ac263_77a904da",
       "revId": "eb4c3f2b3457586b0f9c64f057f5c95b6217c223",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
