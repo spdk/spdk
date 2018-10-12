@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "a5863b68_97350230",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-10-12T09:34:34Z",
+      "side": 1,
+      "message": "Also the helping function you suggested is not correct. For the remove_lun function, we would like to remove all the pdus with tasks, and those tasks are executing the designated luns. But for free_tasks function, we would like to free all the pdus, and all the pdus related tasks. At least, this suggestion is not correct for this scenerio.",
+      "parentUuid": "d3ce2c6c_07622001",
+      "range": {
+        "startLine": 640,
+        "startChar": 0,
+        "endLine": 660,
+        "endChar": 2
+      },
+      "revId": "0543eb51be15c9027d69eec381a3117e35a6fbc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "871ddbaa_83e87d67",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 14
