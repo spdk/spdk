@@ -33,6 +33,24 @@
       "revId": "175abca530ffdb63805cc400358da92ca09e9480",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45bd0f23_2bbb6924",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T10:32:10Z",
+      "side": 1,
+      "message": "Another issue is that the IO path is changed from:\nVM \u003c-\u003e vhost \u003c-\u003e lvol \u003c-\u003e bdev nvme\nto \nVM \u003c-\u003e vhost \u003c-\u003e lvol \u003c-\u003e bdev_raid0 \u003c-\u003e bdev {nvme, malloc}\n\nI\u0027m not against that kind of test but I\u0027m against making this test the only one here. It is hard enought to debug current IO path. Complicating the IO path it will make this task even harder.\n\nI suggest adding following tests:\n1. VM \u003c-\u003e vhost \u003c-\u003e bdev_raid0 \u003c-\u003e {malloc, malloc}\n2. VM \u003c-\u003e vhost \u003c-\u003e bdev_raid0 \u003c-\u003e {nvme, malloc}\n3. VM \u003c-\u003e vhost \u003c-\u003e lvol \u003c-\u003e bdev_raid0 \u003c-\u003e {malloc, malloc}\n\nThen \n4. VM \u003c-\u003e vhost \u003c-\u003e bdev_raid0 \u003c-\u003e bdev {nvme, malloc}\n\nTo not extend the execution time you can run these tests in parallel.",
+      "parentUuid": "15f9e784_0a0c7ae0",
+      "revId": "175abca530ffdb63805cc400358da92ca09e9480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
