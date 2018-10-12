@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d2ea86f_d1e21f1c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 16
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T10:43:56Z",
+      "side": 1,
+      "message": "Done. It is fine.",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 27
+      },
+      "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
