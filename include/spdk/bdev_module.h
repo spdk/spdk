@@ -487,6 +487,11 @@ struct spdk_bdev_io {
 		/** requested size of the buffer associated with this I/O */
 		uint64_t buf_len;
 
+		/** if the request is double buffered, store original request iovs here */
+		struct iovec  bounce_iov;
+		struct iovec *orig_iovs;
+		int           orig_iovcnt;
+
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
 
@@ -648,10 +653,14 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
 
 /**
  * Allocate a buffer for given bdev_io.  Allocation will happen
- * only if the bdev_io has no assigned SGL yet. The buffer will be
- * freed automatically on \c spdk_bdev_free_io() call. This call
- * will never fail - in case of lack of memory given callback \c cb
- * will be deferred until enough memory is freed.
+ * only if the bdev_io has no assigned SGL yet or SGL is not
+ * aligned to \c bdev->required_alignment.  If SGL is assigned,
+ * this call will cause copy from SGL to bounce buffer on write
+ * path or copy from bounce buffer to SGL before completion
+ * callback on read path.  The buffer will be freed automatically
+ * on \c spdk_bdev_free_io() call. This call will never fail.
+ * In case of lack of memory given callback \c cb will be deferred
+ * until enough memory is freed.
  *
  * \param bdev_io I/O to allocate buffer for.
  * \param cb callback to be called when the buffer is allocated
