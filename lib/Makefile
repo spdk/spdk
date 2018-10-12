@@ -50,6 +50,8 @@ ifeq ($(abspath $(CONFIG_ENV)),$(SPDK_ROOT_DIR)/lib/$(ENV_NAME))
 DIRS-y += $(ENV_NAME)
 endif
 
+DEPDIRS-bdev := log conf
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
