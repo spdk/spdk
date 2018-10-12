@@ -79,7 +79,6 @@ static uint32_t g_tgt_core;
 
 static struct nvmf_tgt_poll_group *g_poll_groups = NULL;
 static size_t g_num_poll_groups = 0;
-static size_t g_active_poll_groups = 0;
 
 static struct spdk_poller *g_acceptor_poller = NULL;
 
@@ -231,9 +230,6 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 
 	spdk_nvmf_poll_group_destroy(pg->group);
 	pg->group = NULL;
-
-	assert(g_active_poll_groups > 0);
-	g_active_poll_groups--;
 }
 
 static void
@@ -252,8 +248,6 @@ nvmf_tgt_create_poll_group(void *ctx)
 
 	pg->group = spdk_nvmf_poll_group_create(g_spdk_nvmf_tgt);
 	assert(pg->group != NULL);
-
-	g_active_poll_groups++;
 }
 
 static void
