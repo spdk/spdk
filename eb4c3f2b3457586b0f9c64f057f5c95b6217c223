@@ -16,6 +16,41 @@
       "revId": "eb4c3f2b3457586b0f9c64f057f5c95b6217c223",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "364a2a0a_4670ebe5",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T17:20:56Z",
+      "side": 1,
+      "message": "I think uio_pci_generic would probably work but let\u0027s defer that to later.",
+      "parentUuid": "9a87fb6d_daa171c9",
+      "revId": "eb4c3f2b3457586b0f9c64f057f5c95b6217c223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c6ac263_77a904da",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T17:20:56Z",
+      "side": 1,
+      "message": "replace DEPENDENCY_DIR here too?",
+      "revId": "eb4c3f2b3457586b0f9c64f057f5c95b6217c223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
