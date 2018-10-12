@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28e9148d_6e481e79",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T22:41:02Z",
+      "side": 1,
+      "message": "Dont think this check is needed unless you use accept4 with SOCK_NONBLOCK or expect that F_GETFL will fail.\n\nAlso moving this whole if() above calloc() will void need to free the new_sock in case of fcntl() failure.",
+      "range": {
+        "startLine": 343,
+        "startChar": 5,
+        "endLine": 343,
+        "endChar": 30
+      },
+      "revId": "9e0683f9a64de0d82a93fc4df13c24fa10d518b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
