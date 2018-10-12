@@ -34,18 +34,15 @@
 #include "spdk/util.h"
 #include "jsonrpc_internal.h"
 
-struct jsonrpc_response {
-	const struct spdk_json_val *version;
-	const struct spdk_json_val *id;
-	const struct spdk_json_val *result;
-};
-
 static int
-capture_string(const struct spdk_json_val *val, void *out)
+capture_version(const struct spdk_json_val *val, void *out)
 {
 	const struct spdk_json_val **vptr = out;
 
 	if (val->type != SPDK_JSON_VAL_STRING) {
+		return SPDK_JSON_PARSE_INVALID;
+	} else if (spdk_json_strequal(val, "2.0") != true) {
+		SPDK_ERRLOG("Invalid JSON RPC version\n");
 		return SPDK_JSON_PARSE_INVALID;
 	}
 
@@ -54,7 +51,20 @@ capture_string(const struct spdk_json_val *val, void *out)
 }
 
 static int
-capture_val(const struct spdk_json_val *val, void *out)
+capture_id(const struct spdk_json_val *val, void *out)
+{
+	const struct spdk_json_val **vptr = out;
+
+	if (val->type != SPDK_JSON_VAL_STRING && val->type != SPDK_JSON_VAL_NUMBER) {
+		return -EINVAL;
+	}
+
+	*vptr = val;
+	return 0;
+}
+
+static int
+capture_any(const struct spdk_json_val *val, void *out)
 {
 	const struct spdk_json_val **vptr = out;
 
@@ -63,75 +73,80 @@ capture_val(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder jsonrpc_response_decoders[] = {
-	{"jsonrpc", offsetof(struct jsonrpc_response, version), capture_string},
-	{"id", offsetof(struct jsonrpc_response, id), capture_val},
-	{"result", offsetof(struct jsonrpc_response, result), capture_val},
+	{"jsonrpc", offsetof(struct spdk_jsonrpc_client_response, version), capture_version},
+	{"id", offsetof(struct spdk_jsonrpc_client_response, id), capture_id, true},
+	{"result", offsetof(struct spdk_jsonrpc_client_response, result), capture_any, true},
+	{"error", offsetof(struct spdk_jsonrpc_client_response, result), capture_any, true},
 };
 
-static int
-parse_single_response(struct spdk_json_val *values,
-		      spdk_jsonrpc_client_response_parser parser_fn,
-		      void *parser_ctx)
-{
-	struct jsonrpc_response resp = {};
-
-	if (spdk_json_decode_object(values, jsonrpc_response_decoders,
-				    SPDK_COUNTOF(jsonrpc_response_decoders),
-				    &resp)) {
-		return SPDK_JSON_PARSE_INVALID;
-	}
-
-	if (spdk_json_strequal(resp.version, "2.0")) {
-		return SPDK_JSON_PARSE_INVALID;
-	}
-
-	if (resp.id->type != SPDK_JSON_VAL_STRING && resp.id->type != SPDK_JSON_VAL_NUMBER) {
-		return SPDK_JSON_PARSE_INVALID;
-	}
-
-	return parser_fn(parser_ctx, resp.result);
-}
-
 int
-spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client, void *json, size_t size)
+spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 {
+	struct spdk_jsonrpc_client_response_internal *r;
 	ssize_t rc;
+	size_t values_cnt;
 	void *end = NULL;
 
-	/* Check to see if we have received a full JSON value. */
-	rc = spdk_json_parse(json, size, NULL, 0, &end, 0);
-	if (rc == SPDK_JSON_PARSE_INCOMPLETE) {
-		return rc;
+	if (client->resp) {
+		return -ENOSPC;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_RPC_CLIENT, "Json string is :\n%s\n", (char *)json);
+	/* Check to see if we have received a full JSON value. */
+	rc = spdk_json_parse(client->recv_buf, client->recv_offset, NULL, 0, &end, 0);
+	if (rc == SPDK_JSON_PARSE_INCOMPLETE) {
+		return -EAGAIN;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_RPC_CLIENT, "JSON string is :\n%s\n", client->recv_buf);
 	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
 		SPDK_ERRLOG("JSON parse error\n");
 		/*
 		 * Can't recover from parse error (no guaranteed resync point in streaming JSON).
 		 * Return an error to indicate that the connection should be closed.
 		 */
-		return SPDK_JSON_PARSE_INVALID;
+		return -EINVAL;
 	}
 
+	values_cnt = rc;
+
+	r = calloc(1, sizeof(*r) + sizeof(struct spdk_json_val) * (values_cnt + 1));
+	if (!r) {
+		return -errno;
+	}
+
+	r->recv_buf = client->recv_buf;
+	r->values_cnt = values_cnt;
+
+	client->recv_buf_size = 0;
+	client->recv_offset = 0;
+	client->recv_buf = NULL;
+
 	/* Decode a second time now that there is a full JSON value available. */
-	rc = spdk_json_parse(json, size, client->values, SPDK_JSONRPC_MAX_VALUES, &end,
+	rc = spdk_json_parse(client->recv_buf, client->recv_offset, r->values, values_cnt, &end,
 			     SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
-	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
+	if (rc != (ssize_t)values_cnt) {
 		SPDK_ERRLOG("JSON parse error on second pass\n");
-		return SPDK_JSON_PARSE_INVALID;
+		goto err;
 	}
 
 	assert(end != NULL);
 
-	if (client->values[0].type != SPDK_JSON_VAL_OBJECT_BEGIN) {
+	if (r->values[0].type != SPDK_JSON_VAL_OBJECT_BEGIN) {
 		SPDK_ERRLOG("top-level JSON value was not object\n");
-		return SPDK_JSON_PARSE_INVALID;
+		goto err;
 	}
 
-	rc = parse_single_response(client->values, client->parser_fn, client->parser_ctx);
+	if (spdk_json_decode_object(r->values, jsonrpc_response_decoders,
+				    SPDK_COUNTOF(jsonrpc_response_decoders), &r->jsonrpc)) {
+		goto err;
+	}
 
-	return rc;
+	client->resp = r;
+	return 0;
+
+err:
+	spdk_jsonrpc_client_free_response(&r->jsonrpc);
+	return -EINVAL;
 }
 
 static int
