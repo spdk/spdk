@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5747b57e_5d6ec636",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T16:37:35Z",
+      "side": 1,
+      "message": "lvl isn\u0027t a clear parameter name\n\nI thought lvl probably stood for \"level\", but that didn\u0027t make sense to me.  Maybe \"obj\" or \"object\"?\n\nSame for lvl later in this patch.",
+      "revId": "78dc0056d9f5bd10784352489c187b1b56f75863",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9a30f18_3283c51c",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T16:37:35Z",
+      "side": 1,
+      "message": "I have the same comment here as version 6 of this patch.",
+      "revId": "78dc0056d9f5bd10784352489c187b1b56f75863",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7710538_b4db6cd3",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T16:37:35Z",
+      "side": 1,
+      "message": "Please make this spdk_json_find_string.\n\nAdding the \"find\" isn\u0027t that much extra text.  And we already call the main function \"spdk_json_find\" so removing it for this helper function is just confusing.",
+      "revId": "78dc0056d9f5bd10784352489c187b1b56f75863",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29636f84_54d245be",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T16:37:35Z",
+      "side": 1,
+      "message": "spdk_json_find_array",
+      "revId": "78dc0056d9f5bd10784352489c187b1b56f75863",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
