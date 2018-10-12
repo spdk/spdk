@@ -489,6 +489,10 @@ struct spdk_bdev_io {
 		/** requested alignment of the buffer associated with this I/O */
 		uint64_t alignment;
 
+		/** if the request is double buffered, store original reqest iovs here */
+		struct iovec *dbl_buf_iovs;
+		int dbl_buf_iovcnt;
+
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
 
