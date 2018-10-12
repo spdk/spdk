@@ -90,7 +90,7 @@ BLOCKDEV_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			       -Wl,--no-whole-archive \
 			       $(BLOCKDEV_MODULES_DEPS)
 
-BLOCKDEV_MODULES_FILES = $(call spdk_lib_list_to_files,$(BLOCKDEV_MODULES_LIST))
+BLOCKDEV_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(BLOCKDEV_MODULES_LIST))
 
 BLOCKDEV_NO_LVOL_MODULES_LIST = $(filter-out $(LVOL_MODULES_LIST),$(BLOCKDEV_MODULES_LIST))
 BLOCKDEV_NO_LVOL_MODULES_LINKER_ARGS = -Wl,--whole-archive \
@@ -98,18 +98,18 @@ BLOCKDEV_NO_LVOL_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			       -Wl,--no-whole-archive \
 			       $(BLOCKDEV_MODULES_DEPS)
 
-BLOCKDEV_NO_LVOL_MODULES_FILES = $(call spdk_lib_list_to_files,$(BLOCKDEV_NO_LVOL_MODULES_LIST))
+BLOCKDEV_NO_LVOL_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(BLOCKDEV_NO_LVOL_MODULES_LIST))
 
 COPY_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			   $(COPY_MODULES_LIST:%=-lspdk_%) \
 			   -Wl,--no-whole-archive \
 			   $(COPY_MODULES_DEPS)
 
-COPY_MODULES_FILES = $(call spdk_lib_list_to_files,$(COPY_MODULES_LIST))
+COPY_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(COPY_MODULES_LIST))
 
 SOCK_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			   $(SOCK_MODULES_LIST:%=-lspdk_%) \
 			   $(SOCK_MODULES_DEPS) \
 			   -Wl,--no-whole-archive
 
-SOCK_MODULES_FILES = $(call spdk_lib_list_to_files,$(SOCK_MODULES_LIST))
+SOCK_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(SOCK_MODULES_LIST))
