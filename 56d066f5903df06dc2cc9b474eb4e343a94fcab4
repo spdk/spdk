@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0815d627_753019f0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 4346,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T22:58:32Z",
+      "side": 1,
+      "message": "Can some native english write/vote something about this sentence :)",
+      "range": {
+        "startLine": 4346,
+        "startChar": 0,
+        "endLine": 4346,
+        "endChar": 42
+      },
+      "revId": "56d066f5903df06dc2cc9b474eb4e343a94fcab4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b0c6566_1e948d49",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 4358,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T22:58:32Z",
+      "side": 1,
+      "message": "Array of names?\n\n\nMy eglish is not fluent so pls wait for other reviewers.",
+      "range": {
+        "startLine": 4358,
+        "startChar": 40,
+        "endLine": 4358,
+        "endChar": 67
+      },
+      "revId": "56d066f5903df06dc2cc9b474eb4e343a94fcab4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fe44f27_7c126ef2",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 4359,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T22:58:32Z",
+      "side": 1,
+      "message": "you don\u0027t need this field as the array size known when response arrives.",
+      "range": {
+        "startLine": 4359,
+        "startChar": 0,
+        "endLine": 4359,
+        "endChar": 62
+      },
+      "revId": "56d066f5903df06dc2cc9b474eb4e343a94fcab4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e87e68a_ce038b7e",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T22:58:32Z",
+      "side": 1,
+      "message": "as noted in jsonrpc.mk this is not needed.",
+      "range": {
+        "startLine": 554,
+        "startChar": 0,
+        "endLine": 554,
+        "endChar": 17
+      },
+      "revId": "56d066f5903df06dc2cc9b474eb4e343a94fcab4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
