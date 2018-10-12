@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a06d8df7_cf10aba8",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1173,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T15:48:00Z",
+      "side": 1,
+      "message": "This will work since we only have one lbaf defined.  But instead of hardcoding 0 here, we should use nsdata-\u003eflbas.format instead.  For example, see similar logic for NVMe driver in nvme_ns_identify_update in lib/nvme/nvme_ns.c.\n\nI would also be OK with just directly using spdk_bdev_get_block_size(ns-\u003ebdev).",
+      "revId": "e25d29c380d4dff678820e19dae6414440eba185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11bc1d06_55b3c7eb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1177,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T15:48:00Z",
+      "side": 1,
+      "message": "I was going to comment that maybe we shouldn\u0027t do this logic in case spdk_nvmf_bdev_ctrlr_identify_ns() returns an error.  But that function can never return an error.  Which makes me think that function should return void instead and then just return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE directly here.  You could do that in a separate cleanup patch before or after this one.",
+      "revId": "e25d29c380d4dff678820e19dae6414440eba185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
