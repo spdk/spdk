@@ -106,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "eb49d68d_5fe259ac",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T11:11:28Z",
+      "side": 1,
+      "message": "They are delibertly deffined without \"_find\" to make these names shorter. I don\u0027t see any benefit in adding \"find\" verb here.",
+      "parentUuid": "45d95fae_1ec27301",
+      "revId": "ade77b6e9195c7e6ca37b2f5a2573c34315b7ae4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd330e6d_6afc8571",
         "filename": "include/spdk/json.h",
         "patchSetId": 6
