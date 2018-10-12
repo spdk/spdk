@@ -16,6 +16,24 @@
       "revId": "cda2969b28bee2c79c71d309281b2caa5759bb09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e311aeac_b9ef0749",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-10-12T21:34:54Z",
+      "side": 1,
+      "message": "Oh. I see.  This script is always run as root.  So I don\u0027t think this code belongs in the script.  pkgdep.sh should only install packages.  If we need to build and install repositories, that should be done someplace else, like vm_setup.sh, which should really be renamed....",
+      "parentUuid": "a1a0493d_1eaa9aa5",
+      "revId": "cda2969b28bee2c79c71d309281b2caa5759bb09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
