@@ -2,6 +2,190 @@
   "comments": [
     {
       "key": {
+        "uuid": "a2374381_5b068d9e",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "1. Pls use $( ) insted of ` `\n2. num_qat_bus in enought to check if you have any QAT device . No need to do \u0027*$num_vfs\u0027",
+      "range": {
+        "startLine": 17,
+        "startChar": 12,
+        "endLine": 17,
+        "endChar": 35
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91842fc1_eb9858f1",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "download the QAT 89700 firmware binary \u0027$qat_binary\u0027from \u0027\u003cURL\u003e\u0027",
+      "range": {
+        "startLine": 28,
+        "startChar": 15,
+        "endLine": 28,
+        "endChar": 22
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb1d7bf1_6fdb529a",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "download the QAT 89700 firmware binary \u0027$qat_map_binary\u0027from \u0027\u003cURL\u003e\u0027",
+      "range": {
+        "startLine": 36,
+        "startChar": 7,
+        "endLine": 36,
+        "endChar": 42
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3ba6c08_23cf52a2",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "\u0027$\u0027 is not needed in bash arithmetic contect (( )). Als you can just move this expression to \n\nif (( $(lspci -d:37c9 | wc -l) \u003d\u003d num_qat_bus * num_vfs )); then ...",
+      "range": {
+        "startLine": 50,
+        "startChar": 20,
+        "endLine": 50,
+        "endChar": 32
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f906baf0_a13f9a45",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 51,
+        "startChar": 5,
+        "endLine": 51,
+        "endChar": 6
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e17772e0_0377e117",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "Are these three loops unbind all QAT VF devices from system?",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 105
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fd16d33_2d7f36a6",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "We don\u0027t care about failure here?",
+      "range": {
+        "startLine": 62,
+        "startChar": 68,
+        "endLine": 62,
+        "endChar": 75
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9749c43c_9257793d",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "using \" \" will void need for \u0027\\:\u0027",
+      "range": {
+        "startLine": 62,
+        "startChar": 3,
+        "endLine": 62,
+        "endChar": 67
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "05e1f3f2_7cd483cb",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 5
@@ -49,6 +233,52 @@
       "side": 1,
       "message": "Ha - that dmesg warning is from my kernel commit earlier this year to enable VMD with uio_pci_generic.  :-)",
       "parentUuid": "1310abc5_ad2dcefa",
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e491499_07a13fdc",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "It would be much more robust to check sysfs for the driver or use bdf in lspci to check for actual driver.\n\nWhats more, I would love to see that this script collect all QAT VF bdf addresses at the very beginning of this file and only this list is used to unbind/bind the driver in whole script.",
+      "range": {
+        "startLine": 79,
+        "startChar": 3,
+        "endLine": 79,
+        "endChar": 40
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e9512f1_0b353f06",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-12T23:31:01Z",
+      "side": 1,
+      "message": "not needed",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 6
+      },
       "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
