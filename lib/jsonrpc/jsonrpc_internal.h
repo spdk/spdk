@@ -106,15 +106,22 @@ struct spdk_jsonrpc_client_request {
 	uint8_t *send_buf;
 };
 
+struct spdk_jsonrpc_client_response_internal {
+	struct spdk_jsonrpc_client_response jsonrpc;
+	uint8_t *recv_buf;
+	size_t values_cnt;
+	struct spdk_json_val values[];
+};
+
 struct spdk_jsonrpc_client {
 	int sockfd;
 
-	struct spdk_json_val values[SPDK_JSONRPC_MAX_VALUES];
-	size_t recv_buf_size;
-	uint8_t *recv_buf;
+	/* Parsed response */
+	struct spdk_jsonrpc_client_response_internal *resp;
 
-	spdk_jsonrpc_client_response_parser parser_fn;
-	void *parser_ctx;
+	size_t recv_buf_size;
+	size_t recv_offset;
+	char *recv_buf;
 };
 
 /* jsonrpc_server_tcp */
@@ -136,14 +143,12 @@ void spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request);
  * Parse JSON data as RPC command response.
  *
  * \param client structure pointer of jsonrpc client
- * \param json Raw JSON data; must be encoded in UTF-8.
- * \param size Size of data in bytes.
  *
- * \return 0 On success
- *         SPDK_JSON_PARSE_INCOMPLETE If the provided data is not a complete JSON value
- *         SPDK_JSON_PARSE_INVALID if the provided data has invalid JSON syntax.
+ * \return 0 On success. Negative error code in error
+ * -EAGAIN - If the provided data is not a complete JSON value (SPDK_JSON_PARSE_INCOMPLETE)
+ * -EINVAL - If the provided data has invalid JSON syntax and can't be parsed (SPDK_JSON_PARSE_INVALID).
+ * -ENOSPC - No space left to store parsed response.
  */
-int spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client, void *json,
-				size_t size);
+int spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client);
 
 #endif
