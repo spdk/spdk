@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2d4626a_52fd54de",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T18:29:42Z",
+      "side": 1,
+      "message": "I don\u0027t think this comment really explains what this field is for.  Maybe it should match the comment for buf_len:\n\n\"requested alignment of the buffer associated with this I/O\"\n\nThink about someone looking at this header file for the first time to understand what each field does - \"buffer alignment\" really won\u0027t give them enough detail.",
+      "revId": "cf6c1c53ae91787101e1f22e73105b2d1fe5545d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fb6e5aa_bf39c8e2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T18:29:42Z",
+      "side": 1,
+      "message": "need newline before void",
+      "revId": "cf6c1c53ae91787101e1f22e73105b2d1fe5545d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
