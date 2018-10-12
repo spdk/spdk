@@ -248,18 +248,26 @@ void spdk_jsonrpc_client_free_request(
  * \param req JSON-RPC request.
  *
  * \return 0 on success.
+ *  -ENOTCONN - not connected yet. Try again later.
  */
 int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
 				     struct spdk_jsonrpc_client_request *req);
 
 /**
- * Receive the JSON-RPC response in JSON-RPC client.
+ * Poll the JSON-RPC client. When any response is available use
+ * \c spdk_jsonrpc_client_response retrive it.
  *
  * \param client JSON-RPC client.
  *
- * \return 0 on success.
+ * \return 0 on success - at least one full response received or negative error code:
+ *  -ENOTCONN - not connected yet. Try again later.
+ *  -EAGAIN - partial response. Try again later.
+ *  -EINVAL - responce is detected to be invalid. Client connection should be terminated.
+ *  -ENOSPC - response too big. Client connection should be terminated.
+ *  -EIO - connection terminated (or other critical error). Client connection should be terminated.
+ *  -ENOMEM - out of memory
  */
-int spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client);
+int spdk_jsonrpc_client_recv_poll(struct spdk_jsonrpc_client *client);
 
 /**
  * Return JSON RPC response object representing next available response from client connection.

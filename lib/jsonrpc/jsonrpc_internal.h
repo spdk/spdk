@@ -115,6 +115,8 @@ struct spdk_jsonrpc_client_response_internal {
 
 struct spdk_jsonrpc_client {
 	int sockfd;
+	int (*recv_fn)(struct spdk_jsonrpc_client *);
+	int (*send_fn)(struct spdk_jsonrpc_client *, struct spdk_jsonrpc_client_request *);
 
 	/* Parsed response */
 	struct spdk_jsonrpc_client_response_internal *resp;
