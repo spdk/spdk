@@ -31,27 +31,15 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += core error gpt lvol malloc null nvme passthru raid rpc split
-
-ifeq ($(CONFIG_CRYPTO),y)
-DIRS-y += crypto
+ifeq ($(CONFIG_VTUNE),y)
+CFLAGS += -I$(CONFIG_VTUNE_DIR)/include -I$(CONFIG_VTUNE_DIR)/sdk/src/ittnotify
 endif
 
-ifeq ($(OS),Linux)
-DIRS-y += aio
-DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
-DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_PMDK) += pmem
-endif
+C_SRCS = bdev.c part.c scsi_nvme.c
+C_SRCS-$(CONFIG_VTUNE) += vtune.c
+LIBNAME = bdev_core
 
-DIRS-$(CONFIG_RBD) += rbd
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
