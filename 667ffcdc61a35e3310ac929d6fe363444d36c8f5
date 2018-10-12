@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fa51ccdc_dd6bb6ad",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-10-12T12:22:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e6a8ef9_1551cf7e",
+      "range": {
+        "startLine": 49,
+        "startChar": 7,
+        "endLine": 50,
+        "endChar": 38
+      },
+      "revId": "667ffcdc61a35e3310ac929d6fe363444d36c8f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "717fffdd_9dcbc77f",
         "filename": "scripts/rpc/__init__.py",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "87afbbd7_28aaa7be",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-10-12T12:22:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "717fffdd_9dcbc77f",
+      "range": {
+        "startLine": 69,
+        "startChar": 7,
+        "endLine": 69,
+        "endChar": 12
+      },
+      "revId": "667ffcdc61a35e3310ac929d6fe363444d36c8f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "972ffa2b_69487830",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 4
@@ -59,6 +107,30 @@
       "writtenOn": "2018-10-12T10:13:25Z",
       "side": 1,
       "message": "why save method takes parameter but load methods are split?",
+      "range": {
+        "startLine": 74,
+        "startChar": 8,
+        "endLine": 74,
+        "endChar": 30
+      },
+      "revId": "667ffcdc61a35e3310ac929d6fe363444d36c8f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54406b0c_3ed1d6ea",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-10-12T12:22:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "972ffa2b_69487830",
       "range": {
         "startLine": 74,
         "startChar": 8,
