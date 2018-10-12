@@ -34,6 +34,24 @@
       "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc4a0da3_8cde34fd",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T17:23:08Z",
+      "side": 1,
+      "message": "Ha - that dmesg warning is from my kernel commit earlier this year to enable VMD with uio_pci_generic.  :-)",
+      "parentUuid": "1310abc5_ad2dcefa",
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
