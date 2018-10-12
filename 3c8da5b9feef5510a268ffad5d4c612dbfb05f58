@@ -51,6 +51,24 @@
       "revId": "3c8da5b9feef5510a268ffad5d4c612dbfb05f58",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b06dd1e3_bdf1bed3",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-12T07:20:39Z",
+      "side": 1,
+      "message": "Looks like we can now just remove the g_active_poll_groups which is not used, just for tracking purpose here. I will have another patch to remove it. Thanks.",
+      "parentUuid": "6f83d40d_542790bc",
+      "revId": "3c8da5b9feef5510a268ffad5d4c612dbfb05f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
