@@ -67,6 +67,13 @@ struct spdk_jsonrpc_request;
 struct spdk_jsonrpc_client;
 struct spdk_jsonrpc_client_request;
 
+struct spdk_jsonrpc_client_response {
+	struct spdk_json_val *version;
+	struct spdk_json_val *id;
+	struct spdk_json_val *result;
+	struct spdk_json_val *error;
+};
+
 /**
  * User callback to handle a single JSON-RPC request.
  *
@@ -249,14 +256,31 @@ int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
  * Receive the JSON-RPC response in JSON-RPC client.
  *
  * \param client JSON-RPC client.
- * \param parser_fn Specific function used to parse the result inside response.
- * \param parser_ctx Parameter for parser_fn.
  *
  * \return 0 on success.
  */
-int spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client,
-				      spdk_jsonrpc_client_response_parser parser_fn,
-				      void *parser_ctx);
+int spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client);
+
+/**
+ * Return JSON RPC response object representing next available response from client connection.
+ * Returned pointer must be freed using \c spdk_jsonrpc_client_free_response
+ *
+ * \param client
+ * \return pointer to JSON RPC response object or NULL if no response available.
+ *
+ * On error \c errno set:
+ * ENOENT - no respone available
+ */
+struct spdk_jsonrpc_client_response *spdk_jsonrpc_client_response(struct spdk_jsonrpc_client
+		*client);
+
+/**
+ * Free response object obtained from \c spdk_jsonrpc_client_response
+ *
+ * \param  pointer to JSON RPC response object. If NULL no operation is performed.
+ */
+void spdk_jsonrpc_client_free_response(struct spdk_jsonrpc_client_response *resp);
+
 
 #ifdef __cplusplus
 }
