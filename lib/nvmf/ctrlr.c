@@ -47,7 +47,7 @@
 
 #include "spdk_internal/log.h"
 
-#define MIN_KEEP_ALIVE_TIMEOUT 10000
+#define MIN_KEEP_ALIVE_TIMEOUT 120000
 
 #define MODEL_NUMBER "SPDK bdev Controller"
 
@@ -1109,6 +1109,11 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			goto invalid_log_page;
 		}
 	} else {
+
+		if (!((cmd->cdw10) & 0x8000) && (cmd->cdw10) != 0) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get  log page  bypass async event \r\n");
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
 		switch (lid) {
 		case SPDK_NVME_LOG_ERROR:
 		case SPDK_NVME_LOG_HEALTH_INFORMATION:
