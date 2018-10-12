@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a8c7e5d_713ac986",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-12T16:38:48Z",
+      "side": 1,
+      "message": "cread \u003d\u003e create?",
+      "revId": "7b0acf5531a469ee544072c65118af61f340c83d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
