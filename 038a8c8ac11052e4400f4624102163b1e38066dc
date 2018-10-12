@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b4b8990_401a9d81",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-10-12T05:33:06Z",
+      "side": 1,
+      "message": "nvmf: fix a typo error",
+      "range": {
+        "startLine": 7,
+        "startChar": 9,
+        "endLine": 7,
+        "endChar": 16
+      },
+      "revId": "038a8c8ac11052e4400f4624102163b1e38066dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c368ce9e_e7fb8528",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-10-12T05:33:06Z",
+      "side": 1,
+      "message": "fix a typo error in lib/nvmf/nvmf_fc.h.",
+      "range": {
+        "startLine": 9,
+        "startChar": 6,
+        "endLine": 9,
+        "endChar": 14
+      },
+      "revId": "038a8c8ac11052e4400f4624102163b1e38066dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
