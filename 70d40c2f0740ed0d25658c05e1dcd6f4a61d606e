@@ -16,6 +16,24 @@
       "revId": "70d40c2f0740ed0d25658c05e1dcd6f4a61d606e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5eaa27f6_419a18f9",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-10-12T07:48:36Z",
+      "side": 1,
+      "message": "Thank you, working on it. \nnvme list-subsys is what I need now, thanks.",
+      "parentUuid": "9bebd829_79b9818c",
+      "revId": "70d40c2f0740ed0d25658c05e1dcd6f4a61d606e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
