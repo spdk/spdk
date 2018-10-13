@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9668d58_8abd0290",
+        "filename": "test/spdkcli/vhost.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-13T17:06:26Z",
+      "side": 0,
+      "message": "Why is this removal part of the patch?",
+      "revId": "5c9dccc96289801cfe9bda5f1e7dc4edf9a33e01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
