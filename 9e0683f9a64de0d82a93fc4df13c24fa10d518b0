@@ -22,6 +22,30 @@
       "revId": "9e0683f9a64de0d82a93fc4df13c24fa10d518b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "231a422d_9cbc504c",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-10-13T00:44:03Z",
+      "side": 1,
+      "message": "This is not check the failure of G_GET_FL. It checks that if the O_NONBLOCK is already set, then we do not need to set it again.",
+      "parentUuid": "28e9148d_6e481e79",
+      "range": {
+        "startLine": 343,
+        "startChar": 5,
+        "endLine": 343,
+        "endChar": 30
+      },
+      "revId": "9e0683f9a64de0d82a93fc4df13c24fa10d518b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
