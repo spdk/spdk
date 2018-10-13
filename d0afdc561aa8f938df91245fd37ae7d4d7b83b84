@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8c21eee_4c9ac0ef",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 38
+      },
+      "lineNbr": 4297,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-13T17:00:35Z",
+      "side": 1,
+      "message": "is there an extra CRLF after the word \u0027command\u0027?  Looks like it",
+      "revId": "d0afdc561aa8f938df91245fd37ae7d4d7b83b84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95458be5_ee4ebf4d",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 38
+      },
+      "lineNbr": 4298,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-13T17:00:35Z",
+      "side": 1,
+      "message": "suggest: \"would cause SPDK\u0027s crash: --\u003e \"may result in unpredictable behavior.\"",
+      "revId": "d0afdc561aa8f938df91245fd37ae7d4d7b83b84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
