@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f39de34c_38f33c57",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-13T00:36:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "72269ef6_f5286b6d",
+      "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e7e0299_946154a1",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 35
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-12T20:24:07Z",
       "side": 1,
       "message": "I think I\u0027d rather have a switch statement in spdk_rpc_send_nvme_cmd().  If cmd_type \u003d\u003d ADMIN_CMD, set the nvme_ctrlr (or if we can\u0027t find it, return error).  If cmd_type \u003d\u003d IO_CMD, set the nvme_bdev.\n\nI think it\u0027s just cleaner because then we find the issue immediately - especially if user specifies a controller name for an IO-CMD.",
+      "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a0bb69c_343de1f7",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-13T00:36:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e7e0299_946154a1",
       "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "de8c4442_26b3e6e8",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-13T00:36:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a54ff757_1c45dfd1",
+      "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0119874_e7d0d500",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 35
@@ -64,6 +118,24 @@
       "writtenOn": "2018-10-12T20:24:07Z",
       "side": 1,
       "message": "remove extra newline",
+      "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec1bd8e7_79a563c2",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-13T00:36:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d0119874_e7d0d500",
       "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "fdbf983c_44530e21",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-13T00:36:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e212efb2_b017ebd4",
+      "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e0c13fb_a98538a3",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 35
@@ -98,6 +188,24 @@
       "writtenOn": "2018-10-12T20:24:07Z",
       "side": 1,
       "message": "you can remove the \"rc \u003d\" part of this - there is no reason to assign rc here since you are returning",
+      "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20e8b98e_77239bc4",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-13T00:36:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e0c13fb_a98538a3",
       "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "84682df5_1a7d6444",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-13T00:36:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9499ff1_e1fe45e6",
+      "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86266885_baef9f2a",
         "filename": "scripts/rpc/nvme.py",
         "patchSetId": 35
@@ -132,6 +258,24 @@
       "writtenOn": "2018-10-12T20:24:07Z",
       "side": 1,
       "message": "this is just a nit, but the other .py files like this one do not have extra newlines at the beginning of the file",
+      "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3b90bb5_4e710c2d",
+        "filename": "scripts/rpc/nvme.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-13T00:36:18Z",
+      "side": 1,
+      "message": "I\u0027m also curious that if I remove the extra line, I\u0027ve gotten error from check_format.sh\n\nChecking Python style... Python formatting errors detected\nscripts/rpc/nvme.py:1:1: E302 expected 2 blank lines, found 0\n\nIt seems iscsi.py has a same issue",
+      "parentUuid": "86266885_baef9f2a",
       "revId": "22e9457618c02c571930a23d3da092795c5a52a0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
