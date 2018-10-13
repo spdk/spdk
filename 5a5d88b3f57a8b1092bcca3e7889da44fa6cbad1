@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "631bd7ab_c0cc0203",
+        "filename": "lib/iscsi/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-13T20:56:32Z",
+      "side": 1,
+      "message": "As commented in mk/spdk.lib.mk, would you please mind prepending this with SPDK_?   That is, SPDK_DEP_LIBNAMES ?",
+      "revId": "5a5d88b3f57a8b1092bcca3e7889da44fa6cbad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c15e2f8_c66b27c8",
+        "filename": "mk/spdk.lib.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-13T20:56:32Z",
+      "side": 1,
+      "message": "Would you mind please prepending \"DEP_LIBS\" with \"SPDK\"; i.e. SPDK_DEP_LIBS.   I believe that helps improve code readability, thus making the distinction from the LOCAL_SYS_LIBS dependencies.",
+      "revId": "5a5d88b3f57a8b1092bcca3e7889da44fa6cbad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "689c33ee_1a0b1731",
+        "filename": "mk/spdk.subdirs.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-13T20:56:32Z",
+      "side": 1,
+      "message": "Just \"wow\".   I was unfamiliar with make\u0027s \"order-only-prerequisites\".   That and the ability to have multiple lines of prerequisites for the same target that result in them being appended, is perfect for this.   Complex, but really amazing.",
+      "revId": "5a5d88b3f57a8b1092bcca3e7889da44fa6cbad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
