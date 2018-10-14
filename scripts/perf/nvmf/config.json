@@ -1,0 +1,32 @@
+{
+  "general": {
+    "username": "uname",
+    "password": "pass"
+  },
+  "target": {
+    "rdma_ips": ["192.0.1.1", "192.0.2.1"],
+    "mode": "spdk",
+    "use_null_block": false,
+    "nvmet_dir": "/path/to/nvmetcli",
+    "num_cores": "1"
+  },
+  "initiator1": {
+    "ip": "10.0.0.1",
+    "rdma_ips": ["192.0.1.1"],
+    "mode": "spdk"
+  },
+  "initiator2": {
+    "ip": "10.0.0.2",
+    "rdma_ips": ["192.0.2.1"],
+    "mode": "spdk"
+  },
+  "fio": {
+    "bs": ["4k"],
+    "qd": [128],
+    "rw": ["read"],
+    "rwmixread": 100,
+    "run_time": 5,
+    "ramp_time": 1,
+    "run_num": 3
+  }
+}
