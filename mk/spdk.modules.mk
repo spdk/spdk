@@ -39,6 +39,11 @@ ifeq ($(CONFIG_CRYPTO),y)
 BLOCKDEV_MODULES_LIST += bdev_crypto
 endif
 
+ifeq ($(CONFIG_REDUCE),y)
+BLOCKDEV_MODULES_LIST += bdev_compress reduce
+BLOCKDEV_MODULES_DEPS += -lpmem
+endif
+
 ifeq ($(CONFIG_RDMA),y)
 BLOCKDEV_MODULES_DEPS += -libverbs -lrdmacm
 endif
