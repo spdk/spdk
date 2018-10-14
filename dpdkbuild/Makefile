@@ -87,6 +87,10 @@ endif
 
 DPDK_CFLAGS = -fPIC
 
+ifeq ($(shell grep -q "release 6" /etc/redhat-release 2&>1 > /dev/null && echo y), y)
+DPDK_CFLAGS += -fno-strict-aliasing
+endif
+
 ifeq ($(CONFIG_DEBUG),y)
 DPDK_CFLAGS += -O0 -g
 IPSEC_OPTS += DEBUG=y
