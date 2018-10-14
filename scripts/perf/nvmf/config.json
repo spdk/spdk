@@ -1,0 +1,32 @@
+{
+  "general": {
+    "username": "sys_sgci",
+    "password": "espidikej"
+  },
+  "target": {
+    "rdma_ips": ["20.0.0.1", "20.0.1.1", "10.0.0.1", "10.0.1.1"],
+    "mode": "spdk",
+    "use_null_block": false,
+    "nvmet_dir": "/home/sys_sgci/nvmetcli",
+    "num_cores": "[0-1,28-29,56-57,84-85]"
+  },
+  "initiator1": {
+    "ip": "10.102.54.175",
+    "rdma_ips": ["20.0.0.1", "20.0.1.1"],
+    "mode": "kernel"
+  },
+  "initiator2": {
+    "ip": "10.102.54.176",
+    "rdma_ips": ["10.0.0.1", "10.0.1.1"],
+    "mode": "kernel"
+  },
+  "fio": {
+    "bs": ["4k"],
+    "qd": [1],
+    "rw": ["randread"],
+    "rwmixread": 100,
+    "run_time": 10,
+    "ramp_time": 0,
+    "run_num": 1
+  }
+}
