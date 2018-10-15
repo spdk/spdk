@@ -12,24 +12,28 @@ function usage()
 	echo "$0"
 	echo "  -h --help"
 	echo "  -i --install-crypto Install ipsec dependencies"
+	echo "  -r --install-reduce Install isa-l dependencies"
 	echo ""
 	exit 0
 }
 
 INSTALL_CRYPTO=false
+INSTALL_REDUCE=false
 
-while getopts 'hi-:' optchar; do
+while getopts 'hir-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
 			help) usage;;
 			install-crypto) INSTALL_CRYPTO=true;;
+			install-reduce) INSTALL_REDUCE=true;;
 			*) echo "Invalid argument '$OPTARG'"
 			usage;;
 		esac
 		;;
 	h) usage;;
 	i) INSTALL_CRYPTO=true;;
+	r) INSTALL_REDUCE=true;;
 	*) echo "Invalid argument '$OPTARG'"
 	usage;;
 	esac
@@ -74,6 +78,10 @@ if [ -s /etc/redhat-release ]; then
 	if ! echo "$ID $VERSION_ID" | egrep -q 'rhel 7|centos 7'; then
 		yum install -y python3-configshell python3-pexpect
 	fi
+	# Additional dependencies for ISA-L used in compression
+	if $INSTALL_REDUCE; then
+		yum install -y autoconf automake libtool
+	fi
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
@@ -90,6 +98,10 @@ elif [ -f /etc/debian_version ]; then
 	if [[ $(lsb_release -rs) > "17.07" ]]; then
 		apt-get install -y python3-configshell-fb python3-pexpect
 	fi
+	# Additional dependencies for ISA-L used in compression
+	if $INSTALL_REDUCE; then
+		apt-get install -y autoconf automake libtool
+	fi
 elif [ -f /etc/SuSE-release ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pep8 libuuid-devel sg3_utils pciutils
@@ -103,36 +115,73 @@ elif [ -f /etc/SuSE-release ]; then
 	zypper install -y libpmemblk-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
+	# Additional dependencies for ISA-L used in compression
+	if $INSTALL_REDUCE; then
+		zypper install -y autoconf automake libtool
+	fi
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	pkg install -y gmake cunit openssl git devel/astyle bash py27-pycodestyle \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	# Additional dependencies for building docs
 	pkg install -y doxygen mscgen graphviz
+	# Additional dependencies for ISA-L used in compression
+	if $INSTALL_REDUCE; then
+		pkg install -y autoconf automake libtool
+	fi
 else
 	echo "pkgdep: unknown system type."
 	exit 1
 fi
 
-# Only crypto needs nasm and this lib but because the lib requires root to
-# install we do it here - when asked.
-
-if $INSTALL_CRYPTO; then
-
+# Crypto and compression both require a minimum version of nasm
+if [[ $INSTALL_CRYPTO ]] || [[ $INSTALL_REDUCE ]]; then
+	echo "Checking for nasm dependency..."
 	nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
 	if [ $nasm_ver -lt "21202" ]; then
-			echo Crypto requires NASM version 2.12.02 or newer.  Please install
-			echo or upgrade and re-run this script if you are going to use Crypto.
+			echo "Crypto & compression require NASM version 2.12.02 or newer.  Please install"
+			echo "or upgrade and re-run this script."
 	else
-		ipsec="$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)"
-		if [ "$ipsec" == "" ]; then
-			ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
-			if [ "$ipsec_submodule_cloned" != "" ]; then
-				su - $SUDO_USER -c "make -C $rootdir/intel-ipsec-mb"
-				make -C $rootdir/intel-ipsec-mb install
-			else
-				echo "The intel-ipsec-mb submodule has not been cloned and will not be installed."
-				echo "To enable crypto, run 'git submodule update --init' and then run this script again."
-			fi
+		echo "Nasm dependency has been met."
+	fi
+fi
+
+# compression dependency that must run as root so we do it in this script
+if $INSTALL_REDUCE; then
+	echo "Checking for isa-l dependency..."
+	isal="$(find /usr -xdev -name isa-l.h 2>/dev/null)"
+	if [ "$isal" == "" ]; then
+		# isa-l.h is generated so look for README.md to confirm the repo exists
+		isal_submodule_cloned="$(find $rootdir/isa-l -name README.md 2>/dev/null)"
+		if [ "$isal_submodule_cloned" != "" ]; then
+			cd $rootdir/isa-l
+			./autogen.sh
+			./configure
+			su - $SUDO_USER -c "make -C $rootdir/isa-l"
+			make -C $rootdir/isa-l install
+			cd -
+		else
+			echo "The isa-l submodule has not been cloned and will not be installed."
+			echo "To enable compression, run 'git submodule update --init' and then run this script again."
 		fi
+	else
+		echo "Isa-l dependency has been met."
+	fi
+fi
+
+# crypto dependency that must run as root so we do it in this script
+if $INSTALL_CRYPTO; then
+	echo "Checking for ipsec dependency..."
+	ipsec="$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)"
+	if [ "$ipsec" == "" ]; then
+		ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
+		if [ "$ipsec_submodule_cloned" != "" ]; then
+			su - $SUDO_USER -c "make -C $rootdir/intel-ipsec-mb"
+			make -C $rootdir/intel-ipsec-mb install
+		else
+			echo "The intel-ipsec-mb submodule has not been cloned and will not be installed."
+			echo "To enable crypto, run 'git submodule update --init' and then run this script again."
+		fi
+	else
+		echo "Ipsec dependency has been met."
 	fi
 fi
