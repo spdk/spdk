@@ -48,6 +48,10 @@ Example response
 ~~~
 {
   "num_blocks": 32768,
+  "assigned_rate_limits": {
+    "rw_ios_per_sec": 10000,
+    "rw_mbytes_per_sec": 20
+  },
   "supported_io_types": {
     "reset": true,
     "nvme_admin": false,
@@ -65,6 +69,19 @@ Example response
   "name": "Malloc0"
 }
 ~~~
+
+## set_bdev_qos_limit {#set_bdev_qos_limit}
+
+To enable, adjust and disable rate limits on the previously created bdev, user
+can use `set_bdev_qos_limit` RPC command. Two types of rate limits are supported.
+One is the IOPS rate limit and the other is the bandwidth rate limit. The rate
+limits can be enabled, adjusted and disabled at any time for the required bdev
+which is consumed by any upper layers. Bdev name is the required parameter for
+this RPC command and one of `rw_ios_per_sec` and `rw_mbytes_per_sec` parameters
+is needed for either the IOPS or bandwidth rate limits. When both rate limits
+are enabled, the first met limit will take effect. Specifically, the value of 0
+is to disable the corresponding rate limit. User can run this command with `-h`
+or `--help` for more information about the usage.
 
 ## delete_bdev {#bdev_ug_delete_bdev}
 
