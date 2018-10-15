@@ -50,6 +50,24 @@
       "revId": "5a5d88b3f57a8b1092bcca3e7889da44fa6cbad1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed5fcd3e_e23b3a9b",
+        "filename": "mk/spdk.subdirs.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T16:58:01Z",
+      "side": 1,
+      "message": "Shamelessly copied from DPDK.  :-)",
+      "parentUuid": "689c33ee_1a0b1731",
+      "revId": "5a5d88b3f57a8b1092bcca3e7889da44fa6cbad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
