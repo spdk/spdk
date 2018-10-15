@@ -84,7 +84,7 @@ for dev in $devs; do
 	mkdir -p /mnt/${dev}dir
 	mount -o sync /dev/$dev /mnt/${dev}dir
 
-	rsync -qav --exclude=".git" $rootdir/ /mnt/${dev}dir/spdk
+	rsync -qav --exclude=".git" --exclude="*.o" $rootdir/ /mnt/${dev}dir/spdk
 
 	make -C /mnt/${dev}dir/spdk clean
 	(cd /mnt/${dev}dir/spdk && ./configure $config_params)
