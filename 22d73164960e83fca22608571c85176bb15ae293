@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5608deb5_a09e9d04",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-15T17:04:38Z",
+      "side": 1,
+      "message": "I think in order for this to guarantee that bdev_io is still a valid pointer, you need to do this line before calling spdk_bdev_io_complete",
+      "revId": "22d73164960e83fca22608571c85176bb15ae293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2460ae37_c03aed65",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-15T17:04:38Z",
+      "side": 1,
+      "message": "Don\u0027t you want to take the operation off of the pending list here too? Is the pending list just for outstanding I/O to the crypto dev or for all I/O outstanding to this bdev?",
+      "revId": "22d73164960e83fca22608571c85176bb15ae293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49dfa362_dca8bcec",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-15T17:04:38Z",
+      "side": 1,
+      "message": "I know it\u0027s kind of backward feeling at first, but we would typically put _ch_quiesce below _ch_quiesce_done. We often read code from the bottom up when coding asynchronously. You get used to it over time and it starts to actually feel right at some point.",
+      "revId": "22d73164960e83fca22608571c85176bb15ae293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f246fc1_e9f55cd6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-15T17:04:38Z",
+      "side": 1,
+      "message": "I\u0027m not sure if it is more or less confusing to directly call the poller here. I\u0027m actually leaning toward more confusing. Instead, we should put a comment here that says the already running poller will look at crypto_ch-\u003eiter and recognize that a reset is occurring. It will continue the iteration when no more I/O is outstanding.",
+      "revId": "22d73164960e83fca22608571c85176bb15ae293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b48ad9be_ef9d9362",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-15T17:04:38Z",
+      "side": 1,
+      "message": "This function completes writes after they\u0027ve been encrypted, right? I think if you remove the bdev_io from the pending_ios list after the crypto operation completes you don\u0027t have to touch this and it\u0027s overall simpler.",
+      "revId": "22d73164960e83fca22608571c85176bb15ae293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed8d3b9a_d11b1a86",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-15T17:04:38Z",
+      "side": 1,
+      "message": "_crypto_operation only enqueues the bdev_io if it succeeds.",
+      "revId": "22d73164960e83fca22608571c85176bb15ae293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e3f7b7f_77260931",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 880,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-15T17:04:38Z",
+      "side": 1,
+      "message": "The operation was only enqueued if _crypto_operation was called",
+      "revId": "22d73164960e83fca22608571c85176bb15ae293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
