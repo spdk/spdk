@@ -4,3 +4,6 @@
 [submodule "intel-ipsec-mb"]
 	path = intel-ipsec-mb
 	url = https://github.com/spdk/intel-ipsec-mb.git
+[submodule "isa-l"]
+	path = isa-l
+	url = https://github.com/spdk/isa-l.git
