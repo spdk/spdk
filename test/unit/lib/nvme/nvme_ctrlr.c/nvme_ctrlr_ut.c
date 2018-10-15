@@ -1501,6 +1501,7 @@ test_ctrlr_get_default_ctrlr_opts(void)
 	CU_ASSERT(strlen(opts.hostnqn) == 0);
 	CU_ASSERT(strlen(opts.src_addr) == 0);
 	CU_ASSERT(strlen(opts.src_svcid) == 0);
+	CU_ASSERT_EQUAL(opts.admin_timeout_ms, 0);
 
 	/* set a consistent opts_size */
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
@@ -1519,6 +1520,7 @@ test_ctrlr_get_default_ctrlr_opts(void)
 			 sizeof(opts.extended_host_id)) == 0);
 	CU_ASSERT(strlen(opts.src_addr) == 0);
 	CU_ASSERT(strlen(opts.src_svcid) == 0);
+	CU_ASSERT_EQUAL(opts.admin_timeout_ms, NVME_MAX_TIMEOUT_PERIOD * 1000);
 }
 
 static void
