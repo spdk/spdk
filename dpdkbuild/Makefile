@@ -98,6 +98,8 @@ else
 DPDK_CFLAGS += -Wno-error
 endif
 
+DPDK_CFLAGS += $(EXTRA_DPDK_CFLAGS)
+
 $(SPDK_ROOT_DIR)/dpdk/build: $(INTEL_IPSEC_MB_LIB)
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG) $(DPDK_OPTS)
 
