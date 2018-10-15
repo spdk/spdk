@@ -152,14 +152,6 @@ else
 	SPDK_TEST_PMDK=0; export SPDK_TEST_PMDK
 fi
 
-if [ -f /usr/include/libpmem.h ]; then
-	config_params+=' --with-reduce'
-else
-	# PMDK not installed so disable any reduce tests explicitly here
-	#  since reduce depends on libpmem
-	SPDK_TEST_REDUCE=0; export SPDK_TEST_REDUCE
-fi
-
 if [ -d /usr/src/fio ]; then
 	config_params+=' --with-fio=/usr/src/fio'
 fi
