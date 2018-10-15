@@ -33,6 +33,23 @@
       "revId": "cf6c1c53ae91787101e1f22e73105b2d1fe5545d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22c44195_8860867c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-15T15:14:42Z",
+      "side": 1,
+      "message": "You mean in n upcoming patch that addresses some limitation in bdev_io tets?",
+      "revId": "cf6c1c53ae91787101e1f22e73105b2d1fe5545d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
