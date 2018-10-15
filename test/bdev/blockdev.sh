@@ -11,7 +11,7 @@ function run_fio()
 {
 	if [ $RUN_NIGHTLY -eq 0 ]; then
 		LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio "$@"
-	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+	elif [ $RUN_NIGHTLY -eq 1 ]; then
 		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
 		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
 		LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio "$@"
