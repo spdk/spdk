@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "33692865_c8682f37",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-15T08:46:42Z",
+      "side": 1,
+      "message": "same as line 88 here.",
+      "parentUuid": "c6b57f6c_0634bdf1",
+      "revId": "02245a62d0539b0505c5f1d9b06dae9e16efb206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fe42c3ab_dd135565",
         "filename": "doc/bdev.md",
         "patchSetId": 2
