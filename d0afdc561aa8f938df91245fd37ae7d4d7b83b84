@@ -56,6 +56,30 @@
       "revId": "d0afdc561aa8f938df91245fd37ae7d4d7b83b84",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b09aeb2c_67e2f73c",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T18:38:47Z",
+      "side": 1,
+      "message": "This is not really duplicated - for NVME_IO_CMD, name should be the bdev (namespace) name.  For NVME_ADMIN_CMD, name should be the controller name.  It is not valid for nvme_bdev to be NULL, nvme_ctrlr to be not NULL and cmd_type to be NVME_IO_CMD.  So these separate checks need to be here.",
+      "parentUuid": "38ed9415_71b77466",
+      "range": {
+        "startLine": 469,
+        "startChar": 0,
+        "endLine": 474,
+        "endChar": 3
+      },
+      "revId": "d0afdc561aa8f938df91245fd37ae7d4d7b83b84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
