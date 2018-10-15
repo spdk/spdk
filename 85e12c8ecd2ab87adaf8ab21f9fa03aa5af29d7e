@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7e67b92_fb12a514",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T19:47:25Z",
+      "side": 1,
+      "message": "Hi,\n\nWhy is this debug print required?  We can already get the value of this from the SPDK_DEBUGLOG at line 794.\n\n-Jim",
+      "revId": "85e12c8ecd2ab87adaf8ab21f9fa03aa5af29d7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
