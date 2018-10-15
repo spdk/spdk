@@ -2,6 +2,11 @@
 
 ## v19.01: (Upcoming Release)
 
+### nvme
+
+admin_timeout_ms was added to NVMe controller initialization options, users
+can change the default value when probing a controller.
+
 ### NVMe-oF Target
 
 The `spdk_nvmf_tgt_opts` struct has been deprecated in favor of `spdk_nvmf_transport_opts`.
