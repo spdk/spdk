@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90511abe_00873380",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-15T15:36:25Z",
+      "side": 1,
+      "message": "What do you mean by \"in future\"? Do you mean post-initialization? If so that would be a clearer way to state it I think (when I read \u0027in future\u0027 in a commit message I think it implies some future patch)",
+      "revId": "7637022b36427a7df0101545686ae53e2b6824da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4198285b_111ac66a",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-15T15:36:25Z",
+      "side": 1,
+      "message": "suggest \"(0 \u003d no timeout)\" instead of disabled",
+      "revId": "7637022b36427a7df0101545686ae53e2b6824da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1481057_d4c8b204",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-15T15:36:25Z",
+      "side": 1,
+      "message": "I don\u0027t completely understand this sentence, just a translation thing I think.  Are you trying to say \"The timeout value for Admin commands used during initialization when there is no callback? What about if there is a callback (are there any)? Meaning that admin commands not used during init are not subject to this *and* admin commands for which there is a callback are not subject to this?.  And then after init you can change the timeout value with the cal mentioned here? Maybe try and reword this being really clear about when this is in effect and what this other call is for.",
+      "revId": "7637022b36427a7df0101545686ae53e2b6824da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
