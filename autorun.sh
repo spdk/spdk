@@ -4,6 +4,10 @@ set -e
 
 rootdir=$(readlink -f $(dirname $0))
 
+git submodule update --init
+sudo $rootdir/scripts/pkgdep.sh -r
+exit 0
+
 conf=~/autorun-spdk.conf
 
 # Runs agent scripts
