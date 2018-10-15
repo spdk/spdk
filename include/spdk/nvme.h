@@ -155,6 +155,15 @@ struct spdk_nvme_ctrlr_opts {
 	 * command set is used.
 	 */
 	enum spdk_nvme_cc_css command_set;
+
+	/**
+	 * Admin commands timeout in milliseconds (0 = disabled).
+	 *
+	 * The timeout value are used for Admin commands when initialization and no
+	 * callback is required.  Users can call spdk_nvme_ctrlr_register_timeout_callback()
+	 * to replace the value after successful initialization.
+	 */
+	uint32_t admin_timeout_ms;
 };
 
 /**
