@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15049ffe_28ed53ce",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-15T05:19:11Z",
+      "side": 1,
+      "message": "descriptors",
+      "range": {
+        "startLine": 646,
+        "startChar": 31,
+        "endLine": 646,
+        "endChar": 41
+      },
+      "revId": "d0a6e37f30c9fc9672622905ad69667cbd9900ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f85a89b_102d3706",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-15T05:19:11Z",
+      "side": 1,
+      "message": "Namespace Identification Descriptors",
+      "range": {
+        "startLine": 477,
+        "startChar": 29,
+        "endLine": 477,
+        "endChar": 41
+      },
+      "revId": "d0a6e37f30c9fc9672622905ad69667cbd9900ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
