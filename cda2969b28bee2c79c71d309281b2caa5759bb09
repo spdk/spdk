@@ -34,6 +34,24 @@
       "revId": "cda2969b28bee2c79c71d309281b2caa5759bb09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdd013f6_be824190",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-15T15:27:57Z",
+      "side": 1,
+      "message": "vm_setup isn\u0027t something that everyone runs, even if we rename it.  Agree this isn\u0027t the greatest fit but when we put it here it was because the next line \u0027make install\u0027 must be done as root or it doesn\u0027t work. So rather than make people do that as a \u0027one off\u0027 thing we decided to include this here since it already required root",
+      "parentUuid": "e311aeac_b9ef0749",
+      "revId": "cda2969b28bee2c79c71d309281b2caa5759bb09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
