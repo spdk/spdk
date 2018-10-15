@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e6e01ad_05573477",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2745,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-15T18:07:46Z",
+      "side": 1,
+      "message": "Don\u0027t think you can use task object after spdk_iscsi_task_put().",
+      "range": {
+        "startLine": 2745,
+        "startChar": 4,
+        "endLine": 2745,
+        "endChar": 30
+      },
+      "revId": "25559a1ce9cb6522b66806558bcac8b0b4650d63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
