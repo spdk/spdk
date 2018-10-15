@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdc109bf_5804f8c4",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-15T17:53:12Z",
+      "side": 1,
+      "message": "SPKD",
+      "revId": "b1954c680f3c7cb96b677f65ccfcb9b433eb3f7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
