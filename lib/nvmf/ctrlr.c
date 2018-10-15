@@ -1164,7 +1164,9 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	return spdk_nvmf_bdev_ctrlr_identify_ns(ns, nsdata);
+	spdk_nvmf_bdev_ctrlr_identify_ns(ns, nsdata);
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 static int
