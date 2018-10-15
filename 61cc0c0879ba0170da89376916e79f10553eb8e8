@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50c2d705_ca49ba77",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T17:39:36Z",
+      "side": 1,
+      "message": "lvl \u003d\u003e object\n\n(mentioned in earlier review - also matches spdk_json_find_array() below)",
+      "revId": "61cc0c0879ba0170da89376916e79f10553eb8e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be34eff4_5087c9ca",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T17:39:36Z",
+      "side": 1,
+      "message": "lvl \u003d\u003e object",
+      "revId": "61cc0c0879ba0170da89376916e79f10553eb8e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bca9aab8_e603d0c9",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T17:39:36Z",
+      "side": 1,
+      "message": "lvl \u003d\u003e object",
+      "revId": "61cc0c0879ba0170da89376916e79f10553eb8e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a4ba0fb_418e5d70",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T17:39:36Z",
+      "side": 1,
+      "message": "lvl \u003d\u003e object",
+      "revId": "61cc0c0879ba0170da89376916e79f10553eb8e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
