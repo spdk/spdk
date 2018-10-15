@@ -67,6 +67,10 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	$rootdir/scripts/gen_rbd.sh >> $testdir/bdev.conf
 fi
 
+if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+	$rootdir/scripts/gen_crypto.sh Malloc6 >> $testdir/bdev.conf
+fi
+
 if hash pmempool; then
 	rm -f /tmp/spdk-pmem-pool
 	pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
