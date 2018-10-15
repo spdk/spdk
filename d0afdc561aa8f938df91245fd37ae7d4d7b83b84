@@ -33,6 +33,29 @@
       "revId": "d0afdc561aa8f938df91245fd37ae7d4d7b83b84",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38ed9415_71b77466",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-15T03:17:02Z",
+      "side": 1,
+      "message": "Together with block line 477-481, we can add a check at line 484\n\nif (ctx-\u003envme_bdev \u003d\u003d NULL \u0026\u0026 ctx-\u003envme_ctrl \u003d\u003d NULL) {\n  SPDK_ERRLOG();\n  error_code\n  ret\n  goto\n}\n\nThis can remove these duplicated code?",
+      "range": {
+        "startLine": 469,
+        "startChar": 0,
+        "endLine": 474,
+        "endChar": 3
+      },
+      "revId": "d0afdc561aa8f938df91245fd37ae7d4d7b83b84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
