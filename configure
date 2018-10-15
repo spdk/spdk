@@ -48,14 +48,14 @@ function usage()
 	echo "                           No path required."
 	echo " pmdk                      Required to build persistent memory bdev."
 	echo "                           example: /usr/share/pmdk"
-	echo " reduce                    Required to build \"reduce\" (SPDK block compression)."
-	echo "                           No path required."
 	echo " vpp                       Required to build VPP net module."
 	echo "                           example: /vpp_repo/build-root/install-vpp-native/vpp"
 	echo " rbd                       [disabled]"
 	echo "                           No path required."
 	echo " rdma                      [disabled]"
 	echo "                           No path required."
+        echo " reduce                    Required to build vbdev compression module."
+        echo "                           No path required."
 	echo " shared                    Required to build spdk shared libraries."
 	echo "                           No path required."
 	echo " iscsi-initiator           [disabled]"
@@ -192,6 +192,12 @@ for i in "$@"; do
 		--without-dpdk)
 			CONFIG[DPDK_DIR]=
 			;;
+                --with-reduce)
+                        CONFIG[REDUCE]=y
+                        ;;
+                --without-reduce)
+                        CONFIG[REDUCE]=n
+                        ;;
 		--with-crypto)
 			CONFIG[CRYPTO]=y
 			;;
@@ -221,12 +227,6 @@ for i in "$@"; do
 			;;
 		--without-pmdk)
 			CONFIG[PMDK]=n
-			;;
-		--with-reduce)
-			CONFIG[REDUCE]=y
-			;;
-		--without-reduce)
-			CONFIG[REDUCE]=n
 			;;
 		--with-vpp)
 			CONFIG[VPP]=y
@@ -367,24 +367,33 @@ than or equal to 4.14 will see significantly reduced performance.
 	fi
 fi
 
-if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
-		echo Crypto requires NASM version 2.12.02 or newer.  Please install
-		echo or upgrade then re-run this script.
-		exit 1
-        else
-		if [[ "$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)" == "" ]]; then
-			echo "To enable crypto you must first go to the intel-ipsec-mb directory and "
-			echo "run 'make' then 'sudo make install' then re-run this script."
-			exit 1
-		fi
-	fi
+if [[ "${CONFIG[REDUCE]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+        if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
+                echo "Crypto & compression require NASM version 2.12.02 or newer.  Please install"
+                echo "or upgrade then re-run this script."
+                exit 1
+        fi
 fi
 
 if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
-	if [ ! -f /usr/include/libpmem.h ]; then
-		echo --with-reduce requires libpmem.
-		echo Please install then re-run this script.
+	echo NOTE: Compression is currently marked as experimental.  Do not use in production.
+	if [[ "$(find /usr -xdev -name isa-l.h 2>/dev/null)" == "" ]]; then
+		echo "To enable compression you must first go to the isa-l directory and "
+		echo "run 'autogen.sh', 'configure', 'make',  then 'sudo make install' and then "
+		echo "re-run this script."
+		exit 1
+	fi
+        if [ ! -f /usr/include/libpmem.h ]; then
+                echo --with-reduce requires libpmem.
+                echo "Please install then re-run this script."
+                exit 1
+        fi
+fi
+
+if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+	if [[ "$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)" == "" ]]; then
+		echo "To enable crypto you must first go to the intel-ipsec-mb directory and "
+		echo "run 'make' then 'sudo make install' then re-run this script."
 		exit 1
 	fi
 fi
