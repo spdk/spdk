@@ -144,7 +144,7 @@ ctrlr_ut_pass_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	fn(ctx);
 }
 
-int
+void
 spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata)
 {
 	uint64_t num_blocks;
@@ -157,8 +157,6 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_da
 	nsdata->nlbaf = 0;
 	nsdata->flbas.format = 0;
 	nsdata->lbaf[0].lbads = spdk_u32log2(512);
-
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 static void

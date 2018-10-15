@@ -102,7 +102,7 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_bdev_free_io(bdev_io);
 }
 
-int
+void
 spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata)
 {
 	struct spdk_bdev *bdev = ns->bdev;
@@ -124,8 +124,6 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_da
 
 	SPDK_STATIC_ASSERT(sizeof(nsdata->eui64) == sizeof(ns->opts.eui64), "size mismatch");
 	memcpy(&nsdata->eui64, ns->opts.eui64, sizeof(nsdata->eui64));
-
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 static void
