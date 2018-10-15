@@ -98,6 +98,14 @@ else
 DPDK_CFLAGS += -Wno-error
 endif
 
+ifdef EXTRA_DPDK_CFLAGS
+$(warning EXTRA_DPDK_CFLAGS defined, possibly to work around an unsupported compiler version)
+$(shell sleep 1)
+endif
+
+# Allow users to specify EXTRA_DPDK_CFLAGS if they want to build DPDK using unsupported compiler versions
+DPDK_CFLAGS += $(EXTRA_DPDK_CFLAGS)
+
 $(SPDK_ROOT_DIR)/dpdk/build: $(INTEL_IPSEC_MB_LIB)
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG) $(DPDK_OPTS)
 
