@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6b57f6c_0634bdf1",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-15T08:35:14Z",
+      "side": 1,
+      "message": "\u003d\u003eprevious",
+      "revId": "02245a62d0539b0505c5f1d9b06dae9e16efb206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe42c3ab_dd135565",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-15T08:35:14Z",
+      "side": 1,
+      "message": "Bdev name is required for ...",
+      "revId": "02245a62d0539b0505c5f1d9b06dae9e16efb206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ec13ddd_17d70f71",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-15T08:35:14Z",
+      "side": 1,
+      "message": "rate limits\u003d\u003d\u003erate limits parameters",
+      "revId": "02245a62d0539b0505c5f1d9b06dae9e16efb206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa5e090f_b6b06589",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-15T08:35:14Z",
+      "side": 1,
+      "message": "remove \"about the usage\".",
+      "revId": "02245a62d0539b0505c5f1d9b06dae9e16efb206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
