@@ -91,10 +91,8 @@ else
 	if [ "$ipsec" == "" ]; then
 		ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
 		if [ "$ipsec_submodule_cloned" != "" ]; then
-			cd $rootdir/intel-ipsec-mb
-			su - $SUDO_USER -c 'make'
-			make install
-			cd -
+			su - $SUDO_USER -c "make -C $rootdir/intel-ipsec-mb"
+			make -C $rootdir/intel-ipsec-mb install
 		else
 			echo "The intel-ipsec-mb submodule has not been cloned and will not be installed."
 			echo "To enable crypto, run 'git submodule update --init' and then run this script again."
