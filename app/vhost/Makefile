@@ -40,10 +40,11 @@ APP = vhost
 
 C_SRCS := vhost.c
 
-SPDK_LIB_LIST = event_bdev event_copy event_net event_scsi event_vhost event
+SPDK_LIB_LIST = event_vhost vhost rte_vhost
+SPDK_LIB_LIST += event_bdev event_copy event_net event_scsi event
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
 SPDK_LIB_LIST += thread util log log_rpc app_rpc
-SPDK_LIB_LIST += vhost rte_vhost event_nbd nbd net
+SPDK_LIB_LIST += event_nbd nbd net
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS) \
