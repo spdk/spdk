@@ -814,7 +814,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	 * TODO: This is a workaround for an issue where the device is not ready after VFIO reset.
 	 * Figure out what is actually going wrong and remove this sleep.
 	 */
-	usleep(500 * 1000);
+	sleep(2);
 
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {
