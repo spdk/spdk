@@ -202,6 +202,10 @@ if [ $SPDK_TEST_ISAL -eq 0 ]; then
 	config_params+=' --without-isal'
 fi
 
+if [ $SPDK_TEST_REDUCE -eq 0 ]; then
+        config_params+=' --without-reduce'
+fi
+
 export config_params
 
 if [ -z "$output_dir" ]; then
