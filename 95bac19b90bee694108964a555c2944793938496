@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "98c38c9a_4b5a3655",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T23:00:37Z",
+      "side": 1,
+      "message": "The error message above here is actually wrong. I was experimenting with a couple ways of handling this. Updating the message.",
+      "parentUuid": "9e4829a2_d7774e1f",
+      "revId": "95bac19b90bee694108964a555c2944793938496",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb58c342_ebf58123",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-15T21:48:06Z",
       "side": 1,
       "message": "nit - put space between # and Install\n\nIs the comment accurate though?  Maybe \"Fetch firmware if needed\" would be more accurate.  \"Install\" seems to mean installing the FW onto the card (which is always required).",
+      "revId": "95bac19b90bee694108964a555c2944793938496",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c509dc7e_beaa26a8",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T23:00:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb58c342_ebf58123",
       "revId": "95bac19b90bee694108964a555c2944793938496",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "367db142_106f8a30",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T23:00:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a23519fa_1358c89b",
+      "revId": "95bac19b90bee694108964a555c2944793938496",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8880ad7d_24e8304e",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 7
@@ -64,6 +118,24 @@
       "writtenOn": "2018-10-15T21:48:06Z",
       "side": 1,
       "message": "How about:\n\nYour kernel\u0027s uio_pci_generic module does not support binding to virtual functions.  It likely is missing Linux git commit ID acec09e67 which is needed to bind uio_pci_generic to virtual functions which have no legacy interrupt vector.",
+      "revId": "95bac19b90bee694108964a555c2944793938496",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6068e261_4dc10f9a",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T23:00:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8880ad7d_24e8304e",
       "revId": "95bac19b90bee694108964a555c2944793938496",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
