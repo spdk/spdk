@@ -34,6 +34,8 @@ function usage()
 	echo "                           disable features and components."
 	echo ""
 	echo "Valid dependencies are listed below."
+        echo " compress                  Required to build vbdev compression module."
+        echo "                           No path required."
 	echo " crypto                    Required to build vbdev crypto module."
 	echo "                           No path required."
 	echo " dpdk                      Optional.  Uses dpdk submodule in spdk tree if not specified."
@@ -190,6 +192,12 @@ for i in "$@"; do
 		--without-dpdk)
 			CONFIG[DPDK_DIR]=
 			;;
+                --with-compress)
+                        CONFIG[COMPRESS]=y
+                        ;;
+                --without-compress)
+                        CONFIG[COMPRESS]=n
+                        ;;
 		--with-crypto)
 			CONFIG[CRYPTO]=y
 			;;
@@ -353,17 +361,29 @@ than or equal to 4.14 will see significantly reduced performance.
 	fi
 fi
 
-if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
-		echo Crypto requires NASM version 2.12.02 or newer.  Please install
-		echo or upgrade then re-run this script.
-		exit 1
+if [[ "${CONFIG[COMPRESS]}" = "y" ] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+        if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
+                echo Crypto & Compression require NASM version 2.12.02 or newer.  Please install
+                echo or upgrade then re-run this script.
+                exit 1
         else
-		if [[ "$(find /usr -name intel-ipsec-mb.h 2>/dev/null)" == "" ]]; then
-			echo "To enable crypto you must first go to the intel-ipsec-mb directory and "
-			echo "run 'make' then 'sudo make install' then re-run this script."
-			exit 1
-		fi
+fi
+
+if [[ "${CONFIG[COMPRESS]}" = "y" ]]; then
+	echo NOTE: Compression is currently marked as experimental.  Do not use in production.
+	if [[ "$(find /usr -name isa-l.h 2>/dev/null)" == "" ]]; then
+		echo "To enable compression you must first go to the isa-l directory and "
+		echo "run `autogen.sh', 'configure', 'make',  then 'sudo make install' and then "
+		echo "re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+	if [[ "$(find /usr -name intel-ipsec-mb.h 2>/dev/null)" == "" ]]; then
+		echo "To enable crypto you must first go to the intel-ipsec-mb directory and "
+		echo "run 'make' then 'sudo make install' then re-run this script."
+		exit 1
 	fi
 fi
 
