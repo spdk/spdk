@@ -59,7 +59,7 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 		return 1;
 	}
 
-	if (device->kdrv == RTE_KDRV_VFIO) {
+	if (device->kdrv == RTE_KDRV_VFIO && spdk_process_is_primary()) {
 		/*
 		 * TODO: This is a workaround for an issue where the device is not ready after VFIO reset.
 		 * Figure out what is actually going wrong and remove this sleep.
