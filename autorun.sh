@@ -4,6 +4,9 @@ set -e
 
 rootdir=$(readlink -f $(dirname $0))
 
+$rootdir/scripts/pkgdep.sh
+exit 0
+
 conf=~/autorun-spdk.conf
 
 # Runs agent scripts
