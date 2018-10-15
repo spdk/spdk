@@ -96,7 +96,7 @@ CONFIG_VIRTIO=y
 CONFIG_PMDK=n
 CONFIG_PMDK_DIR=
 
-# Build with "reduce" (SPDK block compression)
+# Enable the dependencies for building the compress vbdev
 CONFIG_REDUCE=n
 
 # Build with VPP
