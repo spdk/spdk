@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "752d49a2_fc83996c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-15T22:50:37Z",
+      "side": 1,
+      "message": "I see a few issues here that we may want to think about. First, it\u0027s not actually valid to write cc.shn to 0 at all. It doesn\u0027t mean anything. However, it\u0027s harmless enough so I\u0027d prefer we don\u0027t make it an error.\n\nSecond, reading csts.shst is only valid if cc.shn is not 0. So it doesn\u0027t matter what the value of csts.shst is here. If there is anything to be fixed here, and I\u0027m not sure there really is, it\u0027s that cc.shn and csts.shst don\u0027t both get set to 0 up on line 470.",
+      "revId": "e255aaa0e888c97b951ac9c156ba879b3ef31caa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
