@@ -4,6 +4,9 @@
 
 ### nvme
 
+admin_timeout_ms was added to NVMe controller initialization options, users
+can change the default value when probing a controller.
+
 spdk_nvme_ctrlr_cmd_security_send() and spdk_nvme_ctrlr_cmd_security_receive()
 were added to support sending or receiving security protocol data to or from
 nvme controller.
