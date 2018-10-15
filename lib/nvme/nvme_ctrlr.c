@@ -1437,13 +1437,26 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	union spdk_nvme_async_event_completion	event;
 	int					rc;
 
-	if (cpl->status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION) {
+	if (cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
+	    cpl->status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION) {
 		/*
 		 *  This is simulated when controller is being shut down, to
 		 *  effectively abort outstanding asynchronous event requests
 		 *  and make sure all memory is freed.  Do not repost the
 		 *  request in this case.
 		 */
+		return;
+	}
+
+	if (cpl->status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC &&
+	    cpl->status.sc == SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED) {
+		/*
+		 *  SPDK will only send as many AERs as the device says it supports,
+		 *  so this status code indicates an out-of-spec device.  Do not repost
+		 *  the request in this case.
+		 */
+		SPDK_ERRLOG("Controller appears out-of-spec for asynchronous event request\n"
+			    "handling.  Do not repost this AER.\n");
 		return;
 	}
 
