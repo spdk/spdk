@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "633ea67d_427a5acb",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T20:48:28Z",
+      "side": 1,
+      "message": "Thanks for the pointers, done.",
+      "parentUuid": "a2374381_5b068d9e",
+      "range": {
+        "startLine": 17,
+        "startChar": 12,
+        "endLine": 17,
+        "endChar": 35
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91842fc1_eb9858f1",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-12T23:31:01Z",
       "side": 1,
       "message": "download the QAT 89700 firmware binary \u0027$qat_binary\u0027from \u0027\u003cURL\u003e\u0027",
+      "range": {
+        "startLine": 28,
+        "startChar": 15,
+        "endLine": 28,
+        "endChar": 22
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cd532c7_7842946b",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T20:48:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "91842fc1_eb9858f1",
       "range": {
         "startLine": 28,
         "startChar": 15,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "8cd71cfb_77384187",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T20:48:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fb1d7bf1_6fdb529a",
+      "range": {
+        "startLine": 36,
+        "startChar": 7,
+        "endLine": 36,
+        "endChar": 42
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3ba6c08_23cf52a2",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 5
@@ -82,6 +154,30 @@
       "writtenOn": "2018-10-12T23:31:01Z",
       "side": 1,
       "message": "\u0027$\u0027 is not needed in bash arithmetic contect (( )). Als you can just move this expression to \n\nif (( $(lspci -d:37c9 | wc -l) \u003d\u003d num_qat_bus * num_vfs )); then ...",
+      "range": {
+        "startLine": 50,
+        "startChar": 20,
+        "endLine": 50,
+        "endChar": 32
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61c9766b_2b7fff1f",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T20:48:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a3ba6c08_23cf52a2",
       "range": {
         "startLine": 50,
         "startChar": 20,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "ef96f05e_1ef310cd",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T20:48:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f906baf0_a13f9a45",
+      "range": {
+        "startLine": 51,
+        "startChar": 5,
+        "endLine": 51,
+        "endChar": 6
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e17772e0_0377e117",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 5
@@ -128,6 +248,30 @@
       "writtenOn": "2018-10-12T23:31:01Z",
       "side": 1,
       "message": "Are these three loops unbind all QAT VF devices from system?",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 105
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85ccec24_6a57ab6b",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T20:48:28Z",
+      "side": 1,
+      "message": "Not anymore after I took your advice on line 79.",
+      "parentUuid": "e17772e0_0377e117",
       "range": {
         "startLine": 57,
         "startChar": 0,
@@ -179,6 +323,30 @@
         "startChar": 3,
         "endLine": 62,
         "endChar": 67
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27e5229b_e3844eff",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T20:48:28Z",
+      "side": 1,
+      "message": "It\u0027s possible that the Virtual Function is not bound to a driver. In that case we would get an error since the path driver/unbind doesn\u0027t exist. It\u0027s fine if that happens and we should continue to try and bind to igb_uio or another driver later.",
+      "parentUuid": "3fd16d33_2d7f36a6",
+      "range": {
+        "startLine": 62,
+        "startChar": 68,
+        "endLine": 62,
+        "endChar": 75
       },
       "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -262,6 +430,30 @@
     },
     {
       "key": {
+        "uuid": "972df2be_9916b184",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T20:48:28Z",
+      "side": 1,
+      "message": "That\u0027s a great simplification. Thank you!",
+      "parentUuid": "6e491499_07a13fdc",
+      "range": {
+        "startLine": 79,
+        "startChar": 3,
+        "endLine": 79,
+        "endChar": 40
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e9512f1_0b353f06",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 5
@@ -273,6 +465,30 @@
       "writtenOn": "2018-10-12T23:31:01Z",
       "side": 1,
       "message": "not needed",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 6
+      },
+      "revId": "11cceaecc6bd0fe7a7637fd60231d3e27068398c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fee01d26_8d077edf",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-15T20:48:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e9512f1_0b353f06",
       "range": {
         "startLine": 85,
         "startChar": 0,
