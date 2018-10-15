@@ -6,7 +6,6 @@
  # CRY <bdev name> <vbdev name> <key> <PMD>
  # key size depends on cipher
  # supported PMD names: crypto_aesni_mb, crypto_qat
- # Note: QAT is experimental while test HW is being setup
  CRY Malloc6 crypto_ram 0123456789123456 crypto_aesni_mb
 
 [Malloc]

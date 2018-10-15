@@ -51,10 +51,6 @@
  */
 #define MAX_NUM_DRV_TYPES 2
 #define AESNI_MB "crypto_aesni_mb"
-/* NOTE: QAT is experimental.  It has been tested in development but should not
- * be used in production until this comment is removed following the addition of
- * QAT hardware to the CI test pool.
- */
 #define QAT "crypto_qat"
 const char *g_driver_names[MAX_NUM_DRV_TYPES] = { AESNI_MB, QAT };
 
