@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "62d68f4d_7b35db43",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 840,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-15T02:35:03Z",
+      "side": 1,
+      "message": "You can submit another patch for this change. As it seems not directly relate to this new IO count from my perspective.",
+      "parentUuid": "d4dab69e_c70f2ac0",
+      "range": {
+        "startLine": 837,
+        "startChar": 0,
+        "endLine": 840,
+        "endChar": 3
+      },
+      "revId": "5399f7ba07d89ca7302c6ff6e899abe4042ffac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ac31f1c_7d4ec1e5",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 13
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "no. here, it must be the current time.",
       "parentUuid": "3ac31f1c_7d4ec1e5",
+      "range": {
+        "startLine": 917,
+        "startChar": 6,
+        "endLine": 917,
+        "endChar": 20
+      },
+      "revId": "5399f7ba07d89ca7302c6ff6e899abe4042ffac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c06736e_3f7ec2bb",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-15T02:35:03Z",
+      "side": 1,
+      "message": "Yes. My suggestion is that \n\ntsc_now \u003d spdk_get_ticks();\nif (tsc_now \u003e tsc_end) {\n   break;\n}\n\nif (done_ns \u003d\u003d ns_cnt) {\n   break;\n}\n\nAnd later for the below check as tsc_now will always be obtained each round.\n\ng_time_used_tsc \u003d tsc_now - tsc_start;",
+      "parentUuid": "2ac2152b_540aa458",
       "range": {
         "startLine": 917,
         "startChar": 6,
