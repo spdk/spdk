@@ -346,7 +346,6 @@ than or equal to 4.14 will see significantly reduced performance.
 fi
 
 if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	echo NOTE: Crypto is currently marked as experimental.  Do not use in production.
 	if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
 		echo Crypto requires NASM version 2.12.02 or newer.  Please install
 		echo or upgrade then re-run this script.
