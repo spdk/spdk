@@ -10,7 +10,7 @@
 
 [Malloc]
   NumberOfLuns 7
-  LunSizeInMB 64
+  LunSizeInMB 32
 
 [Split]
   # Split Malloc1 into two auto-sized halves
