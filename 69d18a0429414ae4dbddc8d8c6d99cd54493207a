@@ -52,6 +52,24 @@
       "revId": "69d18a0429414ae4dbddc8d8c6d99cd54493207a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16c0f3b4_9c2f09d2",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T18:43:06Z",
+      "side": 1,
+      "message": "Yeah - step of registering will trigger vbdev modules to try to open channels to the RAID device.  Ignore my comment - it needs to be done the way you have it.",
+      "parentUuid": "1d5bca68_87c45192",
+      "revId": "69d18a0429414ae4dbddc8d8c6d99cd54493207a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
