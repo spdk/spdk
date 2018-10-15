@@ -22,6 +22,30 @@
       "revId": "25559a1ce9cb6522b66806558bcac8b0b4650d63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78c36548_d1e3f6d6",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2745,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-15T20:06:39Z",
+      "side": 1,
+      "message": "This patch was from my speculation. Now I\u0027m creating the environment to reproduce the issue. By using this environment, I hope I can find the root cause and create the patch to fix the issue.\n\nSorry for taking your time and please wait for my update.",
+      "parentUuid": "5e6e01ad_05573477",
+      "range": {
+        "startLine": 2745,
+        "startChar": 4,
+        "endLine": 2745,
+        "endChar": 30
+      },
+      "revId": "25559a1ce9cb6522b66806558bcac8b0b4650d63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
