@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b893e59_e3b025c6",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T21:36:36Z",
+      "side": 1,
+      "message": "systems",
+      "revId": "3a85fbc7039fb06bb2e58362fec98ab6c98bae54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
