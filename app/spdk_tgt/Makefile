@@ -40,18 +40,19 @@ APP = spdk_tgt
 
 C_SRCS := spdk_tgt.c
 
-SPDK_LIB_LIST = event_bdev event_copy event_iscsi event_net event_scsi event_nvmf event
-SPDK_LIB_LIST += nvmf trace log conf thread util bdev iscsi scsi copy rpc jsonrpc json
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc net
+SPDK_LIB_LIST =
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
 
 ifeq ($(CONFIG_VHOST),y)
-SPDK_LIB_LIST += vhost rte_vhost event_vhost
+SPDK_LIB_LIST += event_vhost vhost rte_vhost
+endif
 endif
 
-endif
+SPDK_LIB_LIST += event_bdev event_copy event_iscsi event_net event_scsi event_nvmf event
+SPDK_LIB_LIST += nvmf trace log conf thread util bdev iscsi scsi copy rpc jsonrpc json
+SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc net
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS) \
