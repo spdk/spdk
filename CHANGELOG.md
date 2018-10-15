@@ -10,6 +10,9 @@ values from user input.
 
 ### environment
 
+ISA-L submodule has been added as a requirement for SPDK running on x86 architecture in order
+to support use of its various features throughout the SPDK library (CRC, etc.).
+
 A new public header file env_dpdk.h has been introduced, and function spdk_env_dpdk_post_init
 is added into it. If user is using DPDK, and already called rte_eal_init, then include
 include/spdk/env_dpdk.h, and call spdk_env_dpdk_post_init() instead of spdk_env_init.
