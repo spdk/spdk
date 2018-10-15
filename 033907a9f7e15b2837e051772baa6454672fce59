@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66af1007_2b8dbb4d",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-15T20:20:27Z",
+      "side": 1,
+      "message": "you can remove the trailing semicolon now that there aren\u0027t any commands after it",
+      "revId": "033907a9f7e15b2837e051772baa6454672fce59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
