@@ -156,6 +156,17 @@ struct spdk_nvme_ctrlr_opts {
 	 * command set is used.
 	 */
 	enum spdk_nvme_cc_css command_set;
+
+	/**
+	 * Admin commands timeout in milliseconds (0 = no timeout).
+	 *
+	 * The timeout value is used for admin commands submitted internally
+	 * by the nvme driver during initialization, before the user is able
+	 * to call spdk_nvme_ctrlr_register_timeout_callback(). By default,
+	 * this is set to 120 seconds, users can change it in the probing
+	 * callback.
+	 */
+	uint32_t admin_timeout_ms;
 };
 
 /**
