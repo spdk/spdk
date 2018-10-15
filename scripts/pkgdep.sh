@@ -80,13 +80,14 @@ else
 	exit 1
 fi
 
-# Only crypto needs nasm and this lib but because the lib requires root to
+# Crypto and Compression need nasm and this lib but because the lib requires root to
 # install we do it here.
 nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
 if [ $nasm_ver -lt "21202" ]; then
-		echo Crypto requires NASM version 2.12.02 or newer.  Please install
-		echo or upgrade and re-run this script if you are going to use Crypto.
+		echo Crypto & Compression require NASM version 2.12.02 or newer.  Please install
+		echo or upgrade and re-run this script.
 else
+	# this else is only applicable to crypto
 	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
 	if [ "$ipsec" == "" ]; then
 		ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"

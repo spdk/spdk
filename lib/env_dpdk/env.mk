@@ -54,41 +54,52 @@ else
 DPDK_LIB_EXT = .so
 endif
 
-DPDK_LIB_LIST = rte_eal rte_mempool rte_ring
+_DPDK_LIB_LIST = rte_eal rte_mempool rte_ring
 
 # librte_mempool_ring was new added from DPDK 17.05. Link this library used for
 #   ring based mempool management API.
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_mempool_ring.*))
-DPDK_LIB_LIST += rte_mempool_ring
+_DPDK_LIB_LIST += rte_mempool_ring
 endif
 
 # librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
 #  existence to maintain backward compatibility.
 ifneq ($(wildcard $(DPDK_ABS_DIR)/lib/librte_malloc.*),)
-DPDK_LIB_LIST += rte_malloc
+_DPDK_LIB_LIST += rte_malloc
 endif
 
 # librte_pci and librte_bus_pci were added in DPDK 17.11. Link these libraries conditionally
 # based on their existence to maintain backward compatibility.
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_pci.*))
-DPDK_LIB_LIST += rte_pci
+_DPDK_LIB_LIST += rte_pci
 endif
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_bus_pci.*))
-DPDK_LIB_LIST += rte_bus_pci
+_DPDK_LIB_LIST += rte_bus_pci
 endif
 
 ifeq ($(CONFIG_CRYPTO),y)
-DPDK_LIB_LIST += rte_cryptodev rte_reorder rte_bus_vdev rte_pmd_aesni_mb rte_pmd_qat rte_mbuf
+_DPDK_LIB_LIST += rte_cryptodev rte_reorder rte_bus_vdev rte_pmd_aesni_mb rte_pmd_qat rte_mbuf
+endif
+
+ifeq ($(CONFIG_COMPRESS),y)
+_DPDK_LIB_LIST += rte_compressdev rte_pmd_qat
 endif
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
-DPDK_LIB_LIST += rte_kvargs
+_DPDK_LIB_LIST += rte_kvargs
 endif
+
+# Remove any duplicates that may have been added above
+DPDK_LIB_LIST = $(sort $(_DPDK_LIB_LIST))
 
 DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_LIB += $(SPDK_ROOT_DIR)/intel-ipsec-mb/libIPSec_MB.a
+endif
+
+ifeq ($(CONFIG_COMPRESS),y)
+DPDK_LIB += $(SPDK_ROOT_DIR)/isa-l/bin/isa-l.a
 endif
 
 # SPDK memory registration requires experimental (deprecated) rte_memory API for DPDK 18.05

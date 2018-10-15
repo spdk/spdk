@@ -105,6 +105,9 @@ CONFIG_ISCSI_INITIATOR?=n
 # Enable the dependencies for building the crypto vbdev
 CONFIG_CRYPTO?=n
 
+# Enable the dependencies for building the compress vbdev
+CONFIG_COMPRESS?=n
+
 # Build spdk shared libraries in addition to the static ones.
 CONFIG_SHARED?=n
 
