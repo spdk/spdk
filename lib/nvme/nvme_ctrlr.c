@@ -1883,8 +1883,8 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		 *
 		 * TODO: Figure out what is actually going wrong.
 		 */
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Adding 500 ms delay before initializing the controller\n");
-		ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (500 * spdk_get_ticks_hz() / 1000);
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Adding 2 second delay before initializing the controller\n");
+		ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (2000 * spdk_get_ticks_hz() / 1000);
 		break;
 
 	case NVME_CTRLR_STATE_INIT:
