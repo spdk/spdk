@@ -96,7 +96,7 @@ CONFIG_VIRTIO=y
 CONFIG_PMDK=n
 CONFIG_PMDK_DIR=
 
-# Build with "reduce" (SPDK block compression)
+# Enable the dependencies for building the compress vbdev
 CONFIG_REDUCE=n
 
 # Build with VPP
@@ -121,3 +121,6 @@ CONFIG_IGB_UIO_DRIVER=n
 
 # Build FTL library
 CONFIG_FTL=n
+
+# Auto set by configure if running on X86
+CONFIG_ISAL=n
