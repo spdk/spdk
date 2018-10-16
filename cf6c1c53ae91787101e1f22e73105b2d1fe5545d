@@ -50,6 +50,24 @@
       "revId": "cf6c1c53ae91787101e1f22e73105b2d1fe5545d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6d53c33_5735e9fc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-16T12:07:19Z",
+      "side": 1,
+      "message": "Currently, there is a problem with using AIO and vhost because AIO requires aligned memory. \nProblem is partially solved by aligning every read buffer to 512 bytes. I\u0027m providing more flexible solution, that will provide any alignment and double buffering to any bdev module.\nTo make existing tests pass, I have to specify 512 alignment here before patch that fixes AIO module with new API.",
+      "parentUuid": "22c44195_8860867c",
+      "revId": "cf6c1c53ae91787101e1f22e73105b2d1fe5545d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
