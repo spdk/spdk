@@ -22,6 +22,23 @@
       "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bcfee1d1_da2d469e",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 16
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-16T20:36:50Z",
+      "side": 1,
+      "message": "Unneeded, I believe, and as written also breaks rpmbuild:\n\nBUILDROOT/spdk-18.07-3.el7.x86_64/usr/share/spdk/mk/spdk.common.mk:36: /home/lghartma/rpmbuild/BUILDROOT/spdk-18.07-3.el7.x86_64/usr/share/spdk/CONFIG: No such file or directory\n\nBUILDROOT/spdk-18.07-3.el7.x86_64/usr/share/spdk/mk/spdk.common.mk:164: /env.mk: No such file or directory\nmake: *** No rule to make target `/env.mk\u0027.  Stop.",
+      "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
