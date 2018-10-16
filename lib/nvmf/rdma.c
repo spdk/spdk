@@ -289,7 +289,8 @@ struct spdk_nvmf_rdma_qpair {
 	struct ibv_qp_init_attr			ibv_init_attr;
 	struct ibv_qp_attr			ibv_attr;
 
-	bool					qpair_disconnected;
+	bool					send_done;
+	bool					recv_done;
 
 	/* Reference counter for how many unprocessed messages
 	 * from other threads are currently outstanding. The
@@ -559,10 +560,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 
-	if (spdk_nvmf_rdma_cur_queue_depth(rqpair)) {
-		rqpair->qpair_disconnected = true;
-		return;
-	}
+	assert(spdk_nvmf_rdma_cur_queue_depth(rqpair) == 0);
 
 	if (rqpair->refcnt > 0) {
 		return;
@@ -2093,10 +2091,6 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 		}
 	}
 
-	if (rqpair->qpair_disconnected) {
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return;
-	}
 
 	/* Do not process newly received commands if qp is in ERROR state,
 	 * wait till the recovery is complete.
@@ -2619,8 +2613,29 @@ static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	struct ibv_send_wr send_wr = {};
+	struct ibv_send_wr *bad_send_wr;
+	struct ibv_recv_wr recv_wr = {};
+	struct ibv_recv_wr *bad_recv_wr;
+	int rc = 0;
 
-	spdk_nvmf_rdma_qpair_destroy(rqpair);
+	/* Set the qp to the error state, preventing any further operations. */
+	spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
+
+	/* Send two dummy requests, one recv and one send. When these complete,
+	 * it is safe to free the qp resources. */
+	send_wr.opcode = IBV_WR_SEND;
+	rc = ibv_post_send(rqpair->cm_id->qp, &send_wr, &bad_send_wr);
+	if (rc != 0) {
+		assert(false);
+		return;
+	}
+
+	rc = ibv_post_recv(rqpair->cm_id->qp, &recv_wr, &bad_recv_wr);
+	if (rc != 0) {
+		assert(false);
+		return;
+	}
 }
 
 static struct spdk_nvmf_rdma_request *
@@ -2708,6 +2723,32 @@ spdk_nvmf_rdma_validate_wc(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_wc *w
 	return true;
 }
 
+static void
+spdk_nvmf_rdma_handle_dummy_cqe(struct spdk_nvmf_rdma_poller *rpoller, struct ibv_wc *wc)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair, *tmp;
+
+	TAILQ_FOREACH_SAFE(rqpair, &rpoller->qpairs, link, tmp) {
+		if (rqpair->cm_id->qp->qp_num == wc->qp_num) {
+			if (wc->opcode == IBV_WC_SEND) {
+				rqpair->send_done = true;
+			} else if (wc->opcode == IBV_WC_RECV) {
+				rqpair->recv_done = true;
+			} else {
+				assert(false);
+			}
+
+			if (rqpair->recv_done && rqpair->send_done) {
+				spdk_nvmf_rdma_qpair_destroy(rqpair);
+			}
+
+			return;
+		}
+	}
+
+	assert(false);
+}
+
 static int
 spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			   struct spdk_nvmf_rdma_poller *rpoller)
@@ -2737,6 +2778,12 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				      wc[i].opcode, wc[i].qp_num);
 
 			error = true;
+
+			/* Handle dummy wr_ids placed onto the queue for the purposes of waiting for a clean shutdown. */
+			if (wc[i].wr_id == 0) {
+				spdk_nvmf_rdma_handle_dummy_cqe(rpoller, &wc[i]);
+				continue;
+			}
 
 			/* The RDMA specification says that both wr_id and qp_num are valid even in error cases. However, that's
 			 * not true in practice. These values are often junk. Instead of blindly casting wr_id to a pointer,
