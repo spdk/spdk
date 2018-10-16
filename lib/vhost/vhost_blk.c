@@ -718,8 +718,24 @@ spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	}
 
 	bdev = bvdev->bdev;
-	blk_size = spdk_bdev_get_block_size(bdev);
-	blkcnt = spdk_bdev_get_num_blocks(bdev);
+	if (bdev == NULL) {
+		/* We can't just return -1 here as this GET_CONFIG message might
+		 * be caused by a QEMU VM reboot. Returning -1 will indicate an
+		 * error to QEMU, who might then decide to terminate itself.
+		 * We don't want that. A simple reboot shouldn't break the system.
+		 *
+		 * Presenting a block device with block size 0 and block count 0
+		 * doesn't cause any problems on QEMU side and the virtio-pci
+		 * device is even still available inside the VM, but there will
+		 * be no block device created for it - the kernel drivers will
+		 * silently reject it.
+		 */
+		blk_size = 0;
+		blkcnt = 0;
+	} else {
+		blk_size = spdk_bdev_get_block_size(bdev);
+		blkcnt = spdk_bdev_get_num_blocks(bdev);
+	}
 
 	memset(blkcfg, 0, sizeof(*blkcfg));
 	blkcfg->blk_size = blk_size;
