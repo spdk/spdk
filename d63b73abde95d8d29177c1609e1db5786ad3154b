@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "70a5332b_bfc7e358",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-16T12:58:05Z",
+      "side": 1,
+      "message": "By default we\u0027re going to try to use uio_pci_generic in the qat setup script.  There\u0027s a Linux kernel patch needed to use uio_pci_generic with QAT VFs which was merged mid last year.  We will try to use uio_pci_generic but if the attach doesn\u0027t work, users can revert to igb_uio instead.\n\nigb_uio can be a pain - it requires kernel headers installed and many times won\u0027t build on the latest Linux kernel since it\u0027s an out-of-tree driver.  So we want to enable uio_pci_generic if possible.",
+      "parentUuid": "a029334e_f4a69bd2",
+      "range": {
+        "startLine": 43,
+        "startChar": 43,
+        "endLine": 43,
+        "endChar": 59
+      },
+      "revId": "d63b73abde95d8d29177c1609e1db5786ad3154b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a421546_e52d79a4",
         "filename": "configure",
         "patchSetId": 6
