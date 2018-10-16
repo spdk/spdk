@@ -718,8 +718,16 @@ spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	}
 
 	bdev = bvdev->bdev;
-	blk_size = spdk_bdev_get_block_size(bdev);
-	blkcnt = spdk_bdev_get_num_blocks(bdev);
+	if (bdev) {
+		blk_size = spdk_bdev_get_block_size(bdev);
+		blkcnt = spdk_bdev_get_num_blocks(bdev);
+	} else {
+		/* A proper driver will fail to initialize with block size 0.
+		 * That's what we expect.
+		 */
+		blk_size = 0;
+		blkcnt = 0;
+	}
 
 	memset(blkcfg, 0, sizeof(*blkcfg));
 	blkcfg->blk_size = blk_size;
