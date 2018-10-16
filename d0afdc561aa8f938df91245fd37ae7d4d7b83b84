@@ -80,6 +80,30 @@
       "revId": "d0afdc561aa8f938df91245fd37ae7d4d7b83b84",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1716067_53cd1c51",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-16T04:09:54Z",
+      "side": 1,
+      "message": "Agree with Jim.\nBesides Jim\u0027s description on cmd_type logic, (ctx-\u003envme_bdev \u003d\u003d NULL \u0026\u0026 ctx-\u003envme_ctrl \u003d\u003d NULL) is also one point which easily gets error report by SPDK\u0027s asan/ubsan",
+      "parentUuid": "b09aeb2c_67e2f73c",
+      "range": {
+        "startLine": 469,
+        "startChar": 0,
+        "endLine": 474,
+        "endChar": 3
+      },
+      "revId": "d0afdc561aa8f938df91245fd37ae7d4d7b83b84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
