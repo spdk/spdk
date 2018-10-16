@@ -16,6 +16,24 @@
       "revId": "fc6bff8fbead266b92b19895f92bc5dc2732269f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52fcc684_a31e4ab4",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-10-16T06:27:46Z",
+      "side": 1,
+      "message": "I think this patch is incorrect. Because the thread that invokes spdk_vhost_blk_get_config() and hot-remove bdev is different. We cannot ensure the spdk_vhost_blk_get_config() found the bdev is NULL immediately after hot-remove-cb set bdev to NULL.",
+      "parentUuid": "bc6bd0d7_6ddd45ef",
+      "revId": "fc6bff8fbead266b92b19895f92bc5dc2732269f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
