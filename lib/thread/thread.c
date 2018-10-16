@@ -304,7 +304,7 @@ spdk_on_thread(void *ctx)
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (!ct->cur_thread) {
-		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Completed thread iteration");
+		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Completed thread iteration\n");
 
 		spdk_thread_send_msg(ct->orig_thread, ct->cpl, ct->ctx);
 		free(ctx);
