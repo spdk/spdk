@@ -16,6 +16,24 @@
       "revId": "4b498f7fbd5cc46725af0709418cbe2a2fbc5f72",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6ac259e_26e2caa1",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 817,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-16T23:45:57Z",
+      "side": 1,
+      "message": "I don\u0027t think it will work with a new state, as the delay should be added before any access to the registers.  Why not adding this delay to DPDK library or just add a PCI RESET here in NVMe driver ?",
+      "parentUuid": "8a2e462a_92625680",
+      "revId": "4b498f7fbd5cc46725af0709418cbe2a2fbc5f72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
