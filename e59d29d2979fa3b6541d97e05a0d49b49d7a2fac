@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "375121d8_272c0784",
+        "filename": "mk/spdk.subdirs.mk",
+        "patchSetId": 11
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-16T10:08:18Z",
+      "side": 1,
+      "message": "Oh. What is this monster? Can we have a few words of comment about that? What does the \"|\" in the middle do?\n\nMaybe a single comment of the whole file could do?",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 23
+      },
+      "revId": "e59d29d2979fa3b6541d97e05a0d49b49d7a2fac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
