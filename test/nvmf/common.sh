@@ -198,3 +198,28 @@ function check_ip_is_soft_roce()
 		return 1
 	fi
 }
+
+function list_nvmes()
+{
+	sudo nvme list | cut -d ' ' -f 1 | tail -n +3
+}
+function nvme_connect_slow()
+{
+	local init_count=$(list_nvmes | wc -l)
+
+	nvme connect $@
+	if [ $? != 0 ]; then return $?; fi
+
+	while true; do
+		local nvmes=$(list_nvmes)
+		local connected=0
+		for nv in $nvmes; do
+			if [ -a "$nv" ]; then connected=$((connected + 1)); fi
+		done
+		if [ $connected -gt $init_count ]; then
+			break
+		else
+			sleep 1s
+		fi
+	done
+}
