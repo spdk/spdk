@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a2e462a_92625680",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 817,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-16T23:27:05Z",
+      "side": 1,
+      "message": "I\u0027d like Changpeng to look at this patch.  I\u0027m concerned that we will be increasing this to 2 seconds in the next patch, and now do it on uio_pci_generic too.  A lot of users will be affected - especially ones with many SSDs.\n\nChangpeng - could we move everything from here to end of this function to a new state in the controller state machine?  Then we can add this sleep as another state.  Then if we have 24 SSDs, instead of a 2 second sleep * 24 SSDs, the 2 second delays are incurred in parallel.",
+      "revId": "4b498f7fbd5cc46725af0709418cbe2a2fbc5f72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
