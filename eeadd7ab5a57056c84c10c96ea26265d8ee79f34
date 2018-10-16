@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "000a2c8d_434fa0c2",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-16T14:15:12Z",
+      "side": 1,
+      "message": "When we write results, its always good to include configuration info such as the block size, qd, workload/rw mix. It makes it easier to read the results.",
+      "range": {
+        "startLine": 77,
+        "startChar": 32,
+        "endLine": 79,
+        "endChar": 98
+      },
+      "revId": "eeadd7ab5a57056c84c10c96ea26265d8ee79f34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee1f9bac_aac13c03",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-16T14:15:12Z",
+      "side": 1,
+      "message": "I would prefer using usec. \"us\" is very ambiguous, it could mean the country US or just us.",
+      "range": {
+        "startLine": 98,
+        "startChar": 28,
+        "endLine": 98,
+        "endChar": 32
+      },
+      "revId": "eeadd7ab5a57056c84c10c96ea26265d8ee79f34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
