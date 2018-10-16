@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "431b2ff7_adaa00b8",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-16T11:07:32Z",
+      "side": 1,
+      "message": "shouldn\u0027t this be added to PHONY? Those targets don\u0027t have any dependencies and might not be rebuilt after the configuration is changed.",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 7
+      },
+      "revId": "a39e33e521e94a51e8f8b5438f89caeddb738398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
