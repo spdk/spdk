@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9401895_228f47b9",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-16T11:58:25Z",
+      "side": 1,
+      "message": "doesn\u0027t it break tsc counting? spdk_reactor_add_tsc_stats used to be called after each poller tick - it also handled rc\u003d\u003d0 which increases the idle tsc.\n\nShould the whole tsc counting be moved to thread internals as well? I believe measuring all pollers at once will give much different results compared to measuring them 1 by 1.",
+      "range": {
+        "startLine": 360,
+        "startChar": 3,
+        "endLine": 360,
+        "endChar": 29
+      },
+      "revId": "13cf6d4d228451e2f8ad6f1fc9f86d7f9b06a74f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
