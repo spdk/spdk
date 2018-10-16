@@ -52,6 +52,9 @@ struct hello_context_t {
 	struct spdk_io_channel *bdev_io_channel;
 	char *buff;
 	char *bdev_name;
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+	uint64_t offset;
+	uint64_t length;
 };
 
 /*
@@ -97,6 +100,33 @@ read_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	spdk_app_stop(success ? 0 : -1);
 }
 
+static void
+hello_read(void *arg)
+{
+	struct hello_context_t *hello_context = arg;
+	int rc = 0;
+
+	SPDK_NOTICELOG("Reading io\n");
+	rc = spdk_bdev_read(hello_context->bdev_desc, hello_context->bdev_io_channel,
+			    hello_context->buff, hello_context->offset, hello_context->length, read_complete, hello_context);
+
+	if (rc == -ENOMEM) {
+		SPDK_NOTICELOG("Qeueing io\n");
+		/* In case we cannot perform I/O now, queue I/O */
+		hello_context->bdev_io_wait.bdev = hello_context->bdev;
+		hello_context->bdev_io_wait.cb_fn = hello_read;
+		hello_context->bdev_io_wait.cb_arg = hello_context;
+		spdk_bdev_queue_io_wait(hello_context->bdev, hello_context->bdev_io_channel,
+					&hello_context->bdev_io_wait);
+	} else 	if (rc) {
+		SPDK_ERRLOG("%s error while reading from bdev: %d\n", spdk_strerror(-rc), rc);
+		spdk_put_io_channel(hello_context->bdev_io_channel);
+		spdk_bdev_close(hello_context->bdev_desc);
+		spdk_app_stop(-1);
+		return;
+	}
+}
+
 /*
  * Callback function for write io completion.
  */
@@ -104,7 +134,6 @@ static void
 write_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct hello_context_t *hello_context = cb_arg;
-	int rc;
 	uint32_t blk_size;
 
 	/* Complete the I/O */
@@ -124,14 +153,31 @@ write_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	blk_size = spdk_bdev_get_block_size(hello_context->bdev);
 	memset(hello_context->buff, 0, blk_size);
 
-	SPDK_NOTICELOG("Reading io\n");
-	rc = spdk_bdev_read(hello_context->bdev_desc, hello_context->bdev_io_channel,
-			    hello_context->buff, 0, blk_size, read_complete, hello_context);
+	hello_read(hello_context);
+}
 
-	if (rc) {
-		SPDK_ERRLOG("%s error while reading from bdev: %d\n", spdk_strerror(-rc), rc);
-		spdk_put_io_channel(hello_context->bdev_io_channel);
+static void
+hello_write(void *arg)
+{
+	struct hello_context_t *hello_context = arg;
+	int rc = 0;
+
+	SPDK_NOTICELOG("Writing to the bdev\n");
+	rc = spdk_bdev_write(hello_context->bdev_desc, hello_context->bdev_io_channel,
+			     hello_context->buff, hello_context->offset, hello_context->length, write_complete, hello_context);
+
+	if (rc == -ENOMEM) {
+		SPDK_NOTICELOG("Qeueing io\n");
+		/* In case we cannot perform I/O now, queue I/O */
+		hello_context->bdev_io_wait.bdev = hello_context->bdev;
+		hello_context->bdev_io_wait.cb_fn = hello_write;
+		hello_context->bdev_io_wait.cb_arg = hello_context;
+		spdk_bdev_queue_io_wait(hello_context->bdev, hello_context->bdev_io_channel,
+					&hello_context->bdev_io_wait);
+	} else if (rc) {
+		SPDK_ERRLOG("%s error while writing to bdev: %d\n", spdk_strerror(-rc), rc);
 		spdk_bdev_close(hello_context->bdev_desc);
+		spdk_put_io_channel(hello_context->bdev_io_channel);
 		spdk_app_stop(-1);
 		return;
 	}
@@ -200,16 +246,9 @@ hello_start(void *arg1, void *arg2)
 	}
 	snprintf(hello_context->buff, blk_size, "%s", "Hello World!\n");
 
-	SPDK_NOTICELOG("Writing to the bdev\n");
-	rc = spdk_bdev_write(hello_context->bdev_desc, hello_context->bdev_io_channel,
-			     hello_context->buff, 0, blk_size, write_complete, hello_context);
-	if (rc) {
-		SPDK_ERRLOG("%s error while writing to bdev: %d\n", spdk_strerror(-rc), rc);
-		spdk_bdev_close(hello_context->bdev_desc);
-		spdk_put_io_channel(hello_context->bdev_io_channel);
-		spdk_app_stop(-1);
-		return;
-	}
+	hello_context->offset = 0;
+	hello_context->length = blk_size;
+	hello_write(hello_context);
 }
 
 int
