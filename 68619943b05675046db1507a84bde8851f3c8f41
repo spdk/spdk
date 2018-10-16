@@ -16,6 +16,24 @@
       "revId": "68619943b05675046db1507a84bde8851f3c8f41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc5fd8e1_88c6fa2b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1604,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2018-10-16T00:47:47Z",
+      "side": 1,
+      "message": "spdk_nvme_rdma_hooks is going to be used for the same purpose in nvmf as well. Thats why we have defined the hook struct in nvme.h. Also the main purpose of this patch is to let the user pass their hooks here for using their own pd/mr (like the one that we have in oracle). If nothing is passed, so this global hooks would be NULL and pd/mr will be set by their own default.",
+      "parentUuid": "ab4ff0e1_4bad483d",
+      "revId": "68619943b05675046db1507a84bde8851f3c8f41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
