@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd6a864b_8eb1d78d",
+        "filename": "configure",
+        "patchSetId": 30
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-16T10:58:18Z",
+      "side": 1,
+      "message": "sourceable",
+      "range": {
+        "startLine": 72,
+        "startChar": 20,
+        "endLine": 72,
+        "endChar": 29
+      },
+      "revId": "8179aa97cfa6523e3b3ac107af29d85907f75e3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
