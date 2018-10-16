@@ -22,6 +22,30 @@
       "revId": "e59d29d2979fa3b6541d97e05a0d49b49d7a2fac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a09836b_0e01906a",
+        "filename": "mk/spdk.subdirs.mk",
+        "patchSetId": 11
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-16T15:19:24Z",
+      "side": 1,
+      "message": "That was a new one for me too.   It\u0027s called a \"order-only-prerequisite\".   Essentially, all of the items to the right of the pipe will be processed like a regular makefile rule, but then the actual target for this rule itself will not in this rule.   This type of construct is especially useful when the targets are directories because directory timestamps change whenever anything inside that directory is altered or added (or removed).\n\nhttps://www.gnu.org/software/make/manual/make.html#Prerequisite-Types",
+      "parentUuid": "375121d8_272c0784",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 23
+      },
+      "revId": "e59d29d2979fa3b6541d97e05a0d49b49d7a2fac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
