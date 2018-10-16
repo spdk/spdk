@@ -289,7 +289,8 @@ struct spdk_nvmf_rdma_qpair {
 	struct ibv_qp_init_attr			ibv_init_attr;
 	struct ibv_qp_attr			ibv_attr;
 
-	bool					qpair_disconnected;
+	bool					send_done;
+	bool					recv_done;
 
 	/* Reference counter for how many unprocessed messages
 	 * from other threads are currently outstanding. The
@@ -308,6 +309,7 @@ struct spdk_nvmf_rdma_poller {
 	struct ibv_cq				*cq;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
+	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	disconnecting;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_poller)	link;
 };
@@ -492,12 +494,12 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 	state = spdk_nvmf_rdma_update_ibv_state(rqpair);
 
 	if (state != new_state) {
-		SPDK_ERRLOG("QP#%d: expected state: %s, actual state: %s\n",
-			    rqpair->qpair.qid, str_ibv_qp_state[new_state],
+		SPDK_ERRLOG("QP %d: expected state: %s, actual state: %s\n",
+			    rqpair->cm_id->qp->qp_num, str_ibv_qp_state[new_state],
 			    str_ibv_qp_state[state]);
 		return -1;
 	}
-	SPDK_NOTICELOG("IBV QP#%u changed to: %s\n", rqpair->qpair.qid,
+	SPDK_NOTICELOG("RDMA qp %d changed to: %s\n", rqpair->cm_id->qp->qp_num,
 		       str_ibv_qp_state[state]);
 	return 0;
 }
@@ -559,18 +561,34 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 
-	if (spdk_nvmf_rdma_cur_queue_depth(rqpair)) {
-		rqpair->qpair_disconnected = true;
-		return;
-	}
+	assert(spdk_nvmf_rdma_cur_queue_depth(rqpair) == 0);
 
 	if (rqpair->refcnt > 0) {
 		return;
 	}
 
+#ifdef DEBUG
+	/* Brute force validate that this qpair is not on one of the poller's lists */
 	if (rqpair->poller) {
-		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
+		struct spdk_nvmf_rdma_qpair *tmp;
+
+		TAILQ_FOREACH(tmp, &rqpair->poller->qpairs, link) {
+			if (tmp == rqpair) {
+				break;
+			}
+		}
+
+		assert(tmp == NULL);
+
+		TAILQ_FOREACH(tmp, &rqpair->poller->disconnecting, link) {
+			if (tmp == rqpair) {
+				break;
+			}
+		}
+
+		assert(tmp == NULL);
 	}
+#endif
 
 	if (rqpair->cmds_mr) {
 		ibv_dereg_mr(rqpair->cmds_mr);
@@ -585,6 +603,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	if (rqpair->cm_id) {
+		SPDK_NOTICELOG("Destroying qpair %d\n", rqpair->cm_id->qp->qp_num);
 		rdma_destroy_qp(rqpair->cm_id);
 		rdma_destroy_id(rqpair->cm_id);
 	}
@@ -637,7 +656,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	}
 
 	spdk_trace_record(TRACE_RDMA_QP_CREATE, 0, 0, (uintptr_t)rqpair->cm_id, 0);
-	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "New RDMA Connection: %p\n", qpair);
+	SPDK_NOTICELOG("New RDMA qp: %d\n", rqpair->cm_id->qp->qp_num);
 
 	rqpair->reqs = calloc(rqpair->max_queue_depth, sizeof(*rqpair->reqs));
 	rqpair->recvs = calloc(rqpair->max_queue_depth, sizeof(*rqpair->recvs));
@@ -2093,10 +2112,6 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 		}
 	}
 
-	if (rqpair->qpair_disconnected) {
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return;
-	}
 
 	/* Do not process newly received commands if qp is in ERROR state,
 	 * wait till the recovery is complete.
@@ -2456,6 +2471,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		poller->group = rgroup;
 
 		TAILQ_INIT(&poller->qpairs);
+		TAILQ_INIT(&poller->disconnecting);
 
 		poller->cq = ibv_create_cq(device->context, NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
 		if (!poller->cq) {
@@ -2497,6 +2513,12 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 			spdk_nvmf_rdma_qpair_destroy(qpair);
 		}
 
+		TAILQ_FOREACH_SAFE(qpair, &poller->disconnecting, link, tmp_qpair) {
+			TAILQ_REMOVE(&poller->disconnecting, qpair, link);
+			_spdk_nvmf_rdma_qp_cleanup_all_states(qpair);
+			spdk_nvmf_rdma_qpair_destroy(qpair);
+		}
+
 		free(poller);
 	}
 
@@ -2531,7 +2553,6 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -1;
 	}
 
-	TAILQ_INSERT_TAIL(&poller->qpairs, rqpair, link);
 	rqpair->poller = poller;
 
 	rc = spdk_nvmf_rdma_qpair_initialize(qpair);
@@ -2557,6 +2578,8 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
+
+	TAILQ_INSERT_TAIL(&poller->qpairs, rqpair, link);
 
 	spdk_nvmf_rdma_update_ibv_state(rqpair);
 
@@ -2619,8 +2642,27 @@ static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	struct ibv_send_wr send_wr = {};
+	struct ibv_send_wr *bad_send_wr;
+	int rc = 0;
 
-	spdk_nvmf_rdma_qpair_destroy(rqpair);
+	/* Set the qp to the error state, preventing any further operations. */
+	spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
+
+	/* Send a dummy request. When this completes,
+	 * no more send completions will appear for this qp. */
+	send_wr.opcode = IBV_WR_SEND;
+	rc = ibv_post_send(rqpair->cm_id->qp, &send_wr, &bad_send_wr);
+	if (rc != 0) {
+		assert(false);
+		return;
+	}
+
+	/* Place the queue pair on the disconnecting list. When the shared ibv_cq is polled,
+	 * any time it hits a fully drained condition it will clean up the queue pairs
+	 * that have been marked as disconnecting. */
+	TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
+	TAILQ_INSERT_TAIL(&rqpair->poller->disconnecting, rqpair, link);
 }
 
 static struct spdk_nvmf_rdma_request *
@@ -2708,6 +2750,44 @@ spdk_nvmf_rdma_validate_wc(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_wc *w
 	return true;
 }
 
+static void
+spdk_nvmf_rdma_handle_dummy_cqe(struct spdk_nvmf_rdma_poller *rpoller, struct ibv_wc *wc)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair, *tmp;
+
+	/* When a dummy CQE is received, the qpair should be on the disconnecting list */
+	TAILQ_FOREACH_SAFE(rqpair, &rpoller->disconnecting, link, tmp) {
+		if (rqpair->cm_id->qp->qp_num == wc->qp_num) {
+			if (wc->opcode != IBV_WC_SEND) {
+				SPDK_ERRLOG("Expected dummy WQE to have opcode SEND but it has: %u\n", wc->opcode);
+			}
+			rqpair->send_done = true;
+
+			if (rqpair->recv_done && rqpair->send_done) {
+				spdk_nvmf_rdma_qpair_destroy(rqpair);
+			}
+
+			return;
+		}
+	}
+
+	/* Error condition below this point */
+
+#ifdef DEBUG
+	/* Search the active qpair list to see if we can find it. */
+	TAILQ_FOREACH_SAFE(rqpair, &rpoller->qpairs, link, tmp) {
+		if (rqpair->cm_id->qp->qp_num == wc->qp_num) {
+			SPDK_ERRLOG("Found dummy CQE for active qpair %d\n", wc->qp_num);
+			break;
+		}
+	}
+#endif
+
+	assert(false);
+}
+
+#define CQ_BATCH_SIZE 32
+
 static int
 spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			   struct spdk_nvmf_rdma_poller *rpoller)
@@ -2721,7 +2801,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	bool error = false;
 
 	/* Poll for completing operations. */
-	reaped = ibv_poll_cq(rpoller->cq, 32, wc);
+	reaped = ibv_poll_cq(rpoller->cq, CQ_BATCH_SIZE, wc);
 	if (reaped < 0) {
 		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
 			    errno, spdk_strerror(errno));
@@ -2738,19 +2818,34 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			error = true;
 
+			/* Handle dummy wr_ids placed onto the queue for the purposes of waiting for a clean shutdown. */
+			if (wc[i].wr_id == 0) {
+				SPDK_NOTICELOG("Found dummy CQE. Shutting down qpair.\n");
+				spdk_nvmf_rdma_handle_dummy_cqe(rpoller, &wc[i]);
+				continue;
+			}
+
 			/* The RDMA specification says that both wr_id and qp_num are valid even in error cases. However, that's
 			 * not true in practice. These values are often junk. Instead of blindly casting wr_id to a pointer,
 			 * loop through each qpair and try to look it up by the qp_num. If the qp_num given is junk, we'll
 			 * just pretend this completion didn't happen. */
-			TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+			TAILQ_FOREACH(rqpair, &rpoller->disconnecting, link) {
 				if (spdk_nvmf_rdma_validate_wc(rqpair, &wc[i])) {
-					SPDK_NOTICELOG("Found qpair matching completion entry on qpair list.\n");
+					SPDK_NOTICELOG("Found qpair matching completion entry on disconnecting list.\n");
 					break;
+				}
+			}
+			if (rqpair == NULL) {
+				TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+					if (spdk_nvmf_rdma_validate_wc(rqpair, &wc[i])) {
+						SPDK_NOTICELOG("Found qpair matching completion entry on qpair list.\n");
+						break;
+					}
 				}
 			}
 
 			if (rqpair == NULL) {
-				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No rqpair matches this qp_num. Ignore it.\n");
+				SPDK_WARNLOG("No rqpair matches qp_num %d. Ignore this completion.\n", wc[i].qp_num);
 				continue;
 			}
 
@@ -2838,6 +2933,20 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 		default:
 			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
 			continue;
+		}
+	}
+
+	if (reaped < CQ_BATCH_SIZE) {
+		/* We managed to fully drain the queue */
+		struct spdk_nvmf_rdma_qpair *tmp;
+
+		TAILQ_FOREACH_SAFE(rqpair, &rpoller->disconnecting, link, tmp) {
+			TAILQ_REMOVE(&rpoller->disconnecting, rqpair, link);
+			rqpair->recv_done = true;
+
+			if (rqpair->recv_done && rqpair->send_done) {
+				spdk_nvmf_rdma_qpair_destroy(rqpair);
+			}
 		}
 	}
 
