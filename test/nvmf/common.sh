@@ -198,3 +198,24 @@ function check_ip_is_soft_roce()
 		return 1
 	fi
 }
+
+function list_nvmes()
+{
+	nvme list | cut -d ' ' -f 1 | tail -n +3
+}
+function nvme_connect_slow()
+{
+	local init_count=$(list_nvmes | wc -l)
+
+	nvme connect $@
+	if [ $? != 0 ]; then return $?; fi
+
+	for i in $(seq 1 10); do
+		if [ $(list_nvmes | wc -l) -gt $init_count ]; then
+			return 0
+		else
+			sleep 1s
+		fi
+	done
+	return 1
+}
