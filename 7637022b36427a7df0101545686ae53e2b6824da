@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "a03a97b1_90f4300b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-16T02:29:58Z",
+      "side": 1,
+      "message": "Thanks Paul, done.",
+      "parentUuid": "4198285b_111ac66a",
+      "revId": "7637022b36427a7df0101545686ae53e2b6824da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b1481057_d4c8b204",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 3
@@ -64,6 +82,42 @@
       "writtenOn": "2018-10-15T17:27:59Z",
       "side": 1,
       "message": "How about:\n\nThe timeout value is used for admin commands submitted internally by the nvme driver during initialization, before the user is able to call spdk_nvme_ctrlr_register_timeout_callback().",
+      "parentUuid": "b1481057_d4c8b204",
+      "revId": "7637022b36427a7df0101545686ae53e2b6824da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f13f723_9416d2a4",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-16T02:29:58Z",
+      "side": 1,
+      "message": "Done, thanks.",
+      "parentUuid": "ef04f8fd_609df999",
+      "revId": "7637022b36427a7df0101545686ae53e2b6824da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c4e2de3_3de214a5",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-16T02:29:58Z",
+      "side": 1,
+      "message": "Applied Jim\u0027s words for this, hope it makes the parameter more clear now.",
       "parentUuid": "b1481057_d4c8b204",
       "revId": "7637022b36427a7df0101545686ae53e2b6824da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
