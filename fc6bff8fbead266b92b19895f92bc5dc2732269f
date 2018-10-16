@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc6bd0d7_6ddd45ef",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-16T06:23:21Z",
+      "side": 1,
+      "message": "I think for this case you can just return -1 instead.",
+      "revId": "fc6bff8fbead266b92b19895f92bc5dc2732269f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
