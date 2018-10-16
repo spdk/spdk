@@ -198,3 +198,61 @@ function check_ip_is_soft_roce()
 		return 1
 	fi
 }
+
+function for_nvme_subsys {
+	local cmd="$1"
+	local json="$2"
+	local nqn="$3"
+
+	if [ "$json" == '[]' ]; then
+		return 0
+	fi
+
+	local head_json=$(echo "$json" | jq '.[0]')
+	local tail_json=$(echo "$json" | jq '.[1:]')
+	if [ -z "$tail_json" ] || [ -z "$head_json" ]; then
+		return 1;
+	fi
+
+	local new_nqn=$(echo "$head_json" | jq -r '.NQN')
+	if [ "$new_nqn" != 'null' ]; then
+		for_nvme_subsys $cmd "$tail_json" "$new_nqn"
+		return $?
+	fi
+	local paths_base=$(echo "$head_json" | jq '.Paths')
+	if [ "$paths_base" != 'null' ]; then
+		local disks=$(echo "$paths_base" | jq -r '.[].Name')
+		for d in $disks; do
+			$cmd $d $nqn
+		done
+		for_nvme_subsys $cmd "$tail_json" "$nqn"
+		return $?
+	fi
+
+	>&2 echo "Wrong json format"
+	return 1
+}
+function list_blk_by_nvmename {
+	local name="$1"
+	local ns_count=$(sudo nvme list-ns /dev/$name | cut -d':' -f 1 | tr -d ' []' | wc -l)
+	for n in $(seq 1 $ns_count); do
+		echo "${name}n${n}"
+	done
+}
+function wait_for_nqns {
+	local nqns="$@"
+	function wait_if_nqn {
+		local disk="$1"
+		local nqn="$2"
+		if [[ "$nqns" == *$nqn* ]]; then
+			for d in $(list_blk_by_nvmename $disk); do
+				waitforblk $d
+			done
+		fi
+	}
+
+	# local json_init=$(cat nvme-subsys-shutdown.log | jq '.Subsystems[0:]')
+	local json_init=$(nvme list-subsys -o json | jq '.Subsystems[0:]')
+	for_nvme_subsys wait_if_nqn "$json_init"
+	return $?
+}
