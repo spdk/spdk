@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "d5282270_b05c228a",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-17T23:06:09Z",
+      "side": 1,
+      "message": "Ah, problem was I was sourcing autotest_common.sh which sets debug. I can actually remove that source now that I don\u0027t use the common dependency_dir variable.",
+      "parentUuid": "ab8223d3_e8c3143d",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 6
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4f3b63d_490c0e15",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 11
