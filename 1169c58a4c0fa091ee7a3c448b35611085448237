@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6e06bd6_229240fa",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 882,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-17T06:02:32Z",
+      "side": 1,
+      "message": "From the built error:\n\nhttps://ci.spdk.io/spdk/builds/review/1169c58a4c0fa091ee7a3c448b35611085448237.1539750980/fedora-01/scan-build/report-8b5432.html#EndPath\n\nThis set looks like need to be removed and later it will always be set at line 911.",
+      "range": {
+        "startLine": 882,
+        "startChar": 1,
+        "endLine": 882,
+        "endChar": 21
+      },
+      "revId": "1169c58a4c0fa091ee7a3c448b35611085448237",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
