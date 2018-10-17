@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b5069146_27ea5465",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-17T20:35:55Z",
+      "side": 1,
+      "message": "I feel that having debug on for this script makes analyzing the flow control from the logs more difficult. However, since it\u0027s called from autotest I want to make sure that it\u0027s re-enabled for the rest of the scripts.",
+      "parentUuid": "bacc157c_1636cb3c",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 6
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4f3b63d_490c0e15",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-17T16:10:11Z",
       "side": 1,
       "message": "you can query all info in line 21. Just construct an array\n\n  qat_pci_bdfs\u003d( $(lspci -D | cut -f1 -d\u0027 \u0027) )\n\nthen just use it all over this script:\n  num_qat_bus -\u003e ${#qat_pci_bdfs[@]}\n\nin line 64:\n\n  for qat_bdf in ${qat_pci_bdfs[@]}; do\n  ..",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 31
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6576ca0_9f6a34c9",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-17T20:35:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f4f3b63d_490c0e15",
       "range": {
         "startLine": 21,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "44f66068_3c2e9277",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-17T20:35:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46432a78_c1303a80",
+      "range": {
+        "startLine": 37,
+        "startChar": 3,
+        "endLine": 37,
+        "endChar": 32
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3df68a18_2fa3c38d",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 11
@@ -82,6 +154,30 @@
       "writtenOn": "2018-10-17T16:10:11Z",
       "side": 1,
       "message": "I think that printing driver in one line will be enough by\n\n echo \"${allowed_drivers[@]}\"\n\nbut your call.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 5
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dca3afe3_f582131c",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-17T20:35:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3df68a18_2fa3c38d",
       "range": {
         "startLine": 39,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "c7afb03f_45b5085d",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-17T20:35:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6437b91c_11fcfd7a",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 67
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d978d70_43eb8009",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 11
@@ -128,6 +248,30 @@
       "writtenOn": "2018-10-17T16:10:11Z",
       "side": 1,
       "message": "the same comment as for lines 21-22",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 44
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb9de76d_ebf0e689",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-17T20:35:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d978d70_43eb8009",
       "range": {
         "startLine": 76,
         "startChar": 0,
