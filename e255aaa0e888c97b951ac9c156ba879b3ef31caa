@@ -16,6 +16,24 @@
       "revId": "e255aaa0e888c97b951ac9c156ba879b3ef31caa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "685c6a03_ee0c48ad",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-10-17T02:31:07Z",
+      "side": 1,
+      "message": "thanks for you answer,I just want to keep the register to a status which the Keep Alive timer is active,spec in Page229-7.12 points out this,I just think if you set cc.shn\u003d0,and I set cc.shst\u003d0 to a normal state right now.",
+      "parentUuid": "752d49a2_fc83996c",
+      "revId": "e255aaa0e888c97b951ac9c156ba879b3ef31caa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
