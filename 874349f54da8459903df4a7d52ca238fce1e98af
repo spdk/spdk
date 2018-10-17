@@ -22,6 +22,30 @@
       "revId": "874349f54da8459903df4a7d52ca238fce1e98af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af9cef92_4295bf05",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T16:16:49Z",
+      "side": 1,
+      "message": "Sure, I personally don\u0027t like these spdk_very_long_function_names() :) but I\u0027m afraid I\u0027m in minority here since You and Jim like them. Will change it in next version.",
+      "parentUuid": "56bf4180_89f6213f",
+      "range": {
+        "startLine": 274,
+        "startChar": 37,
+        "endLine": 274,
+        "endChar": 65
+      },
+      "revId": "874349f54da8459903df4a7d52ca238fce1e98af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
