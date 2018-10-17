@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bacc157c_1636cb3c",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T16:10:11Z",
+      "side": 1,
+      "message": "why you explicitly turn off debug here and switching it on at the end?",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 6
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4f3b63d_490c0e15",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T16:10:11Z",
+      "side": 1,
+      "message": "you can query all info in line 21. Just construct an array\n\n  qat_pci_bdfs\u003d( $(lspci -D | cut -f1 -d\u0027 \u0027) )\n\nthen just use it all over this script:\n  num_qat_bus -\u003e ${#qat_pci_bdfs[@]}\n\nin line 64:\n\n  for qat_bdf in ${qat_pci_bdfs[@]}; do\n  ..",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 31
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46432a78_c1303a80",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T16:10:11Z",
+      "side": 1,
+      "message": "you can use true, false idiom:\n\n   true_or_false\u003dfalse\n   ...\n   true_or_false\u003dtrue\n   ...\n\n   if $true_or_false; then\n   ...",
+      "range": {
+        "startLine": 37,
+        "startChar": 3,
+        "endLine": 37,
+        "endChar": 32
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3df68a18_2fa3c38d",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T16:10:11Z",
+      "side": 1,
+      "message": "I think that printing driver in one line will be enough by\n\n echo \"${allowed_drivers[@]}\"\n\nbut your call.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 5
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6437b91c_11fcfd7a",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T16:10:11Z",
+      "side": 1,
+      "message": "if (( $(lspci -d:37c9 | wc -l) !\u003d num_qat_bus*num_vfs )); then\n ...",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 67
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d978d70_43eb8009",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T16:10:11Z",
+      "side": 1,
+      "message": "the same comment as for lines 21-22",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 44
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
