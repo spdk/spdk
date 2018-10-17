@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8814eced_21f216f5",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 1539,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-17T11:49:00Z",
+      "side": 1,
+      "message": "I think it\u0027s worth to mention that now you can create passthru bdev before base bdev is present in the system.",
+      "revId": "d99157197ef6bbc6cc3bd02a197f28bfbb4f5f0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
