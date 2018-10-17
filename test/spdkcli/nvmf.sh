@@ -62,13 +62,13 @@ timing_exit spdkcli_check_match
 
 timing_enter spdkcli_clear_nvmf_config
 $spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/namespaces delete nsid=1" "Malloc3"
-$spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/namespaces delete nsid=2" "Malloc4"
+$spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/namespaces delete_all" "Malloc4"
 $spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/hosts delete nqn.2014-08.org.spdk:cnode2" "nqn.2014-08.org.spdk:cnode2"
+$spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode3/hosts delete_all" "nqn.2014-08.org.spdk:cnode1"
 $spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/listen_addresses delete RDMA $NVMF_TARGET_IP 4262" "$NVMF_TARGET_IP:4262"
-$spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/listen_addresses delete RDMA $NVMF_TARGET_IP 4261" "$NVMF_TARGET_IP:4261"
+$spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/listen_addresses delete_all" "$NVMF_TARGET_IP:4261"
 $spdkcli_job "/nvmf/subsystem delete nqn.2014-08.org.spdk:cnode3" "nqn.2014-08.org.spdk:cnode3"
-$spdkcli_job "/nvmf/subsystem delete nqn.2014-08.org.spdk:cnode2" "nqn.2014-08.org.spdk:cnode2"
-$spdkcli_job "/nvmf/subsystem delete nqn.2014-08.org.spdk:cnode1" "nqn.2014-08.org.spdk:cnode1"
+$spdkcli_job "/nvmf/subsystem delete_all" "nqn.2014-08.org.spdk:cnode2"
 $spdkcli_job "/bdevs/malloc delete Malloc6" "Malloc6"
 $spdkcli_job "/bdevs/malloc delete Malloc5" "Malloc5"
 $spdkcli_job "/bdevs/malloc delete Malloc4" "Malloc4"
