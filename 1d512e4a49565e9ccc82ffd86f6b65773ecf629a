@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "ab8223d3_e8c3143d",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T21:15:26Z",
+      "side": 1,
+      "message": "Bash flags are not inherited when calling a script only when sourcing.",
+      "parentUuid": "b5069146_27ea5465",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 6
+      },
+      "revId": "1d512e4a49565e9ccc82ffd86f6b65773ecf629a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4f3b63d_490c0e15",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 11

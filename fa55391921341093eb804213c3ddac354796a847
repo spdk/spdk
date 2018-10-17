@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "21a73d93_eefe344c",
+        "filename": "scripts/qat_setup.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T21:15:26Z",
+      "side": 1,
+      "message": "this still can be done only once after VF configuration lop (just like qat_pci_bdfs).",
+      "range": {
+        "startLine": 69,
+        "startChar": 6,
+        "endLine": 69,
+        "endChar": 31
+      },
+      "revId": "fa55391921341093eb804213c3ddac354796a847",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a2d021e6_ea9229e7",
         "filename": "scripts/qat_setup.sh",
         "patchSetId": 12
