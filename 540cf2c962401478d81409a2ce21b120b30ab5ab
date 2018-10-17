@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f26ebc0_3d746252",
+        "filename": "autotest.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T13:25:06Z",
+      "side": 1,
+      "message": "Should this be in vhost init section?\nThe script comes from test/vhost directory, commit message points to test/vhost, so... why put it into SPDK_TEST_VHOST_INIT section?",
+      "range": {
+        "startLine": 222,
+        "startChar": 0,
+        "endLine": 222,
+        "endChar": 51
+      },
+      "revId": "540cf2c962401478d81409a2ce21b120b30ab5ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "701bccdd_48d1f84a",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T13:25:06Z",
+      "side": 1,
+      "message": "We do this sed stuff in a couple of places but I think we could avoid it here.\n\n1) Would it be possible to remove hardcoded naa.Nvme0n1p0.0?\nMaybe you could get a list of files from (get_vhost_dir) and using if [ -S $file ] find a socket file?\n\n2) contents of bdev.conf is pretty short, so I\u0027d be OK with generating the config file using echo\u0027s or cat \u003e\u003e\u003c\u003c EOL to avoid sed\u0027ing",
+      "range": {
+        "startLine": 210,
+        "startChar": 1,
+        "endLine": 210,
+        "endChar": 94
+      },
+      "revId": "540cf2c962401478d81409a2ce21b120b30ab5ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e20465ca_67d04a3e",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T13:25:06Z",
+      "side": 1,
+      "message": "You can avoid LD_PRELOADing by adding ioengine\u003d{path_to_fio_bdev_plugin} to fio job config if I remember correctly",
+      "range": {
+        "startLine": 218,
+        "startChar": 1,
+        "endLine": 218,
+        "endChar": 75
+      },
+      "revId": "540cf2c962401478d81409a2ce21b120b30ab5ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48b60649_66580c5e",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T13:25:06Z",
+      "side": 1,
+      "message": "Size and offset params are passed through fio config file (lines 213-214) but ioengine, iodepth, bs and runtime are passed as call arguments.\nTry to keep it consistent:)",
+      "range": {
+        "startLine": 219,
+        "startChar": 1,
+        "endLine": 219,
+        "endChar": 53
+      },
+      "revId": "540cf2c962401478d81409a2ce21b120b30ab5ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
