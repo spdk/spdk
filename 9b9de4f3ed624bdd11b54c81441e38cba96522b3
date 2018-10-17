@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eafba50f_fb5f9617",
+        "filename": "test/nvme/timeout/timeout.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-17T17:01:36Z",
+      "side": 1,
+      "message": "too many tabs?",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 11
+      },
+      "revId": "9b9de4f3ed624bdd11b54c81441e38cba96522b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00e7a7b2_1d4b4e61",
+        "filename": "test/nvme/timeout/timeout.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-17T17:01:36Z",
+      "side": 1,
+      "message": "redundant blank line",
+      "revId": "9b9de4f3ed624bdd11b54c81441e38cba96522b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
