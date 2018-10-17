@@ -314,6 +314,19 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 				task->used_len, ' ');
 		blk_request_finish(true, task);
 		break;
+	case VIRTIO_BLK_T_FLUSH:
+		task->used_len = payload_len + sizeof(*task->status);
+		rc = spdk_bdev_flush(bvdev->bdev_desc, bvdev->bdev_io_channel, 0, 0, blk_request_complete_cb, task);
+		if (rc) {
+			if (rc == -ENOMEM) {
+				SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "No memory, start to queue io.\n");
+				blk_request_queue_io(task);
+			} else {
+				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				return -1;
+			}
+		}
+		break;
 	default:
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Not supported request type '%"PRIu32"'.\n", type);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
