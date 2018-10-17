@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0f63ffd_cf3d064f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T14:18:37Z",
+      "side": 1,
+      "message": "When iov_base can be NULL?",
+      "range": {
+        "startLine": 430,
+        "startChar": 6,
+        "endLine": 430,
+        "endChar": 21
+      },
+      "revId": "50e71d0dfc18a9b94b2a40b509362eef9f01d809",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
