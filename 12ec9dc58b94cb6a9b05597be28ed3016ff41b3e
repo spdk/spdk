@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e4baaa2_f2a4b9ec",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-17T23:25:28Z",
+      "side": 1,
+      "message": "You don\u0027t need sudo here. All of the scripts that source this one must be called with elevated privileges.",
+      "revId": "12ec9dc58b94cb6a9b05597be28ed3016ff41b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e1b1fc0_19711d32",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-17T23:25:28Z",
+      "side": 1,
+      "message": "Why not do a for loop with a builtin timeout? That way we won\u0027t hang the tests if we never connect. You can also just get the new count inline to make this more concise.\n\nfor i in $(seq 1 10); do\n  if [ $(list_nvmes | wc -l) -gt $init_count ]; then\n    break\n  else\n    sleep 1\n  fi\ndone",
+      "revId": "12ec9dc58b94cb6a9b05597be28ed3016ff41b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
