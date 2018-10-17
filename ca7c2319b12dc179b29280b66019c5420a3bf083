@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce0bb6d4_bfdec34f",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T14:10:29Z",
+      "side": 1,
+      "message": "Hmmm... Not sure but I think this should be PAGE_SIZE",
+      "range": {
+        "startLine": 54,
+        "startChar": 36,
+        "endLine": 54,
+        "endChar": 40
+      },
+      "revId": "ca7c2319b12dc179b29280b66019c5420a3bf083",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54b03f2d_9acce425",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T14:10:29Z",
+      "side": 1,
+      "message": "Don\u0027t that this is assert() condition.",
+      "range": {
+        "startLine": 471,
+        "startChar": 1,
+        "endLine": 471,
+        "endChar": 50
+      },
+      "revId": "ca7c2319b12dc179b29280b66019c5420a3bf083",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b4868b9_72bb3047",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T14:10:29Z",
+      "side": 1,
+      "message": "max alignment is 4k so why using uint64_t here? It would be great if you can store alignment as number of bits so you use only 4 bits instead of 64.",
+      "range": {
+        "startLine": 477,
+        "startChar": 1,
+        "endLine": 477,
+        "endChar": 41
+      },
+      "revId": "ca7c2319b12dc179b29280b66019c5420a3bf083",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66a11c60_9799632e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T14:10:29Z",
+      "side": 1,
+      "message": "hmmm... This expands small pool size by 50%. Are we fine with that? As an alternative you could allocate each buffer with maximum allowed alignment using rte_mempool_register_ops(). This would require some SPDK mempool API extension but would not require to calc alignment in get_buf/put_buf - buffers will be aligned by default.",
+      "range": {
+        "startLine": 827,
+        "startChar": 8,
+        "endLine": 827,
+        "endChar": 67
+      },
+      "revId": "ca7c2319b12dc179b29280b66019c5420a3bf083",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
