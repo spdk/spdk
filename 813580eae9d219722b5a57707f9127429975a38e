@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "350a09e4_209de4a5",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-17T11:23:11Z",
+      "side": 1,
+      "message": "Are you sure this is correct? \nconstruct_passthru_bdev is specific to passthru module",
+      "range": {
+        "startLine": 492,
+        "startChar": 1,
+        "endLine": 493,
+        "endChar": 32
+      },
+      "revId": "813580eae9d219722b5a57707f9127429975a38e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
