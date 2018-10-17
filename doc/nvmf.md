@@ -109,20 +109,15 @@ of the new script `scripts/config_converter.py`.
 
 ### Using RPCs {#nvmf_config_rpc}
 
-Start the nvmf_tgt application with elevated privileges and instruct it to wait for RPCs.
-The set_nvmf_target_options RPC can then be used to configure basic target parameters.
-Below is an example where the target is configured with an I/O unit size of 8192,
-4 max qpairs per controller, and an in capsule data size of 0. The parameters controlled
-by set_nvmf_target_options may only be modified before the SPDK NVMe-oF subsystem is initialized.
-Once the target options are configured. You need to start the NVMe-oF subsystem with start_subsystem_init.
+Start the nvmf_tgt application with elevated privileges. Once the target is started,
+the nvmf_create_transport rpc can be used to initialize a given transport. Below is an
+example where the target is started and the rdma transport is configured with an I/O
+unit size of 8192, 4 max qpairs per controller, and an in capsule data size of 0.
 
 ~~~{.sh}
-app/nvmf_tgt/nvmf_tgt --wait-for-rpc
-scripts/rpc.py set_nvmf_target_options -u 8192 -p 4 -c 0
-scripts/rpc.py start_subsystem_init
+app/nvmf_tgt/nvmf_tgt
+scripts/rpc.py nvmf_create_transport -t RDMA -u 8192 -p 4 -c 0
 ~~~
-
-Note: The start_subsystem_init rpc is referring to SPDK application subsystems and not the NVMe over Fabrics concept.
 
 Below is an example of creating a malloc bdev and assigning it to a subsystem. Adjust the bdevs,
 NQN, serial number, and IP address to your own circumstances.
