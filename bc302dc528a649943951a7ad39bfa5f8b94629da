@@ -39,6 +39,24 @@
       "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78c8e902_85c01940",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 16
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-17T08:57:34Z",
+      "side": 1,
+      "message": "It is needed to clean files produced during build like *.o *.d etc (install only source).\n\nI think it was working on my fedora setup. What OS you are using to build RPM ?",
+      "parentUuid": "bcfee1d1_da2d469e",
+      "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
