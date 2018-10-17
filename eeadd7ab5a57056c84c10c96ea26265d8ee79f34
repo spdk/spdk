@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "17eb3da7_b5be8add",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T13:06:07Z",
+      "side": 1,
+      "message": "This function (common.py / parse_results) to be removed. I moved it to one of the classes in run_nvmf.py.\n\n\"Name\" column contains that: block size, qd, rw mode, \nmixread value and numbers of CPUs.\nSo for example \"name\" for a single row could be:\n4k_32_randrw_70_4CPU\nof\n4k_32_randrw_70 (if no cpu restriction was given)",
+      "parentUuid": "000a2c8d_434fa0c2",
+      "range": {
+        "startLine": 77,
+        "startChar": 32,
+        "endLine": 79,
+        "endChar": 98
+      },
+      "revId": "eeadd7ab5a57056c84c10c96ea26265d8ee79f34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ee1f9bac_aac13c03",
         "filename": "scripts/perf/nvmf/common.py",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-16T14:15:12Z",
       "side": 1,
       "message": "I would prefer using usec. \"us\" is very ambiguous, it could mean the country US or just us.",
+      "range": {
+        "startLine": 98,
+        "startChar": 28,
+        "endLine": 98,
+        "endChar": 32
+      },
+      "revId": "eeadd7ab5a57056c84c10c96ea26265d8ee79f34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21c2a232_90500179",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T13:06:07Z",
+      "side": 1,
+      "message": "OK, will change in next patch",
+      "parentUuid": "ee1f9bac_aac13c03",
       "range": {
         "startLine": 98,
         "startChar": 28,

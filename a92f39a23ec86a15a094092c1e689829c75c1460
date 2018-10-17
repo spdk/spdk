@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "14ee0a3b_9cbaf368",
+        "filename": "scripts/perf/nvmf/config.json",
+        "patchSetId": 12
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T13:06:07Z",
+      "side": 1,
+      "message": "This is just a config example / template to fill out before running tests but I can switch it to 256 as the report was done with p4600\u0027s",
+      "parentUuid": "019951e9_94725483",
+      "range": {
+        "startLine": 25,
+        "startChar": 4,
+        "endLine": 25,
+        "endChar": 16
+      },
+      "revId": "a92f39a23ec86a15a094092c1e689829c75c1460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2548230e_d81e5624",
         "filename": "scripts/perf/nvmf/config.json",
         "patchSetId": 12
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "4b4cc8fc_eb587871",
+        "filename": "scripts/perf/nvmf/config.json",
+        "patchSetId": 12
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T13:06:07Z",
+      "side": 1,
+      "message": "Yup, this is sequential, and all the RW names here follow FIO naming convention. As in previous comment - this is just an example config.",
+      "parentUuid": "2548230e_d81e5624",
+      "range": {
+        "startLine": 26,
+        "startChar": 4,
+        "endLine": 26,
+        "endChar": 19
+      },
+      "revId": "a92f39a23ec86a15a094092c1e689829c75c1460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "73a6b832_8b15de51",
         "filename": "scripts/perf/nvmf/config.json",
         "patchSetId": 12
@@ -59,6 +107,30 @@
       "writtenOn": "2018-10-16T14:15:12Z",
       "side": 1,
       "message": "Can you put the units some where? Usually when we configure run times and ramp times the units are in the seconds so that if someone just wants to a quick 10 sec run with no ramp time to validate the script they can do that easily.",
+      "range": {
+        "startLine": 28,
+        "startChar": 4,
+        "endLine": 29,
+        "endChar": 19
+      },
+      "revId": "a92f39a23ec86a15a094092c1e689829c75c1460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51fceb2b_7c2fddd0",
+        "filename": "scripts/perf/nvmf/config.json",
+        "patchSetId": 12
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T13:06:07Z",
+      "side": 1,
+      "message": "I described the units in README.md.\nI am against putting units here, as this time is going to be parsed to int. If I change this to string in form of \"10s\" or \"20s\" then it would need additional operation from script side.",
+      "parentUuid": "73a6b832_8b15de51",
       "range": {
         "startLine": 28,
         "startChar": 4,
