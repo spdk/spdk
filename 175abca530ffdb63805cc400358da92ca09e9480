@@ -51,6 +51,24 @@
       "revId": "175abca530ffdb63805cc400358da92ca09e9480",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b7a0877_08ac5a90",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-17T12:51:20Z",
+      "side": 1,
+      "message": "I agree with Pawel, this is getting too complex.\nI guess it\u0027d be best to run a VM (or even more than 1 VM) and create multiple bdevs, of various types, and run FIO on all of them at the same time, in parallel.\n\nBy the way - is there any particular reason for doing this test with malloc, and not with some other bdev?",
+      "parentUuid": "45bd0f23_2bbb6924",
+      "revId": "175abca530ffdb63805cc400358da92ca09e9480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
