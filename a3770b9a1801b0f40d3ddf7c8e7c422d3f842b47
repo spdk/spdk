@@ -22,6 +22,30 @@
       "revId": "a3770b9a1801b0f40d3ddf7c8e7c422d3f842b47",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4796f31_5bdff3c4",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-17T08:03:00Z",
+      "side": 1,
+      "message": "See parameters in spdk_bdev_flush, I think you should flush the whole disk as there is no parameters from flush command with a length and offset.",
+      "parentUuid": "4cd3612c_ab4ca5ce",
+      "range": {
+        "startLine": 319,
+        "startChar": 71,
+        "endLine": 319,
+        "endChar": 100
+      },
+      "revId": "a3770b9a1801b0f40d3ddf7c8e7c422d3f842b47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
