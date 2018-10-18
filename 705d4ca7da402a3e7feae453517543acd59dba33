@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8eca5611_9002ea6a",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T11:58:41Z",
+      "side": 1,
+      "message": "I\u0027ve changes to SPDK RPC socket (without \u0027target\u0027, to not confuse user)",
+      "parentUuid": "62973f41_b719c7e4",
+      "range": {
+        "startLine": 18,
+        "startChar": 24,
+        "endLine": 18,
+        "endChar": 42
+      },
+      "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18b6fb55_fe8e9829",
         "filename": "scripts/rpc_http_proxy.py",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-18T09:43:59Z",
       "side": 1,
       "message": "This is not valid JSON RPC error response. From other hand - I don\u0027t think that any response is needed in case of 401 is returned.",
+      "range": {
+        "startLine": 82,
+        "startChar": 11,
+        "endLine": 82,
+        "endChar": 68
+      },
+      "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ec97027_61c4c99f",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T11:58:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "18b6fb55_fe8e9829",
       "range": {
         "startLine": 82,
         "startChar": 11,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5f0290c6_75cba2a3",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T11:58:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "778f230d_e87105c7",
+      "range": {
+        "startLine": 84,
+        "startChar": 54,
+        "endLine": 84,
+        "endChar": 55
+      },
+      "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b888847_4eb074c1",
         "filename": "scripts/rpc_http_proxy.py",
         "patchSetId": 6
@@ -82,6 +154,30 @@
       "writtenOn": "2018-10-18T09:43:59Z",
       "side": 1,
       "message": "Why you parse this data at all? Just grab whatever you have got and pass it to SPDK or user.",
+      "range": {
+        "startLine": 86,
+        "startChar": 12,
+        "endLine": 86,
+        "endChar": 58
+      },
+      "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35588fa5_50014404",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T11:58:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5b888847_4eb074c1",
       "range": {
         "startLine": 86,
         "startChar": 12,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "1bcdbe0e_807d59df",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T11:58:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "60faa3e2_5a380f6e",
+      "range": {
+        "startLine": 95,
+        "startChar": 16,
+        "endLine": 95,
+        "endChar": 59
+      },
+      "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a0deea8_d01df1a3",
         "filename": "scripts/rpc_http_proxy.py",
         "patchSetId": 6
@@ -128,6 +248,30 @@
       "writtenOn": "2018-10-18T09:43:59Z",
       "side": 1,
       "message": "This should exit with error.",
+      "range": {
+        "startLine": 115,
+        "startChar": 7,
+        "endLine": 115,
+        "endChar": 30
+      },
+      "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8a2e590_44b659e6",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T11:58:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a0deea8_d01df1a3",
       "range": {
         "startLine": 115,
         "startChar": 7,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "b91ab9ae_6d0f8534",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T11:58:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fda69976_0bb4c341",
+      "range": {
+        "startLine": 118,
+        "startChar": 8,
+        "endLine": 118,
+        "endChar": 30
+      },
+      "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9022ddb_d717225b",
         "filename": "scripts/rpc_http_proxy.py",
         "patchSetId": 6
@@ -174,6 +342,30 @@
       "writtenOn": "2018-10-18T09:56:11Z",
       "side": 1,
       "message": "each HTTP connection should make its own connection to SPDK RPC socket. Otherwise you don\u0027t know which response is for which request.",
+      "range": {
+        "startLine": 125,
+        "startChar": 4,
+        "endLine": 125,
+        "endChar": 26
+      },
+      "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19acd5a0_f03cbbc7",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T11:58:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c9022ddb_d717225b",
       "range": {
         "startLine": 125,
         "startChar": 4,
