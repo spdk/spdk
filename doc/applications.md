@@ -1,3 +1,4 @@
+
 # An Overview of SPDK Applications {#app_overview}
 
 SPDK is primarily a development kit that delivers libraries and header files for
@@ -37,9 +38,9 @@ Param    | Long Param             | Type     | Default                | Descript
 -p       | --master-core          | integer  | first core in CPU mask | master (primary) core for DPDK
 -r       | --rpc-socket           | string   | /var/tmp/spdk.sock     | RPC listen address
 -s       | --mem-size             | integer  | all hugepage memory    | @ref cmd_arg_memory_size
-         | --silence-noticelog    | flag     |                        | disable notice level logging to `stderr`
+&nbsp;   | --silence-noticelog    | flag     |                        | disable notice level logging to `stderr`
 -u       | --no-pci               | flag     |                        | @ref cmd_arg_disable_pci_access.
-         | --wait-for-rpc         | flag     |                        | @ref cmd_arg_deferred_initialization
+&nbsp;   | --wait-for-rpc         | flag     |                        | @ref cmd_arg_deferred_initialization
 -B       | --pci-blacklist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
 -W       | --pci-whitelist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
 -R       | --huge-unlink          | flag     |                        | @ref cmd_arg_huge_unlink
