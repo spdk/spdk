@@ -78,17 +78,19 @@ spdk_jsonrpc_client_check_rpc_method(struct spdk_jsonrpc_client *client, char *m
 	spdk_jsonrpc_client_send_request(client, request);
 
 	do {
-		rc = spdk_jsonrpc_client_recv_response(client);
-	} while (rc == -EAGAIN || rc == -ENOTCONN);
+		rc = spdk_jsonrpc_client_poll(client, 1);
+	} while (rc == 0 || rc == -ENOTCONN);
 
-	if (rc != 0) {
+	if (rc <= 0) {
+		SPDK_ERRLOG("Failed to get response: %d\n", rc);
+		rc = -1;
 		goto out;
 	}
 
 	json_resp = spdk_jsonrpc_client_get_response(client);
 	if (json_resp == NULL) {
 		SPDK_ERRLOG("spdk_jsonrpc_client_get_response() failed\n");
-		rc = -errno;
+		rc = -1;
 		goto out;
 
 	}
