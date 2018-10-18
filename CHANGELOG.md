@@ -51,7 +51,7 @@ A new structure spdk_mem_map_ops has been introduced to hold memory map related
 callbacks. This structure is now passed as the second argument of spdk_mem_map_alloc
 in lieu of the notify callback.
 
-### iscsi
+### iscsi target
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
 method for CHAP authentication in discovery sessions have been changed to
@@ -68,6 +68,12 @@ default location for this file (`/usr/local/etc/spdk/auth.conf`) if none was
 specified. This default has been removed. Users must now explicitly specify
 the location of this file to load CHAP shared secrets from a file, or use
 the related iSCSI RPC methods to add them at runtime.
+
+### iscsi initiator
+
+The SPDK iSCSI initiator is no longer perceived experimental and becomes
+a first-class citizen among bdev modules. The basic usage has been briefly
+described in the bdev user guide: [iSCSI bdev](https://spdk.io/doc/bdev.html#bdev_config_iscsi)
 
 ### Miscellaneous
 
