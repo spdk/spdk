@@ -46,27 +46,30 @@ _spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
 		return 0;
 	}
 
-	/* Reset offset in request */
-	request->send_offset = 0;
-
-	while (request->send_len > 0) {
+	if (request->send_len > 0) {
 		rc = send(client->sockfd, request->send_buf + request->send_offset,
 			  request->send_len, 0);
-		if (rc <= 0) {
-			if (rc < 0 && errno == EINTR) {
+		if (rc < 0) {
+			/* For EINTR we pretend that nothing was send. */
+			if (errno == EINTR) {
 				rc = 0;
 			} else {
-				return rc;
+				rc = -errno;
+				SPDK_ERRLOG("poll() failed (%d): %s\n", errno, spdk_strerror(errno));
 			}
+
+			return rc;
 		}
 
 		request->send_offset += rc;
 		request->send_len -= rc;
 	}
 
-	client->request = NULL;
+	if (request->send_len == 0) {
+		client->request = NULL;
+		spdk_jsonrpc_client_free_request(request);
+	}
 
-	spdk_jsonrpc_client_free_request(request);
 	return 0;
 }
 
@@ -93,15 +96,17 @@ recv_buf_expand(struct spdk_jsonrpc_client *client)
 }
 
 static int
-_spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client)
+_spdk_jsonrpc_client_resp_ready_count(struct spdk_jsonrpc_client *client)
 {
-	ssize_t rc = 0;
-	size_t recv_avail;
+	return client->resp != NULL && client->resp->ready ? 1 : 0;
+}
 
-	_spdk_jsonrpc_client_send_request(client);
+static int
+_spdk_jsonrpc_client_recv(struct spdk_jsonrpc_client *client)
+{
+	ssize_t rc;
 
 	if (client->recv_buf == NULL) {
-		/* memory malloc for recv-buf */
 		client->recv_buf = malloc(SPDK_JSONRPC_SEND_BUF_SIZE_INIT);
 		if (!client->recv_buf) {
 			rc = errno;
@@ -110,54 +115,119 @@ _spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client)
 		}
 		client->recv_buf_size = SPDK_JSONRPC_SEND_BUF_SIZE_INIT;
 		client->recv_offset = 0;
-	}
-
-	recv_avail = client->recv_buf_size - client->recv_offset;
-	while (recv_avail > 0) {
-		rc = recv(client->sockfd, client->recv_buf + client->recv_offset, recv_avail - 1, 0);
-		if (rc < 0) {
-			if (errno == EINTR) {
-				continue;
-			} else {
-				return errno;
-			}
-		} else if (rc == 0) {
-			return -EIO;
-		}
-
-		client->recv_offset += rc;
-		recv_avail -= rc;
-
-		client->recv_buf[client->recv_offset] = '\0';
-
-		/* Check to see if we have received a full JSON value. */
-		rc = spdk_jsonrpc_parse_response(client);
-		if (rc == 0) {
-			/* Successfully parsed response */
-			return 0;
-		} else if (rc && rc != -EAGAIN) {
-			SPDK_ERRLOG("jsonrpc parse request failed\n");
+	} else if (client->recv_offset == client->recv_buf_size - 1) {
+		rc = recv_buf_expand(client);
+		if (rc) {
 			return rc;
 		}
+	}
 
-		/* Expand receive buffer if larger one is needed */
-		if (recv_avail == 1) {
-			rc = recv_buf_expand(client);
-			if (rc != 0) {
-				return rc;
+	rc = recv(client->sockfd, client->recv_buf + client->recv_offset,
+		  client->recv_buf_size - client->recv_offset - 1, 0);
+	if (rc < 0) {
+		/* For EINTR we pretend that nothing was reveived. */
+		if (errno == EINTR) {
+			return 0;
+		} else {
+			rc = -errno;
+			SPDK_ERRLOG("recv() failed (%d): %s\n", errno, spdk_strerror(errno));
+			return rc;
+		}
+	} else if (rc == 0) {
+		return -EIO;
+	}
+
+	client->recv_offset += rc;
+	client->recv_buf[client->recv_offset] = '\0';
+
+	/* Check to see if we have received a full JSON value. */
+	return spdk_jsonrpc_parse_response(client);
+}
+
+static int
+_spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
+{
+	int rc;
+	struct pollfd pfd = { .fd = client->sockfd, .events = POLLIN | POLLOUT };
+
+	rc = poll(&pfd, 1, timeout);
+	if (rc == -1) {
+		if (errno == EINTR) {
+			/* For EINTR we pretend that nothing was received nor send. */
+			rc = 0;
+		} else {
+			rc = -errno;
+			SPDK_ERRLOG("poll() failed (%d): %s\n", errno, spdk_strerror(errno));
+		}
+	} else if (rc > 0) {
+		rc = 0;
+
+		if (pfd.revents & POLLOUT) {
+			rc = _spdk_jsonrpc_client_send_request(client);
+		}
+
+		if (rc == 0 && (pfd.revents & POLLIN)) {
+			rc = _spdk_jsonrpc_client_recv(client);
+			/* Incomplete message in buffer isn't an error. */
+			if (rc == -EAGAIN) {
+				rc = 0;
 			}
-			recv_avail = client->recv_buf_size - client->recv_offset;
 		}
 	}
 
-	return 0;
+	return rc ? rc : _spdk_jsonrpc_client_resp_ready_count(client);
+}
+
+static int
+_spdk_jsonrpc_client_poll_connecting(struct spdk_jsonrpc_client *client, int timeout)
+{
+	socklen_t rc_len;
+	int rc;
+
+	struct pollfd pfd = {
+		.fd = client->sockfd,
+		.events = POLLOUT
+	};
+
+	rc = poll(&pfd, 1, timeout);
+	if (rc == 0) {
+		return -ENOTCONN;
+	} else if (rc == -1) {
+		if (errno != EINTR) {
+			SPDK_ERRLOG("poll() failed (%d): %s\n", errno, spdk_strerror(errno));
+			goto err;
+		}
+
+		/* We are still not connected. Caller will have to call us again. */
+		return -ENOTCONN;
+	} else if (pfd.revents & ~POLLOUT) {
+		/* We only poll for POLLOUT */
+		goto err;
+	} else if ((pfd.revents & POLLOUT) == 0) {
+		/* Is this even possible to get here? */
+		return -ENOTCONN;
+	}
+
+	rc_len = sizeof(int);
+	/* connection might fail so need to check SO_ERROR. */
+	if (getsockopt(client->sockfd, SOL_SOCKET, SO_ERROR, &rc, &rc_len) == -1) {
+		goto err;
+	}
+
+	if (rc == 0) {
+		client->connected = true;
+		return 0;
+	}
+
+err:
+	return -EIO;
 }
 
 static int
 _spdk_jsonrpc_client_connect(struct spdk_jsonrpc_client *client, int domain, int protocol,
 			     struct sockaddr *server_addr, socklen_t addrlen)
 {
-	int rc;
+	int rc, flags;
 
 	client->sockfd = socket(domain, SOCK_STREAM, protocol);
 	if (client->sockfd < 0) {
@@ -166,13 +236,26 @@ _spdk_jsonrpc_client_connect(struct spdk_jsonrpc_client *client, int domain, int
 		return -rc;
 	}
 
-	rc = connect(client->sockfd, server_addr, addrlen);
-	if (rc != 0) {
-		SPDK_ERRLOG("could not connect to JSON-RPC server: %s\n", spdk_strerror(errno));
+	flags = fcntl(client->sockfd, F_GETFL);
+	if (flags < 0 || fcntl(client->sockfd, F_SETFL, flags | O_NONBLOCK) < 0) {
+		rc = errno;
+		SPDK_ERRLOG("fcntl(): can't set nonblocking mode for socket (%d): %s\n",
+			    errno, spdk_strerror(errno));
 		goto err;
 	}
 
-	return 0;
+	rc = connect(client->sockfd, server_addr, addrlen);
+	if (rc != 0) {
+		rc = errno;
+		if (rc != EINPROGRESS) {
+			SPDK_ERRLOG("could not connect to JSON-RPC server: %s\n", spdk_strerror(errno));
+			goto err;
+		}
+	} else {
+		client->connected = true;
+	}
+
+	return -rc;
 err:
 	close(client->sockfd);
 	client->sockfd = -1;
@@ -244,7 +327,7 @@ spdk_jsonrpc_client_connect(const char *addr, int addr_family)
 	}
 
 err:
-	if (rc != 0) {
+	if (rc != 0 && rc != -EINPROGRESS) {
 		free(client);
 		client = NULL;
 		errno = -rc;
@@ -299,9 +382,13 @@ spdk_jsonrpc_client_free_request(struct spdk_jsonrpc_client_request *req)
 }
 
 int
-spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
+spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
 {
-	return _spdk_jsonrpc_client_poll(client);
+	if (client->connected) {
+		return _spdk_jsonrpc_client_poll(client, timeout);
+	} else {
+		return _spdk_jsonrpc_client_poll_connecting(client, timeout);
+	}
 }
 
 int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
