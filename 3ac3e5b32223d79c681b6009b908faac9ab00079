@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b23afe16_a1aed6a1",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T21:55:38Z",
+      "side": 1,
+      "message": "We shouldn\u0027t need to wait for RPCs, now that the nvmf_create_transport RPC can run after subsystems have been initialized.\n\n--wait-for-rpcs immediately followed by start_subsystem_init RPC is functionally equivalent to just not specifying --wait-for-rpcs at all.\n\nThis should say something about nvmf_create_transport must be called before the first listener is created.",
+      "revId": "3ac3e5b32223d79c681b6009b908faac9ab00079",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
