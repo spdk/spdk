@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "d3982572_adf54dce",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T16:56:08Z",
+      "side": 1,
+      "message": "I\u0027m not sure we can do anything different than an assert though.  There\u0027s no way to \"fail\" the get_buf request.\n\nYou could just drop this I/O - it means this I/O would hang, but it wouldn\u0027t corrupt the system at least.  Probably need an ERRLOG in here too.  Maybe something like:\n\nif (alignment \u003e SPDK_BDEV_BUF_MAX_ALIGNMENT) {\n  SPDK_ERRLOG(\"blah\\n\");\n  assert(false);\n  /* Drop this I/O since using the specified alignment could overflow the buffer. */\n  return;\n}",
+      "parentUuid": "54b03f2d_9acce425",
+      "range": {
+        "startLine": 471,
+        "startChar": 1,
+        "endLine": 471,
+        "endChar": 50
+      },
+      "revId": "ca7c2319b12dc179b29280b66019c5420a3bf083",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b4868b9_72bb3047",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 10
@@ -178,6 +202,30 @@
       "side": 1,
       "message": "Ack",
       "parentUuid": "66a11c60_9799632e",
+      "range": {
+        "startLine": 827,
+        "startChar": 8,
+        "endLine": 827,
+        "endChar": 67
+      },
+      "revId": "ca7c2319b12dc179b29280b66019c5420a3bf083",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fcf8f05_429906f1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T16:56:08Z",
+      "side": 1,
+      "message": "Let\u0027s just leave this as 512 for now.  When we check which pool to pull from, do the check like this:\n\nif (len + alignment \u003e\u003d SMALL_BUF_MAX_SIZE + 512)\n\nThen if user requests an 8KB buffer with 4KB alignment, it will just pull from the big pool instead.  That\u0027s a very uncommon case so we don\u0027t need to optimize for it.\n\nYou\u0027ll need to come up with a #define for that 512 value though.",
+      "parentUuid": "2b1c7936_148b382f",
       "range": {
         "startLine": 827,
         "startChar": 8,
