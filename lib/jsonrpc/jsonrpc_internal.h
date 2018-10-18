@@ -116,7 +116,7 @@ struct spdk_jsonrpc_client_response_internal {
 
 struct spdk_jsonrpc_client {
 	int sockfd;
-	int (*poll)(struct spdk_jsonrpc_client *);
+	int (*poll)(struct spdk_jsonrpc_client *, int);
 
 	size_t recv_buf_size;
 	size_t recv_offset;
