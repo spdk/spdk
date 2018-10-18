@@ -36,7 +36,122 @@
 
 #define RPC_DEFAULT_PORT	"5260"
 
-static int _spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client);
+static int
+_spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
+{
+	ssize_t rc;
+	struct spdk_jsonrpc_client_request *request = client->request;
+
+	if (!request) {
+		return 0;
+	}
+
+	/* Reset offset in request */
+	request->send_offset = 0;
+
+	while (request->send_len > 0) {
+		rc = send(client->sockfd, request->send_buf + request->send_offset,
+			  request->send_len, 0);
+		if (rc <= 0) {
+			if (rc < 0 && errno == EINTR) {
+				rc = 0;
+			} else {
+				return rc;
+			}
+		}
+
+		request->send_offset += rc;
+		request->send_len -= rc;
+	}
+
+	client->request = NULL;
+
+	spdk_jsonrpc_client_free_request(request);
+	return 0;
+}
+
+static int
+recv_buf_expand(struct spdk_jsonrpc_client *client)
+{
+	uint8_t *new_buf;
+
+	if (client->recv_buf_size * 2 > SPDK_JSONRPC_SEND_BUF_SIZE_MAX) {
+		return -ENOSPC;
+	}
+
+	new_buf = realloc(client->recv_buf, client->recv_buf_size * 2);
+	if (new_buf == NULL) {
+		SPDK_ERRLOG("Resizing recv_buf failed (current size %zu, new size %zu)\n",
+			    client->recv_buf_size, client->recv_buf_size * 2);
+		return -ENOMEM;
+	}
+
+	client->recv_buf = new_buf;
+	client->recv_buf_size *= 2;
+
+	return 0;
+}
+
+static int
+_spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client)
+{
+	ssize_t rc = 0;
+	size_t recv_avail;
+
+	_spdk_jsonrpc_client_send_request(client);
+
+	if (client->recv_buf == NULL) {
+		/* memory malloc for recv-buf */
+		client->recv_buf = malloc(SPDK_JSONRPC_SEND_BUF_SIZE_INIT);
+		if (!client->recv_buf) {
+			rc = errno;
+			SPDK_ERRLOG("malloc() failed (%d): %s\n", (int)rc, spdk_strerror(rc));
+			return -rc;
+		}
+		client->recv_buf_size = SPDK_JSONRPC_SEND_BUF_SIZE_INIT;
+		client->recv_offset = 0;
+	}
+
+	recv_avail = client->recv_buf_size - client->recv_offset;
+	while (recv_avail > 0) {
+		rc = recv(client->sockfd, client->recv_buf + client->recv_offset, recv_avail - 1, 0);
+		if (rc < 0) {
+			if (errno == EINTR) {
+				continue;
+			} else {
+				return errno;
+			}
+		} else if (rc == 0) {
+			return -EIO;
+		}
+
+		client->recv_offset += rc;
+		recv_avail -= rc;
+
+		client->recv_buf[client->recv_offset] = '\0';
+
+		/* Check to see if we have received a full JSON value. */
+		rc = spdk_jsonrpc_parse_response(client);
+		if (rc == 0) {
+			/* Successfully parsed response */
+			return 0;
+		} else if (rc && rc != -EAGAIN) {
+			SPDK_ERRLOG("jsonrpc parse request failed\n");
+			return rc;
+		}
+
+		/* Expand receive buffer if larger one is needed */
+		if (recv_avail == 1) {
+			rc = recv_buf_expand(client);
+			if (rc != 0) {
+				return rc;
+			}
+			recv_avail = client->recv_buf_size - client->recv_offset;
+		}
+	}
+
+	return 0;
+}
 
 static int
 _spdk_jsonrpc_client_connect(struct spdk_jsonrpc_client *client, int domain, int protocol,
@@ -181,123 +296,6 @@ spdk_jsonrpc_client_free_request(struct spdk_jsonrpc_client_request *req)
 {
 	free(req->send_buf);
 	free(req);
-}
-
-static int
-_spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
-{
-	ssize_t rc;
-	struct spdk_jsonrpc_client_request *request = client->request;
-
-	if (!request) {
-		return 0;
-	}
-
-	/* Reset offset in request */
-	request->send_offset = 0;
-
-	while (request->send_len > 0) {
-		rc = send(client->sockfd, request->send_buf + request->send_offset,
-			  request->send_len, 0);
-		if (rc <= 0) {
-			if (rc < 0 && errno == EINTR) {
-				rc = 0;
-			} else {
-				return rc;
-			}
-		}
-
-		request->send_offset += rc;
-		request->send_len -= rc;
-	}
-
-	client->request = NULL;
-
-	spdk_jsonrpc_client_free_request(request);
-	return 0;
-}
-
-static int
-recv_buf_expand(struct spdk_jsonrpc_client *client)
-{
-	uint8_t *new_buf;
-
-	if (client->recv_buf_size * 2 > SPDK_JSONRPC_SEND_BUF_SIZE_MAX) {
-		return -ENOSPC;
-	}
-
-	new_buf = realloc(client->recv_buf, client->recv_buf_size * 2);
-	if (new_buf == NULL) {
-		SPDK_ERRLOG("Resizing recv_buf failed (current size %zu, new size %zu)\n",
-			    client->recv_buf_size, client->recv_buf_size * 2);
-		return -ENOMEM;
-	}
-
-	client->recv_buf = new_buf;
-	client->recv_buf_size *= 2;
-
-	return 0;
-}
-
-static int
-_spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client)
-{
-	ssize_t rc = 0;
-	size_t recv_avail;
-
-	_spdk_jsonrpc_client_send_request(client);
-
-	if (client->recv_buf == NULL) {
-		/* memory malloc for recv-buf */
-		client->recv_buf = malloc(SPDK_JSONRPC_SEND_BUF_SIZE_INIT);
-		if (!client->recv_buf) {
-			rc = errno;
-			SPDK_ERRLOG("malloc() failed (%d): %s\n", (int)rc, spdk_strerror(rc));
-			return -rc;
-		}
-		client->recv_buf_size = SPDK_JSONRPC_SEND_BUF_SIZE_INIT;
-		client->recv_offset = 0;
-	}
-
-	recv_avail = client->recv_buf_size - client->recv_offset;
-	while (recv_avail > 0) {
-		rc = recv(client->sockfd, client->recv_buf + client->recv_offset, recv_avail - 1, 0);
-		if (rc < 0) {
-			if (errno == EINTR) {
-				continue;
-			} else {
-				return errno;
-			}
-		} else if (rc == 0) {
-			return -EIO;
-		}
-
-		client->recv_offset += rc;
-		recv_avail -= rc;
-
-		client->recv_buf[client->recv_offset] = '\0';
-
-		/* Check to see if we have received a full JSON value. */
-		rc = spdk_jsonrpc_parse_response(client);
-		if (rc == 0) {
-			/* Successfully parsed response */
-			return 0;
-		} else if (rc && rc != -EAGAIN) {
-			SPDK_ERRLOG("jsonrpc parse request failed\n");
-			return rc;
-		}
-
-		/* Expand receive buffer if larger one is needed */
-		if (recv_avail == 1) {
-			rc = recv_buf_expand(client);
-			if (rc != 0) {
-				return rc;
-			}
-			recv_avail = client->recv_buf_size - client->recv_offset;
-		}
-	}
-
-	return 0;
 }
 
 int
