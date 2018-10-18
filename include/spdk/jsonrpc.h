@@ -261,16 +261,25 @@ int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
 				     struct spdk_jsonrpc_client_request *req);
 
 /**
- * Receive the JSON-RPC response in JSON-RPC client.
+ * Poll the JSON-RPC client. When any response is available use
+ * \c spdk_jsonrpc_client_get_response to retrieve it.
  *
  * This function is not thread safe and should only be called from one thread at
  * a time while no other threads are actively \c client object.
  *
  * \param client JSON-RPC client.
+ * \param timeout Time in miliseconds this function will block. -1 block forever, 0 don't block.
  *
- * \return 0 on success.
+ * \return If no error occurred, this function returns a non-negative number indicating how
+ * many ready responses can be retrieved. If an error occurred, this function returns one of
+ * the following negated errno values:
+ *  -ENOTCONN - not connected yet. Try again later.
+ *  -EINVAL - response is detected to be invalid. Client connection should be terminated.
+ *  -ENOSPC - no space to receive another response. User need to retrieve waiting responses.
+ *  -EIO - connection terminated (or other critical error). Client connection should be terminated.
+ *  -ENOMEM - out of memory
  */
-int spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client);
+int spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout);
 
 /**
  * Return JSON RPC response object representing next available response from client connection.
