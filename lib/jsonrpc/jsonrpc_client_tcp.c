@@ -36,6 +36,10 @@
 
 #define RPC_DEFAULT_PORT	"5260"
 
+static int _spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client);
+static int _spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
+		struct spdk_jsonrpc_client_request *request);
+
 static struct spdk_jsonrpc_client *
 _spdk_jsonrpc_client_connect(int domain, int protocol,
 			     struct sockaddr *server_addr, socklen_t addrlen)
@@ -62,6 +66,9 @@ _spdk_jsonrpc_client_connect(int domain, int protocol,
 		free(client);
 		return NULL;
 	}
+
+	client->recv_fn = _spdk_jsonrpc_client_recv_response;
+	client->send_fn = _spdk_jsonrpc_client_send_request;
 
 	return client;
 }
@@ -176,9 +183,9 @@ spdk_jsonrpc_client_free_request(struct spdk_jsonrpc_client_request *req)
 	free(req);
 }
 
-int
-spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
-				 struct spdk_jsonrpc_client_request *request)
+static int
+_spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
+				  struct spdk_jsonrpc_client_request *request)
 {
 	ssize_t rc;
 
@@ -225,8 +232,8 @@ recv_buf_expand(struct spdk_jsonrpc_client *client)
 	return 0;
 }
 
-int
-spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
+static int
+_spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
 {
 	ssize_t rc = 0;
 	size_t recv_avail;
@@ -282,6 +289,18 @@ spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
 	}
 
 	return 0;
+}
+
+int
+spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
+{
+	return client->recv_fn(client);
+}
+
+int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
+				     struct spdk_jsonrpc_client_request *req)
+{
+	return client->send_fn(client, req);
 }
 
 struct spdk_jsonrpc_client_response *
