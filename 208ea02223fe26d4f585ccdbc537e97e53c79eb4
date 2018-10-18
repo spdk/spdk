@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "f14b924e_1389e563",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T14:09:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "12e9d3e6_3977f1b0",
+      "range": {
+        "startLine": 38,
+        "startChar": 7,
+        "endLine": 43,
+        "endChar": 13
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "28b59ab8_c32d4494",
         "filename": "scripts/rpc_http_proxy.py",
         "patchSetId": 7
@@ -273,6 +297,30 @@
       "side": 1,
       "message": "There might be no ID in request meaning user don\u0027t want any response (fire and forget). So if you want to handle this you need to check in rpc_call()\n\n  if len(buf) \u003e 0 \u0026\u0026 response is None:\n     raise ....\n\nand here catch that exception and then send resp 500.",
       "parentUuid": "5911f063_1bfba47b",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 32
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "954e6e33_3d14d4e1",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-18T14:09:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3e4015f_bad42b1d",
       "range": {
         "startLine": 87,
         "startChar": 12,
