@@ -16,6 +16,24 @@
       "revId": "8bbaafe11eb499d6b203d8e144b15fa6f85fd74c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e4d00c0_e96a517f",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-18T16:50:48Z",
+      "side": 1,
+      "message": "No, it\u0027s not. I must have had a copy paste error.",
+      "parentUuid": "fa893c7e_e9a49871",
+      "revId": "8bbaafe11eb499d6b203d8e144b15fa6f85fd74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
