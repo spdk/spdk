@@ -33,6 +33,24 @@
       "revId": "45e420827e43a4c9af52d8ddffa07d4eee290d88",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82c7c0f4_7655e870",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-18T20:20:33Z",
+      "side": 1,
+      "message": "The first arg is the source object that was built which is named just $APP -- not spdk_example_$APP.   Thus the invocation I wrote copies -and- renames $APP such that it is prepended with \"spdk_example\" once placed in $DESTDIR/$bindir.   The DPDK folks employ the same naming convention for their examples.",
+      "parentUuid": "6b37dcdb_a7f79a1d",
+      "revId": "45e420827e43a4c9af52d8ddffa07d4eee290d88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
