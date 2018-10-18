@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c92cff72_1145bc4c",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T12:44:58Z",
+      "side": 1,
+      "message": "This is transparent proxy. Just read everything without decoding it.",
+      "range": {
+        "startLine": 38,
+        "startChar": 7,
+        "endLine": 43,
+        "endChar": 13
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28b59ab8_c32d4494",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T12:44:58Z",
+      "side": 1,
+      "message": "Any response is good response, even the error response. You can remove it.",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 23
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5eee202d_fcc7e712",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T12:44:58Z",
+      "side": 1,
+      "message": "Don\u0027t care what the response is\n\nreturn buf",
+      "range": {
+        "startLine": 57,
+        "startChar": 11,
+        "endLine": 57,
+        "endChar": 19
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79d8659c_ad3e86c6",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T12:44:58Z",
+      "side": 1,
+      "message": "It is not C, you don\u0027t have to check for NULL. Just do the comapre here.",
+      "range": {
+        "startLine": 81,
+        "startChar": 11,
+        "endLine": 82,
+        "endChar": 66
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cbd88d4_c83efd29",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T12:44:58Z",
+      "side": 1,
+      "message": "No response is possible if request don\u0027t have ID. So this check is also not needed.",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 32
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e40e501_6f25c70d",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T12:44:58Z",
+      "side": 1,
+      "message": "just send result of rpc_call() whatever it is.",
+      "range": {
+        "startLine": 91,
+        "startChar": 33,
+        "endLine": 91,
+        "endChar": 85
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
