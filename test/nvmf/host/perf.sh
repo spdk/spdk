@@ -22,13 +22,12 @@ fi
 timing_enter perf
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -m 0xF --wait-for-rpc -i 0 &
+$NVMF_APP -m 0xF -i 0 &
 nvmfpid=$!
 
 trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
-$rpc_py start_subsystem_init
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 timing_exit start_nvmf_tgt

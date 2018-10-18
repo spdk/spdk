@@ -11,7 +11,6 @@ function test_subsystems() {
 	rpc_py="$spdk_rpc_py"
 	clear_config_py="$spdk_clear_config_py"
 
-	$rpc_py start_subsystem_init
 	create_nvmf_subsystem_config
 	$rpc_py save_config > $base_nvmf_config
 	test_json_config

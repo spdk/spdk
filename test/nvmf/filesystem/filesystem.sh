@@ -27,13 +27,12 @@ timing_enter fs_test
 
 for incapsule in 0 4096; do
 	# Start up the NVMf target in another process
-	$NVMF_APP -m 0xF --wait-for-rpc &
+	$NVMF_APP -m 0xF &
 	nvmfpid=$!
 
 	trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 	waitforlisten $nvmfpid
-	$rpc_py start_subsystem_init
 	$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4 -c $incapsule
 
 	bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
