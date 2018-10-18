@@ -72,7 +72,6 @@ spdk_jsonrpc_client_check_rpc_method(struct spdk_jsonrpc_client *client, char *m
 	w = spdk_jsonrpc_begin_request(request, 1, "get_rpc_methods");
 	spdk_jsonrpc_end_request(request, w);
 	spdk_jsonrpc_client_send_request(client, request);
-	spdk_jsonrpc_client_free_request(request);
 
 	rc = spdk_jsonrpc_client_recv_response(client);
 	if (rc) {
