@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e261c41_22a9489d",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T21:30:53Z",
+      "side": 1,
+      "message": "What if instead we move the calculations into spdk_iscsi_conn_write_pdu?  I think that would be more clear - it may be confusing what writev_offset has to do with calculating the digests.",
+      "revId": "bac2ca93836a54b46c5aac9c673ec562a08f66f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
