@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7211136a_064c86fe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T17:18:18Z",
+      "side": 1,
+      "message": "this isn\u0027t checking if the iov is allocated, it\u0027s checking if a buffer is allocated\n\nI would also remove the spdk from the names of these private static functions - in general, we try to save the \"spdk_\" prefix for functions that are in the public API",
+      "revId": "0fb4147d5920448d8836ffc3c0648af45fcd25f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "628b5df8_61af84db",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T17:18:18Z",
+      "side": 1,
+      "message": "_are_iovs_aligned?  since this is checking all of the iovs, not just one",
+      "revId": "0fb4147d5920448d8836ffc3c0648af45fcd25f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "097fdea5_4ec2e52e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T17:18:18Z",
+      "side": 1,
+      "message": "static void on its own line\n\nthere\u0027s also an inconsistency in the function names - this one has \"copy\" in it, the next function does not",
+      "revId": "0fb4147d5920448d8836ffc3c0648af45fcd25f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b244aa28_32135be5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T17:18:18Z",
+      "side": 1,
+      "message": "why remove the comment here?  also there are some unrelated whitespace changes\n\nbut doesn\u0027t this if statement need to be removed completely?  otherwise if the buffer is there, but it is not aligned correctly, it will not get double buffered",
+      "revId": "0fb4147d5920448d8836ffc3c0648af45fcd25f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
