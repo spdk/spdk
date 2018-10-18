@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f5fec0fc_d112d50e",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 881,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-10-18T11:47:03Z",
+      "side": 1,
+      "message": "you are right ,ready to have.",
+      "parentUuid": "c7224ed9_9c162515",
+      "range": {
+        "startLine": 881,
+        "startChar": 1,
+        "endLine": 881,
+        "endChar": 18
+      },
+      "revId": "cbbffc1fec68eec54f5514949021c631bc38b544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "027a451e_d6844b53",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "15c11862_093996ab",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-10-18T11:47:03Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "027a451e_d6844b53",
+      "range": {
+        "startLine": 889,
+        "startChar": 2,
+        "endLine": 889,
+        "endChar": 8
+      },
+      "revId": "cbbffc1fec68eec54f5514949021c631bc38b544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "df715446_9b0f2c05",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2018-10-18T11:20:27Z",
       "side": 1,
       "message": "Maybe we could add at least debug log that no action was done?",
+      "range": {
+        "startLine": 890,
+        "startChar": 1,
+        "endLine": 890,
+        "endChar": 9
+      },
+      "revId": "cbbffc1fec68eec54f5514949021c631bc38b544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "315fdcbd_aacd3201",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 890,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-10-18T11:47:03Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "df715446_9b0f2c05",
       "range": {
         "startLine": 890,
         "startChar": 1,
