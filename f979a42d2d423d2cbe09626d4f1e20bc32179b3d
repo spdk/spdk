@@ -94,6 +94,23 @@
     },
     {
       "key": {
+        "uuid": "d0d19ffb_1f6ad72b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-18T21:51:07Z",
+      "side": 1,
+      "message": "Instead of using g_reset_io, which is global, use crypto_ch-\u003eiter as the flag to determine if you\u0027re in a reset and failing all I/O. You don\u0027t actually need g_reset_io at all and can delete it.",
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3d51a62_989eab62",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -151,6 +168,30 @@
       "writtenOn": "2018-10-18T10:02:55Z",
       "side": 1,
       "message": "What if reset is already in progress? Flood of resets from different threads would not mess something here?",
+      "range": {
+        "startLine": 946,
+        "startChar": 2,
+        "endLine": 946,
+        "endChar": 23
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63dd2de7_cec4d8d6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-18T21:51:07Z",
+      "side": 1,
+      "message": "The generic bdev layer guarantees that only one reset will come down at a time.",
+      "parentUuid": "8117c3d9_e39bcaa6",
       "range": {
         "startLine": 946,
         "startChar": 2,
