@@ -36,6 +36,8 @@
 
 #define RPC_DEFAULT_PORT	"5260"
 
+static int _spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client);
+
 static struct spdk_jsonrpc_client *
 _spdk_jsonrpc_client_connect(int domain, int protocol,
 			     struct sockaddr *server_addr, socklen_t addrlen)
@@ -176,11 +178,15 @@ spdk_jsonrpc_client_free_request(struct spdk_jsonrpc_client_request *req)
 	free(req);
 }
 
-int
-spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
-				 struct spdk_jsonrpc_client_request *request)
+static int
+_spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
 {
 	ssize_t rc;
+	struct spdk_jsonrpc_client_request *request = client->request;
+
+	if (!request) {
+		return 0;
+	}
 
 	/* Reset offset in request */
 	request->send_offset = 0;
@@ -200,6 +206,9 @@ spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
 		request->send_len -= rc;
 	}
 
+	client->request = NULL;
+
+	spdk_jsonrpc_client_free_request(request);
 	return 0;
 }
 
@@ -225,11 +234,13 @@ recv_buf_expand(struct spdk_jsonrpc_client *client)
 	return 0;
 }
 
-int
-spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
+static int
+_spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client)
 {
 	ssize_t rc = 0;
 	size_t recv_avail;
+
+	_spdk_jsonrpc_client_send_request(client);
 
 	if (client->recv_buf == NULL) {
 		/* memory malloc for recv-buf */
@@ -284,12 +295,30 @@ spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
 	return 0;
 }
 
+int
+spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
+{
+	return _spdk_jsonrpc_client_poll(client);
+}
+
+int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
+				     struct spdk_jsonrpc_client_request *req)
+{
+	if (client->request != NULL) {
+		return -ENOSPC;
+	}
+
+	client->request = req;
+	return 0;
+}
+
 struct spdk_jsonrpc_client_response *
 spdk_jsonrpc_client_get_response(struct spdk_jsonrpc_client *client)
 {
-	struct spdk_jsonrpc_client_response_internal *r = client->resp;
+	struct spdk_jsonrpc_client_response_internal *r;
 
-	if (r == NULL) {
+	r = client->resp;
+	if (r == NULL || r->ready == false) {
 		return NULL;
 	}
 
