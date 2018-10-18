@@ -33,6 +33,23 @@
       "revId": "a6d6ddf1e9cd5949fef62a3d5eb115c6b9f2dbba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b773e46_6fdcfef5",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T19:28:12Z",
+      "side": 1,
+      "message": "This is a good catch.  But it makes me think of a couple of things:\n\n1) Instead of bdev-\u003eneeds_aligned_buffer, I think should change it to \"required_alignment\".  0 means no alignment is necessary (the default) - AIO can set it to 512 or 4096.\n2) Did we ever talk about having the bdev layer do the double buffering automatically?  For example, instead if we implement #1, then bdev layer can do these checks for alignment, etc.\n\nI\u0027m also tempted to have the bdev layer just fail any I/O that needs double-buffering but exceeds the max I/O size - at least for now.",
+      "revId": "a6d6ddf1e9cd5949fef62a3d5eb115c6b9f2dbba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
