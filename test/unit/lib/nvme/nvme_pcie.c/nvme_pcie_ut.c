@@ -288,6 +288,18 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	abort();
 }
 
+int
+nvme_transport_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	abort();
+}
+
+int
+nvme_transport_set_non_blocking_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	abort();
+}
+
 void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 {

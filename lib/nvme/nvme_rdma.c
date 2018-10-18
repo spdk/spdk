@@ -1608,6 +1608,70 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	return reaped;
 }
 
+int
+nvme_rdma_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+	struct ibv_context *context = rqpair->cm_id->verbs;
+	struct ibv_async_event event;
+	int rc;
+	int flags;
+
+	flags = fcntl(context->async_fd, F_GETFL);
+	if (flags < 0) {
+		return flags;
+	}
+
+	rc = ibv_get_async_event(context, &event);
+	if (rc && !(flags & O_NONBLOCK)) {
+		return rc;
+	} else if (rc && (flags & O_NONBLOCK)) {
+		return 0;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Async event: %s\n",
+		      ibv_event_type_str(event.event_type));
+
+	switch (event.event_type) {
+	case IBV_EVENT_QP_FATAL:
+	case IBV_EVENT_QP_LAST_WQE_REACHED:
+	case IBV_EVENT_SQ_DRAINED:
+	case IBV_EVENT_QP_REQ_ERR:
+	case IBV_EVENT_QP_ACCESS_ERR:
+	case IBV_EVENT_COMM_EST:
+	case IBV_EVENT_PATH_MIG:
+	case IBV_EVENT_PATH_MIG_ERR:
+	case IBV_EVENT_CQ_ERR:
+	case IBV_EVENT_DEVICE_FATAL:
+	case IBV_EVENT_PORT_ACTIVE:
+	case IBV_EVENT_PORT_ERR:
+	case IBV_EVENT_LID_CHANGE:
+	case IBV_EVENT_PKEY_CHANGE:
+	case IBV_EVENT_SM_CHANGE:
+	case IBV_EVENT_SRQ_ERR:
+	case IBV_EVENT_SRQ_LIMIT_REACHED:
+	case IBV_EVENT_CLIENT_REREGISTER:
+	case IBV_EVENT_GID_CHANGE:
+	default:
+		break;
+	}
+
+	ibv_ack_async_event(&event);
+
+	return 0;
+}
+
+int
+nvme_rdma_set_non_blocking_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+	struct ibv_context *context = rqpair->cm_id->verbs;
+	int flags;
+
+	flags = fcntl(context->async_fd, F_GETFL);
+	return fcntl(context->async_fd, F_SETFL, flags | O_NONBLOCK);
+}
+
 uint32_t
 nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
