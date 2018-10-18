@@ -52,6 +52,24 @@
       "revId": "fc6bff8fbead266b92b19895f92bc5dc2732269f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fc580e0_21dfbc18",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T08:21:04Z",
+      "side": 1,
+      "message": "\u003eI think for this case you can just return -1 instead.\n\nreturning -1 will terminate connection and make qemu reconnect.",
+      "parentUuid": "bc6bd0d7_6ddd45ef",
+      "revId": "fc6bff8fbead266b92b19895f92bc5dc2732269f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
