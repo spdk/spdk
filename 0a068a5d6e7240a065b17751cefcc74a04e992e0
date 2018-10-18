@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72c8ca92_cb950ca9",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-18T07:43:31Z",
+      "side": 1,
+      "message": "Move closing quotes to line 180",
+      "range": {
+        "startLine": 181,
+        "startChar": 8,
+        "endLine": 181,
+        "endChar": 11
+      },
+      "revId": "0a068a5d6e7240a065b17751cefcc74a04e992e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a57cc833_2290157e",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-18T07:43:31Z",
+      "side": 1,
+      "message": "each \"la\" is a dictionary. I think you could just unpack the dict by doing:\nself.delete(*la)\ninstead of typing all dictionary keys.\n\nUp to you.",
+      "range": {
+        "startLine": 183,
+        "startChar": 24,
+        "endLine": 183,
+        "endChar": 78
+      },
+      "revId": "0a068a5d6e7240a065b17751cefcc74a04e992e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecf2b507_5accf17c",
+        "filename": "test/spdkcli/nvmf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-18T07:43:31Z",
+      "side": 1,
+      "message": "Same question as in comment from line 71",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 105
+      },
+      "revId": "0a068a5d6e7240a065b17751cefcc74a04e992e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9022c6e_96294faa",
+        "filename": "test/spdkcli/nvmf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-18T07:43:31Z",
+      "side": 1,
+      "message": "Same question as in comment from line 71",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 109
+      },
+      "revId": "0a068a5d6e7240a065b17751cefcc74a04e992e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc986b6a_e6f5eacf",
+        "filename": "test/spdkcli/nvmf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-10-18T07:43:31Z",
+      "side": 1,
+      "message": "def ui_command_delete_all(self): @ line 62 does not take any arguments.\nSo why are we passing a nqn name here as an argument? Shouldnt this fail?",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 71
+      },
+      "revId": "0a068a5d6e7240a065b17751cefcc74a04e992e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
