@@ -2140,3 +2140,15 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 	return num_completions;
 }
+
+int
+nvme_pcie_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+int
+nvme_pcie_set_non_blocking_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}

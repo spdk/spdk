@@ -423,6 +423,20 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 }
 
 int
+spdk_nvme_event_handler(struct spdk_nvme_qpair *qpair)
+{
+
+	return nvme_transport_event_handler(qpair);
+}
+
+int
+spdk_nvme_set_non_blocking_event_handler(struct spdk_nvme_qpair *qpair)
+{
+
+	return nvme_transport_set_non_blocking_event_handler(qpair);
+}
+
+int
 nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		struct spdk_nvme_ctrlr *ctrlr,
 		enum spdk_nvme_qprio qprio,
