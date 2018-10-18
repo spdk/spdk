@@ -25,6 +25,75 @@
     },
     {
       "key": {
+        "uuid": "262f1dd7_e73cede2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-18T10:02:55Z",
+      "side": 1,
+      "message": "Maybe that\u0027s a suggestion for another patch, but you can check here if rc \u003d\u003d -ENOMEM, then queue IO instead of failing.",
+      "range": {
+        "startLine": 424,
+        "startChar": 10,
+        "endLine": 424,
+        "endChar": 11
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8cd94d20_2cbe3199",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-18T10:02:55Z",
+      "side": 1,
+      "message": "Why not use some errno flag instead of hard coded number?",
+      "range": {
+        "startLine": 428,
+        "startChar": 8,
+        "endLine": 428,
+        "endChar": 10
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66a91014_73207d19",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-18T10:02:55Z",
+      "side": 1,
+      "message": "Unknown",
+      "range": {
+        "startLine": 432,
+        "startChar": 15,
+        "endLine": 432,
+        "endChar": 22
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3d51a62_989eab62",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -68,6 +137,29 @@
       "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8117c3d9_e39bcaa6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-18T10:02:55Z",
+      "side": 1,
+      "message": "What if reset is already in progress? Flood of resets from different threads would not mess something here?",
+      "range": {
+        "startLine": 946,
+        "startChar": 2,
+        "endLine": 946,
+        "endChar": 23
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
