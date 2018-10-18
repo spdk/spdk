@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa893c7e_e9a49871",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T16:14:18Z",
+      "side": 1,
+      "message": "is the Malloc6 change needed?  I don\u0027t see where gen_rbd.sh uses a parameter",
+      "revId": "8bbaafe11eb499d6b203d8e144b15fa6f85fd74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
