@@ -121,6 +121,12 @@ struct rte_cryptodev_sym_session {
 	__extension__ void *sess_private_data[0];
 };
 
+struct rte_cryptodev_asym_session {
+	__extension__ void *sess_private_data[0];
+};
+
+struct rte_crypto_asym_xform;
+
 struct rte_cryptodev_sym_session *
 rte_cryptodev_sym_session_create(struct rte_mempool *mempool);
 
