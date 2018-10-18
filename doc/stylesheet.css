@@ -828,18 +828,18 @@ address {
 	color: #2A3D61;
 }
 
-table.doxtable {
+table.doxtable, table.markdownTable {
 	border-collapse:collapse;
         margin-top: 4px;
         margin-bottom: 4px;
 }
 
-table.doxtable td, table.doxtable th {
+table.doxtable td, table.doxtable th, table.markdownTable td, table.markdownTable th {
 	border: 1px solid #2D4068;
 	padding: 3px 7px 2px;
 }
 
-table.doxtable th {
+table.doxtable th, table.markdownTable th {
 	background-color: #374F7F;
 	color: #FFFFFF;
 	font-size: 110%;
