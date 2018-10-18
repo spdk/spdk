@@ -217,3 +217,15 @@ nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t
 {
 	NVME_TRANSPORT_CALL(qpair->trtype, qpair_process_completions, (qpair, max_completions));
 }
+
+int
+nvme_transport_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	NVME_TRANSPORT_CALL(qpair->trtype, event_handler, (qpair));
+}
+
+int
+nvme_transport_set_non_blocking_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	NVME_TRANSPORT_CALL(qpair->trtype, set_non_blocking_event_handler, (qpair));
+}

@@ -89,6 +89,18 @@ nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t
 }
 
 int
+nvme_transport_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+int
+nvme_transport_set_non_blocking_event_handler(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+int
 spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
