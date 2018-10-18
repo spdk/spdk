@@ -249,6 +249,7 @@ void spdk_jsonrpc_client_free_request(struct spdk_jsonrpc_client_request *req);
  * \param req JSON-RPC request.
  *
  * \return 0 on success or negative error code.
+ * -ENOSPC - no space left to queue another request. Try again later.
  */
 int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
 				     struct spdk_jsonrpc_client_request *req);
