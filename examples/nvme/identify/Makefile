@@ -36,4 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 APP = identify
 
+install: $(APP)
+	$(INSTALL_EXAMPLE)
+
 include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
