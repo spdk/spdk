@@ -210,13 +210,13 @@ void spdk_jsonrpc_end_request(struct spdk_jsonrpc_client_request *request,
 /**
  * Connect to the specified RPC server.
  *
- * \param rpc_sock_addr RPC socket address.
+ * \param addr RPC socket address.
  * \param addr_family Protocol families of address.
  *
- * \return JSON-RPC client on success, NULL on failure.
+ * \return JSON-RPC client on success, NULL on failure and errno set to indicate
+ * the cause of the error.
  */
-struct spdk_jsonrpc_client *spdk_jsonrpc_client_connect(const char *rpc_sock_addr,
-		int addr_family);
+struct spdk_jsonrpc_client *spdk_jsonrpc_client_connect(const char *addr, int addr_family);
 
 /**
  * Close JSON-RPC connection and free \c client object.

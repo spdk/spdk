@@ -38,75 +38,73 @@
 
 static int _spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client);
 
-static struct spdk_jsonrpc_client *
-_spdk_jsonrpc_client_connect(int domain, int protocol,
+static int
+_spdk_jsonrpc_client_connect(struct spdk_jsonrpc_client *client, int domain, int protocol,
 			     struct sockaddr *server_addr, socklen_t addrlen)
 {
-	struct spdk_jsonrpc_client *client;
 	int rc;
-
-	client = calloc(1, sizeof(struct spdk_jsonrpc_client));
-	if (client == NULL) {
-		return NULL;
-	}
 
 	client->sockfd = socket(domain, SOCK_STREAM, protocol);
 	if (client->sockfd < 0) {
+		rc = errno;
 		SPDK_ERRLOG("socket() failed\n");
-		free(client);
-		return NULL;
+		return -rc;
 	}
 
 	rc = connect(client->sockfd, server_addr, addrlen);
 	if (rc != 0) {
-		SPDK_ERRLOG("could not connet JSON-RPC server: %s\n", spdk_strerror(errno));
-		close(client->sockfd);
-		free(client);
-		return NULL;
+		SPDK_ERRLOG("could not connect to JSON-RPC server: %s\n", spdk_strerror(errno));
+		goto err;
 	}
 
-	return client;
+	return 0;
+err:
+	close(client->sockfd);
+	client->sockfd = -1;
+	return -rc;
 }
 
 struct spdk_jsonrpc_client *
-spdk_jsonrpc_client_connect(const char *rpc_sock_addr, int addr_family)
+spdk_jsonrpc_client_connect(const char *addr, int addr_family)
 {
-	struct spdk_jsonrpc_client *client;
+	struct spdk_jsonrpc_client *client = calloc(1, sizeof(struct spdk_jsonrpc_client));
+	/* Unix Domain Socket */
+	struct sockaddr_un addr_un = {};
+	char *add_in = NULL;
+	int rc;
+
+	if (client == NULL) {
+		SPDK_ERRLOG("%s\n", spdk_strerror(errno));
+		return NULL;
+	}
 
 	if (addr_family == AF_UNIX) {
-		/* Unix Domain Socket */
-		struct sockaddr_un rpc_sock_addr_unix = {};
-		int rc;
-
-		rpc_sock_addr_unix.sun_family = AF_UNIX;
-		rc = snprintf(rpc_sock_addr_unix.sun_path,
-			      sizeof(rpc_sock_addr_unix.sun_path),
-			      "%s", rpc_sock_addr);
-		if (rc < 0 || (size_t)rc >= sizeof(rpc_sock_addr_unix.sun_path)) {
+		addr_un.sun_family = AF_UNIX;
+		rc = snprintf(addr_un.sun_path, sizeof(addr_un.sun_path), "%s", addr);
+		if (rc < 0 || (size_t)rc >= sizeof(addr_un.sun_path)) {
+			rc = -EINVAL;
 			SPDK_ERRLOG("RPC Listen address Unix socket path too long\n");
-			return NULL;
+			goto err;
 		}
 
-		client = _spdk_jsonrpc_client_connect(AF_UNIX, 0,
-						      (struct sockaddr *)&rpc_sock_addr_unix,
-						      sizeof(rpc_sock_addr_unix));
+		rc = _spdk_jsonrpc_client_connect(client, AF_UNIX, 0, (struct sockaddr *)&addr_un, sizeof(addr_un));
 	} else {
 		/* TCP/IP socket */
 		struct addrinfo		hints;
 		struct addrinfo		*res;
-		char *tmp;
 		char *host, *port;
 
-		tmp = strdup(rpc_sock_addr);
-		if (!tmp) {
-			SPDK_ERRLOG("Out of memory\n");
-			return NULL;
+		add_in = strdup(addr);
+		if (!add_in) {
+			rc = -errno;
+			SPDK_ERRLOG("%s\n", spdk_strerror(errno));
+			goto err;
 		}
 
-		if (spdk_parse_ip_addr(tmp, &host, &port) < 0) {
-			free(tmp);
-			SPDK_ERRLOG("Invalid listen address '%s'\n", rpc_sock_addr);
-			return NULL;
+		rc = spdk_parse_ip_addr(add_in, &host, &port);
+		if (rc) {
+			SPDK_ERRLOG("Invalid listen address '%s'\n", addr);
+			goto err;
 		}
 
 		if (port == NULL) {
@@ -118,19 +116,26 @@ spdk_jsonrpc_client_connect(const char *rpc_sock_addr, int addr_family)
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_protocol = IPPROTO_TCP;
 
-		if (getaddrinfo(host, port, &hints, &res) != 0) {
-			free(tmp);
-			SPDK_ERRLOG("Unable to look up RPC connnect address '%s'\n", rpc_sock_addr);
-			return NULL;
+		rc = getaddrinfo(host, port, &hints, &res);
+		if (rc != 0) {
+			SPDK_ERRLOG("Unable to look up RPC connnect address '%s' (%d): %s\n", addr, rc, gai_strerror(rc));
+			rc = -EINVAL;
+			goto err;
 		}
 
-		client = _spdk_jsonrpc_client_connect(res->ai_family, res->ai_protocol,
-						      res->ai_addr, res->ai_addrlen);
-
+		rc = _spdk_jsonrpc_client_connect(client, res->ai_family, res->ai_protocol, res->ai_addr,
+						  res->ai_addrlen);
 		freeaddrinfo(res);
-		free(tmp);
 	}
 
+err:
+	if (rc != 0) {
+		free(client);
+		client = NULL;
+		errno = -rc;
+	}
+
+	free(add_in);
 	return client;
 }
 
