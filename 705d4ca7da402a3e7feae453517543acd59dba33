@@ -160,6 +160,29 @@
       "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9022ddb_d717225b",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T09:56:11Z",
+      "side": 1,
+      "message": "each HTTP connection should make its own connection to SPDK RPC socket. Otherwise you don\u0027t know which response is for which request.",
+      "range": {
+        "startLine": 125,
+        "startChar": 4,
+        "endLine": 125,
+        "endChar": 26
+      },
+      "revId": "705d4ca7da402a3e7feae453517543acd59dba33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
