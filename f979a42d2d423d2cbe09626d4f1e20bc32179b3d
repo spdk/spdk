@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aed980fe_7c915d6e",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-18T02:46:01Z",
+      "side": 1,
+      "message": "A minor comment, maybe just set rc \u003d -1 here for the same below format below.",
+      "range": {
+        "startLine": 410,
+        "startChar": 3,
+        "endLine": 410,
+        "endChar": 62
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3d51a62_989eab62",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-18T02:46:01Z",
+      "side": 1,
+      "message": "Is this check needed. Reading the vbdev_crypto_submit_request(), unmap / flush / reset IOs are called. Before calling, the g_reset_io has been set to the bdev_io and orig_io is also for the bdev_io.",
+      "range": {
+        "startLine": 829,
+        "startChar": 45,
+        "endLine": 829,
+        "endChar": 59
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21198831_7a64d741",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-18T02:46:01Z",
+      "side": 1,
+      "message": "same as above comment. Maybe my understanding is incorrect.",
+      "range": {
+        "startLine": 830,
+        "startChar": 2,
+        "endLine": 833,
+        "endChar": 30
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
