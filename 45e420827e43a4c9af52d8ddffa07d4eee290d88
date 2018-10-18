@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4fdd6d0_a6ac0e66",
+        "filename": "examples/nvme/perf/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T20:13:29Z",
+      "side": 1,
+      "message": "You picked a good example.  :)\n\nWe often refer to this tool as \"nvme perf\".  When using it from a built repo, it\u0027s pretty obvious since it\u0027s in the examples/nvme/perf directory.  But I think if we install it, we may literally want the name \"nvmeperf\" instead of \"perf\".\n\nSo maybe we provide a way for these Makefiles to specify an INSTALL_APPNAME.  Here we could set that to \"nvmeperf\".  We also have multiple hello_world examples which would also necessitate something like INSTALL_APPNAME.",
+      "revId": "45e420827e43a4c9af52d8ddffa07d4eee290d88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b37dcdb_a7f79a1d",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T20:13:29Z",
+      "side": 1,
+      "message": "i think this should be\n\ninstall -m 755 \"spdk_example_$(APP)\" \"$(DESTDIR)$(bindir)/\"",
+      "revId": "45e420827e43a4c9af52d8ddffa07d4eee290d88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
