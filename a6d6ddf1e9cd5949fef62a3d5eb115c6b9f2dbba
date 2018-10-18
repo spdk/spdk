@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0754bf55_a0aa8ab2",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T17:25:30Z",
+      "side": 1,
+      "message": "need newline after the variable declaration",
+      "revId": "a6d6ddf1e9cd5949fef62a3d5eb115c6b9f2dbba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5555bd1_0b5f3b3b",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T17:25:30Z",
+      "side": 1,
+      "message": "we should use bdev_io-\u003ebdev-\u003eblocklen in both places, or fdisk-\u003edisk.blocklen in both places, rather than one of each",
+      "revId": "a6d6ddf1e9cd5949fef62a3d5eb115c6b9f2dbba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
