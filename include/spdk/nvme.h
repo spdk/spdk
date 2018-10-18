@@ -862,6 +862,29 @@ int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions);
 
 /**
+ * Get async events. This function may use blocking call (e.g. NVMe-oF).
+ * Where applicable user may call spdk_nvme_set_non_blocking_event_handler() to
+ * make this function non-blocking. This will be usefull if events will be
+ * read on application main thread (vs allacating a poller).
+ *
+ * \param qpair I/O queue pair.
+ *
+ * \return 0 on success, -11 when there are no new events (non-blocking case),
+ * other/any negative value on error (non-blocking/blocking case).
+ */
+int spdk_nvme_event_handler(struct spdk_nvme_qpair *qpair);
+
+/**
+ * Where applicable user may call this function to make spdk_nvme_event_handler
+ * function non-blocking.
+ *
+ * \param qpair I/O queue pair.
+ *
+ * \return 0 on success, negative value on error.
+ */
+int spdk_nvme_set_non_blocking_event_handler(struct spdk_nvme_qpair *qpair);
+
+/**
  * Send the given admin command to the NVMe controller.
  *
  * This is a low level interface for submitting admin commands directly. Prefer
