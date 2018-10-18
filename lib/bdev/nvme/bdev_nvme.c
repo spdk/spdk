@@ -877,7 +877,6 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 			SPDK_ERRLOG("Unable to send abort. Resetting.\n");
 		}
-
 	/* FALLTHROUGH */
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
 		rc = spdk_nvme_ctrlr_reset(ctrlr);
@@ -886,6 +885,8 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 		}
 		break;
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
+	default:
+		SPDK_WARNLOG("No action of nvme controller timeout.\n");
 		break;
 	}
 }
