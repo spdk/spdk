@@ -198,6 +198,19 @@ rpc.py stop_nbd_disk /dev/nbd0
 # Nvme0n1p1 in SPDK applications.
 ~~~
 
+# iSCSI bdev {#bdev_config_iscsi}
+
+The SPDK iSCSI bdev driver depends on libiscsi and hence is not enabled by default.
+In order to use it, build SPDK with an extra `--with-iscsi-initiator` configure option.
+
+The following command creates an `iSCSI0` bdev from a single LUN exposed at given iSCSI URL
+with `iqn.2016-06.io.spdk:init` as the reported initiator IQN.
+
+`rpc.py construct_iscsi_bdev -b iSCSI0 -i iqn.2016-06.io.spdk:init --url iscsi://127.0.0.1/iqn.2016-06.io.spdk:disk1/0`
+
+The URL is in the following format:
+`iscsi://[<username>[%<password>]@]<host>[:<port>]/<target-iqn>/<lun>`
+
 # Linux AIO bdev {#bdev_config_aio}
 
 The SPDK AIO bdev driver provides SPDK block layer access to Linux kernel block
