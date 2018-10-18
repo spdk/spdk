@@ -388,15 +388,22 @@ To remove a block device representation use the delete_pmem_bdev command.
 
 # Virtio Block {#bdev_config_virtio_blk}
 
-The Virtio-Block driver can expose an SPDK bdev from a Virtio-Block device.
+The Virtio-Block driver allows creating SPDK bdevs from Virtio-Block devices.
 
-Virtio-Block bdevs are constructed the same way as Virtio-SCSI ones.
+The following command creates a Virtio-Block device named `VirtioBlk0` from a vhost-user
+socket `/tmp/vhost.0` exposed directly by SPDK @ref vhost. Optional `vq-count` and
+`vq-size` params specify number of request queues and queue depth to be used.
 
-`rpc.py construct_virtio_user_blk_bdev /tmp/virtio.0 VirtioBlk0 --vq-count 2 --vq-size 512`
+`rpc.py construct_virtio_dev --dev-type blk --trtype user --traddr /tmp/vhost.0 --vq-count 2 --vq-size 512 VirtioBlk0`
 
-`rpc.py construct_virtio_pci_blk_bdev 0000:01:00.0 VirtioBlk1`
+The driver can be also used inside QEMU-based VMs. The following command creates a Virtio
+Block device named `VirtioBlk0` from a Virtio PCI device at address `0000:00:01.0`.
+The entire configuration will be read automatically from PCI Configuration Space. It will
+reflect all parameters passed to QEMU's vhost-user-scsi-pci device.
 
-Virtio-BLK devices can be removed with the following command
+`rpc.py construct_virtio_dev --dev-type blk --trtype pci --traddr 0000:01:00.0 VirtioBlk1`
+
+Virtio-Block devices can be removed with the following command
 
 `rpc.py remove_virtio_bdev VirtioBlk0`
 
@@ -404,18 +411,11 @@ Virtio-BLK devices can be removed with the following command
 
 The Virtio-SCSI driver allows creating SPDK block devices from Virtio-SCSI LUNs.
 
-The following command creates a Virtio-SCSI device named `VirtioScsi0` from a vhost-user
-socket `/tmp/vhost.0` exposed directly by SPDK @ref vhost. Optional `vq-count` and
-`vq-size` params specify number of request queues and queue depth to be used.
+Virtio-SCSI bdevs are constructed the same way as Virtio-Block ones.
 
-`rpc.py construct_virtio_user_scsi_bdev /tmp/vhost.0 VirtioScsi0 --vq-count 2 --vq-size 512`
+`rpc.py construct_virtio_dev --dev-type scsi --trtype user --traddr /tmp/vhost.0 --vq-count 2 --vq-size 512 VirtioScsi0`
 
-The driver can be also used inside QEMU-based VMs. The following command creates a Virtio
-SCSI device named `VirtioScsi0` from a Virtio PCI device at address `0000:00:01.0`.
-The entire configuration will be read automatically from PCI Configuration Space. It will
-reflect all parameters passed to QEMU's vhost-user-scsi-pci device.
-
-`rpc.py construct_virtio_pci_scsi_bdev 0000:00:01.0 VirtioScsi0`
+`rpc.py construct_virtio_dev --dev-type scsi --trtype pci --traddr 0000:01:00.0 VirtioScsi0`
 
 Each Virtio-SCSI device may export up to 64 block devices named VirtioScsi0t0 ~ VirtioScsi0t63,
 one LUN (LUN0) per SCSI device. The above 2 commands will output names of all exposed bdevs.

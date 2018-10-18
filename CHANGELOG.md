@@ -115,6 +115,17 @@ Two additional parameters were added to spdk_sock_get_addr() for the server
 port and client port. These parameters are named "sport" and "cport"
 respectively.
 
+### Virtio
+
+The following RPC commands have been deprecated:
+ - construct_virtio_user_scsi_bdev
+ - construct_virtio_pci_scsi_bdev
+ - construct_virtio_user_blk_bdev
+ - construct_virtio_pci_blk_bdev
+
+They're replaced with a single `construct_virtio_dev` command that can create
+any type of Virtio bdev(s).
+
 ## v18.07:
 
 ### bdev
