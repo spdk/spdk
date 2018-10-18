@@ -36,6 +36,8 @@
 
 #define RPC_DEFAULT_PORT	"5260"
 
+static int _spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client);
+
 static struct spdk_jsonrpc_client *
 _spdk_jsonrpc_client_connect(int domain, int protocol,
 			     struct sockaddr *server_addr, socklen_t addrlen)
@@ -62,6 +64,8 @@ _spdk_jsonrpc_client_connect(int domain, int protocol,
 		free(client);
 		return NULL;
 	}
+
+	client->poll = _spdk_jsonrpc_client_poll;
 
 	return client;
 }
@@ -129,12 +133,19 @@ spdk_jsonrpc_client_connect(const char *rpc_sock_addr, int addr_family)
 		free(tmp);
 	}
 
+	if (client) {
+		pthread_spin_init(&client->lock, 0);
+	}
+
 	return client;
 }
 
 void
 spdk_jsonrpc_client_close(struct spdk_jsonrpc_client *client)
 {
+
+	pthread_spin_destroy(&client->lock);
+
 	if (client->sockfd >= 0) {
 		close(client->sockfd);
 	}
@@ -176,11 +187,15 @@ spdk_jsonrpc_client_free_request(struct spdk_jsonrpc_client_request *req)
 	free(req);
 }
 
-int
-spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
-				 struct spdk_jsonrpc_client_request *request)
+static int
+_spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
 {
 	ssize_t rc;
+	struct spdk_jsonrpc_client_request *request = client->request;
+
+	if (!request) {
+		return 0;
+	}
 
 	/* Reset offset in request */
 	request->send_offset = 0;
@@ -200,6 +215,11 @@ spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
 		request->send_len -= rc;
 	}
 
+	pthread_spin_lock(&client->lock);
+	client->request = NULL;
+	pthread_spin_unlock(&client->lock);
+
+	spdk_jsonrpc_client_free_request(request);
 	return 0;
 }
 
@@ -225,11 +245,13 @@ recv_buf_expand(struct spdk_jsonrpc_client *client)
 	return 0;
 }
 
-int
-spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
+static int
+_spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client)
 {
 	ssize_t rc = 0;
 	size_t recv_avail;
+
+	_spdk_jsonrpc_client_send_request(client);
 
 	if (client->recv_buf == NULL) {
 		/* memory malloc for recv-buf */
@@ -284,17 +306,48 @@ spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
 	return 0;
 }
 
+int
+spdk_jsonrpc_client_recv_response(struct spdk_jsonrpc_client *client)
+{
+	return client->poll(client);
+}
+
+int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
+				     struct spdk_jsonrpc_client_request *req)
+{
+	int rc = 0;
+
+	pthread_spin_lock(&client->lock);
+	if (client->request == NULL) {
+		client->request = req;
+	} else {
+		rc = -ENOSPC;
+	}
+	pthread_spin_unlock(&client->lock);
+
+	return rc;
+}
+
 struct spdk_jsonrpc_client_response *
 spdk_jsonrpc_client_get_response(struct spdk_jsonrpc_client *client)
 {
-	struct spdk_jsonrpc_client_response_internal *r = client->resp;
+	struct spdk_jsonrpc_client_response_internal *r;
 
-	if (r == NULL) {
+	pthread_spin_lock(&client->lock);
+	r = client->resp;
+
+	if (r != NULL && r->ready) {
+		client->resp = NULL;
+	} else {
+		r = NULL;
+	}
+	pthread_spin_unlock(&client->lock);
+
+	if (!r) {
 		errno = ENOENT;
 		return NULL;
 	}
 
-	client->resp = NULL;
 	return &r->jsonrpc;
 }
 
