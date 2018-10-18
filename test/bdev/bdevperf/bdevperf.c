@@ -862,7 +862,7 @@ main(int argc, char **argv)
 	int rc;
 
 	spdk_app_opts_init(&opts);
-	opts.name = "bdevtest";
+	opts.name = "bdevperf";
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = NULL;
 	opts.mem_size = 1024;
