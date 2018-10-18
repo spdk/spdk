@@ -71,7 +71,7 @@ the related iSCSI RPC methods to add them at runtime.
 
 ### iscsi initiator
 
-The SPDK iSCSI initiator is no longer perceived experimental and becomes
+The SPDK iSCSI initiator is no longer considered experimental and becomes
 a first-class citizen among bdev modules. The basic usage has been briefly
 described in the bdev user guide: [iSCSI bdev](https://spdk.io/doc/bdev.html#bdev_config_iscsi)
 
