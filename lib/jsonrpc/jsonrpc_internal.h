@@ -108,6 +108,7 @@ struct spdk_jsonrpc_client_request {
 
 struct spdk_jsonrpc_client_response_internal {
 	struct spdk_jsonrpc_client_response jsonrpc;
+	bool ready;
 	uint8_t *buf;
 	size_t values_cnt;
 	struct spdk_json_val values[];
@@ -116,12 +117,13 @@ struct spdk_jsonrpc_client_response_internal {
 struct spdk_jsonrpc_client {
 	int sockfd;
 
-	/* Parsed response */
-	struct spdk_jsonrpc_client_response_internal *resp;
-
 	size_t recv_buf_size;
 	size_t recv_offset;
 	char *recv_buf;
+
+	/* Parsed response */
+	struct spdk_jsonrpc_client_response_internal *resp;
+	struct spdk_jsonrpc_client_request *request;
 };
 
 /* jsonrpc_server_tcp */
