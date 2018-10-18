@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "86423667_1388aee0",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T09:09:02Z",
+      "side": 1,
+      "message": "\u003e I would have liked to avoid this, but to build Arch Linux packages with \u0027makepkg\u0027, the executing user must not be root. That is intended by the Arch Linux developers. No command line flag to override that.\n\nWe expect this file is used in automated setup this why we don\u0027t use sudo here and expect this file is run by privilaged user.\n\nHow about SUDO_USER env? You can run your git clone \u0026\u0026 and makepg just to build (no install) using \u0027sudo -u $SUDO_USER\u0027. This way you don\u0027t need interactive mode.\n\nThen use pacman to install generated package.",
+      "parentUuid": "4e135a96_e95e6073",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 86,
+        "endChar": 3
+      },
+      "revId": "e4973307584dd4ed68e147a0a5e02e1294b5b98a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4818a7f2_9e93d525",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 1
