@@ -85,9 +85,11 @@ spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 	size_t values_cnt;
 	void *end = NULL;
 
+	pthread_spin_lock(&client->lock);
 	if (client->resp) {
 		return -ENOSPC;
 	}
+	pthread_spin_unlock(&client->lock);
 
 	/* Check to see if we have received a full JSON value. */
 	rc = spdk_json_parse(client->recv_buf, client->recv_offset, NULL, 0, &end, 0);
@@ -140,7 +142,9 @@ spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 		goto err;
 	}
 
+	pthread_spin_lock(&client->lock);
 	client->resp = r;
+	pthread_spin_unlock(&client->lock);
 	return 0;
 
 err:

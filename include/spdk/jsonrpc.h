@@ -242,12 +242,15 @@ void spdk_jsonrpc_client_free_request(
 	struct spdk_jsonrpc_client_request *req);
 
 /**
- * Send the JSON-RPC request in JSON-RPC client.
+ * Send the JSON-RPC request in JSON-RPC client. Library takes ownership of the
+ * \c req and will free it when done.
  *
  * \param client JSON-RPC client.
  * \param req JSON-RPC request.
  *
- * \return 0 on success.
+ * \return 0 on success. On error negative error code is returned:
+ *
+ * -ENOSPC - no space left to queue another request. Try again later.
  */
 int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
 				     struct spdk_jsonrpc_client_request *req);
@@ -275,7 +278,8 @@ struct spdk_jsonrpc_client_response *spdk_jsonrpc_client_get_response(struct spd
 		*client);
 
 /**
- * Free response object obtained from \c spdk_jsonrpc_client_response
+ * Free response object obtained from \c spdk_jsonrpc_client_response. This function might
+ * be used only on unsed response (e.g: discard the response without sending it).
  *
  * \param resp to JSON RPC response object. If NULL no operation is performed.
  */
