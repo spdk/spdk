@@ -144,9 +144,16 @@ spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 		goto err;
 	}
 
+	r->ready = 1;
+
 	return 0;
 
 err:
+	/* This lock is needed as ready field is inspected while getting response. */
+	pthread_spin_lock(&client->lock);
+	client->resp = NULL;
+	pthread_spin_unlock(&client->lock);
+
 	spdk_jsonrpc_client_free_response(&r->jsonrpc);
 	return -EINVAL;
 }
