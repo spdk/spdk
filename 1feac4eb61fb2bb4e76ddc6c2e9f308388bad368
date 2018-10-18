@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dd2c0982_ac3961c1",
+        "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T10:33:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d07dc3ae_e2ad51f4",
+      "range": {
+        "startLine": 809,
+        "startChar": 36,
+        "endLine": 809,
+        "endChar": 57
+      },
+      "revId": "1feac4eb61fb2bb4e76ddc6c2e9f308388bad368",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "707fffa0_873c67ea",
         "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
         "patchSetId": 13
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "ec7182ff_1f450230",
+        "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T10:33:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "707fffa0_873c67ea",
+      "range": {
+        "startLine": 811,
+        "startChar": 65,
+        "endLine": 811,
+        "endChar": 86
+      },
+      "revId": "1feac4eb61fb2bb4e76ddc6c2e9f308388bad368",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ece7cde_004d7013",
         "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
         "patchSetId": 13
@@ -59,6 +107,30 @@
       "writtenOn": "2018-10-17T17:33:10Z",
       "side": 1,
       "message": "should be SPDK_JSON_VAL_ANY?",
+      "range": {
+        "startLine": 825,
+        "startChar": 67,
+        "endLine": 825,
+        "endChar": 88
+      },
+      "revId": "1feac4eb61fb2bb4e76ddc6c2e9f308388bad368",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b666db9e_5c144b49",
+        "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T10:33:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6ece7cde_004d7013",
       "range": {
         "startLine": 825,
         "startChar": 67,
