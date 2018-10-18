@@ -122,9 +122,12 @@ The following RPC commands have been deprecated:
  - construct_virtio_pci_scsi_bdev
  - construct_virtio_user_blk_bdev
  - construct_virtio_pci_blk_bdev
+ - remove_virtio_scsi_bdev
 
-They're replaced with a single `construct_virtio_dev` command that can create
-any type of Virtio bdev(s).
+The `construct_virtio_*` ones were replaced with a single `construct_virtio_dev`
+command that can create any type of Virtio bdev(s). `remove_virtio_scsi_bdev`
+was replaced with `remove_virtio_bdev` that can delete both Virtio Block and SCSI
+devices.
 
 ## v18.07:
 
