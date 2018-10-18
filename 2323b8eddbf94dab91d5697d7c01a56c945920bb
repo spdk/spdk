@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2df0c37_d51e2e22",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T13:45:52Z",
+      "side": 1,
+      "message": "None?",
+      "range": {
+        "startLine": 32,
+        "startChar": 15,
+        "endLine": 32,
+        "endChar": 17
+      },
+      "revId": "2323b8eddbf94dab91d5697d7c01a56c945920bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

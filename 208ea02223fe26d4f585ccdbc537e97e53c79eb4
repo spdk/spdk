@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "12e9d3e6_3977f1b0",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T13:45:52Z",
+      "side": 1,
+      "message": "But if there is no ID in request there will be no response from SPDK so you will hang here. Maybe some timeout or \n  \n  sock.sendall(req)\n\n  if not json.loads(req).has_key(\u0027id\u0027):\n    return None.",
+      "parentUuid": "282538bc_cfd4b546",
+      "range": {
+        "startLine": 38,
+        "startChar": 7,
+        "endLine": 43,
+        "endChar": 13
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "28b59ab8_c32d4494",
         "filename": "scripts/rpc_http_proxy.py",
         "patchSetId": 7
@@ -225,6 +249,30 @@
       "side": 1,
       "message": "This is the case with correct ID.",
       "parentUuid": "3cbd88d4_c83efd29",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 32
+      },
+      "revId": "208ea02223fe26d4f585ccdbc537e97e53c79eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3e4015f_bad42b1d",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-18T13:45:52Z",
+      "side": 1,
+      "message": "There might be no ID in request meaning user don\u0027t want any response (fire and forget). So if you want to handle this you need to check in rpc_call()\n\n  if len(buf) \u003e 0 \u0026\u0026 response is None:\n     raise ....\n\nand here catch that exception and then send resp 500.",
+      "parentUuid": "5911f063_1bfba47b",
       "range": {
         "startLine": 87,
         "startChar": 12,
