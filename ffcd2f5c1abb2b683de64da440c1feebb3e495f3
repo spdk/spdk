@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9ba9a6a_32d3791c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-18T21:54:25Z",
+      "side": 1,
+      "message": "no longer considered experimental and is now a first-class citizen",
+      "revId": "ffcd2f5c1abb2b683de64da440c1feebb3e495f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
