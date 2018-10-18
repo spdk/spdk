@@ -22,6 +22,47 @@
       "revId": "91445c284ea6fa33e962c23e87dfc8161ed39d41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59018b42_ff9f4e9a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T16:29:09Z",
+      "side": 1,
+      "message": "Agreed.  I think a better commit message would be:\n\nbdev/nvme: add log message for TIMEOUT_ACTION_NONE case\n\nWhile here, add error message if an invalid timeout action value is found.",
+      "parentUuid": "52502002_88593822",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 55
+      },
+      "revId": "91445c284ea6fa33e962c23e87dfc8161ed39d41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3d9db8c_cf22504a",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-18T16:29:09Z",
+      "side": 1,
+      "message": "I would suggest a different SPDK_ERRLOG if the default case is encountered - this would indicate a serious programming error.",
+      "revId": "91445c284ea6fa33e962c23e87dfc8161ed39d41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
