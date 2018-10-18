@@ -89,7 +89,7 @@ spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 	/* Check to see if we have received a full JSON value. */
 	rc = spdk_json_parse(client->recv_buf, client->recv_offset, NULL, 0, &end, 0);
 	if (rc == SPDK_JSON_PARSE_INCOMPLETE) {
-		return -EAGAIN;
+		return 0;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_RPC_CLIENT, "JSON string is :\n%s\n", client->recv_buf);
@@ -145,8 +145,7 @@ spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 	}
 
 	r->ready = 1;
-
-	return 0;
+	return 1;
 
 err:
 	client->resp = NULL;
