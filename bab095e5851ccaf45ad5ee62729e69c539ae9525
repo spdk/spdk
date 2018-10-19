@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85120565_93439afa",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 801,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-19T13:43:32Z",
+      "side": 1,
+      "message": "SPDK_DEBUGLOG(SPDK_LOG_NVMF, \"Set Features - Volatile Write Cache %s\\n\", ctrlr-\u003efeat.volatile_write_cache.bits.wce ? \"Enabled\" : \"Disabled\");",
+      "revId": "bab095e5851ccaf45ad5ee62729e69c539ae9525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
