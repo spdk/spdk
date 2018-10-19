@@ -1,6 +1,20 @@
 # Changelog
 
-## v18.10: (Upcoming Release)
+## v19.01: (Upcoming Release)
+
+### NVMe-oF Target
+
+The `spdk_nvmf_tgt_opts` struct has been deprecated in favor of `spdk_nvmf_transport_opts`.
+Users will no longer be able to specify target wide I/O parameters. `spdk_nvmf_tgt_listen`
+will also no longer transparently initialize a transport with the default target options (since
+there are none). Instead, a user must manually instantiate the transport with `spdk_nvmf_transport_create`
+prior to calling `spdk_nvmf_tgt_listen`.
+
+Related to the previous change, the rpc `set_nvmf_target_options` has been renamed to
+`set_nvmf_target_max_subsystems` to indicate that this is the only target option available for the user to edit.
+Usage of this rpc is still confined to the time prior to application subsystem initialization.
+
+## v18.10:
 
 ### nvme
 
