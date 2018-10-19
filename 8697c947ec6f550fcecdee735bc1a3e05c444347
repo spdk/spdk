@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a871eef0_c5856f64",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-19T14:03:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b7c8a062_b81efddb",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4df35416_ab0aa16e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a9f561ce_bf95d92a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-19T14:03:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4df35416_ab0aa16e",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b24903c_d4d460bc",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -47,6 +83,24 @@
       "writtenOn": "2018-10-11T22:57:33Z",
       "side": 1,
       "message": "we only want to do this for read operations",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c609b344_367f6ac4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3022,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-19T14:03:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3b24903c_d4d460bc",
       "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -98,6 +152,24 @@
       "writtenOn": "2018-10-11T22:57:33Z",
       "side": 1,
       "message": "let\u0027s also add some cases where iov.iov_base \u003d NULL - that is what happens with iSCSI (and probably NVMe-oF in the future)",
+      "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0227a40c_f238a597",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1235,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-19T14:03:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1e30d1d2_cc8b5eaa",
       "revId": "8697c947ec6f550fcecdee735bc1a3e05c444347",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
