@@ -1278,6 +1278,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=set_nvmf_target_options)
 
     @call_cmd
+    def set_nvmf_target_max_subsystems(args):
+        rpc.nvmf.set_nvmf_target_max_subsystems(args.client,
+                                                max_subsystems=args.max_subsystems)
+
+    p = subparsers.add_parser('set_nvmf_target_max_subsystems', help='Set the maximum number of NVMf target subsystems')
+    p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int, required=True)
+    p.set_defaults(func=set_nvmf_target_max_subsystems)
+
+    @call_cmd
     def set_nvmf_target_config(args):
         rpc.nvmf.set_nvmf_target_config(args.client,
                                         acceptor_poll_rate=args.acceptor_poll_rate,
