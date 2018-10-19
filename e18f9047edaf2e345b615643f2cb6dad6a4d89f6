@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a1c9069_6d67cad8",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-19T15:14:39Z",
+      "side": 1,
+      "message": "Why do you need cut here? I think its enough to count the lines.",
+      "range": {
+        "startLine": 204,
+        "startChar": 13,
+        "endLine": 204,
+        "endChar": 29
+      },
+      "revId": "e18f9047edaf2e345b615643f2cb6dad6a4d89f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
