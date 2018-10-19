@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74c3ccac_1e0d56b8",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-19T18:44:00Z",
+      "side": 1,
+      "message": "Pawel\nI am not sure this is how we want to handle NUMA alignment. I think we need provide the flexibility to use CPUs on either node, like use 2 cores on node 0 or 2 cores on NUMA node 1. \nI think we should handle NUMA by allowing the user to provide a mask for the CPU cores they want to use and then distribute the NVMe devices amongst those cores such that they are NUMA aligned first, and then once we run out of devices on the same NUMA node as the CPU core we can use devices on the other NUMA node. This will provide the most flexibility and ensure we don\u0027t limit the usage of the script to nodes that are NUMA balanced.",
+      "range": {
+        "startLine": 123,
+        "startChar": 2,
+        "endLine": 140,
+        "endChar": 5
+      },
+      "revId": "1dcb808809386521dcec4a433e039f994a2913da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6e8f673_656ed0b6",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-19T18:44:00Z",
+      "side": 1,
+      "message": "Please log the Workload information like randread/write/rw and the MIX.",
+      "range": {
+        "startLine": 21,
+        "startChar": 6,
+        "endLine": 21,
+        "endChar": 41
+      },
+      "revId": "1dcb808809386521dcec4a433e039f994a2913da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fd207ca_58a49ce6",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-19T18:44:00Z",
+      "side": 1,
+      "message": "Let\u0027s log the CPU Mask too so that we can answer questions around things like NUMA alignment.",
+      "range": {
+        "startLine": 23,
+        "startChar": 6,
+        "endLine": 23,
+        "endChar": 10
+      },
+      "revId": "1dcb808809386521dcec4a433e039f994a2913da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69f29960_3afec215",
+        "filename": "test/nvme/perf/perf_tc2.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-19T18:44:00Z",
+      "side": 1,
+      "message": "Please, put this parameter into the configuration file since it\u0027s not changing.",
+      "range": {
+        "startLine": 44,
+        "startChar": 6,
+        "endLine": 44,
+        "endChar": 20
+      },
+      "revId": "1dcb808809386521dcec4a433e039f994a2913da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
