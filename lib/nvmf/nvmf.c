@@ -506,29 +506,20 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		     void *cb_arg)
 {
 	struct spdk_nvmf_transport *transport;
+	const char *trtype;
 	int rc;
-	bool propagate = false;
 
 	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trtype);
 	if (!transport) {
-		struct spdk_nvmf_transport_opts opts;
-
-		opts.max_queue_depth = tgt->opts.max_queue_depth;
-		opts.max_qpairs_per_ctrlr = tgt->opts.max_qpairs_per_ctrlr;
-		opts.in_capsule_data_size = tgt->opts.in_capsule_data_size;
-		opts.max_io_size = tgt->opts.max_io_size;
-		opts.io_unit_size = tgt->opts.io_unit_size;
-		/* use max_queue depth since tgt. opts. doesn't have max_aq_depth */
-		opts.max_aq_depth = tgt->opts.max_queue_depth;
-
-		transport = spdk_nvmf_transport_create(trid->trtype, &opts);
-		if (!transport) {
-			SPDK_ERRLOG("Transport initialization failed\n");
-			cb_fn(cb_arg, -EINVAL);
-			return;
+		trtype = spdk_nvme_transport_id_trtype_str(trid->trtype);
+		if (trtype != NULL) {
+			SPDK_ERRLOG("Unable to listen on transport %s. The transport must be created first.\n", trtype);
+		} else {
+			SPDK_ERRLOG("The specified trtype %d is unknown. Please make sure that it is properly registered.\n",
+				    trid->trtype);
 		}
-
-		propagate = true;
+		cb_fn(cb_arg, -EINVAL);
+		return;
 	}
 
 	rc = spdk_nvmf_transport_listen(transport, trid);
@@ -540,11 +531,7 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 
 	tgt->discovery_genctr++;
 
-	if (propagate) {
-		spdk_nvmf_tgt_add_transport(tgt, transport, cb_fn, cb_arg);
-	} else {
-		cb_fn(cb_arg, 0);
-	}
+	cb_fn(cb_arg, 0);
 }
 
 struct spdk_nvmf_tgt_add_transport_ctx {
