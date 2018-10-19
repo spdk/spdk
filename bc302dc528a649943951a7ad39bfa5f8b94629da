@@ -25,6 +25,40 @@
     },
     {
       "key": {
+        "uuid": "a66be210_904a4448",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 16
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-19T14:55:50Z",
+      "side": 1,
+      "message": "Could we please add this:\n\n%define dpdk_location %(test -n \"$RTE_SDK\" \u0026\u0026 echo $RTE_SDK || echo /usr/share/dpdk)\n\nAnd then update the configure line (below) respectively?   It\u0027s just an additional attempt to avoid a build failure in the event those environment vars are not set when a rpmbuild is initiated.  E.g.  \"oh, I need to install the DPDK packages\" and then they do so, but don\u0027t log out and log back in to get the unbeknownst-to-them RTE env vars set from /etc/profile.d.",
+      "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "baa4e1a5_b06f995c",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 16
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-19T14:55:50Z",
+      "side": 1,
+      "message": "And so change:\n\n--with-dpdk\u003d%{dpdk_location}/x86_64-default-linuxapp-gcc \\",
+      "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bcfee1d1_da2d469e",
         "filename": "pkg/fedora28.spec",
         "patchSetId": 16
