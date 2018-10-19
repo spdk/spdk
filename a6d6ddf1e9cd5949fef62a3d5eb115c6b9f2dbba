@@ -50,6 +50,24 @@
       "revId": "a6d6ddf1e9cd5949fef62a3d5eb115c6b9f2dbba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e74926fd_f84cfb9f",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-19T15:06:07Z",
+      "side": 1,
+      "message": "I\u0027m not sure if I understand correctly:\n1) Do you propose that I should set needs_aligned_buffer in bdev_io instead of a spdk_bdev_io_get_aligned_buf call in each i/o? I think that is possible, but we would have to make sure we change write path to call _spdk_bdev_io_get_buf in every module that needs alignment.\n2) Currently this is implemented in bdev layer, so other layers can use it in similar way that aio does.",
+      "parentUuid": "0b773e46_6fdcfef5",
+      "revId": "a6d6ddf1e9cd5949fef62a3d5eb115c6b9f2dbba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
