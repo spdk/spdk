@@ -235,6 +235,30 @@
       "revId": "ca7c2319b12dc179b29280b66019c5420a3bf083",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aaaedb63_559d0946",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-19T07:33:13Z",
+      "side": 1,
+      "message": "With this approach:\nif (len + alignment \u003e\u003d SMALL_BUF_MAX_SIZE + 512)\nWe don\u0027t have to limit alignment to some specific value as long as this is true:\nlen + alignment \u003c\u003d SPDK_BDEV_LARGE_BUF_MAX_SIZE + 512",
+      "parentUuid": "1fcf8f05_429906f1",
+      "range": {
+        "startLine": 827,
+        "startChar": 8,
+        "endLine": 827,
+        "endChar": 67
+      },
+      "revId": "ca7c2319b12dc179b29280b66019c5420a3bf083",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
