@@ -601,8 +601,10 @@ spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
 
 	/* Header Digest */
 	if (enable_digest && conn->header_digest) {
-		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
-		MAKE_DIGEST_WORD(pdu->header_digest, crc32c);
+		if (!pdu->writev_offset) {
+			crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
+			MAKE_DIGEST_WORD(pdu->header_digest, crc32c);
+		}
 
 		iovec[iovec_cnt].iov_base = pdu->header_digest;
 		iovec[iovec_cnt].iov_len = ISCSI_DIGEST_LEN;
@@ -618,8 +620,10 @@ spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
 
 	/* Data Digest */
 	if (enable_digest && conn->data_digest && data_len != 0) {
-		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
-		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
+		if (!pdu->writev_offset) {
+			crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
+			MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
+		}
 
 		iovec[iovec_cnt].iov_base = pdu->data_digest;
 		iovec[iovec_cnt].iov_len = ISCSI_DIGEST_LEN;
