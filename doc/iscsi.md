@@ -209,7 +209,7 @@ packet processing graph (see [What is VPP?](https://wiki.fd.io/view/VPP/What_is_
 A detailed instructions for **simplified steps 1-3** below, can be found on
 VPP [Quick Start Guide](https://wiki.fd.io/view/VPP).
 
-*SPDK supports VPP version 18.01.1.*
+*SPDK supports VPP version 18.07.1.*
 
 ##  1. Building VPP (optional) {#vpp_build}
 
@@ -218,7 +218,7 @@ VPP [Quick Start Guide](https://wiki.fd.io/view/VPP).
 Clone and checkout VPP
 ~~~
 git clone https://gerrit.fd.io/r/vpp && cd vpp
-git checkout v18.01.1
+git checkout v18.07.1
 ~~~
 
 Install VPP build dependencies
@@ -241,7 +241,7 @@ Packages can be found in `vpp/build-root/` directory.
 For more in depth instructions please see Building section in
 [VPP documentation](https://wiki.fd.io/view/VPP/Pulling,_Building,_Running,_Hacking_and_Pushing_VPP_Code#Building)
 
-*Please note: VPP 18.01.1 does not support OpenSSL 1.1. It is suggested to install a compatibility package
+*Please note: VPP 18.07.1 does not support OpenSSL 1.1. It is suggested to install a compatibility package
 for compilation time.*
 ~~~
 sudo dnf install -y --allowerasing compat-openssl10-devel
@@ -275,6 +275,8 @@ Alternatively, use `vpp` binary directly
 sudo vpp unix {cli-listen /run/vpp/cli.sock}
 ~~~
 
+## 4. Configure VPP {#vpp_config}
+
 A usefull tool is `vppctl`, that allows to control running VPP instance.
 Either by entering VPP configuration prompt
 ~~~
@@ -285,6 +287,49 @@ Or, by sending single command directly. For example to display interfaces within
 ~~~
 sudo vppctl show interface
 ~~~
+
+### Example: Configure two interfaces to be available via VPP
+
+We want to configure two DPDK ports with PCI address 0000:09:00.1 and 0000:0b:00.1
+with address 10.0.0.1/24 and 10.10.0.1/24 to be used with SPDK application.
+
+Bind PCI NICs to UIO driver (igb_uio or uio_pci_generic). 
+
+In the VPP startup file (e.g. /etc/vpp/startup.conf) whitelist specific interfaces
+by specifying PCI addresses in section dpdk:
+~~~
+	dev 0000:09:00.1
+	dev 0000:0b:00.1
+~~~
+
+Restart vpp and use vppctl tool to verify and configure interfaces.
+~~~
+$ vppctl show interface
+              Name               Idx    State  MTU (L3/IP4/IP6/MPLS)     Counter          Count
+
+FortyGigabitEthernet9/0/1         1     down         9000/0/0/0
+FortyGigabitEthernetb/0/1         2     down         9000/0/0/0
+~~~
+
+Set approprite addresses and bring interfaces up:
+~~~
+$ vppctl set interface ip address FortyGigabitEthernet9/0/1 10.0.0.1/24
+$ vppctl set interface state FortyGigabitEthernet9/0/1 up
+$ vppctl set interface ip address FortyGigabitEthernetb/0/1 10.10.0.1/24
+$ vppctl set interface state FortyGigabitEthernetb/0/1 up
+~~~
+
+Verify configuration:
+~~~
+$ vppctl show interface address
+FortyGigabitEthernet9/0/1 (up):
+  L3 10.0.0.1/24
+FortyGigabitEthernetb/0/1 (up):
+  L3 10.10.0.1/24
+~~~
+
+Now, both interfaces are ready to use. To verify conectivity you can ping
+10.0.0.1 and 10.10.0.1 addresses from another connected machine. 
 
 ### Example: Tap interfaces on single host
 
@@ -312,7 +357,7 @@ To verify connectivity
     ping 10.0.0.1
 ~~~
 
-## 4. Building SPDK with VPP {#vpp_built_into_spdk}
+## 5. Building SPDK with VPP {#vpp_built_into_spdk}
 
 Support for VPP can be built into SPDK by using configuration option.
 ~~~
@@ -322,10 +367,10 @@ configure --with-vpp
 Alternatively, directory with built libraries can be pointed at
 and will be used for compilation instead of installed packages.
 ~~~
-configure --with-vpp=/path/to/vpp/repo/build-root/vpp
+configure --with-vpp=/path/to/vpp/repo/build-root/install-vpp-native/vpp
 ~~~
 
-## 5. Running SPDK with VPP {#vpp_running_with_spdk}
+## 6. Running SPDK with VPP {#vpp_running_with_spdk}
 
 VPP application has to be started before SPDK iSCSI target,
 in order to enable usage of network interfaces.
