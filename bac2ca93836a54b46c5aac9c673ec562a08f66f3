@@ -16,6 +16,24 @@
       "revId": "bac2ca93836a54b46c5aac9c673ec562a08f66f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8322dfbf_9f710521",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-10-19T16:59:52Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nPut in spdk_iscsi_write_pdu? If you put in flush_pdus_intenral, how do you judge which iov should have checksum?",
+      "parentUuid": "2e261c41_22a9489d",
+      "revId": "bac2ca93836a54b46c5aac9c673ec562a08f66f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
