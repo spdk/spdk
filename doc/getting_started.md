@@ -103,7 +103,7 @@ with no arguments to see the help output. If your system has its IOMMU
 enabled you can run the examples as your regular user. If it doesn't, you'll
 need to run as a privileged user (root).
 
-A good example to start with is `examples/nvme/identify`, which prints
+A good example to start with is `examples/nvme/identify/identify`, which prints
 out information about all of the NVMe devices on your system.
 
 Larger, more fully functional applications are available in the `app`
