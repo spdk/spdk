@@ -14,8 +14,10 @@ run_spdk_tgt
 timing_exit run_spdk_tgt
 
 timing_enter spdkcli_create_pmem_config
-$spdkcli_job "/bdevs/pmemblk create_pmem_pool /tmp/sample_pmem 32 512" "" True
-$spdkcli_job "/bdevs/pmemblk create /tmp/sample_pmem pmem_bdev" "pmem_bdev" True
+$spdkcli_job "/bdevs/pmemblk create_pmem_pool /tmp/sample_pmem0 32 512" "" True
+$spdkcli_job "/bdevs/pmemblk create /tmp/sample_pmem0 pmem_bdev0" "pmem_bdev0" True
+$spdkcli_job "/bdevs/pmemblk create_pmem_pool /tmp/sample_pmem1 32 512" "" True
+$spdkcli_job "/bdevs/pmemblk create /tmp/sample_pmem1 pmem_bdev1" "pmem_bdev1" True
 timing_exit spdkcli_create_pmem_config
 
 timing_enter spdkcli_check_match
@@ -23,8 +25,10 @@ check_match
 timing_exit spdkcli_check_match
 
 timing_enter spdkcli_clear_pmem_config
-$spdkcli_job "/bdevs/pmemblk delete pmem_bdev" "pmem_bdev"
-$spdkcli_job "/bdevs/pmemblk delete_pmem_pool /tmp/sample_pmem" ""
+$spdkcli_job "/bdevs/pmemblk delete pmem_bdev0" "pmem_bdev0"
+$spdkcli_job "/bdevs/pmemblk delete_pmem_pool /tmp/sample_pmem0" ""
+$spdkcli_job "/bdevs/pmemblk delete_all" "pmem_bdev1"
+$spdkcli_job "/bdevs/pmemblk delete_pmem_pool /tmp/sample_pmem1" ""
 rm -f /tmp/sample_pmem
 timing_exit spdkcli_clear_pmem_config
 
