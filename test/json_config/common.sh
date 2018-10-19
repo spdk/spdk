@@ -175,6 +175,8 @@ function create_nvmf_subsystem_config() {
 
 	bdevs="$($rpc_py construct_malloc_bdev 64 512) "
 	bdevs+="$($rpc_py construct_malloc_bdev 64 512)"
+
+	$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4 -c 0
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 	for bdev in $bdevs; do
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
