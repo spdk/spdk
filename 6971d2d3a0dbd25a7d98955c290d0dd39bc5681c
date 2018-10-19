@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e9d5581_a5010b68",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-19T20:37:24Z",
+      "side": 1,
+      "message": "This should be capitalized \"RDMA\"",
+      "range": {
+        "startLine": 114,
+        "startChar": 44,
+        "endLine": 114,
+        "endChar": 48
+      },
+      "revId": "6971d2d3a0dbd25a7d98955c290d0dd39bc5681c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9d54d2a_9a885832",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-10-19T20:37:24Z",
+      "side": 1,
+      "message": "Is this 8192 bytes?",
+      "range": {
+        "startLine": 115,
+        "startChar": 13,
+        "endLine": 115,
+        "endChar": 17
+      },
+      "revId": "6971d2d3a0dbd25a7d98955c290d0dd39bc5681c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
