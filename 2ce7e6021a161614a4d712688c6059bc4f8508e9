@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7405f3ce_a0949447",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-10-19T01:05:37Z",
+      "side": 1,
+      "message": "there\u0027re two \"return 0\"",
+      "range": {
+        "startLine": 360,
+        "startChar": 2,
+        "endLine": 360,
+        "endChar": 8
+      },
+      "revId": "2ce7e6021a161614a4d712688c6059bc4f8508e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
