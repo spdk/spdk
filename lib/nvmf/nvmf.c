@@ -49,12 +49,7 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
-#define SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH 128
-#define SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
-#define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
-#define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS 1024
-#define SPDK_NVMF_DEFAULT_IO_UNIT_SIZE 131072
 
 typedef void (*nvmf_qpair_disconnect_cpl)(void *ctx, int status);
 static void spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf);
@@ -91,17 +86,6 @@ spdk_nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair,
 	qpair->state = state;
 }
 
-void
-spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
-{
-	opts->max_queue_depth = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
-	opts->max_qpairs_per_ctrlr = SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR;
-	opts->in_capsule_data_size = SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE;
-	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
-	opts->max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS;
-	opts->io_unit_size = SPDK_NVMF_DEFAULT_IO_UNIT_SIZE;
-}
-
 static int
 spdk_nvmf_poll_group_poll(void *ctx)
 {
@@ -136,13 +120,13 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 		spdk_nvmf_poll_group_add_transport(group, transport);
 	}
 
-	group->num_sgroups = tgt->opts.max_subsystems;
-	group->sgroups = calloc(tgt->opts.max_subsystems, sizeof(struct spdk_nvmf_subsystem_poll_group));
+	group->num_sgroups = tgt->max_subsystems;
+	group->sgroups = calloc(tgt->max_subsystems, sizeof(struct spdk_nvmf_subsystem_poll_group));
 	if (!group->sgroups) {
 		return -1;
 	}
 
-	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
+	for (sid = 0; sid < tgt->max_subsystems; sid++) {
 		struct spdk_nvmf_subsystem *subsystem;
 
 		subsystem = tgt->subsystems[sid];
@@ -233,7 +217,7 @@ spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 }
 
 struct spdk_nvmf_tgt *
-spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
+spdk_nvmf_tgt_create(uint32_t max_subsystems)
 {
 	struct spdk_nvmf_tgt *tgt;
 
@@ -242,10 +226,10 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 		return NULL;
 	}
 
-	if (!opts) {
-		spdk_nvmf_tgt_opts_init(&tgt->opts);
+	if (!max_subsystems) {
+		tgt->max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS;
 	} else {
-		tgt->opts = *opts;
+		tgt->max_subsystems = max_subsystems;
 	}
 
 	tgt->discovery_genctr = 0;
@@ -253,7 +237,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	tgt->discovery_log_page_size = 0;
 	TAILQ_INIT(&tgt->transports);
 
-	tgt->subsystems = calloc(tgt->opts.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
+	tgt->subsystems = calloc(tgt->max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	if (!tgt->subsystems) {
 		free(tgt);
 		return NULL;
@@ -282,7 +266,7 @@ spdk_nvmf_tgt_destroy_cb(void *io_device)
 	}
 
 	if (tgt->subsystems) {
-		for (i = 0; i < tgt->opts.max_subsystems; i++) {
+		for (i = 0; i < tgt->max_subsystems; i++) {
 			if (tgt->subsystems[i]) {
 				spdk_nvmf_subsystem_destroy(tgt->subsystems[i]);
 			}
@@ -461,15 +445,10 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	struct spdk_nvmf_transport *transport;
 
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "method", "set_nvmf_target_options");
+	spdk_json_write_named_string(w, "method", "set_nvmf_target_max_subsystems");
 
 	spdk_json_write_named_object_begin(w, "params");
-	spdk_json_write_named_uint32(w, "max_queue_depth", tgt->opts.max_queue_depth);
-	spdk_json_write_named_uint32(w, "max_qpairs_per_ctrlr", tgt->opts.max_qpairs_per_ctrlr);
-	spdk_json_write_named_uint32(w, "in_capsule_data_size", tgt->opts.in_capsule_data_size);
-	spdk_json_write_named_uint32(w, "max_io_size", tgt->opts.max_io_size);
-	spdk_json_write_named_uint32(w, "max_subsystems", tgt->opts.max_subsystems);
-	spdk_json_write_named_uint32(w, "io_unit_size", tgt->opts.io_unit_size);
+	spdk_json_write_named_uint32(w, "max_subsystems", tgt->max_subsystems);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -605,7 +584,7 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 		return NULL;
 	}
 
-	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
+	for (sid = 0; sid < tgt->max_subsystems; sid++) {
 		subsystem = tgt->subsystems[sid];
 		if (subsystem == NULL) {
 			continue;

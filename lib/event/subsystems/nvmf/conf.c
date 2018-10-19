@@ -43,8 +43,8 @@
 
 #define SPDK_NVMF_MAX_NAMESPACES (1 << 14)
 
-struct spdk_nvmf_tgt_opts *g_spdk_nvmf_tgt_opts = NULL;
 struct spdk_nvmf_tgt_conf *g_spdk_nvmf_tgt_conf = NULL;
+uint32_t g_spdk_nvmf_tgt_max_subsystems = 0;
 
 static int
 spdk_add_nvmf_discovery_subsystem(void)
@@ -64,38 +64,14 @@ spdk_add_nvmf_discovery_subsystem(void)
 }
 
 static void
-spdk_nvmf_read_config_file_tgt_opts(struct spdk_conf_section *sp,
-				    struct spdk_nvmf_tgt_opts *opts)
+spdk_nvmf_read_config_file_tgt_max_subsystems(struct spdk_conf_section *sp,
+		uint32_t *max_subsystems)
 {
-	int max_queue_depth;
-	int max_queues_per_sess;
-	int in_capsule_data_size;
-	int max_io_size;
-	int io_unit_size;
+	int tgt_max_subsystems;
 
-	max_queue_depth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
-	if (max_queue_depth >= 0) {
-		opts->max_queue_depth = max_queue_depth;
-	}
-
-	max_queues_per_sess = spdk_conf_section_get_intval(sp, "MaxQueuesPerSession");
-	if (max_queues_per_sess >= 0) {
-		opts->max_qpairs_per_ctrlr = max_queues_per_sess;
-	}
-
-	in_capsule_data_size = spdk_conf_section_get_intval(sp, "InCapsuleDataSize");
-	if (in_capsule_data_size >= 0) {
-		opts->in_capsule_data_size = in_capsule_data_size;
-	}
-
-	max_io_size = spdk_conf_section_get_intval(sp, "MaxIOSize");
-	if (max_io_size >= 0) {
-		opts->max_io_size = max_io_size;
-	}
-
-	io_unit_size = spdk_conf_section_get_intval(sp, "IOUnitSize");
-	if (io_unit_size >= 0) {
-		opts->io_unit_size = io_unit_size;
+	tgt_max_subsystems = spdk_conf_section_get_intval(sp, "MaxSubsystems");
+	if (tgt_max_subsystems >= 0) {
+		*max_subsystems = tgt_max_subsystems;
 	}
 }
 
@@ -111,26 +87,18 @@ spdk_nvmf_read_config_file_tgt_conf(struct spdk_conf_section *sp,
 	}
 }
 
-static struct spdk_nvmf_tgt_opts *
-spdk_nvmf_parse_tgt_opts(void)
+static uint32_t
+spdk_nvmf_parse_tgt_max_subsystems(void)
 {
-	struct spdk_nvmf_tgt_opts *opts;
 	struct spdk_conf_section *sp;
-
-	opts = calloc(1, sizeof(*opts));
-	if (!opts) {
-		SPDK_ERRLOG("calloc() failed for target options\n");
-		return NULL;
-	}
-
-	spdk_nvmf_tgt_opts_init(opts);
+	uint32_t max_subsystems = 0;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
 	if (sp != NULL) {
-		spdk_nvmf_read_config_file_tgt_opts(sp, opts);
+		spdk_nvmf_read_config_file_tgt_max_subsystems(sp, &max_subsystems);
 	}
 
-	return opts;
+	return max_subsystems;
 }
 
 static struct spdk_nvmf_tgt_conf *
@@ -161,12 +129,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 {
 	int rc;
 
-	if (!g_spdk_nvmf_tgt_opts) {
-		g_spdk_nvmf_tgt_opts = spdk_nvmf_parse_tgt_opts();
-		if (!g_spdk_nvmf_tgt_opts) {
-			SPDK_ERRLOG("spdk_nvmf_parse_tgt_opts() failed\n");
-			return -1;
-		}
+	if (!g_spdk_nvmf_tgt_max_subsystems) {
+		g_spdk_nvmf_tgt_max_subsystems = spdk_nvmf_parse_tgt_max_subsystems();
 	}
 
 	if (!g_spdk_nvmf_tgt_conf) {
@@ -177,10 +141,9 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		}
 	}
 
-	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(g_spdk_nvmf_tgt_opts);
+	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(g_spdk_nvmf_tgt_max_subsystems);
 
-	free(g_spdk_nvmf_tgt_opts);
-	g_spdk_nvmf_tgt_opts = NULL;
+	g_spdk_nvmf_tgt_max_subsystems = 0;
 
 	if (!g_spdk_nvmf_tgt) {
 		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
