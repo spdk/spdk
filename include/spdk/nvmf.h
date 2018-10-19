@@ -63,15 +63,6 @@ struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 struct spdk_nvmf_transport;
 
-struct spdk_nvmf_tgt_opts {
-	uint16_t max_queue_depth;
-	uint16_t max_qpairs_per_ctrlr;
-	uint32_t in_capsule_data_size;
-	uint32_t max_io_size;
-	uint32_t max_subsystems;
-	uint32_t io_unit_size;
-};
-
 struct spdk_nvmf_transport_opts {
 	uint16_t max_queue_depth;
 	uint16_t max_qpairs_per_ctrlr;
@@ -82,20 +73,13 @@ struct spdk_nvmf_transport_opts {
 };
 
 /**
- * Initialize the default value of opts.
- *
- * \param opts Data structure where SPDK will initialize the default options.
- */
-void spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts);
-
-/**
  * Construct an NVMe-oF target.
  *
- * \param opts Options.
+ * \param max_subsystems the maximum number of subsystems allowed by the target.
  *
  * \return a pointer to a NVMe-oF target on success, or NULL on failure.
  */
-struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts);
+struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(uint32_t max_subsystems);
 
 typedef void (spdk_nvmf_tgt_destroy_done_fn)(void *ctx, int status);
 

@@ -69,7 +69,7 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 		return;
 	}
 
-	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
+	for (sid = 0; sid < tgt->max_subsystems; sid++) {
 		subsystem = tgt->subsystems[sid];
 		if (subsystem == NULL) {
 			continue;

@@ -55,8 +55,9 @@ struct spdk_nvmf_tgt_conf {
 	enum spdk_nvmf_connect_sched conn_sched;
 };
 
-extern struct spdk_nvmf_tgt_opts *g_spdk_nvmf_tgt_opts;
 extern struct spdk_nvmf_tgt_conf *g_spdk_nvmf_tgt_conf;
+
+extern uint32_t g_spdk_nvmf_tgt_max_subsystems;
 
 extern struct spdk_nvmf_tgt *g_spdk_nvmf_tgt;
 
