@@ -253,12 +253,12 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	}
 
 	/* Find a free subsystem id (sid) */
-	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
+	for (sid = 0; sid < tgt->max_subsystems; sid++) {
 		if (tgt->subsystems[sid] == NULL) {
 			break;
 		}
 	}
-	if (sid >= tgt->opts.max_subsystems) {
+	if (sid >= tgt->max_subsystems) {
 		return NULL;
 	}
 
@@ -559,7 +559,7 @@ spdk_nvmf_subsystem_get_first(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_subsystem	*subsystem;
 	uint32_t sid;
 
-	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
+	for (sid = 0; sid < tgt->max_subsystems; sid++) {
 		subsystem = tgt->subsystems[sid];
 		if (subsystem) {
 			return subsystem;
@@ -581,7 +581,7 @@ spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem)
 
 	tgt = subsystem->tgt;
 
-	for (sid = subsystem->id + 1; sid < tgt->opts.max_subsystems; sid++) {
+	for (sid = subsystem->id + 1; sid < tgt->max_subsystems; sid++) {
 		subsystem = tgt->subsystems[sid];
 		if (subsystem) {
 			return subsystem;
