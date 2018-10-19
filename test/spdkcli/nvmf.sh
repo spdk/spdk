@@ -25,6 +25,7 @@ $spdkcli_job "/bdevs/malloc create 32 512 Malloc3" "Malloc3" True
 $spdkcli_job "/bdevs/malloc create 32 512 Malloc4" "Malloc4" True
 $spdkcli_job "/bdevs/malloc create 32 512 Malloc5" "Malloc5" True
 $spdkcli_job "/bdevs/malloc create 32 512 Malloc6" "Malloc6" True
+$spdkcli_job "nvmf/transport create RDMA max_qpairs_per_ctrlr=4 io_unit_size=8192" True
 $spdkcli_job "/nvmf/subsystem create nqn.2014-08.org.spdk:cnode1 N37SXV509SRW\
   max_namespaces=4 allow_any_host=True" "nqn.2014-08.org.spdk:cnode1" True
 $spdkcli_job "/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/namespaces create Malloc3 1" "Malloc3" True
