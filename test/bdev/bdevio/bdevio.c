@@ -959,7 +959,6 @@ main(int argc, char **argv)
 	opts.name = "bdevtest";
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = "0x7";
-	opts.mem_size = 1024;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
 				      bdevio_parse_arg, bdevio_usage)) !=
