@@ -3268,7 +3268,7 @@ Example response:
 }
 ~~~
 
-## set_nvmf_target_options {#rpc_set_nvmf_target_options}
+## set_nvmf_target_max_subsystems {#rpc_set_nvmf_target_max_subsystems}
 
 Set global parameters for the NVMe-oF target.  This RPC may only be called before SPDK subsystems
 have been initialized.
@@ -3277,12 +3277,7 @@ have been initialized.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-max_queue_depth         | Optional | number      | Maximum number of outstanding I/Os per queue
-max_qpairs_per_ctrlr    | Optional | number      | Maximum number of SQ and CQ per controller
-in_capsule_data_size    | Optional | number      | Maximum number of in-capsule data size
-max_io_size             | Optional | number      | Maximum I/O size (bytes)
-max_subsystems          | Optional | number      | Maximum number of NVMe-oF subsystems
-io_unit_size            | Optional | number      | I/O unit size (bytes)
+max_subsystems          | Required | number      | Maximum number of NVMe-oF subsystems
 
 ### Example
 
@@ -3291,13 +3286,8 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "set_nvmf_target_options",
+  "method": "set_nvmf_target_max_subsystems",
   "params": {
-    "in_capsule_data_size": 4096,
-    "io_unit_size": 131072,
-    "max_qpairs_per_ctrlr": 64,
-    "max_queue_depth": 128,
-    "max_io_size": 131072,
     "max_subsystems": 1024
   }
 }

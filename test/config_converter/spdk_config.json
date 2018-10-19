@@ -182,14 +182,9 @@
         },
         {
           "params": {
-            "in_capsule_data_size": 4096,
-            "io_unit_size": 131072,
-            "max_qpairs_per_ctrlr": 4,
-            "max_queue_depth": 128,
-            "max_io_size": 131072,
             "max_subsystems": 1024
           },
-          "method": "set_nvmf_target_options"
+          "method": "set_nvmf_target_max_subsystems"
         },
         {
           "params": {
