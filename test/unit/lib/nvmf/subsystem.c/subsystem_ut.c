@@ -253,8 +253,8 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	struct spdk_nvmf_ns_opts ns_opts;
 	uint32_t nsid;
 
-	tgt.opts.max_subsystems = 1024;
-	tgt.subsystems = calloc(tgt.opts.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
+	tgt.max_subsystems = 1024;
+	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
 	/* Allow NSID to be assigned automatically */
@@ -304,8 +304,8 @@ nvmf_test_create_subsystem(void)
 	char nqn[256];
 	struct spdk_nvmf_subsystem *subsystem;
 
-	tgt.opts.max_subsystems = 1024;
-	tgt.subsystems = calloc(tgt.opts.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
+	tgt.max_subsystems = 1024;
+	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:subsystem1");

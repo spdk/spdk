@@ -1,5 +1,3 @@
-
-
 def set_nvmf_target_options(client,
                             max_queue_depth=None,
                             max_qpairs_per_ctrlr=None,
@@ -35,6 +33,21 @@ def set_nvmf_target_options(client,
     if io_unit_size:
         params['io_unit_size'] = io_unit_size
     return client.call('set_nvmf_target_options', params)
+
+def set_nvmf_target_max_subsystems(client,
+                                   max_subsystems=None):
+    """Set NVMe-oF target options.
+
+    Args:
+        max_subsystems: Maximum number of NVMe-oF subsystems (e.g. 1024)
+
+    Returns:
+        True or False
+    """
+    params = {}
+
+    params['max_subsystems'] = max_subsystems
+    return client.call('set_nvmf_target_max_subsystems', params)
 
 
 def set_nvmf_target_config(client,
