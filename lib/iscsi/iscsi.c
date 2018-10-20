@@ -117,12 +117,6 @@ static int spdk_iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu
 	    | (((uint32_t) *((uint8_t *)(BUF)+3)) << 24))	\
 	    == (CRC32C))
 
-#define MAKE_DIGEST_WORD(BUF, CRC32C) \
-	(   ((*((uint8_t *)(BUF)+0)) = (uint8_t)((uint32_t)(CRC32C) >> 0)), \
-	    ((*((uint8_t *)(BUF)+1)) = (uint8_t)((uint32_t)(CRC32C) >> 8)), \
-	    ((*((uint8_t *)(BUF)+2)) = (uint8_t)((uint32_t)(CRC32C) >> 16)), \
-	    ((*((uint8_t *)(BUF)+3)) = (uint8_t)((uint32_t)(CRC32C) >> 24)))
-
 #if 0
 static int
 spdk_match_digest_word(const uint8_t *buf, uint32_t crc32c)
@@ -307,7 +301,7 @@ spdk_islun2lun(uint64_t islun)
 	return lun_i;
 }
 
-static uint32_t
+uint32_t
 spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
 {
 	uint32_t crc32c;
@@ -325,7 +319,7 @@ spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
 	return crc32c;
 }
 
-static uint32_t
+uint32_t
 spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 {
 	uint32_t data_len = DGET24(pdu->bhs.data_segment_len);
@@ -573,7 +567,6 @@ spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
 			struct spdk_iscsi_pdu *pdu)
 {
 	int iovec_cnt = 0;
-	uint32_t crc32c;
 	int enable_digest;
 	int total_ahs_len;
 	int data_len;
@@ -601,9 +594,6 @@ spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
 
 	/* Header Digest */
 	if (enable_digest && conn->header_digest) {
-		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
-		MAKE_DIGEST_WORD(pdu->header_digest, crc32c);
-
 		iovec[iovec_cnt].iov_base = pdu->header_digest;
 		iovec[iovec_cnt].iov_len = ISCSI_DIGEST_LEN;
 		iovec_cnt++;
@@ -618,9 +608,6 @@ spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
 
 	/* Data Digest */
 	if (enable_digest && conn->data_digest && data_len != 0) {
-		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
-		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
-
 		iovec[iovec_cnt].iov_base = pdu->data_digest;
 		iovec[iovec_cnt].iov_len = ISCSI_DIGEST_LEN;
 		iovec_cnt++;
