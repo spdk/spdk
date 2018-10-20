@@ -279,6 +279,18 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
+uint32_t
+spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
+{
+	return 0;
+}
+
+uint32_t
+spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
+{
+	return 0;
+}
+
 void
 spdk_shutdown_iscsi_conns_done(void)
 {
