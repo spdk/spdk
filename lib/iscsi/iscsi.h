@@ -435,6 +435,8 @@ int spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn);
 
 void spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task);
 void spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task);
+uint32_t spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu);
+uint32_t spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu);
 
 /* Memory management */
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu);
