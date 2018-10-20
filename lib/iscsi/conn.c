@@ -51,6 +51,12 @@
 #include "iscsi/tgt_node.h"
 #include "iscsi/portal_grp.h"
 
+#define MAKE_DIGEST_WORD(BUF, CRC32C) \
+        (   ((*((uint8_t *)(BUF)+0)) = (uint8_t)((uint32_t)(CRC32C) >> 0)), \
+            ((*((uint8_t *)(BUF)+1)) = (uint8_t)((uint32_t)(CRC32C) >> 8)), \
+            ((*((uint8_t *)(BUF)+2)) = (uint8_t)((uint32_t)(CRC32C) >> 16)), \
+            ((*((uint8_t *)(BUF)+3)) = (uint8_t)((uint32_t)(CRC32C) >> 24)))
+
 #define SPDK_ISCSI_CONNECTION_MEMSET(conn)		\
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
 		offsetof(struct spdk_iscsi_conn, portal));
@@ -1236,6 +1242,28 @@ spdk_iscsi_conn_flush_pdus(void *_conn)
 void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
+	uint32_t crc32c;
+	int enable_digest, data_len;
+
+	data_len = DGET24(pdu->bhs.data_segment_len);
+	enable_digest = 1;
+	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
+		/* this PDU should be sent without digest */
+		enable_digest = 0;
+	}
+
+	/* Header Digest */
+	if (enable_digest && conn->header_digest) {
+		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
+		MAKE_DIGEST_WORD(pdu->header_digest, crc32c);
+	}
+
+	/* Data Digest */
+	if (enable_digest && conn->data_digest && data_len != 0) {
+		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
+		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
+	}
+
 	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
 	spdk_iscsi_conn_flush_pdus(conn);
 }
