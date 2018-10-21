@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -185,6 +185,17 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace)
 					OWNER_NONE, OBJECT_NONE, 0, 0, "");
 }
 
+enum spdk_nvmf_rdma_wr_type {
+	RDMA_WR_TYPE_RECV,
+	RDMA_WR_TYPE_REQ,
+	RDMA_WR_TYPE_DRAIN_SEND,
+	RDMA_WR_TYPE_DRAIN_RECV
+};
+
+struct spdk_nvmf_rdma_wr {
+	enum spdk_nvmf_rdma_wr_type	type;
+};
+
 /* This structure holds commands as they are received off the wire.
  * It must be dynamically paired with a full request object
  * (spdk_nvmf_rdma_request) to service a request. It is separate
@@ -200,6 +211,8 @@ struct spdk_nvmf_rdma_recv {
 
 	/* In-capsule data buffer */
 	uint8_t				*buf;
+
+	struct spdk_nvmf_rdma_wr	rdma_wr;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_recv) link;
 };
@@ -223,8 +236,16 @@ struct spdk_nvmf_rdma_request {
 		void				*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
 	} data;
 
+	struct spdk_nvmf_rdma_wr		rdma_wr;
+
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
+};
+
+enum spdk_nvmf_rdma_qpair_disconnect_flags {
+	RDMA_QP_DISCONNECTING		= 1,
+	RDMA_QP_RECV_DRAINED		= 1 << 1,
+	RDMA_QP_SEND_DRAINED		= 1 << 2
 };
 
 struct spdk_nvmf_rdma_qpair {
@@ -289,7 +310,9 @@ struct spdk_nvmf_rdma_qpair {
 	struct ibv_qp_init_attr			ibv_init_attr;
 	struct ibv_qp_attr			ibv_attr;
 
-	bool					qpair_disconnected;
+	uint32_t				disconnect_flags;
+	struct spdk_nvmf_rdma_wr		drain_send_wr;
+	struct spdk_nvmf_rdma_wr		drain_recv_wr;
 
 	/* Reference counter for how many unprocessed messages
 	 * from other threads are currently outstanding. The
@@ -559,14 +582,8 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 
-	if (spdk_nvmf_rdma_cur_queue_depth(rqpair)) {
-		rqpair->qpair_disconnected = true;
-		return;
-	}
-
-	if (rqpair->refcnt > 0) {
-		return;
-	}
+	assert(spdk_nvmf_rdma_cur_queue_depth(rqpair) == 0);
+	assert(rqpair->refcnt == 0);
 
 	if (rqpair->poller) {
 		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
@@ -622,8 +639,9 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair->ibv_init_attr.send_cq		= rqpair->poller->cq;
 	rqpair->ibv_init_attr.recv_cq		= rqpair->poller->cq;
 	rqpair->ibv_init_attr.cap.max_send_wr	= rqpair->max_queue_depth *
-			2; /* SEND, READ, and WRITE operations */
-	rqpair->ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
+			2 + 1; /* SEND, READ, and WRITE operations + dummy drain WR */
+	rqpair->ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth +
+			1; /* RECV operations + dummy drain WR */
 	rqpair->ibv_init_attr.cap.max_send_sge	= rqpair->max_sge;
 	rqpair->ibv_init_attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
@@ -708,6 +726,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 						  transport->opts.in_capsule_data_size));
 		}
 
+		rdma_recv->rdma_wr.type = RDMA_WR_TYPE_RECV;
+
 		rdma_recv->sgl[0].addr = (uintptr_t)&rqpair->cmds[i];
 		rdma_recv->sgl[0].length = sizeof(rqpair->cmds[i]);
 		rdma_recv->sgl[0].lkey = rqpair->cmds_mr->lkey;
@@ -720,7 +740,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 			rdma_recv->wr.num_sge++;
 		}
 
-		rdma_recv->wr.wr_id = (uintptr_t)rdma_recv;
+		rdma_recv->wr.wr_id = (uintptr_t)&rdma_recv->rdma_wr;
 		rdma_recv->wr.sg_list = rdma_recv->sgl;
 
 		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
@@ -737,6 +757,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_req->req.qpair = &rqpair->qpair;
 		rdma_req->req.cmd = NULL;
 
+		rdma_req->rdma_wr.type = RDMA_WR_TYPE_REQ;
+
 		/* Set up memory to send responses */
 		rdma_req->req.rsp = &rqpair->cpls[i];
 
@@ -744,7 +766,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_req->rsp.sgl[0].length = sizeof(rqpair->cpls[i]);
 		rdma_req->rsp.sgl[0].lkey = rqpair->cpls_mr->lkey;
 
-		rdma_req->rsp.wr.wr_id = (uintptr_t)rdma_req;
+		rdma_req->rsp.wr.wr_id = (uintptr_t)&rdma_req->rdma_wr;
 		rdma_req->rsp.wr.next = NULL;
 		rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 		rdma_req->rsp.wr.send_flags = IBV_SEND_SIGNALED;
@@ -752,7 +774,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_req->rsp.wr.num_sge = SPDK_COUNTOF(rdma_req->rsp.sgl);
 
 		/* Set up memory for data buffers */
-		rdma_req->data.wr.wr_id = (uint64_t)rdma_req;
+		rdma_req->data.wr.wr_id = (uint64_t)&rdma_req->rdma_wr;
 		rdma_req->data.wr.next = NULL;
 		rdma_req->data.wr.send_flags = IBV_SEND_SIGNALED;
 		rdma_req->data.wr.sg_list = rdma_req->data.sgl;
@@ -2093,11 +2115,6 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 		}
 	}
 
-	if (rqpair->qpair_disconnected) {
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return;
-	}
-
 	/* Do not process newly received commands if qp is in ERROR state,
 	 * wait till the recovery is complete.
 	 */
@@ -2615,20 +2632,62 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
+
+static int
+spdk_nvmf_rdma_qpair_drain(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	struct ibv_recv_wr recv_wr = {};
+	struct ibv_recv_wr *bad_recv_wr;
+	struct ibv_send_wr send_wr = {};
+	struct ibv_send_wr *bad_send_wr;
+	int rc;
+
+	rqpair->drain_recv_wr.type = RDMA_WR_TYPE_DRAIN_RECV;
+	recv_wr.wr_id = (uintptr_t)&rqpair->drain_recv_wr;
+	rc = ibv_post_recv(rqpair->cm_id->qp, &recv_wr, &bad_recv_wr);
+	if (rc) {
+		SPDK_ERRLOG("Failed to post dummy receive WR, errno %d\n", errno);
+		return -1;
+	}
+	rqpair->drain_send_wr.type = RDMA_WR_TYPE_DRAIN_SEND;
+	send_wr.wr_id = (uintptr_t)&rqpair->drain_send_wr;
+	send_wr.opcode = IBV_WR_SEND;
+	rc = ibv_post_send(rqpair->cm_id->qp, &send_wr, &bad_send_wr);
+	if (rc) {
+		SPDK_ERRLOG("Failed to post dummy send WR, errno %d\n", errno);
+		return -1;
+	}
+	return 0;
+}
+
 static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	int rc;
 
-	spdk_nvmf_rdma_qpair_destroy(rqpair);
+	if (!(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING)) {
+		rqpair->disconnect_flags |= RDMA_QP_DISCONNECTING;
+		if (IBV_QPS_ERR != rqpair->ibv_attr.qp_state) {
+			spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
+		}
+		rc = spdk_nvmf_rdma_qpair_drain(rqpair);
+		if (rc) {
+			SPDK_ERRLOG("Failed to drain QP %d\n", rqpair->qpair.qid);
+			assert(false);
+		}
+	}
 }
 
 static struct spdk_nvmf_rdma_request *
 get_rdma_req_from_wc(struct ibv_wc *wc)
 {
 	struct spdk_nvmf_rdma_request *rdma_req;
+	struct spdk_nvmf_rdma_wr *rdma_wr;
 
-	rdma_req = (struct spdk_nvmf_rdma_request *)wc->wr_id;
+	rdma_wr = (struct spdk_nvmf_rdma_wr *)wc->wr_id;
+	assert(rdma_wr->type == RDMA_WR_TYPE_REQ);
+	rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, rdma_wr);
 	assert(rdma_req != NULL);
 
 #ifdef DEBUG
@@ -2646,10 +2705,13 @@ static struct spdk_nvmf_rdma_recv *
 get_rdma_recv_from_wc(struct ibv_wc *wc)
 {
 	struct spdk_nvmf_rdma_recv *rdma_recv;
+	struct spdk_nvmf_rdma_wr *rdma_wr;
 
 	assert(wc->byte_len >= sizeof(struct spdk_nvmf_capsule_cmd));
 
-	rdma_recv = (struct spdk_nvmf_rdma_recv *)wc->wr_id;
+	rdma_wr = (struct spdk_nvmf_rdma_wr *)wc->wr_id;
+	assert(rdma_wr->type == RDMA_WR_TYPE_RECV);
+	rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
 	assert(rdma_recv != NULL);
 
 #ifdef DEBUG
@@ -2670,6 +2732,34 @@ spdk_nvmf_rdma_req_is_completing(struct spdk_nvmf_rdma_request *rdma_req)
 	       rdma_req->state == RDMA_REQUEST_STATE_COMPLETING;
 }
 #endif
+
+static void
+spdk_nvmf_rdma_handle_wr_flush_error(struct ibv_wc *wc)
+{
+	struct spdk_nvmf_rdma_wr	*rdma_wr;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+
+	rdma_wr = (struct spdk_nvmf_rdma_wr *)wc->wr_id;
+	if (rdma_wr->type == RDMA_WR_TYPE_DRAIN_RECV) {
+		rqpair = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_qpair, drain_recv_wr);
+		assert(rqpair->cm_id->qp->qp_num == wc->qp_num);
+		assert(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING);
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP RECV %u (%p)\n", rqpair->qpair.qid, rqpair);
+		rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
+		if (rqpair->disconnect_flags & RDMA_QP_SEND_DRAINED) {
+			spdk_nvmf_rdma_qpair_destroy(rqpair);
+		}
+	} else if (rdma_wr->type == RDMA_WR_TYPE_DRAIN_SEND) {
+		rqpair = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_qpair, drain_send_wr);
+		assert(rqpair->cm_id->qp->qp_num == wc->qp_num);
+		assert(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING);
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP SEND %u (%p)\n", rqpair->qpair.qid, rqpair);
+		rqpair->disconnect_flags |= RDMA_QP_SEND_DRAINED;
+		if (rqpair->disconnect_flags & RDMA_QP_RECV_DRAINED) {
+			spdk_nvmf_rdma_qpair_destroy(rqpair);
+		}
+	}
+}
 
 static int
 spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
@@ -2694,9 +2784,17 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	for (i = 0; i < reaped; i++) {
 		/* Handle error conditions */
 		if (wc[i].status) {
+			error = true;
+
+			if (wc[i].status == IBV_WC_WR_FLUSH_ERR) {
+				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "WR flush error on CQ %p, Request 0x%lu\n",
+					      rpoller->cq, wc[i].wr_id);
+				spdk_nvmf_rdma_handle_wr_flush_error(&wc[i]);
+				continue;
+			}
+
 			SPDK_WARNLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
 				     rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
-			error = true;
 
 			switch (wc[i].opcode) {
 			case IBV_WC_SEND:
