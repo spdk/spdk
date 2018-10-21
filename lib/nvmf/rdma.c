@@ -189,6 +189,8 @@ enum spdk_nvmf_rdma_wr_type {
 	RDMA_WR_TYPE_RECV,
 	RDMA_WR_TYPE_SEND,
 	RDMA_WR_TYPE_DATA,
+	RDMA_WR_TYPE_DRAIN_SEND,
+	RDMA_WR_TYPE_DRAIN_RECV
 };
 
 struct spdk_nvmf_rdma_wr {
@@ -237,8 +239,16 @@ struct spdk_nvmf_rdma_request {
 		void				*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
 	} data;
 
+	struct spdk_nvmf_rdma_wr		rdma_wr;
+
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
+};
+
+enum spdk_nvmf_rdma_qpair_disconnect_flags {
+	RDMA_QP_DISCONNECTING		= 1,
+	RDMA_QP_RECV_DRAINED		= 1 << 1,
+	RDMA_QP_SEND_DRAINED		= 1 << 2
 };
 
 struct spdk_nvmf_rdma_qpair {
@@ -303,7 +313,9 @@ struct spdk_nvmf_rdma_qpair {
 	struct ibv_qp_init_attr			ibv_init_attr;
 	struct ibv_qp_attr			ibv_attr;
 
-	bool					qpair_disconnected;
+	uint32_t				disconnect_flags;
+	struct spdk_nvmf_rdma_wr		drain_send_wr;
+	struct spdk_nvmf_rdma_wr		drain_recv_wr;
 
 	/* Reference counter for how many unprocessed messages
 	 * from other threads are currently outstanding. The
@@ -435,9 +447,6 @@ spdk_nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
 	return new_state;
 }
 
-#if 0
-/* This gets used again in the future */
-
 static const char *str_ibv_qp_state[] = {
 	"IBV_QPS_RESET",
 	"IBV_QPS_INIT",
@@ -518,8 +527,6 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 	return 0;
 }
 
-#endif
-
 static void
 spdk_nvmf_rdma_request_set_state(struct spdk_nvmf_rdma_request *rdma_req,
 				 enum spdk_nvmf_rdma_request_state state)
@@ -575,15 +582,17 @@ spdk_nvmf_rdma_cur_queue_depth(struct spdk_nvmf_rdma_qpair *rqpair)
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair->cm_id, 0);
+	int qd;
 
-	if (spdk_nvmf_rdma_cur_queue_depth(rqpair)) {
-		rqpair->qpair_disconnected = true;
+	if (rqpair->refcnt == 0) {
 		return;
 	}
 
-	if (rqpair->refcnt > 0) {
-		return;
+	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair->cm_id, 0);
+
+	qd = spdk_nvmf_rdma_cur_queue_depth(rqpair);
+	if (qd != 0) {
+		SPDK_WARNLOG("Destroying qpair when queue depth is %d\n", qd);
 	}
 
 	if (rqpair->poller) {
@@ -640,8 +649,9 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair->ibv_init_attr.send_cq		= rqpair->poller->cq;
 	rqpair->ibv_init_attr.recv_cq		= rqpair->poller->cq;
 	rqpair->ibv_init_attr.cap.max_send_wr	= rqpair->max_queue_depth *
-			2; /* SEND, READ, and WRITE operations */
-	rqpair->ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
+			2 + 1; /* SEND, READ, and WRITE operations + dummy drain WR */
+	rqpair->ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth +
+			1; /* RECV operations + dummy drain WR */
 	rqpair->ibv_init_attr.cap.max_send_sge	= rqpair->max_sge;
 	rqpair->ibv_init_attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
@@ -2450,8 +2460,40 @@ static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	struct ibv_recv_wr recv_wr = {};
+	struct ibv_recv_wr *bad_recv_wr;
+	struct ibv_send_wr send_wr = {};
+	struct ibv_send_wr *bad_send_wr;
+	int rc;
 
-	spdk_nvmf_rdma_qpair_destroy(rqpair);
+	if (rqpair->disconnect_flags & RDMA_QP_DISCONNECTING) {
+		return;
+	}
+
+	rqpair->disconnect_flags |= RDMA_QP_DISCONNECTING;
+
+	if (rqpair->ibv_attr.qp_state != IBV_QPS_ERR) {
+		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
+	}
+
+	rqpair->drain_recv_wr.type = RDMA_WR_TYPE_DRAIN_RECV;
+	recv_wr.wr_id = (uintptr_t)&rqpair->drain_recv_wr;
+	rc = ibv_post_recv(rqpair->cm_id->qp, &recv_wr, &bad_recv_wr);
+	if (rc) {
+		SPDK_ERRLOG("Failed to post dummy receive WR, errno %d\n", errno);
+		assert(false);
+		return;
+	}
+
+	rqpair->drain_send_wr.type = RDMA_WR_TYPE_DRAIN_SEND;
+	send_wr.wr_id = (uintptr_t)&rqpair->drain_send_wr;
+	send_wr.opcode = IBV_WR_SEND;
+	rc = ibv_post_send(rqpair->cm_id->qp, &send_wr, &bad_send_wr);
+	if (rc) {
+		SPDK_ERRLOG("Failed to post dummy send WR, errno %d\n", errno);
+		assert(false);
+		return;
+	}
 }
 
 #ifdef DEBUG
@@ -2490,8 +2532,9 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 		/* Handle error conditions */
 		if (wc[i].status) {
-			SPDK_WARNLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				     rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on CQ %p, Request 0x%lu (%d): %s\n",
+				      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+
 			error = true;
 
 			switch (rdma_wr->type) {
@@ -2519,6 +2562,26 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
 				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 				break;
+			case RDMA_WR_TYPE_DRAIN_RECV:
+				rqpair = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_qpair, drain_recv_wr);
+				assert(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING);
+				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP RECV %u (%p)\n", rqpair->qpair.qid, rqpair);
+				rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
+				if (rqpair->disconnect_flags & RDMA_QP_SEND_DRAINED) {
+					spdk_nvmf_rdma_qpair_destroy(rqpair);
+				}
+				/* Continue so that this does not trigger the disconnect path below. */
+				continue;
+			case RDMA_WR_TYPE_DRAIN_SEND:
+				rqpair = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_qpair, drain_send_wr);
+				assert(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING);
+				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP SEND %u (%p)\n", rqpair->qpair.qid, rqpair);
+				rqpair->disconnect_flags |= RDMA_QP_SEND_DRAINED;
+				if (rqpair->disconnect_flags & RDMA_QP_RECV_DRAINED) {
+					spdk_nvmf_rdma_qpair_destroy(rqpair);
+				}
+				/* Continue so that this does not trigger the disconnect path below. */
+				continue;
 			default:
 				SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
 				continue;
