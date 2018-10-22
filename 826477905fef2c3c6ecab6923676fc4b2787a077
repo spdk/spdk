@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39abe8de_a334a7cc",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-22T23:16:30Z",
+      "side": 1,
+      "message": "You can just call spdk_bdev_get_block_size() anywhere that you\u0027d use this length member because you already have a pointer to the bdev. I think it\u0027s clearer to re-call the function when you need the value.",
+      "revId": "826477905fef2c3c6ecab6923676fc4b2787a077",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
