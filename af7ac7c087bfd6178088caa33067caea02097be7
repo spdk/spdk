@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8f99206_bfea4128",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1874,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-22T15:27:27Z",
+      "side": 1,
+      "message": "How about keeping NVME_CTRLR_STATE_INIT as the first state, and sleep 2 seconds in this state, make existing NVME_CTRLR_STATE_INIT to NVME_CTRLR_STATE_INIT_START state.  There is spdk_nvme_ctrlr_reset() function also set to NVME_CTRLR_STATE_INIT.",
+      "revId": "af7ac7c087bfd6178088caa33067caea02097be7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
