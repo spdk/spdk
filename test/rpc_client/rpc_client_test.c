@@ -34,6 +34,9 @@
 #include "spdk/stdinc.h"
 #include "spdk/event.h"
 #include "spdk/jsonrpc.h"
+#include "spdk/util.h"
+#include "spdk/rpc.h"
+
 
 #define RPC_MAX_METHODS 200
 
@@ -117,20 +120,79 @@ out:
 	return rc;
 }
 
+static void
+rpc_test_method_startup(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "rpc_test_method_startup(): Method body not implemented");
+}
+SPDK_RPC_REGISTER("test_method_startup", rpc_test_method_startup, SPDK_RPC_STARTUP)
+
+static void
+rpc_test_method_runtime(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "rpc_test_method_runtime(): Method body not implemented");
+}
+SPDK_RPC_REGISTER("test_method_runtime", rpc_test_method_runtime, SPDK_RPC_RUNTIME)
+
+volatile int rpc_server_poll_done;
+
+static void *
+rpc_server_poll(void *arg)
+{
+
+	while (!rpc_server_poll_done) {
+		spdk_rpc_accept();
+		usleep(1000);
+	}
+
+	return NULL;
+}
+
 int main(int argc, char **argv)
 {
+	pthread_t tid;
+	int tid_valid;
 	struct spdk_jsonrpc_client *client;
 	int rc;
 	char *method_name = "get_rpc_methods";
 
-	client = spdk_jsonrpc_client_connect(g_rpcsock_addr, g_addr_family);
-	if (!client) {
+	rc = spdk_rpc_listen(g_rpcsock_addr);
+	if (rc) {
+		fprintf(stderr, "spdk_rpc_listen() failed: %d\n", rc);
 		return EXIT_FAILURE;
 	}
 
-	rc = spdk_jsonrpc_client_check_rpc_method(client, method_name);
+	tid_valid = pthread_create(&tid, NULL, rpc_server_poll, NULL);
+	if (!tid_valid) {
+		fprintf(stderr, "pthread_create() failed: %d\n", tid_valid);
+		goto out;
+	}
 
+	client = spdk_jsonrpc_client_connect(g_rpcsock_addr, g_addr_family);
+
+	if (!client) {
+		fprintf(stderr, "spdk_jsonrpc_client_connect() failed: %d\n", errno);
+		rc = -1;
+		goto out;
+	}
+
+	rc = spdk_jsonrpc_client_check_rpc_method(client, method_name);
+	if (rc) {
+		fprintf(stderr, "spdk_jsonrpc_client_connect() failed: %d\n", errno);
+		goto out;
+	}
+
+out:
 	spdk_jsonrpc_client_close(client);
+
+	if (tid_valid == 0) {
+		rpc_server_poll_done = 1;
+		pthread_join(tid, NULL);
+	}
+
+	spdk_rpc_close();
 
 	return rc ? EXIT_FAILURE : 0;
 }
