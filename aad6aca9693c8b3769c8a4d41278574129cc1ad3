@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f8dfbea_e8669c5a",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-22T22:35:20Z",
+      "side": 1,
+      "message": "Shouldn we change last parameter to MSG_DONTWAIT?\n\nI don\u0027t see where we mark client-\u003esockfd as O_NONBLOCK so each of these calls would be blocking.  I guess this was OK for the original code which is running in a blocking environment.  But if this is going into an SPDK poller, do we want it to be non-blocking?\n\nOr maybe we just want this to be blocking for now, so you don\u0027t have to worry about out-of-order RPC completions.  I\u0027m fine with that.  Just wanted to see what your thoughts were on this.",
+      "revId": "aad6aca9693c8b3769c8a4d41278574129cc1ad3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58424a44_cc8a85da",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-22T22:35:20Z",
+      "side": 1,
+      "message": "I was concerned about case where user calls spdk_json_client_recv_response which completed an RPC, but then user calls this function again before they call get_response().  But I see that spdk_jsonrpc_parse_response() will return -ENOSPC in that case so this should be OK.",
+      "revId": "aad6aca9693c8b3769c8a4d41278574129cc1ad3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b0d317f_e1747727",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-22T22:35:20Z",
+      "side": 1,
+      "message": "I don\u0027t think we should explicitly set errno here.  Returning NULL is sufficient in my opinion.",
+      "revId": "aad6aca9693c8b3769c8a4d41278574129cc1ad3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
