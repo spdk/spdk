@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "cf3376bb_eeb893b3",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-22T12:59:52Z",
+      "side": 1,
+      "message": "agree w/separate patch. enomem queuing needs to be added throughout",
+      "parentUuid": "262f1dd7_e73cede2",
+      "range": {
+        "startLine": 424,
+        "startChar": 10,
+        "endLine": 424,
+        "endChar": 11
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8cd94d20_2cbe3199",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -59,6 +83,30 @@
       "writtenOn": "2018-10-18T10:02:55Z",
       "side": 1,
       "message": "Why not use some errno flag instead of hard coded number?",
+      "range": {
+        "startLine": 428,
+        "startChar": 8,
+        "endLine": 428,
+        "endChar": 10
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66981f45_7ac4deb1",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-22T12:59:52Z",
+      "side": 1,
+      "message": "sure",
+      "parentUuid": "8cd94d20_2cbe3199",
       "range": {
         "startLine": 428,
         "startChar": 8,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "f73c1583_d76003ae",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-22T12:59:52Z",
+      "side": 1,
+      "message": "thanks",
+      "parentUuid": "66a91014_73207d19",
+      "range": {
+        "startLine": 432,
+        "startChar": 15,
+        "endLine": 432,
+        "endChar": 22
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d0d19ffb_1f6ad72b",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -105,6 +177,24 @@
       "writtenOn": "2018-10-18T21:51:07Z",
       "side": 1,
       "message": "Instead of using g_reset_io, which is global, use crypto_ch-\u003eiter as the flag to determine if you\u0027re in a reset and failing all I/O. You don\u0027t actually need g_reset_io at all and can delete it.",
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c7d6317_5500f511",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-22T12:59:52Z",
+      "side": 1,
+      "message": "I actually use g_reset_io to store the reset bdev_io *.  I\u0027ll take another look though and see if there\u0027s a cleaner way to do it.  One thing I don\u0027t think about how this evolved is actually this part, at one point in the code I have to overload one of my ctx fields to keep track of the reset IOs so maybe I can kill 2 birds with one stone.",
+      "parentUuid": "d0d19ffb_1f6ad72b",
       "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -157,6 +247,30 @@
     },
     {
       "key": {
+        "uuid": "d035105d_afae14ae",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-22T12:59:52Z",
+      "side": 1,
+      "message": "This is most defiantly needed and if you read my comment to Ben, this is the part I don\u0027t really like.  The original IO was the reset from above so coming into this routine orig_ctx-\u003eorig_io would be the cb_arg which would represent what is now stored in g_reset_io. Now I need to save off the bdev_io for the reset that this layer issued which is the one that just completed so here bdev_io represents that IO.  That\u0027s why the comment says that it\u0027s overloading this field, its no longer the orig IO (reset from above) but instead the reset that we issued.  If this was confusing in review, it will most likely be more confusing down the road so I\u0027ll come up with a better solution, probably by adding another ctx field, maybe on that says \"reset_rcvd\" and another \"reset_sent\" or something.",
+      "parentUuid": "21198831_7a64d741",
+      "range": {
+        "startLine": 830,
+        "startChar": 2,
+        "endLine": 833,
+        "endChar": 30
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8117c3d9_e39bcaa6",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -192,6 +306,30 @@
       "side": 1,
       "message": "The generic bdev layer guarantees that only one reset will come down at a time.",
       "parentUuid": "8117c3d9_e39bcaa6",
+      "range": {
+        "startLine": 946,
+        "startChar": 2,
+        "endLine": 946,
+        "endChar": 23
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab38c410_c519fbf7",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-22T12:59:52Z",
+      "side": 1,
+      "message": "thanks Ben, that\u0027s what I was about to say :) . Note that I\u0027m going to store this in a new context field to get rid of the global and avoid overloading one of my other fields (see earlier review comment)",
+      "parentUuid": "63dd2de7_cec4d8d6",
       "range": {
         "startLine": 946,
         "startChar": 2,
