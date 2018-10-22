@@ -40,7 +40,9 @@ APP = rpc_client_test
 
 C_SRCS := rpc_client_test.c
 
-SPDK_LIB_LIST = jsonrpc json log util
+# FIXME: sadly there is some kind of recurent dependency and adding jsonrpc twice is mandatory here to avoid
+# FIXME: linker failure
+SPDK_LIB_LIST = jsonrpc json rpc jsonrpc log util
 
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
