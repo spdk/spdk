@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "560f96eb_bbd0a585",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-22T12:51:23Z",
+      "side": 1,
+      "message": "This is copy-paste of the bdev_nvme_config_json() lines 1779 to 1795 If you wish to provide these informations for nvme controller please extract these lines to separate function and use the same code here and in bdev_nvme_config_json().\n\nFrom other hand I think that you should modify or extract most of the code from bdev_nvme_dump_info_json() to new function as this (the bdev_nvme_dump_info_json) exists to dump all nvme controller information.",
+      "range": {
+        "startLine": 281,
+        "startChar": 1,
+        "endLine": 298,
+        "endChar": 2
+      },
+      "revId": "19667af7321397b0365090378416c3e72470b4fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
