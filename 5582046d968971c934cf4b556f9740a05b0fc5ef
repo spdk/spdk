@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04c96e57_d5140f91",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1245,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T20:25:23Z",
+      "side": 1,
+      "message": "The following will be simpler. I didn\u0027t find specific reason to keep the flow used in iscsi.c.\n\nif (pdu-\u003ebhs.opcode !\u003d LOGIN_RSP) {\n  if (conn-\u003eheader_digest) {\n    snip\n  }\n\n  if (conn-\u003edata_digest \u0026\u0026 DGET(pdu-\u003ebhs.data_segment_len) !\u003d 0) {\n    snip\n  }\n}",
+      "revId": "5582046d968971c934cf4b556f9740a05b0fc5ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
