@@ -41,7 +41,8 @@ DIRS-$(CONFIG_SHARED) += shared_lib
 DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
 
-.PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk mk/cc.mk cc_version cxx_version
+.PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk mk/cc.mk \
+	cc_version cxx_version .libs_only_other .ldflags ldflags
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
