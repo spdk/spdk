@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e3d66d0_6f855821",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-22T20:42:04Z",
+      "side": 1,
+      "message": "first parameter can be \u0026nvme_ctrlr-\u003etrid (slightly shorter)",
+      "revId": "cd53c9247dd7d526d219d08b1d2aff13bec333d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
