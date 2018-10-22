@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "423bb9d0_4f18cc9e",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T07:11:30Z",
+      "side": 1,
+      "message": "SPDK_BDEV_BUF_POOL_ALIGNMENT ?",
+      "range": {
+        "startLine": 54,
+        "startChar": 8,
+        "endLine": 54,
+        "endChar": 32
+      },
+      "revId": "42d2bdd5e93e8cdeac53ca0ca648b4a69c232e8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30ad192c_814b0f5e",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T07:11:30Z",
+      "side": 1,
+      "message": "can be removed? or replace by \"which is\" ?",
+      "range": {
+        "startLine": 490,
+        "startChar": 6,
+        "endLine": 490,
+        "endChar": 15
+      },
+      "revId": "42d2bdd5e93e8cdeac53ca0ca648b4a69c232e8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fca2003_a05335d2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T07:11:30Z",
+      "side": 1,
+      "message": "alignment should be checked to be power of 2 by spdk_u32_is_pow2?",
+      "range": {
+        "startLine": 478,
+        "startChar": 44,
+        "endLine": 478,
+        "endChar": 53
+      },
+      "revId": "42d2bdd5e93e8cdeac53ca0ca648b4a69c232e8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
