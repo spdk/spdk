@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "ae6a24f8_0f88d40a",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 16
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-22T20:49:28Z",
+      "side": 1,
+      "message": "Sure, I will do that.\n\nAnother idea is: maybe introduce rpm build time option for that?",
+      "parentUuid": "a66be210_904a4448",
+      "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "baa4e1a5_b06f995c",
         "filename": "pkg/fedora28.spec",
         "patchSetId": 16
@@ -53,6 +71,24 @@
       "writtenOn": "2018-10-19T14:55:50Z",
       "side": 1,
       "message": "And so change:\n\n--with-dpdk\u003d%{dpdk_location}/x86_64-default-linuxapp-gcc \\",
+      "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ae2102b_994e24f5",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 16
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-22T20:49:28Z",
+      "side": 1,
+      "message": "Ok, will do that.",
+      "parentUuid": "baa4e1a5_b06f995c",
       "revId": "bc302dc528a649943951a7ad39bfa5f8b94629da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
