@@ -389,6 +389,11 @@ struct spdk_nvme_ns {
  */
 enum nvme_ctrlr_state {
 	/**
+	 * Wait before initializing the controller.
+	 */
+	NVME_CTRLR_STATE_INIT_DELAY,
+
+	/**
 	 * Controller has not been initialized yet.
 	 */
 	NVME_CTRLR_STATE_INIT,

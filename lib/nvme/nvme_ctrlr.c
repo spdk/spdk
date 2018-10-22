@@ -608,6 +608,8 @@ static const char *
 nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 {
 	switch (state) {
+	case NVME_CTRLR_STATE_INIT_DELAY:
+		return "delay init";
 	case NVME_CTRLR_STATE_INIT:
 		return "init";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
@@ -1869,6 +1871,22 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	 * Check if the current initialization step is done or has timed out.
 	 */
 	switch (ctrlr->state) {
+	case NVME_CTRLR_STATE_INIT_DELAY:
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, ready_timeout_in_ms);
+		/*
+		 * Controller may need some delay before it's enabled.
+		 *
+		 * This is a workaround for an issue where the PCIe-attached NVMe controller
+		 * is not ready after VFIO reset. We delay the initialization rather than the
+		 * enabling itself, because this is required only for the very first enabling
+		 * - directly after a VFIO reset.
+		 *
+		 * TODO: Figure out what is actually going wrong.
+		 */
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Adding 500 ms delay before initializing the controller\n");
+		ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (500 * spdk_get_ticks_hz() / 1000);
+		break;
+
 	case NVME_CTRLR_STATE_INIT:
 		/* Begin the hardware initialization by making sure the controller is disabled. */
 		if (cc.bits.en) {
@@ -2113,7 +2131,12 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
+	if (ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT_DELAY, NVME_TIMEOUT_INFINITE);
+	} else {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
+	}
+
 	ctrlr->flags = 0;
 	ctrlr->free_io_qids = NULL;
 	ctrlr->is_resetting = false;
