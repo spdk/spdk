@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00b59736_ab094fa7",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-22T12:26:26Z",
+      "side": 1,
+      "message": "I have impression that we are getting too verbose here and there. Such long description should be placed in commit message rather that in code and here just brief comment would should be suficien. Lets keep this in mind for the future patches.",
+      "range": {
+        "startLine": 722,
+        "startChar": 0,
+        "endLine": 732,
+        "endChar": 5
+      },
+      "revId": "ea8d3b39179c36aa8c04cddded1d452fa8b2e1c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
