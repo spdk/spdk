@@ -221,7 +221,7 @@ spdk_mempool_get(struct spdk_mempool *_mp)
 		return NULL;
 	}
 
-	if (posix_memalign(&buf, 64, 0x1000)) {
+	if (posix_memalign(&buf, 64, 0x10000)) {
 		return NULL;
 	} else {
 		if (mp) {
