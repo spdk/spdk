@@ -2270,31 +2270,6 @@ _spdk_nvmf_rdma_qp_error(void *arg)
 }
 
 static void
-_spdk_nvmf_rdma_qp_last_wqe(void *arg)
-{
-	struct spdk_nvmf_rdma_qpair	*rqpair = arg;
-	enum ibv_qp_state		state;
-
-	spdk_nvmf_rdma_qpair_dec_refcnt(rqpair);
-
-	state = rqpair->ibv_attr.qp_state;
-	if (state != IBV_QPS_ERR) {
-		/* Error was already recovered */
-		return;
-	}
-
-	/* Clear out the states that are safe to clear any time, plus the
-	 * RDMA data transfer states. */
-	_spdk_nvmf_rdma_qp_cleanup_safe_states(rqpair);
-
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_COMPLETING);
-
-	spdk_nvmf_rdma_qpair_recover(rqpair);
-}
-
-static void
 spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 {
 	int				rc;
@@ -2323,12 +2298,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
-		rqpair = event.element.qp->qp_context;
-		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
-				  (uintptr_t)rqpair->cm_id, event.event_type);
-		spdk_nvmf_rdma_update_ibv_state(rqpair);
-		spdk_nvmf_rdma_qpair_inc_refcnt(rqpair);
-		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_last_wqe, rqpair);
+		/* This event only occurs for shared receive queues, which are not currently supported. */
 		break;
 	case IBV_EVENT_SQ_DRAINED:
 		/* This event occurs frequently in both error and non-error states.
