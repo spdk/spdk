@@ -150,7 +150,11 @@ function create_bdev_subsystem_config() {
 	$rpc_py construct_malloc_bdev 8 1024 --name Malloc2
 	if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 		$rpc_py construct_malloc_bdev 8 1024 --name Malloc3
-		$rpc_py construct_crypto_bdev -b Malloc3 -c CryMalloc3 -d crypto_aesni_mb -k 0123456789123456
+		if [ $(lspci -d:37c8 | wc -l) -eq 0 ]; then
+			$rpc_py construct_crypto_bdev -b Malloc3 -c CryMalloc3 -d crypto_aesni_mb -k 0123456789123456
+		else
+			$rpc_py construct_crypto_bdev -b Malloc3 -c CryMalloc3 -d crypto_qat -k 0123456789123456
+		fi
 	fi
 	$rpc_py construct_error_bdev Malloc2
 	if [ $(uname -s) = Linux ]; then
