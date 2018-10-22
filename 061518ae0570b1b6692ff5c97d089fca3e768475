@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15735ece_165cb21d",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T01:01:32Z",
+      "side": 1,
+      "message": "can be removed.",
+      "range": {
+        "startLine": 126,
+        "startChar": 2,
+        "endLine": 126,
+        "endChar": 9
+      },
+      "revId": "061518ae0570b1b6692ff5c97d089fca3e768475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a285e52_6fa3a5f9",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T01:01:32Z",
+      "side": 1,
+      "message": "can be removed.",
+      "range": {
+        "startLine": 137,
+        "startChar": 1,
+        "endLine": 137,
+        "endChar": 19
+      },
+      "revId": "061518ae0570b1b6692ff5c97d089fca3e768475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61249c7d_0af1aa82",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T01:01:32Z",
+      "side": 1,
+      "message": "can be removed.",
+      "range": {
+        "startLine": 153,
+        "startChar": 1,
+        "endLine": 153,
+        "endChar": 58
+      },
+      "revId": "061518ae0570b1b6692ff5c97d089fca3e768475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7417ef55_222165f6",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T01:01:32Z",
+      "side": 1,
+      "message": "they should be changed to hello_context-\u003eoffset and hello_context-\u003elength, respectively.",
+      "range": {
+        "startLine": 154,
+        "startChar": 29,
+        "endLine": 154,
+        "endChar": 40
+      },
+      "revId": "061518ae0570b1b6692ff5c97d089fca3e768475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56b22b3c_7612b3aa",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T01:01:32Z",
+      "side": 1,
+      "message": "moving this to before bdev_close() will be better. They may not have any ordering dependency but the change will improve consistency.",
+      "range": {
+        "startLine": 180,
+        "startChar": 2,
+        "endLine": 180,
+        "endChar": 54
+      },
+      "revId": "061518ae0570b1b6692ff5c97d089fca3e768475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfb41c27_a1d96f07",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T01:01:32Z",
+      "side": 1,
+      "message": "can be removed.",
+      "range": {
+        "startLine": 182,
+        "startChar": 2,
+        "endLine": 182,
+        "endChar": 9
+      },
+      "revId": "061518ae0570b1b6692ff5c97d089fca3e768475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
