@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfdf9c26_949227b9",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T12:26:48Z",
+      "side": 1,
+      "message": "Queueing or queuing",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 114,
+        "endChar": 2
+      },
+      "revId": "f90a35c3574a34cacddc21dd05ae103e78858b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1476eecc_723e4269",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-22T12:26:48Z",
+      "side": 1,
+      "message": "Queueing or queuing",
+      "range": {
+        "startLine": 168,
+        "startChar": 0,
+        "endLine": 168,
+        "endChar": 2
+      },
+      "revId": "f90a35c3574a34cacddc21dd05ae103e78858b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
