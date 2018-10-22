@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73921cca_d7c7b46b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-22T12:56:39Z",
+      "side": 1,
+      "message": "I think this should be at most NOTICE but I would preffere DEBUG here.",
+      "range": {
+        "startLine": 888,
+        "startChar": 7,
+        "endLine": 888,
+        "endChar": 14
+      },
+      "revId": "7f3b631100dc932adf40e3671ead82227657f66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
