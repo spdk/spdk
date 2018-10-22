@@ -546,6 +546,35 @@ bdev_nvme_get_io_channel(void *ctx)
 	return spdk_get_io_channel(nvme_bdev->nvme_ctrlr->ctrlr);
 }
 
+void
+spdk_bdev_nvme_dump_trid_json(struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
+{
+	const char *trtype_str;
+	const char *adrfam_str;
+
+	trtype_str = spdk_nvme_transport_id_trtype_str(trid->trtype);
+	if (trtype_str) {
+		spdk_json_write_named_string(w, "trtype", trtype_str);
+	}
+
+	adrfam_str = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
+	if (adrfam_str) {
+		spdk_json_write_named_string(w, "adrfam", adrfam_str);
+	}
+
+	if (trid->traddr[0] != '\0') {
+		spdk_json_write_named_string(w, "traddr", trid->traddr);
+	}
+
+	if (trid->trsvcid[0] != '\0') {
+		spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+	}
+
+	if (trid->subnqn[0] != '\0') {
+		spdk_json_write_named_string(w, "subnqn", trid->subnqn);
+	}
+}
+
 static int
 bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
@@ -555,8 +584,6 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct spdk_nvme_ns *ns;
 	union spdk_nvme_vs_register vs;
 	union spdk_nvme_csts_register csts;
-	const char *trtype_str;
-	const char *adrfam_str;
 	char buf[128];
 
 	cdata = spdk_nvme_ctrlr_get_data(nvme_bdev->nvme_ctrlr->ctrlr);
@@ -572,27 +599,7 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_object_begin(w, "trid");
 
-	trtype_str = spdk_nvme_transport_id_trtype_str(nvme_ctrlr->trid.trtype);
-	if (trtype_str) {
-		spdk_json_write_named_string(w, "trtype", trtype_str);
-	}
-
-	adrfam_str = spdk_nvme_transport_id_adrfam_str(nvme_ctrlr->trid.adrfam);
-	if (adrfam_str) {
-		spdk_json_write_named_string(w, "adrfam", adrfam_str);
-	}
-
-	if (nvme_ctrlr->trid.traddr[0] != '\0') {
-		spdk_json_write_named_string(w, "traddr", nvme_ctrlr->trid.traddr);
-	}
-
-	if (nvme_ctrlr->trid.trsvcid[0] != '\0') {
-		spdk_json_write_named_string(w, "trsvcid", nvme_ctrlr->trid.trsvcid);
-	}
-
-	if (nvme_ctrlr->trid.subnqn[0] != '\0') {
-		spdk_json_write_named_string(w, "subnqn", nvme_ctrlr->trid.subnqn);
-	}
+	spdk_bdev_nvme_dump_trid_json(&nvme_ctrlr->trid, w);
 
 	spdk_json_write_object_end(w);
 
@@ -1743,7 +1750,6 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 {
 	struct nvme_ctrlr		*nvme_ctrlr;
 	struct spdk_nvme_transport_id	*trid;
-	const char			*adrfam;
 	const char			*action;
 
 	if (g_opts.action_on_timeout == SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET) {
@@ -1777,21 +1783,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "name", nvme_ctrlr->name);
-		spdk_json_write_named_string(w, "trtype", spdk_nvme_transport_id_trtype_str(trid->trtype));
-		spdk_json_write_named_string(w, "traddr", trid->traddr);
-
-		adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
-		if (adrfam) {
-			spdk_json_write_named_string(w, "adrfam", adrfam);
-		}
-
-		if (trid->trsvcid[0] != '\0') {
-			spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
-		}
-
-		if (trid->subnqn[0] != '\0') {
-			spdk_json_write_named_string(w, "subnqn", trid->subnqn);
-		}
+		spdk_bdev_nvme_dump_trid_json(trid, w);
 
 		spdk_json_write_object_end(w);
 
