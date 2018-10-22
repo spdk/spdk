@@ -995,172 +995,6 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	return 0;
 }
 
-static void
-_nvmf_rdma_disconnect(void *ctx)
-{
-	struct spdk_nvmf_qpair *qpair = ctx;
-	struct spdk_nvmf_rdma_qpair *rqpair;
-
-	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
-	spdk_nvmf_rdma_qpair_dec_refcnt(rqpair);
-
-	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-}
-
-static void
-_nvmf_rdma_disconnect_retry(void *ctx)
-{
-	struct spdk_nvmf_qpair *qpair = ctx;
-	struct spdk_nvmf_poll_group *group;
-
-	/* Read the group out of the qpair. This is normally set and accessed only from
-	 * the thread that created the group. Here, we're not on that thread necessarily.
-	 * The data member qpair->group begins it's life as NULL and then is assigned to
-	 * a pointer and never changes. So fortunately reading this and checking for
-	 * non-NULL is thread safe in the x86_64 memory model. */
-	group = qpair->group;
-
-	if (group == NULL) {
-		/* The qpair hasn't been assigned to a group yet, so we can't
-		 * process a disconnect. Send a message to ourself and try again. */
-		spdk_thread_send_msg(spdk_get_thread(), _nvmf_rdma_disconnect_retry, qpair);
-		return;
-	}
-
-	spdk_thread_send_msg(group->thread, _nvmf_rdma_disconnect, qpair);
-}
-
-static int
-nvmf_rdma_disconnect(struct rdma_cm_event *evt)
-{
-	struct spdk_nvmf_qpair		*qpair;
-	struct spdk_nvmf_rdma_qpair	*rqpair;
-
-	if (evt->id == NULL) {
-		SPDK_ERRLOG("disconnect request: missing cm_id\n");
-		return -1;
-	}
-
-	qpair = evt->id->context;
-	if (qpair == NULL) {
-		SPDK_ERRLOG("disconnect request: no active connection\n");
-		return -1;
-	}
-
-	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
-	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair->cm_id, 0);
-
-	spdk_nvmf_rdma_update_ibv_state(rqpair);
-	spdk_nvmf_rdma_qpair_inc_refcnt(rqpair);
-
-	_nvmf_rdma_disconnect_retry(qpair);
-
-	return 0;
-}
-
-#ifdef DEBUG
-static const char *CM_EVENT_STR[] = {
-	"RDMA_CM_EVENT_ADDR_RESOLVED",
-	"RDMA_CM_EVENT_ADDR_ERROR",
-	"RDMA_CM_EVENT_ROUTE_RESOLVED",
-	"RDMA_CM_EVENT_ROUTE_ERROR",
-	"RDMA_CM_EVENT_CONNECT_REQUEST",
-	"RDMA_CM_EVENT_CONNECT_RESPONSE",
-	"RDMA_CM_EVENT_CONNECT_ERROR",
-	"RDMA_CM_EVENT_UNREACHABLE",
-	"RDMA_CM_EVENT_REJECTED",
-	"RDMA_CM_EVENT_ESTABLISHED",
-	"RDMA_CM_EVENT_DISCONNECTED",
-	"RDMA_CM_EVENT_DEVICE_REMOVAL",
-	"RDMA_CM_EVENT_MULTICAST_JOIN",
-	"RDMA_CM_EVENT_MULTICAST_ERROR",
-	"RDMA_CM_EVENT_ADDR_CHANGE",
-	"RDMA_CM_EVENT_TIMEWAIT_EXIT"
-};
-#endif /* DEBUG */
-
-static void
-spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
-{
-	struct spdk_nvmf_rdma_transport *rtransport;
-	struct rdma_cm_event		*event;
-	int				rc;
-
-	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
-
-	if (rtransport->event_channel == NULL) {
-		return;
-	}
-
-	while (1) {
-		rc = rdma_get_cm_event(rtransport->event_channel, &event);
-		if (rc == 0) {
-			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
-
-			spdk_trace_record(TRACE_RDMA_CM_ASYNC_EVENT, 0, 0, 0, event->event);
-
-			switch (event->event) {
-			case RDMA_CM_EVENT_ADDR_RESOLVED:
-			case RDMA_CM_EVENT_ADDR_ERROR:
-			case RDMA_CM_EVENT_ROUTE_RESOLVED:
-			case RDMA_CM_EVENT_ROUTE_ERROR:
-				/* No action required. The target never attempts to resolve routes. */
-				break;
-			case RDMA_CM_EVENT_CONNECT_REQUEST:
-				rc = nvmf_rdma_connect(transport, event, cb_fn);
-				if (rc < 0) {
-					SPDK_ERRLOG("Unable to process connect event. rc: %d\n", rc);
-					break;
-				}
-				break;
-			case RDMA_CM_EVENT_CONNECT_RESPONSE:
-				/* The target never initiates a new connection. So this will not occur. */
-				break;
-			case RDMA_CM_EVENT_CONNECT_ERROR:
-				/* Can this happen? The docs say it can, but not sure what causes it. */
-				break;
-			case RDMA_CM_EVENT_UNREACHABLE:
-			case RDMA_CM_EVENT_REJECTED:
-				/* These only occur on the client side. */
-				break;
-			case RDMA_CM_EVENT_ESTABLISHED:
-				/* TODO: Should we be waiting for this event anywhere? */
-				break;
-			case RDMA_CM_EVENT_DISCONNECTED:
-			case RDMA_CM_EVENT_DEVICE_REMOVAL:
-				rc = nvmf_rdma_disconnect(event);
-				if (rc < 0) {
-					SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
-					break;
-				}
-				break;
-			case RDMA_CM_EVENT_MULTICAST_JOIN:
-			case RDMA_CM_EVENT_MULTICAST_ERROR:
-				/* Multicast is not used */
-				break;
-			case RDMA_CM_EVENT_ADDR_CHANGE:
-				/* Not utilizing this event */
-				break;
-			case RDMA_CM_EVENT_TIMEWAIT_EXIT:
-				/* For now, do nothing. The target never re-uses queue pairs. */
-				break;
-			default:
-				SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
-				break;
-			}
-
-			rdma_ack_cm_event(event);
-		} else {
-			if (errno != EAGAIN && errno != EWOULDBLOCK) {
-				SPDK_ERRLOG("Acceptor Event Error: %s\n", spdk_strerror(errno));
-			}
-			break;
-		}
-	}
-}
-
 static int
 spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			  enum spdk_mem_map_notify_action action,
@@ -2091,14 +1925,6 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 		}
 	}
 
-
-	/* Do not process newly received commands if qp is in ERROR state,
-	 * wait till the recovery is complete.
-	 */
-	if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR) {
-		return;
-	}
-
 	/* The lowest priority is processing newly received commands */
 	TAILQ_FOREACH_SAFE(rdma_recv, &rqpair->incoming_queue, link, recv_tmp) {
 		if (TAILQ_EMPTY(&rqpair->state_queue[RDMA_REQUEST_STATE_FREE])) {
@@ -2115,152 +1941,169 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 }
 
 static void
-spdk_nvmf_rdma_drain_state_queue(struct spdk_nvmf_rdma_qpair *rqpair,
-				 enum spdk_nvmf_rdma_request_state state)
+_nvmf_rdma_qpair_disconnect(void *ctx)
 {
-	struct spdk_nvmf_rdma_request *rdma_req, *req_tmp;
-	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_rdma_qpair *rqpair;
 
-	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[state], state_link, req_tmp) {
-		rtransport = SPDK_CONTAINEROF(rdma_req->req.qpair->transport,
-					      struct spdk_nvmf_rdma_transport, transport);
-		spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
-		spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-	}
-}
-
-static void
-spdk_nvmf_rdma_qpair_recover(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	enum ibv_qp_state state, next_state;
-	int recovered;
-	struct spdk_nvmf_rdma_transport *rtransport;
-
-	if (!spdk_nvmf_rdma_qpair_is_idle(&rqpair->qpair)) {
-		/* There must be outstanding requests down to media.
-		 * If so, wait till they're complete.
-		 */
-		assert(!TAILQ_EMPTY(&rqpair->qpair.outstanding));
-		return;
-	}
-
-	state = rqpair->ibv_attr.qp_state;
-	next_state = state;
-
-	SPDK_NOTICELOG("RDMA qpair %u is in state: %s\n",
-		       rqpair->qpair.qid,
-		       str_ibv_qp_state[state]);
-
-	if (!(state == IBV_QPS_ERR || state == IBV_QPS_RESET)) {
-		SPDK_ERRLOG("Can't recover RDMA qpair %u from the state: %s\n",
-			    rqpair->qpair.qid,
-			    str_ibv_qp_state[state]);
-		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
-		return;
-	}
-
-	recovered = 0;
-	while (!recovered) {
-		switch (state) {
-		case IBV_QPS_ERR:
-			next_state = IBV_QPS_RESET;
-			break;
-		case IBV_QPS_RESET:
-			next_state = IBV_QPS_INIT;
-			break;
-		case IBV_QPS_INIT:
-			next_state = IBV_QPS_RTR;
-			break;
-		case IBV_QPS_RTR:
-			next_state = IBV_QPS_RTS;
-			break;
-		case IBV_QPS_RTS:
-			recovered = 1;
-			break;
-		default:
-			SPDK_ERRLOG("RDMA qpair %u unexpected state for recovery: %u\n",
-				    rqpair->qpair.qid, state);
-			goto error;
-		}
-		/* Do not transition into same state */
-		if (next_state == state) {
-			break;
-		}
-
-		if (spdk_nvmf_rdma_set_ibv_state(rqpair, next_state)) {
-			goto error;
-		}
-
-		state = next_state;
-	}
-
-	rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
-				      struct spdk_nvmf_rdma_transport,
-				      transport);
-
-	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
-
-	return;
-error:
-	SPDK_NOTICELOG("RDMA qpair %u: recovery failed, disconnecting...\n",
-		       rqpair->qpair.qid);
-	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
-}
-
-/* Clean up only the states that can be aborted at any time */
-static void
-_spdk_nvmf_rdma_qp_cleanup_safe_states(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
-
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_NEW);
-	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[RDMA_REQUEST_STATE_NEED_BUFFER], link, req_tmp) {
-		TAILQ_REMOVE(&rqpair->ch->pending_data_buf_queue, rdma_req, link);
-	}
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_NEED_BUFFER);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_READY_TO_EXECUTE);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_EXECUTED);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_READY_TO_COMPLETE);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_COMPLETED);
-}
-
-/* This cleans up all memory. It is only safe to use if the rest of the software stack
- * has been shut down */
-static void
-_spdk_nvmf_rdma_qp_cleanup_all_states(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	_spdk_nvmf_rdma_qp_cleanup_safe_states(rqpair);
-
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_EXECUTING);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
-	spdk_nvmf_rdma_drain_state_queue(rqpair, RDMA_REQUEST_STATE_COMPLETING);
-}
-
-static void
-_spdk_nvmf_rdma_qp_error(void *arg)
-{
-	struct spdk_nvmf_rdma_qpair	*rqpair = arg;
-	enum ibv_qp_state		state;
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	spdk_nvmf_rdma_qpair_dec_refcnt(rqpair);
 
-	state = rqpair->ibv_attr.qp_state;
-	if (state != IBV_QPS_ERR) {
-		/* Error was already recovered */
+	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+}
+
+static void
+_nvmf_rdma_disconnect_retry(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_poll_group *group;
+
+	/* Read the group out of the qpair. This is normally set and accessed only from
+	 * the thread that created the group. Here, we're not on that thread necessarily.
+	 * The data member qpair->group begins it's life as NULL and then is assigned to
+	 * a pointer and never changes. So fortunately reading this and checking for
+	 * non-NULL is thread safe in the x86_64 memory model. */
+	group = qpair->group;
+
+	if (group == NULL) {
+		/* The qpair hasn't been assigned to a group yet, so we can't
+		 * process a disconnect. Send a message to ourself and try again. */
+		spdk_thread_send_msg(spdk_get_thread(), _nvmf_rdma_disconnect_retry, qpair);
 		return;
 	}
 
-	if (spdk_nvmf_qpair_is_admin_queue(&rqpair->qpair)) {
-		spdk_nvmf_ctrlr_abort_aer(rqpair->qpair.ctrlr);
+	spdk_thread_send_msg(group->thread, _nvmf_rdma_qpair_disconnect, qpair);
+}
+
+static int
+nvmf_rdma_disconnect(struct rdma_cm_event *evt)
+{
+	struct spdk_nvmf_qpair		*qpair;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+
+	if (evt->id == NULL) {
+		SPDK_ERRLOG("disconnect request: missing cm_id\n");
+		return -1;
 	}
 
-	_spdk_nvmf_rdma_qp_cleanup_safe_states(rqpair);
+	qpair = evt->id->context;
+	if (qpair == NULL) {
+		SPDK_ERRLOG("disconnect request: no active connection\n");
+		return -1;
+	}
 
-	/* Attempt recovery. This will exit without recovering if I/O requests
-	 * are still outstanding */
-	spdk_nvmf_rdma_qpair_recover(rqpair);
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair->cm_id, 0);
+
+	spdk_nvmf_rdma_update_ibv_state(rqpair);
+	spdk_nvmf_rdma_qpair_inc_refcnt(rqpair);
+
+	_nvmf_rdma_disconnect_retry(qpair);
+
+	return 0;
+}
+
+#ifdef DEBUG
+static const char *CM_EVENT_STR[] = {
+	"RDMA_CM_EVENT_ADDR_RESOLVED",
+	"RDMA_CM_EVENT_ADDR_ERROR",
+	"RDMA_CM_EVENT_ROUTE_RESOLVED",
+	"RDMA_CM_EVENT_ROUTE_ERROR",
+	"RDMA_CM_EVENT_CONNECT_REQUEST",
+	"RDMA_CM_EVENT_CONNECT_RESPONSE",
+	"RDMA_CM_EVENT_CONNECT_ERROR",
+	"RDMA_CM_EVENT_UNREACHABLE",
+	"RDMA_CM_EVENT_REJECTED",
+	"RDMA_CM_EVENT_ESTABLISHED",
+	"RDMA_CM_EVENT_DISCONNECTED",
+	"RDMA_CM_EVENT_DEVICE_REMOVAL",
+	"RDMA_CM_EVENT_MULTICAST_JOIN",
+	"RDMA_CM_EVENT_MULTICAST_ERROR",
+	"RDMA_CM_EVENT_ADDR_CHANGE",
+	"RDMA_CM_EVENT_TIMEWAIT_EXIT"
+};
+#endif /* DEBUG */
+
+static void
+spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
+{
+	struct spdk_nvmf_rdma_transport *rtransport;
+	struct rdma_cm_event		*event;
+	int				rc;
+
+	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
+
+	if (rtransport->event_channel == NULL) {
+		return;
+	}
+
+	while (1) {
+		rc = rdma_get_cm_event(rtransport->event_channel, &event);
+		if (rc == 0) {
+			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
+
+			spdk_trace_record(TRACE_RDMA_CM_ASYNC_EVENT, 0, 0, 0, event->event);
+
+			switch (event->event) {
+			case RDMA_CM_EVENT_ADDR_RESOLVED:
+			case RDMA_CM_EVENT_ADDR_ERROR:
+			case RDMA_CM_EVENT_ROUTE_RESOLVED:
+			case RDMA_CM_EVENT_ROUTE_ERROR:
+				/* No action required. The target never attempts to resolve routes. */
+				break;
+			case RDMA_CM_EVENT_CONNECT_REQUEST:
+				rc = nvmf_rdma_connect(transport, event, cb_fn);
+				if (rc < 0) {
+					SPDK_ERRLOG("Unable to process connect event. rc: %d\n", rc);
+					break;
+				}
+				break;
+			case RDMA_CM_EVENT_CONNECT_RESPONSE:
+				/* The target never initiates a new connection. So this will not occur. */
+				break;
+			case RDMA_CM_EVENT_CONNECT_ERROR:
+				/* Can this happen? The docs say it can, but not sure what causes it. */
+				break;
+			case RDMA_CM_EVENT_UNREACHABLE:
+			case RDMA_CM_EVENT_REJECTED:
+				/* These only occur on the client side. */
+				break;
+			case RDMA_CM_EVENT_ESTABLISHED:
+				/* TODO: Should we be waiting for this event anywhere? */
+				break;
+			case RDMA_CM_EVENT_DISCONNECTED:
+			case RDMA_CM_EVENT_DEVICE_REMOVAL:
+				rc = nvmf_rdma_disconnect(event);
+				if (rc < 0) {
+					SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
+					break;
+				}
+				break;
+			case RDMA_CM_EVENT_MULTICAST_JOIN:
+			case RDMA_CM_EVENT_MULTICAST_ERROR:
+				/* Multicast is not used */
+				break;
+			case RDMA_CM_EVENT_ADDR_CHANGE:
+				/* Not utilizing this event */
+				break;
+			case RDMA_CM_EVENT_TIMEWAIT_EXIT:
+				/* For now, do nothing. The target never re-uses queue pairs. */
+				break;
+			default:
+				SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
+				break;
+			}
+
+			rdma_ack_cm_event(event);
+		} else {
+			if (errno != EAGAIN && errno != EWOULDBLOCK) {
+				SPDK_ERRLOG("Acceptor Event Error: %s\n", spdk_strerror(errno));
+			}
+			break;
+		}
+	}
 }
 
 static void
@@ -2289,7 +2132,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
 		spdk_nvmf_rdma_qpair_inc_refcnt(rqpair);
-		spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
+		spdk_thread_send_msg(rqpair->qpair.group->thread, _nvmf_rdma_qpair_disconnect, &rqpair->qpair);
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
 		/* This event only occurs for shared receive queues, which are not currently supported. */
@@ -2306,7 +2149,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		state = spdk_nvmf_rdma_update_ibv_state(rqpair);
 		if (state == IBV_QPS_ERR) {
 			spdk_nvmf_rdma_qpair_inc_refcnt(rqpair);
-			spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_qp_error, rqpair);
+			spdk_thread_send_msg(rqpair->qpair.group->thread, _nvmf_rdma_qpair_disconnect, &rqpair->qpair);
 		}
 		break;
 	case IBV_EVENT_QP_REQ_ERR:
@@ -2457,7 +2300,6 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 			ibv_destroy_cq(poller->cq);
 		}
 		TAILQ_FOREACH_SAFE(qpair, &poller->qpairs, link, tmp_qpair) {
-			_spdk_nvmf_rdma_qp_cleanup_all_states(qpair);
 			spdk_nvmf_rdma_qpair_destroy(qpair);
 		}
 
@@ -2569,12 +2411,6 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	}
 
 	spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-
-	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE && rqpair->ibv_attr.qp_state == IBV_QPS_ERR) {
-		/* If the NVMe-oF layer thinks the connection is active, but the RDMA layer thinks
-		 * the connection is dead, perform error recovery. */
-		spdk_nvmf_rdma_qpair_recover(rqpair);
-	}
 
 	return 0;
 }
@@ -2751,6 +2587,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			/* Handle dummy wr_ids placed onto the queue for the purposes of waiting for a clean shutdown. */
 			if (wc[i].wr_id == 0) {
+				SPDK_NOTICELOG("Found dummy CQE. Shutting down qpair.\n");
 				spdk_nvmf_rdma_handle_dummy_cqe(rpoller, &wc[i]);
 				continue;
 			}
@@ -2767,7 +2604,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			if (rqpair == NULL) {
-				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No rqpair matches this qp_num. Ignore it.\n");
+				SPDK_WARNLOG("No rqpair matches this qp_num. This indicates a bug in the RDMA stack.\n");
 				continue;
 			}
 
@@ -2802,8 +2639,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				continue;
 			}
 
-			/* Set the qpair to the error state. This will initiate a recovery. */
-			spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
+			/* Disconnect the connection. */
+			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 			continue;
 		}
 
