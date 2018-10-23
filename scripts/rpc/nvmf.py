@@ -98,6 +98,15 @@ def nvmf_create_transport(client,
     return client.call('nvmf_create_transport', params)
 
 
+def get_nvmf_transports(client):
+    """Get list of NVMe-oF transports.
+
+    Returns:
+        List of NVMe-oF transport objects.
+    """
+    return client.call('get_nvmf_transports')
+
+
 def get_nvmf_subsystems(client):
     """Get list of NVMe-oF subsystems.
 

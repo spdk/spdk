@@ -3394,6 +3394,41 @@ Example response:
 }
 ~~~
 
+## get_nvmf_transports method {#rpc_get_nvmf_transports}
+
+### Parameters
+
+This method has no parameters.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_nvmf_transports"
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "type": "RDMA".
+      "max_queue_depth": 128,
+      "max_qpairs_per_ctrlr": 64,
+      "in_capsule_data_size": 4096,
+      "max_io_size": 131072,
+      "io_unit_size": 131072
+    }
+  ]
+}
+~~~
+
 # Vhost Target {#jsonrpc_components_vhost_tgt}
 
 The following common preconditions need to be met in all target types.
