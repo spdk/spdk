@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "270d0f36_a00955b3",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-23T14:18:58Z",
+      "side": 1,
+      "message": "I think -EINVAL is better for all the -1 cases.",
+      "revId": "33b3160b0ff28a39fe3a0765c35d7be2e92406d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e19c645_4404ea58",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-23T14:18:58Z",
+      "side": 1,
+      "message": "Why there is no superblock size for backing device ? you said both PM and backing device have superblock in the beginning.",
+      "revId": "33b3160b0ff28a39fe3a0765c35d7be2e92406d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
