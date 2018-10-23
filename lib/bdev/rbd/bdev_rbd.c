@@ -592,7 +592,7 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 
 struct spdk_bdev *
 spdk_bdev_rbd_create(const char *name, const char *pool_name, const char *rbd_name,
-		     uint32_t block_size)
+		     uint32_t block_size, const struct spdk_bdev_rbd_config *cofnig)
 {
 	struct bdev_rbd *rbd;
 	int ret;
@@ -619,6 +619,7 @@ spdk_bdev_rbd_create(const char *name, const char *pool_name, const char *rbd_na
 		return NULL;
 	}
 
+	/* TODO: use 'cofnig' parameter somehow */
 	ret = bdev_rbd_init(rbd->pool_name, rbd_name, &rbd->info);
 	if (ret < 0) {
 		bdev_rbd_free(rbd);

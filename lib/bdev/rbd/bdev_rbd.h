@@ -40,8 +40,15 @@
 
 typedef void (*spdk_delete_rbd_complete)(void *cb_arg, int bdeverrno);
 
+struct spdk_bdev_rbd_config {
+	/* TODO: Add paramters here */
+	char *first_param;
+};
+
+
 struct spdk_bdev *spdk_bdev_rbd_create(const char *name, const char *pool_name,
-				       const char *rbd_name, uint32_t block_size);
+				       const char *rbd_name, uint32_t block_size,
+				       const struct spdk_bdev_rbd_config *config);
 /**
  * Delete rbd bdev.
  *
