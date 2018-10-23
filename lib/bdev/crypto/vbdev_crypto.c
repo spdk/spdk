@@ -1178,7 +1178,7 @@ vbdev_crypto_init(void)
 
 	sp = spdk_conf_find_section(NULL, "crypto");
 	if (sp == NULL) {
-		return 0;
+		goto exit;
 	}
 
 	for (i = 0; ; i++) {
@@ -1218,7 +1218,7 @@ vbdev_crypto_init(void)
 			return rc;
 		}
 	}
-
+exit:
 	/* Fully configure both SW and HW drivers. */
 	rc = vbdev_crypto_init_crypto_drivers();
 	if (rc) {
@@ -1256,6 +1256,10 @@ vbdev_crypto_finish(void)
 		TAILQ_REMOVE(&g_device_qp, dev_qp, link);
 		free(dev_qp);
 	}
+
+	rte_mempool_free(g_crypto_op_mp);
+	spdk_mempool_free(g_mbuf_mp);
+	spdk_mempool_free(g_session_mp);
 }
 
 /* During init we'll be asked how much memory we'd like passed to us
