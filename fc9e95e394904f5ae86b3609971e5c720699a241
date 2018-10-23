@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42deb228_9aa71159",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-23T16:59:23Z",
+      "side": 1,
+      "message": "There is an issue here. This method will initialize everything along with re-initializing RPC server. I need to fix it somehow to make the \u0027--wait-for-rpc\u0027 to work :(",
+      "range": {
+        "startLine": 330,
+        "startChar": 3,
+        "endLine": 330,
+        "endChar": 86
+      },
+      "revId": "fc9e95e394904f5ae86b3609971e5c720699a241",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
