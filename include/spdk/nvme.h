@@ -192,6 +192,9 @@ enum spdk_nvme_transport_type {
 	SPDK_NVME_TRANSPORT_FC = SPDK_NVMF_TRTYPE_FC,
 };
 
+/* typedef added for coding style reasons */
+typedef enum spdk_nvme_transport_type spdk_nvme_transport_type_t;
+
 /**
  * NVMe transport identifier.
  *

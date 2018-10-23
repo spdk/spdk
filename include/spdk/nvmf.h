@@ -748,6 +748,43 @@ struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tg
 		enum spdk_nvme_transport_type type);
 
 /**
+ * Get the first transport registered with the given target
+ *
+ * \param tgt The NVMe-oF target
+ *
+ * \return The first transport registered on the target
+ */
+struct spdk_nvmf_transport *spdk_nvmf_transport_get_first(struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Get the next transport in a target's list.
+ *
+ * \param transport A handle to a transport object
+ *
+ * \return The next transport associated with the NVMe-oF target
+ */
+struct spdk_nvmf_transport *spdk_nvmf_transport_get_next(struct spdk_nvmf_transport *transport);
+
+/**
+ * Get the opts for a given transport.
+ *
+ * \param transport The transport to query
+ *
+ * \return The opts associated with the given transport
+ */
+const struct spdk_nvmf_transport_opts *spdk_nvmf_get_transport_opts(struct spdk_nvmf_transport
+		*transport);
+
+/**
+ * Get the transport type for a given transport.
+ *
+ * \param transport The transport to query
+ *
+ * \return the transport type for the given transport
+ */
+spdk_nvme_transport_type_t spdk_nvmf_get_transport_type(struct spdk_nvmf_transport *transport);
+
+/**
  * Function to be called once transport add is complete
  *
  * \param cb_arg Callback argument passed to this function.
