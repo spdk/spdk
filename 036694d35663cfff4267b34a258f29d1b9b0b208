@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f458ae1_d9ab1ea4",
+        "filename": "lib/bdev/rbd/bdev_rbd.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-23T13:49:42Z",
+      "side": 1,
+      "message": "This function should not take JSON-type parameters. It could take ``char **config`` array. Where\n\n  key \u003d config[n];\n  value \u003d config[n + 1]\n\nConfig is last parameter so think it should be the last parameter.\n\nMaybe something like this:\n\n  struct spdk_bdev *spdk_bdev_rbd_create(const char *name,\n                 const char *pool_name,\n                 const char *rbd_name,\n                 uint32_t block_size,\n                 char **config,\n                 size_t config_key_cnt);",
+      "range": {
+        "startLine": 44,
+        "startChar": 11,
+        "endLine": 44,
+        "endChar": 41
+      },
+      "revId": "036694d35663cfff4267b34a258f29d1b9b0b208",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8da3879c_98290f2f",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-23T13:49:42Z",
+      "side": 1,
+      "message": "I don\u0027t think we can consider spdk_json_decode_map as \u0027library function\u0027. It is to this-case-specific.\n\nI recently pushed API to iterate over arbitrary JSON object.\nSee https://github.com/spdk/spdk/commit/439641f7727b4b3955e76071102b26163a91ed92 \n\nYou can just cap \u0027config\u0027 object here and iterate over it using \n\n  json_key \u003d spdk_json_object_first(val);\n  if (!json_key) {\n    error;\n  }\n\n  do {\n    json_val \u003d spdk_json_value(key);\n        \n    key \u003d spdk_json_strdup(key);\n    value \u003d spdk_json_strdup(json_val);\n    if (!key || !value) {\n      error\n    }\n\n    append(config, key, value);\n \n    json_key \u003d spdk_json_next(key);\n  } while(json_key);\n\n\nYou can check unit test for these API to see how this can be used: https://github.com/spdk/spdk/blob/decb59575b32bb0c4a96a9df3366df2f2aacba01/test/unit/lib/json/json_util.c/json_util_ut.c#L837",
+      "range": {
+        "startLine": 62,
+        "startChar": 56,
+        "endLine": 62,
+        "endChar": 76
+      },
+      "revId": "036694d35663cfff4267b34a258f29d1b9b0b208",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
