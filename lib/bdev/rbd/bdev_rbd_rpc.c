@@ -42,7 +42,27 @@ struct rpc_construct_rbd {
 	char *pool_name;
 	char *rbd_name;
 	uint32_t block_size;
+
+	struct spdk_bdev_rbd_config config;
+	bool custom_config;
 };
+
+static const struct spdk_json_object_decoder bdev_rbd_config_decoders[] = {
+	{"first_param", offsetof(struct spdk_bdev_rbd_config, first_param), spdk_json_decode_string, true},
+	/* TODO: Add more decoders here. */
+};
+
+static int
+decode_bdev_rbd_config(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_construct_rbd *req = out;
+
+	req->custom_config = true;
+
+	return spdk_json_decode_object(val, bdev_rbd_config_decoders,
+				       SPDK_COUNTOF(bdev_rbd_config_decoders),
+				       &req->config);
+}
 
 static void
 free_rpc_construct_rbd(struct rpc_construct_rbd *req)
@@ -50,6 +70,9 @@ free_rpc_construct_rbd(struct rpc_construct_rbd *req)
 	free(req->name);
 	free(req->pool_name);
 	free(req->rbd_name);
+
+	free(req->config.first_param);
+	/* TODO: add free() for other fields */
 }
 
 static const struct spdk_json_object_decoder rpc_construct_rbd_decoders[] = {
@@ -57,6 +80,7 @@ static const struct spdk_json_object_decoder rpc_construct_rbd_decoders[] = {
 	{"pool_name", offsetof(struct rpc_construct_rbd, pool_name), spdk_json_decode_string},
 	{"rbd_name", offsetof(struct rpc_construct_rbd, rbd_name), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_construct_rbd, block_size), spdk_json_decode_uint32},
+	{"config", 0, decode_bdev_rbd_config, true},
 };
 
 static void
@@ -74,7 +98,8 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_rbd_create(req.name, req.pool_name, req.rbd_name, req.block_size);
+	bdev = spdk_bdev_rbd_create(req.name, req.pool_name, req.rbd_name, req.block_size,
+				    req->custom_config ? &req.config : NULL);
 	if (bdev == NULL) {
 		goto invalid;
 	}
