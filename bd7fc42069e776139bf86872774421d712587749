@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6c6f3b09_56e3e130",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-23T13:00:08Z",
+      "side": 1,
+      "message": "Default alignment should be \u003d\u003d 0. \nModules that require alignment should call spdk_get_aligned_buf with appropriate alignment.\nTo avoid test pool crashes I temporarily define default alignment as 512 for compatibility reasons. It will be removed in last patch in series.",
+      "parentUuid": "e854b61e_9562c508",
+      "range": {
+        "startLine": 424,
+        "startChar": 0,
+        "endLine": 426,
+        "endChar": 2
+      },
+      "revId": "bd7fc42069e776139bf86872774421d712587749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2f8f56ec_03ac1e65",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "9dcb7647_780d5b06",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-23T13:00:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2f8f56ec_03ac1e65",
+      "range": {
+        "startLine": 539,
+        "startChar": 5,
+        "endLine": 539,
+        "endChar": 43
+      },
+      "revId": "bd7fc42069e776139bf86872774421d712587749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c8f047c_8dc45b2f",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -68,6 +116,30 @@
       "revId": "bd7fc42069e776139bf86872774421d712587749",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7a71860_490946bd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-23T13:00:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3c8f047c_8dc45b2f",
+      "range": {
+        "startLine": 550,
+        "startChar": 14,
+        "endLine": 550,
+        "endChar": 17
+      },
+      "revId": "bd7fc42069e776139bf86872774421d712587749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
