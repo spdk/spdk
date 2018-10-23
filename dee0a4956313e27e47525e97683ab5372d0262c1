@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70db3591_7877d20e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T14:38:02Z",
+      "side": 1,
+      "message": "How about io_quota ?\n\nchecking if io_completed is less than io_quota may make the logic simpler.",
+      "range": {
+        "startLine": 110,
+        "startChar": 11,
+        "endLine": 110,
+        "endChar": 17
+      },
+      "revId": "dee0a4956313e27e47525e97683ab5372d0262c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e3e0ff3_b4ad25df",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T14:38:02Z",
+      "side": 1,
+      "message": "How about using io_cnt (or renamed io_quota) as watermark?\n\nelse if (ns_ctx-\u003eio_completed \u003c ns_ctx-\u003eio_cnt) {\n  submit_single_io(task);\n}",
+      "range": {
+        "startLine": 737,
+        "startChar": 0,
+        "endLine": 737,
+        "endChar": 34
+      },
+      "revId": "dee0a4956313e27e47525e97683ab5372d0262c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0b3cb6d_41c61697",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 775,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T14:38:02Z",
+      "side": 1,
+      "message": "ns_ctx-\u003eio_cnt is decremented not in submission but in completion.\nHence what you want to do may not be satisfied and should be changed to the following?\n\nqueue_depth \u003d spdk_min(queue_depth, ns_ctx-\u003eio_cnt);\nwhile (queue_depth-- \u003e 0) {",
+      "range": {
+        "startLine": 771,
+        "startChar": 0,
+        "endLine": 775,
+        "endChar": 0
+      },
+      "revId": "dee0a4956313e27e47525e97683ab5372d0262c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f9df16a_3689c301",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T14:38:02Z",
+      "side": 1,
+      "message": "this block should be moved to the line 910 or 911.",
+      "range": {
+        "startLine": 916,
+        "startChar": 0,
+        "endLine": 919,
+        "endChar": 0
+      },
+      "revId": "dee0a4956313e27e47525e97683ab5372d0262c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
