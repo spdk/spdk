@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "964a5612_95972278",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T23:07:33Z",
+      "side": 1,
+      "message": "io_submitted may sound natural",
+      "range": {
+        "startLine": 110,
+        "startChar": 11,
+        "endLine": 110,
+        "endChar": 17
+      },
+      "revId": "9cf545d2309b495c28f3b0237e7e0d53d488998a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "faf32a2f_90e691c7",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T23:07:33Z",
+      "side": 1,
+      "message": "How about the following?\n\n} else if (ns_ctx-\u003eio_cnt++ \u003c g_ns_io_cnt || g_ns_io_cnt \u003c 0) {",
+      "range": {
+        "startLine": 737,
+        "startChar": 0,
+        "endLine": 740,
+        "endChar": 3
+      },
+      "revId": "9cf545d2309b495c28f3b0237e7e0d53d488998a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4dcd14e_caaa3d35",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T23:07:33Z",
+      "side": 1,
+      "message": "How about the following?\n\nInitial IOs are issued up to minimum of queue_depth and g_ns_io_cnt.",
+      "range": {
+        "startLine": 771,
+        "startChar": 0,
+        "endLine": 774,
+        "endChar": 4
+      },
+      "revId": "9cf545d2309b495c28f3b0237e7e0d53d488998a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9459b708_8c3b17e9",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 775,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T23:07:33Z",
+      "side": 1,
+      "message": "How about the following?\n\nwhile ((queue_depth-- \u003e 0) \u0026\u0026 (ns_ctx-\u003eio_cnt++ \u003c g_ns_io_cnt || g_ns_io_cnt \u003c 0)) {",
+      "range": {
+        "startLine": 775,
+        "startChar": 1,
+        "endLine": 775,
+        "endChar": 55
+      },
+      "revId": "9cf545d2309b495c28f3b0237e7e0d53d488998a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91b630d8_c4d50d4e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T23:07:33Z",
+      "side": 1,
+      "message": "it may be better to use io_completed in the following block.",
+      "range": {
+        "startLine": 895,
+        "startChar": 15,
+        "endLine": 895,
+        "endChar": 29
+      },
+      "revId": "9cf545d2309b495c28f3b0237e7e0d53d488998a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c825b30_91d17345",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T23:07:33Z",
+      "side": 1,
+      "message": "How about the following?\nMoving the line 916-918 to the line 910 or 911 and incrementing io_cnt may easier to understand.\n\ndone_ns \u003d 0;\nwhile (ns_ctx !\u003d NULL) {\n  if (g_ns_io_cnt \u003c 0 || ns_ctx-\u003eio_completed \u003c\u003d g_ns_io_cnt) {\n    check_io(ns_ctx);\n  } else {\n    done_ns++;\n  }\n  ns_ctx \u003d ns_ctx-\u003enext;\n}\n\nif (done_ns \u003d\u003d ns_cnt) {\n  break;\n}\n\ntsc_now \u003d spdk_get_ticks();\nif (tsc_now \u003e tsc_end) {\n  break;\n}",
+      "range": {
+        "startLine": 900,
+        "startChar": 0,
+        "endLine": 918,
+        "endChar": 3
+      },
+      "revId": "9cf545d2309b495c28f3b0237e7e0d53d488998a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
