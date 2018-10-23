@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d5fba41_eef51fa5",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-23T08:12:31Z",
+      "side": 1,
+      "message": "I think this change is not related to this patch, it can go to refactor patch",
+      "range": {
+        "startLine": 534,
+        "startChar": 0,
+        "endLine": 535,
+        "endChar": 23
+      },
+      "revId": "71f93de524a091de017c3b628e3f8cf1aa6c0c1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
