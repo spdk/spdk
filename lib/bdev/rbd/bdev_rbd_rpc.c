@@ -39,24 +39,32 @@
 
 struct rpc_construct_rbd {
 	char *name;
+	char *user_id;
 	char *pool_name;
 	char *rbd_name;
 	uint32_t block_size;
+	spdk_bdev_rbd_map config;
 };
 
 static void
 free_rpc_construct_rbd(struct rpc_construct_rbd *req)
 {
 	free(req->name);
+	if (req->user_id) {
+		free(req->user_id);
+	}
 	free(req->pool_name);
 	free(req->rbd_name);
+	spdk_bdev_rbd_free_map(req->config);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_rbd_decoders[] = {
 	{"name", offsetof(struct rpc_construct_rbd, name), spdk_json_decode_string, true},
+	{"user_id", offsetof(struct rpc_construct_rbd, user_id), spdk_json_decode_string, true},
 	{"pool_name", offsetof(struct rpc_construct_rbd, pool_name), spdk_json_decode_string},
 	{"rbd_name", offsetof(struct rpc_construct_rbd, rbd_name), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_construct_rbd, block_size), spdk_json_decode_uint32},
+	{"config", offsetof(struct rpc_construct_rbd, config), spdk_bdev_rbd_decode_map, true}
 };
 
 static void
@@ -74,7 +82,7 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_rbd_create(req.name, req.pool_name, req.rbd_name, req.block_size);
+	bdev = spdk_bdev_rbd_create(req.name, req.user_id, req.pool_name, req.config, req.rbd_name, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}
@@ -155,3 +163,71 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("delete_rbd_bdev", spdk_rpc_delete_rbd_bdev, SPDK_RPC_RUNTIME)
+
+void spdk_bdev_rbd_free_map(spdk_bdev_rbd_map map)
+{
+	spdk_bdev_rbd_map entry;
+
+	if (map) {
+		for (entry = map; *entry; entry++) {
+			free(*entry);
+		}
+		free(map);
+	}
+}
+
+spdk_bdev_rbd_map spdk_bdev_rbd_dup_map(spdk_bdev_rbd_map map)
+{
+	size_t count;
+	spdk_bdev_rbd_map copy;
+
+	if (!map) {
+		return NULL;
+	}
+	for (count = 0; map[count]; count++) {}
+	copy = calloc(sizeof(*copy), count + 1);
+	if (!copy) {
+		return NULL;
+	}
+	for (count = 0; map[count]; count++) {
+		if (!(copy[count] = strdup(map[count]))) {
+			spdk_bdev_rbd_free_map(copy);
+			return NULL;
+		}
+	}
+	return copy;
+}
+
+
+int spdk_bdev_rbd_decode_map(const struct spdk_json_val *values, void *out)
+{
+	spdk_bdev_rbd_map *map = out;
+	spdk_bdev_rbd_map entry;
+	uint32_t i;
+
+
+	if (values == NULL || values->type != SPDK_JSON_VAL_OBJECT_BEGIN) {
+		return -1;
+	}
+
+	*map = calloc(sizeof(**map), values->len + 1);
+	if (!*map) {
+		return -1;
+	}
+
+	for (i = 0, entry = *map; i < values->len;) {
+		const struct spdk_json_val *name = &values[i + 1];
+		const struct spdk_json_val *v = &values[i + 2];
+		/* Here we catch errors like invalid types. */
+		if (!(entry[0] = spdk_json_strdup(name)) ||
+		    !(entry[1] = spdk_json_strdup(v))) {
+			spdk_bdev_rbd_free_map(*map);
+			*map = NULL;
+			return -1;
+		}
+		i += 1 + spdk_json_val_len(v);
+		entry += 2;
+	}
+
+	return 0;
+}
