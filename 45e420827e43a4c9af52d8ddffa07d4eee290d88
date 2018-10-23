@@ -51,6 +51,24 @@
       "revId": "45e420827e43a4c9af52d8ddffa07d4eee290d88",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aab0b2b4_cdbb9061",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-23T23:33:24Z",
+      "side": 1,
+      "message": "I misread this.  INSTALL_APP leaves out $(APP) from the destination since the name of the file isn\u0027t changing.  So what you have here is OK.",
+      "parentUuid": "82c7c0f4_7655e870",
+      "revId": "45e420827e43a4c9af52d8ddffa07d4eee290d88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
