@@ -1178,7 +1178,7 @@ vbdev_crypto_init(void)
 
 	sp = spdk_conf_find_section(NULL, "crypto");
 	if (sp == NULL) {
-		return 0;
+		goto exit;
 	}
 
 	for (i = 0; ; i++) {
@@ -1218,7 +1218,7 @@ vbdev_crypto_init(void)
 			return rc;
 		}
 	}
-
+exit:
 	/* Fully configure both SW and HW drivers. */
 	rc = vbdev_crypto_init_crypto_drivers();
 	if (rc) {
