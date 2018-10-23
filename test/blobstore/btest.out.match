@@ -16,6 +16,11 @@ EAL:   probe driver: 8086:2f25 spdk_ioat
 EAL: PCI device 0000:00:04.6 on NUMA socket 0
 EAL:   probe driver: 8086:2f26 spdk_ioat
 EAL: PCI device 0000:00:04.7 on NUMA socket 0
+CRYPTODEV: [crypto_aesni_mb] - Creating cryptodev crypto_aesni_mb
+
+CRYPTODEV: [crypto_aesni_mb] - Initialisation parameters - name: crypto_aesni_mb,socket id: 0, max queue pairs: 8
+$(OPT)cryptodev_aesni_mb_create() line 976: IPSec Multi-buffer library version used: 0.49.0
+
 EAL:   probe driver: 8086:2f27 spdk_ioat
 EAL: PCI device 0000:80:04.0 on NUMA socket 1
 EAL:   probe driver: 8086:2f20 spdk_ioat
