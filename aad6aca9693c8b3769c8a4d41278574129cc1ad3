@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7348fb8f_b1cc1635",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-23T12:45:28Z",
+      "side": 1,
+      "message": "O_NONBLOCK will be used later in this https://review.gerrithub.io/#/c/spdk/spdk/+/430095\n\nFor now it is just a rework so we will be ready for non blocking mode.\n\nAnyway, as for MSG_DONTWAIT - it won\u0027t be enough as connect() might block and we don\u0027t want this.",
+      "parentUuid": "2f8dfbea_e8669c5a",
+      "revId": "aad6aca9693c8b3769c8a4d41278574129cc1ad3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58424a44_cc8a85da",
         "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
         "patchSetId": 14
@@ -47,6 +65,24 @@
       "writtenOn": "2018-10-22T22:35:20Z",
       "side": 1,
       "message": "I don\u0027t think we should explicitly set errno here.  Returning NULL is sufficient in my opinion.",
+      "revId": "aad6aca9693c8b3769c8a4d41278574129cc1ad3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eeef88f4_cacc9c75",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-23T12:45:28Z",
+      "side": 1,
+      "message": "I don\u0027t agree. In SPDK we should set errno in more places that don\u0027t report errors by returning proper error code. Consider malloc/calloc/realloc - it can return NULL if you pass zero as the object size but ENOMEM will be set only when size \u003e 0 and ret val is NULL. the same is for read() - if ret val is less than count you need to check errno to see what happen.",
+      "parentUuid": "6b0d317f_e1747727",
       "revId": "aad6aca9693c8b3769c8a4d41278574129cc1ad3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
