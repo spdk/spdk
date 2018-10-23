@@ -305,7 +305,7 @@ vbdev_crypto_init_crypto_drivers(void)
 
 		rc = rte_cryptodev_configure(cdev_id, &conf);
 		if (rc < 0) {
-			SPDK_ERRLOG("Failed to configure cryptodev %u", cdev_id);
+			SPDK_ERRLOG("Failed to configure cryptodev %u\n", cdev_id);
 			rc = -EINVAL;
 			goto error_dev_config;
 		}
@@ -325,7 +325,7 @@ vbdev_crypto_init_crypto_drivers(void)
 
 			if (rc < 0) {
 				SPDK_ERRLOG("Failed to setup queue pair %u on "
-					    "cryptodev %u", j, cdev_id);
+					    "cryptodev %u\n", j, cdev_id);
 				rc = -EINVAL;
 				goto error_qp_setup;
 			}
@@ -858,12 +858,12 @@ _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		orig_ctx->read_io = bdev_io;
 
 		if (_crypto_operation(orig_io, RTE_CRYPTO_CIPHER_OP_DECRYPT)) {
-			SPDK_ERRLOG("ERROR decrypting");
+			SPDK_ERRLOG("ERROR decrypting\n");
 			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
 			spdk_bdev_free_io(bdev_io);
 		}
 	} else {
-		SPDK_ERRLOG("ERROR on read prior to decrypting");
+		SPDK_ERRLOG("ERROR on read prior to decrypting\n");
 		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
 		spdk_bdev_free_io(bdev_io);
 	}
