@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "fe1a8df5_22583bed",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-23T20:40:26Z",
+      "side": 1,
+      "message": "spdk_jsonrpc_client_get_response",
+      "range": {
+        "startLine": 278,
+        "startChar": 41,
+        "endLine": 278,
+        "endChar": 69
+      },
+      "revId": "2d9f9e222efc7cc94e73d393ad6b3e1a628f2709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "27eb4277_387485e7",
         "filename": "lib/jsonrpc/jsonrpc_client.c",
         "patchSetId": 15
