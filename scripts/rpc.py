@@ -1303,6 +1303,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=nvmf_create_transport)
 
     @call_cmd
+    def get_nvmf_transports(args):
+        print_dict(rpc.nvmf.get_nvmf_transports(args.client))
+
+    p = subparsers.add_parser('get_nvmf_transports',
+                              help='Display nvmf transports')
+    p.set_defaults(func=get_nvmf_transports)
+
+    @call_cmd
     def get_nvmf_subsystems(args):
         print_dict(rpc.nvmf.get_nvmf_subsystems(args.client))
 
