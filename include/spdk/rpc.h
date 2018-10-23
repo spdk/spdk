@@ -81,6 +81,17 @@ typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
 void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
 			      uint32_t state_mask);
 
+/**
+ * Check if \c method is allowed for \c state_mask
+ *
+ * \param method Method name
+ * \param state_mask state mask to check against
+ * \return 0 if method is allowed or negative error code:
+ * -EPERM method is not allowed
+ * -ENOENT method not found
+ */
+int spdk_rpc_is_method_allowed(const char *method, uint32_t state_mask);
+
 #define SPDK_RPC_STARTUP	0x1
 #define SPDK_RPC_RUNTIME	0x2
 
