@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7225e49_5691e306",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-23T17:22:13Z",
+      "side": 1,
+      "message": "response",
+      "revId": "2d9f9e222efc7cc94e73d393ad6b3e1a628f2709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27eb4277_387485e7",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-23T17:22:13Z",
+      "side": 1,
+      "message": "need to unlock before returning\n\nbut where is lock actually defined?  i\u0027m having trouble finding it",
+      "revId": "2d9f9e222efc7cc94e73d393ad6b3e1a628f2709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

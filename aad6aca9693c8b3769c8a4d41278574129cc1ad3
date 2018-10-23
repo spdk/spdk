@@ -109,6 +109,24 @@
       "revId": "aad6aca9693c8b3769c8a4d41278574129cc1ad3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ada14b58_b1b82fab",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-23T17:22:13Z",
+      "side": 1,
+      "message": "I understand how malloc() and read() use errno.  But here there is only one reason that this function will return NULL, so setting errno isn\u0027t needed.\n\nI guess I\u0027d prefer to *not* set errno unless we absolutely need to.  It opens up an entirely new class of bugs.  We have lots of APIs today that return NULL - I don\u0027t think we should change all of them to set errno as well (unless there are multiple reasons it could return NULL).",
+      "parentUuid": "eeef88f4_cacc9c75",
+      "revId": "aad6aca9693c8b3769c8a4d41278574129cc1ad3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
