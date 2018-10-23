@@ -517,16 +517,10 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 	return -1;
 }
 
-void
-spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
+static void
+_spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
 	int rc;
-
-	conn->state = ISCSI_CONN_STATE_EXITED;
-
-	if (conn->sess != NULL && conn->pending_task_cnt > 0) {
-		spdk_iscsi_conn_cleanup_backend(conn);
-	}
 
 	spdk_clear_all_transfer_task(conn, NULL);
 	spdk_iscsi_poll_group_remove_conn_sock(conn);
@@ -541,6 +535,38 @@ spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	} else {
 		spdk_iscsi_conn_stop(conn);
 		_spdk_iscsi_conn_free(conn);
+	}
+}
+
+static int
+_spdk_iscsi_conn_check_pending_tasks(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+
+	if (conn->dev != NULL && spdk_scsi_dev_has_pending_tasks(conn->dev)) {
+		return -1;
+	}
+
+	spdk_poller_unregister(&conn->shutdown_timer);
+
+	_spdk_iscsi_conn_destruct(conn);
+
+	return -1;
+}
+
+void
+spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
+{
+	conn->state = ISCSI_CONN_STATE_EXITED;
+
+	if (conn->sess != NULL && conn->pending_task_cnt > 0) {
+		spdk_iscsi_conn_cleanup_backend(conn);
+	}
+
+	if (conn->dev != NULL && spdk_scsi_dev_has_pending_tasks(conn->dev)) {
+		conn->shutdown_timer = spdk_poller_register(_spdk_iscsi_conn_check_pending_tasks, conn, 1000);
+	} else {
+		_spdk_iscsi_conn_destruct(conn);
 	}
 }
 
