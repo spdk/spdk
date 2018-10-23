@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8295153_02575596",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T07:38:12Z",
+      "side": 1,
+      "message": "request",
+      "range": {
+        "startLine": 493,
+        "startChar": 56,
+        "endLine": 493,
+        "endChar": 62
+      },
+      "revId": "ffdf3c5a059a1f477ed6c2719a63c442a92ccd16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c88421e4_e259982e",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T07:38:12Z",
+      "side": 1,
+      "message": "Using the term, original/saved buffer and bounce buffer may sound easy for me.\n \nstruct iovec bounce_iov;\nstruct iovec *orig_iovs or *saved_iovs;\nint orig_iovcnt or saved_iovcnt;",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 496,
+        "endChar": 32
+      },
+      "revId": "ffdf3c5a059a1f477ed6c2719a63c442a92ccd16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ef13d83_6e4a7af9",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T07:38:12Z",
+      "side": 1,
+      "message": "bounce buffer ?",
+      "range": {
+        "startLine": 676,
+        "startChar": 33,
+        "endLine": 676,
+        "endChar": 49
+      },
+      "revId": "ffdf3c5a059a1f477ed6c2719a63c442a92ccd16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad52bcbf_a08881cc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T07:38:12Z",
+      "side": 1,
+      "message": "The following two lines saves original iovec ?",
+      "revId": "ffdf3c5a059a1f477ed6c2719a63c442a92ccd16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57ba84db_4563e906",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T07:38:12Z",
+      "side": 1,
+      "message": "The following two lines use temporary iovec to hold the bounce buffer ?",
+      "revId": "ffdf3c5a059a1f477ed6c2719a63c442a92ccd16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
