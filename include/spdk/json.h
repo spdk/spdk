@@ -154,6 +154,20 @@ int spdk_json_decode_uint32(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_uint64(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_string(const struct spdk_json_val *val, void *out);
 
+typedef struct {
+	char *key;
+	char *value;
+} spdk_json_string_pair;
+
+/**
+ * Decodes a JSON object into an array of spdk_json_string_pair,
+ * with a NULL pointer terminating the array.
+ */
+int spdk_json_decode_map(const struct spdk_json_val *val, void *out);
+
+void spdk_json_free_map(spdk_json_string_pair *map);
+spdk_json_string_pair *spdk_json_dup_map(spdk_json_string_pair *map);
+
 /**
  * Get length of a value in number of values.
  *

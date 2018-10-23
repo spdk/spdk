@@ -647,4 +647,83 @@ spdk_json_next(struct spdk_json_val *it)
 	}
 }
 
+void spdk_json_free_map(spdk_json_string_pair *map)
+{
+	spdk_json_string_pair *entry;
+
+	if (map) {
+		for (entry = map; entry->key; entry++) {
+			free(entry->key);
+			if (entry->value) {
+				free(entry->value);
+			}
+		}
+		free(map);
+	}
+}
+
+spdk_json_string_pair *spdk_json_dup_map(spdk_json_string_pair *map)
+{
+	size_t count;
+	spdk_json_string_pair *copy;
+
+	if (!map) {
+		return NULL;
+	}
+	for (count = 0; map[count].key; count++) {}
+	copy = calloc(sizeof(*copy), count + 1);
+	if (!copy) {
+		return NULL;
+	}
+	for (count = 0; map[count].key; count++) {
+		if (!(copy[count].key = strdup(map[count].key))) {
+			spdk_json_free_map(copy);
+			return NULL;
+		}
+		if (map[count].value &&
+		    !(copy[count].value = strdup(map[count].value))) {
+			spdk_json_free_map(copy);
+			return NULL;
+		}
+	}
+	return copy;
+}
+
+
+int spdk_json_decode_map(const struct spdk_json_val *values, void *out)
+{
+	spdk_json_string_pair **map = out;
+	spdk_json_string_pair *entry;
+	uint32_t i;
+
+
+	if (values == NULL || values->type != SPDK_JSON_VAL_OBJECT_BEGIN) {
+		return -1;
+	}
+
+	*map = calloc(sizeof(**map), values->len / 2 + 1);
+	if (!*map) {
+		return -1;
+	}
+
+	for (i = 0, entry = *map; i < values->len;) {
+		const struct spdk_json_val *name = &values[i + 1];
+		const struct spdk_json_val *v = &values[i + 2];
+		/* Here we catch errors like invalid types. */
+		if (!(entry->key = spdk_json_strdup(name)) ||
+		    !(entry->value = spdk_json_strdup(v))) {
+			goto failed;
+		}
+		i += 1 + spdk_json_val_len(v);
+		entry++;
+	}
+
+	return 0;
+ failed:
+	spdk_json_free_map(*map);
+	*map = NULL;
+	return -1;
+}
+
+
 SPDK_LOG_REGISTER_COMPONENT("json_util", SPDK_LOG_JSON_UTIL)

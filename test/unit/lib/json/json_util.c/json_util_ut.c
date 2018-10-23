@@ -766,6 +766,61 @@ test_decode_string(void)
 	free(value);
 }
 
+static void
+test_decode_map(void)
+{
+	spdk_json_string_pair *map, *copy;
+	struct spdk_json_val object[] = {
+		{"", 4, SPDK_JSON_VAL_OBJECT_BEGIN},
+		{"first", 5, SPDK_JSON_VAL_NAME},
+		{"HELLO", 5, SPDK_JSON_VAL_STRING},
+		{"second", 6, SPDK_JSON_VAL_NAME},
+		{"234", 3, SPDK_JSON_VAL_STRING},
+		{"", 0, SPDK_JSON_VAL_OBJECT_END},
+	};
+
+	/* Passing Test: object containing string pairs */
+	CU_ASSERT(spdk_json_decode_map(object, &map) == 0);
+	SPDK_CU_ASSERT_FATAL(map != NULL);
+	CU_ASSERT(map[0].key != NULL);
+	CU_ASSERT(map[0].value != NULL);
+	CU_ASSERT(map[1].key != NULL);
+	CU_ASSERT(map[1].value != NULL);
+	CU_ASSERT(map[2].key == NULL);
+	CU_ASSERT(!strcmp(map[0].key, object[1].start));
+	CU_ASSERT(!strcmp(map[0].value, object[2].start));
+	CU_ASSERT(!strcmp(map[1].key, object[3].start));
+	CU_ASSERT(!strcmp(map[1].value, object[4].start));
+
+	copy = spdk_json_dup_map(map);
+	SPDK_CU_ASSERT_FATAL(copy != NULL);
+	CU_ASSERT(copy[0].key != NULL);
+	CU_ASSERT(copy[0].value != NULL);
+	CU_ASSERT(copy[1].key != NULL);
+	CU_ASSERT(copy[1].value != NULL);
+	CU_ASSERT(copy[2].key == NULL);
+	CU_ASSERT(!strcmp(copy[0].key, object[1].start));
+	CU_ASSERT(!strcmp(copy[0].value, object[2].start));
+	CU_ASSERT(!strcmp(copy[1].key, object[3].start));
+	CU_ASSERT(!strcmp(copy[1].value, object[4].start));
+
+	spdk_json_free_map(map);
+	spdk_json_free_map(copy);
+	map = NULL;
+
+	/* Failing Test: not an object */
+	object[0].type = SPDK_JSON_VAL_ARRAY_BEGIN;
+	CU_ASSERT(spdk_json_decode_map(object, &map) != 0);
+	CU_ASSERT(map == NULL);
+	object[0].type = SPDK_JSON_VAL_OBJECT_BEGIN;
+
+	/* Failing test: invalid type */
+	object[4].type = SPDK_JSON_VAL_NUMBER;
+	CU_ASSERT(spdk_json_decode_map(object, &map) != 0);
+	CU_ASSERT(map == NULL);
+	object[4].type = SPDK_JSON_VAL_STRING;
+}
+
 char ut_json_text[] =
 	"{"
 	"	\"string\": \"Some string data\","
@@ -946,6 +1001,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL ||
 		CU_add_test(suite, "decode_uint64", test_decode_uint64) == NULL ||
 		CU_add_test(suite, "decode_string", test_decode_string) == NULL ||
+		CU_add_test(suite, "decode_map", test_decode_map) == NULL ||
 		CU_add_test(suite, "find_object", test_find) == NULL ||
 		CU_add_test(suite, "iterating", test_iterating) == NULL) {
 		CU_cleanup_registry();
