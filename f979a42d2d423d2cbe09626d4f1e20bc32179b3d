@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4751fda9_d0858bfe",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T01:44:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aed980fe_7c915d6e",
+      "range": {
+        "startLine": 410,
+        "startChar": 3,
+        "endLine": 410,
+        "endChar": 62
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "262f1dd7_e73cede2",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -69,6 +93,30 @@
       "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb5b2a05_2c1550e5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T01:44:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cf3376bb_eeb893b3",
+      "range": {
+        "startLine": 424,
+        "startChar": 10,
+        "endLine": 424,
+        "endChar": 11
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -119,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "a981b92a_b4ce3357",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T01:44:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "66981f45_7ac4deb1",
+      "range": {
+        "startLine": 428,
+        "startChar": 8,
+        "endLine": 428,
+        "endChar": 10
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66a91014_73207d19",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -166,6 +238,30 @@
     },
     {
       "key": {
+        "uuid": "b7e6d8fe_8ceb43b0",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T01:44:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f73c1583_d76003ae",
+      "range": {
+        "startLine": 432,
+        "startChar": 15,
+        "endLine": 432,
+        "endChar": 22
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0d19ffb_1f6ad72b",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -201,6 +297,24 @@
     },
     {
       "key": {
+        "uuid": "7ac35a0b_599292c6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T01:44:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0c7d6317_5500f511",
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3d51a62_989eab62",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -212,6 +326,30 @@
       "writtenOn": "2018-10-18T02:46:01Z",
       "side": 1,
       "message": "Is this check needed. Reading the vbdev_crypto_submit_request(), unmap / flush / reset IOs are called. Before calling, the g_reset_io has been set to the bdev_io and orig_io is also for the bdev_io.",
+      "range": {
+        "startLine": 829,
+        "startChar": 45,
+        "endLine": 829,
+        "endChar": 59
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6eb3e5d_1e8a51af",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T01:44:38Z",
+      "side": 1,
+      "message": "Yes, because this is the general completion routine for non-RW and I\u0027m about to store the bdev_io that completed so that it can be properly freed. Maybe right now the extra \u0026\u0026 isn\u0027t needed (since no other IOs should come after reset) but it doesn\u0027t hurt and at some point in the future if that changes this code will completely break if we store the wrong bdev_io",
+      "parentUuid": "b3d51a62_989eab62",
       "range": {
         "startLine": 829,
         "startChar": 45,
@@ -259,6 +397,30 @@
       "side": 1,
       "message": "This is most defiantly needed and if you read my comment to Ben, this is the part I don\u0027t really like.  The original IO was the reset from above so coming into this routine orig_ctx-\u003eorig_io would be the cb_arg which would represent what is now stored in g_reset_io. Now I need to save off the bdev_io for the reset that this layer issued which is the one that just completed so here bdev_io represents that IO.  That\u0027s why the comment says that it\u0027s overloading this field, its no longer the orig IO (reset from above) but instead the reset that we issued.  If this was confusing in review, it will most likely be more confusing down the road so I\u0027ll come up with a better solution, probably by adding another ctx field, maybe on that says \"reset_rcvd\" and another \"reset_sent\" or something.",
       "parentUuid": "21198831_7a64d741",
+      "range": {
+        "startLine": 830,
+        "startChar": 2,
+        "endLine": 833,
+        "endChar": 30
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0bc3d37_4de45561",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T01:44:38Z",
+      "side": 1,
+      "message": "OK,I redid this to avoid confusion over which bdev is which :) Hopefully it makes more sense now",
+      "parentUuid": "d035105d_afae14ae",
       "range": {
         "startLine": 830,
         "startChar": 2,
@@ -330,6 +492,30 @@
       "side": 1,
       "message": "thanks Ben, that\u0027s what I was about to say :) . Note that I\u0027m going to store this in a new context field to get rid of the global and avoid overloading one of my other fields (see earlier review comment)",
       "parentUuid": "63dd2de7_cec4d8d6",
+      "range": {
+        "startLine": 946,
+        "startChar": 2,
+        "endLine": 946,
+        "endChar": 23
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22316964_c1a5709a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T01:44:38Z",
+      "side": 1,
+      "message": "So still need the global as a flag, not suing it to store the reset bdev anymore mainly for clarity.  Talked with Ben about the issue of getting a global reset on one channel and exactly how we deterministically fail all IOs from the moment in time, on all channels, without any sort of timing window.  Not real clear that we have a 100% solid answer for that but the global flag should work for almost all cases and when it doesn\u0027t the worst case would be that the app gets completion for a reset before all IOs are completed and then gets the remaining IO(s) completed sometime after with whatever status they had natrually.",
+      "parentUuid": "ab38c410_c519fbf7",
       "range": {
         "startLine": 946,
         "startChar": 2,
