@@ -191,6 +191,6 @@ spdk_tracelog_usage(FILE *f, const char *trace_arg)
 	fprintf(f, ")\n");
 #else
 	fprintf(f, " %s, --traceflag <flag>    enable debug log flag (not supported"
-		" - must rebuild with CONFIG_DEBUG=y)\n", trace_arg);
+		" - must rebuild with --enable-debug)\n", trace_arg);
 #endif
 }
