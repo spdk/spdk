@@ -525,6 +525,30 @@
       "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "112db69d_3f96c3f0",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T01:46:25Z",
+      "side": 1,
+      "message": "Note: my last comment is not up to date with the latest implementation.  Just ignore it and let me know if there are further questions on what you see in the code now :)",
+      "parentUuid": "22316964_c1a5709a",
+      "range": {
+        "startLine": 946,
+        "startChar": 2,
+        "endLine": 946,
+        "endChar": 23
+      },
+      "revId": "f979a42d2d423d2cbe09626d4f1e20bc32179b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
