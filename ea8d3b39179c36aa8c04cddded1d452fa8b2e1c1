@@ -22,6 +22,30 @@
       "revId": "ea8d3b39179c36aa8c04cddded1d452fa8b2e1c1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "807179d6_f4caa493",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-23T17:31:29Z",
+      "side": 1,
+      "message": "Agreed.",
+      "parentUuid": "00b59736_ab094fa7",
+      "range": {
+        "startLine": 722,
+        "startChar": 0,
+        "endLine": 732,
+        "endChar": 5
+      },
+      "revId": "ea8d3b39179c36aa8c04cddded1d452fa8b2e1c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
