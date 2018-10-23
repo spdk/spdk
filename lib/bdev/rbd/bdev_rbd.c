@@ -60,6 +60,7 @@ struct bdev_rbd {
 	struct spdk_bdev disk;
 	char *rbd_name;
 	char *pool_name;
+	spdk_json_string_pair *config;
 	rbd_image_info_t info;
 	TAILQ_ENTRY(bdev_rbd) tailq;
 	struct spdk_poller *reset_timer;
@@ -91,12 +92,13 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 	free(rbd->disk.name);
 	free(rbd->rbd_name);
 	free(rbd->pool_name);
+	spdk_json_free_map(rbd->config);
 	free(rbd);
 }
 
 static int
-bdev_rados_context_init(const char *rbd_pool_name, rados_t *cluster,
-			rados_ioctx_t *io_ctx)
+bdev_rados_context_init(const char *rbd_pool_name, spdk_json_string_pair *config,
+			rados_t *cluster, rados_ioctx_t *io_ctx)
 {
 	int ret;
 
@@ -106,11 +108,24 @@ bdev_rados_context_init(const char *rbd_pool_name, rados_t *cluster,
 		return -1;
 	}
 
-	ret = rados_conf_read_file(*cluster, NULL);
-	if (ret < 0) {
-		SPDK_ERRLOG("Failed to read conf file\n");
-		rados_shutdown(*cluster);
-		return -1;
+	if (config) {
+		spdk_json_string_pair *entry = config;
+		while (entry->key) {
+			ret = rados_conf_set(*cluster, entry->key, entry->value);
+			if (ret < 0) {
+				SPDK_ERRLOG("Failed to set %s = %s\n", entry->key, entry->value);
+				rados_shutdown(*cluster);
+				return -1;
+			}
+			entry++;
+		}
+	} else {
+		ret = rados_conf_read_file(*cluster, NULL);
+		if (ret < 0) {
+			SPDK_ERRLOG("Failed to read conf file\n");
+			rados_shutdown(*cluster);
+			return -1;
+		}
 	}
 
 	ret = rados_connect(*cluster);
@@ -131,14 +146,14 @@ bdev_rados_context_init(const char *rbd_pool_name, rados_t *cluster,
 }
 
 static int
-bdev_rbd_init(const char *rbd_pool_name, const char *rbd_name, rbd_image_info_t *info)
+bdev_rbd_init(const char *rbd_pool_name, spdk_json_string_pair *config, const char *rbd_name, rbd_image_info_t *info)
 {
 	int ret;
 	rados_t cluster = NULL;
 	rados_ioctx_t io_ctx = NULL;
 	rbd_image_t image = NULL;
 
-	ret = bdev_rados_context_init(rbd_pool_name, &cluster, &io_ctx);
+	ret = bdev_rados_context_init(rbd_pool_name, config, &cluster, &io_ctx);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to create rados context for rbd_pool=%s\n",
 			    rbd_pool_name);
@@ -492,7 +507,7 @@ bdev_rbd_create_cb(void *io_device, void *ctx_buf)
 	ch->io_ctx = NULL;
 	ch->pfd.fd = -1;
 
-	ret = bdev_rados_context_init(ch->disk->pool_name, &ch->cluster, &ch->io_ctx);
+	ret = bdev_rados_context_init(ch->disk->pool_name, ch->disk->config, &ch->cluster, &ch->io_ctx);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to create rados context for rbd_pool=%s\n",
 			    ch->disk->pool_name);
@@ -591,7 +606,9 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 };
 
 struct spdk_bdev *
-spdk_bdev_rbd_create(const char *name, const char *pool_name, const char *rbd_name,
+spdk_bdev_rbd_create(const char *name, const char *pool_name,
+		     spdk_json_string_pair *config,
+		     const char *rbd_name,
 		     uint32_t block_size)
 {
 	struct bdev_rbd *rbd;
@@ -618,8 +635,12 @@ spdk_bdev_rbd_create(const char *name, const char *pool_name, const char *rbd_na
 		bdev_rbd_free(rbd);
 		return NULL;
 	}
+	if (config && !(rbd->config = spdk_json_dup_map(config))) {
+		bdev_rbd_free(rbd);
+		return NULL;
+	}
 
-	ret = bdev_rbd_init(rbd->pool_name, rbd_name, &rbd->info);
+	ret = bdev_rbd_init(rbd->pool_name, rbd->config, rbd_name, &rbd->info);
 	if (ret < 0) {
 		bdev_rbd_free(rbd);
 		SPDK_ERRLOG("Failed to init rbd device\n");
@@ -726,7 +747,8 @@ bdev_rbd_library_init(void)
 			}
 		}
 
-		if (spdk_bdev_rbd_create(NULL, pool_name, rbd_name, block_size) == NULL) {
+		// TODO(?): rbd config values
+		if (spdk_bdev_rbd_create(NULL, pool_name, NULL, rbd_name, block_size) == NULL) {
 			rc = -1;
 			goto end;
 		}

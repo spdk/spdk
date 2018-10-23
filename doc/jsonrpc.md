@@ -1082,6 +1082,14 @@ name                    | Optional | string      | Bdev name
 pool_name               | Required | string      | Pool name
 rbd_name                | Required | string      | Image name
 block_size              | Required | number      | Block size
+config                  | Optional | string map  | Explicit librados configuration
+
+If no config is specified, Ceph configuration files must exist with
+all relevant settings for accessing the pool. If a config map is
+passed, the configuration files are ignored and instead all key/value
+pairs are passed to rados_conf_set to configure cluster access. In
+practice, "mon_host" (= list of monitor address+port) and "key" (= the
+secret key stored in Ceph keyrings) are enough.
 
 ### Result
 
@@ -1096,6 +1104,10 @@ Example request:
   "params": {
     "pool_name": "rbd",
     "rbd_name": "foo",
+    "config": {
+      "mon_host": "192.168.7.1:6789,192.168.7.4:6789,192.168.7.2:6789",
+      "key": "AQDwf8db7zR1GRAA5k7NKXjS5S5V4mntwUDnGQ==",
+    }
     "block_size": 4096
   },
   "jsonrpc": "2.0",
