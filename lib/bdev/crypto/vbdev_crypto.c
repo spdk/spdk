@@ -1176,6 +1176,13 @@ vbdev_crypto_init(void)
 	int rc = 0;
 	const char *key = NULL;
 
+	/* Fully configure both SW and HW drivers. */
+	rc = vbdev_crypto_init_crypto_drivers();
+	if (rc) {
+		SPDK_ERRLOG("Error setting up crypto devices\n");
+		return rc;
+	}
+
 	sp = spdk_conf_find_section(NULL, "crypto");
 	if (sp == NULL) {
 		return 0;
@@ -1219,13 +1226,6 @@ vbdev_crypto_init(void)
 		}
 	}
 
-	/* Fully configure both SW and HW drivers. */
-	rc = vbdev_crypto_init_crypto_drivers();
-	if (rc) {
-		SPDK_ERRLOG("Error setting up crypto devices\n");
-		return rc;
-	}
-
 	return rc;
 }
 
@@ -1256,6 +1256,10 @@ vbdev_crypto_finish(void)
 		TAILQ_REMOVE(&g_device_qp, dev_qp, link);
 		free(dev_qp);
 	}
+
+	rte_mempool_free(g_crypto_op_mp);
+	spdk_mempool_free(g_mbuf_mp);
+	spdk_mempool_free(g_session_mp);
 }
 
 /* During init we'll be asked how much memory we'd like passed to us

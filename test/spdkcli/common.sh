@@ -14,7 +14,7 @@ function on_error_exit() {
 }
 
 function run_spdk_tgt() {
-	$SPDKCLI_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 1024 &
+	$SPDKCLI_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 4096 &
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
 }
