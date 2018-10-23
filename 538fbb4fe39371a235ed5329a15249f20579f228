@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d0c28a8_f65d79f4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 821,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-23T17:42:50Z",
+      "side": 1,
+      "message": "If you assigned this to bdev_io on the submit path, you could just be verifying that reset_io and bdev_io do indeed match here.",
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61e1391d_4e8230a7",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-23T17:42:50Z",
+      "side": 1,
+      "message": "Why not just assign this to bdev_io?",
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
