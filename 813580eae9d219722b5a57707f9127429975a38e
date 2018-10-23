@@ -22,6 +22,30 @@
       "revId": "813580eae9d219722b5a57707f9127429975a38e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e0ab671_80bddbd2",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-23T13:39:22Z",
+      "side": 1,
+      "message": "No, I\u0027m not 100% positive but posting for review was a good way to check :)\n\nI moved the JSON code from here to vbdev_passthru_config_json() after examining other bdevs and testing using the next patch in this series.  From what I can tell this function is just for bdev specific methods, not for module methods.  In the next patch you can see where I added in use of the RPC to construct a PT.  In that code JSON is used to both save and load a config so it seems like these changes in this patch were needed.\n\nCan you or someone else confirm?",
+      "parentUuid": "350a09e4_209de4a5",
+      "range": {
+        "startLine": 492,
+        "startChar": 1,
+        "endLine": 493,
+        "endChar": 32
+      },
+      "revId": "813580eae9d219722b5a57707f9127429975a38e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
