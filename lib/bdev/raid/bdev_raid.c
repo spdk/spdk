@@ -1273,6 +1273,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	raid_bdev_gen->ctxt = raid_bdev;
 	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
 	raid_bdev_gen->module = &g_raid_if;
+	raid_bdev_gen->write_cache = 0;
 
 	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_configuring_list, raid_bdev, state_link);
 	TAILQ_INSERT_TAIL(&g_spdk_raid_bdev_list, raid_bdev, global_link);
@@ -1364,15 +1365,12 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		}
 	}
 
-	raid_bdev_gen = &raid_bdev->bdev;
-	raid_bdev_gen->write_cache = 0;
-	raid_bdev_gen->blocklen = blocklen;
-	raid_bdev_gen->ctxt = raid_bdev;
-	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
-	raid_bdev_gen->module = &g_raid_if;
 	raid_bdev->strip_size = (raid_bdev->strip_size * 1024) / blocklen;
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
 	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
+
+	raid_bdev_gen = &raid_bdev->bdev;
+	raid_bdev_gen->blocklen = blocklen;
 	if (raid_bdev->num_base_bdevs > 1) {
 		raid_bdev_gen->optimal_io_boundary = raid_bdev->strip_size;
 		raid_bdev_gen->split_on_optimal_io_boundary = true;
