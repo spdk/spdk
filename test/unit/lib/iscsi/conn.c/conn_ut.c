@@ -247,8 +247,9 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	return 0;
 }
 
-void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
+bool spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 {
+	return true;
 }
 
 int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
