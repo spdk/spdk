@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e854b61e_9562c508",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-23T12:46:17Z",
+      "side": 1,
+      "message": "In this case alignment is actually 512 (default one). What will happen when iov_base has alignment \u003d 256?\n\nMaybe in spdk_bdev_io_get_buf() we could use SPDK_BDEV_POOL_ALIGNMENT instead of 0 and then we won\u0027t need to check special \u00270\u0027 case in few places.",
+      "range": {
+        "startLine": 424,
+        "startChar": 0,
+        "endLine": 426,
+        "endChar": 2
+      },
+      "revId": "bd7fc42069e776139bf86872774421d712587749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f8f56ec_03ac1e65",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-23T12:46:17Z",
+      "side": 1,
+      "message": "This is called 3 times in this function. Can we create a variable for this?",
+      "range": {
+        "startLine": 539,
+        "startChar": 5,
+        "endLine": 539,
+        "endChar": 43
+      },
+      "revId": "bd7fc42069e776139bf86872774421d712587749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c8f047c_8dc45b2f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-23T12:46:17Z",
+      "side": 1,
+      "message": "Use SPDK_BDEV_POOL_ALIGNMENT here",
+      "range": {
+        "startLine": 550,
+        "startChar": 14,
+        "endLine": 550,
+        "endChar": 17
+      },
+      "revId": "bd7fc42069e776139bf86872774421d712587749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
