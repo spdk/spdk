@@ -62,6 +62,18 @@ spdk_nvmf_get_transport_ops(enum spdk_nvme_transport_type type)
 	return NULL;
 }
 
+const struct spdk_nvmf_transport_opts *
+spdk_nvmf_get_transport_opts(struct spdk_nvmf_transport *transport)
+{
+	return &transport->opts;
+}
+
+enum spdk_nvme_transport_type
+spdk_nvmf_get_transport_type(struct spdk_nvmf_transport *transport)
+{
+	return transport->ops->type;
+}
+
 struct spdk_nvmf_transport *
 spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 			   struct spdk_nvmf_transport_opts *opts)
@@ -98,6 +110,18 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 	transport->opts = *opts;
 
 	return transport;
+}
+
+struct spdk_nvmf_transport *
+spdk_nvmf_transport_get_first(struct spdk_nvmf_tgt *tgt)
+{
+	return TAILQ_FIRST(&tgt->transports);
+}
+
+struct spdk_nvmf_transport *
+spdk_nvmf_transport_get_next(struct spdk_nvmf_transport *transport)
+{
+	return TAILQ_NEXT(transport, link);
 }
 
 int
