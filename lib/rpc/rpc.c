@@ -66,6 +66,12 @@ spdk_rpc_set_state(uint32_t state)
 	g_rpc_state = state;
 }
 
+uint32_t
+spdk_rpc_get_state(void)
+{
+	return g_rpc_state;
+}
+
 static void
 spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *method,
@@ -215,6 +221,26 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func, uint3
 
 	/* TODO: use a hash table or sorted list */
 	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);
+}
+
+int
+spdk_rpc_is_method_allowed(const char *method, uint32_t state_mask)
+{
+	struct spdk_rpc_method *m;
+
+	SLIST_FOREACH(m, &g_rpc_methods, slist) {
+		if (strcmp(m->name, method) != 0) {
+			continue;
+		}
+
+		if ((m->state_mask & g_rpc_state) == g_rpc_state) {
+			return 0;
+		} else {
+			return -EPERM;
+		}
+	}
+
+	return -ENOENT;
 }
 
 void
