@@ -474,15 +474,18 @@ static void
 spdk_iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
 {
 	int rc;
+	struct spdk_iscsi_tgt_node *target;
 
 	if (conn->sess->connections > 1) {
 		/* connection specific cleanup */
 	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
 		/* clean up all tasks to all LUNs for session */
-		rc = spdk_iscsi_tgt_node_cleanup_luns(conn,
-						      conn->sess->target);
-		if (rc < 0) {
-			SPDK_ERRLOG("target abort failed\n");
+		target = conn->sess->target;
+		if (target != NULL) {
+			rc = spdk_iscsi_tgt_node_cleanup_luns(conn, target);
+			if (rc < 0) {
+				SPDK_ERRLOG("target abort failed\n");
+			}
 		}
 	}
 }
@@ -517,16 +520,12 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 void
 spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_tgt_node	*target;
-	int				rc;
+	int rc;
 
 	conn->state = ISCSI_CONN_STATE_EXITED;
 
 	if (conn->sess != NULL && conn->pending_task_cnt > 0) {
-		target = conn->sess->target;
-		if (target != NULL) {
-			spdk_iscsi_conn_cleanup_backend(conn);
-		}
+		spdk_iscsi_conn_cleanup_backend(conn);
 	}
 
 	spdk_clear_all_transfer_task(conn, NULL);
