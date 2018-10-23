@@ -141,7 +141,7 @@ bdev_rbd_init(const char *rbd_pool_name, const char *rbd_name, rbd_image_info_t 
 	ret = bdev_rados_context_init(rbd_pool_name, &cluster, &io_ctx);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to create rados context for rbd_pool=%s\n",
-			    rbd_name);
+			    rbd_pool_name);
 		return -1;
 	}
 
