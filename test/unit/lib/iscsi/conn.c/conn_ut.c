@@ -154,6 +154,12 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 	return NULL;
 }
 
+bool
+spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev)
+{
+	return true;
+}
+
 int
 spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb,
 		   void *hotremove_ctx, struct spdk_scsi_desc **desc)
