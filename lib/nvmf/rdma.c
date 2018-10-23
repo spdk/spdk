@@ -305,7 +305,8 @@ struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poll_group	*group;
 
-	struct ibv_cq				*cq;
+	struct ibv_cq				*recv_cq;
+	struct ibv_cq				*send_cq;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
 
@@ -623,8 +624,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	memset(&rqpair->ibv_init_attr, 0, sizeof(struct ibv_qp_init_attr));
 	rqpair->ibv_init_attr.qp_context	= rqpair;
 	rqpair->ibv_init_attr.qp_type		= IBV_QPT_RC;
-	rqpair->ibv_init_attr.send_cq		= rqpair->poller->cq;
-	rqpair->ibv_init_attr.recv_cq		= rqpair->poller->cq;
+	rqpair->ibv_init_attr.send_cq		= rqpair->poller->send_cq;
+	rqpair->ibv_init_attr.recv_cq		= rqpair->poller->recv_cq;
 	rqpair->ibv_init_attr.cap.max_send_wr	= rqpair->max_queue_depth *
 			2; /* SEND, READ, and WRITE operations */
 	rqpair->ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
@@ -2270,9 +2271,19 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 
 		TAILQ_INIT(&poller->qpairs);
 
-		poller->cq = ibv_create_cq(device->context, NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
-		if (!poller->cq) {
-			SPDK_ERRLOG("Unable to create completion queue\n");
+		poller->recv_cq = ibv_create_cq(device->context, NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
+		if (!poller->recv_cq) {
+			SPDK_ERRLOG("Unable to create recv completion queue\n");
+			free(poller);
+			free(rgroup);
+			pthread_mutex_unlock(&rtransport->lock);
+			return NULL;
+		}
+
+		poller->send_cq = ibv_create_cq(device->context, NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
+		if (!poller->send_cq) {
+			SPDK_ERRLOG("Unable to create send completion queue\n");
+			ibv_destroy_cq(poller->recv_cq);
 			free(poller);
 			free(rgroup);
 			pthread_mutex_unlock(&rtransport->lock);
@@ -2302,9 +2313,14 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
 		TAILQ_REMOVE(&rgroup->pollers, poller, link);
 
-		if (poller->cq) {
-			ibv_destroy_cq(poller->cq);
+		if (poller->recv_cq) {
+			ibv_destroy_cq(poller->recv_cq);
 		}
+
+		if (poller->send_cq) {
+			ibv_destroy_cq(poller->send_cq);
+		}
+
 		TAILQ_FOREACH_SAFE(qpair, &poller->qpairs, link, tmp_qpair) {
 			spdk_nvmf_rdma_qpair_destroy(qpair);
 		}
@@ -2489,10 +2505,10 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	int count = 0;
 	bool error = false;
 
-	/* Poll for completing operations. */
-	reaped = ibv_poll_cq(rpoller->cq, 32, wc);
+	/* Poll for completing send operations. */
+	reaped = ibv_poll_cq(rpoller->send_cq, 32, wc);
 	if (reaped < 0) {
-		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
+		SPDK_ERRLOG("Error polling send CQ! (%d): %s\n",
 			    errno, spdk_strerror(errno));
 		return -1;
 	}
@@ -2500,40 +2516,12 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	for (i = 0; i < reaped; i++) {
 		/* Handle error conditions */
 		if (wc[i].status) {
-			SPDK_WARNLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				     rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			SPDK_WARNLOG("CQ error on send CQ %p, Request 0x%lu (%d): %s\n",
+				     rpoller->send_cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
 
-			switch (wc[i].opcode) {
-			case IBV_WC_SEND:
-				rdma_req = get_rdma_req_from_wc(&wc[i]);
-				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
-				/* We're going to attempt an error recovery, so force the request into
-				 * the completed state. */
-				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
-				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-				break;
-			case IBV_WC_RECV:
-				rdma_recv = get_rdma_recv_from_wc(&wc[i]);
-				rqpair = rdma_recv->qpair;
-
-				/* Dump this into the incoming queue. This gets cleaned up when
-				 * the queue pair disconnects or recovers. */
-				TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
-				break;
-			case IBV_WC_RDMA_WRITE:
-			case IBV_WC_RDMA_READ:
-				/* If the data transfer fails still force the queue into the error state,
-				 * but the rdma_req objects should only be manipulated in response to
-				 * SEND and RECV operations. */
-				rdma_req = get_rdma_req_from_wc(&wc[i]);
-				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-				break;
-			default:
-				SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
-				continue;
-			}
+			rdma_req = get_rdma_req_from_wc(&wc[i]);
+			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			/* Disconnect the connection. */
 			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
@@ -2576,9 +2564,41 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
 			break;
 
+		default:
+			SPDK_ERRLOG("Received an unknown opcode on the send CQ: %d\n", wc[i].opcode);
+			continue;
+		}
+	}
+
+	/* Poll for incoming commands */
+	reaped = ibv_poll_cq(rpoller->recv_cq, 32, wc);
+	if (reaped < 0) {
+		SPDK_ERRLOG("Error polling recv CQ! (%d): %s\n",
+			    errno, spdk_strerror(errno));
+		return -1;
+	}
+
+	for (i = 0; i < reaped; i++) {
+		/* Handle error conditions */
+		if (wc[i].status) {
+			SPDK_WARNLOG("CQ error on recv CQ %p, Request 0x%lu (%d): %s\n",
+				     rpoller->recv_cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			error = true;
+
+			rdma_recv = get_rdma_recv_from_wc(&wc[i]);
+			rqpair = rdma_recv->qpair;
+
+			/* Disconnect the connection. */
+			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+			continue;
+		}
+
+		switch (wc[i].opcode) {
 		case IBV_WC_RECV:
 			rdma_recv = get_rdma_recv_from_wc(&wc[i]);
 			rqpair = rdma_recv->qpair;
+
+			count++;
 
 			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 			/* Try to process other queued requests */
@@ -2586,7 +2606,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 
 		default:
-			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
+			SPDK_ERRLOG("Received an unknown opcode on the recv CQ: %d\n", wc[i].opcode);
 			continue;
 		}
 	}
