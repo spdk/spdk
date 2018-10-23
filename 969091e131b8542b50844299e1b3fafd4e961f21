@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae5605c9_2bc2d5ac",
+        "filename": "test/pkg/fedora28_test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-23T14:29:36Z",
+      "side": 1,
+      "message": "This should not be needed.",
+      "range": {
+        "startLine": 24,
+        "startChar": 10,
+        "endLine": 24,
+        "endChar": 41
+      },
+      "revId": "969091e131b8542b50844299e1b3fafd4e961f21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f99f263_5f91656c",
+        "filename": "test/pkg/fedora28_test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-23T14:29:36Z",
+      "side": 1,
+      "message": "+ no_arch dir \nalso * -\u003e *.rpm",
+      "range": {
+        "startLine": 28,
+        "startChar": 50,
+        "endLine": 28,
+        "endChar": 56
+      },
+      "revId": "969091e131b8542b50844299e1b3fafd4e961f21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61c7cac3_d4467ef9",
+        "filename": "test/pkg/fedora28_test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-23T14:29:36Z",
+      "side": 1,
+      "message": "This should be the same list as in install_package().",
+      "range": {
+        "startLine": 40,
+        "startChar": 17,
+        "endLine": 40,
+        "endChar": 102
+      },
+      "revId": "969091e131b8542b50844299e1b3fafd4e961f21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
