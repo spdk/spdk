@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "0d8770fb_dc5e208a",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-23T14:57:14Z",
+      "side": 1,
+      "message": "-\u003e error :(",
+      "range": {
+        "startLine": 76,
+        "startChar": 57,
+        "endLine": 76,
+        "endChar": 63
+      },
+      "revId": "aad6aca9693c8b3769c8a4d41278574129cc1ad3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f8dfbea_e8669c5a",
         "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
         "patchSetId": 14
