@@ -38,9 +38,21 @@
 
 #include "spdk/bdev.h"
 
+/* Array of key/value pairs, terminated by a single NULL key pointer. */
+typedef char **spdk_bdev_rbd_map;
+
+/**
+ * Decodes a JSON object into a spdk_bdev_rbd_string_pairs.
+ */
+int spdk_bdev_rbd_decode_map(const struct spdk_json_val *val, void *out);
+
+void spdk_bdev_rbd_free_map(spdk_bdev_rbd_map map);
+spdk_bdev_rbd_map spdk_bdev_rbd_dup_map(spdk_bdev_rbd_map map);
+
 typedef void (*spdk_delete_rbd_complete)(void *cb_arg, int bdeverrno);
 
-struct spdk_bdev *spdk_bdev_rbd_create(const char *name, const char *pool_name,
+struct spdk_bdev *spdk_bdev_rbd_create(const char *name, const char *user_id, const char *pool_name,
+				       spdk_bdev_rbd_map config,
 				       const char *rbd_name, uint32_t block_size);
 /**
  * Delete rbd bdev.
