@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6cd60fa_229fcf75",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-23T18:27:01Z",
+      "side": 1,
+      "message": "might \u003d\u003e may?  or must?",
+      "revId": "e17b1b903616fd7451dd89db19093e7bbd7de63d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1137efda_76a7ccb7",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-23T18:27:01Z",
+      "side": 1,
+      "message": "unused",
+      "revId": "e17b1b903616fd7451dd89db19093e7bbd7de63d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "722e2a7d_79ccd63e",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-23T18:27:01Z",
+      "side": 1,
+      "message": "Do we need this lock?  I\u0027m wondering if we can simplify the code and just tell the caller that they have to do everything from the same thread.  If they don\u0027t want to do it from the same thread, have the caller implement locking.",
+      "revId": "e17b1b903616fd7451dd89db19093e7bbd7de63d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
