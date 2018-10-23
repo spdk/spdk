@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fa390d0_26a911bf",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-10-23T13:28:51Z",
+      "side": 1,
+      "message": "How about just one line : conn-\u003eshutdown_timer \u003d spdk_poller_register(_spdk_iscsi_conn_check_pending_tasks, conn, 1000);  I think most of the existing similar code(also in other places) make the logic more complicated.",
+      "revId": "883cc4147a6383eea85753d99bdc84b1b0efd0f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
