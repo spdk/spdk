@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82cc81d7_85cbc9fd",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-23T13:02:34Z",
+      "side": 1,
+      "message": "Unnecessary line",
+      "revId": "f5a6f08e178ca9e259398e9fc39edcf2d2ae4767",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "355930e0_db3c7bf2",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1216,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-23T13:02:34Z",
+      "side": 1,
+      "message": "Unnecessary line",
+      "revId": "f5a6f08e178ca9e259398e9fc39edcf2d2ae4767",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "555b015f_166a5b4a",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1289,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-23T13:02:34Z",
+      "side": 1,
+      "message": "Unnecessary line",
+      "revId": "f5a6f08e178ca9e259398e9fc39edcf2d2ae4767",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
