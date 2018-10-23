@@ -33,9 +33,9 @@ sed -i 's/[[:space:]]*$//' $testdir/btest.out
 $rootdir/test/app/match/match -v $testdir/btest.out.match
 diff $testdir/test.pattern $testdir/test.pattern.blob
 
-rm -rf $testdir/btest.out
+#rm -rf $testdir/btest.out
 rm -rf $testdir/blobcli.conf
 rm -rf $testdir/*.blob
-rm -rf $testdir/test.pattern
+#rm -rf $testdir/test.pattern
 
 timing_exit blobstore
