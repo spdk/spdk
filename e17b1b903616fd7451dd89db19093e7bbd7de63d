@@ -50,6 +50,24 @@
       "revId": "e17b1b903616fd7451dd89db19093e7bbd7de63d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08b8c7c8_754a8364",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-10-23T20:38:50Z",
+      "side": 1,
+      "message": "agree with Jim.\nEven with this lock, it still can\u0027t keep the function thread-safe from concurrent calling.",
+      "parentUuid": "722e2a7d_79ccd63e",
+      "revId": "e17b1b903616fd7451dd89db19093e7bbd7de63d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
