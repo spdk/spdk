@@ -16,6 +16,24 @@
       "revId": "883cc4147a6383eea85753d99bdc84b1b0efd0f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f6680b3_f672826b",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-23T14:40:48Z",
+      "side": 1,
+      "message": "Make sense to me but we see this logic in other places too as you say.\nHow about doing this refactoring in the separate patch?\nI will do tomorrow.",
+      "parentUuid": "3fa390d0_26a911bf",
+      "revId": "883cc4147a6383eea85753d99bdc84b1b0efd0f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
