@@ -33,6 +33,47 @@
       "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18683cf5_b49f13dd",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-24T06:32:55Z",
+      "side": 1,
+      "message": "After reading the code, the io_ctx-\u003ecrypto_bdev-\u003ereset_io is to track to reset_io initiated at this layer and not the reset_io from upper layer which is tracked at io_ctx-\u003eorig_io.",
+      "parentUuid": "61e1391d_4e8230a7",
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28b927a6_298ac7d5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-24T06:32:55Z",
+      "side": 1,
+      "message": "you may just put io_ctx (at line 908) as the cb_arg which seems more clear from the context (orig_io: the reset I/O received from upper layer and 1st parameter - bdev_io of_complete_internal_io: the reset I/O initiated from current layer).",
+      "range": {
+        "startLine": 945,
+        "startChar": 27,
+        "endLine": 945,
+        "endChar": 34
+      },
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
