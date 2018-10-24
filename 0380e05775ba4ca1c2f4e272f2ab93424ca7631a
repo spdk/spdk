@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "982c991c_7c09e0c9",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T20:57:44Z",
+      "side": 1,
+      "message": "I think this is good, although general use of shared libraries is still rather difficult.  Lack of inter-library dependencies specifically makes using the shared libraries a bit difficult at the moment.  I\u0027ll defer to Lance and Pawel on their input on this.",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47b8f030_74325691",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T20:57:44Z",
+      "side": 1,
+      "message": "statically\n\nthere should also be a comma after \"default\"",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "555f769a_3d74bf9b",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T20:57:44Z",
+      "side": 1,
+      "message": "provide \u003d\u003e provides\ncomma after \"default\"\nLet\u0027s also capitalize SPDK here",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2726328a_2211c58a",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T20:57:44Z",
+      "side": 1,
+      "message": "you can remove the leading space",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfb0d81c_2b02f963",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T20:57:44Z",
+      "side": 1,
+      "message": "spdk \u003d\u003e SPDK\n\nsureo \u003d\u003e sure to?",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df3fe025_752928b9",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T20:57:44Z",
+      "side": 1,
+      "message": "the following steps",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
