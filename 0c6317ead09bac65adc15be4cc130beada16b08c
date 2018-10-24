@@ -22,6 +22,30 @@
       "revId": "0c6317ead09bac65adc15be4cc130beada16b08c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc4cbadf_aa5037fa",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1468,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T23:37:28Z",
+      "side": 1,
+      "message": "We have to get not only the raid_bdev but also the slot in which the base_bdev is registered.\nAnd we don\u0027t have other cases that uses the proposed helper function.\n\nSo I want to hold your idea as a promising option.",
+      "parentUuid": "033313a2_03284bd5",
+      "range": {
+        "startLine": 1466,
+        "startChar": 1,
+        "endLine": 1468,
+        "endChar": 56
+      },
+      "revId": "0c6317ead09bac65adc15be4cc130beada16b08c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
