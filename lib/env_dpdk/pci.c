@@ -84,7 +84,9 @@ spdk_pci_device_detach(struct spdk_pci_device *device)
 #endif
 #endif
 
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
+	rte_eal_hotplug_remove("pci", device->device.name);
+#elif RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 	struct spdk_pci_addr	addr;
 	char			bdf[32];
 
@@ -136,7 +138,9 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 	ctx->cb_fn = enum_cb;
 	ctx->cb_arg = enum_ctx;
 
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
+	if (rte_eal_hotplug_add("pci", bdf, "") != 0) {
+#elif RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 	if (rte_eal_dev_attach(bdf, "") != 0) {
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
 	if (rte_pci_probe_one(&addr) != 0) {
