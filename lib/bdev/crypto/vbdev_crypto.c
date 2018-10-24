@@ -1449,7 +1449,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 
 		vbdev->crypto_bdev.product_name = "crypto";
 		vbdev->crypto_bdev.write_cache = bdev->write_cache;
-		vbdev->crypto_bdev.need_aligned_buffer = bdev->need_aligned_buffer;
+		vbdev->crypto_bdev.required_alignment = bdev->required_alignment;
 		/* Note: CRYPTO_MAX_IO is in units of bytes, optimal_io_boundary is
 		 * in units of blocks.
 		 */
