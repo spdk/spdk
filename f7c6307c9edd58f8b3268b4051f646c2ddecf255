@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3494f0ef_48a2c2bf",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T18:09:14Z",
+      "side": 1,
+      "message": "I\u0027m still not following how this locking here is sufficient.  What happens if multiple threads call spdk_jsonrpc_client_recv_response at once?  Won\u0027t all of this code earlier int his function stomp on each other?",
+      "revId": "f7c6307c9edd58f8b3268b4051f646c2ddecf255",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
