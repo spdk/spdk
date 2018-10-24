@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "80e8025e_27984808",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 807,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-24T11:34:24Z",
+      "side": 1,
+      "message": "Can you move this comment above crypto_ch-\u003eiter \u003d i;?",
+      "range": {
+        "startLine": 805,
+        "startChar": 2,
+        "endLine": 807,
+        "endChar": 4
+      },
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0d0c28a8_f65d79f4",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 10
@@ -54,6 +77,29 @@
     },
     {
       "key": {
+        "uuid": "02b03610_4fd581e6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 943,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-24T11:34:24Z",
+      "side": 1,
+      "message": "This looks like a hack. Maybe you could put some #define that will tell that this value serves as a flag?",
+      "range": {
+        "startLine": 943,
+        "startChar": 42,
+        "endLine": 943,
+        "endChar": 52
+      },
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "28b927a6_298ac7d5",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 10
@@ -65,6 +111,30 @@
       "writtenOn": "2018-10-24T06:32:55Z",
       "side": 1,
       "message": "you may just put io_ctx (at line 908) as the cb_arg which seems more clear from the context (orig_io: the reset I/O received from upper layer and 1st parameter - bdev_io of_complete_internal_io: the reset I/O initiated from current layer).",
+      "range": {
+        "startLine": 945,
+        "startChar": 27,
+        "endLine": 945,
+        "endChar": 34
+      },
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bca46ad_65dc43a7",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-24T11:34:24Z",
+      "side": 1,
+      "message": "Since you want to pass bdev_io in different context than for other io, maybe you could add separate callback for reset, like _complete_internal_reset?",
+      "parentUuid": "28b927a6_298ac7d5",
       "range": {
         "startLine": 945,
         "startChar": 27,
