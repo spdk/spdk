@@ -261,10 +261,13 @@ struct spdk_bdev {
 	uint64_t blockcnt;
 
 	/**
-	 * This is used to make sure buffers are sector aligned.
-	 * This causes double buffering on writes.
+	 * Specifies an alignment requirement for data buffers associated with an spdk_bdev_io.
+	 * 0 = no alignment requirement
+	 * >0 = alignment requirement is 2 ^ required_alignment.
+	 * bdev layer will automatically double buffer any spdk_bdev_io that violates this
+	 * alignment, before the spdk_bdev_io is submitted to the bdev module.
 	 */
-	bool need_aligned_buffer;
+	uint8_t required_alignment;
 
 	/**
 	 * Specifies whether the optimal_io_boundary is mandatory or
