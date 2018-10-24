@@ -36,8 +36,10 @@ class UIRoot(UINode):
         self._children = set([])
         UIBdevs(self)
         UILvolStores(self)
-        UIVhosts(self)
-        UINVMf(self)
+        if self.has_subsystem("vhost"):
+            UIVhosts(self)
+        if self.has_subsystem("nvmf"):
+            UINVMf(self)
         UIISCSI(self)
 
     def set_rpc_target(self, s):
@@ -420,6 +422,12 @@ class UIRoot(UINode):
     @verbose
     def get_iscsi_global_params(self, **kwargs):
         return rpc.iscsi.get_iscsi_global_params(self.client, **kwargs)
+
+    def has_subsystem(self, subsystem):
+        for system in rpc.subsystem.get_subsystems(self.client):
+            if subsystem.lower() == system["subsystem"].lower():
+                return True
+        return False
 
 
 class Bdev(object):
