@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1d8e9800_62b4115c",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-24T21:42:45Z",
+      "side": 1,
+      "message": "When building existing SPDK applications, examples, etc. from the SPDK tree source, this documentation should suffice.   It\u0027s when attempting to build new SPDK applications, especially those out of tree that one is likely to run into greater difficulty in which case it is suggested that one links against the implicit linker script, libspdk.so, which groups all of the individual SPDK libraries.   Doing so, along with specifying the libspdk_env_dpdk.so and the DPDK rte_X libraries -- intentionally not part of the libspdk.so so as to enable an alternate env implementation -- should make the effort less arduous.   Such documentation details as these I provide here, I think, may be more appropriate for any docs included in the spdk-devel package.",
+      "parentUuid": "982c991c_7c09e0c9",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47b8f030_74325691",
         "filename": "README.md",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "4be74c7d_4c67f93d",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-24T21:42:45Z",
+      "side": 1,
+      "message": "Suggest rephrasing:  By default, the build of the SPDK yields static libraries against which the SPDK applications and examples are linked.   Configure option `--with-shared`",
+      "parentUuid": "47b8f030_74325691",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "555f769a_3d74bf9b",
         "filename": "README.md",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2018-10-24T20:57:44Z",
       "side": 1,
       "message": "provide \u003d\u003e provides\ncomma after \"default\"\nLet\u0027s also capitalize SPDK here",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10622038_2ddb4aa7",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-24T21:42:45Z",
+      "side": 1,
+      "message": "Suggest rephrasing:  provides the ability to produce SPDK shared libraries, in addition to the default static ones, which also results in the SPDK executables linked to the shared versions.",
+      "parentUuid": "555f769a_3d74bf9b",
       "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "638bf71f_b33ed6f3",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-24T21:42:45Z",
+      "side": 1,
+      "message": "Add \u0027a\u0027 after start\n\nSuggest rephrasing:   start a SPDK app linked with SPDK shared libraries,",
+      "parentUuid": "cfb0d81c_2b02f963",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df3fe025_752928b9",
         "filename": "README.md",
         "patchSetId": 1
@@ -98,6 +170,23 @@
       "writtenOn": "2018-10-24T20:57:44Z",
       "side": 1,
       "message": "the following steps",
+      "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fa6367b_12f0df5a",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-24T21:42:45Z",
+      "side": 1,
+      "message": "Suggest rephrasing:  run ldconfig specifying the directory containing the SPDK shared libraries.",
       "revId": "0380e05775ba4ca1c2f4e272f2ab93424ca7631a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
