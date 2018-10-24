@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "033313a2_03284bd5",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1468,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-24T12:10:11Z",
+      "side": 1,
+      "message": "Maybe  you could simplify even more:\nAdd separate function:\n\nstatic struct raid_bdev *\n _get_raid_bdev_by_base_bdev(struct spdk_bdev *base_bdev)\n{\n    struct raid_bdev\t*raid_bdev;\n    TAILQ_FOREACH(raid_bdev, \u0026g_spdk_raid_bdev_list, global_link) {\n        for (i \u003d 0; i \u003c raid_bdev-\u003enum_base_bdevs; i++) {\n            if (raid_bdev-\u003ebase_bdev_info[i].bdev \u003d\u003d base_bdev) {\n                return raid_bdev;\n            }\n        }\n    }\n    return NULL;\n}\n\n\nThen you could use:\n raid_bdev \u003d  _get_raid_bdev_by_base_bdev(struct spdk_bdev *base_bdev);\nif (raid_bdev) {\n ...\n} else {\n ...\n}",
+      "range": {
+        "startLine": 1466,
+        "startChar": 1,
+        "endLine": 1468,
+        "endChar": 56
+      },
+      "revId": "0c6317ead09bac65adc15be4cc130beada16b08c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
