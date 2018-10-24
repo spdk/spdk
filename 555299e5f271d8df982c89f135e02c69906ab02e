@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b38a6cc_de68c3ab",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T02:16:04Z",
+      "side": 1,
+      "message": "Adding \"By default, this is set to 50 milliseconds.\" may be helpful.",
+      "range": {
+        "startLine": 164,
+        "startChar": 55,
+        "endLine": 164,
+        "endChar": 56
+      },
+      "revId": "555299e5f271d8df982c89f135e02c69906ab02e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
