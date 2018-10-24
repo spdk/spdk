@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "8f0e453a_e21f4116",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-24T14:52:09Z",
+      "side": 1,
+      "message": "calling bash from python... lovely\n\nJust read file  \"/sys/bus/pci/devices/0000:%{bdf}/numa_node\"\n\nBTW: maybe use some tools like https://pypi.org/project/libpci/ ?",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 106
+      },
+      "revId": "a92f39a23ec86a15a094092c1e689829c75c1460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01017e3f_85251224",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-24T14:52:09Z",
+      "side": 1,
+      "message": "You should handle non-NUMA systems as well.",
+      "range": {
+        "startLine": 27,
+        "startChar": 4,
+        "endLine": 27,
+        "endChar": 26
+      },
+      "revId": "a92f39a23ec86a15a094092c1e689829c75c1460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "019951e9_94725483",
         "filename": "scripts/perf/nvmf/config.json",
         "patchSetId": 12
@@ -140,6 +186,52 @@
       "revId": "a92f39a23ec86a15a094092c1e689829c75c1460",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb3d594e_889db544",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-24T14:52:09Z",
+      "side": 1,
+      "message": "this should be extracted before loop as order in of JSON object is undeffined so \"general\" might be iterated after \"target\"/\"initiator\"",
+      "range": {
+        "startLine": 624,
+        "startChar": 0,
+        "endLine": 625,
+        "endChar": 40
+      },
+      "revId": "a92f39a23ec86a15a094092c1e689829c75c1460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0f04b0b_524b9f6d",
+        "filename": "scripts/perf/nvmf/spdk_tgt_template.conf",
+        "patchSetId": 12
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-24T14:52:09Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 3,
+        "startChar": 26,
+        "endLine": 3,
+        "endChar": 84
+      },
+      "revId": "a92f39a23ec86a15a094092c1e689829c75c1460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
