@@ -238,7 +238,10 @@ class UIRoot(UINode):
 
     def list_vhost_ctrls(self):
         if self.is_init:
-            self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+            try:
+                self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+            except Exception:
+                pass
 
     def get_vhost_ctrlrs(self, ctrlr_type):
         if self.is_init:
