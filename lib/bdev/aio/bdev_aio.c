@@ -549,7 +549,6 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 	fdisk->disk.product_name = "AIO disk";
 	fdisk->disk.module = &aio_if;
 
-	fdisk->disk.need_aligned_buffer = 1;
 	fdisk->disk.write_cache = 1;
 
 	detected_block_size = spdk_fd_get_blocklen(fdisk->fd);
@@ -586,6 +585,7 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 	}
 
 	fdisk->disk.blocklen = block_size;
+	fdisk->disk.required_alignment = spdk_u32log2(block_size);
 
 	if (disk_size % fdisk->disk.blocklen != 0) {
 		SPDK_ERRLOG("Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
