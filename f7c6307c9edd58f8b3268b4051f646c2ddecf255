@@ -34,6 +34,24 @@
       "revId": "f7c6307c9edd58f8b3268b4051f646c2ddecf255",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f1e0d3b_60fb60f9",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T20:32:38Z",
+      "side": 1,
+      "message": "So this is protecting the case where one thread is calling recv_response()/poll() and another thread is calling get_response()?\n\nLet\u0027s say that a user wants to call these APIs from multiple threads on the same client.  Couldn\u0027t the user create their own lock, and do synchronization at a higher level?",
+      "parentUuid": "e9242873_0f6cf8e5",
+      "revId": "f7c6307c9edd58f8b3268b4051f646c2ddecf255",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
