@@ -1456,10 +1456,9 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev)
 void
 raid_bdev_remove_base_bdev(void *ctx)
 {
-	struct    spdk_bdev       *base_bdev = ctx;
-	struct    raid_bdev       *raid_bdev;
-	uint16_t                  i;
-	bool                      found = false;
+	struct spdk_bdev	*base_bdev = ctx;
+	struct raid_bdev	*raid_bdev;
+	uint16_t		i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_remove_base_bdev\n");
 
@@ -1467,38 +1466,31 @@ raid_bdev_remove_base_bdev(void *ctx)
 	TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_list, global_link) {
 		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 			if (raid_bdev->base_bdev_info[i].bdev == base_bdev) {
-				found = true;
-				break;
+
+				assert(raid_bdev->base_bdev_info[i].desc);
+				raid_bdev->base_bdev_info[i].remove_scheduled = true;
+
+				if (raid_bdev->destruct_called == true ||
+				    raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
+					/*
+					 * As raid bdev is not registered yet or already unregistered,
+					 * so cleanup should be done here itself.
+					 */
+					raid_bdev_free_base_bdev_resource(raid_bdev, i);
+					if (raid_bdev->num_base_bdevs_discovered == 0) {
+						/* There is no base bdev for this raid, so free the raid device. */
+						raid_bdev_cleanup(raid_bdev);
+						return;
+					}
+				}
+
+				raid_bdev_deconfigure(raid_bdev);
+				return;
 			}
 		}
-		if (found == true) {
-			break;
-		}
 	}
 
-	if (found == false) {
-		SPDK_ERRLOG("bdev to remove '%s' not found\n", base_bdev->name);
-		return;
-	}
-
-	assert(raid_bdev->base_bdev_info[i].desc);
-	raid_bdev->base_bdev_info[i].remove_scheduled = true;
-
-	if (raid_bdev->destruct_called == true ||
-	    raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
-		/*
-		 * As raid bdev is not registered yet or already unregistered, so cleanup
-		 * should be done here itself
-		 */
-		raid_bdev_free_base_bdev_resource(raid_bdev, i);
-		if (raid_bdev->num_base_bdevs_discovered == 0) {
-			/* Since there is no base bdev for this raid, so free the raid device */
-			raid_bdev_cleanup(raid_bdev);
-			return;
-		}
-	}
-
-	raid_bdev_deconfigure(raid_bdev);
+	SPDK_ERRLOG("bdev to remove '%s' not found\n", base_bdev->name);
 }
 
 /*
