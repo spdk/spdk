@@ -48,15 +48,12 @@ struct spdk_net_framework *g_next_net_framework = NULL;
 
 void spdk_net_framework_init_next(int rc)
 {
-	if (rc) {
-		SPDK_ERRLOG("Net framework %s failed to initalize with error %d\n", g_next_net_framework->name, rc);
-		g_init_cb_fn(g_init_cb_arg, rc);
-		return;
-	}
-
 	if (g_next_net_framework == NULL) {
 		g_next_net_framework = STAILQ_FIRST(&g_net_frameworks);
 	} else {
+		if (rc == 0) {
+			g_next_net_framework->ready = true;
+		}
 		g_next_net_framework = STAILQ_NEXT(g_next_net_framework, link);
 	}
 
@@ -65,9 +62,10 @@ void spdk_net_framework_init_next(int rc)
 		return;
 	}
 
-	if (g_next_net_framework->init) {
+	if (g_next_net_framework->init != NULL) {
 		g_next_net_framework->init();
 	} else {
+		g_next_net_framework->ready = true;
 		spdk_net_framework_init_next(0);
 	}
 }
@@ -85,6 +83,7 @@ void spdk_net_framework_fini_next(void)
 	if (g_next_net_framework == NULL) {
 		g_next_net_framework = STAILQ_FIRST(&g_net_frameworks);
 	} else {
+		g_next_net_framework->ready = false;
 		g_next_net_framework = STAILQ_NEXT(g_next_net_framework, link);
 	}
 

@@ -616,7 +616,7 @@ spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type)
 	uint8_t is_ip4 = 0;
 	ip46_address_t addr_buf;
 
-	if (ip == NULL) {
+	if (!g_svm.vpp_initialized || ip == NULL) {
 		return NULL;
 	}
 
@@ -1132,7 +1132,7 @@ _(APPLICATION_ATTACH_REPLY, application_attach_reply)   \
 _(APPLICATION_DETACH_REPLY, application_detach_reply)	\
 _(MAP_ANOTHER_SEGMENT, map_another_segment)		\
 
-static int
+static void
 spdk_vpp_net_framework_init(void)
 {
 	char *app_name;
@@ -1158,6 +1158,7 @@ spdk_vpp_net_framework_init(void)
 #undef _
 
 	if (vl_client_connect_to_vlib_no_rx_pthread("/vpe-api", app_name, 32 /* API_RX_Q_SIZE */) < 0) {
+		spdk_net_framework_init_next(-1);
 		return -1;
 	}
 
@@ -1216,6 +1217,8 @@ spdk_vpp_net_framework_fini(void)
 	if (g_svm.vpp_initialized) {
 		spdk_poller_unregister(&g_svm.app_event_poller);
 		_spdk_vpp_app_detach();
+	} else {
+		spdk_net_framework_fini_next();
 	}
 }
 

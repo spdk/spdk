@@ -51,7 +51,9 @@ struct spdk_sock;
 struct spdk_net_framework {
 	const char *name;
 
-	int (*init)(void);
+	bool ready;
+
+	void (*init)(void);
 	void (*fini)(void);
 
 	STAILQ_ENTRY(spdk_net_framework) link;
