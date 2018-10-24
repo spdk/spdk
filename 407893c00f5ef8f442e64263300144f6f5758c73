@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1778ae43_7d47f58a",
+        "filename": "dpdk",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-24T04:49:20Z",
+      "side": 1,
+      "message": "is this change needed here?",
+      "range": {
+        "startLine": 1,
+        "startChar": 18,
+        "endLine": 1,
+        "endChar": 58
+      },
+      "revId": "407893c00f5ef8f442e64263300144f6f5758c73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56668df0_0bb9e1a3",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1227,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-24T04:49:20Z",
+      "side": 1,
+      "message": "Shall we move this after line 1178 as it will always be needed instead of calling goto here?",
+      "range": {
+        "startLine": 1222,
+        "startChar": 0,
+        "endLine": 1227,
+        "endChar": 2
+      },
+      "revId": "407893c00f5ef8f442e64263300144f6f5758c73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
