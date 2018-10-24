@@ -57,6 +57,7 @@ class UIISCSIGlobalParam(UINode):
 class UIISCSIDevices(UINode):
     def __init__(self, parent):
         UINode.__init__(self, "target_nodes", parent)
+        self.scsi_devices = list()
         self.refresh()
 
     def refresh(self):
