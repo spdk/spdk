@@ -326,7 +326,7 @@ function vm_ssh()
 		-p $(vm_ssh_socket $1) $VM_SSH_OPTIONS 127.0.0.1"
 
 	shift
-	$ssh_cmd "$@"
+	$ssh_cmd "$*"
 }
 
 # Execute scp command on given VM
