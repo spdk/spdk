@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "092d9345_a1d5b8e8",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T02:06:02Z",
+      "side": 0,
+      "message": "Should undo this removal.",
+      "revId": "2772d86c23148d3cd575b1c814584fa0946acc0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
