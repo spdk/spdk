@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95bed91f_266f9be8",
+        "filename": "test/rpc_client/Makefile",
+        "patchSetId": 13
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T18:22:05Z",
+      "side": 1,
+      "message": "Is this still true?  I just pulled this patch on to my local system, removed the second jsonrpc, and it built fine.",
+      "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a260312e_551ac700",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T18:22:05Z",
+      "side": 1,
+      "message": "let\u0027s prepend these names with g_",
+      "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d585446d_c4f35ab9",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T18:22:05Z",
+      "side": 1,
+      "message": "g_",
+      "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15e53344_67f4ab5d",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T18:22:05Z",
+      "side": 1,
+      "message": "is this usleep needed?  i would think the _sem_timedwait and pthread_join would be sufficient - I guess I don\u0027t understand why we need to wait 500ms before doing the _sem_timedwait",
+      "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
