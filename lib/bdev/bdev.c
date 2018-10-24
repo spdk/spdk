@@ -3259,6 +3259,16 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 	bdev->internal.qd_poller = NULL;
 	bdev->internal.qos = NULL;
 
+	if (spdk_bdev_get_buf_align(bdev) > 1) {
+		if (bdev->split_on_optimal_io_boundary) {
+			bdev->optimal_io_boundary = spdk_min(bdev->optimal_io_boundary,
+							     SPDK_BDEV_LARGE_BUF_MAX_SIZE / bdev->blocklen);
+		} else {
+			bdev->split_on_optimal_io_boundary = true;
+			bdev->optimal_io_boundary = SPDK_BDEV_LARGE_BUF_MAX_SIZE / bdev->blocklen;
+		}
+	}
+
 	TAILQ_INIT(&bdev->internal.open_descs);
 
 	TAILQ_INIT(&bdev->aliases);
