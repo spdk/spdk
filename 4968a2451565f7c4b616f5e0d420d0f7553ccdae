@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "313b0dd1_22240d6a",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-24T16:29:57Z",
+      "side": 1,
+      "message": "check_coding_style_astyle is destructive and needs to be run in serial",
+      "revId": "4968a2451565f7c4b616f5e0d420d0f7553ccdae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
