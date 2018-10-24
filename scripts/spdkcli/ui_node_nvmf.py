@@ -10,6 +10,58 @@ class UINVMf(UINode):
     def refresh(self):
         self._children = set([])
         UINVMfSubsystems(self)
+        UINVMfTransports(self)
+
+
+class UINVMfTransports(UINode):
+    def __init__(self, parent):
+        UINode.__init__(self, "transport", parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        for transport in self.get_root().get_nvmf_transports():
+            UINVMfTransport(transport, self)
+
+    def ui_command_create(self, trtype, max_queue_depth=None, max_qpairs_per_ctrlr=None, in_capsule_data_size=None,
+                          max_io_size=None, io_unit_size=None, max_aq_depth=None):
+        """Create a transport with given parameters
+
+        Arguments:
+            trtype - Example: 'RDMA'.
+            max_queue_depth - Optional parameter. Integer, max value 65535.
+            max_qpairs_per_ctrlr - Optional parameter. 16 bit Integer, max value 65535.
+            in_capsule_data_size - Optional parameter. 32 bit Integer, max value 4294967295
+            max_io_size - Optional parameter. 32 bit integer, max value 4294967295
+            io_unit_size - Optional parameter. 32 bit integer, max value 4294967295
+            max_aq_depth - Optional parameter. 32 bit integer, max value 4294967295
+        """
+        max_queue_depth = self.ui_eval_param(max_queue_depth, "number", None)
+        max_qpairs_per_ctrlr = self.ui_eval_param(max_qpairs_per_ctrlr, "number", None)
+        in_capsule_data_size = self.ui_eval_param(in_capsule_data_size, "number", None)
+        max_io_size = self.ui_eval_param(max_io_size, "number", None)
+        io_unit_size = self.ui_eval_param(io_unit_size, "number", None)
+        max_aq_depth = self.ui_eval_param(max_aq_depth, "number", None)
+        try:
+            self.get_root().create_nvmf_transport(trtype=trtype,
+                                                  max_queue_depth=max_queue_depth,
+                                                  max_qpairs_per_ctrlr=max_qpairs_per_ctrlr,
+                                                  in_capsule_data_size=in_capsule_data_size,
+                                                  max_io_size=max_io_size,
+                                                  io_unit_size=io_unit_size,
+                                                  max_aq_depth=max_aq_depth)
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
+        self.refresh()
+
+    def summary(self):
+        return "Transports: %s" % len(self.children), None
+
+
+class UINVMfTransport(UINode):
+    def __init__(self, transport, parent):
+        UINode.__init__(self, transport.trtype, parent)
+        self.transport = transport
 
 
 class UINVMfSubsystems(UINode):
