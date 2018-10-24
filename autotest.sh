@@ -242,6 +242,10 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	run_test suite ./test/spdkcli/rbd.sh
 fi
 
+if [ $SPDK_FEDORA_PACKAGING -eq 1 ]; then
+	#run_test suite ./test/pkg/fedora28_test.sh
+fi
+
 timing_enter cleanup
 autotest_cleanup
 timing_exit cleanup
