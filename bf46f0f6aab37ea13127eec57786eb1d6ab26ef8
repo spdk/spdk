@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2fa2ac1b_8d60b38e",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T00:24:17Z",
+      "side": 1,
+      "message": "The number of blocks of the backing storage device consumed by the chunk ?",
+      "range": {
+        "startLine": 36,
+        "startChar": 63,
+        "endLine": 36,
+        "endChar": 83
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26102a70_e0552e6b",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T00:24:17Z",
+      "side": 1,
+      "message": "- Some preliminary explanation about offsets will be helpful.\n- This should be offsets divided by the chunk size?\n- mapping from A to B may be easier to understand if possible. mapping from offsets divided by the chunk size to indices of the chunk map?",
+      "range": {
+        "startLine": 47,
+        "startChar": 28,
+        "endLine": 47,
+        "endChar": 35
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eba558f8_dd7fc4b3",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T00:24:17Z",
+      "side": 1,
+      "message": "but?",
+      "range": {
+        "startLine": 133,
+        "startChar": 38,
+        "endLine": 133,
+        "endChar": 40
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "805ac94e_604ecab0",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T00:24:17Z",
+      "side": 1,
+      "message": "entire chunk and full chunk are different meaning?",
+      "range": {
+        "startLine": 220,
+        "startChar": 22,
+        "endLine": 220,
+        "endChar": 32
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6076ce8b_56c5f9cb",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T00:24:17Z",
+      "side": 1,
+      "message": "Write?",
+      "range": {
+        "startLine": 234,
+        "startChar": 0,
+        "endLine": 234,
+        "endChar": 6
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab5927f5_8d9f20e7",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T00:24:17Z",
+      "side": 1,
+      "message": "an?",
+      "range": {
+        "startLine": 235,
+        "startChar": 17,
+        "endLine": 235,
+        "endChar": 20
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c784e7e_e9053225",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T00:24:17Z",
+      "side": 1,
+      "message": "backing io units ?",
+      "range": {
+        "startLine": 262,
+        "startChar": 10,
+        "endLine": 262,
+        "endChar": 23
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
