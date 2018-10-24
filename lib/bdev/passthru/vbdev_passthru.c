@@ -550,7 +550,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 
 		/* Copy some properties from the underlying base bdev. */
 		pt_node->pt_bdev.write_cache = bdev->write_cache;
-		pt_node->pt_bdev.need_aligned_buffer = bdev->need_aligned_buffer;
+		pt_node->pt_bdev.required_alignment = bdev->required_alignment;
 		pt_node->pt_bdev.optimal_io_boundary = bdev->optimal_io_boundary;
 		pt_node->pt_bdev.blocklen = bdev->blocklen;
 		pt_node->pt_bdev.blockcnt = bdev->blockcnt;
