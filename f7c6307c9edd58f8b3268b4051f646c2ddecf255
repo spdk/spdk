@@ -16,6 +16,24 @@
       "revId": "f7c6307c9edd58f8b3268b4051f646c2ddecf255",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9242873_0f6cf8e5",
+        "filename": "lib/jsonrpc/jsonrpc_client.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-24T19:27:18Z",
+      "side": 1,
+      "message": "This is intermediate patch, so might be a little confusing since there is a thin border between making a small patch an having to change everything what is needed.\n\nAnyway this lock is for spdk_jsonrpc_client_get_response(). It checks for both client-\u003eresp !\u003d NULL and client-\u003eresp-\u003eready \u003d\u003d 1. Both these checks can\u0027t be done atomically.",
+      "parentUuid": "3494f0ef_48a2c2bf",
+      "revId": "f7c6307c9edd58f8b3268b4051f646c2ddecf255",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
