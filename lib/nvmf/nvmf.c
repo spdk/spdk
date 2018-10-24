@@ -700,7 +700,7 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	if (rc == 0) {
 		spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ACTIVE);
 	} else {
-		spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_INACTIVE);
+		spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
 	}
 
 	return rc;
@@ -743,7 +743,7 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
-	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_INACTIVE);
+	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
 	qpair_ctx->qid = qpair->qid;
 
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
@@ -781,8 +781,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 	/* The queue pair must be disconnected from the thread that owns it */
 	assert(qpair->group->thread == spdk_get_thread());
 
-	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING ||
-	    qpair->state == SPDK_NVMF_QPAIR_INACTIVE) {
+	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
 		/* This can occur if the connection is killed by the target,
 		 * which results in a notification that the connection
 		 * died. Send a message to defer the processing of this
