@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45448fcd_f7cc2f39",
+        "filename": "scripts/rpc_http_proxy.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-24T01:45:15Z",
+      "side": 1,
+      "message": "No argument is OK? If no argument, raise the last exception that was active in the current scope again.",
+      "range": {
+        "startLine": 52,
+        "startChar": 8,
+        "endLine": 52,
+        "endChar": 13
+      },
+      "revId": "e3fc5096d945c5661e8e8ff4c6a540f9ebef3f9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
