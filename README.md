@@ -26,6 +26,7 @@ The development kit currently includes:
 * [Unit Tests](#tests)
 * [Vagrant](#vagrant)
 * [Advanced Build Options](#advanced)
+* [Shared libraries](#shared)
 * [Hugepages and Device Binding](#huge)
 * [Example Code](#examples)
 * [Contributing](#contributing)
@@ -155,6 +156,33 @@ The options specified on the `make` command line take precedence over the
 values in `mk/config.mk`. This can be useful if you, for example, generate
 a `mk/config.mk` using the `configure` script and then have one or two
 options (i.e. debug builds) that you wish to turn on and off frequently.
+
+<a id="shared"></a>
+## Shared libraries
+
+By default, the build of the SPDK yields static libraries against which
+the SPDK applications and examples are linked.
+Configure option `--with-shared` provides the ability to produce SPDK shared
+libraries, in addition to the default static ones.  Use of this flag also
+results in the SPDK executables linked to the shared versions of libraries.
+SPDK shared libraries by default, are located in `./build/lib`.  This includes
+the single SPDK shared lib encompassing all of the SPDK static libs
+(`libspdk.so`) as well as individual SPDK shared libs corresponding to each
+of the SPDK static ones.
+
+In order to start a SPDK app linked with SPDK shared libraries, make sure
+to do the following steps:
+- run ldconfig specifying the directory containing SPDK shared libraries
+- provide proper `LD_LIBRARY_PATH`
+
+Linux:
+
+~~~{.sh}
+./configure --with-shared
+make
+ldconfig -v -n ./build/lib
+LD_LIBRARY_PATH=./build/lib/ ./app/spdk_tgt/spdk_tgt
+~~~
 
 <a id="huge"></a>
 ## Hugepages and Device Binding
