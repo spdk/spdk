@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d702da2f_34151319",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-24T08:21:09Z",
+      "side": 1,
+      "message": "Sorry. This whole description is messed up. Will reword it.",
+      "parentUuid": "f6cd60fa_229fcf75",
+      "revId": "e17b1b903616fd7451dd89db19093e7bbd7de63d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1137efda_76a7ccb7",
         "filename": "include/spdk/jsonrpc.h",
         "patchSetId": 7
@@ -65,6 +83,24 @@
       "side": 1,
       "message": "agree with Jim.\nEven with this lock, it still can\u0027t keep the function thread-safe from concurrent calling.",
       "parentUuid": "722e2a7d_79ccd63e",
+      "revId": "e17b1b903616fd7451dd89db19093e7bbd7de63d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8277187d_36be9d5d",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-24T08:21:09Z",
+      "side": 1,
+      "message": "For now, we can skip this lock here. When multiple requests will be supported it will have to be restored.\n\n@Jim\nEnabling multi threads access is super easy with this lock. Otherwise caller will always need to route all calls to core that poll() socket. See next patches (non-blocking mode).",
+      "parentUuid": "08b8c7c8_754a8364",
       "revId": "e17b1b903616fd7451dd89db19093e7bbd7de63d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
