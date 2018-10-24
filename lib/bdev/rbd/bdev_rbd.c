@@ -115,8 +115,9 @@ bdev_rados_context_init(const char *rbd_pool_name, rados_t *cluster,
 
 	ret = rados_connect(*cluster);
 	if (ret < 0) {
-		SPDK_ERRLOG("Failed to connect rbd_pool\n");
+		SPDK_ERRLOG("Failed to connect to rbd_pool\n");
 		rados_shutdown(*cluster);
+		return -1;
 	}
 
 	ret = rados_ioctx_create(*cluster, rbd_pool_name, io_ctx);
