@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "28afbb90_74c1c4f4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 807,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-24T12:53:06Z",
+      "side": 1,
+      "message": "I\u0027m not sure that matters, I put it here because sequentially (and actually how I had it before) you\u0027d first set the iter then call the poller but the comment is saying \"we don\u0027t need to call the poller, its going to run anyways\".  If I need to repush for another reason I\u0027ve got no problem moving it though, thanks!",
+      "parentUuid": "80e8025e_27984808",
+      "range": {
+        "startLine": 805,
+        "startChar": 2,
+        "endLine": 807,
+        "endChar": 4
+      },
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0d0c28a8_f65d79f4",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 10
@@ -36,6 +60,24 @@
       "writtenOn": "2018-10-23T17:42:50Z",
       "side": 1,
       "message": "If you assigned this to bdev_io on the submit path, you could just be verifying that reset_io and bdev_io do indeed match here.",
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0dbbd190_1e15b122",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 821,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-24T12:53:06Z",
+      "side": 1,
+      "message": "but in the submit path I\u0027d be assigning the wrong reset.  That one is the one I need to complete, I don\u0027t know the bdev_io that I need to free on the one that I issue completes and that\u0027s here.  I kept the naming of the orig_io (the reset to complete) the same so that completions are consistent looking, if you check in quiesce complete you\u0027ll see where I complete the orig out of the ctx, just like any other completion, and the \"add on\" (like with the read_io) is the reset IO that\u0027s stashed per bdev and assigned here.",
+      "parentUuid": "0d0c28a8_f65d79f4",
       "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -77,6 +119,24 @@
     },
     {
       "key": {
+        "uuid": "b246b0d1_be112282",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-24T12:53:06Z",
+      "side": 1,
+      "message": "Gang has it right, also see my comment in the completion routine for a more verbose description :)",
+      "parentUuid": "18683cf5_b49f13dd",
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "02b03610_4fd581e6",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 10
@@ -88,6 +148,30 @@
       "writtenOn": "2018-10-24T11:34:24Z",
       "side": 1,
       "message": "This looks like a hack. Maybe you could put some #define that will tell that this value serves as a flag?",
+      "range": {
+        "startLine": 943,
+        "startChar": 42,
+        "endLine": 943,
+        "endChar": 52
+      },
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebdd589e_12e83c5f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 943,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-24T12:53:06Z",
+      "side": 1,
+      "message": "Yeah, this value has been used forever to represent a non-random deterministic non-0 value so if it ever got spotted in debug it would have meaning. Or maybe we just did that in the Windows world, I dunno :) . But yeah, if I need to repsin this patch a #define that says \"NON_ZERO_VALU\" would be better I agree.  Or if Ben or someone requires it I\u0027ve got no problem pushing another.  Otherwise I can update it following the release so we clear the plate for functionally critical items.",
+      "parentUuid": "02b03610_4fd581e6",
       "range": {
         "startLine": 943,
         "startChar": 42,
@@ -135,6 +219,30 @@
       "side": 1,
       "message": "Since you want to pass bdev_io in different context than for other io, maybe you could add separate callback for reset, like _complete_internal_reset?",
       "parentUuid": "28b927a6_298ac7d5",
+      "range": {
+        "startLine": 945,
+        "startChar": 27,
+        "endLine": 945,
+        "endChar": 34
+      },
+      "revId": "538fbb4fe39371a235ed5329a15249f20579f228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9d6e382_9a3eb8a2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-24T12:53:06Z",
+      "side": 1,
+      "message": "Both are reasonable suggestions but I don\u0027t think are critical, I did it like this to try and be consistent with other calls within the driver. I think I like the _complete_internal_reset the best but as with some of the others I\u0027ll leave it to Ben to decide if there\u0027s enough merit in some of these suggestions to warrant a new patch before release.",
+      "parentUuid": "8bca46ad_65dc43a7",
       "range": {
         "startLine": 945,
         "startChar": 27,
