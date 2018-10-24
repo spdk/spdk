@@ -154,6 +154,10 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	run_test suite ./test/vhost/spdk_vhost.sh --negative
 	timing_exit negative
 
+	timing_enter vhost_rpm
+        run_test suite ./test/pkg/fedora28_test.sh
+        timing_exit vhost_rpm
+
 	timing_enter vhost_json_config
 	run_test suite ./test/vhost/json_config/json_config.sh
 	timing_exit vhost_json_config
