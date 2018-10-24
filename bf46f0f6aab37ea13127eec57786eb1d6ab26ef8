@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0e6c8a33_573bb1f0",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T23:39:18Z",
+      "side": 1,
+      "message": "Ack - will change to \"number of backing io units\"",
+      "parentUuid": "2fa2ac1b_8d60b38e",
+      "range": {
+        "startLine": 36,
+        "startChar": 63,
+        "endLine": 36,
+        "endChar": 83
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26102a70_e0552e6b",
         "filename": "doc/compression.md",
         "patchSetId": 1
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "8747fae0_e0aa5b74",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T23:39:18Z",
+      "side": 1,
+      "message": "The meaning here is that since the write is not for the entire chunk, we allocate a chunk sized buffer where we can stage the 4KB of this operation, plus zeroes for the rest of the chunk.\n\nI\u0027ll reword this a bit.  Hopefully it will be more clear.",
+      "parentUuid": "eba558f8_dd7fc4b3",
+      "range": {
+        "startLine": 133,
+        "startChar": 38,
+        "endLine": 133,
+        "endChar": 40
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "805ac94e_604ecab0",
         "filename": "doc/compression.md",
         "patchSetId": 1
@@ -82,6 +130,30 @@
       "writtenOn": "2018-10-24T00:24:17Z",
       "side": 1,
       "message": "entire chunk and full chunk are different meaning?",
+      "range": {
+        "startLine": 220,
+        "startChar": 22,
+        "endLine": 220,
+        "endChar": 32
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71e227a7_211aea50",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T23:39:18Z",
+      "side": 1,
+      "message": "Ack - will change to \"entire chunk\"",
+      "parentUuid": "805ac94e_604ecab0",
       "range": {
         "startLine": 220,
         "startChar": 22,
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "632896ec_0764e0b7",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T23:39:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6076ce8b_56c5f9cb",
+      "range": {
+        "startLine": 234,
+        "startChar": 0,
+        "endLine": 234,
+        "endChar": 6
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab5927f5_8d9f20e7",
         "filename": "doc/compression.md",
         "patchSetId": 1
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "be5984b3_107c25de",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T23:39:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ab5927f5_8d9f20e7",
+      "range": {
+        "startLine": 235,
+        "startChar": 17,
+        "endLine": 235,
+        "endChar": 20
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c784e7e_e9053225",
         "filename": "doc/compression.md",
         "patchSetId": 1
@@ -151,6 +271,30 @@
       "writtenOn": "2018-10-24T00:24:17Z",
       "side": 1,
       "message": "backing io units ?",
+      "range": {
+        "startLine": 262,
+        "startChar": 10,
+        "endLine": 262,
+        "endChar": 23
+      },
+      "revId": "bf46f0f6aab37ea13127eec57786eb1d6ab26ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2eed0c34_a0241542",
+        "filename": "doc/compression.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-24T23:39:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8c784e7e_e9053225",
       "range": {
         "startLine": 262,
         "startChar": 10,
