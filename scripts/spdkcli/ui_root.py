@@ -15,6 +15,7 @@ class UIRoot(UINode):
         self.current_bdevs = []
         self.current_lvol_stores = []
         self.current_vhost_ctrls = []
+        self.current_nvmf_transports = []
         self.current_nvmf_subsystems = []
         self.set_rpc_target(s)
         self.verbose = False
@@ -272,6 +273,20 @@ class UIRoot(UINode):
     def set_vhost_controller_coalescing(self, **kwargs):
         rpc.vhost.set_vhost_controller_coalescing(self.client, **kwargs)
 
+    @verbose
+    def create_nvmf_transport(self, **kwargs):
+        rpc.nvmf.nvmf_create_transport(self.client, **kwargs)
+
+    def list_nvmf_transports(self):
+        if self.is_init:
+            self.current_nvmf_transports = rpc.nvmf.get_nvmf_transports(self.client)
+
+    def get_nvmf_transports(self):
+        if self.is_init:
+            self.list_nvmf_transports()
+            for transport in self.current_nvmf_transports:
+                yield NvmfTransport(transport)
+
     def list_nvmf_subsystems(self):
         if self.is_init:
             self.current_nvmf_subsystems = rpc.nvmf.get_nvmf_subsystems(self.client)
@@ -459,6 +474,18 @@ class VhostCtrlr(object):
         """
         for i in list(ctrlr_info.keys()):
             setattr(self, i, ctrlr_info[i])
+
+
+class NvmfTransport(object):
+    def __init__(self, transport_info):
+        """
+        All class attributes are set based on what information is received
+        from get_nvmf_transport RPC call.
+        # TODO: Document in docstring parameters which describe bdevs.
+        # TODO: Possible improvement: JSON schema might be used here in future
+        """
+        for i in transport_info.keys():
+            setattr(self, i, transport_info[i])
 
 
 class NvmfSubsystem(object):
