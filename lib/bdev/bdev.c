@@ -2033,12 +2033,9 @@ spdk_bdev_get_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits)
 size_t
 spdk_bdev_get_buf_align(const struct spdk_bdev *bdev)
 {
-	/* TODO: push this logic down to the bdev modules */
-	if (bdev->need_aligned_buffer) {
-		return bdev->blocklen;
-	}
+	assert(bdev->required_alignment < 32);
 
-	return 1;
+	return 1U << bdev->required_alignment;
 }
 
 uint32_t
