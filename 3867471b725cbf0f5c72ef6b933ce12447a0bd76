@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35b6716b_58128479",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-10-25T04:38:02Z",
+      "side": 1,
+      "message": "Why not use the ISCSI_PORT defined above ?",
+      "range": {
+        "startLine": 35,
+        "startChar": 60,
+        "endLine": 35,
+        "endChar": 64
+      },
+      "revId": "3867471b725cbf0f5c72ef6b933ce12447a0bd76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62be3c2c_b90f5a87",
+        "filename": "test/iscsi_tgt/sock/sock.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-10-25T04:38:02Z",
+      "side": 1,
+      "message": "This is the same as ISCSI_PORT, shouldn\u0027t this be used instead ?",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 14
+      },
+      "revId": "3867471b725cbf0f5c72ef6b933ce12447a0bd76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
