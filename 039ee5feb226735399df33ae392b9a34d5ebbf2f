@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c300933a_1c6edb82",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T19:04:17Z",
+      "side": 1,
+      "message": "Using flags here would reduce the size, but due to padding this doesn\u0027t pack nicely anyway.",
+      "revId": "039ee5feb226735399df33ae392b9a34d5ebbf2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac7b08d4_581cda09",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T19:04:17Z",
+      "side": 1,
+      "message": "Need to add 1 to accommodate dummy wr",
+      "revId": "039ee5feb226735399df33ae392b9a34d5ebbf2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fc0e304_0b11ae76",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2339,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T19:04:17Z",
+      "side": 1,
+      "message": "This needs to do a TAILQ_REMOVE",
+      "revId": "039ee5feb226735399df33ae392b9a34d5ebbf2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2429d5d_c1d4cd9b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2576,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T19:04:17Z",
+      "side": 1,
+      "message": "This check should be removed - opcode isn\u0027t valid on error.",
+      "revId": "039ee5feb226735399df33ae392b9a34d5ebbf2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdcc169b_27e8b533",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2786,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T19:04:17Z",
+      "side": 1,
+      "message": "If the qps sharing this cq remain very busy, this may never occur and old qps will not get cleaned up. That\u0027s not terrible, since a system will not remain entirely busy forever. However, this could also keep a count of how many completions were reaped on each disconnecting qpair and when it gets to the max queue depth, destroy them. It\u0027s not as efficient to do that though.",
+      "revId": "039ee5feb226735399df33ae392b9a34d5ebbf2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
