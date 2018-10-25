@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4aff30de_8ffb51b8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-25T18:52:54Z",
+      "side": 1,
+      "message": "It looks like the variable is used in this file only. What do you think about adding \"static\" and limit the scope of the variable?",
+      "revId": "ba390a4008e50532548079e31741e89ab7db5aa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
