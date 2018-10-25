@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13d5bf96_e7c6fb8e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1113,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:22:01Z",
+      "side": 1,
+      "message": "Don\u0027t think we support comments in JSON RPC",
+      "range": {
+        "startLine": 1113,
+        "startChar": 56,
+        "endLine": 1113,
+        "endChar": 99
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92f6909c_a4e85d46",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:22:01Z",
+      "side": 1,
+      "message": "free can handle NULL.",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 97,
+        "endChar": 2
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b3bc476_a7ba7ddb",
+        "filename": "lib/bdev/rbd/bdev_rbd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:22:01Z",
+      "side": 1,
+      "message": "You can be down voted by Jim/Ben as we don\u0027t use typedef in SPDK (except typedef callbacks)",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 7
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8013a4a5_b47b697a",
+        "filename": "lib/bdev/rbd/bdev_rbd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:22:01Z",
+      "side": 1,
+      "message": "Is this needed here?",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 73
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a718169_37454a2c",
+        "filename": "lib/bdev/rbd/bdev_rbd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:22:01Z",
+      "side": 1,
+      "message": "const?",
+      "range": {
+        "startLine": 55,
+        "startChar": 11,
+        "endLine": 55,
+        "endChar": 28
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20d590fd_d9ad4a1a",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:22:01Z",
+      "side": 1,
+      "message": "I think it could be renamed to spdk_bdev_rbd_config_free() and moved to bdev_rbd.c",
+      "range": {
+        "startLine": 168,
+        "startChar": 5,
+        "endLine": 168,
+        "endChar": 27
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bba8ac1e_b935046c",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:22:01Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 180,
+        "startChar": 18,
+        "endLine": 180,
+        "endChar": 39
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e154b982_548fde6f",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:22:01Z",
+      "side": 1,
+      "message": "I think value could not be NULL here.\n\nSecond thing - passing in JSON RPC\n\n  ..\n  config\" : null\n  ...\n\nShould be allowed.",
+      "range": {
+        "startLine": 210,
+        "startChar": 5,
+        "endLine": 210,
+        "endChar": 19
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3909ffe5_5036e84b",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:22:01Z",
+      "side": 1,
+      "message": "Can you use spdk_json_object_first() / spdk_json_next() / spdk_json_key() API here?\n\nWe can change internal representation of JSON object in SPDK. This new API will make changes less painful.",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 2
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
