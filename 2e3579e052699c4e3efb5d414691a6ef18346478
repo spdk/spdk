@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01f21de8_cdbfcd6d",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-25T05:49:37Z",
+      "side": 1,
+      "message": "By the way, there is API bdev_aio_flush() that supplied for the fsync() operation.",
+      "range": {
+        "startLine": 84,
+        "startChar": 44,
+        "endLine": 84,
+        "endChar": 53
+      },
+      "revId": "2e3579e052699c4e3efb5d414691a6ef18346478",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
