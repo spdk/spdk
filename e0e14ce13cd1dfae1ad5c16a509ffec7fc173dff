@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f2c4823a_b964b5ef",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-25T13:30:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c0ed90ba_60c7e00a",
+      "revId": "e0e14ce13cd1dfae1ad5c16a509ffec7fc173dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d17d488_d1fee2eb",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 14
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "549f4408_b1c563a7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-25T13:30:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d17d488_d1fee2eb",
+      "revId": "e0e14ce13cd1dfae1ad5c16a509ffec7fc173dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "844f1f82_941dfb2d",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 14
@@ -47,6 +83,24 @@
       "writtenOn": "2018-10-23T19:26:56Z",
       "side": 1,
       "message": "let\u0027s make the changes we talked about earlier in our 1x1 - put the alignment as a number of bits in the bdev itself, so that the module using it (i.e. aio) doesn\u0027t have to pass the alignment every time to io_get_buf() - then spdk_bdev_register can also take care of any extra split requirements\n\nwe need that change in this patch, so that we aren\u0027t switching between passing number of bits and number of bytes in these functions",
+      "revId": "e0e14ce13cd1dfae1ad5c16a509ffec7fc173dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de0935d6_8b8c862c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-25T13:30:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "844f1f82_941dfb2d",
       "revId": "e0e14ce13cd1dfae1ad5c16a509ffec7fc173dff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
