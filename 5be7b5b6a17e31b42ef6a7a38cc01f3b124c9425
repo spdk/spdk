@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c767ad8d_74c694e4",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-25T19:03:02Z",
+      "side": 1,
+      "message": "s/specyfying/specifying/",
+      "revId": "5be7b5b6a17e31b42ef6a7a38cc01f3b124c9425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
