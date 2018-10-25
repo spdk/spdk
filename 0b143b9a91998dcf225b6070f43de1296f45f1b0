@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "237fa1dc_d44e043c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-25T17:34:37Z",
+      "side": 1,
+      "message": "Should we put an ERRLOG here to help validate this assumption?",
+      "revId": "0b143b9a91998dcf225b6070f43de1296f45f1b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
