@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02704d9c_58fa9dc1",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1568,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-25T01:56:06Z",
+      "side": 1,
+      "message": "spdk_nvme_transport_type_t ?",
+      "range": {
+        "startLine": 1568,
+        "startChar": 1,
+        "endLine": 1568,
+        "endChar": 30
+      },
+      "revId": "6c772fe5bc68a70b1644dd52a7a126f1098439c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61bb8640_c4c690bb",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1571,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-25T01:56:06Z",
+      "side": 1,
+      "message": "you may be able to use write_named_string.",
+      "range": {
+        "startLine": 1571,
+        "startChar": 1,
+        "endLine": 1571,
+        "endChar": 21
+      },
+      "revId": "6c772fe5bc68a70b1644dd52a7a126f1098439c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fdc8243_18183178",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1573,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-25T01:56:06Z",
+      "side": 1,
+      "message": "write_named_uint32.",
+      "range": {
+        "startLine": 1573,
+        "startChar": 1,
+        "endLine": 1573,
+        "endChar": 21
+      },
+      "revId": "6c772fe5bc68a70b1644dd52a7a126f1098439c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
