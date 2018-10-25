@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "53c9ff1a_824ab7e3",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 558,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-25T13:34:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "93415225_ff5c0296",
+      "revId": "532db2302fa0ee374b3bc0555cae4d4da41834f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d06b6747_69b08116",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-23T15:14:56Z",
       "side": 1,
       "message": "let\u0027s move these two lines into spdk_bdev_register, so that the aio module does not need to worry about setting these fields",
+      "revId": "532db2302fa0ee374b3bc0555cae4d4da41834f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "015217f1_ee3c43da",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-10-25T13:34:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d06b6747_69b08116",
       "revId": "532db2302fa0ee374b3bc0555cae4d4da41834f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
