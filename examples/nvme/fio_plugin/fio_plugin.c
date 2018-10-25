@@ -88,13 +88,14 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_error;
 
 struct spdk_fio_qpair {
-	struct fio_file		*f;
-	struct spdk_nvme_qpair	*qpair;
-	struct spdk_nvme_ns	*ns;
-	uint32_t		io_flags;
-	bool			do_nvme_pi;
-	struct spdk_fio_qpair	*next;
-	struct spdk_fio_ctrlr	*fio_ctrlr;
+	struct fio_file			*f;
+	struct spdk_nvme_qpair		*qpair;
+	struct spdk_nvme_ns		*ns;
+	const struct spdk_nvme_ns_data	*nsdata;
+	uint32_t			io_flags;
+	bool				do_nvme_pi;
+	struct spdk_fio_qpair		*next;
+	struct spdk_fio_ctrlr		*fio_ctrlr;
 };
 
 struct spdk_fio_thread {
@@ -184,7 +185,7 @@ fio_do_nvme_pi_check(struct spdk_fio_qpair *fio_qpair)
 	const struct spdk_nvme_ns_data *nsdata;
 
 	ns = fio_qpair->ns;
-	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata = fio_qpair->nsdata;
 
 	if (!spdk_nvme_ns_supports_extended_lba(ns)) {
 		return false;
@@ -296,6 +297,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	fio_qpair->ns = ns;
+	fio_qpair->nsdata = spdk_nvme_ns_get_data(ns);
 	fio_qpair->f = f;
 	fio_qpair->fio_ctrlr = fio_ctrlr;
 	fio_qpair->next = fio_thread->fio_qpair;
