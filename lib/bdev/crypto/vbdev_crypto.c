@@ -1138,11 +1138,6 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 		return rc;
 	}
 
-	rc = vbdev_crypto_init_crypto_drivers();
-	if (rc) {
-		return rc;
-	}
-
 	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
 		if (strcmp(crypto_bdev->base_bdev->name, bdev->name) == 0) {
 			rc = spdk_vbdev_register(&crypto_bdev->crypto_bdev,
