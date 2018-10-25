@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec010541_1c8d1ce6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2644,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T18:02:40Z",
+      "side": 1,
+      "message": "Does posting a receive after placing the qp in the error state work? I was testing and only posting a send actually worked - the recv would just fail to post here. I need to go back and test on both rxe and on mlx stacks though. It could be another rxe bug.",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ff24eae_92f911bc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2741,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T18:02:40Z",
+      "side": 1,
+      "message": "What if the type is a regular request or recv? Can you only get flush errors if the connection is shutting down? Are we guaranteed to get an RDMA disconnect event any time we see flush errors?",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcffcff4_81e30649",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2788,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T18:02:40Z",
+      "side": 1,
+      "message": "There is a bug in the rxe driver where it doesn\u0027t fill out the wc here at all on error. I notified the linux-rdma mailing list and Sagi Grimberg posted a fix for it. When I apply that fix locally, everything works as expected. This was a major source of confusion as I implemented this, so I\u0027m glad it is cleared up.\n\nUnfortunately, the test machines don\u0027t have the patch applied, meaning we can\u0027t do a correct shutdown on the rxe machines. I\u0027m not sure how to deal with this just yet.",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1e7911b_767ac361",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2798,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T18:02:40Z",
+      "side": 1,
+      "message": "I realized only yesterday that the opcode is not valid on error, so the whole block of code from here down isn\u0027t right. That was the source of what I thought were invalid wr_id\u0027s - I was using the opcode to determine the type and that\u0027s not allowed. I like the way you\u0027ve made wr_id point at an intermediate structure that contains the type to solve the problem.\n\nI\u0027m not currently sure whether the code should ever be initiating the disconnect process in response to finding an error here. Should we drive all disconnects via the rdma_cm_event channel? Is there ever an error we detect here that doesn\u0027t result in an event on the event channel?",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
