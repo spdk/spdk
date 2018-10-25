@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e3a85f0c_e8e0da9d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2644,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T18:15:11Z",
+      "side": 1,
+      "message": "I just confirmed - calling ibv_post_recv fails if the qp is in the error state. This is true for both the mlx and rxe stacks. In my patch series I use the dummy command to determine when send completions are done, but on the receive side I wait for the cq to drain entirely one time after placing the qp in the error state and then consider the receives done. This seems to be working.",
+      "parentUuid": "ec010541_1c8d1ce6",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ff24eae_92f911bc",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
