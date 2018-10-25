@@ -22,6 +22,30 @@
       "revId": "2e3579e052699c4e3efb5d414691a6ef18346478",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7407ca2_d3d67440",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T23:33:37Z",
+      "side": 1,
+      "message": "This was right previously and there is no bug. There\u0027s two scenarios to consider when reading the documentation for these.\n\nThe first is that the user is writing to a file, in which case when data is written there may be associated metadata. O_SYNC will do two things in this case. It will guarantee that any filesystem metadata is written prior to this operating completing. Second, it will also send a flush command and wait for it to complete prior to returning. SPDK never maps files though, so none of this applies.\n\nThe second is that the user is writing to a raw block device. In this case, there is no associated metadata, so that part can be ignored. Therefore, all this does is also issue a flush after the data completes. However, the SPDK API is able to report whether the drive is performing write caching and requires explicit flushing already. So returning once the data finishes the DMA to the drive, regardless of whether the driver is doing internal caching, is the right behavior.",
+      "parentUuid": "01f21de8_cdbfcd6d",
+      "range": {
+        "startLine": 84,
+        "startChar": 44,
+        "endLine": 84,
+        "endChar": 53
+      },
+      "revId": "2e3579e052699c4e3efb5d414691a6ef18346478",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
