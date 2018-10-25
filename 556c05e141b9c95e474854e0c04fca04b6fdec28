@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e0dba32a_e850b38a",
+        "filename": "test/rpc_client/Makefile",
+        "patchSetId": 13
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T11:16:23Z",
+      "side": 1,
+      "message": "Hmmm... It is working now. Will remove it.",
+      "parentUuid": "95bed91f_266f9be8",
+      "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a260312e_551ac700",
         "filename": "test/rpc_client/rpc_client_test.c",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-24T18:22:05Z",
       "side": 1,
       "message": "let\u0027s prepend these names with g_",
+      "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c36327ce_77506083",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T11:16:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a260312e_551ac700",
       "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "9c21262a_d77b7af6",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T11:16:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d585446d_c4f35ab9",
+      "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15e53344_67f4ab5d",
         "filename": "test/rpc_client/rpc_client_test.c",
         "patchSetId": 13
@@ -64,6 +118,24 @@
       "writtenOn": "2018-10-24T18:22:05Z",
       "side": 1,
       "message": "is this usleep needed?  i would think the _sem_timedwait and pthread_join would be sufficient - I guess I don\u0027t understand why we need to wait 500ms before doing the _sem_timedwait",
+      "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c25b5a7_5a343289",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T11:16:23Z",
+      "side": 1,
+      "message": "Done - removed.",
+      "parentUuid": "15e53344_67f4ab5d",
       "revId": "556c05e141b9c95e474854e0c04fca04b6fdec28",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
