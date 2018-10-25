@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "000cd2b6_a3ba715e",
+        "filename": "test/unit/lib/nvme/nvme_ns_ocssd_cmd.c/nvme_ns_ocssd_cmd_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-25T18:37:36Z",
+      "side": 1,
+      "message": "Hi Liang,\n\nThanks for the patch!  We should use a different name here than SPDK_BS_PAGE_SIZE - \"BS\" means \"blobstore\" so that\u0027s not appropriate for this unit test.\n\nCould you name this OCSSD_SECTOR_SIZE instead?  And then also change the hardcoded const uint32_t sector_size variables to use OCSSD_SECTOR_SIZE as well (instead of 0x1000)?\n\nThanks,\n\n-Jim",
+      "revId": "a61519540a6fc06a3d73501acc8f480086f68ac8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
