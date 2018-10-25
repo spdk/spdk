@@ -230,6 +230,9 @@ nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
 		memset(map_address, 0xFF, sizeof(struct spdk_nvme_registers));
 		g_thread_mmio_ctrlr->regs = (volatile struct spdk_nvme_registers *)map_address;
 		g_thread_mmio_ctrlr->is_remapped = true;
+
+		g_thread_mmio_ctrlr->ctrlr.is_removed = true;
+		g_thread_mmio_ctrlr->ctrlr.is_failed = true;
 	}
 	g_signal_lock = 0;
 	return;
