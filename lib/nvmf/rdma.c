@@ -2454,57 +2454,6 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	spdk_nvmf_rdma_qpair_destroy(rqpair);
 }
 
-static struct spdk_nvmf_rdma_request *
-get_rdma_req_from_wc(struct ibv_wc *wc)
-{
-	struct spdk_nvmf_rdma_request *rdma_req = NULL;
-	struct spdk_nvmf_rdma_wr *rdma_wr;
-
-	rdma_wr = (struct spdk_nvmf_rdma_wr *)wc->wr_id;
-	if (rdma_wr->type == RDMA_WR_TYPE_SEND) {
-		rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, rsp.rdma_wr);
-	} else if (rdma_wr->type == RDMA_WR_TYPE_DATA) {
-		rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
-	}
-	assert(rdma_req != NULL);
-
-#ifdef DEBUG
-	struct spdk_nvmf_rdma_qpair *rqpair;
-	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
-	assert(rdma_req - rqpair->reqs >= 0);
-	assert(rdma_req - rqpair->reqs < (ptrdiff_t)rqpair->max_queue_depth);
-#endif
-
-	return rdma_req;
-}
-
-static struct spdk_nvmf_rdma_recv *
-get_rdma_recv_from_wc(struct ibv_wc *wc)
-{
-	struct spdk_nvmf_rdma_recv *rdma_recv;
-	struct spdk_nvmf_rdma_wr *rdma_wr;
-
-	rdma_wr = (struct spdk_nvmf_rdma_wr *)wc->wr_id;
-	assert(rdma_wr->type == RDMA_WR_TYPE_RECV);
-	rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
-	assert(rdma_recv != NULL);
-
-#ifdef DEBUG
-	struct spdk_nvmf_rdma_qpair *rqpair = rdma_recv->qpair;
-
-	if (wc->status == IBV_WC_SUCCESS) {
-		/* byte_len is only filled out on success */
-		assert(wc->byte_len >= sizeof(struct spdk_nvmf_capsule_cmd));
-	}
-
-	assert(rdma_recv - rqpair->recvs >= 0);
-	assert(rdma_recv - rqpair->recvs < (ptrdiff_t)rqpair->max_queue_depth);
-#endif
-
-	return rdma_recv;
-}
-
 #ifdef DEBUG
 static int
 spdk_nvmf_rdma_req_is_completing(struct spdk_nvmf_rdma_request *rdma_req)
@@ -2519,6 +2468,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			   struct spdk_nvmf_rdma_poller *rpoller)
 {
 	struct ibv_wc wc[32];
+	struct spdk_nvmf_rdma_wr	*rdma_wr;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
@@ -2535,19 +2485,18 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 
 	for (i = 0; i < reaped; i++) {
+
+		rdma_wr = (struct spdk_nvmf_rdma_wr *)wc[i].wr_id;
+
 		/* Handle error conditions */
 		if (wc[i].status) {
-			struct spdk_nvmf_rdma_wr *rdma_wr;
-
 			SPDK_WARNLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
 				     rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
 
-			rdma_wr = (struct spdk_nvmf_rdma_wr *)wc[i].wr_id;
-
 			switch (rdma_wr->type) {
 			case RDMA_WR_TYPE_SEND:
-				rdma_req = get_rdma_req_from_wc(&wc[i]);
+				rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, rsp.rdma_wr);
 				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 				/* We're going to attempt an error recovery, so force the request into
@@ -2556,7 +2505,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 				break;
 			case RDMA_WR_TYPE_RECV:
-				rdma_recv = get_rdma_recv_from_wc(&wc[i]);
+				rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
 				rqpair = rdma_recv->qpair;
 
 				/* Dump this into the incoming queue. This gets cleaned up when
@@ -2567,7 +2516,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				/* If the data transfer fails still force the queue into the error state,
 				 * but the rdma_req objects should only be manipulated in response to
 				 * SEND and RECV operations. */
-				rdma_req = get_rdma_req_from_wc(&wc[i]);
+				rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
 				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 				break;
 			default:
@@ -2584,7 +2533,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 		switch (wc[i].opcode) {
 		case IBV_WC_SEND:
-			rdma_req = get_rdma_req_from_wc(&wc[i]);
+			assert(rdma_wr->type == RDMA_WR_TYPE_SEND);
+			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, rsp.rdma_wr);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			assert(spdk_nvmf_rdma_req_is_completing(rdma_req));
@@ -2599,7 +2549,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 
 		case IBV_WC_RDMA_WRITE:
-			rdma_req = get_rdma_req_from_wc(&wc[i]);
+			assert(rdma_wr->type == RDMA_WR_TYPE_DATA);
+			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			/* Try to process other queued requests */
@@ -2607,7 +2558,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 
 		case IBV_WC_RDMA_READ:
-			rdma_req = get_rdma_req_from_wc(&wc[i]);
+			assert(rdma_wr->type == RDMA_WR_TYPE_DATA);
+			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			assert(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
@@ -2619,7 +2571,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 
 		case IBV_WC_RECV:
-			rdma_recv = get_rdma_recv_from_wc(&wc[i]);
+			assert(rdma_wr->type == RDMA_WR_TYPE_RECV);
+			rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
 			rqpair = rdma_recv->qpair;
 
 			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
