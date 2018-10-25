@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6c9ac456_cd0539e4",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-10-25T16:08:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aee997bc_a43f66db",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 26
+      },
+      "revId": "76594002c9f67ba532a2dae00e5b1a85306398c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c683b9d9_1d8ff3b4",
         "filename": "test/nvme/perf/common.sh",
         "patchSetId": 16
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-19T17:29:25Z",
       "side": 1,
       "message": "This should be lat_ns instead of clat_ns? lat includes both submission and completion latency.",
+      "range": {
+        "startLine": 134,
+        "startChar": 61,
+        "endLine": 134,
+        "endChar": 68
+      },
+      "revId": "76594002c9f67ba532a2dae00e5b1a85306398c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c5c76f7_e3f8a690",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-10-25T16:08:32Z",
+      "side": 1,
+      "message": "You\u0027re right, I\u0027ll fix it",
+      "parentUuid": "c683b9d9_1d8ff3b4",
       "range": {
         "startLine": 134,
         "startChar": 61,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "050b4fa0_f94b1143",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-10-25T16:08:32Z",
+      "side": 1,
+      "message": "read_pct and write_pct are vales in percentage and end value needs to be divided by 100. Here values are converted from ns to us so it needs to be divided by 1000. So it is $mean_lat/(100*1000)",
+      "parentUuid": "29288815_0ec8dcc4",
+      "range": {
+        "startLine": 136,
+        "startChar": 21,
+        "endLine": 136,
+        "endChar": 27
+      },
+      "revId": "76594002c9f67ba532a2dae00e5b1a85306398c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f86b7672_f2c9547c",
         "filename": "test/nvme/perf/perf_tc1.sh",
         "patchSetId": 16
@@ -82,6 +154,30 @@
       "writtenOn": "2018-10-19T17:29:25Z",
       "side": 1,
       "message": "Can you include the workload info like is it randread/write/rw and MIX also?",
+      "range": {
+        "startLine": 22,
+        "startChar": 6,
+        "endLine": 22,
+        "endChar": 41
+      },
+      "revId": "76594002c9f67ba532a2dae00e5b1a85306398c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16b58a41_f8065328",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-10-25T16:08:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f86b7672_f2c9547c",
       "range": {
         "startLine": 22,
         "startChar": 6,
@@ -128,6 +224,54 @@
       "writtenOn": "2018-10-19T17:29:25Z",
       "side": 1,
       "message": "Can you log the CPUMASK into the result file too? This will help with trying to figure out things like number of CPU cores used and NUMA alignment",
+      "range": {
+        "startLine": 35,
+        "startChar": 50,
+        "endLine": 35,
+        "endChar": 68
+      },
+      "revId": "76594002c9f67ba532a2dae00e5b1a85306398c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b666f00_f2a07641",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-10-25T16:08:32Z",
+      "side": 1,
+      "message": "In precondition job use use size parameter to determine job lenght instead time",
+      "parentUuid": "2f697493_85003583",
+      "range": {
+        "startLine": 35,
+        "startChar": 99,
+        "endLine": 35,
+        "endChar": 115
+      },
+      "revId": "76594002c9f67ba532a2dae00e5b1a85306398c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f39260c_eec3d48d",
+        "filename": "test/nvme/perf/perf_tc1.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-10-25T16:08:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5aa21cf9_35302219",
       "range": {
         "startLine": 35,
         "startChar": 50,
