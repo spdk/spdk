@@ -16,6 +16,24 @@
       "revId": "0b143b9a91998dcf225b6070f43de1296f45f1b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "730479e8_f89cdc60",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2301,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T18:21:31Z",
+      "side": 1,
+      "message": "It\u0027s in the documentation for this event. We\u0027re going to add shared receive queue support soon, in which case this event will get used. So the errlog would only be very temporary anyway.",
+      "parentUuid": "237fa1dc_d44e043c",
+      "revId": "0b143b9a91998dcf225b6070f43de1296f45f1b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
