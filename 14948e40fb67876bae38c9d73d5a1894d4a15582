@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c870670f_bf40490e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-25T23:22:59Z",
+      "side": 1,
+      "message": "\"Cleaning\" the code doesn\u0027t really mean anything. It looks like you\u0027re renaming a variable primarily in this patch. The commit message title and description should talk about that.",
+      "revId": "14948e40fb67876bae38c9d73d5a1894d4a15582",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
