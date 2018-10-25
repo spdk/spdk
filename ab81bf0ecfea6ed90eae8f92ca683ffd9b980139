@@ -206,6 +206,29 @@
       "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c3b89cf_0e730d63",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-25T10:25:08Z",
+      "side": 1,
+      "message": "Wow! We could use this in more places instead of handcrafting it :)",
+      "range": {
+        "startLine": 326,
+        "startChar": 48,
+        "endLine": 326,
+        "endChar": 67
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
