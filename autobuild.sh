@@ -31,14 +31,6 @@ if [ $SPDK_RUN_CHECK_FORMAT -eq 1 ]; then
 fi
 timing_exit check_format
 
-$MAKE $MAKEFLAGS clean
-if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
-	./configure $config_params --with-shared
-	$MAKE $MAKEFLAGS
-	$MAKE $MAKEFLAGS clean
-	report_test_completion "shared_object_build"
-fi
-
 scanbuild=''
 make_timing_label='make'
 if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
@@ -63,6 +55,15 @@ fi
 echo $scanbuild
 
 timing_enter "$make_timing_label"
+
+$MAKE $MAKEFLAGS clean
+if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
+	./configure $config_params --with-shared
+	$MAKE $MAKEFLAGS
+	$MAKE $MAKEFLAGS clean
+	report_test_completion "shared_object_build"
+fi
+
 fail=0
 ./configure $config_params
 time $scanbuild $MAKE $MAKEFLAGS || fail=1
