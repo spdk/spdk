@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5a98d419_04beb5b3",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1014787
+      },
+      "writtenOn": "2018-10-25T02:33:03Z",
+      "side": 1,
+      "message": "we stop io at this io_cnt. io_submitted is not better than it.",
+      "parentUuid": "964a5612_95972278",
+      "range": {
+        "startLine": 110,
+        "startChar": 11,
+        "endLine": 110,
+        "endChar": 17
+      },
+      "revId": "9cf545d2309b495c28f3b0237e7e0d53d488998a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "faf32a2f_90e691c7",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 17
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-23T23:07:33Z",
       "side": 1,
       "message": "How about the following?\n\n} else if (ns_ctx-\u003eio_cnt++ \u003c g_ns_io_cnt || g_ns_io_cnt \u003c 0) {",
+      "range": {
+        "startLine": 737,
+        "startChar": 0,
+        "endLine": 740,
+        "endChar": 3
+      },
+      "revId": "9cf545d2309b495c28f3b0237e7e0d53d488998a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bb45f7d_4724978f",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1014787
+      },
+      "writtenOn": "2018-10-25T02:33:03Z",
+      "side": 1,
+      "message": "we stop when io_cnt \u003d\u003d 0",
+      "parentUuid": "faf32a2f_90e691c7",
       "range": {
         "startLine": 737,
         "startChar": 0,
@@ -105,6 +153,30 @@
       "writtenOn": "2018-10-23T23:07:33Z",
       "side": 1,
       "message": "it may be better to use io_completed in the following block.",
+      "range": {
+        "startLine": 895,
+        "startChar": 15,
+        "endLine": 895,
+        "endChar": 29
+      },
+      "revId": "9cf545d2309b495c28f3b0237e7e0d53d488998a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3079fa7_0224eba5",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1014787
+      },
+      "writtenOn": "2018-10-25T02:33:03Z",
+      "side": 1,
+      "message": "io_completed is io callback. it\u0027s not for here",
+      "parentUuid": "91b630d8_c4d50d4e",
       "range": {
         "startLine": 895,
         "startChar": 15,
