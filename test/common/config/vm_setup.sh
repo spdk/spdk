@@ -332,7 +332,7 @@ git -C spdk_repo/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
 git -C spdk_repo/spdk submodule update --init --recursive
 
 if $INSTALL; then
-    sudo ./scripts/pkgdep.sh
+    sudo spdk_repo/spdk/scripts/pkgdep.sh
 
     if echo $CONF | grep -q tsocks; then
         sudo dnf install -y tsocks
@@ -397,28 +397,33 @@ if [ ! -e ~/autorun-spdk.conf ]; then
 	cat > ~/autorun-spdk.conf << EOF
 # assign a value of 1 to all of the pertinent tests
 SPDK_BUILD_DOC=1
+SPDK_BUILD_SHARED_OBJECT=1
 SPDK_RUN_CHECK_FORMAT=1
 SPDK_RUN_SCANBUILD=1
 SPDK_RUN_VALGRIND=1
+SPDK_TEST_CRYPTO=1
 SPDK_TEST_UNITTEST=1
 SPDK_TEST_ISCSI=1
 SPDK_TEST_ISCSI_INITIATOR=1
-# nvme and nvme-cli cannot be run at the same time on a VM.
 SPDK_TEST_NVME=1
-SPDK_TEST_NVME_CLI=0
+SPDK_TEST_NVME_CLI=1
 SPDK_TEST_NVMF=1
 SPDK_TEST_RBD=1
-# requires some extra configuration. see TEST_ENV_SETUP_README
-SPDK_TEST_VHOST=0
-SPDK_TEST_VHOST_INIT=0
 SPDK_TEST_BLOCKDEV=1
-# doesn't work on vm
-SPDK_TEST_IOAT=0
 SPDK_TEST_EVENT=1
 SPDK_TEST_BLOBFS=1
 SPDK_TEST_PMDK=1
 SPDK_TEST_LVOL=1
+SPDK_TEST_JSON=1
 SPDK_RUN_ASAN=1
 SPDK_RUN_UBSAN=1
+# doesn't work on vm
+SPDK_TEST_IOAT=0
+# requires some extra configuration. see TEST_ENV_SETUP_README
+SPDK_TEST_VHOST=0
+SPDK_TEST_VHOST_INIT=0
+# Not configured here
+SPDK_RUN_INSTALLED_DPDK=0
+
 EOF
 fi
