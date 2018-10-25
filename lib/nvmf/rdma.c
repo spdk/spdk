@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -185,6 +185,16 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace)
 					OWNER_NONE, OBJECT_NONE, 0, 0, "");
 }
 
+enum spdk_nvmf_rdma_wr_type {
+	RDMA_WR_TYPE_RECV,
+	RDMA_WR_TYPE_SEND,
+	RDMA_WR_TYPE_DATA,
+};
+
+struct spdk_nvmf_rdma_wr {
+	enum spdk_nvmf_rdma_wr_type	type;
+};
+
 /* This structure holds commands as they are received off the wire.
  * It must be dynamically paired with a full request object
  * (spdk_nvmf_rdma_request) to service a request. It is separate
@@ -201,6 +211,8 @@ struct spdk_nvmf_rdma_recv {
 	/* In-capsule data buffer */
 	uint8_t				*buf;
 
+	struct spdk_nvmf_rdma_wr	rdma_wr;
+
 	TAILQ_ENTRY(spdk_nvmf_rdma_recv) link;
 };
 
@@ -213,11 +225,13 @@ struct spdk_nvmf_rdma_request {
 	struct spdk_nvmf_rdma_recv		*recv;
 
 	struct {
+		struct spdk_nvmf_rdma_wr	rdma_wr;
 		struct	ibv_send_wr		wr;
 		struct	ibv_sge			sgl[NVMF_DEFAULT_TX_SGE];
 	} rsp;
 
 	struct {
+		struct spdk_nvmf_rdma_wr	rdma_wr;
 		struct ibv_send_wr		wr;
 		struct ibv_sge			sgl[SPDK_NVMF_MAX_SGL_ENTRIES];
 		void				*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
@@ -712,6 +726,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 						  transport->opts.in_capsule_data_size));
 		}
 
+		rdma_recv->rdma_wr.type = RDMA_WR_TYPE_RECV;
+
 		rdma_recv->sgl[0].addr = (uintptr_t)&rqpair->cmds[i];
 		rdma_recv->sgl[0].length = sizeof(rqpair->cmds[i]);
 		rdma_recv->sgl[0].lkey = rqpair->cmds_mr->lkey;
@@ -724,7 +740,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 			rdma_recv->wr.num_sge++;
 		}
 
-		rdma_recv->wr.wr_id = (uintptr_t)rdma_recv;
+		rdma_recv->wr.wr_id = (uintptr_t)&rdma_recv->rdma_wr;
 		rdma_recv->wr.sg_list = rdma_recv->sgl;
 
 		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
@@ -748,7 +764,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_req->rsp.sgl[0].length = sizeof(rqpair->cpls[i]);
 		rdma_req->rsp.sgl[0].lkey = rqpair->cpls_mr->lkey;
 
-		rdma_req->rsp.wr.wr_id = (uintptr_t)rdma_req;
+		rdma_req->rsp.rdma_wr.type = RDMA_WR_TYPE_SEND;
+		rdma_req->rsp.wr.wr_id = (uintptr_t)&rdma_req->rsp.rdma_wr;
 		rdma_req->rsp.wr.next = NULL;
 		rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 		rdma_req->rsp.wr.send_flags = IBV_SEND_SIGNALED;
@@ -756,7 +773,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_req->rsp.wr.num_sge = SPDK_COUNTOF(rdma_req->rsp.sgl);
 
 		/* Set up memory for data buffers */
-		rdma_req->data.wr.wr_id = (uint64_t)rdma_req;
+		rdma_req->data.rdma_wr.type = RDMA_WR_TYPE_DATA;
+		rdma_req->data.wr.wr_id = (uintptr_t)&rdma_req->data.rdma_wr;
 		rdma_req->data.wr.next = NULL;
 		rdma_req->data.wr.send_flags = IBV_SEND_SIGNALED;
 		rdma_req->data.wr.sg_list = rdma_req->data.sgl;
@@ -2439,9 +2457,15 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 static struct spdk_nvmf_rdma_request *
 get_rdma_req_from_wc(struct ibv_wc *wc)
 {
-	struct spdk_nvmf_rdma_request *rdma_req;
+	struct spdk_nvmf_rdma_request *rdma_req = NULL;
+	struct spdk_nvmf_rdma_wr *rdma_wr;
 
-	rdma_req = (struct spdk_nvmf_rdma_request *)wc->wr_id;
+	rdma_wr = (struct spdk_nvmf_rdma_wr *)wc->wr_id;
+	if (rdma_wr->type == RDMA_WR_TYPE_SEND) {
+		rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, rsp.rdma_wr);
+	} else if (rdma_wr->type == RDMA_WR_TYPE_DATA) {
+		rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
+	}
 	assert(rdma_req != NULL);
 
 #ifdef DEBUG
@@ -2459,14 +2483,20 @@ static struct spdk_nvmf_rdma_recv *
 get_rdma_recv_from_wc(struct ibv_wc *wc)
 {
 	struct spdk_nvmf_rdma_recv *rdma_recv;
+	struct spdk_nvmf_rdma_wr *rdma_wr;
 
-	assert(wc->byte_len >= sizeof(struct spdk_nvmf_capsule_cmd));
-
-	rdma_recv = (struct spdk_nvmf_rdma_recv *)wc->wr_id;
+	rdma_wr = (struct spdk_nvmf_rdma_wr *)wc->wr_id;
+	assert(rdma_wr->type == RDMA_WR_TYPE_RECV);
+	rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
 	assert(rdma_recv != NULL);
 
 #ifdef DEBUG
 	struct spdk_nvmf_rdma_qpair *rqpair = rdma_recv->qpair;
+
+	if (wc->status == IBV_WC_SUCCESS) {
+		/* byte_len is only filled out on success */
+		assert(wc->byte_len >= sizeof(struct spdk_nvmf_capsule_cmd));
+	}
 
 	assert(rdma_recv - rqpair->recvs >= 0);
 	assert(rdma_recv - rqpair->recvs < (ptrdiff_t)rqpair->max_queue_depth);
@@ -2507,12 +2537,16 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	for (i = 0; i < reaped; i++) {
 		/* Handle error conditions */
 		if (wc[i].status) {
+			struct spdk_nvmf_rdma_wr *rdma_wr;
+
 			SPDK_WARNLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
 				     rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
 
-			switch (wc[i].opcode) {
-			case IBV_WC_SEND:
+			rdma_wr = (struct spdk_nvmf_rdma_wr *)wc[i].wr_id;
+
+			switch (rdma_wr->type) {
+			case RDMA_WR_TYPE_SEND:
 				rdma_req = get_rdma_req_from_wc(&wc[i]);
 				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
@@ -2521,7 +2555,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
 				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 				break;
-			case IBV_WC_RECV:
+			case RDMA_WR_TYPE_RECV:
 				rdma_recv = get_rdma_recv_from_wc(&wc[i]);
 				rqpair = rdma_recv->qpair;
 
@@ -2529,8 +2563,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				 * the queue pair disconnects or recovers. */
 				TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 				break;
-			case IBV_WC_RDMA_WRITE:
-			case IBV_WC_RDMA_READ:
+			case RDMA_WR_TYPE_DATA:
 				/* If the data transfer fails still force the queue into the error state,
 				 * but the rdma_req objects should only be manipulated in response to
 				 * SEND and RECV operations. */
