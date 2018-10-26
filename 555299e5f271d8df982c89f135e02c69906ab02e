@@ -22,6 +22,23 @@
       "revId": "555299e5f271d8df982c89f135e02c69906ab02e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe8ff109_30c1e6c7",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-26T21:39:07Z",
+      "side": 1,
+      "message": "When the controller options are specified in probe, wouldn\u0027t it be simpler to check for a 0 value there and update it to NVME_TIMEOUT_INFINITE? That way you can just pass in ctrlr-\u003eopts.admin_timeout_ms everywhere.",
+      "revId": "555299e5f271d8df982c89f135e02c69906ab02e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
