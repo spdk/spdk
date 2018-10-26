@@ -401,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "ca73e305_32638a57",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T10:09:50Z",
+      "side": 1,
+      "message": "\u003e \u003e Can you use spdk_json_object_first() / spdk_json_next() / spdk_json_key() API here?\n\u003e \n\u003e It looked more complicated, but okay.\n\nI started using this API, but ran into issues, so I have given up. Can I leave that conversion to you?\n\nThe issues were:\n- spdk_json_value is static and cannot be called\n- spdk_json_object_first(values) in my decode function leads to a const warning;\n  spdk_json_object_first should take a \"const struct spdk_json_val *object\" or\n  type casting at the call site is necessary (ugly)\n\nI also noticed that the unit testing doesn\u0027t seem to verify that spdk_json_value returns the right content.",
+      "parentUuid": "f667aab1_50f21f2f",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 2
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1c3b89cf_0e730d63",
         "filename": "scripts/rpc.py",
         "patchSetId": 3
