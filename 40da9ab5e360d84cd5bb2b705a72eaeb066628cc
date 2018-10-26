@@ -22,6 +22,30 @@
       "revId": "40da9ab5e360d84cd5bb2b705a72eaeb066628cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a95c076b_74923ced",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-26T11:24:27Z",
+      "side": 0,
+      "message": "The g_spdk_iscsi.MaxQueueDepth is from opts-\u003eMaxQueueDepth. And opts-\u003eMaxQueueDepth is from either the default one or from the user specified one. In this case, g_spdk_iscsi.MaxQueueDepth may still be proper as this is inherited from opts-\u003eMaxQueueDepth. May also hear other comments here. Thanks for the discussion.",
+      "parentUuid": "6aba92f1_38deec3a",
+      "range": {
+        "startLine": 955,
+        "startChar": 25,
+        "endLine": 955,
+        "endChar": 77
+      },
+      "revId": "40da9ab5e360d84cd5bb2b705a72eaeb066628cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
