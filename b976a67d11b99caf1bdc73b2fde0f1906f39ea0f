@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98b9d32f_b33af545",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-26T08:29:04Z",
+      "side": 1,
+      "message": "Please describe what\u0027s this test for and why we need it.",
+      "revId": "b976a67d11b99caf1bdc73b2fde0f1906f39ea0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f378ee8_762e8e93",
+        "filename": "test/bdev/dynamic_memalloc/dynamic_memory.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-26T08:29:04Z",
+      "side": 1,
+      "message": "The default values are the same, so no need to define them explicitly - those can be removed.",
+      "range": {
+        "startLine": 11,
+        "startChar": 38,
+        "endLine": 11,
+        "endChar": 50
+      },
+      "revId": "b976a67d11b99caf1bdc73b2fde0f1906f39ea0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29f87d9c_7a3f610b",
+        "filename": "test/bdev/dynamic_memalloc/dynamic_memory.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-26T08:29:04Z",
+      "side": 1,
+      "message": "This still preallocates 1024M of hugepages. Was the intention to preallocate 0?",
+      "range": {
+        "startLine": 11,
+        "startChar": 51,
+        "endLine": 11,
+        "endChar": 58
+      },
+      "revId": "b976a67d11b99caf1bdc73b2fde0f1906f39ea0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6b26766_e40c4047",
+        "filename": "test/bdev/dynamic_memalloc/dynamic_memory.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-10-26T08:29:04Z",
+      "side": 1,
+      "message": "Why do we create functions for single-line calls like that? This doesn\u0027t make the code more readable and only gives us more lines of code. Can we inline them?",
+      "revId": "b976a67d11b99caf1bdc73b2fde0f1906f39ea0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
