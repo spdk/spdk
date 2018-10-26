@@ -1160,9 +1160,21 @@ This method is available only if SPDK was build with Ceph RBD support.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Bdev name
+user_id                 | Optional | string      | Ceph ID (i.e. admin, not client.admin)
 pool_name               | Required | string      | Pool name
 rbd_name                | Required | string      | Image name
 block_size              | Required | number      | Block size
+config                  | Optional | string map  | Explicit librados configuration
+
+If no config is specified, Ceph configuration files must exist with
+all relevant settings for accessing the pool. If a config map is
+passed, the configuration files are ignored and instead all key/value
+pairs are passed to rados_conf_set to configure cluster access. In
+practice, "mon_host" (= list of monitor address+port) and "key" (= the
+secret key stored in Ceph keyrings) are enough.
+
+When accessing the image as some user other than "admin" (the
+default), the "user_id" has to be set.
 
 ### Result
 
@@ -1170,13 +1182,17 @@ Name of newly created bdev.
 
 ### Example
 
-Example request:
+Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
 
 ~~~
 {
   "params": {
     "pool_name": "rbd",
     "rbd_name": "foo",
+    "config": {
+      "mon_host": "192.168.7.1:6789,192.168.7.2:6789",
+      "key": "AQDwf8db7zR1GRAA5k7NKXjS5S5V4mntwUDnGQ==",
+    }
     "block_size": 4096
   },
   "jsonrpc": "2.0",
