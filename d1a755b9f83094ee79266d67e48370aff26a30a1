@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33665a48_7c43be2a",
+        "filename": "test/bdev/dynamic_memalloc/spdk_tgt.conf.base",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-10-26T12:46:53Z",
+      "side": 1,
+      "message": "Is this file used ?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 8
+      },
+      "revId": "d1a755b9f83094ee79266d67e48370aff26a30a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

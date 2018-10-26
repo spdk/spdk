@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df6c11e6_ea744636",
+        "filename": "autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-10-26T12:46:53Z",
+      "side": 1,
+      "message": "Have you seen Darek\u0027s comment about inclusion in blockdev.sh ?",
+      "range": {
+        "startLine": 106,
+        "startChar": 2,
+        "endLine": 106,
+        "endChar": 61
+      },
+      "revId": "72b8046204a42435751ee60a7c38d23270a3376c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
