@@ -39,24 +39,72 @@
 
 struct rpc_construct_rbd {
 	char *name;
+	char *user_id;
 	char *pool_name;
 	char *rbd_name;
 	uint32_t block_size;
+	char **config;
 };
 
 static void
 free_rpc_construct_rbd(struct rpc_construct_rbd *req)
 {
 	free(req->name);
+	free(req->user_id);
 	free(req->pool_name);
 	free(req->rbd_name);
+	spdk_bdev_rbd_free_config(req->config);
+}
+
+static int
+spdk_bdev_rbd_decode_config(const struct spdk_json_val *values, void *out)
+{
+	char ***map = out;
+	char **entry;
+	uint32_t i;
+
+	if (values->type == SPDK_JSON_VAL_NULL) {
+		/* treated like empty object: empty config */
+		*map = calloc(1, sizeof(**map));
+		if (!*map) {
+			return -1;
+		}
+		return 0;
+	}
+
+	if (values->type != SPDK_JSON_VAL_OBJECT_BEGIN) {
+		return -1;
+	}
+
+	*map = calloc(values->len + 1, sizeof(**map));
+	if (!*map) {
+		return -1;
+	}
+
+	for (i = 0, entry = *map; i < values->len;) {
+		const struct spdk_json_val *name = &values[i + 1];
+		const struct spdk_json_val *v = &values[i + 2];
+		/* Here we catch errors like invalid types. */
+		if (!(entry[0] = spdk_json_strdup(name)) ||
+		    !(entry[1] = spdk_json_strdup(v))) {
+			spdk_bdev_rbd_free_config(*map);
+			*map = NULL;
+			return -1;
+		}
+		i += 1 + spdk_json_val_len(v);
+		entry += 2;
+	}
+
+	return 0;
 }
 
 static const struct spdk_json_object_decoder rpc_construct_rbd_decoders[] = {
 	{"name", offsetof(struct rpc_construct_rbd, name), spdk_json_decode_string, true},
+	{"user_id", offsetof(struct rpc_construct_rbd, user_id), spdk_json_decode_string, true},
 	{"pool_name", offsetof(struct rpc_construct_rbd, pool_name), spdk_json_decode_string},
 	{"rbd_name", offsetof(struct rpc_construct_rbd, rbd_name), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_construct_rbd, block_size), spdk_json_decode_uint32},
+	{"config", offsetof(struct rpc_construct_rbd, config), spdk_bdev_rbd_decode_config, true}
 };
 
 static void
@@ -74,7 +122,10 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_rbd_create(req.name, req.pool_name, req.rbd_name, req.block_size);
+	bdev = spdk_bdev_rbd_create(req.name, req.user_id, req.pool_name,
+				    (const char *const *)req.config,
+				    req.rbd_name,
+				    req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}

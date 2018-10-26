@@ -286,8 +286,18 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_nvme_controller)
 
     def construct_rbd_bdev(args):
+        config = None
+        if args.config:
+            config = {}
+            for entry in args.config:
+                parts = entry.split('=', 1)
+                if len(parts) != 2:
+                    raise Exception('--config %s not in key=value form' % entry)
+                config[parts[0]] = parts[1]
         print(rpc.bdev.construct_rbd_bdev(args.client,
                                           name=args.name,
+                                          user=args.user,
+                                          config=config,
                                           pool_name=args.pool_name,
                                           rbd_name=args.rbd_name,
                                           block_size=args.block_size))
@@ -295,6 +305,9 @@ if __name__ == "__main__":
     p = subparsers.add_parser('construct_rbd_bdev',
                               help='Add a bdev with ceph rbd backend')
     p.add_argument('-b', '--name', help="Name of the bdev", required=False)
+    p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)", required=False)
+    p.add_argument('--config', action='append', metavar='key=value',
+                   help="adds a key=value configuration option for rados_conf_set (default: rely on config file)")
     p.add_argument('pool_name', help='rbd pool name')
     p.add_argument('rbd_name', help='rbd image name')
     p.add_argument('block_size', help='rbd block size', type=int)
