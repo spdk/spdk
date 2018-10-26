@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "985f6d92_bdf9e533",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1113,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-26T16:40:24Z",
+      "side": 1,
+      "message": "I threat these examples as 1-1 compare for users who want do rpc.py and just check what is sent vs what is received. This is why C+V request/response from rpc.py tool here.",
+      "parentUuid": "79f397fc_9019e79e",
+      "range": {
+        "startLine": 1113,
+        "startChar": 56,
+        "endLine": 1113,
+        "endChar": 99
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92f6909c_a4e85d46",
         "filename": "lib/bdev/rbd/bdev_rbd.c",
         "patchSetId": 3
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "\u003e free can handle NULL.\n\nNot on all platforms. I worked on Unix platforms where free(NULL) crashed. https://stackoverflow.com/questions/1938735/does-freeptr-where-ptr-is-null-corrupt-memory\n\nHow portable to you want your code to be? I can remove the if check, shouldn\u0027t be a problem in practice.",
       "parentUuid": "92f6909c_a4e85d46",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 97,
+        "endChar": 2
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d92a44d6_0e08657d",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-26T16:40:24Z",
+      "side": 1,
+      "message": "\"free(NULL)\" can\u0027t crash on any OS we support. This a rule of thumb I strictly follow.",
+      "parentUuid": "17858ac4_ed0e05fe",
       "range": {
         "startLine": 95,
         "startChar": 1,
@@ -437,6 +485,30 @@
       "side": 1,
       "message": "\u003e \u003e Can you use spdk_json_object_first() / spdk_json_next() / spdk_json_key() API here?\n\u003e \n\u003e It looked more complicated, but okay.\n\nI started using this API, but ran into issues, so I have given up. Can I leave that conversion to you?\n\nThe issues were:\n- spdk_json_value is static and cannot be called\n- spdk_json_object_first(values) in my decode function leads to a const warning;\n  spdk_json_object_first should take a \"const struct spdk_json_val *object\" or\n  type casting at the call site is necessary (ugly)\n\nI also noticed that the unit testing doesn\u0027t seem to verify that spdk_json_value returns the right content.",
       "parentUuid": "f667aab1_50f21f2f",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 2
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80cbc968_5f8c66b4",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-26T16:40:24Z",
+      "side": 1,
+      "message": "\u003e I started using this API, but ran into issues, so I have given up. Can I leave that conversion to you?\n\nSure, when everything else is ok I will push patch to change it.",
+      "parentUuid": "ca73e305_32638a57",
       "range": {
         "startLine": 219,
         "startChar": 0,

@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0049b8a_7419906a",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-26T16:40:24Z",
+      "side": 1,
+      "message": "if we have NULL here we have a BUG and we should not cover it.\n\nI think it can be removed.",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 2
+      },
+      "revId": "dd408839306b4d590f80ac95c312e5d43e7d0b31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2862e782_c89fe87a",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-26T16:40:24Z",
+      "side": 1,
+      "message": "I admit, this looks ugly. Need to think how to deal with that but lets leave it for now.",
+      "range": {
+        "startLine": 131,
+        "startChar": 8,
+        "endLine": 131,
+        "endChar": 30
+      },
+      "revId": "dd408839306b4d590f80ac95c312e5d43e7d0b31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
