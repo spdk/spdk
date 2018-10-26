@@ -39,6 +39,10 @@
 
 #include "common/lib/test_env.c"
 
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096
+#endif
+
 DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
 	    (struct spdk_nvme_qpair *qpair,
 	     uint32_t max_completions), 0);
@@ -137,8 +141,8 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	 *  so that we test the SGL splitting path.
 	 */
 	ctrlr->flags = 0;
-	ctrlr->min_page_size = 4096;
-	ctrlr->page_size = 4096;
+	ctrlr->min_page_size = PAGE_SIZE;
+	ctrlr->page_size = PAGE_SIZE;
 	memset(&ctrlr->opts, 0, sizeof(ctrlr->opts));
 	memset(ns, 0, sizeof(*ns));
 	ns->ctrlr = ctrlr;
