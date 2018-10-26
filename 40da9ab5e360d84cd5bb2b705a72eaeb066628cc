@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6aba92f1_38deec3a",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-26T09:15:33Z",
+      "side": 0,
+      "message": "g_spdk_iscsi.MaxQueueDepth has been used only here.\n\nIf you remove this, g_spdk_iscsi.MaxQueueDepth is used only if the user skips queue_depth.\n\nHence after this patch the name of g_spdk_iscsi.MaxQueueDepth should be changed to g_spdk_iscsi.DefaultQueueDepth ?",
+      "range": {
+        "startLine": 955,
+        "startChar": 25,
+        "endLine": 955,
+        "endChar": 77
+      },
+      "revId": "40da9ab5e360d84cd5bb2b705a72eaeb066628cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
