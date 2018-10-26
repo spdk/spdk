@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "acfdcf6a_b9260c27",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-10-26T12:25:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "98b9d32f_b33af545",
+      "revId": "b976a67d11b99caf1bdc73b2fde0f1906f39ea0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0f378ee8_762e8e93",
         "filename": "test/bdev/dynamic_memalloc/dynamic_memory.sh",
         "patchSetId": 8
@@ -65,6 +83,54 @@
     },
     {
       "key": {
+        "uuid": "2607e985_3780e494",
+        "filename": "test/bdev/dynamic_memalloc/dynamic_memory.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-10-26T12:25:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f378ee8_762e8e93",
+      "range": {
+        "startLine": 11,
+        "startChar": 38,
+        "endLine": 11,
+        "endChar": 50
+      },
+      "revId": "b976a67d11b99caf1bdc73b2fde0f1906f39ea0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe7527a0_dea28924",
+        "filename": "test/bdev/dynamic_memalloc/dynamic_memory.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-10-26T12:25:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "29f87d9c_7a3f610b",
+      "range": {
+        "startLine": 11,
+        "startChar": 51,
+        "endLine": 11,
+        "endChar": 58
+      },
+      "revId": "b976a67d11b99caf1bdc73b2fde0f1906f39ea0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b6b26766_e40c4047",
         "filename": "test/bdev/dynamic_memalloc/dynamic_memory.sh",
         "patchSetId": 8
@@ -76,6 +142,24 @@
       "writtenOn": "2018-10-26T08:29:04Z",
       "side": 1,
       "message": "Why do we create functions for single-line calls like that? This doesn\u0027t make the code more readable and only gives us more lines of code. Can we inline them?",
+      "revId": "b976a67d11b99caf1bdc73b2fde0f1906f39ea0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e161d70a_ef6ac72a",
+        "filename": "test/bdev/dynamic_memalloc/dynamic_memory.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-10-26T12:25:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6b26766_e40c4047",
       "revId": "b976a67d11b99caf1bdc73b2fde0f1906f39ea0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
