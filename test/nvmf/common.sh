@@ -155,12 +155,15 @@ function nvmftestinit()
 	if [ "$1" == "iso" ]; then
 		$rootdir/scripts/setup.sh
 		rdma_device_init
+		start_stub "-s 2048 -i 0 -m $NVMF_TEST_CORE_MASK"
+		export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i 0 -e 0xFFFF"
 	fi
 }
 
 function nvmftestfini()
 {
 	if [ "$1" == "iso" ]; then
+		kill_stub
 		$rootdir/scripts/setup.sh reset
 		rdma_device_init
 	fi
