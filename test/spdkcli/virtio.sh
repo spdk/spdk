@@ -5,7 +5,7 @@ testdir=$(readlink -f $(dirname $0))
 . $testdir/common.sh
 
 trap 'killprocess $virtio_pid; on_error_exit' ERR
-timing_enter spdk_cli_vhost
+timing_enter spdk_cli_vhost_init
 
 timing_enter run_spdk_tgt
 run_spdk_tgt
@@ -41,16 +41,16 @@ if [ ! -z $pci_blk ]  && [ ! -z $pci_scsi ]; then
 fi
 timing_exit spdkcli_check_match
 
-timing_exit spdkcli_create_virtio_user_config
+timing_enter spdkcli_create_virtio_user_config
 $spdkcli_job "/bdevs/virtioblk_disk create virtioblk_user user $testdir/../../sample_block" "virtioblk_user" True "/var/tmp/virtio.sock"
 $spdkcli_job "/bdevs/virtioscsi_disk create virtioscsi_user user $testdir/../../sample_scsi" "virtioscsi_user" True "/var/tmp/virtio.sock"
 timing_exit spdkcli_create_virtio_user_config
 
-timing_enter spdkcli_check_match
+timing_enter spdkcli_check_match_user_config
 MATCH_FILE="spdkcli_virtio_user.test"
 SPDKCLI_BRANCH="/vhost"
 check_match
-timing_exit spdkcli_check_match
+timing_exit spdkcli_check_match_user_config
 
 timing_enter spdkcli_clear_virtio_config
 $spdkcli_job "/bdevs/virtioscsi_disk delete virtioscsi_user" "" False "/var/tmp/virtio.sock"
@@ -71,4 +71,4 @@ timing_exit spdkcli_clear_virtio_config
 killprocess $virtio_pid
 killprocess $spdk_tgt_pid
 
-timing_exit spdk_cli_vhost
+timing_exit spdk_cli_vhost_init
