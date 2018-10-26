@@ -94,6 +94,30 @@
       "revId": "2e3579e052699c4e3efb5d414691a6ef18346478",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd4bc450_dac7ec5e",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-10-26T03:26:21Z",
+      "side": 1,
+      "message": "It seems in our latest Qemu and vhost, the Flush command is disabled and never sent down to SPDK bdev stack. So this behavior relies on how the Disk operates after data has been written to the RAM on Disk. Either flush by the Disk itself, or the data is dropped? If we add the O_SYNC flag, this could guarantee the data if there is no explicit Flush received? Any more suggestion? Thanks.",
+      "parentUuid": "2ca96082_3a3428be",
+      "range": {
+        "startLine": 84,
+        "startChar": 44,
+        "endLine": 84,
+        "endChar": 53
+      },
+      "revId": "2e3579e052699c4e3efb5d414691a6ef18346478",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
