@@ -16,6 +16,23 @@
       "revId": "22e5e3d8ac3246c9985fbcf0155da8c7f3ea2e7b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83b746ad_18941664",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-26T17:22:44Z",
+      "side": 1,
+      "message": "bdev modules shouldn\u0027t write to bdev_io-\u003einternal fields (that\u0027s why we\u0027ve marked them internal)\n\nwe should have a field in the crypto modules per-io context to do this kind of marking\n\nplease let\u0027s fix that for 19.01",
+      "revId": "22e5e3d8ac3246c9985fbcf0155da8c7f3ea2e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
