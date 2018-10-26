@@ -354,6 +354,30 @@
     },
     {
       "key": {
+        "uuid": "8c5e8226_4403b372",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T12:08:37Z",
+      "side": 1,
+      "message": "\u003e \u003e Second thing - passing in JSON RPC\n\u003e \u003e \n\u003e \u003e   ..\n\u003e \u003e   config\" : null\n\u003e \u003e   ...\n\u003e \u003e \n\u003e \u003e Should be allowed.\n\u003e \n\u003e When that is passed, what is in `values`?\n\nIt\u0027s a value with type SPDK_JSON_VAL_NULL. I have added support for that.",
+      "parentUuid": "57ce0911_01e7967f",
+      "range": {
+        "startLine": 210,
+        "startChar": 5,
+        "endLine": 210,
+        "endChar": 19
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3909ffe5_5036e84b",
         "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
         "patchSetId": 3
