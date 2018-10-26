@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "79f397fc_9019e79e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1113,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T09:17:59Z",
+      "side": 1,
+      "message": "This example isn\u0027t meant to be sent as-is, is it? For illustrative purposes, fake inline comments are fine IMHO. But I can also remove it or move it out of the example.",
+      "parentUuid": "13d5bf96_e7c6fb8e",
+      "range": {
+        "startLine": 1113,
+        "startChar": 56,
+        "endLine": 1113,
+        "endChar": 99
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92f6909c_a4e85d46",
         "filename": "lib/bdev/rbd/bdev_rbd.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-25T10:22:01Z",
       "side": 1,
       "message": "free can handle NULL.",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 97,
+        "endChar": 2
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17858ac4_ed0e05fe",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T09:17:59Z",
+      "side": 1,
+      "message": "\u003e free can handle NULL.\n\nNot on all platforms. I worked on Unix platforms where free(NULL) crashed. https://stackoverflow.com/questions/1938735/does-freeptr-where-ptr-is-null-corrupt-memory\n\nHow portable to you want your code to be? I can remove the if check, shouldn\u0027t be a problem in practice.",
+      "parentUuid": "92f6909c_a4e85d46",
       "range": {
         "startLine": 95,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "6a36a504_e81f1246",
+        "filename": "lib/bdev/rbd/bdev_rbd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T09:17:59Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5b3bc476_a7ba7ddb",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 7
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8013a4a5_b47b697a",
         "filename": "lib/bdev/rbd/bdev_rbd.h",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2018-10-25T10:22:01Z",
       "side": 1,
       "message": "Is this needed here?",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 73
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bb003af_968b0ea3",
+        "filename": "lib/bdev/rbd/bdev_rbd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T09:17:59Z",
+      "side": 1,
+      "message": "Will check.",
+      "parentUuid": "8013a4a5_b47b697a",
       "range": {
         "startLine": 44,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "6632843a_6f28494e",
+        "filename": "lib/bdev/rbd/bdev_rbd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T09:17:59Z",
+      "side": 1,
+      "message": "\u003e const?\n\nIn my experience, \"const array of const pointers\" leads to ugly type casting. But I can try as part of removing the type.",
+      "parentUuid": "2a718169_37454a2c",
+      "range": {
+        "startLine": 55,
+        "startChar": 11,
+        "endLine": 55,
+        "endChar": 28
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20d590fd_d9ad4a1a",
         "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
         "patchSetId": 3
@@ -128,6 +248,30 @@
       "writtenOn": "2018-10-25T10:22:01Z",
       "side": 1,
       "message": "I think it could be renamed to spdk_bdev_rbd_config_free() and moved to bdev_rbd.c",
+      "range": {
+        "startLine": 168,
+        "startChar": 5,
+        "endLine": 168,
+        "endChar": 27
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bd3d51b_6d01665a",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T09:17:59Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "20d590fd_d9ad4a1a",
       "range": {
         "startLine": 168,
         "startChar": 5,
@@ -186,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "57ce0911_01e7967f",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T09:17:59Z",
+      "side": 1,
+      "message": "\u003e I think value could not be NULL here.\n\nspdk_json_decode_object does the same NULL check. Let\u0027s leave it in, it\u0027s good defensive programming.\n\n\u003e Second thing - passing in JSON RPC\n\u003e \n\u003e   ..\n\u003e   config\" : null\n\u003e   ...\n\u003e \n\u003e Should be allowed.\n\nWhen that is passed, what is in `values`?",
+      "parentUuid": "e154b982_548fde6f",
+      "range": {
+        "startLine": 210,
+        "startChar": 5,
+        "endLine": 210,
+        "endChar": 19
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3909ffe5_5036e84b",
         "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
         "patchSetId": 3
@@ -197,6 +365,30 @@
       "writtenOn": "2018-10-25T10:22:01Z",
       "side": 1,
       "message": "Can you use spdk_json_object_first() / spdk_json_next() / spdk_json_key() API here?\n\nWe can change internal representation of JSON object in SPDK. This new API will make changes less painful.",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 2
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f667aab1_50f21f2f",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-10-26T09:17:59Z",
+      "side": 1,
+      "message": "\u003e Can you use spdk_json_object_first() / spdk_json_next() / spdk_json_key() API here?\n\nIt looked more complicated, but okay.",
+      "parentUuid": "3909ffe5_5036e84b",
       "range": {
         "startLine": 219,
         "startChar": 0,
