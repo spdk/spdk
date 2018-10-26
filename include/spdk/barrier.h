@@ -64,7 +64,7 @@ extern "C" {
 #ifdef __PPC64__
 #define spdk_rmb()	__asm volatile("sync" ::: "memory")
 #elif defined(__aarch64__)
-#define spdk_rmb()	__asm volatile("dsb lt" ::: "memory")
+#define spdk_rmb()	__asm volatile("dsb ld" ::: "memory")
 #elif defined(__i386__) || defined(__x86_64__)
 #define spdk_rmb()	__asm volatile("lfence" ::: "memory")
 #else
