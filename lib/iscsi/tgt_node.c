@@ -952,7 +952,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	target->header_digest = header_digest;
 	target->data_digest = data_digest;
 
-	if (queue_depth > 0 && ((uint32_t)queue_depth <= g_spdk_iscsi.MaxQueueDepth)) {
+	if (queue_depth > 0) {
 		target->queue_depth = queue_depth;
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "QueueDepth %d is invalid and %d is used instead.\n",
