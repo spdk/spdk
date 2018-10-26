@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "726d2df9_1bbe9f81",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-26T15:40:29Z",
+      "side": 1,
+      "message": "Unknown bdev io type",
+      "revId": "22e5e3d8ac3246c9985fbcf0155da8c7f3ea2e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
