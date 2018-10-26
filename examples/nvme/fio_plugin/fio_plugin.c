@@ -335,6 +335,15 @@ static void parse_prchk_flags(const char *prchk_str)
 	}
 }
 
+static void parse_pract_flag(int pract)
+{
+	if (pract == 1) {
+		spdk_pract_flag = SPDK_NVME_IO_FLAGS_PRACT;
+	} else {
+		spdk_pract_flag = 0;
+	}
+}
+
 /* Called once at initialization. This is responsible for gathering the size of
  * each "file", which in our case are in the form
  * 'key=value [key=value] ... ns=value'
@@ -376,7 +385,7 @@ static int spdk_fio_setup(struct thread_data *td)
 		opts.mem_size = fio_options->mem_size;
 		opts.shm_id = fio_options->shm_id;
 		spdk_enable_sgl = fio_options->enable_sgl;
-		spdk_pract_flag = fio_options->pi_act;
+		parse_pract_flag(fio_options->pi_act);
 		parse_prchk_flags(fio_options->pi_chk);
 		if (spdk_env_init(&opts) < 0) {
 			SPDK_ERRLOG("Unable to initialize SPDK env\n");
