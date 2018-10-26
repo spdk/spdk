@@ -581,6 +581,18 @@ size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
  */
 uint64_t spdk_vtophys(void *buf);
 
+/**
+ * Get the physical address and length of a buffer.
+ *
+ * \param buf - input address of buffer.
+ * \param length - input length of the buffer.
+ * \param phys_len - output the number of bytes before the end of the physical page.
+ *
+ * \return the physical address of this buffer on success, or SPDK_VTOPHYS_ERROR
+ * on failure.
+ */
+uint64_t spdk_vtophys_and_len(void *buf, size_t length, size_t *phys_len);
+
 struct spdk_pci_addr {
 	uint32_t			domain;
 	uint8_t				bus;

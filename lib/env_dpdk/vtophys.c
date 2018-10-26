@@ -710,3 +710,32 @@ struct rte_bus spdk_bus = {
 };
 
 RTE_REGISTER_BUS(spdk, spdk_bus);
+
+uint64_t
+spdk_vtophys_and_len(void *buf, size_t length, size_t *phys_len)
+{
+	uint64_t phys_addr, vaddr, paddr_2mb;
+	uint64_t page_size = 0;
+
+
+	vaddr = (uint64_t)buf;
+
+	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr, &page_size);
+
+	/*
+	 * SPDK_VTOPHYS_ERROR has all bits set, so if the lookup returned SPDK_VTOPHYS_ERROR,
+	 * we will still bitwise-or it with the buf offset below, but the result will still be
+	 * SPDK_VTOPHYS_ERROR.
+	 */
+	SPDK_STATIC_ASSERT(SPDK_VTOPHYS_ERROR == UINT64_C(-1), "SPDK_VTOPHYS_ERROR should be all 1s");
+
+	if (paddr_2mb == SPDK_VTOPHYS_ERROR || paddr_2mb == 0) {
+		*phys_len = 0;
+		return SPDK_VTOPHYS_ERROR;
+	}
+
+	phys_addr = (paddr_2mb | ((uint64_t)buf & MASK_2MB));
+	*phys_len = (size_t) page_size;
+
+	return phys_addr;
+}
