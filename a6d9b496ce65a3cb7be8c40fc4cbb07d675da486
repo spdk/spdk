@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50e28c92_df38c8da",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 21
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-10-26T18:21:47Z",
+      "side": 1,
+      "message": "Change \u0027python-pexpect\u0027 to just \u0027pexpect\u0027",
+      "revId": "a6d9b496ce65a3cb7be8c40fc4cbb07d675da486",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
