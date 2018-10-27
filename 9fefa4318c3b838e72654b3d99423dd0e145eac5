@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56569746_4ce7f96c",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:12:28Z",
+      "side": 1,
+      "message": "is that a two space indent before \"an\"?",
+      "revId": "9fefa4318c3b838e72654b3d99423dd0e145eac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ead0bcd8_e9a78eab",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:12:28Z",
+      "side": 1,
+      "message": "heh, both in code and the docs you use a mix of io, IO, I/O",
+      "revId": "9fefa4318c3b838e72654b3d99423dd0e145eac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8addd68_7939d692",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:12:28Z",
+      "side": 1,
+      "message": "I hate to bring this up since you\u0027ve messed with the name so many times and I\u0027m not suggesting you change it again, but reading many of these function names \"reduce\" reads as an action verb.  Like here is this a function that reduces the total chunks? Obviously not but an opening comment that says \"returns total chunks for the given volume\"\n\nThen again, it may just be me :)\n\nOr, now after reading the rest of the file, calling this _reduce_get_ttl_chunks() would be clearer IMHO",
+      "revId": "9fefa4318c3b838e72654b3d99423dd0e145eac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e51591a4_9adc19b1",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:12:28Z",
+      "side": 1,
+      "message": "see, this one really is an action verb!",
+      "revId": "9fefa4318c3b838e72654b3d99423dd0e145eac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
