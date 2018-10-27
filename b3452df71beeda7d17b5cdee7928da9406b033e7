@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "602b48e7_06b10c64",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:03:32Z",
+      "side": 1,
+      "message": "I think you need a high level explanation of how this library/algorithm maps to something that actually does the compression, like what we\u0027ll be starting off with at least using CompressDev.  For a new person reading this, I think they will get lost pretty quick without getting \"the big picture\" first",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d83aad80_225c2633",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:03:32Z",
+      "side": 1,
+      "message": "we should probably have some short description/link or something here to SNIA PM instead of assuming everyone will know that this is - but they should by now :)",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47651190_f3b90d62",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:03:32Z",
+      "side": 1,
+      "message": "I\u0027d consider IO instead of io throughout",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f288a82_2dcdc625",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:03:32Z",
+      "side": 1,
+      "message": "maybe spell the word \"two\" or do a \"2 x 4KB\"",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b9c9b8d_41d3e6ca",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:03:32Z",
+      "side": 1,
+      "message": "Can other values be used? If not I\u0027d remove the \"for example\"",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dd99b69_93c0c4de",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:03:32Z",
+      "side": 1,
+      "message": "I assume it will also send an actual unmap to the backing device?",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7d11d56_e58a5c78",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:03:32Z",
+      "side": 1,
+      "message": "Maybe define what \"restart\" means.  System reboot, SPDK application stop/start, is there some other level of load/unload?",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
