@@ -167,6 +167,16 @@ spdk_vtophys(void *buf)
 	return (uintptr_t)buf;
 }
 
+DEFINE_RETURN_MOCK(spdk_vtophys_and_len, uint64_t);
+uint64_t
+spdk_vtophys_and_len(void *buf, size_t length, size_t *phys_len)
+{
+	HANDLE_RETURN_MOCK(spdk_vtophys_and_len);
+
+	*phys_len = length;
+	return (uintptr_t)buf;
+}
+
 void
 spdk_memzone_dump(FILE *f)
 {
