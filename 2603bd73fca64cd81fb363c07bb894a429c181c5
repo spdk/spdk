@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2972d95a_6c75c35e",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-10-27T22:15:36Z",
+      "side": 1,
+      "message": "Do you see this happening a lot? Just wondering why this isn\u0027t just an assert",
+      "revId": "2603bd73fca64cd81fb363c07bb894a429c181c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
