@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ca4e4de_696327d8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-28T20:23:19Z",
+      "side": 1,
+      "message": "I\u0027d consider to use a mask or enumeration rather than set of bools. If we take into account SRQ case, we have sequence of states:\nQP in RTS-\u003eQP in Error-\u003eWaiting for last WQE-\u003edraining shared CQ from send requests-\u003edarning shared CQ from receive requests-\u003eclose.",
+      "revId": "005c4c596bf62b65be62463aee24148c79ab3514",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffa552d3_4521e48f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-28T20:23:19Z",
+      "side": 1,
+      "message": "I\u0027d suggest to change the name \"disconnecting\" -\u003e \"disconnecting_qpais\".",
+      "revId": "005c4c596bf62b65be62463aee24148c79ab3514",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9edd9cb1_dc5c81b7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2621,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-28T20:23:19Z",
+      "side": 1,
+      "message": "This condition ( reaped \u003c CQ_BATCH_SIZE ) looks quite problematic for me. We\u0027re draining shared CQ. If other QP post completions, we can always have more than CQ_BATCH_SIZE completions in the queue.",
+      "revId": "005c4c596bf62b65be62463aee24148c79ab3514",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
