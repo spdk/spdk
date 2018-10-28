@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "7accb822_f68bb299",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2644,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-28T20:59:35Z",
+      "side": 1,
+      "message": "Posting receive after placing the QP in the error state should work. We\u0027ve tested that in both mlnx and soft-roce stack. \n\nIn which log I can see backtrace from the assert?",
+      "parentUuid": "c19cfa43_e149bd49",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ff24eae_92f911bc",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -66,6 +84,24 @@
       "writtenOn": "2018-10-25T18:02:40Z",
       "side": 1,
       "message": "What if the type is a regular request or recv? Can you only get flush errors if the connection is shutting down? Are we guaranteed to get an RDMA disconnect event any time we see flush errors?",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c15366a_f39f5100",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2741,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-28T20:59:35Z",
+      "side": 1,
+      "message": "QP may transitioned to error state automatically by HW. The first WR that complied with error will indicate a reason for error. Any new WR$ posted to QP in error state will be finished with flash error. I\u0027m not sure about WR posted before error, but not which one completed with error. I think, they will also finished with flush error.\n\nAre you asking about RDMA_CM_EVENT_DISCONNECTED in librdmacm? \nI should check that. I believe,we will not receive RDMA_CM_EVENT_DISCONNECTED in all cases. The local port can go down and remote side don\u0027t know about that till sending data. librdamcm exchange information using some kind of \"out-of-band\". In case of Infiniband, I relies on mcast group created for IpovIB. So, I think, if we close librdmacm\u0027s channel by rdma_disconnect, both sides receive RDMA_CM_EVENT_DISCONNECTED. But that\u0027s not related to transitioning to error state in RDMA QP.",
+      "parentUuid": "3ff24eae_92f911bc",
       "revId": "cc15038f66755c124db204f8d15410f65307588c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
