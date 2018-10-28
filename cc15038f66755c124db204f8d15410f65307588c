@@ -125,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "fa74ba77_292995ae",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2788,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-28T21:10:48Z",
+      "side": 1,
+      "message": "Can you send me link to the fix. I\u0027ll care to push it to soft-roce in Mellanox OFED. \n\nI\u0027ll see the fix, but I think, we can differentiate rxe and mlnx in configure time and disable code that breaks tests. I\u0027ve never heard about soft-roce in production. But today closing procedure is wrong, nvmf-target can crash in real scenario.",
+      "parentUuid": "dcffcff4_81e30649",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1e7911b_767ac361",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -136,6 +154,24 @@
       "writtenOn": "2018-10-25T18:02:40Z",
       "side": 1,
       "message": "I realized only yesterday that the opcode is not valid on error, so the whole block of code from here down isn\u0027t right. That was the source of what I thought were invalid wr_id\u0027s - I was using the opcode to determine the type and that\u0027s not allowed. I like the way you\u0027ve made wr_id point at an intermediate structure that contains the type to solve the problem.\n\nI\u0027m not currently sure whether the code should ever be initiating the disconnect process in response to finding an error here. Should we drive all disconnects via the rdma_cm_event channel? Is there ever an error we detect here that doesn\u0027t result in an event on the event channel?",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1dd8ddab_660c6bf5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2798,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-28T21:10:48Z",
+      "side": 1,
+      "message": "Does NVME-OF standard says something about QP disconnect? \nI believe, we should call explicitly to rdma_diconnect. This is a way to notify connected host about closing QP \"out-of-band\".\nLet me do some homework. I\u0027ll return with an answer.",
+      "parentUuid": "c1e7911b_767ac361",
       "revId": "cc15038f66755c124db204f8d15410f65307588c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
