@@ -98,7 +98,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	#timing_exit aer
 
 	timing_enter reset
-	$testdir/reset/reset -q 64 -w write -s 4096 -t 2
+	$testdir/reset/reset -q 64 -w write -t 2
 	report_test_completion "nightly_nvme_reset"
 	timing_exit reset
 fi
@@ -144,7 +144,7 @@ $testdir/err_injection/err_injection
 timing_exit err_injection
 
 timing_enter overhead
-$testdir/overhead/overhead -s 4096 -t 1 -H
+$testdir/overhead/overhead -t 1 -H
 timing_exit overhead
 
 timing_enter arbitration
