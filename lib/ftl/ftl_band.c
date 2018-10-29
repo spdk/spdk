@@ -37,6 +37,7 @@
 #include "ftl_band.h"
 #include "ftl_io.h"
 #include "ftl_core.h"
+#include "ftl_reloc.h"
 #include "ftl_debug.h"
 
 /* TODO: define some signature for meta version */
@@ -139,6 +140,7 @@ ftl_band_write_failed(struct ftl_band *band)
 		dev->df_band = band;
 	}
 
+	ftl_reloc_add(dev->reloc, band, 0, ftl_num_band_lbks(dev), 1);
 	ftl_band_set_state(band, FTL_BAND_STATE_CLOSED);
 }
 
