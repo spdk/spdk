@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd606e6d_8b088a2a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-29T22:43:51Z",
+      "side": 1,
+      "message": "\"for DPDK 18.05.1\" \u003d\u003e \"starting with DPDK 18.05.1\"?",
+      "revId": "9ef5c1038621f14b3fb693515246a4136d0fa80f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
