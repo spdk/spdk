@@ -745,9 +745,10 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 	}
 
 	/* CHAP method (RFC1994) */
-	if ((algorithm = spdk_iscsi_param_get_val(params, "CHAP_A")) != NULL) {
-		if (conn->auth.chap_phase != ISCSI_CHAP_PHASE_WAIT_A) {
-			SPDK_ERRLOG("CHAP sequence error\n");
+	if (conn->auth.chap_phase == ISCSI_CHAP_PHASE_WAIT_A) {
+		algorithm = spdk_iscsi_param_get_val(params, "CHAP_A");
+		if (algorithm == NULL) {
+			SPDK_ERRLOG("no algorithm\n");
 			goto error_return;
 		}
 
@@ -791,13 +792,15 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 					       data, alloc_len, total);
 
 		conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_NR;
-	} else if ((name = spdk_iscsi_param_get_val(params, "CHAP_N")) != NULL) {
+
+	} else if (conn->auth.chap_phase == ISCSI_CHAP_PHASE_WAIT_NR) {
 		uint8_t resmd5[SPDK_MD5DIGEST_LEN];
 		uint8_t tgtmd5[SPDK_MD5DIGEST_LEN];
 		struct spdk_md5ctx md5ctx;
 
-		if (conn->auth.chap_phase != ISCSI_CHAP_PHASE_WAIT_NR) {
-			SPDK_ERRLOG("CHAP sequence error\n");
+		name = spdk_iscsi_param_get_val(params, "CHAP_N");
+		if (name == NULL) {
+			SPDK_ERRLOG("no name\n");
 			goto error_return;
 		}
 
@@ -914,7 +917,6 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 
 		conn->auth.chap_phase = ISCSI_CHAP_PHASE_END;
 	} else {
-		/* not found CHAP keys */
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "start CHAP\n");
 		conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
 	}
