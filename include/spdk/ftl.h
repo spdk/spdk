@@ -167,13 +167,13 @@ struct ftl_init_opts {
 	struct spdk_nvme_transport_id		trid;
 
 	/* Device's config */
-	struct ftl_conf			*conf;
+	struct ftl_conf				*conf;
 
 	/* Device's name */
 	const char				*name;
 
 	/* Parallel unit range */
-	struct ftl_punit_range		range;
+	struct ftl_punit_range			range;
 
 	/* Mode flags */
 	unsigned int				mode;
