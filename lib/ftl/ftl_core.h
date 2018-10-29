@@ -47,6 +47,8 @@
 #include "ftl_utils.h"
 #include "ftl_trace.h"
 
+#define FTL_NSID 1
+
 struct ftl_dev;
 struct ftl_band;
 struct ftl_chunk;
@@ -54,6 +56,8 @@ struct ftl_io;
 struct ftl_restore;
 struct ftl_wptr;
 struct ftl_flush;
+struct ftl_reloc;
+struct ftl_anm_event;
 
 struct ftl_stats {
 	/* Number of writes scheduled directly by the user */
@@ -198,6 +202,9 @@ struct ftl_dev {
 
 	/* Inflight io operations */
 	atomic_ulong				num_inflight;
+
+	/* Manages data relocation */
+	struct ftl_reloc			*reloc;
 
 	/* Task array */
 	struct ftl_task				tasks[FTL_TASK_ID_MAX];
