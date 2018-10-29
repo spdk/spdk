@@ -42,6 +42,7 @@
 #include "ftl_core.h"
 #include "ftl_band.h"
 #include "ftl_io.h"
+#include "ftl_anm.h"
 #include "ftl_rwb.h"
 #include "ftl_nvme.h"
 #include "ftl_debug.h"
@@ -1498,6 +1499,13 @@ spdk_ftl_flush(struct ftl_dev *dev, const ftl_fn cb_fn, void *cb_arg)
 	return 0;
 }
 
+static void
+ftl_anm_event_cb(struct ftl_anm_event *event)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Unconsumed ANM received for dev: %p...\n", event->dev);
+	ftl_anm_event_complete(event);
+}
+
 void
 ftl_read_thread(void *ctx)
 {
@@ -1537,6 +1545,11 @@ ftl_core_thread(void *ctx)
 
 	for (size_t i = 0; i < SPDK_COUNTOF(pollers); ++i) {
 		spdk_pollers[i] = spdk_poller_register(pollers[i].fn, pollers[i].ctx, 0);
+	}
+
+	if (ftl_anm_register_device(dev, ftl_anm_event_cb)) {
+		SPDK_ERRLOG("Unable to register to anm thread\n");
+		return;
 	}
 
 	ftl_thread_set_initialized(io_thread->thread);
