@@ -41,6 +41,7 @@
 #include "ftl_core.h"
 #include "ftl_band.h"
 #include "ftl_io.h"
+#include "ftl_anm.h"
 #include "ftl_rwb.h"
 #include "ftl_debug.h"
 #include "ftl_reloc.h"
@@ -1522,6 +1523,13 @@ spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
 
 	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_flush, flush);
 	return 0;
+}
+
+void
+ftl_process_anm_event(struct ftl_anm_event *event)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Unconsumed ANM received for dev: %p...\n", event->dev);
+	ftl_anm_event_complete(event);
 }
 
 int
