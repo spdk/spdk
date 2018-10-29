@@ -60,6 +60,7 @@ fi
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=1}; export SPDK_RUN_INSTALLED_DPDK
 : ${SPDK_TEST_CRYPTO=1}; export SPDK_TEST_CRYPTO
+: ${SPDK_TEST_FTL=0}; export SPDK_TEST_FTL
 
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
@@ -185,6 +186,10 @@ fi
 
 if [ ! -d "${DEPENDENCY_DIR}/nvme-cli" ]; then
 	export SPDK_TEST_NVME_CLI=0
+fi
+
+if [ $SPDK_TEST_FTL -eq 1 ]; then
+	config_params+=' --with-ftl'
 fi
 
 export config_params
