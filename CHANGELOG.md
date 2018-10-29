@@ -158,6 +158,11 @@ The io_unit size is now the same as the underlying block device's block size.
 Logical volumes built on a block device with 512B block size can now be used as boot devices
 in QEMU.
 
+### SPDKCLI
+
+The SPDKCLI interactive command tool for managing SPDK is no longer considered experimental.
+Support for the iSCSI and NVMe-oF targets has been added.
+
 ## v18.07:
 
 ### bdev
