@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "087cffde_daee41f0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2644,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-29T17:06:53Z",
+      "side": 1,
+      "message": "OK. Thanks.\nI\u0027ll see the log tomorrow. \n\nOnce, you merge your series, we will rebase this patch.\nBut we still have an issue with rxe. \nI don\u0027t quite understand how we can deal with it without removing assert for qp_num",
+      "parentUuid": "93b0a22e_039731c1",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ff24eae_92f911bc",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
