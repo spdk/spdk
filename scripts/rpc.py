@@ -1180,6 +1180,33 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('base_bdev', help='base bdev name')
     p.set_defaults(func=destruct_split_vbdev)
 
+    # ftl
+    def construct_ftl_bdev(args):
+        print_dict(rpc.bdev.construct_ftl_bdev(args.client,
+                                               name=args.name,
+                                               traddr=args.traddr,
+                                               punits=args.punits,
+                                               mode=args.mode,
+                                               uuid=args.uuid))
+
+    p = subparsers.add_parser('construct_ftl_bdev',
+                              help='Add FTL bdev')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.add_argument('-a', '--traddr',
+                   help='NVMe target address: e.g., an ip address or BDF', required=True)
+    p.add_argument('-l', '--punits', help='Parallel unit range in the form of start-end: e.g. 4-8',
+                   required=True)
+    p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
+                   'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)', required=False)
+    p.set_defaults(func=construct_ftl_bdev)
+
+    def delete_ftl_bdev(args):
+        print_dict(rpc.bdev.delete_ftl_bdev(args.client, name=args.name))
+
+    p = subparsers.add_parser('delete_ftl_bdev', help='Delete FTL bdev')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.set_defaults(func=delete_ftl_bdev)
+
     # nbd
     def start_nbd_disk(args):
         print(rpc.nbd.start_nbd_disk(args.client,
