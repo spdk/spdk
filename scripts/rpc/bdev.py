@@ -445,20 +445,20 @@ def destruct_split_vbdev(client, base_bdev):
     return client.call('destruct_split_vbdev', params)
 
 
-def construct_ftl_bdev(client, name, traddr, punits, mode, uuid):
+def construct_ftl_bdev(client, name, traddr, punits, uuid=None):
     """Construct FTL bdev
 
     Args:
         name: name of the bdev
         traddr: transport address
         punit: parallel unit range
-        mode: bdev mode (bit 0 - mode create, bit 1 - separated reads)
         uuid: UUID of the device
     """
     params = {'name': name,
               'traddr': traddr,
-              'punits': punits,
-              'uuid': uuid}
+              'punits': punits}
+    if uuid:
+        params['uuid'] = uuid
 
     return client.call('construct_ftl_bdev', params)
 
