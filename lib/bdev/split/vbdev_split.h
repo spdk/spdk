@@ -65,4 +65,4 @@ int spdk_vbdev_split_destruct(const char *base_bdev_name);
  */
 struct spdk_bdev_part_base *spdk_vbdev_split_get_part_base(struct spdk_bdev *base_bdev);
 
-#endif // SPDK_VBDEV_SPLIT_H
+#endif /* SPDK_VBDEV_SPLIT_H */

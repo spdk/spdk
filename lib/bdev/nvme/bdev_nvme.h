@@ -109,4 +109,4 @@ struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
  */
 int spdk_bdev_nvme_delete(const char *name);
 
-#endif // SPDK_BDEV_NVME_H
+#endif /* SPDK_BDEV_NVME_H */

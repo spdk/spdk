@@ -593,7 +593,7 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		break;
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		// TODO: support flush if requirement comes
+		/* TODO: support flush if requirement comes */
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		break;
 
