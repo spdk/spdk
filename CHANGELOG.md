@@ -41,6 +41,8 @@ documentation for more details. The previous set_bdev_qos_limit_iops RPC method 
 18.04 release has been deprecated. The new set_bdev_qos_limit RPC method can support both
 bandwidth and IOPS limits.
 
+spdk_bdev_config_json() and corresponding `get_bdevs_config` RPC was removed.
+
 ### Environment Abstraction Layer and Event Framework
 
 The size parameter of spdk_mem_map_translate is now a pointer. This allows the
