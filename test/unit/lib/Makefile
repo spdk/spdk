@@ -38,6 +38,7 @@ DIRS-y = bdev blob blobfs event ioat iscsi json jsonrpc log lvol nvme nvmf scsi 
 ifeq ($(OS),Linux)
 DIRS-$(CONFIG_VHOST) += vhost
 endif
+DIRS-$(CONFIG_FTL) += ftl
 
 .PHONY: all clean $(DIRS-y)
 
