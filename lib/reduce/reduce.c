@@ -131,9 +131,11 @@ int64_t
 spdk_reduce_get_pm_file_size(struct spdk_reduce_vol_params *params)
 {
 	uint64_t total_pm_size;
+	int rc;
 
-	if (_validate_vol_params(params) != 0) {
-		return -1;
+	rc = _validate_vol_params(params);
+	if (rc != 0) {
+		return rc;
 	}
 
 	total_pm_size = sizeof(struct spdk_reduce_vol_superblock);
@@ -147,9 +149,11 @@ int64_t
 spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params)
 {
 	uint64_t total_backing_size, num_chunks;
+	int rc;
 
-	if (_validate_vol_params(params) != 0) {
-		return -1;
+	rc = _validate_vol_params(params);
+	if (rc != 0) {
+		return rc;
 	}
 
 	num_chunks = _get_total_chunks(params->vol_size, params->chunk_size);
@@ -168,6 +172,14 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	struct spdk_reduce_vol *vol;
 	struct spdk_reduce_vol_superblock *pm_super;
 	int64_t size, size_needed;
+	int rc;
+
+	rc = _validate_vol_params(params);
+	if (rc != 0) {
+		SPDK_ERRLOG("invalid vol params\n");
+		cb_fn(cb_arg, NULL, rc);
+		return;
+	}
 
 	size_needed = spdk_reduce_get_backing_device_size(params);
 	size = backing_dev->blockcnt * backing_dev->blocklen;
