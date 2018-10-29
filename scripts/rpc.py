@@ -1186,7 +1186,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                name=args.name,
                                                traddr=args.traddr,
                                                punits=args.punits,
-                                               mode=args.mode,
                                                uuid=args.uuid))
 
     p = subparsers.add_parser('construct_ftl_bdev',
@@ -1197,7 +1196,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-l', '--punits', help='Parallel unit range in the form of start-end: e.g. 4-8',
                    required=True)
     p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
-                   'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)', required=False)
+                   'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)')
     p.set_defaults(func=construct_ftl_bdev)
 
     def delete_ftl_bdev(args):
