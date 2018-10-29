@@ -263,6 +263,12 @@ for i in "$@"; do
 		--without-igb-uio-driver)
 			CONFIG[IGB_UIO_DRIVER]=n
 			;;
+		--with-ftl)
+			CONFIG[FTL]=y
+			;;
+		--without-ftl)
+			CONFIG[FTL]=n
+			;;
 		--)
 			break
 			;;
