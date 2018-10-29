@@ -41,6 +41,7 @@
 #include "ocssd_utils.h"
 #include "ocssd_core.h"
 #include "ocssd_band.h"
+#include "ocssd_anm.h"
 #include "ocssd_io.h"
 #include "ocssd_reloc.h"
 #include "ocssd_rwb.h"
@@ -1503,6 +1504,13 @@ spdk_ocssd_flush(struct ocssd_dev *dev, const struct ocssd_cb *cb)
 	return 0;
 }
 
+static void
+ocssd_anm_event_cb(struct ocssd_anm_event *event)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_OCSSD_CORE, "Unconsumed ANM received for dev: %p...\n", event->dev);
+	ocssd_anm_event_complete(event);
+}
+
 void
 ocssd_read_thread(void *ctx)
 {
@@ -1544,11 +1552,18 @@ ocssd_core_thread(void *ctx)
 		spdk_pollers[i] = spdk_poller_register(pollers[i].fn, pollers[i].ctx, 0);
 	}
 
+	if (ocssd_anm_register_device(dev, ocssd_anm_event_cb)) {
+		SPDK_ERRLOG("Unable to register to anm thread\n");
+		return;
+	}
+
 	ocssd_thread_set_initialized(io_thread->thread);
 
 	while (ocssd_dev_running(dev)) {
 		ocssd_thread_process(io_thread->thread);
 	}
+
+	ocssd_anm_unregister_device(dev);
 
 	for (size_t i = 0; i < ocssd_array_size(pollers); ++i) {
 		spdk_poller_unregister(&spdk_pollers[i]);
