@@ -32,6 +32,6 @@
 #
 
 $(DIRS-y) :
-	$(Q)$(MAKE) -C $@ S=$S$(S:%=/)$@ $(MAKECMDGOALS) $(MAKESUBDIRFLAGS)
+	$(Q)$(MAKE) V=$(V) -C $@ S=$S$(S:%=/)$@ $(MAKECMDGOALS) $(MAKESUBDIRFLAGS)
 
 install: all $(DIRS-y)
