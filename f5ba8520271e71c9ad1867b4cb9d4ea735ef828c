@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb4a2d27_724d1052",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-29T15:03:40Z",
+      "side": 1,
+      "message": "The SPDKCLI",
+      "revId": "f5ba8520271e71c9ad1867b4cb9d4ea735ef828c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "989c5f78_5dc047c0",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-29T15:03:40Z",
+      "side": 1,
+      "message": "Support for the iSCSI and NVMe-oF targets has been added.",
+      "revId": "f5ba8520271e71c9ad1867b4cb9d4ea735ef828c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
