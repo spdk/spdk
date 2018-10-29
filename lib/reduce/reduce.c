@@ -56,6 +56,19 @@ struct spdk_reduce_vol_superblock {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_superblock) == 4096, "size incorrect");
 
+#define REDUCE_PATH_MAX 4096
+
+/**
+ * Describes a persistent memory file used to hold metadata associated with a
+ *  compressed volume.
+ */
+struct spdk_reduce_pm_file {
+	char			path[REDUCE_PATH_MAX];
+	void			*pm_buf;
+	int			pm_is_pmem;
+	uint64_t		size;
+};
+
 struct spdk_reduce_vol {
 	struct spdk_uuid			uuid;
 	struct spdk_reduce_pm_file		pm_file;
@@ -205,14 +218,21 @@ _init_write_path_cpl(void *cb_arg, int ziperrno)
 void
 spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		     struct spdk_reduce_backing_dev *backing_dev,
-		     struct spdk_reduce_pm_file *pm_file,
+		     const char *pm_file_path,
 		     spdk_reduce_vol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_reduce_vol *vol;
 	struct spdk_reduce_vol_superblock *pm_super;
 	struct reduce_init_load_ctx *init_ctx;
 	int64_t size, size_needed;
+	size_t mapped_len;
 	int rc;
+
+	if (strnlen(pm_file_path, REDUCE_PATH_MAX) == REDUCE_PATH_MAX) {
+		SPDK_ERRLOG("pm_file_path (%s) too long\n", pm_file_path);
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
 
 	rc = _validate_vol_params(params);
 	if (rc != 0) {
@@ -230,8 +250,6 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	size_needed = spdk_reduce_get_pm_file_size(params);
-	size = pm_file->size;
 	if (size_needed > size) {
 		SPDK_ERRLOG("pm file size %" PRIi64 " but %" PRIi64 " needed\n",
 			    size, size_needed);
@@ -258,8 +276,6 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	memcpy(&vol->pm_file, pm_file, sizeof(*pm_file));
-
 	vol->backing_super = spdk_dma_zmalloc(sizeof(*vol->backing_super), 64, NULL);
 	if (vol->backing_super == NULL) {
 		free(vol);
@@ -280,6 +296,30 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		free(init_ctx);
 		spdk_dma_free(vol->backing_super);
 		free(vol);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	strncpy(vol->pm_file.path, pm_file_path, REDUCE_PATH_MAX);
+	vol->pm_file.size = spdk_reduce_get_pm_file_size(params);
+	vol->pm_file.pm_buf = pmem_map_file(pm_file_path, vol->pm_file.size,
+					    PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0600,
+					    &mapped_len, &vol->pm_file.pm_is_pmem);
+	if (vol->pm_file.pm_buf == NULL) {
+		free(init_ctx);
+		spdk_dma_free(vol->backing_super);
+		free(vol);
+		SPDK_ERRLOG("could not pmem_map_file(%s): %s\n", pm_file_path, strerror(errno));
+		cb_fn(cb_arg, NULL, -errno);
+		return;
+	}
+
+	if (vol->pm_file.size != mapped_len) {
+		free(init_ctx);
+		spdk_dma_free(vol->backing_super);
+		free(vol);
+		SPDK_ERRLOG("could not map entire pmem file (size=%" PRIu64 " mapped=%" PRIu64 ")\n",
+			    vol->pm_file.size, mapped_len);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
@@ -330,9 +370,7 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		return;
 	}
 
-	if (vol->pm_file.close != NULL) {
-		vol->pm_file.close(&vol->pm_file);
-	}
+	pmem_unmap(vol->pm_file.pm_buf, vol->pm_file.size);
 
 	vol->backing_dev->close(vol->backing_dev);
 
