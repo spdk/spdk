@@ -161,6 +161,24 @@
     },
     {
       "key": {
+        "uuid": "e434ac58_b4d98044",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2745,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-29T17:02:46Z",
+      "side": 1,
+      "message": "OK. I see the the phrase in \"man ibv_poll_cq\" you refer:\n\" Not all wc attributes are always valid. If the completion status is other than IBV_WC_SUCCESS, only the following attributes are valid: wr_id, status, qp_num, and vendor_err.\"\n\nI can\u0027t find in Infiniband spec the basis for the statement (in case of qp_num) . But, I agree that non-rxe stack returns valid qp num.\n\nEven if the kernel fix is accepted, on old kernels and old OFEDs the assert will fail on rxe. Is that OK?\nFrom our perspective (Mellanox), we should focus on real case: Infiniband, ROcE, iWrap. But that can be problem for CI based on rxe.",
+      "parentUuid": "322dff02_e1305aae",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dcffcff4_81e30649",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
