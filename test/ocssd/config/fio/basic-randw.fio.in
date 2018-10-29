@@ -1,0 +1,16 @@
+[global]
+ioengine=spdk_bdev
+spdk_conf=OCSSD_CONF_DIR/ocssd.conf
+thread=1
+direct=1
+iodepth=1
+rw=randwrite
+time_based=1
+runtime=30
+bs=4k
+filename=OCSSD_BDEV_NAME
+norandommap
+random_distribution=normal
+
+[test]
+numjobs=1
