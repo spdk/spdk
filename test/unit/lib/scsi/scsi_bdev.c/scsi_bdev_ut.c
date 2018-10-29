@@ -476,8 +476,8 @@ inquiry_evpd_test(void)
 	ut_init_task(&task);
 
 	cdb[0] = 0x12;
-	cdb[1] = 0x00; // EVPD = 0
-	cdb[2] = 0xff; // PageCode non-zero
+	cdb[1] = 0x00;	/* EVPD = 0 */
+	cdb[2] = 0xff;	/* PageCode non-zero */
 	cdb[3] = 0x00;
 	cdb[4] = 0xff;
 	cdb[5] = 0x00;
@@ -518,10 +518,10 @@ inquiry_standard_test(void)
 	ut_init_task(&task);
 
 	cdb[0] = 0x12;
-	cdb[1] = 0x00; // EVPD = 0
-	cdb[2] = 0x00; // PageCode zero - requesting standard inquiry
+	cdb[1] = 0x00;	/* EVPD = 0 */
+	cdb[2] = 0x00;	/* PageCode zero - requesting standard inquiry */
 	cdb[3] = 0x00;
-	cdb[4] = 0xff; // Indicate data size used by conformance test
+	cdb[4] = 0xff;	/* Indicate data size used by conformance test */
 	cdb[5] = 0x00;
 	task.cdb = cdb;
 
@@ -556,10 +556,10 @@ _inquiry_overflow_test(uint8_t alloc_len)
 	ut_init_task(&task);
 
 	cdb[0] = 0x12;
-	cdb[1] = 0x00; // EVPD = 0
-	cdb[2] = 0x00; // PageCode zero - requesting standard inquiry
+	cdb[1] = 0x00;		/* EVPD = 0 */
+	cdb[2] = 0x00;		/* PageCode zero - requesting standard inquiry */
 	cdb[3] = 0x00;
-	cdb[4] = alloc_len; // Indicate data size used by conformance test
+	cdb[4] = alloc_len;	/* Indicate data size used by conformance test */
 	cdb[5] = 0x00;
 	task.cdb = cdb;
 
