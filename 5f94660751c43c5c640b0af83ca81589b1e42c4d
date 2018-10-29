@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d72cdbd_1799c759",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-29T18:23:46Z",
+      "side": 1,
+      "message": "We could create blobstores on devices with 512B block sizes even before these changes.  I think more accurately, this should say:\n\nBlobstore I/O operations are now based on io_units, instead of blobstore page size.  The io_unit size is now the same as the underlying block device\u0027s block size.  Logical volumes built on a block device with 512B block size can now be used as boot devices in QEMU.",
+      "revId": "5f94660751c43c5c640b0af83ca81589b1e42c4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
