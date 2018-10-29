@@ -37,6 +37,7 @@
 #include "ocssd_band.h"
 #include "ocssd_io.h"
 #include "ocssd_core.h"
+#include "ocssd_reloc.h"
 #include "ocssd_debug.h"
 
 /* TODO: define some signature for meta version */
@@ -159,6 +160,7 @@ ocssd_band_write_failed(struct ocssd_band *band)
 		dev->df_band = band;
 	}
 
+	ocssd_reloc_add(dev->reloc, band, 0, ocssd_num_band_lbks(dev), 1);
 	ocssd_band_set_state(band, OCSSD_BAND_STATE_CLOSED);
 }
 

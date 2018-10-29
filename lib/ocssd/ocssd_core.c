@@ -42,6 +42,7 @@
 #include "ocssd_core.h"
 #include "ocssd_band.h"
 #include "ocssd_io.h"
+#include "ocssd_reloc.h"
 #include "ocssd_rwb.h"
 #include "ocssd_nvme.h"
 #include "ocssd_debug.h"
@@ -1194,6 +1195,101 @@ ocssd_rwb_fill(struct ocssd_io *io)
 }
 
 static int
+ocssd_dev_needs_defrag(struct ocssd_dev *dev)
+{
+	const struct ocssd_limit *limit = ocssd_get_limit(dev, OCSSD_LIMIT_START);
+
+	if (ocssd_reloc_halted(dev->reloc)) {
+		return 0;
+	}
+
+	if (dev->df_band) {
+		return 0;
+	}
+
+	if (dev->num_free <= limit->thld) {
+		return 1;
+	}
+
+	return 0;
+}
+
+static double
+ocssd_band_calc_merit(struct ocssd_band *band, size_t *thld_vld)
+{
+	size_t usable, valid, invalid;
+	double vld_ratio;
+
+	/* If the band doesn't have any usable lbks it's of no use */
+	usable = ocssd_band_num_usable_lbks(band);
+	if (!usable) {
+		return 0.0;
+	}
+
+	valid = thld_vld ? (usable - *thld_vld) : band->md.num_vld;
+	invalid = usable - valid;
+
+	/* Add one to avoid division by 0 */
+	vld_ratio = (double)invalid / (double)(valid + 1);
+	return vld_ratio * ocssd_band_age(band);
+}
+
+static int
+ocssd_band_needs_defrag(struct ocssd_band *band, struct ocssd_dev *dev)
+{
+	struct ocssd_conf *conf = &dev->conf;
+	size_t thld_vld;
+
+	/* If we're in dire need of free bands, every band is worth defragging */
+	if (ocssd_current_limit(dev) == OCSSD_LIMIT_CRIT) {
+		return 1;
+	}
+
+	thld_vld = (ocssd_band_num_usable_lbks(band) * conf->defrag.invld_thld) / 100;
+
+	return band->merit > ocssd_band_calc_merit(band, &thld_vld);
+}
+
+static struct ocssd_band *
+ocssd_select_defrag_band(struct ocssd_dev *dev)
+{
+	struct ocssd_band *band, *mband = NULL;
+	double merit = 0;
+
+	LIST_FOREACH(band, &dev->shut_bands, list_entry) {
+		assert(ocssd_band_check_state(band, OCSSD_BAND_STATE_CLOSED));
+		band->merit = ocssd_band_calc_merit(band, NULL);
+		if (band->merit > merit) {
+			merit = band->merit;
+			mband = band;
+		}
+	}
+
+	if (mband && !ocssd_band_needs_defrag(mband, dev)) {
+		mband = NULL;
+	}
+
+	return mband;
+}
+
+static int
+ocssd_process_relocs(void *arg)
+{
+	struct ocssd_dev *dev = arg;
+
+	if (ocssd_dev_needs_defrag(dev)) {
+		dev->df_band = ocssd_select_defrag_band(dev);
+		if (dev->df_band) {
+			ocssd_reloc_add(dev->reloc, dev->df_band, 0,
+					ocssd_num_band_lbks(dev), 0);
+		}
+	}
+
+	ocssd_reloc(dev->reloc);
+	return 0;
+}
+
+static int
 ocssd_process_completions(void *arg)
 {
 	struct ocssd_io_thread *thread = arg;
@@ -1435,7 +1531,8 @@ ocssd_core_thread(void *ctx)
 		void *ctx;
 	} pollers[] = {
 		{ ocssd_process_writes, dev },
-		{ ocssd_process_completions, io_thread }
+		{ ocssd_process_completions, io_thread },
+		{ ocssd_process_relocs, dev }
 	};
 	struct spdk_poller *spdk_pollers[ocssd_array_size(pollers)];
 
