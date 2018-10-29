@@ -445,6 +445,35 @@ def destruct_split_vbdev(client, base_bdev):
     return client.call('destruct_split_vbdev', params)
 
 
+def construct_ftl_bdev(client, name, traddr, punits, mode, uuid):
+    """Construct FTL bdev
+
+    Args:
+        name: name of the bdev
+        traddr: transport address
+        punit: parallel unit range
+        mode: bdev mode (bit 0 - mode create, bit 1 - separated reads)
+        uuid: UUID of the device
+    """
+    params = {'name': name,
+              'traddr': traddr,
+              'punits': punits,
+              'uuid': uuid}
+
+    return client.call('construct_ftl_bdev', params)
+
+
+def delete_ftl_bdev(client, name):
+    """Delete FTL bdev
+
+    Args:
+        name: name of the bdev
+    """
+    params = {'name': name}
+
+    return client.call('delete_ftl_bdev', params)
+
+
 def get_bdevs(client, name=None):
     """Get information about block devices.
 
