@@ -42,6 +42,52 @@ def delete_crypto_bdev(client, name):
     return client.call('delete_crypto_bdev', params)
 
 
+def construct_cache_bdev(client, name, mode, cache_bdev_name, core_bdev_name):
+    """Construct a cache block device
+
+    Args:
+        name: name of constructed cache vbdev
+        mode: CAS cache mode
+        cache_bdev_name: name of underlying cache bdev
+        core_bdev_name: name of underlying core bdev
+
+    Returns:
+        Name of created block device
+    """
+    params = {'name': name, 'mode': mode, 'cache_bdev_name': cache_bdev_name, 'core_bdev_name': core_bdev_name}
+
+    return client.call('construct_cache_bdev', params)
+
+
+def get_cache_stats(client, name, statname):
+    """Get statistics of chosen cache block device
+
+    Args:
+        name: name of cache bdev
+        statname: usage | reqs | blocks | errors
+
+    Returns:
+        Formatted statistics
+    """
+    params = {'name': name, 'statname': statname}
+
+    return client.call('get_cache_stats', params)
+
+
+def delete_cache_bdev(client, name):
+    """Delete a cache device
+
+    Args:
+        name: name of cache bdev
+
+    Returns:
+        name
+    """
+    params = {'name': name}
+
+    return client.call('delete_cache_bdev', params)
+
+
 def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
     """Construct a malloc block device.
 
