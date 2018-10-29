@@ -2,6 +2,17 @@
 
 ## v18.10: (Upcoming Release)
 
+### DPDK
+
+Dynamic memory allocation is now enabled by default for DPDK 18.05.1. When SPDK
+performs memory allocations and no hugepages are available, DPDK will attempt to
+allocate more automatically. Hugepages may still be pre-assigned to the
+application via the `--mem-size` command line argument as before, but specifying
+a value less than the total needed, including 0, will no longer result in
+errors.
+
+The DPDK submodule now corresponds to DPDK 18.08.
+
 ### nvme
 
 spdk_nvme_ctrlr_cmd_security_send() and spdk_nvme_ctrlr_cmd_security_receive()
