@@ -12,6 +12,10 @@ spdk_nvme_ns_get_extended_sector_size() was added.  This function includes
 the metadata size per sector (if any).  spdk_nvme_ns_get_sector_size() still
 returns only the data size per sector, not including metadata.
 
+New `send_nvme_cmd` RPC was added to allow sending NVMe commands directly to NVMe controller.
+See the [send_nvme_cmd](http://spdk.io/doc/jsonrpc.html#rpc_send_nvme_cmd) documentation
+for more details.
+
 ### Build System
 
 New `configure` options, `--with-shared` and `--without-shared`
