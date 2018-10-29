@@ -42,11 +42,13 @@
 static struct spdk_reduce_vol *g_vol;
 static int g_ziperrno;
 static char *g_volatile_pm_buf;
+static size_t g_volatile_pm_buf_len;
 static char *g_persistent_pm_buf;
 static bool g_backing_dev_closed;
 static char *g_backing_dev_buf;
+static const char *g_path;
 
-#define TEST_MD_PATH "/tmp/meta.data"
+#define TEST_MD_PATH "/tmp"
 
 static void
 sync_pm_buf(const void *addr, size_t length)
@@ -151,41 +153,43 @@ get_backing_device_size(void)
 	CU_ASSERT(backing_size == expected_backing_size);
 }
 
-static void
-pm_file_close(struct spdk_reduce_pm_file *pm_file)
+void *
+pmem_map_file(const char *path, size_t len, int flags, mode_t mode,
+	      size_t *mapped_lenp, int *is_pmemp)
 {
+	CU_ASSERT(g_volatile_pm_buf == NULL);
+	g_volatile_pm_buf = calloc(1, len);
+	g_volatile_pm_buf_len = len;
+	g_path = path;
+	SPDK_CU_ASSERT_FATAL(g_volatile_pm_buf != NULL);
+	*mapped_lenp = len;
+	*is_pmemp = 1;
+
+	if (g_persistent_pm_buf == NULL) {
+		g_persistent_pm_buf = calloc(1, len);
+		SPDK_CU_ASSERT_FATAL(g_persistent_pm_buf != NULL);
+	}
+
+	return g_volatile_pm_buf;
+}
+
+int
+pmem_unmap(void *addr, size_t len)
+{
+	CU_ASSERT(addr == g_volatile_pm_buf);
+	CU_ASSERT(len == g_volatile_pm_buf_len);
 	free(g_volatile_pm_buf);
 	g_volatile_pm_buf = NULL;
+
+	return 0;
 }
 
 static void
-pm_file_destroy(void)
+persistent_pm_buf_destroy(void)
 {
 	CU_ASSERT(g_persistent_pm_buf != NULL);
 	free(g_persistent_pm_buf);
 	g_persistent_pm_buf = NULL;
-}
-
-static int
-pm_file_init(struct spdk_reduce_pm_file *pm_file, struct spdk_reduce_vol_params *params)
-{
-	pm_file->size = spdk_reduce_get_pm_file_size(params);
-
-	CU_ASSERT(g_persistent_pm_buf == NULL);
-	g_persistent_pm_buf = calloc(1, pm_file->size);
-	SPDK_CU_ASSERT_FATAL(g_persistent_pm_buf != NULL);
-
-	CU_ASSERT(g_volatile_pm_buf == NULL);
-	g_volatile_pm_buf = calloc(1, pm_file->size);
-	SPDK_CU_ASSERT_FATAL(g_volatile_pm_buf != NULL);
-
-	memcpy(pm_file->path, TEST_MD_PATH, strlen(TEST_MD_PATH));
-	pm_file->path[strlen(TEST_MD_PATH)] = '\0';
-
-	pm_file->pm_buf = g_volatile_pm_buf;
-	pm_file->close = pm_file_close;
-
-	return 0;
 }
 
 static void
@@ -206,7 +210,6 @@ init_failure(void)
 {
 	struct spdk_reduce_vol_params params = {};
 	struct spdk_reduce_backing_dev backing_dev = {};
-	struct spdk_reduce_pm_file pm_file = {};
 
 	backing_dev.blocklen = 512;
 
@@ -217,34 +220,20 @@ init_failure(void)
 	/* backing_dev and pm_file have an invalid size.  This should fail. */
 	g_vol = NULL;
 	g_ziperrno = 0;
-	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
 	CU_ASSERT(g_ziperrno == -EINVAL);
 	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
 
-	/* backing_dev now has valid size, but pm_file is still invalid.
-	 * This should fail.
+	/* backing_dev now has valid size, but backing_dev still has null
+	 *  function pointers.  This should fail.
 	 */
 	backing_dev.blockcnt = spdk_reduce_get_backing_device_size(&params) / backing_dev.blocklen;
 
 	g_vol = NULL;
 	g_ziperrno = 0;
-	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
 	CU_ASSERT(g_ziperrno == -EINVAL);
 	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
-
-	/* pm_file now has valid size, but backing_dev still has null function
-	 * pointers.  This should fail.
-	 */
-	pm_file_init(&pm_file, &params);
-
-	g_vol = NULL;
-	g_ziperrno = 0;
-	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
-	CU_ASSERT(g_ziperrno == -EINVAL);
-	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
-
-	pm_file_close(&pm_file);
-	pm_file_destroy();
 }
 
 static void
@@ -327,24 +316,32 @@ init_md(void)
 	struct spdk_reduce_vol_params params = {};
 	struct spdk_reduce_vol_params *persistent_params;
 	struct spdk_reduce_backing_dev backing_dev = {};
-	struct spdk_reduce_pm_file pm_file = {};
+	struct spdk_uuid uuid;
 
 	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 512;
 
 	backing_dev_init(&backing_dev, &params);
-	pm_file_init(&pm_file, &params);
 
 	g_vol = NULL;
 	g_ziperrno = -1;
-	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
 	CU_ASSERT(g_ziperrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
 	/* Confirm that reduce persisted the params to metadata. */
 	CU_ASSERT(memcmp(g_persistent_pm_buf, SPDK_REDUCE_SIGNATURE, 8) == 0);
 	persistent_params = (struct spdk_reduce_vol_params *)(g_persistent_pm_buf + 8);
 	CU_ASSERT(memcmp(persistent_params, &params, sizeof(params)) == 0);
+
+	/* Check that the pm file path was constructed correctly.  It should be in
+	 * the form:
+	 * TEST_MD_PATH + "/" + <uuid string>
+	 */
+	CU_ASSERT(strncmp(&g_path[0], TEST_MD_PATH, strlen(TEST_MD_PATH)) == 0);
+	CU_ASSERT(g_path[strlen(TEST_MD_PATH)] == '/');
+	CU_ASSERT(spdk_uuid_parse(&uuid, &g_path[strlen(TEST_MD_PATH) + 1]) == 0);
+	CU_ASSERT(spdk_uuid_compare(&uuid, spdk_reduce_vol_get_uuid(g_vol)) == 0);
 
 	g_ziperrno = -1;
 	g_backing_dev_closed = false;
@@ -353,7 +350,7 @@ init_md(void)
 	CU_ASSERT(g_backing_dev_closed == true);
 	CU_ASSERT(g_volatile_pm_buf == NULL);
 
-	pm_file_destroy();
+	persistent_pm_buf_destroy();
 	backing_dev_destroy(&backing_dev);
 }
 
@@ -363,7 +360,6 @@ init_backing_dev(void)
 	struct spdk_reduce_vol_params params = {};
 	struct spdk_reduce_vol_params *persistent_params;
 	struct spdk_reduce_backing_dev backing_dev = {};
-	struct spdk_reduce_pm_file pm_file = {};
 
 	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
@@ -371,13 +367,14 @@ init_backing_dev(void)
 	spdk_uuid_generate(&params.uuid);
 
 	backing_dev_init(&backing_dev, &params);
-	pm_file_init(&pm_file, &params);
 
 	g_vol = NULL;
+	g_path = NULL;
 	g_ziperrno = -1;
-	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
 	CU_ASSERT(g_ziperrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+	SPDK_CU_ASSERT_FATAL(g_path != NULL);
 	/* Confirm that libreduce persisted the params to the backing device. */
 	CU_ASSERT(memcmp(g_backing_dev_buf, SPDK_REDUCE_SIGNATURE, 8) == 0);
 	persistent_params = (struct spdk_reduce_vol_params *)(g_backing_dev_buf + 8);
@@ -386,7 +383,7 @@ init_backing_dev(void)
 	/* Confirm that the path to the persistent memory metadata file was persisted to
 	 *  the backing device.
 	 */
-	CU_ASSERT(strncmp(TEST_MD_PATH,
+	CU_ASSERT(strncmp(g_path,
 			  g_backing_dev_buf + REDUCE_BACKING_DEV_PATH_OFFSET,
 			  REDUCE_PATH_MAX) == 0);
 
@@ -396,7 +393,7 @@ init_backing_dev(void)
 	CU_ASSERT(g_ziperrno == 0);
 	CU_ASSERT(g_backing_dev_closed == true);
 
-	pm_file_destroy();
+	persistent_pm_buf_destroy();
 	backing_dev_destroy(&backing_dev);
 }
 
