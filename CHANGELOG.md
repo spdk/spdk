@@ -137,6 +137,8 @@ spdk_file_get_id() returning unique ID for the file was added.
 
 ### JSON
 
+Added jsonrpc-client C library intended for issuing RPC commands from applications.
+
 Added API enabling iteration over JSON object:
  - spdk_json_find()
  - spdk_json_find_string()
