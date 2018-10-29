@@ -34,9 +34,10 @@
 #ifndef FTL_IO_H
 #define FTL_IO_H
 
-#include <spdk/stdinc.h>
-#include <spdk/nvme.h>
-#include <spdk/ftl.h>
+#include "spdk/stdinc.h"
+#include "spdk/nvme.h"
+#include "spdk/ftl.h"
+
 #include "ftl_ppa.h"
 #include "ftl_trace.h"
 
@@ -250,8 +251,6 @@ void *ftl_io_iovec_addr(struct ftl_io *io);
 size_t ftl_io_iovec_len_left(struct ftl_io *io);
 int ftl_io_init_iovec(struct ftl_io *io, void *buf,
 		      size_t iov_cnt, size_t req_size);
-void ftl_io_init(struct ftl_io *io, struct spdk_ftl_dev *dev,
-		 spdk_ftl_fn cb, void *ctx, int flags, int type);
 struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
 struct ftl_io *ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 			       struct ftl_rwb_batch *entry, spdk_ftl_fn cb);

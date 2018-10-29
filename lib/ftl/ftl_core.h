@@ -221,7 +221,7 @@ int	ftl_invalidate_addr(struct spdk_ftl_dev *dev, struct ftl_ppa ppa);
 int	ftl_task_core(void *ctx);
 int	ftl_task_read(void *ctx);
 size_t	ftl_tail_md_num_lbks(const struct spdk_ftl_dev *dev);
-size_t	ftl_tail_md_hdr_num_lbks(const struct spdk_ftl_dev *dev);
+size_t	ftl_tail_md_hdr_num_lbks(void);
 size_t	ftl_vld_map_num_lbks(const struct spdk_ftl_dev *dev);
 size_t	ftl_lba_map_num_lbks(const struct spdk_ftl_dev *dev);
 size_t	ftl_head_md_num_lbks(const struct spdk_ftl_dev *dev);

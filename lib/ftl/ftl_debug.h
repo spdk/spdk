@@ -31,72 +31,45 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FTL_PPA_H
-#define FTL_PPA_H
+#ifndef FTL_DEBUG_H
+#define FTL_DEBUG_H
 
-#include "spdk/stdinc.h"
+#include "ftl_ppa.h"
+#include "ftl_band.h"
+#include "ftl_core.h"
+#include "ftl_rwb.h"
 
-/* Marks PPA as invalid */
-#define FTL_PPA_INVALID		(-1)
-/* Marks LBA as invalid */
-#define FTL_LBA_INVALID		((uint64_t)-1)
-/* Smallest data unit size */
-#define FTL_BLOCK_SIZE		4096
+#if defined(DEBUG)
+/* Debug flags - enabled when defined */
+#define FTL_META_DEBUG	1
+#define FTL_DUMP_STATS	1
 
-/* This structure represents PPA address. It can have one of the following */
-/* formats: */
-/*        - PPA describing the on-disk address */
-/*        - offset inside the cache (indicated by the cached flag) */
-/*        - packed version of the two formats above (can be only used when the */
-/*          on-disk PPA address can be represented in less than 32 bits) */
-/* Packed format is used, when possible, to avoid wasting RAM on the L2P table. */
-struct ftl_ppa {
-	union {
-		struct {
-			uint64_t lbk	: 32;
-			uint64_t chk	: 16;
-			uint64_t pu	: 8;
-			uint64_t grp	: 7;
-			uint64_t rsvd	: 1;
-		};
+#define ftl_debug(msg, ...) \
+	fprintf(stderr, msg, ## __VA_ARGS__)
+#else
+#define ftl_debug(msg, ...)
+#endif
 
-		struct {
-			uint64_t offset	: 63;
-			uint64_t cached : 1;
-		};
+static inline const char *
+ftl_ppa2str(struct ftl_ppa ppa, char *buf, size_t size)
+{
+	snprintf(buf, size, "(grp: %u, pu: %u, chk: %u, lbk: %u)",
+		 ppa.grp, ppa.pu, ppa.chk, ppa.lbk);
+	return buf;
+}
 
-		struct {
-			union {
-				struct  {
-					uint32_t offset : 31;
-					uint32_t cached : 1;
-				};
+#if defined(FTL_META_DEBUG)
+bool ftl_band_validate_md(struct ftl_band *band, const uint64_t *lba_map);
+void ftl_dev_dump_bands(struct spdk_ftl_dev *dev);
+#else
+#define ftl_band_validate_md(band, lba_map)
+#define ftl_dev_dump_bands(dev)
+#endif
 
-				uint32_t ppa;
-			};
-			uint32_t rsvd;
-		} pack;
+#if defined(FTL_DUMP_STATS)
+void ftl_dev_dump_stats(const struct spdk_ftl_dev *dev);
+#else
+#define ftl_dev_dump_stats(dev)
+#endif
 
-		uint64_t ppa;
-	};
-};
-
-struct ftl_ppa_fmt {
-	/* Logical block */
-	unsigned int				lbk_offset;
-	unsigned int				lbk_mask;
-
-	/* Chunk */
-	unsigned int				chk_offset;
-	unsigned int				chk_mask;
-
-	/* Parallel unit (NAND die) */
-	unsigned int				pu_offset;
-	unsigned int				pu_mask;
-
-	/* Group */
-	unsigned int				grp_offset;
-	unsigned int				grp_mask;
-};
-
-#endif /* FTL_PPA_H */
+#endif /* FTL_DEBUG_H */
