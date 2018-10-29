@@ -37,6 +37,10 @@
 #include "spdk/stdinc.h"
 
 #include <CUnit/Basic.h>
+#include <setjmp.h>
+
+extern jmp_buf	g_ut_jmpbuf;
+extern int	g_ut_expect_assert_fail;
 
 /*
  * CU_ASSERT_FATAL calls a function that does a longjmp() internally, but only for fatal asserts,
@@ -52,5 +56,37 @@
 			abort();		\
 		}				\
 	} while (0)
+
+#define SPDK_EXPECT_ASSERT_FAIL(func)							\
+	do {										\
+		if (!setjmp(g_ut_jmpbuf)) {						\
+			g_ut_expect_assert_fail = 1;					\
+			func;								\
+			g_ut_expect_assert_fail = 0;					\
+			CU_FAIL_FATAL("Expected assertion failure did not occur");	\
+		} else {								\
+			g_ut_expect_assert_fail = 0;					\
+		}									\
+	} while (0)
+
+#define SPDK_MOCK_ASSERT(cond)					\
+	do {							\
+		if (!(cond)) {					\
+			if (g_ut_expect_assert_fail) {		\
+				longjmp(g_ut_jmpbuf, 1);	\
+			} else {				\
+				CU_FAIL_FATAL(cond);		\
+			}					\
+		}						\
+	} while(0)
+
+#define _SPDK_CU_ASSERT_MEMORY_EQUAL(actual, expected, len, fatal) \
+	CU_ASSERT##fatal(!memcmp(actual, expected, len))
+
+#define SPDK_CU_ASSERT_MEMORY_EQUAL(actual, expected, len) \
+	_SPDK_CU_ASSERT_MEMORY_EQUAL(actual, expected, len, )
+
+#define SPDK_CU_ASSERT_MEMORY_EQUAL_FATAL(actual, expected, len) \
+	_SPDK_CU_ASSERT_MEMORY_EQUAL(actual, expected, len, _FATAL)
 
 #endif /* SPDK_CUNIT_H */
