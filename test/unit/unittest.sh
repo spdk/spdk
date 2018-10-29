@@ -134,6 +134,12 @@ if [ $(uname -s) = Linux ]; then
 $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 fi
 
+if grep -q '#define SPDK_CONFIG_OCSSD_FTL 1' $rootdir/include/spdk/config.h; then
+$valgrind $testdir/lib/ocssd/ocssd_rwb.c/ocssd_rwb_ut
+$valgrind $testdir/lib/ocssd/ocssd_ppa/ocssd_ppa_ut
+$valgrind $testdir/lib/ocssd/ocssd_band.c/ocssd_band_ut
+fi
+
 # local unit test coverage
 if [ "$cov_avail" = "yes" ]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
