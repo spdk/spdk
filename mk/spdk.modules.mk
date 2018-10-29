@@ -83,6 +83,10 @@ endif
 SOCK_MODULES_LIST += sock_vpp
 endif
 
+ifeq ($(CONFIG_OCSSD_FTL),y)
+BLOCKDEV_MODULES_LIST += ocssd
+endif
+
 COPY_MODULES_LIST = copy_ioat ioat
 
 BLOCKDEV_MODULES_LINKER_ARGS = -Wl,--whole-archive \
