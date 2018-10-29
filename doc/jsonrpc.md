@@ -790,6 +790,88 @@ Example response:
 }
 ~~~
 
+## construct_ocf_bdev {#rpc_construct_ocf_bdev}
+
+Construct new OCF bdev.
+Command accepts cache mode that is going to be used.
+Currently, we support Write-Through and Pass-Through OCF cache modes.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name to use
+mode                    | Required | string      | OCF cache mode ('wt' or 'pt')
+cache_bdev_name         | Required | string      | Name of underlying cache bdev
+core_bdev_name          | Required | string      | Name of underlying core bdev
+
+### Result
+
+Name of newly created bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "ocf0",
+    "mode": "wt",
+    "cache_bdev_name": "Nvme0n1"
+    "core_bdev_name": "aio0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_ocf_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "ocf0"
+}
+~~~
+
+## delete_ocf_bdev {#rpc_delete_ocf_bdev}
+
+Delete the OCF bdev
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "ocf0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_ocf_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## construct_malloc_bdev {#rpc_construct_malloc_bdev}
 
 Construct @ref bdev_config_malloc
