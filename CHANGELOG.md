@@ -137,6 +137,11 @@ Enabling creation of blobstores on devices with block sizes smaller than 4kB.
 Logical volumes can now used as boot devices in QEMU, due to enabling of 512B
 reads.
 
+### SPDKCLI
+
+SPDKCLI interactive command tool for managing SPDK is no longer considered experimental.
+Support for iSCSI and NVMe-oF targets have been added.
+
 ## v18.07:
 
 ### bdev
