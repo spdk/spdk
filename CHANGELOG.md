@@ -135,6 +135,16 @@ devices.
 
 spdk_file_get_id() returning unique ID for the file was added.
 
+### JSON
+
+Added API enabling iteration over JSON object:
+ - spdk_json_find()
+ - spdk_json_find_string()
+ - spdk_json_find_array()
+ - spdk_json_object_first()
+ - spdk_json_array_first()
+ - spdk_json_next()
+
 ## v18.07:
 
 ### bdev
