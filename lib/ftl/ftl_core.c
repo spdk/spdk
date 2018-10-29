@@ -43,6 +43,7 @@
 #include "ftl_io.h"
 #include "ftl_rwb.h"
 #include "ftl_debug.h"
+#include "ftl_reloc.h"
 
 /* Max number of iovecs */
 #define FTL_MAX_IOV 1024
@@ -1186,6 +1187,98 @@ ftl_rwb_fill(struct ftl_io *io)
 	return 0;
 }
 
+static int
+ftl_dev_needs_defrag(struct spdk_ftl_dev *dev)
+{
+	const struct spdk_ftl_limit *limit = ftl_get_limit(dev, SPDK_FTL_LIMIT_START);
+
+	if (ftl_reloc_halted(dev->reloc)) {
+		return 0;
+	}
+
+	if (dev->df_band) {
+		return 0;
+	}
+
+	if (dev->num_free <= limit->thld) {
+		return 1;
+	}
+
+	return 0;
+}
+
+static double
+ftl_band_calc_merit(struct ftl_band *band, size_t *thld_vld)
+{
+	size_t usable, valid, invalid;
+	double vld_ratio;
+
+	/* If the band doesn't have any usable lbks it's of no use */
+	usable = ftl_band_num_usable_lbks(band);
+	if (!usable) {
+		return 0.0;
+	}
+
+	valid = thld_vld ? (usable - *thld_vld) : band->md.num_vld;
+	invalid = usable - valid;
+
+	/* Add one to avoid division by 0 */
+	vld_ratio = (double)invalid / (double)(valid + 1);
+	return vld_ratio * ftl_band_age(band);
+}
+
+static int
+ftl_band_needs_defrag(struct ftl_band *band, struct spdk_ftl_dev *dev)
+{
+	struct spdk_ftl_conf *conf = &dev->conf;
+	size_t thld_vld;
+
+	/* If we're in dire need of free bands, every band is worth defragging */
+	if (ftl_current_limit(dev) == SPDK_FTL_LIMIT_CRIT) {
+		return 1;
+	}
+
+	thld_vld = (ftl_band_num_usable_lbks(band) * conf->defrag.invld_thld) / 100;
+
+	return band->merit > ftl_band_calc_merit(band, &thld_vld);
+}
+
+static struct ftl_band *
+ftl_select_defrag_band(struct spdk_ftl_dev *dev)
+{
+	struct ftl_band *band, *mband = NULL;
+	double merit = 0;
+
+	LIST_FOREACH(band, &dev->shut_bands, list_entry) {
+		assert(band->state == FTL_BAND_STATE_CLOSED);
+		band->merit = ftl_band_calc_merit(band, NULL);
+		if (band->merit > merit) {
+			merit = band->merit;
+			mband = band;
+		}
+	}
+
+	if (mband && !ftl_band_needs_defrag(mband, dev)) {
+		mband = NULL;
+	}
+
+	return mband;
+}
+
+static int
+ftl_process_relocs(struct spdk_ftl_dev *dev)
+{
+	if (ftl_dev_needs_defrag(dev)) {
+		dev->df_band = ftl_select_defrag_band(dev);
+		if (dev->df_band) {
+			ftl_reloc_add(dev->reloc, dev->df_band, 0, ftl_num_band_lbks(dev), 0);
+		}
+	}
+
+	ftl_reloc(dev->reloc);
+	return 0;
+}
+
 int
 ftl_current_limit(const struct spdk_ftl_dev *dev)
 {
@@ -1462,6 +1555,7 @@ ftl_task_core(void *ctx)
 
 	ftl_process_writes(dev);
 	spdk_nvme_qpair_process_completions(qpair, 1);
+	ftl_process_relocs(dev);
 
 	return 0;
 }
