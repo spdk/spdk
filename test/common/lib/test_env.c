@@ -37,6 +37,14 @@
 
 #include "spdk/env.h"
 #include "spdk/queue.h"
+#include "setjmp.h"
+
+/*
+ * These variables are used by the mock assertions to allow for verification if
+ * the assertions fail when expected.
+ */
+jmp_buf	g_ut_jmpbuf;
+int	g_ut_expect_assert_fail;
 
 DEFINE_STUB(spdk_process_is_primary, bool, (void), true)
 DEFINE_STUB(spdk_memzone_lookup, void *, (const char *name), NULL)
