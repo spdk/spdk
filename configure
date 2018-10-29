@@ -255,6 +255,12 @@ for i in "$@"; do
 		--without-igb-uio-driver)
 			CONFIG[IGB_UIO_DRIVER]=n
 			;;
+		--with-ocssd-ftl)
+			CONFIG[OCSSD_FTL]=y
+			;;
+		--without-ocssd-ftl)
+			CONFIG[OCSSD_FTL]=n
+			;;
 		--)
 			break
 			;;
