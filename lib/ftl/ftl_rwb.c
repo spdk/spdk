@@ -148,13 +148,13 @@ ftl_rwb_batch_init(struct ftl_rwb *rwb, struct ftl_rwb_batch *batch, unsigned in
 	batch->buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * rwb->xfer_size,
 					 FTL_BLOCK_SIZE, NULL);
 	if (!batch->buffer) {
-		goto error;
+		return -1;
 	}
 
 	if (md_size > 0) {
 		batch->md_buffer = spdk_dma_zmalloc(md_size, FTL_BLOCK_SIZE, NULL);
 		if (!batch->md_buffer) {
-			goto error;
+			return -1;
 		}
 	}
 
@@ -165,10 +165,6 @@ ftl_rwb_batch_init(struct ftl_rwb *rwb, struct ftl_rwb_batch *batch, unsigned in
 	}
 
 	return 0;
-error:
-	free(batch->entries);
-	spdk_dma_free(batch->buffer);
-	return -1;
 }
 
 struct ftl_rwb *
