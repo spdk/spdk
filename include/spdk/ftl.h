@@ -72,9 +72,6 @@ struct spdk_ftl_conf {
 	/* Trace enabled flag */
 	int					trace;
 
-	/* Trace file name */
-	const char				*trace_path;
-
 	/* Maximum IO depth per band relocate */
 	size_t					max_reloc_qdepth;
 

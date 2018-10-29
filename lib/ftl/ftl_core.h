@@ -86,8 +86,6 @@ struct ftl_thread {
 
 	/* Thread on which the poller is running */
 	struct spdk_thread			*thread;
-	/* Thread id */
-	pthread_t				tid;
 
 	/* Poller */
 	struct spdk_poller			*poller;
