@@ -273,7 +273,12 @@ endef
 INSTALL_SHARED_LIB=\
 	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/$(notdir $(SHARED_LINKED_LIB))"; \
 	install -d -m 755 "$(DESTDIR)$(libdir)"; \
-	install -m 755 "$(SHARED_REALNAME_LIB)" "$(DESTDIR)$(libdir)/"; \
+	if file --mime-type $(SHARED_REALNAME_LIB) | grep -q 'application/x-sharedlib'; then \
+		perm_mode=755; \
+	else \
+		perm_mode=644; \
+	fi; \
+	install -m $$perm_mode "$(SHARED_REALNAME_LIB)" "$(DESTDIR)$(libdir)/"; \
 	$(call spdk_install_lib_symlink,$(notdir $(SHARED_REALNAME_LIB)),$(notdir $(SHARED_LINKED_LIB)));
 
 # Install an app binary
