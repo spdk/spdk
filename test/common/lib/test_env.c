@@ -37,6 +37,14 @@
 
 #include "spdk/env.h"
 #include "spdk/queue.h"
+#include "setjmp.h"
+
+/*
+ * These variables are used by the mock assertions to allow for verification if
+ * the assertions fail when expected.
+ */
+jmp_buf	g_ut_jmpbuf;
+int	g_ut_expect_assert_fail;
 
 DEFINE_STUB(spdk_process_is_primary, bool, (void), true)
 DEFINE_STUB(spdk_memzone_lookup, void *, (const char *name), NULL)
@@ -289,6 +297,7 @@ struct spdk_ring_ele {
 
 struct spdk_ring {
 	TAILQ_HEAD(, spdk_ring_ele) elements;
+	pthread_mutex_t lock;
 };
 
 DEFINE_RETURN_MOCK(spdk_ring_create, struct spdk_ring *);
@@ -300,16 +309,33 @@ spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
 	HANDLE_RETURN_MOCK(spdk_ring_create);
 
 	ring = calloc(1, sizeof(*ring));
-	if (ring) {
-		TAILQ_INIT(&ring->elements);
+	if (!ring) {
+		return NULL;
 	}
 
+	if (pthread_mutex_init(&ring->lock, NULL)) {
+		free(ring);
+		return NULL;
+	}
+
+	TAILQ_INIT(&ring->elements);
 	return ring;
 }
 
 void
 spdk_ring_free(struct spdk_ring *ring)
 {
+	struct spdk_ring_ele *ele, *tmp;
+
+	if (!ring) {
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(ele, &ring->elements, link, tmp) {
+		free(ele);
+	}
+
+	pthread_mutex_destroy(&ring->lock);
 	free(ring);
 }
 
@@ -322,6 +348,8 @@ spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
 
 	HANDLE_RETURN_MOCK(spdk_ring_enqueue);
 
+	pthread_mutex_lock(&ring->lock);
+
 	for (i = 0; i < count; i++) {
 		ele = calloc(1, sizeof(*ele));
 		if (!ele) {
@@ -332,6 +360,7 @@ spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
 		TAILQ_INSERT_TAIL(&ring->elements, ele, link);
 	}
 
+	pthread_mutex_unlock(&ring->lock);
 	return i;
 }
 
@@ -348,6 +377,8 @@ spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 		return 0;
 	}
 
+	pthread_mutex_lock(&ring->lock);
+
 	TAILQ_FOREACH_SAFE(ele, &ring->elements, link, tmp) {
 		TAILQ_REMOVE(&ring->elements, ele, link);
 		objs[i] = ele->ele;
@@ -358,6 +389,7 @@ spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 		}
 	}
 
+	pthread_mutex_unlock(&ring->lock);
 	return i;
 
 }
