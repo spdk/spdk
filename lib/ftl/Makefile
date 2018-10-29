@@ -34,7 +34,9 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = ftl_band.c ftl_core.c ftl_debug.c ftl_io.c ftl_rwb.c ftl_reloc.c
+C_SRCS = ftl_band.c ftl_core.c ftl_debug.c ftl_io.c ftl_rwb.c ftl_reloc.c \
+	 ftl_anm.c
+
 LIBNAME = ftl
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
