@@ -144,6 +144,10 @@ command that can create any type of Virtio bdev(s). `remove_virtio_scsi_bdev`
 was replaced with `remove_virtio_bdev` that can delete both Virtio Block and SCSI
 devices.
 
+### Blobfs
+
+spdk_file_get_id() returning unique ID for the file was added.
+
 ## v18.07:
 
 ### bdev
