@@ -61,6 +61,7 @@ fi
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=1}; export SPDK_RUN_INSTALLED_DPDK
 : ${SPDK_TEST_CRYPTO=1}; export SPDK_TEST_CRYPTO
+: ${SPDK_TEST_FTL=0}; export SPDK_TEST_FTL
 
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
@@ -188,6 +189,10 @@ if [ ! -d "${DEPENDENCY_DIR}/nvme-cli" ]; then
 	export SPDK_TEST_NVME_CLI=0
 fi
 
+if [ $SPDK_TEST_FTL -eq 1 ]; then
+	config_params+=' --with-ftl'
+fi
+
 export config_params
 
 if [ -z "$output_dir" ]; then
@@ -246,7 +251,7 @@ function timing_finish() {
 }
 
 function create_test_list() {
-	grep -rsh --exclude="autotest_common.sh" --exclude="$rootdir/test/common/autotest_common.sh" -e "report_test_completion" $rootdir | sed 's/report_test_completion//g; s/[[:blank:]]//g; s/"//g;' > $output_dir/all_tests.txt || true
+	grep -rshI --exclude="autotest_common.sh" --exclude="$rootdir/test/common/autotest_common.sh" -e "report_test_completion" $rootdir | sed 's/report_test_completion//g; s/[[:blank:]]//g; s/"//g;' > $output_dir/all_tests.txt || true
 }
 
 function report_test_completion() {
