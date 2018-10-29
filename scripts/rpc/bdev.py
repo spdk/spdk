@@ -433,6 +433,38 @@ def destruct_split_vbdev(client, base_bdev):
     return client.call('destruct_split_vbdev', params)
 
 
+def construct_ocssd_bdev(client, name, trtype, traddr, punits, mode, uuid):
+    """Construct OCSSD bdev
+
+    Args:
+        name: name of the bdev
+        trtype: transport type
+        traddr: transport address
+        punit: parallel unit range
+        mode: bdev mode (bit 0 - mode create, bit 1 - separated reads)
+        uuid: UUID of the device
+    """
+    params = {'name': name,
+              'trtype': trtype,
+              'traddr': traddr,
+              'punits': punits,
+              'mode': mode,
+              'uuid': uuid}
+
+    return client.call('construct_ocssd_bdev', params)
+
+
+def delete_ocssd_bdev(client, name):
+    """Delete OCSSD bdev
+
+    Args:
+        name: name of the bdev
+    """
+    params = {'name': name}
+
+    return client.call('delete_ocssd_bdev', params)
+
+
 def get_bdevs(client, name=None):
     """Get information about block devices.
 
