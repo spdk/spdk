@@ -37,7 +37,7 @@ OPENCASDIR=$(SPDK_ROOT_DIR)/lib/cas
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS +=  $(ENV_CFLAGS) -I$(OPENCASDIR) -I$(OPENCASDIR)/ocfenv
-C_SRCS = vbdev_cas.c vbdev_cas_data.c vbdev_cas_dobj.c
+C_SRCS = vbdev_cas.c vbdev_cas_data.c vbdev_cas_dobj.c vbdev_cas_rpc.c
 
 LIBNAME=vbdev_cas
 
