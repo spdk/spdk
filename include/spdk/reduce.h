@@ -88,23 +88,6 @@ int64_t spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *param
 
 struct spdk_reduce_vol;
 
-#define REDUCE_PATH_MAX	4096
-
-/**
- * Describes a persistent memory file used to hold metadata associated with a
- *  compressed volume.
- */
-struct spdk_reduce_pm_file {
-	char			path[REDUCE_PATH_MAX];
-	void			*pm_buf;
-	bool			pm_is_pmem;
-
-	/** Size of the persistent memory file in bytes. */
-	uint64_t		size;
-
-	void	(*close)(struct spdk_reduce_pm_file *);
-};
-
 typedef void (*spdk_reduce_vol_op_complete)(void *ctx, int ziperrno);
 typedef void (*spdk_reduce_vol_op_with_handle_complete)(void *ctx,
 		struct spdk_reduce_vol *vol,
@@ -146,13 +129,15 @@ const struct spdk_uuid *spdk_reduce_vol_get_uuid(struct spdk_reduce_vol *vol);
  *
  * \param params Parameters for the new volume.
  * \param backing_dev Structure describing the backing device to use for the new volume.
- * \param pm_file Structure describing the persistent memory file to use for the new volume.
+ * \param pm_file_dir Directory to use for creation of the persistent memory file to
+ *                    use for the new volume.  This function will append the UUID as
+ *		      the filename to create in this directory.
  * \param cb_fn Callback function to signal completion of the initialization process.
  * \param cb_arg Argument to pass to the callback function.
  */
 void spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 			  struct spdk_reduce_backing_dev *backing_dev,
-			  struct spdk_reduce_pm_file *pm_file,
+			  const char *pm_file_dir,
 			  spdk_reduce_vol_op_with_handle_complete cb_fn,
 			  void *cb_arg);
 
