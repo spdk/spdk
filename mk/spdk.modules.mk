@@ -66,7 +66,11 @@ BLOCKDEV_MODULES_LIST += bdev_pmem
 SYS_LIBS += -lpmemblk
 endif
 
-SOCK_MODULES_LIST = sock_posix
+ifeq ($(CONFIG_FTL),y)
+BLOCKDEV_MODULES_LIST += ftl
+endif
+
+SOCK_MODULES_LIST += sock_posix
 
 ifeq ($(CONFIG_VPP),y)
 SYS_LIBS += -Wl,--whole-archive
