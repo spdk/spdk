@@ -5,9 +5,9 @@
 Now nvme-cli can support both kernel driver and SPDK user mode driver for most of its available commands and
 Intel specific commands.
 
-1. Clone the nvme-cli repository from the SPDK GitHub fork. Make sure you check out the spdk branch.
+1. Clone the nvme-cli repository from the SPDK GitHub fork. Make sure you check out the spdk-1.6 branch.
 ~~~{.sh}
-git clone -b spdk https://github.com/spdk/nvme-cli.git
+git clone -b spdk-1.6 https://github.com/spdk/nvme-cli.git
 ~~~
 
 2. Clone the SPDK repository from https://github.com/spdk/spdk under the nvme-cli folder.
