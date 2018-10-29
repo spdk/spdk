@@ -1235,6 +1235,42 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('base_bdev', help='base bdev name')
     p.set_defaults(func=destruct_split_vbdev)
 
+    # ocssd
+    @call_cmd
+    def construct_ocssd_bdev(args):
+        print_dict(rpc.bdev.construct_ocssd_bdev(args.client,
+                                                 name=args.name,
+                                                 trtype=args.trtype,
+                                                 traddr=args.traddr,
+                                                 punits=args.punits,
+                                                 mode=args.mode,
+                                                 uuid=args.uuid))
+
+    p = subparsers.add_parser('construct_ocssd_bdev',
+                              help='Add OCSSD bdev')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.add_argument('-t', '--trtype',
+                   help='NVMe target trtype: e.g., pcie', default='pcie')
+    p.add_argument('-a', '--traddr',
+                   help='NVMe target address: e.g., an ip address or BDF', required=True)
+    p.add_argument('-l', '--punits', help='Parallel unit range in the form of start-end: e.g. 4-8',
+                   required=True)
+    p.add_argument('-m', '--mode',
+                   help=("Bit 0 - when set create, otherwise restore; Bit 1 - when set "
+                         "reads are separated on different thread, otherwise shared with writes"),
+                   default=0, type=int)
+    p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
+                   'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d', default='')
+    p.set_defaults(func=construct_ocssd_bdev)
+
+    @call_cmd
+    def delete_ocssd_bdev(args):
+        print_dict(rpc.bdev.delete_ocssd_bdev(args.client, name=args.name))
+
+    p = subparsers.add_parser('delete_ocssd_bdev', help='Delete OCSSD bdev')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.set_defaults(func=delete_ocssd_bdev)
+
     # nbd
     @call_cmd
     def start_nbd_disk(args):
