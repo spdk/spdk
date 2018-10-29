@@ -321,13 +321,13 @@ _ftl_io_erase(void *ctx)
 static bool
 ftl_check_core_thread(const struct spdk_ftl_dev *dev)
 {
-	return dev->core_thread.tid == pthread_self();
+	return dev->core_thread.thread == spdk_get_thread();
 }
 
 static bool
 ftl_check_read_thread(const struct spdk_ftl_dev *dev)
 {
-	return dev->read_thread.tid == pthread_self();
+	return dev->read_thread.thread == spdk_get_thread();
 }
 
 int
