@@ -72,4 +72,4 @@ int create_iscsi_disk(const char *bdev_name, const char *initiator_iqn, const ch
  */
 void delete_iscsi_disk(struct spdk_bdev *bdev, spdk_delete_iscsi_complete cb_fn, void *cb_arg);
 
-#endif // SPDK_BDEV_ISCSI_H
+#endif /* SPDK_BDEV_ISCSI_H */

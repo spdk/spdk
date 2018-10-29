@@ -89,9 +89,9 @@ struct spdk_fio_thread {
 
 	TAILQ_HEAD(, spdk_fio_target)	targets;
 
-	struct io_u		**iocq;		// io completion queue
-	unsigned int		iocq_count;	// number of iocq entries filled by last getevents
-	unsigned int		iocq_size;	// number of iocq entries allocated
+	struct io_u		**iocq;		/* io completion queue */
+	unsigned int		iocq_count;	/* number of iocq entries filled by last getevents */
+	unsigned int		iocq_size;	/* number of iocq entries allocated */
 };
 
 static struct spdk_fio_thread *g_init_thread = NULL;
@@ -698,20 +698,20 @@ struct ioengine_ops ioengine = {
 	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN,
 	.setup			= spdk_fio_setup,
 	.init			= spdk_fio_init,
-	//.prep			= unused,
+	/* .prep		= unused, */
 	.queue			= spdk_fio_queue,
-	//.commit		= unused,
+	/* .commit		= unused, */
 	.getevents		= spdk_fio_getevents,
 	.event			= spdk_fio_event,
-	//.errdetails		= unused,
-	//.cancel		= unused,
+	/* .errdetails		= unused, */
+	/* .cancel		= unused, */
 	.cleanup		= spdk_fio_cleanup,
 	.open_file		= spdk_fio_open,
 	.close_file		= spdk_fio_close,
 	.invalidate		= spdk_fio_invalidate,
-	//.unlink_file		= unused,
-	//.get_file_size	= unused,
-	//.terminate		= unused,
+	/* .unlink_file		= unused, */
+	/* .get_file_size	= unused, */
+	/* .terminate		= unused, */
 	.iomem_alloc		= spdk_fio_iomem_alloc,
 	.iomem_free		= spdk_fio_iomem_free,
 	.io_u_init		= spdk_fio_io_u_init,

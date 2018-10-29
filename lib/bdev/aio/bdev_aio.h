@@ -77,4 +77,4 @@ struct spdk_bdev *create_aio_disk(const char *name, const char *filename, uint32
 
 void delete_aio_disk(struct spdk_bdev *bdev, spdk_delete_aio_complete cb_fn, void *cb_arg);
 
-#endif // SPDK_BDEV_AIO_H
+#endif /* SPDK_BDEV_AIO_H */
