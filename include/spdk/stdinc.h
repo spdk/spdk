@@ -85,6 +85,7 @@ extern "C" {
 #include <sys/un.h>
 #include <sys/user.h>
 #include <sys/wait.h>
+#include <regex.h>
 
 /* GNU extension */
 #include <getopt.h>
