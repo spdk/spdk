@@ -129,6 +129,14 @@ command that can create any type of Virtio bdev(s). `remove_virtio_scsi_bdev`
 was replaced with `remove_virtio_bdev` that can delete both Virtio Block and SCSI
 devices.
 
+### Blobstore
+
+Blobstore I/O operations are now based on io_units, instead of blobstore page size.
+This allows to issue IO with sizes smaller than SPDK_BS_PAGE_SIZE (set to 4096B).
+Enabling creation of blobstores on devices with block sizes smaller than 4kB.
+Logical volumes can now used as boot devices in QEMU, due to enabling of 512B
+reads.
+
 ## v18.07:
 
 ### bdev
