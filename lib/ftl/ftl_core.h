@@ -55,6 +55,7 @@ struct ftl_io;
 struct ftl_restore;
 struct ftl_wptr;
 struct ftl_flush;
+struct ftl_reloc;
 
 struct ftl_stats {
 	/* Number of writes scheduled directly by the user */
@@ -206,6 +207,9 @@ struct spdk_ftl_dev {
 
 	/* Inflight io operations */
 	atomic_ulong				num_inflight;
+
+	/* Manages data relocation */
+	struct ftl_reloc			*reloc;
 
 	/* Task array */
 	struct ftl_task				tasks[FTL_TASK_ID_MAX];
