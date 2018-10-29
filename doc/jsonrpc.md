@@ -1466,12 +1466,10 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": [
-    {
+  "result": {
       "name" : "nvme0"
       "uuid" : "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
-    }
-  ]
+  }
 }
 ~~~
 
