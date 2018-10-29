@@ -224,3 +224,15 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 
 SPDK has a tracing framework for capturing low-level event information at runtime.
 @ref nvmf_tgt_tracepoints enable analysis of both performance and application crashes.
+
+## RDMA Limitations {#nvmf_rdma_limitations}
+
+As RDMA NICs put a limitation on the number of memory regions registered, the SPDK NVMe-oF
+target application may eventually start failing to allocate more DMA-able memory. This is
+an imperfection of the DPDK dynamic memory management and is most likely to occur with too
+many 2MB hugepages reserved at runtime. Some of our NICs report as many as 2048 for the
+maximum number of memory regions, meaning that exactly that many pages can be allocated.
+With 2MB hugepages, this gives us a 4GB memory limit. It can be overcome by using 1GB
+hugepages or by pre-reserving memory at application startup with `--mem-size` or `-s`
+option. All pre-reserved memory will be registered as a single region, but won't be
+returned to the system until the SPDK application is terminated.

@@ -51,6 +51,19 @@ A new structure spdk_mem_map_ops has been introduced to hold memory map related
 callbacks. This structure is now passed as the second argument of spdk_mem_map_alloc
 in lieu of the notify callback.
 
+### DPDK 18.08
+
+The DPDK submodule has been updated to the DPDK 18.08 release. SPDK will now automatically
+utilize DPDK's dynamic memory management with DPDK versions >= 18.05.1.
+
+Hugepages can be still reserved with `[-s|--mem-size <size>]` option at application startup,
+but once we use them all up, instead of failing user allocations with -ENOMEM, we'll try
+to dynamically reserve even more. This allows starting SPDK with `--mem-size 0` and using
+only as many hugepages as it is really needed.
+
+Due to this change, the memory buffers returned by `spdk_*malloc()` are no longer guaranteed
+to be physically contiguous.
+
 ### iscsi target
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC

@@ -195,6 +195,10 @@ single NVM subsystem directly, the NVMe library will call `probe_cb`
 for just that subsystem; this allows the user to skip the discovery step
 and connect directly to a subsystem with a known address.
 
+## RDMA Limitations
+
+Please refer to NVMe-oF target's @ref nvmf_rdma_limitations
+
 # NVMe Multi Process {#nvme_multi_process}
 
 This capability enables the SPDK NVMe driver to support multiple processes accessing the
