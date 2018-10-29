@@ -1221,7 +1221,7 @@ spdk_bdev_scsi_mode_select_page(struct spdk_bdev *bdev,
 
 	switch (page) {
 	case 0x08: { /* Caching */
-		//int wce;
+		/* int wce; */
 
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "MODE_SELECT Caching\n");
 		if (subpage != 0x00) {
@@ -1233,22 +1233,23 @@ spdk_bdev_scsi_mode_select_page(struct spdk_bdev *bdev,
 			break;
 		}
 
-		// TODO:
-		//wce = data[2] & 0x4; /* WCE */
+		/* TODO:
+		wce = data[2] & 0x4;
 
-		//fd = bdev->fd;
-		//
-		//rc = fcntl(fd, F_GETFL, 0);
-		//if (rc != -1) {
-		//	if (wce) {
-		//		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "MODE_SELECT Writeback cache enable\n");
-		//		rc = fcntl(fd, F_SETFL, (rc & ~O_FSYNC));
-		//		bdev->write_cache = 1;
-		//	} else {
-		//		rc = fcntl(fd, F_SETFL, (rc | O_FSYNC));
-		//		bdev->write_cache = 0;
-		//	}
-		//}
+		fd = bdev->fd;
+
+		rc = fcntl(fd, F_GETFL, 0);
+		if (rc != -1) {
+			if (wce) {
+				SPDK_DEBUGLOG(SPDK_LOG_SCSI, "MODE_SELECT Writeback cache enable\n");
+				rc = fcntl(fd, F_SETFL, (rc & ~O_FSYNC));
+				bdev->write_cache = 1;
+			} else {
+				rc = fcntl(fd, F_SETFL, (rc | O_FSYNC));
+				bdev->write_cache = 0;
+			}
+		}
+		*/
 
 		break;
 	}
