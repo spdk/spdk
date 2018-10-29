@@ -263,7 +263,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->data_out_cnt = 0;
 	conn->data_in_cnt = 0;
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-	conn->MaxRecvDataSegmentLength = 8192; // RFC3720(12.12)
+	conn->MaxRecvDataSegmentLength = 8192; /* RFC3720(12.12) */
 
 	conn->portal = portal;
 	conn->pg_tag = portal->group->tag;

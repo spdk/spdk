@@ -76,4 +76,4 @@ void spdk_iscsi_init_grps_destroy(void);
 void spdk_iscsi_init_grps_config_text(FILE *fp);
 void spdk_iscsi_init_grps_info_json(struct spdk_json_write_ctx *w);
 void spdk_iscsi_init_grps_config_json(struct spdk_json_write_ctx *w);
-#endif // SPDK_INIT_GRP_H
+#endif /* SPDK_INIT_GRP_H */
