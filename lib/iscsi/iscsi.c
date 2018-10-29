@@ -702,20 +702,232 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 }
 
 static int
-spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
-		       struct iscsi_param *params, const char *method, uint8_t *data,
-		       int alloc_len, int data_len)
+spdk_iscsi_check_chap_algorithm(struct spdk_iscsi_conn *conn,
+				struct iscsi_param *params, uint8_t *data,
+				int alloc_len, int total)
 {
 	char *in_val;
 	char *in_next;
 	char *new_val;
 	const char *algorithm;
+
+	/* for temporary store */
+	in_val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
+	if (!in_val) {
+		SPDK_ERRLOG("malloc() failed for temporary store\n");
+		return -ENOMEM;
+	}
+
+	algorithm = spdk_iscsi_param_get_val(params, "CHAP_A");
+	if (algorithm == NULL) {
+		SPDK_ERRLOG("no algorithm\n");
+		goto error_return;
+	}
+
+	/* CHAP_A is LIST type */
+	snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN + 1, "%s", algorithm);
+	in_next = in_val;
+	while ((new_val = spdk_strsepq(&in_next, ",")) != NULL) {
+		if (strcasecmp(new_val, "5") == 0) {
+			/* CHAP with MD5 */
+			break;
+		}
+	}
+	if (new_val == NULL) {
+		snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN + 1, "%s", "Reject");
+		new_val = in_val;
+		spdk_iscsi_append_text(conn, "CHAP_A", new_val,
+				       data, alloc_len, total);
+		goto error_return;
+	}
+	/* selected algorithm is 5 (MD5) */
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_A=%s\n", new_val);
+	total = spdk_iscsi_append_text(conn, "CHAP_A", new_val,
+				       data, alloc_len, total);
+
+	/* Identifier is one octet */
+	spdk_gen_random(conn->auth.chap_id, 1);
+	snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN, "%d",
+		 (int) conn->auth.chap_id[0]);
+	total = spdk_iscsi_append_text(conn, "CHAP_I", in_val,
+				       data, alloc_len, total);
+
+	/* Challenge Value is a variable stream of octets */
+	/* (binary length MUST not exceed 1024 bytes) */
+	conn->auth.chap_challenge_len = ISCSI_CHAP_CHALLENGE_LEN;
+	spdk_gen_random(conn->auth.chap_challenge,
+			conn->auth.chap_challenge_len);
+	spdk_bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN,
+		     conn->auth.chap_challenge,
+		     conn->auth.chap_challenge_len);
+	total = spdk_iscsi_append_text(conn, "CHAP_C", in_val,
+				       data, alloc_len, total);
+
+	conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_NR;
+	free(in_val);
+	return total;
+
+error_return:
+	conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
+	free(in_val);
+	return -1;
+}
+
+static int
+spdk_iscsi_check_chap_response(struct spdk_iscsi_conn *conn,
+			       struct iscsi_param *params, const char *method,
+			       uint8_t *data, int alloc_len, int total)
+{
+	char *in_val;
 	const char *name;
 	const char *response;
 	const char *identifier;
 	const char *challenge;
-	int total;
+	uint8_t resmd5[SPDK_MD5DIGEST_LEN];
+	uint8_t tgtmd5[SPDK_MD5DIGEST_LEN];
+	struct spdk_md5ctx md5ctx;
 	int rc;
+
+	/* for temporary store */
+	in_val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
+	if (!in_val) {
+		SPDK_ERRLOG("malloc() failed for temporary store\n");
+		return -ENOMEM;
+	}
+
+	name = spdk_iscsi_param_get_val(params, "CHAP_N");
+	if (name == NULL) {
+		SPDK_ERRLOG("no name\n");
+		goto error_return;
+	}
+
+	response = spdk_iscsi_param_get_val(params, "CHAP_R");
+	if (response == NULL) {
+		SPDK_ERRLOG("no response\n");
+		goto error_return;
+	}
+	rc = spdk_hex2bin(resmd5, SPDK_MD5DIGEST_LEN, response);
+	if (rc < 0 || rc != SPDK_MD5DIGEST_LEN) {
+		SPDK_ERRLOG("response format error\n");
+		goto error_return;
+	}
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_N/CHAP_R\n");
+
+	rc = spdk_iscsi_get_authinfo(conn, name);
+	if (rc < 0) {
+		/* SPDK_ERRLOG("auth user or secret is missing\n"); */
+		SPDK_ERRLOG("iscsi_get_authinfo() failed\n");
+		goto error_return;
+	}
+	if (conn->auth.user[0] == '\0' || conn->auth.secret[0] == '\0') {
+		/* SPDK_ERRLOG("auth user or secret is missing\n"); */
+		SPDK_ERRLOG("auth failed (name %.64s)\n", name);
+		goto error_return;
+	}
+
+	spdk_md5init(&md5ctx);
+	/* Identifier */
+	spdk_md5update(&md5ctx, conn->auth.chap_id, 1);
+	/* followed by secret */
+	spdk_md5update(&md5ctx, conn->auth.secret,
+		       strlen(conn->auth.secret));
+	/* followed by Challenge Value */
+	spdk_md5update(&md5ctx, conn->auth.chap_challenge,
+		       conn->auth.chap_challenge_len);
+	/* tgtmd5 is expecting Response Value */
+	spdk_md5final(tgtmd5, &md5ctx);
+
+	spdk_bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN,
+		     tgtmd5, SPDK_MD5DIGEST_LEN);
+
+#if 0
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "tgtmd5=%s, resmd5=%s\n", in_val, response);
+	spdk_dump("tgtmd5", tgtmd5, SPDK_MD5DIGEST_LEN);
+	spdk_dump("resmd5", resmd5, SPDK_MD5DIGEST_LEN);
+#endif
+
+	/* compare MD5 digest */
+	if (memcmp(tgtmd5, resmd5, SPDK_MD5DIGEST_LEN) != 0) {
+		/* not match */
+		/* SPDK_ERRLOG("auth user or secret is missing\n"); */
+		SPDK_ERRLOG("auth failed (name %.64s)\n", name);
+		goto error_return;
+	}
+	/* OK initiator's secret */
+	conn->authenticated = 1;
+
+	/* mutual CHAP? */
+	identifier = spdk_iscsi_param_get_val(params, "CHAP_I");
+	if (identifier != NULL) {
+		conn->auth.chap_mid[0] = (uint8_t) strtol(identifier, NULL, 10);
+		challenge = spdk_iscsi_param_get_val(params, "CHAP_C");
+		if (challenge == NULL) {
+			SPDK_ERRLOG("CHAP sequence error\n");
+			goto error_return;
+		}
+		rc = spdk_hex2bin(conn->auth.chap_mchallenge,
+				  ISCSI_CHAP_CHALLENGE_LEN,
+				  challenge);
+		if (rc < 0) {
+			SPDK_ERRLOG("challenge format error\n");
+			goto error_return;
+		}
+		conn->auth.chap_mchallenge_len = rc;
+#if 0
+		spdk_dump("MChallenge", conn->auth.chap_mchallenge,
+			  conn->auth.chap_mchallenge_len);
+#endif
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_I/CHAP_C\n");
+
+		if (conn->auth.muser[0] == '\0' || conn->auth.msecret[0] == '\0') {
+			/* SPDK_ERRLOG("mutual auth user or secret is missing\n"); */
+			SPDK_ERRLOG("auth failed (user %.64s)\n", name);
+			goto error_return;
+		}
+
+		spdk_md5init(&md5ctx);
+		/* Identifier */
+		spdk_md5update(&md5ctx, conn->auth.chap_mid, 1);
+		/* followed by secret */
+		spdk_md5update(&md5ctx, conn->auth.msecret,
+			       strlen(conn->auth.msecret));
+		/* followed by Challenge Value */
+		spdk_md5update(&md5ctx, conn->auth.chap_mchallenge,
+			       conn->auth.chap_mchallenge_len);
+		/* tgtmd5 is Response Value */
+		spdk_md5final(tgtmd5, &md5ctx);
+
+		spdk_bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN,
+			     tgtmd5, SPDK_MD5DIGEST_LEN);
+
+		total = spdk_iscsi_append_text(conn, "CHAP_N",
+					       conn->auth.muser, data, alloc_len, total);
+		total = spdk_iscsi_append_text(conn, "CHAP_R",
+					       in_val, data, alloc_len, total);
+	} else {
+		/* not mutual */
+		if (conn->req_mutual) {
+			SPDK_ERRLOG("required mutual CHAP\n");
+			goto error_return;
+		}
+	}
+
+	conn->auth.chap_phase = ISCSI_CHAP_PHASE_END;
+	free(in_val);
+	return total;
+
+error_return:
+	conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
+	free(in_val);
+	return total;
+}
+
+static int
+spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
+		       struct iscsi_param *params, const char *method, uint8_t *data,
+		       int alloc_len, int data_len)
+{
+	int total;
 
 	if (conn == NULL || params == NULL || method == NULL) {
 		return -1;
@@ -737,197 +949,19 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		return total;
 	}
 
-	/* for temporary store */
-	in_val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
-	if (!in_val) {
-		SPDK_ERRLOG("malloc() failed for temporary store\n");
-		return -ENOMEM;
-	}
-
 	/* CHAP method (RFC1994) */
 	if (conn->auth.chap_phase == ISCSI_CHAP_PHASE_WAIT_A) {
-		algorithm = spdk_iscsi_param_get_val(params, "CHAP_A");
-		if (algorithm == NULL) {
-			SPDK_ERRLOG("no algorithm\n");
-			goto error_return;
-		}
-
-		/* CHAP_A is LIST type */
-		snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN + 1, "%s", algorithm);
-		in_next = in_val;
-		while ((new_val = spdk_strsepq(&in_next, ",")) != NULL) {
-			if (strcasecmp(new_val, "5") == 0) {
-				/* CHAP with MD5 */
-				break;
-			}
-		}
-		if (new_val == NULL) {
-			snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN + 1, "%s", "Reject");
-			new_val = in_val;
-			spdk_iscsi_append_text(conn, "CHAP_A", new_val,
-					       data, alloc_len, total);
-			goto error_return;
-		}
-		/* selected algorithm is 5 (MD5) */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_A=%s\n", new_val);
-		total = spdk_iscsi_append_text(conn, "CHAP_A", new_val,
-					       data, alloc_len, total);
-
-		/* Identifier is one octet */
-		spdk_gen_random(conn->auth.chap_id, 1);
-		snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN, "%d",
-			 (int) conn->auth.chap_id[0]);
-		total = spdk_iscsi_append_text(conn, "CHAP_I", in_val,
-					       data, alloc_len, total);
-
-		/* Challenge Value is a variable stream of octets */
-		/* (binary length MUST not exceed 1024 bytes) */
-		conn->auth.chap_challenge_len = ISCSI_CHAP_CHALLENGE_LEN;
-		spdk_gen_random(conn->auth.chap_challenge,
-				conn->auth.chap_challenge_len);
-		spdk_bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN,
-			     conn->auth.chap_challenge,
-			     conn->auth.chap_challenge_len);
-		total = spdk_iscsi_append_text(conn, "CHAP_C", in_val,
-					       data, alloc_len, total);
-
-		conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_NR;
-
+		total = spdk_iscsi_check_chap_algorithm(conn, params, data,
+							alloc_len, total);
 	} else if (conn->auth.chap_phase == ISCSI_CHAP_PHASE_WAIT_NR) {
-		uint8_t resmd5[SPDK_MD5DIGEST_LEN];
-		uint8_t tgtmd5[SPDK_MD5DIGEST_LEN];
-		struct spdk_md5ctx md5ctx;
-
-		name = spdk_iscsi_param_get_val(params, "CHAP_N");
-		if (name == NULL) {
-			SPDK_ERRLOG("no name\n");
-			goto error_return;
-		}
-
-		response = spdk_iscsi_param_get_val(params, "CHAP_R");
-		if (response == NULL) {
-			SPDK_ERRLOG("no response\n");
-			goto error_return;
-		}
-		rc = spdk_hex2bin(resmd5, SPDK_MD5DIGEST_LEN, response);
-		if (rc < 0 || rc != SPDK_MD5DIGEST_LEN) {
-			SPDK_ERRLOG("response format error\n");
-			goto error_return;
-		}
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_N/CHAP_R\n");
-
-		rc = spdk_iscsi_get_authinfo(conn, name);
-		if (rc < 0) {
-			/* SPDK_ERRLOG("auth user or secret is missing\n"); */
-			SPDK_ERRLOG("iscsi_get_authinfo() failed\n");
-			goto error_return;
-		}
-		if (conn->auth.user[0] == '\0' || conn->auth.secret[0] == '\0') {
-			/* SPDK_ERRLOG("auth user or secret is missing\n"); */
-			SPDK_ERRLOG("auth failed (name %.64s)\n", name);
-			goto error_return;
-		}
-
-		spdk_md5init(&md5ctx);
-		/* Identifier */
-		spdk_md5update(&md5ctx, conn->auth.chap_id, 1);
-		/* followed by secret */
-		spdk_md5update(&md5ctx, conn->auth.secret,
-			       strlen(conn->auth.secret));
-		/* followed by Challenge Value */
-		spdk_md5update(&md5ctx, conn->auth.chap_challenge,
-			       conn->auth.chap_challenge_len);
-		/* tgtmd5 is expecting Response Value */
-		spdk_md5final(tgtmd5, &md5ctx);
-
-		spdk_bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN,
-			     tgtmd5, SPDK_MD5DIGEST_LEN);
-
-#if 0
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "tgtmd5=%s, resmd5=%s\n", in_val, response);
-		spdk_dump("tgtmd5", tgtmd5, SPDK_MD5DIGEST_LEN);
-		spdk_dump("resmd5", resmd5, SPDK_MD5DIGEST_LEN);
-#endif
-
-		/* compare MD5 digest */
-		if (memcmp(tgtmd5, resmd5, SPDK_MD5DIGEST_LEN) != 0) {
-			/* not match */
-			/* SPDK_ERRLOG("auth user or secret is missing\n"); */
-			SPDK_ERRLOG("auth failed (name %.64s)\n", name);
-			goto error_return;
-		}
-		/* OK initiator's secret */
-		conn->authenticated = 1;
-
-		/* mutual CHAP? */
-		identifier = spdk_iscsi_param_get_val(params, "CHAP_I");
-		if (identifier != NULL) {
-			conn->auth.chap_mid[0] = (uint8_t) strtol(identifier, NULL, 10);
-			challenge = spdk_iscsi_param_get_val(params, "CHAP_C");
-			if (challenge == NULL) {
-				SPDK_ERRLOG("CHAP sequence error\n");
-				goto error_return;
-			}
-			rc = spdk_hex2bin(conn->auth.chap_mchallenge,
-					  ISCSI_CHAP_CHALLENGE_LEN,
-					  challenge);
-			if (rc < 0) {
-				SPDK_ERRLOG("challenge format error\n");
-				goto error_return;
-			}
-			conn->auth.chap_mchallenge_len = rc;
-#if 0
-			spdk_dump("MChallenge", conn->auth.chap_mchallenge,
-				  conn->auth.chap_mchallenge_len);
-#endif
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_I/CHAP_C\n");
-
-			if (conn->auth.muser[0] == '\0' || conn->auth.msecret[0] == '\0') {
-				/* SPDK_ERRLOG("mutual auth user or secret is missing\n"); */
-				SPDK_ERRLOG("auth failed (user %.64s)\n", name);
-				goto error_return;
-			}
-
-			spdk_md5init(&md5ctx);
-			/* Identifier */
-			spdk_md5update(&md5ctx, conn->auth.chap_mid, 1);
-			/* followed by secret */
-			spdk_md5update(&md5ctx, conn->auth.msecret,
-				       strlen(conn->auth.msecret));
-			/* followed by Challenge Value */
-			spdk_md5update(&md5ctx, conn->auth.chap_mchallenge,
-				       conn->auth.chap_mchallenge_len);
-			/* tgtmd5 is Response Value */
-			spdk_md5final(tgtmd5, &md5ctx);
-
-			spdk_bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN,
-				     tgtmd5, SPDK_MD5DIGEST_LEN);
-
-			total = spdk_iscsi_append_text(conn, "CHAP_N",
-						       conn->auth.muser, data, alloc_len, total);
-			total = spdk_iscsi_append_text(conn, "CHAP_R",
-						       in_val, data, alloc_len, total);
-		} else {
-			/* not mutual */
-			if (conn->req_mutual) {
-				SPDK_ERRLOG("required mutual CHAP\n");
-				goto error_return;
-			}
-		}
-
-		conn->auth.chap_phase = ISCSI_CHAP_PHASE_END;
+		total = spdk_iscsi_check_chap_response(conn, params, method,
+						       data, alloc_len, total);
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "start CHAP\n");
 		conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
 	}
 
-	free(in_val);
 	return total;
-
-error_return:
-	conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
-	free(in_val);
-	return -1;
 }
 
 static int
