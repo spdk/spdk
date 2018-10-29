@@ -153,7 +153,7 @@ if [ $SPDK_TEST_ISCSI -eq 1 ]; then
 	run_test suite ./test/spdkcli/iscsi.sh
 fi
 
-if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+if [[ $SPDK_TEST_BLOBFS -eq 1 ]] && [[ $(uname -s) != "FreeBSD" ]]; then
 	run_test suite ./test/blobfs/rocksdb/rocksdb.sh
 	run_test suite ./test/blobstore/blobstore.sh
 fi
