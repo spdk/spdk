@@ -169,7 +169,7 @@ fi
 rm -f eofnl.log
 
 echo -n "Checking for POSIX includes..."
-git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/vhost/rte_vhost*/**' ':!scripts/posix.txt' > scripts/posix.log || true
+git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/vhost/rte_vhost*/**' ':!scripts/posix.txt' ':!test/spdk_cunit.h' > scripts/posix.log || true
 if [ -s scripts/posix.log ]; then
 	echo "POSIX includes detected. Please include spdk/stdinc.h instead."
 	cat scripts/posix.log
