@@ -90,8 +90,8 @@ struct spdk_env_opts {
 };
 
 /**
- * Allocate dma/sharable memory based on a given dma_flg. It is a physically
- * contiguous memory buffer with the given size, alignment and socket id.
+ * Allocate dma/sharable memory based on a given dma_flg. It is a memory buffer
+ * with the given size, alignment and socket id.
  *
  * \param size Size in bytes.
  * \param align Alignment value for the allocated memory. If '0', the allocated
@@ -110,9 +110,8 @@ struct spdk_env_opts {
 void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags);
 
 /**
- * Allocate dma/sharable memory based on a given dma_flg. It is a physically
- * contiguous memory buffer with the given size, alignment and socket id.
- * Also, the buffer will be zeroed.
+ * Allocate dma/sharable memory based on a given dma_flg. It is a memory buffer
+ * with the given size, alignment and socket id. Also, the buffer will be zeroed.
  *
  * \param size Size in bytes.
  * \param align Alignment value for the allocated memory. If '0', the allocated
@@ -153,8 +152,7 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
 int spdk_env_init(const struct spdk_env_opts *opts);
 
 /**
- * Allocate a pinned, physically contiguous memory buffer with the given size
- * and alignment.
+ * Allocate a pinned memory buffer with the given size and alignment.
  *
  * \param size Size in bytes.
  * \param align Alignment value for the allocated memory. If '0', the allocated
@@ -169,8 +167,7 @@ int spdk_env_init(const struct spdk_env_opts *opts);
 void *spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
- * Allocate a pinned, physically contiguous memory buffer with the given size,
- * alignment and socket id.
+ * Allocate a pinned, memory buffer with the given size, alignment and socket id.
  *
  * \param size Size in bytes.
  * \param align Alignment value for the allocated memory. If '0', the allocated
@@ -187,8 +184,8 @@ void *spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr);
 void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
 
 /**
- * Allocate a pinned, physically contiguous memory buffer with the given size
- * and alignment. The buffer will be zeroed.
+ * Allocate a pinned memory buffer with the given size and alignment. The buffer
+ * will be zeroed.
  *
  * \param size Size in bytes.
  * \param align Alignment value for the allocated memory. If '0', the allocated
@@ -203,8 +200,8 @@ void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int
 void *spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
- * Allocate a pinned, physically contiguous memory buffer with the given size,
- * alignment and socket id. The buffer will be zeroed.
+ * Allocate a pinned memory buffer with the given size, alignment and socket id.
+ * The buffer will be zeroed.
  *
  * \param size Size in bytes.
  * \param align Alignment value for the allocated memory. If '0', the allocated
@@ -247,7 +244,8 @@ void spdk_dma_free(void *buf);
 
 /**
  * Reserve a named, process shared memory zone with the given size, socket_id
- * and flags.
+ * and flags. Unless `SPDK_MEMZONE_NO_IOVA_CONTIG` flag is provided, the returned
+ * memory will be IOVA contiguous.
  *
  * \param name Name to set for this memory zone.
  * \param len Length in bytes.
@@ -261,7 +259,8 @@ void *spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned
 
 /**
  * Reserve a named, process shared memory zone with the given size, socket_id,
- * flags and alignment.
+ * flags and alignment. Unless `SPDK_MEMZONE_NO_IOVA_CONTIG` flag is provided,
+ * the returned memory will be IOVA contiguous.
  *
  * \param name Name to set for this memory zone.
  * \param len Length in bytes.

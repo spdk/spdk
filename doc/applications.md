@@ -112,6 +112,11 @@ reserve memory from all available hugetlbfs mounts, starting with the one with
 the highest page size. This option accepts a number of bytes with a possible
 binary prefix, e.g. 1024, 1024M, 1G. The default unit is megabyte.
 
+Starting with DPDK 18.05.1, it's possible to reserve hugepages at runtime, meaning
+that SPDK application can be started with 0 pre-reserved memory. Unlike hugepages
+pre-reserved at the application startup, the hugepages reserved at runtime will be
+released to the system as soon as they're no longer used.
+
 ### Disable PCI access {#cmd_arg_disable_pci_access}
 
 If SPDK is run with PCI access disabled it won't detect any PCI devices. This
