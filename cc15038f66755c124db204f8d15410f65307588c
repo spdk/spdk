@@ -108,6 +108,23 @@
     },
     {
       "key": {
+        "uuid": "0a6cb367_55c4de96",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2745,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-29T08:03:50Z",
+      "side": 1,
+      "message": "This assert should be removed. qp_num can be invalid in case of error",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dcffcff4_81e30649",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -140,6 +157,24 @@
       "revId": "cc15038f66755c124db204f8d15410f65307588c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bcc1a6b_aca02b47",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2788,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-29T08:03:50Z",
+      "side": 1,
+      "message": "Hi,\n\nI found the fix in linux-rdma list. I think, existing code in rxe can be improved, but it\u0027s correct.\n - Infiniband spec dosen\u0027t require qp_num to be valid in case of error. Only wr_id and status must be valid\n - wr_id is set to valid value\n\nstruct ib_wc {                                                                                \n        union {                                                                               \n                u64             wr_id;                                                        \n                struct ib_cqe   *wr_cqe;                                                      \n        };                                                                                    \n        enum ib_wc_status       status;                                                       \n        enum ib_wc_opcode       opcode;                                                       \n        u32                     vendor_err;                                                   \n        u32                     byte_len;                                                     \n        struct ib_qp           *qp;                                                           \n        union {                                                                               \n                __be32          imm_data;                                                     \n                u32             invalidate_rkey;                                              \n        } ex;                                                                                 \n        u32                     src_qp;                                                       \n        int                     wc_flags;                                                     \n        u16                     pkey_index;                                                   \n        u32                     slid;                                                         \n        u8                      sl;                                                           \n        u8                      dlid_path_bits;                                               \n        u8                      port_num;       /* valid only for DR SMPs on switches */      \n        u8                      smac[ETH_ALEN];                                               \n        u16                     vlan_id;                                                      \n        u8                      network_hdr_type;                                             \n};\n\nstruct ib_uverbs_wc {\n        __u64 wr_id;\n        __u32 status;\n        __u32 opcode;\n        __u32 vendor_err;\n        __u32 byte_len;\n        union {\n                __u32 imm_data;\n                __u32 invalidate_rkey;\n        } ex;\n        __u32 qp_num;\n        __u32 src_qp;\n        __u32 wc_flags;\n        __u16 pkey_index;\n        __u16 slid;\n        __u8 sl;\n        __u8 dlid_path_bits;\n        __u8 port_num;\n        __u8 reserved;\n};\n\nstruct rxe_cqe {\n        union {\n                struct ib_wc            ibwc;\n                struct ib_uverbs_wc     uibwc;\n        };\n};\n\nExisting statement\nwc-\u003ewr_id\t\t\u003d wqe-\u003ewr_id;\nsets the valid wr_id for both cases: mlnx and rxe\n\nI think, \nassert(rqpair-\u003ecm_id-\u003eqp-\u003eqp_num \u003d\u003d wc-\u003eqp_num); line 2745\nin our original patch should be removed.",
+      "parentUuid": "fa74ba77_292995ae",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
