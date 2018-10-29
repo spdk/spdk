@@ -31,20 +31,12 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
-DIRS-y = bdev blob blobfs event ioat iscsi json jsonrpc log lvol
-DIRS-y += nvme nvmf scsi sock thread util
-DIRS-$(CONFIG_REDUCE) += reduce
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost
-endif
-DIRS-$(CONFIG_FTL) += ftl
+CFLAGS += $(ENV_CFLAGS)
+TEST_FILE = ftl_rwb_ut.c
 
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
