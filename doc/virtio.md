@@ -27,7 +27,3 @@ uses one file per hugepage by default. So *by default* this makes SPDK Virtio pr
 with only 1GB hugepages. To run an SPDK app using Virtio initiator with 2MB hugepages
 it is required to pass '-g' command-line option . This forces DPDK to create a single
 non-physically-contiguous hugetlbfs file for all its memory.
-
-This functionality requires latest DPDK changes that are officially landing in DPDK
-18.05, but have been also backported to spdk-18.02 branch of our internal DPDK fork
-which is currently used as a default git submodule for SPDK.

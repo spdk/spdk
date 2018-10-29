@@ -85,10 +85,7 @@ allocating `hugepages` (by default, 2MiB). The Linux kernel treats hugepages
 differently than regular 4KiB pages. Specifically, the operating system will
 never change their physical location. This is not by intent, and so things
 could change in future versions, but it is true today and has been for a number
-of years (see the later section on the IOMMU for a future-proof solution). DPDK
-goes through great pains to allocate hugepages such that it can string together
-the longest runs of physical pages possible, such that it can accommodate
-physically contiguous allocations larger than a single page.
+of years (see the later section on the IOMMU for a future-proof solution).
 
 With this explanation, hopefully it is now clear why all data buffers passed to
 SPDK must be allocated using spdk_dma_malloc() or its siblings. The buffers
