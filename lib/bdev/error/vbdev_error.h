@@ -73,4 +73,4 @@ void spdk_vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete
 int spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type,
 			    uint32_t error_num);
 
-#endif // SPDK_VBDEV_ERROR_H
+#endif /* SPDK_VBDEV_ERROR_H */
