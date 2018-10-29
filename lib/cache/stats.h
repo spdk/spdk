@@ -44,10 +44,18 @@ struct cache_stats {
 	struct ocf_stats_errors errors;
 };
 
-void print_usage_stats(struct ocf_stats_usage *usage);
-void print_reqs_stats(struct ocf_stats_requests *reqs);
-void print_blocks_stats(struct ocf_stats_blocks *blks);
-void print_errors_stats(struct ocf_stats_errors *errs);
+typedef void (*cache_get_stats_callback_t)(const char *stats_text, void *context);
+typedef void (*cache_get_stats_fn_t)(void *stat_structure,
+				     cache_get_stats_callback_t callback, void *ctx);
+
+void cache_stats_write_reqs(struct ocf_stats_requests *, cache_get_stats_callback_t,
+			    void  *context);
+void cache_stats_write_usage(struct ocf_stats_usage *, cache_get_stats_callback_t,
+			     void  *context);
+void cache_stats_write_blocks(struct ocf_stats_blocks *, cache_get_stats_callback_t,
+			      void  *context);
+void cache_stats_write_errors(struct ocf_stats_errors *, cache_get_stats_callback_t,
+			      void  *context);
 
 int cache_get_stats(int cache_id, int core_id, struct cache_stats *stats);
 

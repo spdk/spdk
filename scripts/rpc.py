@@ -167,6 +167,41 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_crypto_bdev)
 
     @call_cmd
+    def construct_cache_bdev(args):
+        print(rpc.bdev.construct_cache_bdev(args.client,
+                                            name=args.name,
+                                            mode=args.mode,
+                                            cache_bdev_name=args.cache_bdev_name,
+                                            core_bdev_name=args.core_bdev_name))
+    p = subparsers.add_parser('construct_cache_bdev',
+                              help='Add new cache virtual block device')
+    p.add_argument('name', help='Name of resulting cache vbdev')
+    p.add_argument('mode', help='CAS cache mode')
+    p.add_argument('cache_bdev_name', help='Name of underlying cache bdev')
+    p.add_argument('core_bdev_name', help='Name of unerlying core bdev')
+    p.set_defaults(func=construct_cache_bdev)
+
+    @call_cmd
+    def get_cache_stats(args):
+        print(rpc.bdev.get_cache_stats(args.client,
+                                       name=args.name,
+                                       statname=args.statname))
+    p = subparsers.add_parser('get_cache_stats',
+                              help='Get statistics of chosen cache block device')
+    p.add_argument('name', help='Name of cache bdev')
+    p.add_argument('statname', help='usage | reqs | blocks | errors')
+    p.set_defaults(func=get_cache_stats)
+
+    @call_cmd
+    def delete_cache_bdev(args):
+        print(rpc.bdev.delete_cache_bdev(args.client,
+                                         name=args.name))
+    p = subparsers.add_parser('delete_cache_bdev',
+                              help='Delete a cache virtual device')
+    p.add_argument('name', help='Name of cache bdev')
+    p.set_defaults(func=delete_cache_bdev)
+
+    @call_cmd
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print(rpc.bdev.construct_malloc_bdev(args.client,
