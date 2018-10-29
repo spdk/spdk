@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "93b0a22e_039731c1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2644,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-29T15:33:24Z",
+      "side": 1,
+      "message": "I was wrong here - crossed two different logs. The receive failed to post on the other log because that particular patch didn\u0027t add an additional recv queue entry as you indicated. Your patch successfully posted the receive, but failed when it went to destroy the qpair because the queue depth was not zero.\n\nhttps://ci.spdk.io/spdk/builds/review/cc15038f66755c124db204f8d15410f65307588c.1540494258/fedora-03/build.log\n\nSo you are right - posting the receive does work. Let\u0027s go with that strategy then. In terms of my other patch series, I\u0027ll just drop the last patch from my series (because I like the other patches) and we\u0027ll put this patch on top.",
+      "parentUuid": "7accb822_f68bb299",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ff24eae_92f911bc",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -119,6 +137,24 @@
       "writtenOn": "2018-10-29T08:03:50Z",
       "side": 1,
       "message": "This assert should be removed. qp_num can be invalid in case of error",
+      "revId": "cc15038f66755c124db204f8d15410f65307588c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "322dff02_e1305aae",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2745,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-29T15:33:24Z",
+      "side": 1,
+      "message": "The man page for ibv_poll_cq says wr_id, status, qp_num, and vendor_err are valid on non-success, and from my experience (outside of rxe where nothing was valid and we have a kernel patch to fix it) this is true.",
+      "parentUuid": "0a6cb367_55c4de96",
       "revId": "cc15038f66755c124db204f8d15410f65307588c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
