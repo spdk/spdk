@@ -106,6 +106,8 @@ void	ftl_trace_limits(struct ftl_trace *trace, const size_t *limits, size_t num_
 #else
 #define ftl_trace(fn, trace, ...)
 #define ftl_trace_alloc_group(trace) FTL_TRACE_INVALID_ID
+#define ftl_trace_init() NULL
+#define ftl_trace_free(t)
 #endif
 
 #endif /* FTL_TRACE_H */
