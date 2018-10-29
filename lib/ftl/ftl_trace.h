@@ -101,6 +101,13 @@ struct ftl_event {
 
 #define FTL_TRACE_INVALID_ID ((uint64_t) -1)
 
+#ifndef FTL_TRACE_ENABLED
+#define FTL_TRACE_ENABLED 0
+#endif
+#ifndef FTL_INTERNAL
+#define FTL_INTERNAL 1
+#endif
+
 #if defined(FTL_INTERNAL)
 
 #include "ftl_utils.h"

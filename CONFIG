@@ -118,3 +118,6 @@ CONFIG_VTUNE_DIR=
 
 # Build the dpdk igb_uio driver
 CONFIG_IGB_UIO_DRIVER=n
+
+# Build FTL library
+CONFIG_FTL=n
