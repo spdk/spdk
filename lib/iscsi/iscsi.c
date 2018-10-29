@@ -80,7 +80,7 @@ static void spdk_gen_random(uint8_t *buf, size_t len);
 static void srandomdev(void);
 #endif /* HAVE_SRANDOMDEV */
 #ifndef HAVE_ARC4RANDOM
-//static uint32_t arc4random(void);
+/* static uint32_t arc4random(void); */
 #endif /* HAVE_ARC4RANDOM */
 
 /* convert from/to bin/hex */
@@ -815,12 +815,12 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 
 		rc = spdk_iscsi_get_authinfo(conn, val);
 		if (rc < 0) {
-			//SPDK_ERRLOG("auth user or secret is missing\n");
+			/* SPDK_ERRLOG("auth user or secret is missing\n"); */
 			SPDK_ERRLOG("iscsi_get_authinfo() failed\n");
 			goto error_return;
 		}
 		if (conn->auth.user[0] == '\0' || conn->auth.secret[0] == '\0') {
-			//SPDK_ERRLOG("auth user or secret is missing\n");
+			/* SPDK_ERRLOG("auth user or secret is missing\n"); */
 			SPDK_ERRLOG("auth failed (user %.64s)\n", user);
 			goto error_return;
 		}
@@ -849,7 +849,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		/* compare MD5 digest */
 		if (memcmp(tgtmd5, resmd5, SPDK_MD5DIGEST_LEN) != 0) {
 			/* not match */
-			//SPDK_ERRLOG("auth user or secret is missing\n");
+			/* SPDK_ERRLOG("auth user or secret is missing\n"); */
 			SPDK_ERRLOG("auth failed (user %.64s)\n", user);
 			goto error_return;
 		}
@@ -880,7 +880,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_I/CHAP_C\n");
 
 			if (conn->auth.muser[0] == '\0' || conn->auth.msecret[0] == '\0') {
-				//SPDK_ERRLOG("mutual auth user or secret is missing\n");
+				/* SPDK_ERRLOG("mutual auth user or secret is missing\n"); */
 				SPDK_ERRLOG("auth failed (user %.64s)\n", user);
 				goto error_return;
 			}
@@ -2364,7 +2364,8 @@ spdk_iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	if (conn->id == cid) {
-		response = 0; // connection or session closed successfully
+		/* connection or session closed successfully */
+		response = 0;
 		spdk_iscsi_conn_logout(conn);
 	} else {
 		response = 1;
