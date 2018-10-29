@@ -34,6 +34,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/base64.h"
 #include "spdk/crc32.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
@@ -795,6 +796,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		uint8_t resmd5[SPDK_MD5DIGEST_LEN];
 		uint8_t tgtmd5[SPDK_MD5DIGEST_LEN];
 		struct spdk_md5ctx md5ctx;
+		size_t decoded_len = 0;
 
 		if (conn->auth.chap_phase != ISCSI_CHAP_PHASE_WAIT_NR) {
 			SPDK_ERRLOG("CHAP sequence error\n");
@@ -806,8 +808,22 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			SPDK_ERRLOG("no response\n");
 			goto error_return;
 		}
-		rc = spdk_hex2bin(resmd5, SPDK_MD5DIGEST_LEN, response);
-		if (rc < 0 || rc != SPDK_MD5DIGEST_LEN) {
+		if (response[0] == '\0' &&
+		    (response[1] == 'x' || response[1] == 'X')) {
+			rc = spdk_hex2bin(resmd5, SPDK_MD5DIGEST_LEN, response);
+			if (rc < 0 || rc != SPDK_MD5DIGEST_LEN) {
+				SPDK_ERRLOG("response format error\n");
+				goto error_return;
+			}
+		} else if (response[0] == '\0' &&
+			   (response[1] == 'b' || response[1] == 'B')) {
+			response += 2;
+			rc = spdk_base64_decode(resmd5, &decoded_len, response);
+			if (rc < 0 || decoded_len != SPDK_MD5DIGEST_LEN) {
+				SPDK_ERRLOG("response format error\n");
+				goto error_return;
+			}
+		} else {
 			SPDK_ERRLOG("response format error\n");
 			goto error_return;
 		}
@@ -865,14 +881,30 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 				SPDK_ERRLOG("CHAP sequence error\n");
 				goto error_return;
 			}
-			rc = spdk_hex2bin(conn->auth.chap_mchallenge,
-					  ISCSI_CHAP_CHALLENGE_LEN,
-					  challenge);
-			if (rc < 0) {
+			if (challenge[0] == '\0' &&
+			    (challenge[1] == 'x' || challenge[1] == 'X')) {
+				rc = spdk_hex2bin(conn->auth.chap_mchallenge,
+						  ISCSI_CHAP_CHALLENGE_LEN,
+						  challenge);
+				if (rc < 0) {
+					SPDK_ERRLOG("challenge format error\n");
+					goto error_return;
+				}
+				conn->auth.chap_mchallenge_len = rc;
+			} else if (challenge[0] == '\0' &&
+				   (challenge[1] == 'b' || challenge[1] == 'B')) {
+				challenge += 2;
+				rc = spdk_base64_decode(conn->auth.chap_mchallenge,
+							&decoded_len, challenge);
+				if (rc < 0) {
+					SPDK_ERRLOG("challenge format error\n");
+					goto error_return;
+				}
+				conn->auth.chap_mchallenge_len = decoded_len;
+			} else {
 				SPDK_ERRLOG("challenge format error\n");
 				goto error_return;
 			}
-			conn->auth.chap_mchallenge_len = rc;
 #if 0
 			spdk_dump("MChallenge", conn->auth.chap_mchallenge,
 				  conn->auth.chap_mchallenge_len);
