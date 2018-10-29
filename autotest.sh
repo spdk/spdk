@@ -197,6 +197,10 @@ if [ $SPDK_TEST_OCF -eq 1 ]; then
 	run_test suite ./test/ocf/ocf.sh
 fi
 
+if [ $SPDK_TEST_BDEV_FTL -eq 1 ]; then
+	run_test suite ./test/ftl/ftl.sh
+fi
+
 run_test suite ./test/json_config/json_config.sh
 
 timing_enter cleanup
