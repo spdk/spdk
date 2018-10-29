@@ -16,6 +16,24 @@
       "revId": "a6d9b496ce65a3cb7be8c40fc4cbb07d675da486",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36ee2792_fa4ed02c",
+        "filename": "pkg/fedora28.spec",
+        "patchSetId": 21
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-29T15:35:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50e28c92_df38c8da",
+      "revId": "a6d9b496ce65a3cb7be8c40fc4cbb07d675da486",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
