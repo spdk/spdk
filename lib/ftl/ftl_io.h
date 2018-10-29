@@ -259,7 +259,7 @@ struct ftl_io *ftl_io_rwb_init(struct ftl_dev *dev, struct ftl_band *band,
 struct ftl_io	*ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_fn cb);
 void	ftl_io_user_init(struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
 			 struct iovec *iov, size_t iov_cnt,
-			 const struct ftl_cb *cb, int type);
+			 const ftl_fn cb_fn, void *cb_arg, int type);
 void	*ftl_io_get_md(const struct ftl_io *io);
 void	ftl_io_complete(struct ftl_io *io);
 void	ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status);
