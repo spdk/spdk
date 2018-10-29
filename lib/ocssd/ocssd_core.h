@@ -53,6 +53,7 @@ struct ocssd_band;
 struct ocssd_chunk;
 struct ocssd_io;
 struct ocssd_restore;
+struct ocssd_reloc;
 struct ocssd_wptr;
 struct ocssd_flush;
 
@@ -175,6 +176,9 @@ struct ocssd_dev {
 
 	/* Inflight io operations */
 	atomic_ulong				num_inflight;
+
+	/* Manages data relocation */
+	struct ocssd_reloc			*reloc;
 
 	/* Array of io threads */
 	struct ocssd_io_thread			thread[OCSSD_THREAD_ID_MAX];
