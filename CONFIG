@@ -115,3 +115,6 @@ CONFIG_VTUNE_DIR=
 
 # Build the dpdk igb_uio driver
 CONFIG_IGB_UIO_DRIVER=n
+
+# Build OCSSD FTL library
+CONFIG_OCSSD_FTL=n

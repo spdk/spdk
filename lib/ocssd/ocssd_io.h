@@ -259,7 +259,7 @@ struct ocssd_io *ocssd_io_rwb_init(struct ocssd_dev *dev, struct ocssd_band *ban
 struct ocssd_io	*ocssd_io_erase_init(struct ocssd_band *band, size_t lbk_cnt, ocssd_fn cb);
 void	ocssd_io_user_init(struct ocssd_io *io, uint64_t lba, size_t lbk_cnt,
 			   struct iovec *iov, size_t iov_cnt,
-			   const struct ocssd_cb *cb, int type);
+			   const ocssd_fn cb_fn, void *cb_arg, int type);
 void	*ocssd_io_get_md(const struct ocssd_io *io);
 void	ocssd_io_complete(struct ocssd_io *io);
 void	ocssd_io_process_error(struct ocssd_io *io, const struct spdk_nvme_cpl *status);
