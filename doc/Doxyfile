@@ -811,6 +811,7 @@ INPUT                  += \
                          concurrency.md \
                          directory_structure.md \
                          event.md \
+                         ftl.md \
                          getting_started.md \
                          ioat.md \
                          iscsi.md \
