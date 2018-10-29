@@ -151,6 +151,13 @@ Added API enabling iteration over JSON object:
  - spdk_json_array_first()
  - spdk_json_next()
 
+### Blobstore
+
+Blobstore I/O operations are now based on io_units, instead of blobstore page size.
+This allows users to issue IO with sizes smaller than SPDK_BS_PAGE_SIZE (set to 4096B),
+enabling creation of blobstores on devices with block sizes smaller than 4kB.
+Logical volumes can now be used as boot devices in QEMU, due to 512B reads being enabled.
+
 ## v18.07:
 
 ### bdev
