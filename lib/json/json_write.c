@@ -177,7 +177,7 @@ emit_indent(struct spdk_json_write_ctx *w)
 static int
 begin_value(struct spdk_json_write_ctx *w)
 {
-	// TODO: check for value state
+	/* TODO: check for value state */
 	if (w->new_indent) {
 		if (emit_fmt(w, "\n", 1)) { return fail(w); }
 		if (emit_indent(w)) { return fail(w); }
@@ -561,7 +561,7 @@ spdk_json_write_val(struct spdk_json_write_ctx *w, const struct spdk_json_val *v
 			}
 		}
 
-		// Loop up to and including the _END value
+		/* Loop up to and including the _END value */
 		for (i = 0; i < num_values + 1;) {
 			if (spdk_json_write_val(w, &val[i + 1])) {
 				return fail(w);
@@ -582,7 +582,7 @@ spdk_json_write_val(struct spdk_json_write_ctx *w, const struct spdk_json_val *v
 		return spdk_json_write_object_end(w);
 
 	case SPDK_JSON_VAL_INVALID:
-		// Handle INVALID to make the compiler happy (and catch other unhandled types)
+		/* Handle INVALID to make the compiler happy (and catch other unhandled types) */
 		return fail(w);
 	}
 
