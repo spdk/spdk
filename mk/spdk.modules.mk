@@ -84,7 +84,7 @@ SOCK_MODULES_LIST += sock_vpp
 endif
 
 ifeq ($(CONFIG_OCSSD_FTL),y)
-BLOCKDEV_MODULES_LIST += ocssd
+BLOCKDEV_MODULES_LIST += ocssd bdev_ocssd
 endif
 
 COPY_MODULES_LIST = copy_ioat ioat
