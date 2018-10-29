@@ -167,7 +167,9 @@ ftl_rwb_batch_init(struct ftl_rwb *rwb, struct ftl_rwb_batch *batch, unsigned in
 	return 0;
 error:
 	free(batch->entries);
+	batch->entries = NULL;
 	spdk_dma_free(batch->buffer);
+	batch->buffer = NULL;
 	return -1;
 }
 
