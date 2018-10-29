@@ -38,8 +38,9 @@ bool
 spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (ctrlr->quirks & NVME_QUIRK_OCSSD) {
-		// TODO: There isn't a standardized way to identify Open-Channel SSD
-		// different verdors may have different conditions.
+		/* TODO: There isn't a standardized way to identify Open-Channel SSD
+		 * different verdors may have different conditions.
+		 */
 
 		/*
 		 * Current QEMU OpenChannel Device needs to check nsdata->vs[0].

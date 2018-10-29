@@ -101,12 +101,12 @@ struct spdk_fio_thread {
 	struct thread_data	*td;
 
 	struct spdk_fio_qpair	*fio_qpair;
-	struct spdk_fio_qpair	*fio_qpair_current; // the current fio_qpair to be handled.
+	struct spdk_fio_qpair	*fio_qpair_current;	/* the current fio_qpair to be handled. */
 
-	struct io_u		**iocq;	// io completion queue
-	unsigned int		iocq_count;	// number of iocq entries filled by last getevents
-	unsigned int		iocq_size;	// number of iocq entries allocated
-	struct fio_file		*current_f;   // fio_file given by user
+	struct io_u		**iocq;		/* io completion queue */
+	unsigned int		iocq_count;	/* number of iocq entries filled by last getevents */
+	unsigned int		iocq_size;	/* number of iocq entries allocated */
+	struct fio_file		*current_f;	/* fio_file given by user */
 
 };
 
@@ -690,7 +690,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	lba = io_u->offset / block_size;
 	lba_count = io_u->xfer_buflen / block_size;
 
-	// TODO: considering situations that fio will randomize and verify io_u
+	/* TODO: considering situations that fio will randomize and verify io_u *?
 	if (fio_qpair->do_nvme_pi) {
 		fio_extended_lba_setup_pi(fio_qpair, io_u);
 	}
