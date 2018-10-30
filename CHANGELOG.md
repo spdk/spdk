@@ -96,6 +96,22 @@ described in the bdev user guide: [iSCSI bdev](https://spdk.io/doc/bdev.html#bde
 
 ### Miscellaneous
 
+The SPDK application framework can now parse long name command line parameters.
+Most single-character parameters have a long name equivalent now. See the
+[Command Line Parameters](https://spdk.io/doc/app_overview.html) documentation
+for details or use the `--help` command line parameter to list all available
+params.
+
+bdevperf `-s` param (io size) was renamed to `-o` as `-s` had been already
+used by existing apps for memory size.
+
+bdevio can now accept all SPDK command line parameters. The config now has to
+be provided with `-c` or `--config` param.
+
+The following ioat/perf and nvme/perf parameters were renamed as well:
+ `-s` (io size) to `-o`
+ `-d` (mem size) to `-s`
+
 The ReactorMask config file parameter has been deprecated.  Users should
 use the -m or --cpumask command line option to specify the CPU core mask
 for the application.
