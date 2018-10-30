@@ -70,6 +70,10 @@ only as many hugepages as it is really needed.
 Due to this change, the memory buffers returned by `spdk_*malloc()` are no longer guaranteed
 to be physically contiguous.
 
+### I/OAT
+
+I/OAT driver can now reinitialize I/OAT channels after encountering DMA errors.
+
 ### iscsi target
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
