@@ -57,6 +57,10 @@ A new structure spdk_mem_map_ops has been introduced to hold memory map related
 callbacks. This structure is now passed as the second argument of spdk_mem_map_alloc
 in lieu of the notify callback.
 
+### I/OAT
+
+I/OAT driver can now reinitialize I/OAT channels after encountering DMA errors.
+
 ### iscsi target
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
