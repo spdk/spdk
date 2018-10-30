@@ -16,7 +16,12 @@ null_json_config=$JSON_DIR/null_json_config.json
 
 function run_spdk_tgt() {
 	echo "Running spdk target"
-	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x1 -p 0 -s 4096 --wait-for-rpc &
+
+	if [[ $# -eq 0 ]]; then
+		wait_for_rpc='--wait-for-rpc'
+	fi
+
+	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x1 -p 0 -s 4096 $wait_for_rpc "$@" &
 	spdk_tgt_pid=$!
 
 	echo "Waiting for app to run..."
@@ -220,14 +225,13 @@ function test_global_params() {
 		run_spdk_tgt
 	elif [ $target == "virtio_initiator" ]; then
 		killprocess $virtio_pid
-                run_initiator
+		run_initiator
 	else
 		echo "Target is not specified for test_global_params"
 		return 1
 	fi
 	$rpc_py load_config < $full_config
-	$rpc_py save_config > $full_config
-	$JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $last_json_config
+	$JSON_DIR/config_filter.py -method "delete_configs" <($rpc_py save_config) > $last_json_config
 
 	json_diff $base_json_config $last_json_config
 	rm $base_json_config $last_json_config
