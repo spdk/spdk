@@ -85,10 +85,10 @@ struct bdev_iscsi_lun {
 	struct spdk_poller		*no_master_ch_poller;
 	struct spdk_thread		*no_master_ch_poller_td;
 	bool				unmap_supported;
+	struct spdk_poller		*poller;
 };
 
 struct bdev_iscsi_io_channel {
-	struct spdk_poller	*poller;
 	struct bdev_iscsi_lun	*lun;
 };
 
@@ -356,8 +356,9 @@ bdev_iscsi_reset(struct spdk_bdev_io *bdev_io)
 }
 
 static int
-bdev_iscsi_poll_lun(struct bdev_iscsi_lun *lun)
+bdev_iscsi_poll_lun(void *_lun)
 {
+	struct bdev_iscsi_lun *lun = _lun;
 	struct pollfd pfd = {};
 
 	pfd.fd = iscsi_get_fd(lun->context);
@@ -394,14 +395,6 @@ bdev_iscsi_no_master_ch_poll(void *arg)
 
 	pthread_mutex_unlock(&lun->mutex);
 	return rc;
-}
-
-static int
-bdev_iscsi_poll(void *arg)
-{
-	struct bdev_iscsi_io_channel *ch = arg;
-
-	return bdev_iscsi_poll_lun(ch->lun);
 }
 
 static void bdev_iscsi_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -501,7 +494,7 @@ bdev_iscsi_create_cb(void *io_device, void *ctx_buf)
 		assert(lun->master_td == NULL);
 		lun->master_ch = ch;
 		lun->master_td = spdk_get_thread();
-		ch->poller = spdk_poller_register(bdev_iscsi_poll, ch, 0);
+		lun->poller = spdk_poller_register(bdev_iscsi_poll_lun, lun, 0);
 		ch->lun = lun;
 	}
 	lun->ch_count++;
@@ -513,7 +506,6 @@ bdev_iscsi_create_cb(void *io_device, void *ctx_buf)
 static void
 bdev_iscsi_destroy_cb(void *io_device, void *ctx_buf)
 {
-	struct bdev_iscsi_io_channel *io_channel = ctx_buf;
 	struct bdev_iscsi_lun *lun = io_device;
 
 	pthread_mutex_lock(&lun->mutex);
@@ -521,11 +513,10 @@ bdev_iscsi_destroy_cb(void *io_device, void *ctx_buf)
 	if (lun->ch_count == 0) {
 		assert(lun->master_ch != NULL);
 		assert(lun->master_td != NULL);
-		assert(lun->master_td == spdk_get_thread());
 
 		lun->master_ch = NULL;
 		lun->master_td = NULL;
-		spdk_poller_unregister(&io_channel->poller);
+		spdk_poller_unregister(&lun->poller);
 	}
 	pthread_mutex_unlock(&lun->mutex);
 }
