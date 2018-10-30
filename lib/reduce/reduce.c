@@ -245,12 +245,6 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	if (spdk_mem_all_zero(&params->uuid, sizeof(params->uuid))) {
-		SPDK_ERRLOG("no uuid specified\n");
-		cb_fn(cb_arg, NULL, -EINVAL);
-		return;
-	}
-
 	if (backing_dev->close == NULL || backing_dev->readv == NULL ||
 	    backing_dev->writev == NULL || backing_dev->unmap == NULL) {
 		SPDK_ERRLOG("backing_dev function pointer not specified\n");
@@ -288,6 +282,10 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		free(vol);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
+	}
+
+	if (spdk_mem_all_zero(&params->uuid, sizeof(params->uuid))) {
+		spdk_uuid_generate(&params->uuid);
 	}
 
 	memcpy(&vol->uuid, &params->uuid, sizeof(params->uuid));

@@ -232,21 +232,10 @@ init_failure(void)
 	CU_ASSERT(g_ziperrno == -EINVAL);
 	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
 
-	/* pm_file now has valid size, but uuid is still all zeroes.
-	 * This should fail.
+	/* pm_file now has valid size, but backing_dev still has null function
+	 * pointers.  This should fail.
 	 */
 	pm_file_init(&pm_file, &params);
-
-	g_vol = NULL;
-	g_ziperrno = 0;
-	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
-	CU_ASSERT(g_ziperrno == -EINVAL);
-	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
-
-	/* uuid is now valid, but backing_dev still has null function pointers.
-	 * This should fail.
-	 */
-	spdk_uuid_generate(&params.uuid);
 
 	g_vol = NULL;
 	g_ziperrno = 0;
@@ -343,7 +332,6 @@ init_md(void)
 	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 512;
-	spdk_uuid_generate(&params.uuid);
 
 	backing_dev_init(&backing_dev, &params);
 	pm_file_init(&pm_file, &params);
