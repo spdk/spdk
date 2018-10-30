@@ -72,6 +72,9 @@ $(LIB): $(OBJS)
 
 install: all
 	$(INSTALL_LIB)
+uninstall:
+	$(UNINSTALL_LIB)
+
 ifeq ($(CONFIG_SHARED),y)
 	$(INSTALL_SHARED_LIB)
 endif
