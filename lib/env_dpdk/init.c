@@ -293,6 +293,17 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 #ifdef __linux__
+	/* Set the base virtual address - it must be an address that is not in the
+	 * ASAN shadow region, otherwise ASAN-enabled builds will ignore the
+	 * mmap hint.
+	 *
+	 * Ref: https://github.com/google/sanitizers/wiki/AddressSanitizerAlgorithm
+	 */
+	args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x200000000000"));
+	if (args == NULL) {
+		return -1;
+	}
+
 	if (opts->shm_id < 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
 				     getpid()));
@@ -302,17 +313,6 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	} else {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk%d",
 				     opts->shm_id));
-		if (args == NULL) {
-			return -1;
-		}
-
-		/* Set the base virtual address - it must be an address that is not in the
-		 * ASAN shadow region, otherwise ASAN-enabled builds will ignore the
-		 * mmap hint.
-		 *
-		 * Ref: https://github.com/google/sanitizers/wiki/AddressSanitizerAlgorithm
-		 */
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x200000000000"));
 		if (args == NULL) {
 			return -1;
 		}
