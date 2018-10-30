@@ -158,6 +158,22 @@ else
 fi
 rm -f eofnl.log
 
+echo -n "Checking for two or more consecutive blank lines..."
+
+files=$(git grep --files-with-matches -e '^$' -- '*.[ch]')
+for file in $files; do
+	awk '/^$/ { if(l==FNR-1) {printf "%s:%s\n",FILENAME,FNR}; l=FNR}' $file >> scripts/blank_lines.log
+	awk  -i inplace '/^$/ { if(l!=FNR-1) {print $0}; l=FNR } /./ {print $0}' $file
+done
+
+if [ -s 'scripts/blank_lines.log' ]; then
+	cat scripts/blank_lines.log
+	rm -f scripts/blank_lines.log
+	rc=1
+else
+	echo " OK"
+fi
+
 echo -n "Checking for POSIX includes..."
 git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/vhost/rte_vhost*/**' ':!scripts/posix.txt' > scripts/posix.log || true
 if [ -s scripts/posix.log ]; then
