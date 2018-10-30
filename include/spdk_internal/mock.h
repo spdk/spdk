@@ -102,7 +102,6 @@
 		return ut_ ## fn; \
 	}
 
-
 /* declare wrapper protos (alphabetically please) here */
 DECLARE_WRAPPER(calloc, void *, (size_t nmemb, size_t size));
 

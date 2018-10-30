@@ -1417,7 +1417,6 @@ nvme_pcie_qpair_disable(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
-
 int
 nvme_pcie_qpair_fail(struct spdk_nvme_qpair *qpair)
 {

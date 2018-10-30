@@ -1122,7 +1122,6 @@ destroy_device_poller_cb(void *arg)
 		return -1;
 	}
 
-
 	for (i = 0; i < svdev->vdev.max_queues; i++) {
 		spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[i]);
 	}

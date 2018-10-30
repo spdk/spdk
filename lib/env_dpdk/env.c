@@ -228,7 +228,6 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 	return (struct spdk_mempool *)mp;
 }
 
-
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
 		    size_t ele_size, size_t cache_size, int socket_id)

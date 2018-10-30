@@ -76,7 +76,6 @@ spdk_tgt_save_pid(const char *pid_path)
 	fclose(pid_file);
 }
 
-
 static void
 spdk_tgt_parse_arg(int ch, char *arg)
 {

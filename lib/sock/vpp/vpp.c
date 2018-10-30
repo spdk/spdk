@@ -136,7 +136,6 @@ getsockname_vpp(int fd, struct sockaddr *addr, socklen_t *len)
 	return rc;
 }
 
-
 static int
 getpeername_vpp(int sock, struct sockaddr *addr, socklen_t *len)
 {
@@ -410,7 +409,6 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	}
 	return total;
 }
-
 
 /*
  * TODO: Check if there are similar parameters to configure in VPP

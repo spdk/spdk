@@ -195,7 +195,6 @@ vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 		goto out_remove;
 	}
 
-
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
 	if (ret) {
 		DEBUG_PRINT("Cannot clear DMA mapping, error %d\n", errno);

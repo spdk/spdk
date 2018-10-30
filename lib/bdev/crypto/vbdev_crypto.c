@@ -72,7 +72,6 @@ struct device_qp {
 static TAILQ_HEAD(, device_qp) g_device_qp = TAILQ_HEAD_INITIALIZER(g_device_qp);
 static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 
-
 /* In order to limit the number of resources we need to do one crypto
  * operation per LBA (we use LBA as IV), we tell the bdev layer that
  * our max IO size is something reasonable. Units here are in bytes.

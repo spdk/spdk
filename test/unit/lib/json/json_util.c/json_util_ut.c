@@ -133,7 +133,6 @@ test_num_to_int32(void)
 	CU_ASSERT(spdk_json_number_to_int32(&v, &i32) == 0);
 	CU_ASSERT(i32 == 1234);
 
-
 	NUM_INT32_PASS("0", 0);
 	NUM_INT32_PASS("1234", 1234);
 	NUM_INT32_PASS("-1234", -1234);
@@ -158,7 +157,6 @@ test_num_to_uint64(void)
 	NUM_SETUP("1234");
 	CU_ASSERT(spdk_json_number_to_uint64(&v, &u64) == 0);
 	CU_ASSERT(u64 == 1234);
-
 
 	NUM_UINT64_PASS("0", 0);
 	NUM_UINT64_PASS("1234", 1234);

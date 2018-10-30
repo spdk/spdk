@@ -410,7 +410,6 @@ _spdk_blob_deserialize_xattr(struct spdk_blob *blob,
 	return 0;
 }
 
-
 static int
 _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *blob)
 {
@@ -954,7 +953,6 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		uint32_t next_page = page->next;
 		uint64_t next_lba = _spdk_bs_page_to_lba(blob->bs, blob->bs->md_start + next_page);
 
-
 		assert(next_lba < (blob->bs->md_start + blob->bs->md_len));
 
 		/* Read the next page */
@@ -984,7 +982,6 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 	ctx->seq = seq;
-
 
 	if (spdk_blob_is_thin_provisioned(blob)) {
 		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
@@ -1463,7 +1460,6 @@ static void
 _spdk_bs_write_super(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
 		     struct spdk_bs_super_block *super, spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
-
 static void
 _spdk_blob_persist_dirty(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
@@ -1476,7 +1472,6 @@ _spdk_blob_persist_dirty(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	_spdk_bs_write_super(seq, ctx->blob->bs, ctx->super, _spdk_blob_persist_dirty_cpl, ctx);
 }
-
 
 /* Write a blob to disk */
 static void
@@ -4449,7 +4444,6 @@ _spdk_bs_snapshot_newblob_create_cpl(void *cb_arg, spdk_blob_id blobid, int bser
 	spdk_bs_open_blob(origblob->bs, ctx->new.id, _spdk_bs_snapshot_newblob_open_cpl, ctx);
 }
 
-
 static void
 _spdk_bs_xattr_snapshot(void *arg, const char *name,
 			const void **value, size_t *value_len)
@@ -4914,7 +4908,6 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_f
 }
 
 /* END spdk_blob_resize */
-
 
 /* START spdk_bs_delete_blob */
 

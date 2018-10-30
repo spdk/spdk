@@ -644,7 +644,6 @@ struct spdk_nvme_ctrlr {
 	/** guards access to the controller itself, including admin queues */
 	pthread_mutex_t			ctrlr_lock;
 
-
 	struct spdk_nvme_qpair		*adminq;
 
 	/** shadow doorbell buffer */
@@ -681,7 +680,6 @@ struct spdk_nvme_ctrlr {
 
 	/** Track all the processes manage this controller */
 	TAILQ_HEAD(, spdk_nvme_ctrlr_process)	active_procs;
-
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;

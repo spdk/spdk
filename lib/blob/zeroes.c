@@ -73,8 +73,6 @@ zeroes_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
 }
 
-
-
 static void
 zeroes_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	      struct iovec *iov, int iovcnt,

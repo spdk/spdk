@@ -145,7 +145,6 @@ ut_put_task(struct spdk_scsi_task *task)
 	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_io_queue));
 }
 
-
 static void
 ut_init_task(struct spdk_scsi_task *task)
 {

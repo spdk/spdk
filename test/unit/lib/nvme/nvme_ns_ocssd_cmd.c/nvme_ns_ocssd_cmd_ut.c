@@ -68,7 +68,6 @@ nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 	return;
 }
 
-
 int
 nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -435,7 +434,6 @@ test_nvme_ocssd_ns_cmd_vector_write_with_md_single_entry(void)
 	free(buffer);
 	free(metadata);
 }
-
 
 static void
 test_nvme_ocssd_ns_cmd_vector_write_with_md(void)

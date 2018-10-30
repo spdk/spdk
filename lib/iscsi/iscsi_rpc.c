@@ -1175,7 +1175,6 @@ spdk_rpc_set_iscsi_discovery_auth(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("set_iscsi_discovery_auth", spdk_rpc_set_iscsi_discovery_auth, SPDK_RPC_RUNTIME)
 
-
 #define MAX_AUTH_SECRETS	64
 
 struct rpc_auth_secret {

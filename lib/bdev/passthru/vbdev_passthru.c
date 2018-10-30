@@ -50,7 +50,6 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
-
 static int vbdev_passthru_init(void);
 static void vbdev_passthru_get_spdk_running_config(FILE *fp);
 static int vbdev_passthru_get_ctx_size(void);

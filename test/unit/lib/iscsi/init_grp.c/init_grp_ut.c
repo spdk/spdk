@@ -102,7 +102,6 @@ create_from_config_file_cases(void)
 	spdk_conf_free(config);
 }
 
-
 static void
 create_initiator_group_success_case(void)
 {
@@ -627,7 +626,6 @@ delete_nonexisting_netmasks_case(void)
 
 	spdk_iscsi_init_grp_destroy(ig);
 }
-
 
 int
 main(int argc, char **argv)

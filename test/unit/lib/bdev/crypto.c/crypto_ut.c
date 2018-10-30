@@ -290,7 +290,6 @@ static inline void *rte_mempool_get_priv(struct rte_mempool *mp)
 	return NULL;
 }
 
-
 static inline int
 rte_crypto_op_attach_sym_session(struct rte_crypto_op *op,
 				 struct rte_cryptodev_sym_session *sess)

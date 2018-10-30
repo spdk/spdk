@@ -63,7 +63,6 @@
 #define NVME_RDMA_DEFAULT_TX_SGE		2
 #define NVME_RDMA_DEFAULT_RX_SGE		1
 
-
 /* Max number of NVMe-oF SGL descriptors supported by the host */
 #define NVME_RDMA_MAX_SGL_DESCRIPTORS		16
 struct spdk_nvmf_cmd {
@@ -993,7 +992,6 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 		remaining_size -= sge_length;
 		num_sgl_desc++;
 	} while (remaining_size > 0 && num_sgl_desc < max_num_sgl);
-
 
 	/* Should be impossible if we did our sgl checks properly up the stack, but do a sanity check here. */
 	if (remaining_size > 0) {

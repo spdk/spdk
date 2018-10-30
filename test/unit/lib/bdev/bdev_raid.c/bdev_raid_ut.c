@@ -682,7 +682,6 @@ spdk_json_decode_uint32(const struct spdk_json_val *val, void *out)
 	return 0;
 }
 
-
 void
 spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 {
@@ -951,7 +950,6 @@ spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	TAILQ_INSERT_TAIL(&g_io_waitq, entry, link);
 	return 0;
 }
-
 
 static uint32_t
 get_num_elts_in_waitq(void)
@@ -1585,7 +1583,6 @@ test_io_failure(void)
 		bdev_io_cleanup(bdev_io);
 		free(bdev_io);
 	}
-
 
 	lba = 0;
 	g_child_io_status_flag = false;

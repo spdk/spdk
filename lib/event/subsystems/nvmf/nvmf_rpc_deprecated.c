@@ -262,7 +262,6 @@ decode_rpc_hosts(const struct spdk_json_val *val, void *out)
 				      &rpc_hosts->num_hosts, sizeof(char *));
 }
 
-
 struct spdk_nvmf_ns_params {
 	char *bdev_name;
 	uint32_t nsid;
@@ -275,7 +274,6 @@ struct rpc_namespaces {
 	size_t num_ns;
 	struct spdk_nvmf_ns_params ns_params[RPC_MAX_NAMESPACES];
 };
-
 
 static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
 	{"nsid", offsetof(struct spdk_nvmf_ns_params, nsid), spdk_json_decode_uint32, true},

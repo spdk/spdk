@@ -799,7 +799,6 @@ struct rpc_namespaces {
 	struct spdk_nvmf_ns_params ns_params[RPC_MAX_NAMESPACES];
 };
 
-
 static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
 	{"nsid", offsetof(struct spdk_nvmf_ns_params, nsid), spdk_json_decode_uint32, true},
 	{"bdev_name", offsetof(struct spdk_nvmf_ns_params, bdev_name), spdk_json_decode_string},
@@ -1248,7 +1247,6 @@ nvmf_rpc_subsystem_remove_host(struct spdk_jsonrpc_request *request,
 	}
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_remove_host", nvmf_rpc_subsystem_remove_host, SPDK_RPC_RUNTIME)
-
 
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_any_host_decoder[] = {
 	{"nqn", offsetof(struct nvmf_rpc_host_ctx, nqn), spdk_json_decode_string},

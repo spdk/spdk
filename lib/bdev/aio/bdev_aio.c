@@ -436,7 +436,6 @@ bdev_aio_get_io_channel(void *ctx)
 	return spdk_get_io_channel(fdisk);
 }
 
-
 static int
 bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {

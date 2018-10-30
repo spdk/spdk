@@ -837,7 +837,6 @@ test_parse_nesting(void)
 	PARSE_FAIL("{\"a\": [0, 1, 2]", SPDK_JSON_PARSE_INCOMPLETE);
 }
 
-
 static void
 test_parse_comment(void)
 {

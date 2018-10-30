@@ -82,7 +82,6 @@
  */
 #define SPDK_VHOST_COALESCING_DELAY_BASE_US 0
 
-
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
 	(1ULL << VIRTIO_F_VERSION_1) | \
@@ -218,7 +217,6 @@ int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqu
  *   1 - if interrupt was signalled
  */
 int spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
-
 
 /**
  * Send IRQs for all queues that need to be signaled.

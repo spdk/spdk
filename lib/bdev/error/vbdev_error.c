@@ -245,7 +245,6 @@ vbdev_error_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 	/* No config per bdev. */
 }
 
-
 static struct spdk_bdev_fn_table vbdev_error_fn_table = {
 	.destruct		= vbdev_error_destruct,
 	.submit_request		= vbdev_error_submit_request,

@@ -110,7 +110,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("kill_instance", spdk_rpc_kill_instance, SPDK_RPC_RUNTIME)
 
-
 struct rpc_context_switch_monitor {
 	bool enabled;
 };

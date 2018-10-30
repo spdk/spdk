@@ -1610,7 +1610,6 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		ctx->count = 0;
 	}
 
-
 	if (task->iovcnt == 1) {
 		data = (uint8_t *)task->iovs[0].iov_base;
 		data_len = task->iovs[0].iov_len;
@@ -1838,7 +1837,6 @@ spdk_bdev_scsi_process_primary(struct spdk_scsi_task *task)
 	int bdlen = 0, llba;
 	int dbd, pc, page, subpage;
 	int cmd_parsed = 0;
-
 
 	switch (cdb[0]) {
 	case SPDK_SPC_INQUIRY:

@@ -328,7 +328,6 @@ nvmf_test_create_subsystem(void)
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
-
 	/* Invalid name, no user supplied string */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);

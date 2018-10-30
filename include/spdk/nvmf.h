@@ -674,7 +674,6 @@ void spdk_nvmf_ns_get_opts(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_ns_op
  */
 const char *spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem);
 
-
 /**
  * Set the serial number for the specified subsystem.
  *

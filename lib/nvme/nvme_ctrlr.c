@@ -909,7 +909,6 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t				next_nsid = 0;
 	uint32_t				*new_ns_list = NULL;
 
-
 	/*
 	 * The allocated size must be a multiple of sizeof(struct spdk_nvme_ns_list)
 	 */

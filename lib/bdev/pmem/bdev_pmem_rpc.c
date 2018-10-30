@@ -265,7 +265,6 @@ spdk_rpc_pmem_pool_info(struct spdk_jsonrpc_request *request,
 	block_size = pmemblk_bsize(pbp);
 	num_blocks = pmemblk_nblock(pbp);
 
-
 	pmemblk_close(pbp);
 
 	/* Check pmem pool consistency */

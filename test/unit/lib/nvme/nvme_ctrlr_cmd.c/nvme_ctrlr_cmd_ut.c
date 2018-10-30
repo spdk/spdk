@@ -1,4 +1,3 @@
-
 /*-
  *   BSD LICENSE
  *

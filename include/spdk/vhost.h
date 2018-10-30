@@ -78,7 +78,6 @@ int spdk_vhost_init(void);
  */
 void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
 
-
 /**
  * Write vhost subsystem configuration into provided JSON context.
  *

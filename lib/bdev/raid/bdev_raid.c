@@ -69,7 +69,6 @@ static int    raid_bdev_init(void);
 static void   raid_bdev_waitq_io_process(void *ctx);
 static void   raid_bdev_deconfigure(struct raid_bdev *raid_bdev);
 
-
 /*
  * brief:
  * raid_bdev_create_cb function is a cb function for raid bdev which creates the
@@ -1177,7 +1176,6 @@ raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **_raid_
 
 	return false;
 }
-
 
 static struct spdk_bdev_module g_raid_if = {
 	.name = "raid",

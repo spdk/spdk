@@ -90,7 +90,6 @@
 #define FCNVME_ASSOC_HOSTNQN_LEN                256
 #define FCNVME_ASSOC_SUBNQN_LEN                 256
 
-
 typedef uint64_t FCNVME_BE64;
 typedef uint32_t FCNVME_BE32;
 typedef uint16_t FCNVME_BE16;

@@ -632,7 +632,6 @@ spdk_app_get_core_mask(void)
 	return g_spdk_app_core_mask;
 }
 
-
 static uint64_t
 spdk_reactor_get_socket_mask(void)
 {

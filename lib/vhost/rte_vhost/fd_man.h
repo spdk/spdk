@@ -56,7 +56,6 @@ struct fdset {
 	int num;	/* current fd number of this fdset */
 };
 
-
 void fdset_init(struct fdset *pfdset);
 
 int fdset_add(struct fdset *pfdset, int fd,

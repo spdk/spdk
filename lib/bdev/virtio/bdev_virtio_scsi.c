@@ -445,7 +445,6 @@ bdev_virtio_scsi_config_json(struct spdk_json_write_ctx *w)
 	return 0;
 }
 
-
 static struct spdk_bdev_module virtio_scsi_if = {
 	.name = "virtio_scsi",
 	.module_init = bdev_virtio_initialize,

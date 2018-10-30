@@ -155,7 +155,6 @@ exit:
 	return ret;
 }
 
-
 static int spdk_process_new_interface_msg(struct nlmsghdr *h)
 {
 	int len;

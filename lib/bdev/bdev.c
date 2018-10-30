@@ -734,7 +734,6 @@ spdk_bdev_modules_init(void)
 	return 0;
 }
 
-
 static void
 spdk_bdev_init_failed_complete(void *cb_arg)
 {
@@ -3301,7 +3300,6 @@ spdk_bdev_destroy_cb(void *io_device)
 		cb_fn(cb_arg, rc);
 	}
 }
-
 
 static void
 spdk_bdev_fini(struct spdk_bdev *bdev)

@@ -232,7 +232,6 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *
 	thread->msg_fn(fn, ctx, thread->thread_ctx);
 }
 
-
 struct spdk_poller *
 spdk_poller_register(spdk_poller_fn fn,
 		     void *arg,
@@ -763,6 +762,5 @@ end:
 
 	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
-
 
 SPDK_LOG_REGISTER_COMPONENT("thread", SPDK_LOG_THREAD)

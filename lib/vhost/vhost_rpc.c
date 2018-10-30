@@ -573,7 +573,6 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("get_vhost_controllers", spdk_rpc_get_vhost_controllers, SPDK_RPC_RUNTIME)
 
-
 struct rpc_vhost_ctrlr_coalescing {
 	char *ctrlr;
 	uint32_t delay_base_us;
@@ -809,6 +808,5 @@ invalid:
 					 spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("add_vhost_nvme_ns", spdk_rpc_add_vhost_nvme_ns, SPDK_RPC_RUNTIME)
-
 
 SPDK_LOG_REGISTER_COMPONENT("vhost_rpc", SPDK_LOG_VHOST_RPC)

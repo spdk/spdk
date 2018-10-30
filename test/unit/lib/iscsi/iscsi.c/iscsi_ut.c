@@ -602,7 +602,6 @@ add_transfer_task_test(void)
 	CU_ASSERT(task.next_r2t_offset ==
 		  pdu->data_segment_len + sess.MaxBurstLength * sess.MaxOutstandingR2T);
 
-
 	while (!TAILQ_EMPTY(&g_write_pdu_list)) {
 		tmp = TAILQ_FIRST(&g_write_pdu_list);
 		TAILQ_REMOVE(&g_write_pdu_list, tmp, tailq);

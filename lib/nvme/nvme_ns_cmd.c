@@ -39,7 +39,6 @@ static struct nvme_request *_nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk
 		void *cb_arg, uint32_t opc, uint32_t io_flags,
 		uint16_t apptag_mask, uint16_t apptag, bool check_sgl);
 
-
 static bool
 spdk_nvme_ns_check_request_length(uint32_t lba_count, uint32_t sectors_per_max_io,
 				  uint32_t sectors_per_stripe, uint32_t qdepth)

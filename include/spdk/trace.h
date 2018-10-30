@@ -124,7 +124,6 @@ struct spdk_trace_flags {
 extern struct spdk_trace_flags *g_trace_flags;
 extern struct spdk_trace_histories *g_trace_histories;
 
-
 struct spdk_trace_histories {
 	struct spdk_trace_flags flags;
 	struct spdk_trace_history	per_lcore_history[SPDK_TRACE_MAX_LCORE];

@@ -1057,7 +1057,6 @@ enomem_multi_bdev(void)
 	teardown_test();
 }
 
-
 static void
 enomem_multi_io_target(void)
 {

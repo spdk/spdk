@@ -698,7 +698,6 @@ spdk_nvmf_subsystem_get_first_host(struct spdk_nvmf_subsystem *subsystem)
 	return TAILQ_FIRST(&subsystem->hosts);
 }
 
-
 struct spdk_nvmf_host *
 spdk_nvmf_subsystem_get_next_host(struct spdk_nvmf_subsystem *subsystem,
 				  struct spdk_nvmf_host *prev_host)

@@ -160,7 +160,6 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 	name = _get_log_level_name(level);
 	spdk_json_write_string(w, name);
 
-
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_log_print_level", spdk_rpc_get_log_print_level,
@@ -185,7 +184,6 @@ spdk_rpc_set_log_level(struct spdk_jsonrpc_request *request,
 		SPDK_DEBUGLOG(SPDK_LOG_LOG, "try to set invalid log level\n");
 		goto invalid;
 	}
-
 
 	spdk_log_set_level(level);
 	free_rpc_log_level(&req);

@@ -182,7 +182,6 @@ struct spdk_iscsi_pdu {
 	uint32_t writev_offset;
 	TAILQ_ENTRY(spdk_iscsi_pdu)	tailq;
 
-
 	/*
 	 * 60 bytes of AHS should suffice for now.
 	 * This should always be at the end of PDU data structure.

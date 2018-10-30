@@ -168,7 +168,6 @@ static int set_arb_feature(struct spdk_nvme_ctrlr *ctrlr);
 
 static const char *print_qprio(enum spdk_nvme_qprio);
 
-
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
@@ -548,7 +547,6 @@ print_qprio(enum spdk_nvme_qprio qprio)
 	}
 }
 
-
 static void
 print_configuration(char *program_name)
 {
@@ -568,7 +566,6 @@ print_configuration(char *program_name)
 	       g_arbitration.io_count,
 	       g_arbitration.shm_id);
 }
-
 
 static void
 print_performance(void)
