@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "a2aa8e6d_68f36d61",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-30T18:14:59Z",
+      "side": 1,
+      "message": "Return value from pthread_mutex_init is not checked.\nProbability of failure is low, but if spdk_ring_create care about calloc failure,pthread_mutex_init can fail exactly on the same reason: ENOMEM",
+      "revId": "502dcc213b2a64627b7828251c4fb95b741fdf7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "20ad1d51_38d7b940",
         "filename": "test/common/lib/test_env.c",
         "patchSetId": 2
