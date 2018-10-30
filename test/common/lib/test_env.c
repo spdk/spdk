@@ -72,6 +72,11 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint3
 	HANDLE_RETURN_MOCK(spdk_malloc);
 
 	void *buf = NULL;
+
+	if (align == 0) {
+		align = 8;
+	}
+
 	if (posix_memalign(&buf, align, size)) {
 		return NULL;
 	}
