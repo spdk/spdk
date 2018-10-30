@@ -16,7 +16,13 @@ null_json_config=$JSON_DIR/null_json_config.json
 
 function run_spdk_tgt() {
 	echo "Running spdk target"
-	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x1 -p 0 -s 4096 --wait-for-rpc &
+	local wait_for_rpc=''
+
+	if [[ $# -eq 0 ]]; then
+		wait_for_rpc='--wait-for-rpc'
+	fi
+
+	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x1 -p 0 -s 4096 $wait_for_rpc "$@" &
 	spdk_tgt_pid=$!
 
 	echo "Waiting for app to run..."
@@ -35,7 +41,13 @@ function load_nvme() {
 }
 
 function run_initiator() {
-	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock --wait-for-rpc &
+	local wait_for_rpc=''
+
+	if [[ $# -eq 0 ]]; then
+		wait_for_rpc='--wait-for-rpc'
+	fi
+
+	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock $wait_for_rpc "$@" &
 	virtio_pid=$!
 	waitforlisten $virtio_pid /var/tmp/virtio.sock
 }
@@ -206,34 +218,50 @@ function clear_bdev_subsystem_config() {
 }
 
 # In this test, target is spdk_tgt or virtio_initiator.
-# 1. Save current spdk config to full_config
-#    and save only global parameters to the file "base_json_config".
-# 2. Exit the running spdk target.
-# 3. Start the spdk target and wait for loading config.
-# 4. Load global parameters and configuration to the spdk target from the file full_config.
-# 5. Save json config to the file "full_config".
-# 6. Save only global parameters to the file "last_json_config".
-# 7. Check if the file "base_json_config" matches the file "last_json_config".
-# 8. Delete all files.
+#  1. Save current spdk config to full_config
+#     and save only global parameters to the file "base_json_config".
+#  2. Exit the running spdk target.
+#  3. Start the spdk target or initiator.
+#  4. Load global parameters and configuration to the spdk target or initiator from the file full_config.
+#  5. Save only global parameters to the file "last_json_config".
+#  7. Check if the file "base_json_config" matches the file "last_json_config".
+#  8. Start the spdk target or initiator with JSON file as it's configuration.
+#  9. Save only global parameters to the file "last_json_config".
+# 10. Check if the file "base_json_config" matches the file "last_json_config".
+# 11. Delete all files.
 function test_global_params() {
 	target=$1
 	$rpc_py save_config > $full_config
+
 	$JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $base_json_config
 	if [ $target == "spdk_tgt" ]; then
 		killprocess $spdk_tgt_pid
 		run_spdk_tgt
 	elif [ $target == "virtio_initiator" ]; then
 		killprocess $virtio_pid
-                run_initiator
+		run_initiator
 	else
 		echo "Target is not specified for test_global_params"
 		return 1
 	fi
 	$rpc_py load_config < $full_config
-	$rpc_py save_config > $full_config
-	$JSON_DIR/config_filter.py -method "delete_configs" < $full_config > $last_json_config
-
+	$rpc_py save_config | $JSON_DIR/config_filter.py -method "delete_configs" > $last_json_config
 	json_diff $base_json_config $last_json_config
+
+	if [ $target == "spdk_tgt" ]; then
+		killprocess $spdk_tgt_pid $full_config
+		run_spdk_tgt --json $full_config
+	elif [ $target == "virtio_initiator" ]; then
+		killprocess $virtio_pid
+		run_initiator --json $full_config
+	else
+		echo "Target is not specified for test_global_params"
+		return 1
+	fi
+
+	$rpc_py save_config | $JSON_DIR/config_filter.py -method "delete_configs" > $last_json_config
+	json_diff $base_json_config $last_json_config
+
 	rm $base_json_config $last_json_config
 	rm $full_config
 }
