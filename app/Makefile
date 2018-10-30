@@ -43,9 +43,10 @@ ifeq ($(OS),Linux)
 DIRS-$(CONFIG_VHOST) += vhost
 endif
 
-.PHONY: all clean $(DIRS-y)
+.PHONY: all clean uninstall $(DIRS-y)
 
 all: $(DIRS-y)
 clean: $(DIRS-y)
+uninstall: $(DIRS-y)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

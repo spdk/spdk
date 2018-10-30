@@ -39,6 +39,8 @@ CXX_SRCS := trace.cpp
 
 APP = spdk_trace
 
+.PHONY: uninstall
+
 all: $(APP)
 	@:
 
@@ -47,5 +49,8 @@ $(APP): $(OBJS) $(SPDK_LIBS)
 
 clean:
 	$(CLEAN_C) $(APP)
+
+uninstall:
+	$(UNINSTALL_APP)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

@@ -58,6 +58,8 @@ LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(SOCK_MODULES_LINKER_ARGS) \
 	$(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
+.PHONY: uninstall
+
 all: $(APP)
 	@:
 
@@ -69,5 +71,8 @@ clean:
 
 install: $(APP)
 	$(INSTALL_APP)
+
+uninstall:
+	$(UNINSTALL_APP)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

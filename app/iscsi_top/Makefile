@@ -41,6 +41,8 @@ CXX_SRCS = iscsi_top.cpp
 
 APP = iscsi_top
 
+.PHONY: uninstall
+
 all: $(APP)
 	@:
 
@@ -49,5 +51,8 @@ $(APP) : $(OBJS)
 
 clean:
 	$(CLEAN_C) $(APP)
+
+uninstall:
+	$(UNINSTALL_APP)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
