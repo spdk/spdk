@@ -47,5 +47,7 @@ endif
 
 all: $(DIRS-y)
 clean: $(DIRS-y)
+uninstall: $(DIRS-y)
+	$(Q) echo Uninstalling $@
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
