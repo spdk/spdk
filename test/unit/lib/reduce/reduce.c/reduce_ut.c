@@ -243,6 +243,17 @@ init_failure(void)
 	CU_ASSERT(g_ziperrno == -EINVAL);
 	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
 
+	/* uuid is now valid, but backing_dev still has null function pointers.
+	 * This should fail.
+	 */
+	spdk_uuid_generate(&params.uuid);
+
+	g_vol = NULL;
+	g_ziperrno = 0;
+	spdk_reduce_vol_init(&params, &backing_dev, &pm_file, init_cb, NULL);
+	CU_ASSERT(g_ziperrno == -EINVAL);
+	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
+
 	pm_file_close(&pm_file);
 	pm_file_destroy();
 }
