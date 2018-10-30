@@ -38,9 +38,9 @@ timing_exit start_nvmf_tgt
 num_subsystems=10
 # SoftRoce does not have enough queues available for
 # this test. Detect if we're using software RDMA.
-# If so, only use four subsystems.
+# If so, only use two subsystem.
 if check_ip_is_soft_roce "$NVMF_FIRST_TARGET_IP"; then
-	num_subsystems=4
+	num_subsystems=2
 fi
 
 # Create subsystems
@@ -58,7 +58,7 @@ modprobe -v nvme-rdma
 modprobe -v nvme-fabrics
 
 # Repeatedly connect and disconnect
-for ((x=0; x<5;x++)); do
+for ((x=0; x<2;x++)); do
 	# Connect kernel host to subsystems
 	for i in `seq 1 $num_subsystems`; do
 		nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
