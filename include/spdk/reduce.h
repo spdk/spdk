@@ -134,6 +134,14 @@ struct spdk_reduce_backing_dev {
 };
 
 /**
+ * Get the UUID for a libreduce compressed volume.
+ *
+ * \param vol Previously loaded or initialized compressed volume.
+ * \return UUID for the compressed volume.
+ */
+const struct spdk_uuid *spdk_reduce_vol_get_uuid(struct spdk_reduce_vol *vol);
+
+/**
  * Initialize a new libreduce compressed volume.
  *
  * \param params Parameters for the new volume.
