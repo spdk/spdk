@@ -12,9 +12,15 @@ function test_subsystems() {
 
 	upload_vhost
 	test_json_config
+	$rpc_py save_config > $full_config
 	$clear_config_py clear_config
 
 	kill_targets
+
+	run_spdk_tgt --json $full_config
+	$rpc_py save_config | $JSON_DIR/config_filter.py -method "delete_global_parameters" > $last_json_config
+	json_diff $base_json_config $last_json_config
+	remove_config_files_after_test_json_config
 }
 
 trap 'on_error_exit "${FUNCNAME}" "${LINENO}"' ERR
