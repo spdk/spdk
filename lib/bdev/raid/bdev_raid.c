@@ -1515,7 +1515,7 @@ raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, struct spdk_bdev *b
 
 	raid_bdev = raid_cfg->raid_bdev;
 	if (!raid_bdev) {
-		SPDK_ERRLOG("Raid bdev is not created yet '%s'\n", bdev->name);
+		SPDK_ERRLOG("Raid bdev '%s' is not created yet\n", raid_cfg->name);
 		return -ENODEV;
 	}
 
