@@ -195,6 +195,7 @@ SYS_LIBS += -lcrypto
 ifeq ($(CONFIG_LOG_BACKTRACE),y)
 SYS_LIBS += -lunwind
 endif
+SYS_LIBS += -l:libisal.a
 
 MAKEFLAGS += --no-print-directory
 
