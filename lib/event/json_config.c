@@ -556,6 +556,9 @@ spdk_app_json_config_load(const struct spdk_app_opts *opts, struct spdk_event *d
 	const char *rpc_addr;
 	int rc;
 
+	rc = spdk_log_set_flag("app_config");
+	assert(rc == 0);
+
 	assert(done_event);
 	if (!ctx) {
 		spdk_app_stop(-ENOMEM);
