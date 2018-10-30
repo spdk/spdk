@@ -76,11 +76,11 @@ typedef void (*client_resp_handler)(struct load_json_config_ctx *,
 
 #define RPC_SOCKET_PATH_MAX sizeof(((struct sockaddr_un *)0)->sun_path)
 
-/* 100ms connections timeout */
-#define RPC_CLIENT_CONNECT_TIMEOUT_US 100000U
+/* 1s connections timeout */
+#define RPC_CLIENT_CONNECT_TIMEOUT_US (1U * 1000 * 1000)
 
 /* 2s for any request */
-#define RPC_CLIENT_REQUEST_TIMEOUT_US 2000000U
+#define RPC_CLIENT_REQUEST_TIMEOUT_US (2 * 1000 * 1000)
 
 struct load_json_config_ctx {
 	/* Thread used during configuration. */
@@ -150,8 +150,15 @@ static int
 rpc_client_check_timeout(struct load_json_config_ctx *ctx)
 {
 	if (ctx->timeout < spdk_get_ticks()) {
-		SPDK_ERRLOG("RPC client command timeout.\n");
-		assert(false);
+		if (ctx->config_it) {
+			struct spdk_json_val *params_end = spdk_json_next(ctx->config_it);
+			size_t params_len = params_end->start - ctx->config_it->start + 1;
+
+			SPDK_ERRLOG("RPC client command timeout: %*s!\n", (int)params_len, (char *)ctx->config_it);
+		} else {
+			SPDK_ERRLOG("RPC client timeout (no command).\n");
+		}
+
 		return -ETIMEDOUT;
 	}
 
@@ -331,7 +338,7 @@ spdk_app_json_config_load_subsystem_config_entry(void *_ctx)
 	if (spdk_json_decode_object(ctx->config_it, jsonrpc_cmd_decoders,
 				    SPDK_COUNTOF(jsonrpc_cmd_decoders), &cfg)) {
 		params_end = spdk_json_next(ctx->config_it);
-		params_len = params_end->start - ctx->config->start + 1;
+		params_len = params_end->start - ctx->config_it->start + 1;
 		SPDK_ERRLOG("Failed to decode config entry: %*s!\n", (int)params_len, (char *)ctx->config_it);
 		spdk_app_json_config_load_done(ctx, -EINVAL);
 		goto out;
@@ -555,6 +562,9 @@ spdk_app_json_config_load(const struct spdk_app_opts *opts, struct spdk_event *d
 	struct load_json_config_ctx *ctx = calloc(1, sizeof(*ctx));
 	const char *rpc_addr;
 	int rc;
+
+	rc = spdk_log_set_flag("app_config");
+	assert(rc == 0);
 
 	assert(done_event);
 	if (!ctx) {
