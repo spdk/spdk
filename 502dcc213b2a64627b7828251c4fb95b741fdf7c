@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20ad1d51_38d7b940",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-30T18:12:04Z",
+      "side": 1,
+      "message": "I\u0027m just curious about performance aspects of acquiring lock in spdk_ring_[en,de]queue. \n\nhttps://github.com/spdk/spdk/blob/1f813ec3dae7406cb52b7ef9e40002ab19ffe8d9/doc/concurrency.md#L108 says \"A message in SPDK typically consists of a function pointer and a pointer to some context, and is passed between threads using a lockless ring\". Is it the same ring that spdk_ring_[en,de]queue deal with?",
+      "revId": "502dcc213b2a64627b7828251c4fb95b741fdf7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
