@@ -65,7 +65,7 @@ if hash astyle; then
 	#  coding standards.
 	git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' | \
 		grep -v rte_vhost | grep -v cpp_headers | \
-		xargs astyle --options=.astylerc >> astyle.log
+		xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
 	if grep -q "^Formatted" astyle.log; then
 		echo " errors detected"
 		git diff
@@ -149,7 +149,7 @@ rm -f badcunit.log
 echo -n "Checking blank lines at end of file..."
 
 if ! git grep -I -l -e . -z | \
-	xargs -0 -P8 -n1 scripts/eofnl > eofnl.log; then
+	xargs -0 -P$(nproc) -n1 scripts/eofnl > eofnl.log; then
 	echo " Incorrect end-of-file formatting detected"
 	cat eofnl.log
 	rc=1
@@ -181,7 +181,7 @@ if [ ! -z ${PEP8} ]; then
 	PEP8_ARGS+=" --max-line-length=140"
 
 	error=0
-	git ls-files '*.py' | xargs -n1 $PEP8 $PEP8_ARGS > pep8.log || error=1
+	git ls-files '*.py' | xargs -P$(nproc) -n1 $PEP8 $PEP8_ARGS > pep8.log || error=1
 	if [ $error -ne 0 ]; then
 		echo " Python formatting errors detected"
 		cat pep8.log
