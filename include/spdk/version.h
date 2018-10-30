@@ -68,7 +68,7 @@
  *
  * \code
  * #if SPDK_VERSION >= SPDK_VERSION_NUM(17, 7, 0)
- * // Use feature from SPDK v17.07
+ *   Use feature from SPDK v17.07
  * #endif
  * \endcode
  */
