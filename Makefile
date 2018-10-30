@@ -67,6 +67,9 @@ clean: $(DIRS-y)
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
 
+uninstall:
+	$(Q)echo "Uninstall from $(DESTDIR)$(CONFIG_PREFIX)"
+
 shared_lib: lib
 lib: $(DPDKBUILD)
 app: $(LIB)

@@ -48,4 +48,7 @@ clean:
 
 install: $(INSTALLED_HEADERS)
 
+uninstall:
+	$(UNINSTALL_HEADER)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

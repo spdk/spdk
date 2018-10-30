@@ -70,4 +70,7 @@ clean:
 install: $(APP)
 	$(INSTALL_APP)
 
+uninstall:
+	$(UNINSTALL_APP)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

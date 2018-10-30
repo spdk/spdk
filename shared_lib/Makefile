@@ -62,4 +62,7 @@ clean:
 install:
 	$(INSTALL_SHARED_LIB)
 
+uninstall:
+	$(UNINSTALL_SHARED_LIB)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

@@ -276,17 +276,33 @@ INSTALL_SHARED_LIB=\
 	install -m 755 "$(SHARED_REALNAME_LIB)" "$(DESTDIR)$(libdir)/"; \
 	$(call spdk_install_lib_symlink,$(notdir $(SHARED_REALNAME_LIB)),$(notdir $(SHARED_LINKED_LIB)));
 
+UNINSTALL_SHARED_LIB=\
+	$(Q)echo "  UNINSTALL $(DESTDIR)$(libdir)/$(notdir $(SHARED_LINKED_LIB))"; \
+	rm -f "$(DESTDIR)$(libdir)/$(notdir $(SHARED_LINKED_LIB))"; \
+	rm -f "$(DESTDIR)$(libdir)/$(notdir $(SHARED_REALNAME_LIB))";
+
+
 # Install an app binary
 INSTALL_APP=\
 	$(Q)echo "  INSTALL $(DESTDIR)$(bindir)/$(APP)"; \
 	install -d -m 755 "$(DESTDIR)$(bindir)"; \
 	install -m 755 "$(APP)" "$(DESTDIR)$(bindir)/"
 
+# Uninstall an app binary
+UNINSTALL_APP=\
+	$(Q)echo "  UNINSTALL $(DESTDIR)$(bindir)/$(APP)"; \
+	rm -f "$(DESTDIR)$(bindir)/$(APP)"
+
 # Install a header
 INSTALL_HEADER=\
 	$(Q)echo "  INSTALL $@"; \
 	install -d -m 755 "$(DESTDIR)$(includedir)/$(dir $(patsubst $(DESTDIR)$(includedir)/%,%,$@))"; \
 	install -m 644 "$(patsubst $(DESTDIR)$(includedir)/%,%,$@)" "$(DESTDIR)$(includedir)/$(dir $(patsubst $(DESTDIR)$(includedir)/%,%,$@))/"
+
+# Uninstall a header
+UNINSTALL_HEADER=\
+	$(Q)echo "  UNINSTALL $@"; \
+	rm -f "$(DESTDIR)$(includedir)/$(dir $(patsubst $(DESTDIR)$(includedir)/%,%,$@))/$(patsubst $(DESTDIR)$(includedir)/%,%,$@)"
 
 %.o: %.c %.d $(MAKEFILE_LIST)
 	$(COMPILE_C)
