@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c17d2b3_5cf98b98",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-30T09:00:26Z",
+      "side": 1,
+      "message": "Why just not \u0027//\u0027? This expression is not catching eg lib/scsi/scsi_bdev.c (on current master).",
+      "range": {
+        "startLine": 91,
+        "startChar": 27,
+        "endLine": 91,
+        "endChar": 49
+      },
+      "revId": "9c0caaaae2db3e688d1254e25de91331bb142e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
