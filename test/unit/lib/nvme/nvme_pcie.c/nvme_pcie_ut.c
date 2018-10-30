@@ -665,7 +665,6 @@ static void test_nvme_qpair_destroy(void)
 	nvme_qpair_init(&qpair, 1, 128, &ctrlr);
 	nvme_qpair_destroy(&qpair);
 
-
 	nvme_qpair_init(&qpair, 0, 128, &ctrlr);
 	tr_temp = TAILQ_FIRST(&qpair.free_tr);
 	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);

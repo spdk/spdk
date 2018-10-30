@@ -503,7 +503,6 @@ register_workers(void)
 	return 0;
 }
 
-
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
@@ -624,7 +623,6 @@ int main(int argc, char **argv)
 	int			rc;
 	int			i;
 	struct spdk_env_opts	opts;
-
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {

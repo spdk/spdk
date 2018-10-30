@@ -60,7 +60,6 @@ DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_han
 		uint32_t state_mask));
 DEFINE_STUB_V(spdk_rpc_set_state, (uint32_t state));
 
-
 static void
 unittest_usage(void)
 {

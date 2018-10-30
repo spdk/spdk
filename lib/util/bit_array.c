@@ -251,7 +251,6 @@ _spdk_bit_array_find_first(const struct spdk_bit_array *ba, uint32_t start_bit_i
 	return ((uintptr_t)cur_word - (uintptr_t)words) * 8 + SPDK_BIT_ARRAY_WORD_TZCNT(word);
 }
 
-
 uint32_t
 spdk_bit_array_find_first_set(const struct spdk_bit_array *ba, uint32_t start_bit_index)
 {

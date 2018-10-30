@@ -77,7 +77,6 @@ struct spdk_bs_super_block_ver1 {
 } __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block_ver1) == 0x1000, "Invalid super block size");
 
-
 static void
 _get_xattr_value(void *arg, const char *name,
 		 const void **value, size_t *value_len)
@@ -108,8 +107,6 @@ _get_xattr_value_null(void *arg, const char *name,
 	*value_len = 0;
 	*value = NULL;
 }
-
-
 
 static void
 bs_op_complete(void *cb_arg, int bserrno)
@@ -825,7 +822,6 @@ blob_clone(void)
 	SPDK_CU_ASSERT_FATAL(value != NULL);
 	CU_ASSERT(value_len == strlen(g_xattr_values[2]));
 	CU_ASSERT_NSTRING_EQUAL((char *)value, g_xattr_values[2], value_len);
-
 
 	spdk_blob_close(clone, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -1769,7 +1765,6 @@ blob_operation_split_rw(void)
 	CU_ASSERT(memcmp(payload_pattern, payload_read + page_size, payload_size - page_size) == 0);
 	CU_ASSERT(memcmp(payload_pattern, payload_read, page_size) == 0);
 
-
 	/* Fill whole blob with a pattern (5 clusters) */
 
 	/* 1. Read test. */
@@ -1937,7 +1932,6 @@ blob_operation_split_rw_iov(void)
 	CU_ASSERT(memcmp(payload_pattern, payload_read + page_size, payload_size - page_size) == 0);
 	CU_ASSERT(memcmp(payload_pattern, payload_read, page_size) == 0);
 
-
 	/* Fill whole blob with a pattern (5 clusters) */
 
 	/* 1. Read test. */
@@ -2081,7 +2075,6 @@ blob_unmap(void)
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
 }
-
 
 static void
 blob_iter(void)
@@ -2415,7 +2408,6 @@ bs_load(void)
 
 	CU_ASSERT(g_bserrno == 0);
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
-
 
 	/* Test compatibility mode */
 
@@ -2844,7 +2836,6 @@ bs_resize_md(void)
 	uint32_t cluster_sz;
 	spdk_blob_id blobids[NUM_BLOBS];
 	int i;
-
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
@@ -4653,7 +4644,6 @@ _blob_inflate_rw(bool decouple_parent)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_clone, payload_read, payload_size) == 0);
 
-
 	/* Close all blobs */
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -4838,7 +4828,6 @@ blob_relations(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(count == 0);
 
-
 	/* 2. Create snapshot */
 
 	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
@@ -4871,7 +4860,6 @@ blob_relations(void)
 	CU_ASSERT(count == 1);
 	CU_ASSERT(ids[0] == blobid);
 
-
 	/* 3. Create clone from snapshot */
 
 	spdk_bs_create_clone(bs, snapshotid, NULL, blob_op_with_id_complete, NULL);
@@ -4902,7 +4890,6 @@ blob_relations(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ids[0] == blobid || ids[1] == blobid);
 	CU_ASSERT(ids[0] == cloneid || ids[1] == cloneid);
-
 
 	/* 4. Create snapshot of the clone */
 
@@ -4936,7 +4923,6 @@ blob_relations(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(count == 1);
 	CU_ASSERT(ids[0] == cloneid);
-
 
 	/* 5. Try to create clone from read only blob */
 
@@ -5013,7 +4999,6 @@ blob_relations(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-
 	/* NULL ids array should return number of clones in count */
 	count = SPDK_COUNTOF(ids);
 	rc = spdk_blob_get_clones(bs, snapshotid, NULL, &count);
@@ -5025,7 +5010,6 @@ blob_relations(void)
 	rc = spdk_blob_get_clones(bs, snapshotid, ids, &count);
 	CU_ASSERT(rc == -ENOMEM);
 	CU_ASSERT(count == 2);
-
 
 	/* Verify structure of loaded blob store */
 
@@ -5316,7 +5300,6 @@ test_io_read(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_cha
 	CU_ASSERT(memcmp(payload_read + (32 + 14) * 512, payload_00, 18 * 512) == 0);
 }
 
-
 static void
 test_io_unmap(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)
 {
@@ -5364,7 +5347,6 @@ test_io_zeroes(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_c
 	CU_ASSERT(memcmp(cluster0 + 0 * 512, payload_00, 32 * 512) == 0);
 	CU_ASSERT(memcmp(cluster1 + 0 * 512, payload_00, 32 * 512) == 0);
 }
-
 
 static void
 test_iov_write(struct spdk_bs_dev *dev, struct spdk_blob *blob, struct spdk_io_channel *channel)

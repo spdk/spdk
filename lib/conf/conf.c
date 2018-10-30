@@ -208,7 +208,6 @@ allocate_cf_value(void)
 	return calloc(1, sizeof(struct spdk_conf_value));
 }
 
-
 #define CHECK_CP_OR_USE_DEFAULT(cp) (((cp) == NULL) && (default_config != NULL)) ? default_config : (cp)
 
 struct spdk_conf_section *
@@ -491,7 +490,6 @@ parse_line(struct spdk_conf *cp, char *lp)
 			}
 		}
 		cp->current_section = sp;
-
 
 		sp->num = num;
 	} else {

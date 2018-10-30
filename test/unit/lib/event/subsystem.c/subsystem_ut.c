@@ -231,7 +231,6 @@ SPDK_SUBSYSTEM_DEPEND(subsystem1, subsystem2)
 SPDK_SUBSYSTEM_DEPEND(subsystem2, subsystem3)
 SPDK_SUBSYSTEM_DEPEND(subsystem3, subsystem4)
 
-
 static void
 subsystem_sort_test_missing_dependency(void)
 {

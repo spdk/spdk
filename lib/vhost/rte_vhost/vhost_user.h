@@ -171,7 +171,6 @@ typedef struct VhostUserMsg {
 /* The version of the protocol we support */
 #define VHOST_USER_VERSION    0x1
 
-
 /* vhost_user.c */
 int vhost_user_msg_handler(int vid, int fd);
 

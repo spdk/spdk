@@ -38,7 +38,6 @@
 
 #include "spdk/vhost.h"
 
-
 #define SPDK_VHOST_DEFAULT_MEM_SIZE 1024
 
 static const char *g_pid_path = NULL;

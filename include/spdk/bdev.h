@@ -1032,7 +1032,6 @@ int spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 void spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			   struct spdk_bdev_io_stat *stat);
 
-
 /**
  * Return I/O statistics for this bdev. All the required information will be passed
  * via the callback function.

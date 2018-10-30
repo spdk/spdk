@@ -160,7 +160,6 @@ struct vhost_virtqueue {
 				(1ULL << VIRTIO_RING_F_INDIRECT_DESC) | \
 				(1ULL << VIRTIO_NET_F_MTU))
 
-
 struct guest_page {
 	uint64_t guest_phys_addr;
 	uint64_t host_phys_addr;
@@ -203,7 +202,6 @@ struct virtio_net {
 	struct VhostUserMemory  mem_table;
 	int                     mem_table_fds[VHOST_MEMORY_MAX_NREGIONS];
 } __rte_cache_aligned;
-
 
 #define VHOST_LOG_PAGE	4096
 

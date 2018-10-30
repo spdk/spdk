@@ -360,7 +360,6 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 			blockdev_write_zeroes(target, tx_buf, offset, data_length);
 		}
 
-
 		if (expected_rc == 0) {
 			CU_ASSERT_EQUAL(g_completion_success, true);
 		} else {

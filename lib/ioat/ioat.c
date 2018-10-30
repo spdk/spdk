@@ -121,7 +121,6 @@ ioat_unmap_pci_bar(struct spdk_ioat_chan *ioat)
 	return rc;
 }
 
-
 static inline uint32_t
 ioat_get_active(struct spdk_ioat_chan *ioat)
 {

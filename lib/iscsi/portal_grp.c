@@ -73,7 +73,6 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 	assert(host != NULL);
 	assert(port != NULL);
 
-
 	p = calloc(1, sizeof(*p));
 	if (!p) {
 		SPDK_ERRLOG("calloc() failed for portal\n");

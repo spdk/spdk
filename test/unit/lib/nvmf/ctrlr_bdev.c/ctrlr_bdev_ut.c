@@ -37,7 +37,6 @@
 
 #include "nvmf/ctrlr_bdev.c"
 
-
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
 int

@@ -177,7 +177,6 @@ spdk_destruct_eal_cmdline(void)
 	spdk_free_args(eal_cmdline, eal_cmdline_argcount);
 }
 
-
 static int
 spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 {

@@ -34,7 +34,6 @@
 #include "spdk/thread.h"
 #include "bs_scheduler.c"
 
-
 #define DEV_BUFFER_SIZE (64 * 1024 * 1024)
 #define DEV_BUFFER_BLOCKLEN (4096)
 #define DEV_BUFFER_BLOCKCNT (DEV_BUFFER_SIZE / DEV_BUFFER_BLOCKLEN)
@@ -61,7 +60,6 @@ dev_destroy(struct spdk_bs_dev *dev)
 {
 	free(dev);
 }
-
 
 static void
 dev_complete_cb(void *arg)

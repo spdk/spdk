@@ -646,7 +646,6 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair->cpls = spdk_dma_zmalloc(rqpair->max_queue_depth * sizeof(*rqpair->cpls),
 					0x1000, NULL);
 
-
 	if (transport->opts.in_capsule_data_size > 0) {
 		rqpair->bufs = spdk_dma_zmalloc(rqpair->max_queue_depth *
 						transport->opts.in_capsule_data_size,

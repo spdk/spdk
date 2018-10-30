@@ -98,7 +98,6 @@ static void __attribute__((constructor)) rpc_register_##func(void) \
  */
 void spdk_rpc_set_state(uint32_t state_mask);
 
-
 #ifdef __cplusplus
 }
 #endif

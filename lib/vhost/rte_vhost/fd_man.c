@@ -200,7 +200,6 @@ fdset_del(struct fdset *pfdset, int fd)
 	return dat;
 }
 
-
 /**
  * This functions runs in infinite blocking loop until there is no fd in
  * pfdset. It calls corresponding r/w handler if there is event on the fd.

@@ -85,7 +85,6 @@ typedef void (*spdk_lvs_op_with_handle_complete)(void *cb_arg, struct spdk_lvol_
  */
 typedef void (*spdk_lvs_op_complete)(void *cb_arg, int lvserrno);
 
-
 /**
  * Callback definition for lvol operations with handle to lvol.
  *

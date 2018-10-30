@@ -429,7 +429,6 @@ parse_args(int argc, char **argv)
 	return 0;
 }
 
-
 static int
 register_controllers(void)
 {

@@ -309,7 +309,6 @@ open_complete(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
-
 	hello_context->blob = blob;
 	free = spdk_bs_free_cluster_count(hello_context->bs);
 	SPDK_NOTICELOG("blobstore has FREE clusters of %" PRIu64 "\n",
@@ -458,7 +457,6 @@ main(int argc, char **argv)
 	 */
 	opts.name = "hello_blob";
 	opts.config_file = "hello_blob.conf";
-
 
 	/*
 	 * Now we'll allocate and intialize the blobstore itself. We

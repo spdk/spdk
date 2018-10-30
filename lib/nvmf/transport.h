@@ -155,7 +155,6 @@ struct spdk_nvmf_transport_ops {
 				     struct spdk_nvme_transport_id *trid);
 };
 
-
 int spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 				    const struct spdk_nvme_transport_id *trid);
 

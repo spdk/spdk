@@ -165,7 +165,6 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 	g_reg_fn_head = reg_fn;
 }
 
-
 void
 spdk_trace_flags_init(void)
 {

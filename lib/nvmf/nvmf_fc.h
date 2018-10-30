@@ -525,7 +525,6 @@ struct __attribute__((__packed__)) spdk_nvmf_fc_rq_buf_ls_request {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fc_rq_buf_ls_request) ==
 		   FCNVME_MAX_LS_BUFFER_SIZE, "LS RQ Buffer overflow");
 
-
 struct spdk_nvmf_fc_poller_api_queue_sync_args {
 	uint64_t u_id;
 	struct spdk_nvmf_fc_hwqp *hwqp;

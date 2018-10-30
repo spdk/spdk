@@ -140,7 +140,6 @@ spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return sock->net_impl->writev(sock, iov, iovcnt);
 }
 
-
 int
 spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 {

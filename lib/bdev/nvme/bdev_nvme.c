@@ -347,7 +347,6 @@ _bdev_nvme_reset(struct spdk_io_channel_iter *i, int status)
 			      bio,
 			      _bdev_nvme_reset_done);
 
-
 }
 
 static void
@@ -794,7 +793,6 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 
 	return 0;
 }
-
 
 static bool
 hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,

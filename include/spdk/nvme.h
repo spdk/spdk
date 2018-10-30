@@ -51,8 +51,6 @@ extern "C" {
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
 extern int32_t		spdk_nvme_retry_count;
 
-
-
 /**
  * Opaque handle to a controller. Returned by spdk_nvme_probe()'s attach_cb.
  */
@@ -908,7 +906,6 @@ int spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
  * \return number of completions processed (may be 0) or negated on error.
  */
 int32_t spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr);
-
 
 /**
  * Opaque handle to a namespace. Obtained by calling spdk_nvme_ctrlr_get_ns().
@@ -2034,7 +2031,6 @@ int spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
 		uint8_t opc);
-
 
 #ifdef __cplusplus
 }

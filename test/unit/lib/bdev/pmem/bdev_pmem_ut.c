@@ -359,7 +359,6 @@ bdev_submit_request(struct spdk_bdev *bdev, int16_t io_type, uint64_t offset_blo
 	return bio.internal.status;
 }
 
-
 static int
 ut_pmem_blk_clean(void)
 {
@@ -623,7 +622,6 @@ ut_pmem_write_read(void)
 				 &iov[1], 2);
 	CU_ASSERT_EQUAL(rc, SPDK_BDEV_IO_STATUS_SUCCESS);
 	iov[2].iov_len -= unaligned_aligned_size;
-
 
 	/*
 	 * Examine what we read state:

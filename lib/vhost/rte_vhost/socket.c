@@ -52,7 +52,6 @@
 #include "vhost.h"
 #include "vhost_user.h"
 
-
 TAILQ_HEAD(vhost_user_connection_list, vhost_user_connection);
 
 /*

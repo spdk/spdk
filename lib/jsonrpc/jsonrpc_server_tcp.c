@@ -283,7 +283,6 @@ spdk_jsonrpc_server_dequeue_request(struct spdk_jsonrpc_server_conn *conn)
 	return request;
 }
 
-
 static int
 spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
 {

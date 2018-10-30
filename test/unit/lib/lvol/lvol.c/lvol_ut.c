@@ -1866,7 +1866,6 @@ static void lvol_refcnt(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
-
 	spdk_lvol_create(g_lvol_store, "lvol", 10, false, lvol_op_with_handle_complete, NULL);
 
 	CU_ASSERT(g_lvserrno == 0);

@@ -260,7 +260,6 @@ spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtque
 	return 1;
 }
 
-
 static void
 check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
 {
