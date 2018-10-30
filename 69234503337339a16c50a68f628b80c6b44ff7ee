@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e22324de_7491c41a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2038,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-10-30T13:01:00Z",
+      "side": 1,
+      "message": "1ULL",
+      "range": {
+        "startLine": 2038,
+        "startChar": 8,
+        "endLine": 2038,
+        "endChar": 10
+      },
+      "revId": "69234503337339a16c50a68f628b80c6b44ff7ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
