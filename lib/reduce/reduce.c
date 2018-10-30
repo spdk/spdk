@@ -168,6 +168,12 @@ spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params)
 	return total_backing_size;
 }
 
+const struct spdk_uuid *
+spdk_reduce_vol_get_uuid(struct spdk_reduce_vol *vol)
+{
+	return &vol->uuid;
+}
+
 struct reduce_init_load_ctx {
 	struct spdk_reduce_vol			*vol;
 	struct spdk_reduce_vol_cb_args		backing_cb_args;
