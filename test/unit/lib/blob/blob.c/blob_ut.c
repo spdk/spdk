@@ -5647,7 +5647,7 @@ blob_io_unit(void)
 	/* Create dev with 512 bytes io unit size */
 
 	spdk_bs_opts_init(&bsopts);
-	bsopts.cluster_sz = SPDK_BS_PAGE_SIZE * 4; // 8 * 4 = 32 io_unit
+	bsopts.cluster_sz = SPDK_BS_PAGE_SIZE * 4;	/* 8 * 4 = 32 io_unit */
 	snprintf(bsopts.bstype.bstype, sizeof(bsopts.bstype.bstype), "TESTTYPE");
 
 	/* Try to initialize a new blob store with unsupported io_unit */
@@ -5785,7 +5785,7 @@ blob_io_unit_compatiblity(void)
 	/* Create dev with 512 bytes io unit size */
 
 	spdk_bs_opts_init(&bsopts);
-	bsopts.cluster_sz = SPDK_BS_PAGE_SIZE * 4; // 8 * 4 = 32 io_unit
+	bsopts.cluster_sz = SPDK_BS_PAGE_SIZE * 4;	/* 8 * 4 = 32 io_unit */
 	snprintf(bsopts.bstype.bstype, sizeof(bsopts.bstype.bstype), "TESTTYPE");
 
 	/* Try to initialize a new blob store with unsupported io_unit */
