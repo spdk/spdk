@@ -16,6 +16,24 @@
       "revId": "2603bd73fca64cd81fb363c07bb894a429c181c5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea9321ee_b64140ac",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T23:30:45Z",
+      "side": 1,
+      "message": "No - this shouldn\u0027t be the normal case.  I think handling it is OK - but adding an assert as well is a good idea.",
+      "parentUuid": "2972d95a_6c75c35e",
+      "revId": "2603bd73fca64cd81fb363c07bb894a429c181c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
