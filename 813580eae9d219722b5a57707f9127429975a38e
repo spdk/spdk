@@ -46,6 +46,30 @@
       "revId": "813580eae9d219722b5a57707f9127429975a38e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3272b065_2a21ef1e",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-31T21:47:30Z",
+      "side": 1,
+      "message": "It depends how the bdev module is designed but it is preferred for all non-persisten vbdevs.\n\nEg all split bdev\u0027s are first \"registered\" in split module config - the base bdev name, split name, count and size. Then, during new bdev creation the name is checked and if match this is claimed and used as base bdev.",
+      "parentUuid": "5e0ab671_80bddbd2",
+      "range": {
+        "startLine": 492,
+        "startChar": 1,
+        "endLine": 493,
+        "endChar": 32
+      },
+      "revId": "813580eae9d219722b5a57707f9127429975a38e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }

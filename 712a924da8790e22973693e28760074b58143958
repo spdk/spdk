@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf0b34b2_32c2c98e",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-31T21:47:30Z",
+      "side": 1,
+      "message": "safe version is only needed if list entry is removed inside loop.",
+      "range": {
+        "startLine": 333,
+        "startChar": 14,
+        "endLine": 333,
+        "endChar": 19
+      },
+      "revId": "712a924da8790e22973693e28760074b58143958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
