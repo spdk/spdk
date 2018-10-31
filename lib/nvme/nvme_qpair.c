@@ -425,8 +425,14 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 int
 spdk_nvme_event_handler(struct spdk_nvme_qpair *qpair)
 {
+	int ret;
 
-	return nvme_transport_event_handler(qpair);
+	ret = nvme_transport_event_handler(qpair);
+	if (ret == 0) {
+		return qpair->last_event;
+	}
+
+	return ret;
 }
 
 int
