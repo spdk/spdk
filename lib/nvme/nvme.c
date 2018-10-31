@@ -518,7 +518,12 @@ spdk_nvme_probe_internal(const struct spdk_nvme_transport_id *trid, void *cb_ctx
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
-	nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb, direct_connect);
+	rc = nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb, direct_connect);
+	if (rc != 0) {
+		SPDK_ERRLOG("NVMe ctrlr scan failed\n");
+		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+		return -1;
+	}
 
 	/*
 	 * Probe controllers on the shared_attached_ctrlrs list
