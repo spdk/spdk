@@ -530,7 +530,7 @@ spdk_get_io_channel(void *io_device)
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	rc = dev->create_cb(io_device, (uint8_t *)ch + sizeof(*ch));
-	if (rc == -1) {
+	if (rc != 0) {
 		pthread_mutex_lock(&g_devlist_mutex);
 		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
 		dev->refcnt--;
