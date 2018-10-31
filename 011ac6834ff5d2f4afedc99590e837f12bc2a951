@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "7da6d461_7575033b",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T22:44:47Z",
+      "side": 1,
+      "message": "This seems unrelated based on the commit message.  (Maybe the commit message needs to be updated.)",
+      "revId": "011ac6834ff5d2f4afedc99590e837f12bc2a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38b3d13f_ad6f7d7a",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 5
@@ -13,6 +30,30 @@
       "writtenOn": "2018-10-31T21:50:06Z",
       "side": 1,
       "message": "Why we are not observing Exception rise in scripts/rpc.py?",
+      "range": {
+        "startLine": 243,
+        "startChar": 12,
+        "endLine": 244,
+        "endChar": 20
+      },
+      "revId": "011ac6834ff5d2f4afedc99590e837f12bc2a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e71730da_695c8e6b",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T22:44:47Z",
+      "side": 1,
+      "message": "I agree - I don\u0027t think handling the exception like this is correct.\n\nWe may want something like rpc.subsystems.has_subsystem(self.client, \"vhost\").  Easy way for spdkcli to see if vhost is enabled in the target application - and then avoid anything vhost related if it\u0027s not enabled.",
+      "parentUuid": "38b3d13f_ad6f7d7a",
       "range": {
         "startLine": 243,
         "startChar": 12,
