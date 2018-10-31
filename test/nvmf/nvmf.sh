@@ -28,6 +28,7 @@ run_test suite test/nvmf/target/bdev_io_wait.sh
 run_test suite test/nvmf/target/create_transport.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
+	run_test suite test/nvmf/target/fuzz.sh
 	run_test suite test/nvmf/target/multiconnection.sh
 fi
 
