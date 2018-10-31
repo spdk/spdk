@@ -22,6 +22,30 @@
       "revId": "6a0583d1f1acbb812a4666f28173d2d79722f68c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "455804ca_344e8b22",
+        "filename": "lib/ocssd/ocssd_anm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-10-31T14:17:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5dfcc954_e894acde",
+      "range": {
+        "startLine": 392,
+        "startChar": 0,
+        "endLine": 392,
+        "endChar": 13
+      },
+      "revId": "6a0583d1f1acbb812a4666f28173d2d79722f68c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
