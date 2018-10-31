@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9e28cd87_79f7c4cc",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-10-31T08:10:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a2aa8e6d_68f36d61",
+      "revId": "502dcc213b2a64627b7828251c4fb95b741fdf7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20ad1d51_38d7b940",
         "filename": "test/common/lib/test_env.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-30T18:12:04Z",
       "side": 1,
       "message": "I\u0027m just curious about performance aspects of acquiring lock in spdk_ring_[en,de]queue. \n\nhttps://github.com/spdk/spdk/blob/1f813ec3dae7406cb52b7ef9e40002ab19ffe8d9/doc/concurrency.md#L108 says \"A message in SPDK typically consists of a function pointer and a pointer to some context, and is passed between threads using a lockless ring\". Is it the same ring that spdk_ring_[en,de]queue deal with?",
+      "revId": "502dcc213b2a64627b7828251c4fb95b741fdf7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aba812a2_69c2faa1",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-10-31T08:10:00Z",
+      "side": 1,
+      "message": "It\u0027s a mock implementation used by unit tests, so I wouldn\u0027t be that much concerned about its performance. One of the OCSSD tests verifies parts of code that relies on the spdk_ring_(en|de)queue being MT-safe, so the locks are needed here. The real ring functions are  MT-safe and, they are in fact lockless by using atomic operations.",
+      "parentUuid": "20ad1d51_38d7b940",
       "revId": "502dcc213b2a64627b7828251c4fb95b741fdf7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
