@@ -421,6 +421,11 @@ nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 	return 0;
 }
 
+void
+spdk_pci_device_detach(struct spdk_pci_device *device)
+{
+}
+
 #define DECLARE_AND_CONSTRUCT_CTRLR()	\
 	struct spdk_nvme_ctrlr	ctrlr = {};	\
 	struct spdk_nvme_qpair	adminq = {};	\
