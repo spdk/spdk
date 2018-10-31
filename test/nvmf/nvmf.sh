@@ -13,6 +13,7 @@ timing_enter nvmf_tgt
 
 trap "exit 1" SIGINT SIGTERM EXIT
 
+run_test suite test/nvmf/fuzz/fuzz.sh
 run_test suite test/nvmf/filesystem/filesystem.sh
 run_test suite test/nvmf/discovery/discovery.sh
 if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
