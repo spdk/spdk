@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af56935d_815f5df1",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1620,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-31T15:29:18Z",
+      "side": 1,
+      "message": "fcntl can return error (-1). Shouldn\u0027t that be handled?",
+      "revId": "f91fadeddb7eff9a923cfc2aa113e8a147102d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7408fbc4_ae269748",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1624,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-31T15:29:18Z",
+      "side": 1,
+      "message": "ibv_get_async_event is a blocking call. It looks like checking for  flags \u0026 O_NONBLOCK should be moved before the call.\n\nDoes nvme_rdma_event_handler fetch events asynchronously ? If it does, shouldn\u0027t we call \"poll\" before ibv_get_async_event?   Something like example in : https://linux.die.net/man/3/ibv_ack_async_event",
+      "revId": "f91fadeddb7eff9a923cfc2aa113e8a147102d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8469e15_7d82278b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1625,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-10-31T15:29:18Z",
+      "side": 1,
+      "message": "ibv_ack_async_event should be called before \"return\"",
+      "revId": "f91fadeddb7eff9a923cfc2aa113e8a147102d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
