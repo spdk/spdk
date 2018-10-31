@@ -742,17 +742,20 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
 	task_complete((struct perf_task *)ctx);
 }
 
-static void
+static int
 check_io(struct ns_worker_ctx *ns_ctx)
 {
+	int rc = 0;
 #if HAVE_LIBAIO
 	if (ns_ctx->entry->type == ENTRY_TYPE_AIO_FILE) {
 		aio_check_io(ns_ctx);
 	} else
 #endif
 	{
-		spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair, g_max_completions);
+		rc = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair, g_max_completions);
 	}
+
+	return rc;
 }
 
 static void
@@ -853,6 +856,7 @@ work_fn(void *arg)
 	uint64_t tsc_end;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
+	int rc = 0;
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
@@ -883,7 +887,13 @@ work_fn(void *arg)
 		 */
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx != NULL) {
-			check_io(ns_ctx);
+			rc = check_io(ns_ctx);
+			if (rc < 0) {
+				printf("ERROR: Unrecoverable event occurred - aborting\n");
+				tsc_end = 0;
+				break;
+			}
+
 			ns_ctx = ns_ctx->next;
 		}
 
@@ -899,7 +909,7 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	return 0;
+	return rc < 0 ? rc : 0;
 }
 
 static void usage(char *program_name)
