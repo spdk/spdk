@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "55456ba3_f102fed2",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-31T23:29:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7da6d461_7575033b",
+      "revId": "011ac6834ff5d2f4afedc99590e837f12bc2a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38b3d13f_ad6f7d7a",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 5
@@ -54,6 +72,30 @@
       "side": 1,
       "message": "I agree - I don\u0027t think handling the exception like this is correct.\n\nWe may want something like rpc.subsystems.has_subsystem(self.client, \"vhost\").  Easy way for spdkcli to see if vhost is enabled in the target application - and then avoid anything vhost related if it\u0027s not enabled.",
       "parentUuid": "38b3d13f_ad6f7d7a",
+      "range": {
+        "startLine": 243,
+        "startChar": 12,
+        "endLine": 244,
+        "endChar": 20
+      },
+      "revId": "011ac6834ff5d2f4afedc99590e837f12bc2a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e390a935_a4d08017",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-10-31T23:29:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e71730da_695c8e6b",
       "range": {
         "startLine": 243,
         "startChar": 12,
