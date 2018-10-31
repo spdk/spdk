@@ -853,6 +853,7 @@ work_fn(void *arg)
 	uint64_t tsc_end;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
+	int rc;
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
@@ -872,6 +873,7 @@ work_fn(void *arg)
 	ns_ctx = worker->ns_ctx;
 	while (ns_ctx != NULL) {
 		submit_io(ns_ctx, g_queue_depth);
+		spdk_nvme_set_non_blocking_event_handler(ns_ctx->u.nvme.qpair);
 		ns_ctx = ns_ctx->next;
 	}
 
@@ -884,6 +886,10 @@ work_fn(void *arg)
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx != NULL) {
 			check_io(ns_ctx);
+			rc = spdk_nvme_event_handler(ns_ctx->u.nvme.qpair);
+			if (rc != 0) {
+				return 1;
+			}
 			ns_ctx = ns_ctx->next;
 		}
 
