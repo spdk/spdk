@@ -220,6 +220,7 @@ void
 spdk_free_thread(void)
 {
 	struct spdk_thread *thread;
+	struct spdk_io_channel *ch;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 
@@ -231,6 +232,11 @@ spdk_free_thread(void)
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Freeing thread %s\n", thread->name);
+
+	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+		SPDK_ERRLOG("thread %s still has channel for io_device %s\n",
+			    thread->name, ch->dev->name);
+	}
 
 	assert(g_thread_count > 0);
 	g_thread_count--;
