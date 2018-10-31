@@ -1659,7 +1659,10 @@ nvme_rdma_cm_event_handler(struct nvme_rdma_qpair *rqpair)
 	case RDMA_CM_EVENT_UNREACHABLE:
 	case RDMA_CM_EVENT_REJECTED:
 	case RDMA_CM_EVENT_ESTABLISHED:
+		break;
 	case RDMA_CM_EVENT_DISCONNECTED:
+		rc = -ECONNABORTED;
+		break;
 	case RDMA_CM_EVENT_DEVICE_REMOVAL:
 	case RDMA_CM_EVENT_MULTICAST_JOIN:
 	case RDMA_CM_EVENT_MULTICAST_ERROR:
@@ -1673,7 +1676,7 @@ nvme_rdma_cm_event_handler(struct nvme_rdma_qpair *rqpair)
 
 	rdma_ack_cm_event(event);
 
-	return 0;
+	return rc;
 }
 
 static int
@@ -1701,6 +1704,9 @@ nvme_rdma_ibv_event_handler(struct nvme_rdma_qpair *rqpair)
 
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
+	case IBV_EVENT_PORT_ERR:
+		rc = -ENETRESET;
+		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
 	case IBV_EVENT_SQ_DRAINED:
 	case IBV_EVENT_QP_REQ_ERR:
@@ -1711,7 +1717,6 @@ nvme_rdma_ibv_event_handler(struct nvme_rdma_qpair *rqpair)
 	case IBV_EVENT_CQ_ERR:
 	case IBV_EVENT_DEVICE_FATAL:
 	case IBV_EVENT_PORT_ACTIVE:
-	case IBV_EVENT_PORT_ERR:
 	case IBV_EVENT_LID_CHANGE:
 	case IBV_EVENT_PKEY_CHANGE:
 	case IBV_EVENT_SM_CHANGE:
@@ -1725,7 +1730,7 @@ nvme_rdma_ibv_event_handler(struct nvme_rdma_qpair *rqpair)
 
 	ibv_ack_async_event(&event);
 
-	return 0;
+	return rc;
 }
 
 #define MAX_COMPLETIONS_PER_POLL 128
