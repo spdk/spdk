@@ -349,7 +349,7 @@ work_fn(void *arg)
 
 	t = worker->ctx;
 	while (t != NULL) {
-		// begin to submit transfers
+		/* begin to submit transfers */
 		submit_xfers(t, g_user_config.queue_depth);
 		t = t->next;
 	}
@@ -368,7 +368,7 @@ work_fn(void *arg)
 
 	t = worker->ctx;
 	while (t != NULL) {
-		// begin to drain io
+		/* begin to drain io */
 		t->is_draining = true;
 		drain_io(t);
 		t = t->next;
