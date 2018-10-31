@@ -322,6 +322,159 @@
       "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c19ada8b_76aaa84c",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:12:50Z",
+      "side": 1,
+      "message": "if (!tcp_req) {\n  return NULL;\n}\n\nThen the rest of the code does not need to be indented.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f2c558f_5e083735",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:12:50Z",
+      "side": 1,
+      "message": "remove this code if it is not needed",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9dcc8c9b_5b44bb87",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:12:50Z",
+      "side": 1,
+      "message": "this if check is not needed - it is ok to do free(NULL)",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b85a3488_81b96888",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:12:50Z",
+      "side": 1,
+      "message": "newline needed after declaration",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08d68dcf_cc93e5db",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:12:50Z",
+      "side": 1,
+      "message": "newline needed after declaration",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb8b0e6b_61b59d1e",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 824,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:12:50Z",
+      "side": 1,
+      "message": "anything to do here?",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29e412ec_d03ae4c3",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:12:50Z",
+      "side": 1,
+      "message": "fix up todos here (including clean up of commented code)",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d85286d6_e9a35a44",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 1227,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:12:50Z",
+      "side": 1,
+      "message": "Digest",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05fe95c3_785fff73",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:12:50Z",
+      "side": 1,
+      "message": "R2T Limit Exceeded is an H2CTermReq status code - I think this should be Data Transfer Limit Exceeded",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
