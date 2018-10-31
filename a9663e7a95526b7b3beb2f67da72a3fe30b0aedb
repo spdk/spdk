@@ -1,0 +1,225 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "793d0b2a_8d953333",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 77
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "Let\u0027s add all of this to a new v19.01 section.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e06c597_ddd58db6",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "let\u0027s remove all of this stuff about cipher suites - TP 8000 only shows the tcp_secsoc (byte 0) everything else is reserved",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "435f1fc3_5d5bbd15",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "can these two defines be removed?  they are not used anywhere, and C2HDOFF_MULT seems to duplicate C2H_DATA_PDO_MULT on line 755",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ad70f78_31d2d4dc",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "I don\u0027t see this enum used anywhere.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78f368f0_8bfb68d2",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "fix this TODO?",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8a09ac0_ea979f7a",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "can these defines be removed?",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d42d7aac_25457d79",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "INVALID_PDU_SEQUENCE \u003d\u003e PDU_SEQUENCE_ERROR (to match the spec)",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f0c718f_47ea49e8",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "INVALID_HDGST \u003d\u003e HDGST_ERROR",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b69a7148_51a87838",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "remove INVALID",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff61f404_7b124390",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "I am OK using same enum to describe C2H and H2C Term Req.  But we should still add SPDK_NVME_TCP_TERM_REQ_FES_R2T_LIMIT_EXCEEDED \u003d 0x5.\n\nAlso remove INVALID here - DATA_TRANSFER_LIMIT_EXCEEDED is sufficient.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "785cb237_7506fdd6",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "PARAMETER",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "124ec1e2_d19da814",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "move R2T definition after C2H data, to match order in spec",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e514a7f_bc2665e1",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 757,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T17:52:32Z",
+      "side": 1,
+      "message": "is this enum in the spec?  i don\u0027t see it used anywhere",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
