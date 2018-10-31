@@ -1,6 +1,4 @@
 #
-#  BSD LICENSE
-#
 #  Copyright (c) Intel Corporation.
 #  All rights reserved.
 #
@@ -31,14 +29,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev_svc fuzz histogram_perf jsoncat stub
+C_SRCS := fuzz_common.c
+LIBNAME = fuzz
 
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
