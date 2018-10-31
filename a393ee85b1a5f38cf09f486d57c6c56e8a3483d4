@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd2a8b5e_7f7b4465",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T21:57:15Z",
+      "side": 1,
+      "message": "\"If SGL is assigned\" \u003d\u003e should this say something more like \"If the SGL is not aligned\"?",
+      "revId": "a393ee85b1a5f38cf09f486d57c6c56e8a3483d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db941457_e58b57fe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T21:57:15Z",
+      "side": 1,
+      "message": "let\u0027s add assert(buf_len \u003e\u003d iovs[i].iov_len)\n\nshould this function be more similar to _copy_buf_to_iovs()?  that function has an spdk_min to make sure we don\u0027t overflow - we don\u0027t have that kind of check here",
+      "revId": "a393ee85b1a5f38cf09f486d57c6c56e8a3483d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92272a21_b712dd53",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T21:57:15Z",
+      "side": 1,
+      "message": "remove spdk_ prefix on this private static function",
+      "revId": "a393ee85b1a5f38cf09f486d57c6c56e8a3483d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a43c9c16_62196ea5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 3114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T21:57:15Z",
+      "side": 1,
+      "message": "use spdk_unlikely here (this is in the fast I/O path)",
+      "revId": "a393ee85b1a5f38cf09f486d57c6c56e8a3483d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb066b2f_f3a6b89c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 3116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T21:57:15Z",
+      "side": 1,
+      "message": "We should be able to move a lot of this complexity into a function - similar to bdev_io_set_bounce_buf",
+      "revId": "a393ee85b1a5f38cf09f486d57c6c56e8a3483d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
