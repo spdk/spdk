@@ -288,6 +288,40 @@
       "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5ec42b8_4c420686",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:01:57Z",
+      "side": 1,
+      "message": "There is a huge amount of duplication between this and spdk_nvmf_tcp_pdu in the nvmf code.\n\nLet\u0027s create include/spdk_internal/nvmf.h and put a lot of this stuff in there.  Just make one structure definition that can be shared by the initiator and target code.\n\nYou can also move some of the MAKE_DIGEST_WORD and related macros there too",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54c77257_873d1d15",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T18:01:57Z",
+      "side": 1,
+      "message": "remove this commented out code",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
