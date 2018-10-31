@@ -573,7 +573,8 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device == io_device) {
-			SPDK_ERRLOG("io_device %p already registered\n", io_device);
+			SPDK_ERRLOG("io_device %p already registered (old:%s new:%s)\n",
+				    io_device, tmp->name, dev->name);
 			free(dev->name);
 			free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
@@ -635,7 +636,8 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	}
 
 	if (dev->for_each_count > 0) {
-		SPDK_ERRLOG("io_device %p has %u for_each calls outstanding\n", io_device, dev->for_each_count);
+		SPDK_ERRLOG("io_device %s (%p) has %u for_each calls outstanding\n",
+			    dev->name, io_device, dev->for_each_count);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
