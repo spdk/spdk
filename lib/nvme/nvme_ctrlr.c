@@ -1650,6 +1650,10 @@ nvme_ctrlr_remove_process(struct spdk_nvme_ctrlr *ctrlr,
 
 	TAILQ_REMOVE(&ctrlr->active_procs, proc, tailq);
 
+	if (!proc->is_primary && ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		spdk_pci_device_detach(proc->devhandle);
+	}
+
 	spdk_dma_free(proc);
 }
 
