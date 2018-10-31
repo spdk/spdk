@@ -13,6 +13,7 @@ timing_enter nvmf_tgt
 
 trap "exit 1" SIGINT SIGTERM EXIT
 
+run_test suite test/nvmf/target/fuzz.sh
 run_test suite test/nvmf/target/filesystem.sh
 run_test suite test/nvmf/target/discovery.sh
 run_test suite test/nvmf/target/connect_disconnect.sh
