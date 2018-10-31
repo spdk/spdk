@@ -1629,6 +1629,9 @@ nvme_rdma_event_handler(struct spdk_nvme_qpair *qpair)
 		      ibv_event_type_str(event.event_type));
 
 	switch (event.event_type) {
+	case IBV_EVENT_PORT_ERR:
+		qpair->last_event = -ENETRESET;
+		break;
 	case IBV_EVENT_QP_FATAL:
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
 	case IBV_EVENT_SQ_DRAINED:
@@ -1640,7 +1643,6 @@ nvme_rdma_event_handler(struct spdk_nvme_qpair *qpair)
 	case IBV_EVENT_CQ_ERR:
 	case IBV_EVENT_DEVICE_FATAL:
 	case IBV_EVENT_PORT_ACTIVE:
-	case IBV_EVENT_PORT_ERR:
 	case IBV_EVENT_LID_CHANGE:
 	case IBV_EVENT_PKEY_CHANGE:
 	case IBV_EVENT_SM_CHANGE:
@@ -1649,6 +1651,7 @@ nvme_rdma_event_handler(struct spdk_nvme_qpair *qpair)
 	case IBV_EVENT_CLIENT_REREGISTER:
 	case IBV_EVENT_GID_CHANGE:
 	default:
+		qpair->last_event = 0;
 		break;
 	}
 	ibv_ack_async_event(&event);
