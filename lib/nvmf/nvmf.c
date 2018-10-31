@@ -139,7 +139,7 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	group->num_sgroups = tgt->opts.max_subsystems;
 	group->sgroups = calloc(tgt->opts.max_subsystems, sizeof(struct spdk_nvmf_subsystem_poll_group));
 	if (!group->sgroups) {
-		return -1;
+		return -ENOMEM;
 	}
 
 	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
