@@ -192,7 +192,7 @@ struct reduce_init_load_ctx {
 	struct spdk_reduce_vol_cb_args		backing_cb_args;
 	spdk_reduce_vol_op_with_handle_complete	cb_fn;
 	void					*cb_arg;
-	struct iovec				iov;
+	struct iovec				iov[2];
 	void					*path;
 };
 
@@ -212,11 +212,11 @@ _init_write_path_cpl(void *cb_arg, int ziperrno)
 	struct spdk_reduce_vol *vol = init_ctx->vol;
 
 	spdk_dma_free(init_ctx->path);
-	init_ctx->iov.iov_base = vol->backing_super;
-	init_ctx->iov.iov_len = sizeof(*vol->backing_super);
+	init_ctx->iov[0].iov_base = vol->backing_super;
+	init_ctx->iov[0].iov_len = sizeof(*vol->backing_super);
 	init_ctx->backing_cb_args.cb_fn = _init_write_super_cpl;
 	init_ctx->backing_cb_args.cb_arg = init_ctx;
-	vol->backing_dev->writev(vol->backing_dev, &init_ctx->iov, 1,
+	vol->backing_dev->writev(vol->backing_dev, init_ctx->iov, 1,
 				 0, sizeof(*vol->backing_super) / vol->backing_dev->blocklen,
 				 &init_ctx->backing_cb_args);
 }
@@ -358,8 +358,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	init_ctx->cb_arg = cb_arg;
 
 	memcpy(init_ctx->path, vol->pm_file.path, REDUCE_PATH_MAX);
-	init_ctx->iov.iov_base = init_ctx->path;
-	init_ctx->iov.iov_len = REDUCE_PATH_MAX;
+	init_ctx->iov[0].iov_base = init_ctx->path;
+	init_ctx->iov[0].iov_len = REDUCE_PATH_MAX;
 	init_ctx->backing_cb_args.cb_fn = _init_write_path_cpl;
 	init_ctx->backing_cb_args.cb_arg = init_ctx;
 	/* Write path to offset 4K on backing device - just after where the super
@@ -367,7 +367,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	 *  super block to guarantee we don't get the super block written without the
 	 *  the path if the system crashed in the middle of a write operation.
 	 */
-	vol->backing_dev->writev(vol->backing_dev, &init_ctx->iov, 1,
+	vol->backing_dev->writev(vol->backing_dev, init_ctx->iov, 1,
 				 REDUCE_BACKING_DEV_PATH_OFFSET / vol->backing_dev->blocklen,
 				 REDUCE_PATH_MAX / vol->backing_dev->blocklen,
 				 &init_ctx->backing_cb_args);
