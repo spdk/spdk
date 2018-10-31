@@ -33,8 +33,7 @@ spdk_bdev_alias_del_all() was added to delete all alias from block device.
 A new virtual bdev module has been added to perform at rest data encryption using the DPDK CryptoDev
 Framework.  The module initially uses a software AESNI CBC cipher with experimental support for the
 Intel QAT hardware accelerator also currently implemented with support for CBC cipher. Future work
-may include additional ciphers as well as consideration for authentication. NOTE: this module is
-currently marked as experimental.  Do not use in production.
+may include additional ciphers as well as consideration for authentication.
 
 The RAID virtual bdev module is now always enabled by default.  The configure --with-raid and
 --without-raid options are now ignored and deprecated and will be removed in the next release.
