@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38b3d13f_ad6f7d7a",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-10-31T21:50:06Z",
+      "side": 1,
+      "message": "Why we are not observing Exception rise in scripts/rpc.py?",
+      "range": {
+        "startLine": 243,
+        "startChar": 12,
+        "endLine": 244,
+        "endChar": 20
+      },
+      "revId": "011ac6834ff5d2f4afedc99590e837f12bc2a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
