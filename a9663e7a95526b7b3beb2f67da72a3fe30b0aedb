@@ -475,6 +475,227 @@
       "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b43fd5e_f8a1011f",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "While it is definitely more verbose, I think it\u0027s clearer if you write sizeof(struct spdk_nvme_tcp_common_pdu_hdr) everywhere that you\u0027re using this and remove the #define.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40ff8ccd_275c4a09",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "NVMF_TCP_PSH_LEN_MAX is not used anywhere.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78b923bb_512bff1e",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "NVMF_TCP_CPDA_MAX is a value from the specification, so move it to nvmf_spec.h.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d6b664d_8afde1f8",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "This NVMF_TCP_ALIGNMENT appears to be used to offset data digests. It should have DIGEST in its name.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ea919a5_bbcf853f",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "Can you put a comment outlining how this value is calculated?",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e84f6ebe_dd6e09d1",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "Can you put a comment here outlining how this value is calculated? I assume it\u0027s the maximum of the sizeof() all of the PDU types?",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99863bd3_eeae9a77",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "NVMF_TCP_PDU_PDO_MAX_OFFSET is a value from the specification, so put it in nvmf_spec.h",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4638f0d6_40d101c7",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "Instead of these 3 #defines, use SPDK_NVMF_TRADDR_MAX_LEN in nvmf_spec.h",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "caef302f_ea550036",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "Fix comment",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0edaa870_45072e17",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "is something off about the indentation here?",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fbec902_c3562d6a",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "Consider removing support for in-capsule data on the first patch, and then adding it back in separately.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8903c5a_fc69c004",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "You could also consider removing the digest support from this patch and putting it into a patch later in the series.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fe74689_d575cc32",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 2926,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T21:52:09Z",
+      "side": 1,
+      "message": "timout -\u003e timeout",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
