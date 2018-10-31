@@ -22,6 +22,30 @@
       "revId": "9c0caaaae2db3e688d1254e25de91331bb142e23",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1770999d_6b0099d0",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-10-31T00:25:51Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nThank you. I\u0027m sorry that this code was completely wrong. What I want to do is to include only ones at the beginning of the line or started by tab or space.\n\nI want to exclude the following patterns:\ntest/unit/lib/json/json_parse.c/json_parse_ut.c:732:    VAL_STRING(\"http://www.example.com/image/481989943\");\ntest/unit/lib/json/json_parse.c/json_parse_ut.c:881:    PARSE_PASS_FLAGS(\"// test\\n0\", 1, \"\", SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);\n\nBy using the updated patch, I found and fixed additional ones.\n\nPlease take a look at the patch again.\n-Shuhei",
+      "parentUuid": "7c17d2b3_5cf98b98",
+      "range": {
+        "startLine": 91,
+        "startChar": 27,
+        "endLine": 91,
+        "endChar": 49
+      },
+      "revId": "9c0caaaae2db3e688d1254e25de91331bb142e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
