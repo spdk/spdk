@@ -119,6 +119,11 @@ spdk_thread_lib_init(void)
 void
 spdk_thread_lib_fini(void)
 {
+	struct io_device *dev;
+
+	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
+		SPDK_ERRLOG("io_device %s not unregistered\n", dev->name);
+	}
 }
 
 struct spdk_thread *
