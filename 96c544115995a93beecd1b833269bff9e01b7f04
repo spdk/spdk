@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff4da905_5686fa51",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T22:59:22Z",
+      "side": 1,
+      "message": "I know the original code had the return type and the function name on the same line, but since you\u0027re changing all of those functions in this patch, let\u0027s fix them here - applies to all of the functions changed/added in this file.",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97098bc8_4846889b",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T22:59:22Z",
+      "side": 1,
+      "message": "why is the STAILQ_EMPTY needed?",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97b71423_d9d7cf3e",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T22:59:22Z",
+      "side": 1,
+      "message": "I don\u0027t think we need to check -\u003einit here - at least we didn\u0027t do that previously.  So let\u0027s remove it for now.  If there comes a time where we want to allow init to be NULL when registered, it can be added as a separate commit.",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ddf1640_2724c38b",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T22:59:22Z",
+      "side": 1,
+      "message": "I don\u0027t think the STAILQ_EMPTY check is needed",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5e498f6_14873f53",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T22:59:22Z",
+      "side": 1,
+      "message": "We don\u0027t check g_init_cb_fn before calling it, so I\u0027d say let\u0027s not check g_fini_cb_fn either.",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "489d9207_93ce01ee",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T22:59:22Z",
+      "side": 1,
+      "message": "same as above - let\u0027s just call -\u003efini() directly without checking\n\nit might be good to add some asserts that -\u003einit and -\u003efini are not NULL in spdk_net_framework_register - but that can be in a separate commit",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
