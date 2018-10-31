@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4cd68266_6e95ee2f",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T22:36:04Z",
+      "side": 1,
+      "message": "NULL if there are no more transports after transport",
+      "revId": "f40600ddfc2f780ce88c818f806d5c8b6b7ab399",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
