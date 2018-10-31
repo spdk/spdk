@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e94c71b6_cab862a5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2036,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-10-31T19:56:48Z",
+      "side": 1,
+      "message": "I think this assert should go in spdk_bdev_register() instead.  If the user passes a bad required_alignment, we should try to catch it as early as possible.\n\nThen below, we can just do 1 \u003c\u003c, and drop the U.  ULL isn\u0027t needed if the shift is less than 32.  Keeping the U by itself doesn\u0027t do anything.",
+      "revId": "69234503337339a16c50a68f628b80c6b44ff7ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e22324de_7491c41a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
