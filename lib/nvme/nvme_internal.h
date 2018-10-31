@@ -359,6 +359,8 @@ struct spdk_nvme_qpair {
 
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
+	int				last_event;
+
 	void				*req_buf;
 };
 
