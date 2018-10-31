@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "c6ccfe08_e3f63fff",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T17:56:27Z",
+      "side": 1,
+      "message": "Can you move the changes to the spec header file to a separate patch that comes first in the series?",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e06c597_ddd58db6",
         "filename": "include/spdk/nvmf_spec.h",
         "patchSetId": 77
@@ -30,6 +47,57 @@
       "writtenOn": "2018-10-31T17:52:32Z",
       "side": 1,
       "message": "let\u0027s remove all of this stuff about cipher suites - TP 8000 only shows the tcp_secsoc (byte 0) everything else is reserved",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bea2c5e9_9fc9e6ac",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T17:56:27Z",
+      "side": 1,
+      "message": "For structures that are coming directly from the specification, we typically make the member name match the name in the spec. That means this field should be \u0027sectype\u0027.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b571f9f_ff576d47",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T17:56:27Z",
+      "side": 1,
+      "message": "The cipher suite list is not in the specification. These fields are reserved.",
+      "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bae0270_31f5bb77",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 77
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-10-31T17:56:27Z",
+      "side": 1,
+      "message": "The definition of the PDU types appears in the specification prior to the definition of the PDU header, and the PDU header contains the pdu type. So move this enum above the pdu_hdr structure.",
       "revId": "a9663e7a95526b7b3beb2f67da72a3fe30b0aedb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
