@@ -24,6 +24,7 @@ trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 export NVMF_APP_SHM_ID="0"
 export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
 
+run_test suite test/nvmf/fuzz/fuzz.sh
 run_test suite test/nvmf/filesystem/filesystem.sh
 run_test suite test/nvmf/discovery/discovery.sh
 if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
