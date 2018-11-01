@@ -16,6 +16,24 @@
       "revId": "b9b46a3b0d25d26992c2fff603672de2e8d725f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a67ed433_2ee6ebf2",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-01T15:39:18Z",
+      "side": 1,
+      "message": "You are right, I need to return after calling the callback so that I don\u0027t try to call spdk_nvmf_transport_listen. I don\u0027t think this path is tested in the system tests.",
+      "parentUuid": "1125ad4b_4c095c84",
+      "revId": "b9b46a3b0d25d26992c2fff603672de2e8d725f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
