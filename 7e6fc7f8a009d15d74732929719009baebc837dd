@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94dc3796_5381e92c",
+        "filename": "include/spdk/ocssd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T22:13:57Z",
+      "side": 1,
+      "message": "I like the emphasis on modularity here and it\u0027s a good instinct. However, in this particular case where is never going to be any way to fill out these callbacks except by forwarding them to the nvme driver API. I am leaning toward just having this FTL make calls directly to the NVMe driver and eliminating these callbacks. I\u0027m open to other opinions.",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8388764_05fbd2e1",
+        "filename": "include/spdk/ocssd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T22:13:57Z",
+      "side": 1,
+      "message": "Please add doxygen comments describing these public API functions. We automatically generate API documentation and update https://spdk.io/doc accordingly.",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
