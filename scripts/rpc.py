@@ -278,8 +278,8 @@ if __name__ == "__main__":
                                                  subnqn=args.subnqn))
 
     p = subparsers.add_parser('construct_nvme_bdev',
-                              help='Add bdev with nvme backend')
-    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+                              help='Add bdevs with nvme backend')
+    p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
     p.add_argument('-t', '--trtype',
                    help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
     p.add_argument('-a', '--traddr',
