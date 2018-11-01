@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "157df130_d540fa65",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T00:13:36Z",
+      "side": 1,
+      "message": "Ack.  I wrote this doc originally for a different audience - you\u0027re right it needs some big picture stuff now that it\u0027s getting merged into SPDK.",
+      "parentUuid": "602b48e7_06b10c64",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d83aad80_225c2633",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-27T22:03:32Z",
       "side": 1,
       "message": "we should probably have some short description/link or something here to SNIA PM instead of assuming everyone will know that this is - but they should by now :)",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26515038_5a4ec087",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T00:13:36Z",
+      "side": 1,
+      "message": "I\u0027ll trust that anyone who doesn\u0027t know what persistent memory is can google it.  :)",
+      "parentUuid": "d83aad80_225c2633",
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "cdf30aeb_ed8f98c6",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T00:13:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "47651190_f3b90d62",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f288a82_2dcdc625",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2018-10-27T22:03:32Z",
       "side": 1,
       "message": "maybe spell the word \"two\" or do a \"2 x 4KB\"",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e02a9ea_53239c24",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T00:13:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1f288a82_2dcdc625",
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "608aa95d_b2ed4ab0",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T00:13:36Z",
+      "side": 1,
+      "message": "Ack - yeah, now that this really describes the implementation (and not just the general idea), I can put in specifics.",
+      "parentUuid": "1b9c9b8d_41d3e6ca",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5dd99b69_93c0c4de",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "3cd844a7_c969590c",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T00:13:36Z",
+      "side": 1,
+      "message": "Eventually.  Not for the initial implementation though.  And I think it might be done better as a background operation rather than inline - since unmap operations will result in freeing a bunch of potentially contiguous 4KB blocks on disk, and 4KB unmaps suck from a performance perspective.",
+      "parentUuid": "5dd99b69_93c0c4de",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7d11d56_e58a5c78",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -115,6 +223,24 @@
       "writtenOn": "2018-10-27T22:03:32Z",
       "side": 1,
       "message": "Maybe define what \"restart\" means.  System reboot, SPDK application stop/start, is there some other level of load/unload?",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a00a479_31dd116c",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T00:13:36Z",
+      "side": 1,
+      "message": "Ack.",
+      "parentUuid": "f7d11d56_e58a5c78",
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
