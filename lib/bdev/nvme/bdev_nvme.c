@@ -1487,7 +1487,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		}
 	}
 
-	return (bdev_created > 0) ? 0 : -1;
+	return (bdev_created > 0 || nsid == 0) ? 0 : -1;
 }
 
 static void
