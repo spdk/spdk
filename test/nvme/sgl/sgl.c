@@ -308,13 +308,35 @@ free_req(struct io_request *req)
 	spdk_dma_free(req);
 }
 
+static bool
+check_io_length(struct io_request *req, struct spdk_nvme_ns *ns,
+		uint32_t *_lba_count)
+{
+	uint32_t len = 0, lba_count, remainder;
+	int i;
+
+	for (i = 0; i < req->iovcnt; i++) {
+		len += req->iovs[i].iov_len;
+	}
+
+	lba_count = len / spdk_nvme_ns_get_sector_size(ns);
+	remainder = len % spdk_nvme_ns_get_sector_size(ns);
+	if (!lba_count || remainder ||
+	    (BASE_LBA_START + lba_count > (uint32_t)spdk_nvme_ns_get_data(ns)->nsze)) {
+		return false;
+	}
+
+	*_lba_count = lba_count;
+	return true;
+}
+
 static int
 writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const char *test_name)
 {
 	int rc = 0;
 	int i, iovcnt;
-	uint32_t len, lba_count;
-	uint32_t j, remainder;
+	uint32_t lba_count = 0;
+	uint32_t j;
 	char *buf;
 
 	struct io_request *req;
@@ -346,16 +368,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	/* IO parameters setting */
 	build_io_fn(req);
 
-	len = 0;
-	for (i = 0; i < req->iovcnt; i++) {
-		struct iovec *iov = &req->iovs[i];
-
-		len += iov->iov_len;
-	}
-
-	lba_count = len / spdk_nvme_ns_get_sector_size(ns);
-	remainder = len % spdk_nvme_ns_get_sector_size(ns);
-	if (!lba_count || remainder || (BASE_LBA_START + lba_count > (uint32_t)nsdata->nsze)) {
+	if (!check_io_length(req, ns, &lba_count)) {
 		fprintf(stderr, "%s: %s Invalid IO length parameter\n", dev->name, test_name);
 		free_req(req);
 		return 0;
