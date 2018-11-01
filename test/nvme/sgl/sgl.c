@@ -330,14 +330,50 @@ check_io_length(struct io_request *req, struct spdk_nvme_ns *ns,
 	return true;
 }
 
+static void
+set_data_pattern(struct io_request *req)
+{
+	int i;
+
+	for (i = 0; i < req->iovcnt; i++) {
+		memset(req->iovs[i].iov_base, DATA_PATTERN, req->iovs[i].iov_len);
+	}
+}
+
+static void
+reset_data_pattern(struct io_request *req)
+{
+	int i;
+
+	for (i = 0; i < req->iovcnt; i++) {
+		memset(req->iovs[i].iov_base, 0, req->iovs[i].iov_len);
+	}
+}
+
+static bool
+check_data_pattern(struct io_request *req)
+{
+	int i;
+	char *buf;
+	uint32_t j;
+
+	for (i = 0; i < req->iovcnt; i++) {
+		buf = (char *)req->iovs[i].iov_base;
+		for (j = 0; j < req->iovs[i].iov_len; j++) {
+			if (buf[j] != DATA_PATTERN) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
 static int
 writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const char *test_name)
 {
 	int rc = 0;
-	int i, iovcnt;
 	uint32_t lba_count = 0;
-	uint32_t j;
-	char *buf;
 
 	struct io_request *req;
 	struct spdk_nvme_ns *ns;
@@ -380,10 +416,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 		return -1;
 	}
 
-	iovcnt = req->iovcnt;
-	for (i = 0; i < iovcnt; i++) {
-		memset(req->iovs[i].iov_base, DATA_PATTERN, req->iovs[i].iov_len);
-	}
+	set_data_pattern(req);
 
 	rc = spdk_nvme_ns_cmd_writev(ns, qpair, BASE_LBA_START, lba_count,
 				     io_complete, req, 0,
@@ -413,9 +446,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	/* reset completion flag */
 	io_complete_flag = 0;
 
-	for (i = 0; i < iovcnt; i++) {
-		memset(req->iovs[i].iov_base, 0, req->iovs[i].iov_len);
-	}
+	reset_data_pattern(req);
 
 	rc = spdk_nvme_ns_cmd_readv(ns, qpair, BASE_LBA_START, lba_count,
 				    io_complete, req, 0,
@@ -440,16 +471,11 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 		return -1;
 	}
 
-	for (i = 0; i < iovcnt; i++) {
-		buf = (char *)req->iovs[i].iov_base;
-		for (j = 0; j < req->iovs[i].iov_len; j++) {
-			if (buf[j] != DATA_PATTERN) {
-				fprintf(stderr, "%s: %s write/read success, but memcmp Failed\n", dev->name, test_name);
-				spdk_nvme_ctrlr_free_io_qpair(qpair);
-				free_req(req);
-				return -1;
-			}
-		}
+	if (!check_data_pattern(req)) {
+		fprintf(stderr, "%s: %s write/read success, but memcmp Failed\n", dev->name, test_name);
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
+		free_req(req);
+		return -1;
 	}
 
 	fprintf(stdout, "%s: %s test passed\n", dev->name, test_name);
