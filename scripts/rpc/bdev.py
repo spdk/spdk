@@ -245,6 +245,22 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
     return client.call('construct_nvme_bdev', params)
 
 
+def construct_nvme_ns_bdev(client, ctrlr_name, nsid):
+    """Construct one NVMe namespace block device.
+
+    Args:
+        ctrlr_name: Name of the NVMe controller
+        nsid: Namespace ID
+
+    Returns:
+        Name of created block device
+    """
+    params = {'ctrlr_name': ctrlr_name,
+              'nsid': nsid}
+
+    return client.call('construct_nvme_ns_bdev', params)
+
+
 def delete_nvme_controller(client, name):
     """Remove NVMe controller from the system.
 

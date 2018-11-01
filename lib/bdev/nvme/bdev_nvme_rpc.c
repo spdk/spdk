@@ -268,6 +268,82 @@ invalid:
 }
 SPDK_RPC_REGISTER("construct_nvme_bdev", spdk_rpc_construct_nvme_bdev, SPDK_RPC_RUNTIME)
 
+struct rpc_construct_nvme_ns_bdev {
+	char *ctrlr_name;
+	uint32_t nsid;
+};
+
+static void
+free_rpc_construct_nvme_ns_bdev(struct rpc_construct_nvme_ns_bdev *req)
+{
+	free(req->ctrlr_name);
+}
+
+static const struct spdk_json_object_decoder rpc_construct_nvme_ns_bdev_decoders[] = {
+	{"ctrlr_name", offsetof(struct rpc_construct_nvme_ns_bdev, ctrlr_name), spdk_json_decode_string},
+	{"nsid", offsetof(struct rpc_construct_nvme_ns_bdev, nsid), spdk_json_decode_uint32},
+};
+
+static void
+spdk_rpc_construct_nvme_ns_bdev(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct rpc_construct_nvme_ns_bdev req = {};
+	struct spdk_json_write_ctx *w;
+	struct nvme_ctrlr *nvme_ctrlr;
+	struct nvme_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_construct_nvme_ns_bdev_decoders,
+				    SPDK_COUNTOF(rpc_construct_nvme_ns_bdev_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	nvme_ctrlr = spdk_bdev_nvme_lookup_ctrlr(req.ctrlr_name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("NVMe ctrlr '%s' doesn't exist\n", req.ctrlr_name);
+		goto invalid;
+	}
+
+	if (spdk_nvme_ctrlr_is_active_ns(nvme_ctrlr->ctrlr, req.nsid) == false) {
+		SPDK_ERRLOG("Namespace %u is not one active namespace in NVMe ctrlr '%s'\n", req.nsid,
+			    req.ctrlr_name);
+		goto invalid;
+	}
+
+	bdev = &nvme_ctrlr->bdevs[req.nsid - 1];
+	if (bdev->active) {
+		SPDK_ERRLOG("NSID %u is already added\n", req.nsid);
+		goto invalid;
+	}
+
+	rc = nvme_ctrlr_create_bdev(nvme_ctrlr, req.nsid);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create bdev on NSID %u\n", req.nsid);
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		free_rpc_construct_nvme_ns_bdev(&req);
+		return;
+	}
+
+	spdk_json_write_string(w, bdev->disk.name);
+	spdk_jsonrpc_end_result(request, w);
+
+	free_rpc_construct_nvme_ns_bdev(&req);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_construct_nvme_ns_bdev(&req);
+}
+SPDK_RPC_REGISTER("construct_nvme_ns_bdev", spdk_rpc_construct_nvme_ns_bdev, SPDK_RPC_RUNTIME)
+
 static void
 spdk_rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
 				   struct nvme_ctrlr *nvme_ctrlr)

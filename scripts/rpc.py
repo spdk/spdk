@@ -292,6 +292,18 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_nvme_bdev)
 
     @call_cmd
+    def construct_nvme_ns_bdev(args):
+        print(rpc.bdev.construct_nvme_ns_bdev(args.client,
+                                              ctrlr_name=args.ctrlr_name,
+                                              nsid=args.nsid))
+
+    p = subparsers.add_parser('construct_nvme_ns_bdev',
+                              help='Add a bdev with nvme namespace backend')
+    p.add_argument('-b', '--ctrlr_name', help="Name of the NVMe controller", required=True)
+    p.add_argument('-i', '--nsid', help='Namespace ID', type=int)
+    p.set_defaults(func=construct_nvme_ns_bdev)
+
+    @call_cmd
     def get_nvme_controllers(args):
         print_dict(rpc.nvme.get_nvme_controllers(args.client,
                                                  name=args.name))

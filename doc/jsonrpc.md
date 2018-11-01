@@ -1033,6 +1033,49 @@ Example response:
 }
 ~~~
 
+## construct_nvme_ns_bdev {#rpc_construct_nvme_ns_bdev}
+
+Construct @ref bdev_config_nvme
+
+### Result
+
+Name of newly created bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr_name              | Required | string      | Name of the NVMe controller
+nsid                    | Required | number      | Namespace ID
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "ctrlr_name": "Nvme0",
+    "nsid": "1"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_nvme_ns_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    "Nvme0n1"
+  ]
+}
+~~~
+
 ## get_nvme_controllers {#rpc_get_nvme_controllers}
 
 Get information about NVMe controllers.
