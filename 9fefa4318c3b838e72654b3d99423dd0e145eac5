@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "a211124d_bf27bcf1",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T18:57:24Z",
+      "side": 1,
+      "message": "vol_size definition depends on chunk_size, which depends on backing_io_unit_size. Maybe reorder these, swapping backing_io_unit_size and vol_size?",
+      "revId": "9fefa4318c3b838e72654b3d99423dd0e145eac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56569746_4ce7f96c",
         "filename": "include/spdk/reduce.h",
         "patchSetId": 8
@@ -47,6 +64,23 @@
       "writtenOn": "2018-10-27T22:12:28Z",
       "side": 1,
       "message": "I hate to bring this up since you\u0027ve messed with the name so many times and I\u0027m not suggesting you change it again, but reading many of these function names \"reduce\" reads as an action verb.  Like here is this a function that reduces the total chunks? Obviously not but an opening comment that says \"returns total chunks for the given volume\"\n\nThen again, it may just be me :)\n\nOr, now after reading the rest of the file, calling this _reduce_get_ttl_chunks() would be clearer IMHO",
+      "revId": "9fefa4318c3b838e72654b3d99423dd0e145eac5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a42a2ea_ad51384f",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T18:57:24Z",
+      "side": 1,
+      "message": "Maybe define the cache line size as a #define? It\u0027s actually possible to dynamically query this via sysfs, but I don\u0027t think we need to go that far yet.",
       "revId": "9fefa4318c3b838e72654b3d99423dd0e145eac5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
