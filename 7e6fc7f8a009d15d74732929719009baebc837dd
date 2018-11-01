@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "ca9b6c2b_fcd743a9",
+        "filename": "include/spdk/ocssd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T22:51:31Z",
+      "side": 1,
+      "message": "Eliminate this callback structure and just pass these two parameters to the functions below.",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e8388764_05fbd2e1",
         "filename": "include/spdk/ocssd.h",
         "patchSetId": 2
@@ -30,6 +47,74 @@
       "writtenOn": "2018-11-01T22:13:57Z",
       "side": 1,
       "message": "Please add doxygen comments describing these public API functions. We automatically generate API documentation and update https://spdk.io/doc accordingly.",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d02a8746_d49cc15c",
+        "filename": "include/spdk/ocssd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T22:51:31Z",
+      "side": 1,
+      "message": "Why not just do the ocssd_io_alloc automatically inside the read/write/flush functions?",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e54f6cef_3f3d3967",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T22:51:31Z",
+      "side": 1,
+      "message": "I am looking ahead at what these functions actually do and I think there is a design conflict we\u0027re going to need to work out. It seems that what you would like to write is software that spawns its own threads to be scheduled by the OS, and then you perform blocking (sleep) operations on that thread.\n\nThat, however, is not how SPDK works and it can be quite an adjustment to get used to the SPDK model, but I\u0027m confident we can make the FTL work how we need it to without ever spawning threads internally.\n\nSPDK is a collection of libraries intended to work as part of a cooperative multi-tasking framework. SPDK doesn\u0027t specify which framework is used (in the libraries themselves, at least) but it certainly assumes there is one. That means that all SPDK libraries should be passive - they only take action in response to direct function calls from a user. Further, the action they take should be well-bounded in time so they don\u0027t block other actions from occurring within the cooperative multi-tasking framework.\n\nThis FTL is certainly going to need to perform periodic garbage collection (reloc I think you call it in the code). However, instead of spawning a thread to go do that in the background, register a poller using spdk_poller_register.\n\nThis FTL also is going to have some major challenges with doing I/O in parallel from two different threads due to shared state. The I/O needs to get appended to the appropriate band in a thread-safe way. Today it appears that you are using these functions to message pass all of the I/O to a single thread per device. SPDK is very fast, and so that may not be the worst thing in the world, however I\u0027d like to really try to come up with a clever design that allows for truly parallel I/O in at least most cases.",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a2ca515_961d2217",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T22:51:31Z",
+      "side": 1,
+      "message": "SPDK has a great bitmap implementation you can use. See include/spdk/bit_array.h.",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88c6049a_219a39d7",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T22:51:31Z",
+      "side": 1,
+      "message": "SPDK_COUNTOF in include/spdk/util.h",
       "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
