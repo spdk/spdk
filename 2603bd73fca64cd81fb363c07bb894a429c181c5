@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "2b07b5c1_499e1f13",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T21:17:43Z",
+      "side": 1,
+      "message": "These operations are all vectored, so maybe readv/writev? I know there isn\u0027t actually a regular read/write that\u0027s going to be supported.",
+      "revId": "2603bd73fca64cd81fb363c07bb894a429c181c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "add46af8_094462f2",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-01T21:17:43Z",
+      "side": 1,
+      "message": "Need doxygen comments",
+      "revId": "2603bd73fca64cd81fb363c07bb894a429c181c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2972d95a_6c75c35e",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 4
