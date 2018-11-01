@@ -167,6 +167,8 @@ nvme_rpc_bdev_nvme_cb(void *ref, const struct spdk_nvme_cpl *cpl)
 		ctx->ctrlr_io_ch = NULL;
 	}
 
+	bdev_nvme_ctrlr_put_ref(ctx->nvme_ctrlr);
+
 	spdk_rpc_send_nvme_cmd_complete(ctx, cpl);
 }
 
@@ -467,6 +469,8 @@ spdk_rpc_send_nvme_cmd(struct spdk_jsonrpc_request *request,
 		ret = -EINVAL;
 		goto invalid;
 	}
+
+	bdev_nvme_ctrlr_get_ref(ctx->nvme_ctrlr);
 
 	ctx->jsonrpc_request = request;
 

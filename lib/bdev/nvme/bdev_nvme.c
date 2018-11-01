@@ -259,6 +259,12 @@ bdev_nvme_unregister_cb(void *io_device)
 	spdk_nvme_detach(ctrlr);
 }
 
+void
+bdev_nvme_ctrlr_get_ref(struct nvme_ctrlr *nvme_ctrlr)
+{
+	nvme_ctrlr->ref++;
+}
+
 static void
 bdev_nvme_ctrlr_destruct(struct nvme_ctrlr *nvme_ctrlr)
 {
@@ -272,25 +278,31 @@ bdev_nvme_ctrlr_destruct(struct nvme_ctrlr *nvme_ctrlr)
 	free(nvme_ctrlr);
 }
 
+void
+bdev_nvme_ctrlr_put_ref(struct nvme_ctrlr *nvme_ctrlr)
+{
+	assert(nvme_ctrlr->ref > 0);
+	nvme_ctrlr->ref--;
+	if (nvme_ctrlr->ref == 0 && nvme_ctrlr->destruct) {
+		/* Clear destruct sign in case of reentering controller destruct */
+		nvme_ctrlr->destruct = false;
+
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "%s is going to destruct.\n", nvme_ctrlr->name);
+		bdev_nvme_ctrlr_destruct(nvme_ctrlr);
+	}
+}
+
 static int
 bdev_nvme_destruct(void *ctx)
 {
 	struct nvme_bdev *nvme_disk = ctx;
 	struct nvme_ctrlr *nvme_ctrlr = nvme_disk->nvme_ctrlr;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	nvme_ctrlr->ref--;
 	free(nvme_disk->disk.name);
 	memset(nvme_disk, 0, sizeof(*nvme_disk));
-	if (nvme_ctrlr->ref == 0 && nvme_ctrlr->destruct) {
-		/* Clear destruct sign in case of reentering controller destruct */
-		nvme_ctrlr->destruct = false;
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		bdev_nvme_ctrlr_destruct(nvme_ctrlr);
-		return 0;
-	}
 
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	bdev_nvme_ctrlr_put_ref(nvme_ctrlr);
+
 	return 0;
 }
 
