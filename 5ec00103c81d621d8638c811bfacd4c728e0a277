@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "861c33e5_04f873c9",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-01T22:30:14Z",
+      "side": 1,
+      "message": "separating these lines from previous if-else may make it easier to read",
+      "range": {
+        "startLine": 191,
+        "startChar": 3,
+        "endLine": 196,
+        "endChar": 2
+      },
+      "revId": "5ec00103c81d621d8638c811bfacd4c728e0a277",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
