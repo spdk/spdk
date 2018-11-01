@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cadb6d17_c5ce4830",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T17:22:20Z",
+      "side": 1,
+      "message": "better to use SPDK_NVME_OPC_FLUSH\n\nbut in general, I think it\u0027s fine to issue some FLUSH commands - they may always complete successfully, but it may not always be the case, and if 1 out of every 256 commands is a FLUSH, I don\u0027t think it\u0027s a big deal",
+      "revId": "57e1a09748ca8f7aad0ab7ec245df0be9c07c355",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
