@@ -52,6 +52,24 @@
       "revId": "d99157197ef6bbc6cc3bd02a197f28bfbb4f5f0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b20bb6aa_a976efa7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 1539,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T21:28:50Z",
+      "side": 1,
+      "message": "It would be good to describe this concept somewhere, but I\u0027m thinking it\u0027s better in doc/bdev.md, rather than the RPC documentation.\n\nIt can be a bit confusing.  For example, if you call construct_lvol_store with a bdev name that does not exist yet, it will immediately fail - it won\u0027t wait for that bdev to show up.  I think that is the correct behavior, but we need to have this described somewhere, and probably call out which bdev modules follow which process.  I think it can be summarized that virtual bdev construct calls that require writing metadata to the bdev *must* specify a bdev that is currently present.",
+      "parentUuid": "098e35be_301c960a",
+      "revId": "d99157197ef6bbc6cc3bd02a197f28bfbb4f5f0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
