@@ -72,6 +72,40 @@
     },
     {
       "key": {
+        "uuid": "93af7add_0d513482",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-01T23:36:15Z",
+      "side": 1,
+      "message": "Also, can you please make it clear if the solution is intended to work without PM? For systems that don\u0027t have PM, will the design allow such compression offload to work simply with DDR4? Our system may not have PM support for a bit. So hosting the metadata in another SSD or DDR4 would help a lot.",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d405d0c4_c9098c27",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-01T23:36:15Z",
+      "side": 1,
+      "message": "First off, thank you Jim for the excellent doc. It explained the concepts really well, cannot thank you enough for such a nice doc. I have some minor nit comments.\n\nI maybe wrong but one of the main points that I understood of this feature was the ability to offload some of the storage features onto other assist-devices (mostly separate hardware). So the reduce feature allows for offloading of storage-compression to other hardware, in an attempt to reduce host-side cpu/resource(s) consumption and free up host resources for other tasks. If that is the case, maybe it would help to make it clear and explicit right at the beginning.",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "47651190_f3b90d62",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -104,6 +138,40 @@
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4fd3a10_cf4371df",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-01T23:36:15Z",
+      "side": 1,
+      "message": "Nit : If N backing IO units are associated with each chunk, then this should be 0 to N-1.",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abd46f5a_25b69f39",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-01T23:36:15Z",
+      "side": 1,
+      "message": "Sorry another Nit : if it is not too late and if it is still possible to use some easily referenced term for \"Backing IO unit\", it\u0027d be welcome. Or maybe it is a matter of me getting used to saying that repeatedly :-) Something like bsPage or something easier maybe helpful.",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -174,6 +242,40 @@
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "528225ab_f367fae6",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-01T23:36:15Z",
+      "side": 1,
+      "message": "Why is this necessary or important? ie. copying the 4KB incoming data to offset 8KB of this temp buffer? Does it make a difference if it is simply occupying the lowest (LSB + 4K) region of the buffer before being used for compression and the result copied to the dest buffer?",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b461e77_2cf44837",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-01T23:36:15Z",
+      "side": 1,
+      "message": "I maybe missing something here, so this is not a comment really. Rather trying to understand how this works: 1. The initial data read from blocking-io-unit 2 was 4KB. So when decompressed it should probably expand to something \u003e\u003d 4KB. Let us say it decompresses to 8KB. So when we try to write this 8KB into the allocated 16KB buffer (which is made of four 4KB units) where do we copy this 8KB which takes up 2 4KB units. My point is, if we copy this to the units 0 and 1 then that itself takes up till offset 8K of the allocated buffer. Then how do we copy the incoming 4K of data to offset 4KB of the uncompressed buffer. I think I am missing something here, so any input will help. Thanks.",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
