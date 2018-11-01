@@ -65,6 +65,7 @@ struct nvme_ctrlr {
 	struct spdk_nvme_transport_id	trid;
 	char				*name;
 	int				ref;
+	bool				destruct;
 	uint32_t			num_ns;
 	/** Array of bdevs indexed by nsid - 1 */
 	struct nvme_bdev		*bdevs;
