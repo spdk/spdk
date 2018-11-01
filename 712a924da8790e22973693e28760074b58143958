@@ -22,6 +22,30 @@
       "revId": "712a924da8790e22973693e28760074b58143958",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "645fa3c5_5f36f56b",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-01T18:46:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bf0b34b2_32c2c98e",
+      "range": {
+        "startLine": 333,
+        "startChar": 14,
+        "endLine": 333,
+        "endChar": 19
+      },
+      "revId": "712a924da8790e22973693e28760074b58143958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

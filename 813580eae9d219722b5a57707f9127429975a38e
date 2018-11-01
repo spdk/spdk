@@ -70,6 +70,30 @@
       "revId": "813580eae9d219722b5a57707f9127429975a38e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c36e66f6_bd40d0a6",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-01T18:46:12Z",
+      "side": 1,
+      "message": "OK thanks.  I talked w/Jim and understand the difference between the per module and per bdev json config functions now, I will add a little more info the comment here.  Thanks!",
+      "parentUuid": "3272b065_2a21ef1e",
+      "range": {
+        "startLine": 492,
+        "startChar": 1,
+        "endLine": 493,
+        "endChar": 32
+      },
+      "revId": "813580eae9d219722b5a57707f9127429975a38e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
