@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d00c8d70_2f85aff1",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1490,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-01T21:49:05Z",
+      "side": 1,
+      "message": "If a controller has two namespaces, and nvme_ctrlr_create_bdev() fails for both, this function will return failure.\n\nIf a controller has two namespaces, and nvme_ctrlr_create_bdev() fails for one of them, this function will return success.\n\nIf a controller has no namespaces, this function will return success.\n\nMaybe we should just always return success now?  I don\u0027t see why we should treat the first two cases differently - since we now support a controller with no constructed namespaces.",
+      "revId": "a953ba9fcb1beb1cb27219c76f9f42b2e77d3775",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
