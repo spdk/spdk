@@ -34,6 +34,24 @@
       "revId": "d99157197ef6bbc6cc3bd02a197f28bfbb4f5f0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "098e35be_301c960a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 1539,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-01T18:45:31Z",
+      "side": 1,
+      "message": "Doubled checked with some others who also agree its a good suggestion but probably doesn\u0027t belong here (to much detail)",
+      "parentUuid": "612791e8_78d3eff4",
+      "revId": "d99157197ef6bbc6cc3bd02a197f28bfbb4f5f0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
