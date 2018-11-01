@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4cda5180_3a9a66aa",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 3321,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-01T15:40:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d6f1732_9a6ecbbd",
+      "range": {
+        "startLine": 3321,
+        "startChar": 4,
+        "endLine": 3321,
+        "endChar": 44
+      },
+      "revId": "6ba67c9f33e7d9c927455afd19a1ad4d653005e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73fac889_968e6664",
         "filename": "lib/event/subsystems/nvmf/conf.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-01T09:05:26Z",
       "side": 1,
       "message": "max_subsystems ?",
+      "range": {
+        "startLine": 67,
+        "startChar": 31,
+        "endLine": 67,
+        "endChar": 35
+      },
+      "revId": "6ba67c9f33e7d9c927455afd19a1ad4d653005e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e80b352_68ac06e2",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-01T15:40:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "73fac889_968e6664",
       "range": {
         "startLine": 67,
         "startChar": 31,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "f8d6b8ad_6633cd58",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 1266,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-01T15:40:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a01eecc_56ac7b24",
+      "range": {
+        "startLine": 1266,
+        "startChar": 74,
+        "endLine": 1266,
+        "endChar": 93
+      },
+      "revId": "6ba67c9f33e7d9c927455afd19a1ad4d653005e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fcb9f269_8bc22c29",
         "filename": "scripts/rpc/nvmf.py",
         "patchSetId": 9
@@ -82,6 +154,30 @@
       "writtenOn": "2018-11-01T09:05:26Z",
       "side": 1,
       "message": "e.g. may be more common ?",
+      "range": {
+        "startLine": 8,
+        "startChar": 62,
+        "endLine": 8,
+        "endChar": 65
+      },
+      "revId": "6ba67c9f33e7d9c927455afd19a1ad4d653005e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8d621f8_e382c2c2",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-01T15:40:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fcb9f269_8bc22c29",
       "range": {
         "startLine": 8,
         "startChar": 62,
