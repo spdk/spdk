@@ -167,6 +167,16 @@ nvme_rpc_bdev_nvme_cb(void *ref, const struct spdk_nvme_cpl *cpl)
 		ctx->ctrlr_io_ch = NULL;
 	}
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	ctx->nvme_ctrlr->ref--;
+	if (ctx->nvme_ctrlr->ref == 0 && ctx->nvme_ctrlr->destruct) {
+		ctx->nvme_ctrlr->destruct = false;
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		bdev_nvme_ctrlr_destruct(ctx->nvme_ctrlr);
+	} else {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	}
+
 	spdk_rpc_send_nvme_cmd_complete(ctx, cpl);
 }
 
@@ -460,13 +470,18 @@ spdk_rpc_send_nvme_cmd(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	ctx->nvme_ctrlr = spdk_bdev_nvme_lookup_ctrlr(ctx->req.name);
 	if (ctx->nvme_ctrlr == NULL) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		SPDK_ERRLOG("Failed at device lookup\n");
 		error_code = SPDK_JSONRPC_ERROR_INVALID_PARAMS;
 		ret = -EINVAL;
 		goto invalid;
 	}
+
+	ctx->nvme_ctrlr->ref++;
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	ctx->jsonrpc_request = request;
 

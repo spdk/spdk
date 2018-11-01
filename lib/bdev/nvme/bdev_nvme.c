@@ -110,7 +110,7 @@ static bool g_nvme_hotplug_enabled = false;
 static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
 static char *g_nvme_hostnqn = NULL;
-static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 
@@ -259,7 +259,7 @@ bdev_nvme_unregister_cb(void *io_device)
 	spdk_nvme_detach(ctrlr);
 }
 
-static void
+void
 bdev_nvme_ctrlr_destruct(struct nvme_ctrlr *nvme_ctrlr)
 {
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
