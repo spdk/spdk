@@ -996,7 +996,7 @@ Array of names of newly created bdevs.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-name                    | Required | string      | Bdev name
+name                    | Required | string      | Name of the NVMe controller, prefix for each bdev name
 trtype                  | Required | string      | NVMe-oF target trtype: rdma or pcie
 traddr                  | Required | string      | NVMe-oF target address: ip or BDF
 adrfam                  | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host
