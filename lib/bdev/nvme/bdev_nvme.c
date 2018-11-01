@@ -114,7 +114,7 @@ static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 
-static int nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
+static void nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
 static int bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
@@ -1030,13 +1030,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 				sizeof(struct nvme_io_channel),
 				name);
 
-	if (nvme_ctrlr_create_bdevs(nvme_ctrlr) != 0) {
-		spdk_io_device_unregister(ctrlr, bdev_nvme_unregister_cb);
-		free(nvme_ctrlr->bdevs);
-		free(nvme_ctrlr->name);
-		free(nvme_ctrlr);
-		return -1;
-	}
+	nvme_ctrlr_create_bdevs(nvme_ctrlr);
 
 	nvme_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
 					  g_opts.nvme_adminq_poll_period_us);
@@ -1473,7 +1467,7 @@ bdev_nvme_library_fini(void)
 	spdk_poller_unregister(&g_hotplug_poller);
 }
 
-static int
+static void
 nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 {
 	int			rc;
@@ -1485,10 +1479,14 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		rc = nvme_ctrlr_create_bdev(nvme_ctrlr, nsid);
 		if (rc == 0) {
 			bdev_created++;
+		} else {
+			SPDK_NOTICELOG("Failed to create bdev for namespace %u of %s\n", nsid, nvme_ctrlr->name);
 		}
 	}
 
-	return (bdev_created > 0) ? 0 : -1;
+	if (bdev_created == 0) {
+		SPDK_NOTICELOG("No bdev is created for NVMe controller %s\n", nvme_ctrlr->name);
+	}
 }
 
 static void
