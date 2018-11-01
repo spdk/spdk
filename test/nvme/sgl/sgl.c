@@ -128,13 +128,24 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
+static void
+_build_io_request(struct io_request *req, int pos, uint32_t offset, uint32_t len,
+		  uint32_t align, uint32_t misalign)
+{
+	uint32_t buf_len;
+
+	buf_len = ((offset + len + misalign) + (align - 1)) & ~(align - 1);
+
+	req->bufs[pos] = spdk_dma_zmalloc(buf_len, align, NULL);
+	req->iovs[pos].iov_base = req->bufs[pos] + offset + misalign;
+	req->iovs[pos].iov_len = len;
+}
+
 static void build_io_request_0(struct io_request *req)
 {
 	req->iovcnt = 1;
 
-	req->bufs[0] = spdk_dma_zmalloc(0x800, 4, NULL);
-	req->iovs[0].iov_base = req->bufs[0];
-	req->iovs[0].iov_len = 0x800;
+	_build_io_request(req, 0, 0, 0x800, 4, 0);
 }
 
 static void build_io_request_1(struct io_request *req)
@@ -142,9 +153,7 @@ static void build_io_request_1(struct io_request *req)
 	req->iovcnt = 1;
 
 	/* 512B for 1st sge */
-	req->bufs[0] = spdk_dma_zmalloc(0x200, 0x200, NULL);
-	req->iovs[0].iov_base = req->bufs[0];
-	req->iovs[0].iov_len = 0x200;
+	_build_io_request(req, 0, 0, 0x200, 0x200, 0);
 }
 
 static void build_io_request_2(struct io_request *req)
@@ -152,9 +161,7 @@ static void build_io_request_2(struct io_request *req)
 	req->iovcnt = 1;
 
 	/* 256KB for 1st sge */
-	req->bufs[0] = spdk_dma_zmalloc(0x40000, 0x1000, NULL);
-	req->iovs[0].iov_base = req->bufs[0];
-	req->iovs[0].iov_len = 0x40000;
+	_build_io_request(req, 0, 0, 0x40000, 0x1000, 0);
 }
 
 static void build_io_request_3(struct io_request *req)
@@ -163,19 +170,13 @@ static void build_io_request_3(struct io_request *req)
 
 	/* 2KB for 1st sge, make sure the iov address start at 0x800 boundary,
 	 *  and end with 0x1000 boundary */
-	req->bufs[0] = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
-	req->iovs[0].iov_base = req->bufs[0] + 0x800;
-	req->iovs[0].iov_len = 0x800;
+	_build_io_request(req, 0, 0x800, 0x800, 0x1000, 0);
 
 	/* 4KB for 2th sge */
-	req->bufs[1] = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
-	req->iovs[1].iov_base = req->bufs[1];
-	req->iovs[1].iov_len = 0x1000;
+	_build_io_request(req, 1, 0, 0x1000, 0x1000, 0);
 
 	/* 12KB for 3th sge */
-	req->bufs[2] = spdk_dma_zmalloc(0x3000, 0x1000, NULL);
-	req->iovs[2].iov_base = req->bufs[2];
-	req->iovs[2].iov_len = 0x3000;
+	_build_io_request(req, 2, 0, 0x3000, 0x1000, 0);
 }
 
 static void build_io_request_4(struct io_request *req)
@@ -185,15 +186,11 @@ static void build_io_request_4(struct io_request *req)
 	req->iovcnt = 32;
 
 	/* 4KB for 1st sge */
-	req->bufs[0] = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
-	req->iovs[0].iov_base = req->bufs[0];
-	req->iovs[0].iov_len = 0x1000;
+	_build_io_request(req, 0, 0, 0x1000, 0x1000, 0);
 
 	/* 8KB for the rest 31 sge */
 	for (i = 1; i < req->iovcnt; i++) {
-		req->bufs[i] = spdk_dma_zmalloc(0x2000, 0x1000, NULL);
-		req->iovs[i].iov_base = req->bufs[i];
-		req->iovs[i].iov_len = 0x2000;
+		_build_io_request(req, i, 0, 0x2000, 0x1000, 0);
 	}
 }
 
@@ -202,9 +199,7 @@ static void build_io_request_5(struct io_request *req)
 	req->iovcnt = 1;
 
 	/* 8KB for 1st sge */
-	req->bufs[0] = spdk_dma_zmalloc(0x2000, 0x1000, NULL);
-	req->iovs[0].iov_base = req->bufs[0];
-	req->iovs[0].iov_len = 0x2000;
+	_build_io_request(req, 0, 0, 0x2000, 0x1000, 0);
 }
 
 static void build_io_request_6(struct io_request *req)
@@ -212,14 +207,10 @@ static void build_io_request_6(struct io_request *req)
 	req->iovcnt = 2;
 
 	/* 4KB for 1st sge */
-	req->bufs[0] = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
-	req->iovs[0].iov_base = req->bufs[0];
-	req->iovs[0].iov_len = 0x1000;
+	_build_io_request(req, 0, 0, 0x1000, 0x1000, 0);
 
 	/* 4KB for 2st sge */
-	req->bufs[1] = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
-	req->iovs[1].iov_base = req->bufs[1];
-	req->iovs[1].iov_len = 0x1000;
+	_build_io_request(req, 1, 0, 0x1000, 0x1000, 0);
 }
 
 static void build_io_request_7(struct io_request *req)
@@ -230,9 +221,7 @@ static void build_io_request_7(struct io_request *req)
 	 * Create a 64KB sge, but ensure it is *not* aligned on a 4KB
 	 *  boundary.  This is valid for single element buffers with PRP.
 	 */
-	req->bufs[0] = spdk_dma_zmalloc(0x11000, 0x1000, NULL);
-	req->iovs[0].iov_base = req->bufs[0] + 64;
-	req->iovs[0].iov_len = 0x10000;
+	_build_io_request(req, 0, 0, 0x10000, 0x1000, 64);
 }
 
 static void build_io_request_8(struct io_request *req)
@@ -243,17 +232,13 @@ static void build_io_request_8(struct io_request *req)
 	 * 1KB for 1st sge, make sure the iov address does not start and end
 	 * at 0x1000 boundary
 	 */
-	req->bufs[0] = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
-	req->iovs[0].iov_base = req->bufs[0] + 0x400;
-	req->iovs[0].iov_len = 0x400;
+	_build_io_request(req, 0, 0x400, 0x400, 0x1000, 0);
 
 	/*
 	 * 1KB for 1st sge, make sure the iov address does not start and end
 	 * at 0x1000 boundary
 	 */
-	req->bufs[1] = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
-	req->iovs[1].iov_base = req->bufs[1] + 0x400;
-	req->iovs[1].iov_len = 0x400;
+	_build_io_request(req, 1, 0x400, 0x400, 0x1000, 0);
 }
 
 static void build_io_request_9(struct io_request *req)
@@ -265,15 +250,12 @@ static void build_io_request_9(struct io_request *req)
 	 */
 	const size_t req_len[] = {  2048, 4096, 2048,  4096,  2048,  1024 };
 	const size_t req_off[] = { 0x800,  0x0,  0x0, 0x100, 0x800, 0x800 };
-	struct iovec *iovs = req->iovs;
 	int i;
 	req->iovcnt = SPDK_COUNTOF(req_len);
 	assert(SPDK_COUNTOF(req_len) == SPDK_COUNTOF(req_off));
 
 	for (i = 0; i < req->iovcnt; i++) {
-		req->bufs[i] = spdk_dma_zmalloc(req_off[i] + req_len[i], 0x4000, NULL);
-		iovs[i].iov_base = req->bufs[i] + req_off[i];
-		iovs[i].iov_len = req_len[i];
+		_build_io_request(req, i, req_off[i], req_len[i], 0x4000, 0);
 	}
 }
 
@@ -285,15 +267,12 @@ static void build_io_request_10(struct io_request *req)
 	 */
 	const size_t req_len[] = {  4004, 4096,  92 };
 	const size_t req_off[] = {  0x5c,  0x0, 0x0 };
-	struct iovec *iovs = req->iovs;
 	int i;
 	req->iovcnt = SPDK_COUNTOF(req_len);
 	assert(SPDK_COUNTOF(req_len) == SPDK_COUNTOF(req_off));
 
 	for (i = 0; i < req->iovcnt; i++) {
-		req->bufs[i] = spdk_dma_zmalloc(req_off[i] + req_len[i], 0x4000, NULL);
-		iovs[i].iov_base = req->bufs[i] + req_off[i];
-		iovs[i].iov_len = req_len[i];
+		_build_io_request(req, i, req_off[i], req_len[i], 0x4000, 0);
 	}
 }
 
@@ -302,15 +281,12 @@ static void build_io_request_11(struct io_request *req)
 	/* This test case focuses on the last element not starting on a page boundary. */
 	const size_t req_len[] = { 512, 512 };
 	const size_t req_off[] = { 0xe00, 0x800 };
-	struct iovec *iovs = req->iovs;
 	int i;
 	req->iovcnt = SPDK_COUNTOF(req_len);
 	assert(SPDK_COUNTOF(req_len) == SPDK_COUNTOF(req_off));
 
 	for (i = 0; i < req->iovcnt; i++) {
-		req->bufs[i] = spdk_dma_zmalloc(req_off[i] + req_len[i], 0x4000, NULL);
-		iovs[i].iov_base = req->bufs[i] + req_off[i];
-		iovs[i].iov_len = req_len[i];
+		_build_io_request(req, i, req_off[i], req_len[i], 0x4000, 0);
 	}
 }
 
