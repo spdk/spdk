@@ -83,6 +83,24 @@
     },
     {
       "key": {
+        "uuid": "edf6e80b_cecef48a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2036,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T23:32:18Z",
+      "side": 1,
+      "message": "I still think an assert in spdk_bdev_register() would be better - rather than relying on all bdev modules to get it right.  But I guess we can do that later.",
+      "parentUuid": "fc1d5b42_05043f1e",
+      "revId": "69234503337339a16c50a68f628b80c6b44ff7ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e22324de_7491c41a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
