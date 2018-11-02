@@ -203,6 +203,10 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	run_test suite ./test/spdkcli/rbd.sh
 fi
 
+if [ $SPDK_TEST_CACHE -eq 1 ]; then
+	run_test suite ./test/cache/cache.sh
+fi
+
 timing_enter cleanup
 autotest_cleanup
 timing_exit cleanup

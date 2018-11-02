@@ -60,6 +60,7 @@ fi
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=1}; export SPDK_RUN_INSTALLED_DPDK
 : ${SPDK_TEST_CRYPTO=1}; export SPDK_TEST_CRYPTO
+: ${SPDK_TEST_CACHE=1}; export SPDK_TEST_CACHE
 
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
@@ -85,6 +86,10 @@ fi
 
 if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 	config_params+=' --with-crypto'
+fi
+
+if [ $SPDK_TEST_CACHE -eq 1 ]; then
+	config_params+=' --with_cache'
 fi
 
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
