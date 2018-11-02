@@ -1435,6 +1435,30 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
+nvme_rdma_ctrlr_confirm_existence(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_rdma_ctrlr *rctrlr = nvme_rdma_ctrlr(ctrlr);
+
+	if (ctrlr->is_resetting) {
+		if (ctrlr->adminq) {
+			nvme_rdma_qpair_destroy(ctrlr->adminq);
+		}
+
+		ctrlr->adminq = NULL;
+
+		ctrlr->adminq = nvme_rdma_ctrlr_create_qpair(&rctrlr->ctrlr, 0,
+				SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES, 0, SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES);
+
+		if (!rctrlr->ctrlr.adminq) {
+			SPDK_ERRLOG("failed to locate nvmf ctrlr on fabric\n");
+			return -ENODEV;
+		}
+	}
+
+	return 0;
+}
+
+int
 nvme_rdma_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
 	return nvme_fabric_ctrlr_set_reg_4(ctrlr, offset, value);
