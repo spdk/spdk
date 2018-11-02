@@ -39,6 +39,23 @@
       "revId": "82dc56ac36f8ea65e43f0e3eff429201d82bb0bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "763f190d_f4441147",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 780,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-02T09:19:38Z",
+      "side": 1,
+      "message": "Should we add assert(len \u003c\u003d sizeof(blkcfg)) before memcpy?",
+      "revId": "82dc56ac36f8ea65e43f0e3eff429201d82bb0bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
