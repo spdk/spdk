@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0d8e8b8_832076da",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-02T17:49:47Z",
+      "side": 1,
+      "message": "This comment needs to state that this is the exponent of a power of two value.",
+      "revId": "f04566e0e7cbc5fdfcad29d335ad2e803c74d30c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
