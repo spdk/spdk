@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc195017_21b140e1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T19:22:53Z",
+      "side": 1,
+      "message": "Hi Jin,\n\nThanks for the patch Jin!  Changpeng is already reviewing the code so I will let him continue to do that.\n\nJust a few pointers on the commit messages.\n\nFor the first line, you don\u0027t need to put the full name of the file, just the component that is being modified.  It should also briefly explain the issue being fixed - not the GitHub issue number.  This will make it easier in the future, if someone looks at \"git log --oneline\" to get a brief idea of what the patch does, without needing to lookup GitHub issue #310.\n\nSo something like:\n\nnvme: check for hotplug events during initialization\n\nThen later in the commit message, you can just say:\n\nFixes issue #310.\n\n-Jim",
+      "revId": "f37763c5a5e936ed7dbc3f3293a62b2a984eb60e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
