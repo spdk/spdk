@@ -41,6 +41,8 @@
 
 DEFINE_STUB_V(spdk_rpc_initialize, (const char *listen_addr));
 DEFINE_STUB_V(spdk_rpc_finish, (void));
+DEFINE_STUB_V(spdk_notifications_initialize, (void));
+DEFINE_STUB_V(spdk_notifications_finish, (void));
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB_V(spdk_reactors_start, (void));
 DEFINE_STUB_V(spdk_reactors_stop, (void *arg1, void *arg2));
