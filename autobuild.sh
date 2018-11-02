@@ -66,6 +66,11 @@ fi
 
 fail=0
 ./configure $config_params
+
+# Need to cmpile OCF files first
+# because they do not pass scanbuild
+$MAKE $MAKEFLAGS -C lib/cas/ocfenv 2> /dev/null
+
 time $scanbuild $MAKE $MAKEFLAGS || fail=1
 if [ $fail -eq 1 ]; then
 	if [ -d $out/scan-build-tmp ]; then
