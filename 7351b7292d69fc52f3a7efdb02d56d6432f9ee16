@@ -16,6 +16,24 @@
       "revId": "7351b7292d69fc52f3a7efdb02d56d6432f9ee16",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c30dfa02_46dfb957",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T17:40:10Z",
+      "side": 1,
+      "message": "It will be more apparent when the load path is fully implemented.  During load, we detect the REDUCE signature on the backing device, read the PM file path from the backing device, and then ask the calling entity to open the file for us.  So that\u0027s why we add the close callback, so that we can ask the calling entity to close it for us once we\u0027re done with it.",
+      "parentUuid": "a871492b_d4656712",
+      "revId": "7351b7292d69fc52f3a7efdb02d56d6432f9ee16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
