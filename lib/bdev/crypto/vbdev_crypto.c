@@ -1036,9 +1036,9 @@ vbdev_crypto_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 static int
 vbdev_crypto_config_json(struct spdk_json_write_ctx *w)
 {
-	struct vbdev_crypto *crypto_bdev, *tmp;
+	struct vbdev_crypto *crypto_bdev;
 
-	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
+	TAILQ_FOREACH(crypto_bdev, &g_vbdev_crypto, link) {
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "method", "construct_crypto_bdev");
 		spdk_json_write_named_object_begin(w, "params");
