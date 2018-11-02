@@ -929,6 +929,18 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+int
+nvme_pcie_ctrlr_confirm_existence(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_cc_register cc;
+
+	nvme_pcie_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw), &cc.raw);
+	if (cc.raw == UINT32_MAX) {
+		return -ENODEV;
+	}
+	return 0;
+}
+
 static void
 nvme_qpair_construct_tracker(struct nvme_tracker *tr, uint16_t cid, uint64_t phys_addr)
 {
