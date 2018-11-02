@@ -89,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "3817d6d9_53a1a4e4",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T16:08:32Z",
+      "side": 1,
+      "message": "For volatile DRAM, you could create a pmem pool on a ramdisk.  The Linux kernel provides a method I believe to create \"fake\" persistent memory from DRAM.  Of course that data won\u0027t be persistent.\n\nPMDK also supports using files that are not backed by persistent memory.  Performance will suffer of course, since syncs will require writing a full sector to disk.",
+      "parentUuid": "93af7add_0d513482",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d405d0c4_c9098c27",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -100,6 +118,24 @@
       "writtenOn": "2018-11-01T23:36:15Z",
       "side": 1,
       "message": "First off, thank you Jim for the excellent doc. It explained the concepts really well, cannot thank you enough for such a nice doc. I have some minor nit comments.\n\nI maybe wrong but one of the main points that I understood of this feature was the ability to offload some of the storage features onto other assist-devices (mostly separate hardware). So the reduce feature allows for offloading of storage-compression to other hardware, in an attempt to reduce host-side cpu/resource(s) consumption and free up host resources for other tasks. If that is the case, maybe it would help to make it clear and explicit right at the beginning.",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a3c0823_3a6885ed",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T16:08:32Z",
+      "side": 1,
+      "message": "The next version of this doc will talk a bit about the compression offloading.",
+      "parentUuid": "d405d0c4_c9098c27",
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -158,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "3e12795c_0a99f926",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T16:08:32Z",
+      "side": 1,
+      "message": "Good catch!",
+      "parentUuid": "b4fd3a10_cf4371df",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "abd46f5a_25b69f39",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -169,6 +223,24 @@
       "writtenOn": "2018-11-01T23:36:15Z",
       "side": 1,
       "message": "Sorry another Nit : if it is not too late and if it is still possible to use some easily referenced term for \"Backing IO unit\", it\u0027d be welcome. Or maybe it is a matter of me getting used to saying that repeatedly :-) Something like bsPage or something easier maybe helpful.",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c15fbb9a_cf9eb5ce",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T16:08:32Z",
+      "side": 1,
+      "message": "We used to use the term \"page\" in blobstore, and recently changed it to IO unit.  Page usually infers 4KB, and while that matches the example here, there are cases where we may want to pick a different IO unit size.  For example, there may be SSDs in the future that are optimized for 16KB writes instead of 4KB writes - in those cases we may want to pick a 16KB IO size.",
+      "parentUuid": "abd46f5a_25b69f39",
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -262,6 +334,24 @@
     },
     {
       "key": {
+        "uuid": "4e855b6b_f4d51a45",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T16:08:32Z",
+      "side": 1,
+      "message": "Yes - the offset definitely matters.  If we later read 4KB from offset 8KB, we need to get this same data back.  Maybe I\u0027m not understanding your question.",
+      "parentUuid": "528225ab_f367fae6",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b461e77_2cf44837",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -279,6 +369,42 @@
     },
     {
       "key": {
+        "uuid": "0c5d80e9_cf770dd2",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T16:08:32Z",
+      "side": 1,
+      "message": "When backing IO unit 2 is decompressed, it will decompress to exactly 16KB.  It\u0027s the same 16KB that we compressed above.  This 16KB consists of (4KB zeroes, 4KB zeroes, 4KB user data, 4KB zeroes).  Then here we will overwrite the second 4KB of zeroes with the incoming data from the user.",
+      "parentUuid": "0b461e77_2cf44837",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6dfc4d61_c352c07d",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T16:08:32Z",
+      "side": 1,
+      "message": "Whenever we decompress the backing IO units related to a chunk, it will *always* decompress to the chunk size.  When this backing IO unit was written out, we started with 16KB of data (4KB of zeroes, 4KB of zeroes, 4KB of user data, 4KB of zeroes) which we were able to compress to 3KB.  When we decompress this 3KB here, we\u0027ll get back the original 16KB of data.",
+      "parentUuid": "0b461e77_2cf44837",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4841d4c_2f5f4d72",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -290,6 +416,24 @@
       "writtenOn": "2018-11-02T00:17:20Z",
       "side": 1,
       "message": "So the write op itself can be acknowledged back to the application or considered complete only after the final step on line 190? I assume that instead of a power failure at this point, if there is a context switch for the thread doing the write of [3 4 X X] to chunk-map 2, that is more implementation specific (where atomicity of the md-updates etc. are all taken care of).\n\nI am yet to work through other examples of when a competing write/read comes in for this particular example. ie. a competing \"Write 8KB comes in at Offset 4KB\" at the exact same moment that the write in this example (Line 168) does. Just want to make sure there are no inconsistencies in those cases.",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cafbc8f_888dd0a1",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T16:08:32Z",
+      "side": 1,
+      "message": "It can be acknowledge after we write chunk map 2 to entry 0 on line 188.  Lines 189 and 190 can be done afterwards.  If the system crashes after line 188, the restart algorithm will figure out that chunk map 1 and backing io unit 2 are no longer in use.",
+      "parentUuid": "c4841d4c_2f5f4d72",
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
