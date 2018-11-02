@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92ef728c_28b2e0d9",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-02T18:31:24Z",
+      "side": 1,
+      "message": "This is very RDMA specific. I don\u0027t think this will do anything for TCP and it doesn\u0027t do anything for PCIe. Therefore, I think we should try to hide this instead of making it public.\n\nWhat if we always use non-blocking mode and then automatically check for RDMA CM events whenever the user polls the admin queue for completions?",
+      "revId": "7b73161e25eac3b7e9f341f7731d73264e0e19c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
