@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "8333d1d7_efa5926b",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-02T06:00:22Z",
+      "side": 1,
+      "message": "\"might cause\" -\u003e \"causes\". Might doesn\u0027t add anything here, since we are sure that \u0027if provided buffers are not aligned\u0027 double buffering will occur.",
+      "range": {
+        "startLine": 265,
+        "startChar": 9,
+        "endLine": 265,
+        "endChar": 20
+      },
+      "revId": "69234503337339a16c50a68f628b80c6b44ff7ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e4820b7_ec1ced75",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-02T06:00:22Z",
+      "side": 1,
+      "message": "Isn\u0027t this handled right above at line 582 ? This assert will never be triggered.",
+      "range": {
+        "startLine": 587,
+        "startChar": 1,
+        "endLine": 587,
+        "endChar": 38
+      },
+      "revId": "69234503337339a16c50a68f628b80c6b44ff7ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e94c71b6_cab862a5",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
