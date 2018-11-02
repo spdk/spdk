@@ -65,6 +65,24 @@
     },
     {
       "key": {
+        "uuid": "fc1d5b42_05043f1e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2036,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-11-02T08:03:01Z",
+      "side": 1,
+      "message": "We are checking if user passed correct value in bdev modules that are actually using required_alignment. Look at bdev_aio bdev_aio.c:582-588 in the last patch of the series.",
+      "parentUuid": "e94c71b6_cab862a5",
+      "revId": "69234503337339a16c50a68f628b80c6b44ff7ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e22324de_7491c41a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
