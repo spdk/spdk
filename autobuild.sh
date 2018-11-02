@@ -16,6 +16,12 @@ git describe --tags
 
 ./configure $config_params
 
+# Need to cmpile OCF files first
+# because they do not pass scanbuild
+CCAR=ar $MAKE $MAKEFLAGS -C lib/cas/ocfenv exportlib O=$rootdir/build/ocf.a
+# Now use precompiled version when building SPDK
+config_params="$config_params --with-cas=/$rootdir/build/ocf.a"
+
 # Print some test system info out for the log
 echo "** START ** Info for Hostname: $HOSTNAME"
 uname -a
@@ -66,6 +72,7 @@ fi
 
 fail=0
 ./configure $config_params
+
 time $scanbuild $MAKE $MAKEFLAGS || fail=1
 if [ $fail -eq 1 ]; then
 	if [ -d $out/scan-build-tmp ]; then
