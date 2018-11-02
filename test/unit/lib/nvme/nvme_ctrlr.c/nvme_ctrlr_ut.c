@@ -86,6 +86,12 @@ nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
+nvme_transport_ctrlr_confirm_existence(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+int
 nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;
