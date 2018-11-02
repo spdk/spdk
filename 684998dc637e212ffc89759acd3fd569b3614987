@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38e686d1_421165a1",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 24
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-11-02T21:08:19Z",
+      "side": 1,
+      "message": "Is this supposed to be 18.10 or 18.10.1 ?   As is, this will produce a packages with suffix:  18.10-0.${dist}.x86_64.rpm",
+      "revId": "684998dc637e212ffc89759acd3fd569b3614987",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
