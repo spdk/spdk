@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aeb529d0_8d8fd988",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-02T09:36:40Z",
+      "side": 1,
+      "message": "A comment here could be useful:\n\"Test dynamic memory management. All hugepages will be reserved at runtime\"",
+      "revId": "21aaf5990725e023b498f60b8f819b6a8ff78ed3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f48fcb3b_91ca322b",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-02T09:36:40Z",
+      "side": 1,
+      "message": "Another comment here could be useful:\n\"Dynamic memory management is not supported on BSD.\"",
+      "revId": "21aaf5990725e023b498f60b8f819b6a8ff78ed3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c078721_a9e0c034",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-02T09:36:40Z",
+      "side": 1,
+      "message": "I suppose we don\u0027t run any fio_plugin tests on FreeBSD, but we technically could - correct me if I\u0027m wrong.\n\nCan you wrap this with another `if`? We should only specify --spdk_mem\u003d128 on Linux.",
+      "range": {
+        "startLine": 121,
+        "startChar": 43,
+        "endLine": 121,
+        "endChar": 57
+      },
+      "revId": "21aaf5990725e023b498f60b8f819b6a8ff78ed3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db42df16_cc0f1833",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-02T09:36:40Z",
+      "side": 1,
+      "message": "Can we have a comment here?\n\"Pre-reserve some hugepages, but not enough for this fio test to run. Additional hugepages should be reserved at runtime.\"",
+      "revId": "21aaf5990725e023b498f60b8f819b6a8ff78ed3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
