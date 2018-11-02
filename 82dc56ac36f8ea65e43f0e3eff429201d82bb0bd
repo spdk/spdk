@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c854ae9f_568a49c2",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-02T09:10:32Z",
+      "side": 1,
+      "message": "This check is unnecessary.",
+      "range": {
+        "startLine": 288,
+        "startChar": 29,
+        "endLine": 288,
+        "endChar": 59
+      },
+      "revId": "82dc56ac36f8ea65e43f0e3eff429201d82bb0bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aaf5f8cf_b2d8162f",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-02T09:10:32Z",
+      "side": 1,
+      "message": "Maybe SPDK_DEBUGLOG",
+      "revId": "82dc56ac36f8ea65e43f0e3eff429201d82bb0bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
