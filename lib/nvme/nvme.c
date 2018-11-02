@@ -536,6 +536,11 @@ spdk_nvme_probe_internal(const struct spdk_nvme_transport_id *trid, void *cb_ctx
 				continue;
 			}
 
+			/* Do not attach if we failed to initialize it in this process */
+			if (spdk_nvme_ctrlr_get_current_process(ctrlr) == NULL) {
+				continue;
+			}
+
 			nvme_ctrlr_proc_get_ref(ctrlr);
 
 			/*

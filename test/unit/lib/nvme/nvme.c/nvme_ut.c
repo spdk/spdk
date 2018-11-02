@@ -59,6 +59,10 @@ DEFINE_STUB(spdk_pci_device_get_id, struct spdk_pci_id,
 DEFINE_STUB(spdk_nvme_transport_available, bool,
 	    (enum spdk_nvme_transport_type trtype), true)
 
+/* return anything non-NULL, this won't be deferenced anywhere in this test */
+DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1)
+
 DEFINE_STUB(nvme_ctrlr_add_process, int,
 	    (struct spdk_nvme_ctrlr *ctrlr, void *devhandle), 0)
 

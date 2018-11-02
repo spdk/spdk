@@ -68,6 +68,8 @@ nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 	return;
 }
 
+DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr), NULL)
 
 int
 nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
