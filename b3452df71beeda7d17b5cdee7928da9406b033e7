@@ -279,6 +279,23 @@
     },
     {
       "key": {
+        "uuid": "c4841d4c_2f5f4d72",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-02T00:17:20Z",
+      "side": 1,
+      "message": "So the write op itself can be acknowledged back to the application or considered complete only after the final step on line 190? I assume that instead of a power failure at this point, if there is a context switch for the thread doing the write of [3 4 X X] to chunk-map 2, that is more implementation specific (where atomicity of the md-updates etc. are all taken care of).\n\nI am yet to work through other examples of when a competing write/read comes in for this particular example. ie. a competing \"Write 8KB comes in at Offset 4KB\" at the exact same moment that the write in this example (Line 168) does. Just want to make sure there are no inconsistencies in those cases.",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5dd99b69_93c0c4de",
         "filename": "doc/compression.md",
         "patchSetId": 4
