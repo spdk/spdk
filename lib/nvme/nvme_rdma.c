@@ -1271,6 +1271,7 @@ nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	if (!qpair) {
 		return -1;
 	}
+	nvme_rdma_qpair_fail(qpair);
 	nvme_qpair_deinit(qpair);
 
 	rqpair = nvme_rdma_qpair(qpair);
@@ -1564,7 +1565,27 @@ nvme_rdma_qpair_reset(struct spdk_nvme_qpair *qpair)
 int
 nvme_rdma_qpair_fail(struct spdk_nvme_qpair *qpair)
 {
-	/* Currently, doing nothing here */
+	/*
+	 * If the qpair is really failed, the connection is broken
+	 * and we need to flush back all I/O
+	 */
+	struct spdk_nvme_rdma_req *rdma_req, *tmp;
+	struct nvme_request *req;
+	struct spdk_nvme_cpl cpl;
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+
+	/* Call it power loss since we don't know what happened, but the controller is gone. */
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_POWER_LOSS;
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->outstanding_reqs, link, tmp) {
+		assert(rdma_req->req != NULL);
+		req = rdma_req->req;
+
+		nvme_rdma_req_complete(req, &cpl);
+		nvme_rdma_req_put(rqpair, rdma_req);
+	}
+
 	return 0;
 }
 
