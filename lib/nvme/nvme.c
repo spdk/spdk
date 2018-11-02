@@ -531,6 +531,10 @@ spdk_nvme_probe_internal(const struct spdk_nvme_transport_id *trid, void *cb_ctx
 				continue;
 			}
 
+			if (probe_cb && !probe_cb(cb_ctx, &ctrlr->trid, &ctrlr->opts)) {
+				continue;
+			}
+
 			nvme_ctrlr_proc_get_ref(ctrlr);
 
 			/*
