@@ -14,6 +14,16 @@ cd $rootdir
 date -u
 git describe --tags
 
+if [ "$SPDK_TEST_CAS" -eq 1 ]; then
+	# We compile OCF sources ourselves
+	# They don't need to be checked with scanbuild and code coverage is not applicable
+	# So we precompile OCF now for further use as standalone static library
+	./configure $(echo $config_params | sed 's/--enable-coverage//g')
+	CC=gcc CCAR=ar $MAKE $MAKEFLAGS -C lib/cas/ocfenv exportlib O=$rootdir/build/ocf.a
+	# Set config to use precompiled library
+	config_params="$config_params --with-cas=/$rootdir/build/ocf.a"
+fi
+
 ./configure $config_params
 
 # Print some test system info out for the log
