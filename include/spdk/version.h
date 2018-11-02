@@ -46,7 +46,7 @@
 /**
  * Minor version number (month of original release).
  */
-#define SPDK_VERSION_MINOR	01
+#define SPDK_VERSION_MINOR	1
 
 /**
  * Patch level.
