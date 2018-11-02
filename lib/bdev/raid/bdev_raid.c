@@ -960,7 +960,7 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 
 	raid_name = spdk_conf_section_get_val(conf_section, "Name");
 	if (raid_name == NULL) {
-		SPDK_ERRLOG("raid_name %s is null\n", raid_name);
+		SPDK_ERRLOG("raid_name is null\n");
 		return -EINVAL;
 	}
 
