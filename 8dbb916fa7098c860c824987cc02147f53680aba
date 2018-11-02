@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83177549_8dda0062",
+        "filename": "test/spdkcli/iscsi.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T18:54:50Z",
+      "side": 1,
+      "message": "Does this need to be uncommented?",
+      "revId": "8dbb916fa7098c860c824987cc02147f53680aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
