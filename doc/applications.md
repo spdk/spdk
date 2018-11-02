@@ -24,26 +24,26 @@ initialization and teardown path.
 The SPDK application framework defines a set of base command line flags for all
 applications that use it. Specific applications may implement additional flags.
 
-Param    | Long Param             | Type     | Default                | Description
--------- | ---------------------- | -------- | ---------------------- | -----------
--c       | --config               | string   |                        | @ref cmd_arg_config_file
--d       | --limit-coredump       | flag     | false                  | @ref cmd_arg_limit_coredump
--e       | --tpoint-group-mask    | integer  | 0x0                    | @ref cmd_arg_limit_tpoint_group_mask
--g       | --single-file-segments | flag     |                        | @ref cmd_arg_single_file_segments
--h       | --help                 | flag     |                        | show all available parameters and exit
--i       | --shm-id               | integer  |                        | @ref cmd_arg_multi_process
--m       | --cpumask              | CPU mask | 0x1                    | application @ref cpu_mask
--n       | --mem-channels         | integer  | all channels           | number of memory channels used for DPDK
--p       | --master-core          | integer  | first core in CPU mask | master (primary) core for DPDK
--r       | --rpc-socket           | string   | /var/tmp/spdk.sock     | RPC listen address
--s       | --mem-size             | integer  | all hugepage memory    | @ref cmd_arg_memory_size
-         | --silence-noticelog    | flag     |                        | disable notice level logging to `stderr`
--u       | --no-pci               | flag     |                        | @ref cmd_arg_disable_pci_access.
-         | --wait-for-rpc         | flag     |                        | @ref cmd_arg_deferred_initialization
--B       | --pci-blacklist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
--W       | --pci-whitelist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
--R       | --huge-unlink          | flag     |                        | @ref cmd_arg_huge_unlink
--L       | --traceflag            | string   |                        | @ref cmd_arg_debug_log_flags
+|Param    | Long Param             | Type     | Default                | Description
+|-------- | ---------------------- | -------- | ---------------------- | -----------
+|-c       | --config               | string   |                        | @ref cmd_arg_config_file
+|-d       | --limit-coredump       | flag     | false                  | @ref cmd_arg_limit_coredump
+|-e       | --tpoint-group-mask    | integer  | 0x0                    | @ref cmd_arg_limit_tpoint_group_mask
+|-g       | --single-file-segments | flag     |                        | @ref cmd_arg_single_file_segments
+|-h       | --help                 | flag     |                        | show all available parameters and exit
+|-i       | --shm-id               | integer  |                        | @ref cmd_arg_multi_process
+|-m       | --cpumask              | CPU mask | 0x1                    | application @ref cpu_mask
+|-n       | --mem-channels         | integer  | all channels           | number of memory channels used for DPDK
+|-p       | --master-core          | integer  | first core in CPU mask | master (primary) core for DPDK
+|-r       | --rpc-socket           | string   | /var/tmp/spdk.sock     | RPC listen address
+|-s       | --mem-size             | integer  | all hugepage memory    | @ref cmd_arg_memory_size
+|         | --silence-noticelog    | flag     |                        | disable notice level logging to `stderr`
+|-u       | --no-pci               | flag     |                        | @ref cmd_arg_disable_pci_access.
+|         | --wait-for-rpc         | flag     |                        | @ref cmd_arg_deferred_initialization
+|-B       | --pci-blacklist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
+|-W       | --pci-whitelist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
+|-R       | --huge-unlink          | flag     |                        | @ref cmd_arg_huge_unlink
+|-L       | --traceflag            | string   |                        | @ref cmd_arg_debug_log_flags
 
 
 ### Configuration file {#cmd_arg_config_file}
