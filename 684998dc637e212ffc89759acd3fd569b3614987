@@ -16,6 +16,24 @@
       "revId": "684998dc637e212ffc89759acd3fd569b3614987",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00af8064_45fcd93a",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 24
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-02T22:17:24Z",
+      "side": 1,
+      "message": "I think we should actually make this 19.01-pre on master.  It\u0027s something we\u0027ll need to update whenever we do a release.\n\nThen when we cherry-pick this to the 18.10 branch, we\u0027ll modify it to say 18.10.1.",
+      "parentUuid": "38e686d1_421165a1",
+      "revId": "684998dc637e212ffc89759acd3fd569b3614987",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
