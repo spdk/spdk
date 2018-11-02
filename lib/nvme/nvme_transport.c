@@ -110,6 +110,12 @@ nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
+nvme_transport_ctrlr_check_exists(struct spdk_nvme_ctrlr *ctrlr)
+{
+	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_check_exists, (ctrlr));
+}
+
+int
 nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_enable, (ctrlr));

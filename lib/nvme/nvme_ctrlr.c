@@ -804,6 +804,14 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	/* Doorbell buffer config is invalid during reset */
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
 
+	/* Make sure the controller is still there. */
+	/* This is important so that we don't try to reinitialize a removed NVMe-oF subsystem */
+	rc = nvme_transport_ctrlr_check_exists(ctrlr);
+	if (rc < 0) {
+		nvme_ctrlr_fail(ctrlr, true);
+		goto exit;
+	}
+
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 
@@ -826,6 +834,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+exit:
 	ctrlr->is_resetting = false;
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
