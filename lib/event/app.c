@@ -628,6 +628,8 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		goto app_start_trace_cleanup_err;
 	}
 
+	spdk_notifications_initialize();
+
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
 	g_spdk_app.shm_id = opts->shm_id;
