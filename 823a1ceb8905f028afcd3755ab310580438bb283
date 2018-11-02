@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0e282317_57b5323a",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9b6e46af_7e046a3b",
+      "range": {
+        "startLine": 384,
+        "startChar": 0,
+        "endLine": 385,
+        "endChar": 78
+      },
+      "revId": "823a1ceb8905f028afcd3755ab310580438bb283",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ac87fd7_968c3539",
         "filename": "doc/iscsi.md",
         "patchSetId": 10
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "0f2e5f1c_a76b6f04",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7ac87fd7_968c3539",
+      "range": {
+        "startLine": 391,
+        "startChar": 0,
+        "endLine": 391,
+        "endChar": 3
+      },
+      "revId": "823a1ceb8905f028afcd3755ab310580438bb283",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20ec066c_38595d09",
         "filename": "doc/iscsi.md",
         "patchSetId": 10
@@ -59,6 +107,30 @@
       "writtenOn": "2018-11-02T13:34:19Z",
       "side": 1,
       "message": "You might want to show an example to clarify things like are the list item seperated by spaces/commas or something else.",
+      "range": {
+        "startLine": 393,
+        "startChar": 35,
+        "endLine": 393,
+        "endChar": 86
+      },
+      "revId": "823a1ceb8905f028afcd3755ab310580438bb283",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42ffba45_92645708",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:16Z",
+      "side": 1,
+      "message": "Most of these values are deeply described in the VPP documentation, and I\u0027ve wanted to just point here which of them are important from our point of view. Also examples and description is in the sample configuration file itself.",
+      "parentUuid": "20ec066c_38595d09",
       "range": {
         "startLine": 393,
         "startChar": 35,
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "7252db49_44a4e218",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7df03fba_ff210137",
+      "range": {
+        "startLine": 407,
+        "startChar": 0,
+        "endLine": 409,
+        "endChar": 43
+      },
+      "revId": "823a1ceb8905f028afcd3755ab310580438bb283",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e7ac382_256986af",
         "filename": "doc/iscsi.md",
         "patchSetId": 10
@@ -137,6 +233,30 @@
       "revId": "823a1ceb8905f028afcd3755ab310580438bb283",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60338fdb_b2004ac9",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3e7ac382_256986af",
+      "range": {
+        "startLine": 434,
+        "startChar": 53,
+        "endLine": 434,
+        "endChar": 78
+      },
+      "revId": "823a1ceb8905f028afcd3755ab310580438bb283",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
