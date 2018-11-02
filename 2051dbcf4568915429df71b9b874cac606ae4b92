@@ -16,6 +16,24 @@
       "revId": "2051dbcf4568915429df71b9b874cac606ae4b92",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f637b447_291263c4",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-02T21:39:56Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "28a24b11_c40ccd71",
+      "revId": "2051dbcf4568915429df71b9b874cac606ae4b92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
