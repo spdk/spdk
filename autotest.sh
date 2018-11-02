@@ -192,6 +192,10 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	run_test suite ./test/spdkcli/rbd.sh
 fi
 
+if [ $SPDK_TEST_CAS -eq 1 ]; then
+	run_test suite ./test/cas/cas.sh
+fi
+
 run_test suite ./test/json_config/json_config.sh
 
 timing_enter cleanup
