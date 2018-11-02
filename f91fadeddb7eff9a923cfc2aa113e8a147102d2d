@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ab2c459c_fb8fee4e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1620,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-11-02T12:09:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "af56935d_815f5df1",
+      "revId": "f91fadeddb7eff9a923cfc2aa113e8a147102d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7408fbc4_ae269748",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "0b8c2733_5f6bf05c",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1624,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-11-02T12:09:34Z",
+      "side": 1,
+      "message": "I\u0027m checking for O_NONBLOCK because in case we are in non-blocking mode and there are no events we will get negative result from ibv_get_async_event which is expected behavior. In blocking mode negative result is not expected - that is way we check this.",
+      "parentUuid": "7408fbc4_ae269748",
+      "revId": "f91fadeddb7eff9a923cfc2aa113e8a147102d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8469e15_7d82278b",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 4
@@ -47,6 +83,24 @@
       "writtenOn": "2018-10-31T15:29:18Z",
       "side": 1,
       "message": "ibv_ack_async_event should be called before \"return\"",
+      "revId": "f91fadeddb7eff9a923cfc2aa113e8a147102d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b8e0cd9_5a0202de",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1625,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-11-02T12:09:34Z",
+      "side": 1,
+      "message": "ibv_ack_async_event should be called only on successful event receiving. Am I wrong?",
+      "parentUuid": "c8469e15_7d82278b",
       "revId": "f91fadeddb7eff9a923cfc2aa113e8a147102d2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
