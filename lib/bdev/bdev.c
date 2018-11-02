@@ -3006,6 +3006,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		pthread_mutex_unlock(&bdev->internal.mutex);
 
 		if (unlock_channels) {
+			bdev_ch->io_outstanding--;
+			shared_resource->io_outstanding--;
 			spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_bdev_unfreeze_channel,
 					      bdev_io, _spdk_bdev_reset_complete);
 			return;
