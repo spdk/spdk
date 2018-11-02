@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ee8601bb_8854a296",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff4da905_5686fa51",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97098bc8_4846889b",
         "filename": "lib/sock/net_framework.c",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2018-10-31T22:59:22Z",
       "side": 1,
       "message": "why is the STAILQ_EMPTY needed?",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6b74e40_c43814b6",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:30Z",
+      "side": 1,
+      "message": "Yes, you\u0027re right, if g_net_frameworks is empty, g_next_net_framework is NULL.",
+      "parentUuid": "97098bc8_4846889b",
       "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "ae2e5c22_417a17ee",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "97b71423_d9d7cf3e",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ddf1640_2724c38b",
         "filename": "lib/sock/net_framework.c",
         "patchSetId": 9
@@ -64,6 +118,24 @@
       "writtenOn": "2018-10-31T22:59:22Z",
       "side": 1,
       "message": "I don\u0027t think the STAILQ_EMPTY check is needed",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d158d39b_30a8a03c",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5ddf1640_2724c38b",
       "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "6bb502bd_501b93c1",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e5e498f6_14873f53",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "489d9207_93ce01ee",
         "filename": "lib/sock/net_framework.c",
         "patchSetId": 9
@@ -98,6 +188,24 @@
       "writtenOn": "2018-10-31T22:59:22Z",
       "side": 1,
       "message": "same as above - let\u0027s just call -\u003efini() directly without checking\n\nit might be good to add some asserts that -\u003einit and -\u003efini are not NULL in spdk_net_framework_register - but that can be in a separate commit",
+      "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9963ceff_f5964321",
+        "filename": "lib/sock/net_framework.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-11-02T18:36:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "489d9207_93ce01ee",
       "revId": "96c544115995a93beecd1b833269bff9e01b7f04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
