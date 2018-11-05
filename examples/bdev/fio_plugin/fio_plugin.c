@@ -253,25 +253,28 @@ spdk_fio_init_env(struct thread_data *td)
 	eo = td->eo;
 	if (!eo->conf || !strlen(eo->conf)) {
 		SPDK_ERRLOG("No configuration file provided\n");
-		return -1;
+		rc = EINVAL;
+		goto err_exit;
 	}
 
 	config = spdk_conf_allocate();
 	if (!config) {
 		SPDK_ERRLOG("Unable to allocate configuration file\n");
-		return -1;
+		rc = ENOMEM;
+		goto err_exit;
 	}
 
 	rc = spdk_conf_read(config, eo->conf);
 	if (rc != 0) {
 		SPDK_ERRLOG("Invalid configuration file format\n");
 		spdk_conf_free(config);
-		return -1;
+		goto err_exit;
 	}
 	if (spdk_conf_first_section(config) == NULL) {
 		SPDK_ERRLOG("Invalid configuration file format\n");
 		spdk_conf_free(config);
-		return -1;
+		rc = EINVAL;
+		goto err_exit;
 	}
 	spdk_conf_set_as_default(config);
 
@@ -287,7 +290,8 @@ spdk_fio_init_env(struct thread_data *td)
 	if (spdk_env_init(&opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
 		spdk_conf_free(config);
-		return -1;
+		rc = EINVAL;
+		goto err_exit;
 	}
 	spdk_unaffinitize_thread();
 
@@ -295,7 +299,7 @@ spdk_fio_init_env(struct thread_data *td)
 	rc = spdk_fio_init_thread(td);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to create initialization thread\n");
-		return -1;
+		goto err_exit;
 	}
 
 	g_init_thread = fio_thread = td->io_ops_data;
@@ -330,6 +334,10 @@ spdk_fio_init_env(struct thread_data *td)
 	}
 
 	return 0;
+
+err_exit:
+	exit(rc);
+	return -1;
 }
 
 /* Called for each thread to fill in the 'real_file_size' member for
