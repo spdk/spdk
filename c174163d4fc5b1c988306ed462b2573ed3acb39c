@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55838ef7_6b515bbc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1585,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-05T06:20:03Z",
+      "side": 1,
+      "message": "I think using max_io_size is right.",
+      "revId": "c174163d4fc5b1c988306ed462b2573ed3acb39c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
