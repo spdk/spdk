@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "148025f3_f87280a3",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-11-05T14:05:01Z",
+      "side": 1,
+      "message": "Ok, I will change it to this approach.",
+      "parentUuid": "92ef728c_28b2e0d9",
+      "revId": "7b73161e25eac3b7e9f341f7731d73264e0e19c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64bd8715_119f0ee2",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 6
