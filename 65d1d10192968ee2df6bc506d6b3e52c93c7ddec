@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "b6620f22_c5c56e33",
+        "filename": "lib/ocssd/ocssd_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1245,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-05T20:21:21Z",
+      "side": 1,
+      "message": "I can\u0027t find a code path where OCSSD_IO_MD is actually set here. I think it would also be really helpful to simply not support reads and writes with metadata in the first implementation patch and instead add that as a follow-on patch later in the series.",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "995f0804_3e62ad2e",
+        "filename": "lib/ocssd/ocssd_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1290,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-05T20:21:21Z",
+      "side": 1,
+      "message": "Yes - you don\u0027t want to send a message if you don\u0027t have to, especially since in the spdk_ocssd_read function below you already sent the message.",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "15bfaab6_da70936b",
         "filename": "lib/ocssd/ocssd_io.c",
         "patchSetId": 6
