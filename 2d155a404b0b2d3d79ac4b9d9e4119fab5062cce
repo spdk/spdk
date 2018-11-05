@@ -16,6 +16,24 @@
       "revId": "2d155a404b0b2d3d79ac4b9d9e4119fab5062cce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2b96318_6c4f922c",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-11-05T16:23:11Z",
+      "side": 1,
+      "message": "Sorry, of course you\u0027re right!",
+      "parentUuid": "bcebf177_2671ede3",
+      "revId": "2d155a404b0b2d3d79ac4b9d9e4119fab5062cce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
