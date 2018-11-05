@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62b69e5d_fb430f83",
+        "filename": "lib/ocssd/ocssd_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1274,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-05T22:51:48Z",
+      "side": 1,
+      "message": "Instead of spawning a poller that just hammers on this repeatedly, can we make this a public API function that users can call instead? That gives users control over when the reloc work happens.\n\nIn the bdev module that uses this library, we can register a poller that repeatedly calls this function to get the same behavior that it has now.",
+      "revId": "8cfae086f56dd21cf237019dc2b0eee1d3dc99e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
