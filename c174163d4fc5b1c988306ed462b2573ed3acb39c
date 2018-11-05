@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "f9b6ffc5_77e783cd",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1491,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-05T17:28:17Z",
+      "side": 1,
+      "message": "You need to make sure this does not go below 4k.",
+      "revId": "c174163d4fc5b1c988306ed462b2573ed3acb39c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ee4944f_85f5a85c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1583,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-05T17:28:17Z",
+      "side": 1,
+      "message": "You\u0027ve lost the arbitrarily chosen \u00274\u0027 here. Now you only have 1 queue depth worth of data buffers. Under load, that probably isn\u0027t enough.",
+      "revId": "c174163d4fc5b1c988306ed462b2573ed3acb39c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55838ef7_6b515bbc",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 10
@@ -31,6 +65,23 @@
       "side": 1,
       "message": "Hi Changpeng, thank you for the review. However I think this number needs to be io_unit_size.\nThe size of these buffers is tied to the io_unit_size. In spdk_nvmf_rdma_request_fill_iovs, we create an I/O vector and assign each one of them to a buffer from this pool, giving it a length of min(remaining length, io_unit_size) (please see line 1134). By allocating these buffers with max_io_size, we will way over-allocate the memory for these buffers and large portions of them will remain unused. \nBy differentiating between io_unit_size and max_io_size, I am trying to allow more granular control over how we use memory buffers. I expand on this in the next few patches where I actually add support for processing an SGL segment from the user with more than one element.",
       "parentUuid": "55838ef7_6b515bbc",
+      "revId": "c174163d4fc5b1c988306ed462b2573ed3acb39c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a63ed173_47447dab",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1735,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-05T17:28:17Z",
+      "side": 1,
+      "message": "You also need to update this print",
       "revId": "c174163d4fc5b1c988306ed462b2573ed3acb39c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
