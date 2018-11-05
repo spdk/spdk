@@ -34,6 +34,24 @@
       "revId": "684998dc637e212ffc89759acd3fd569b3614987",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "634070a8_2ffca901",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 24
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-05T15:57:17Z",
+      "side": 1,
+      "message": "If there will be no v19.01-pre tag on github we shold not use it as version. Anyway I will change this to 18.10.1 for now and let test to run.",
+      "parentUuid": "00af8064_45fcd93a",
+      "revId": "684998dc637e212ffc89759acd3fd569b3614987",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
