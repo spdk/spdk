@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62cb5945_95b9cbd2",
+        "filename": "lib/ocssd/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:07:36Z",
+      "side": 1,
+      "message": "you shouldn\u0027t need ENV_CFLAGS here, since you\u0027re not directly calling any DPDK code",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d52d0a7_71ca6067",
+        "filename": "lib/ocssd/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:07:36Z",
+      "side": 1,
+      "message": "these -D\u0027s should probably be removed from the Makefile - just add #define OCSSD_INTERNAL 1 in one of your header files if you need to keep that code around\n\nsame for OCSSD_TRACE_ENABLED",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3b0a515_213c2c90",
+        "filename": "lib/ocssd/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:07:36Z",
+      "side": 1,
+      "message": "source files should be listed out individually to match how all of the other Makefiles do it",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f68e64d_333caa5f",
+        "filename": "lib/ocssd/ocssd_rwb.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:07:36Z",
+      "side": 1,
+      "message": "let\u0027s remove this direct include of a DPDK header file\n\nwith SPDK, we intend people to be able to use a lot of libraries without requiring DPDK - there are some exceptions (for example the SPDK crypto module directly uses DPDK cryptodev), but for things like OCSSD, the DPDK dependency is not necessary\n\nare there specific things from DPDK that you need here?",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d054f88_4cfed0a6",
+        "filename": "lib/ocssd/ocssd_rwb.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:07:36Z",
+      "side": 1,
+      "message": "let\u0027s use __sync_fetch_and_sub() - this is similar to what we use in other parts of SPDK (see lib/iscsi/conn.c, lib/nvmf/rdma.c)",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7936ff52_f40a1e66",
+        "filename": "lib/ocssd/ocssd_rwb.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:07:36Z",
+      "side": 1,
+      "message": "does this need to be atomic?  atomic operations come at a cost, what is this guarding against?",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35cf1d2e_3ea0c0f1",
+        "filename": "lib/ocssd/ocssd_rwb.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:07:36Z",
+      "side": 1,
+      "message": "same here - does this need to be atomic?",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b3665ec_0d8f6ff7",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:07:36Z",
+      "side": 1,
+      "message": "let\u0027s move this up to line 72 - to keep all of the BLOCKDEV_MODULES_LIST stuff together in this file",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac37df6d_634ffee5",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:07:36Z",
+      "side": 1,
+      "message": "is this \"I\" change needed?  seems unrelated to the rest of this patch",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
