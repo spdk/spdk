@@ -208,6 +208,26 @@ spdk_fio_init_thread(struct thread_data *td)
 	return 0;
 }
 
+static void
+spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
+{
+	struct spdk_fio_target *target, *tmp;
+
+	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
+		TAILQ_REMOVE(&fio_thread->targets, target, link);
+		spdk_put_io_channel(target->ch);
+		spdk_bdev_close(target->desc);
+		free(target);
+	}
+
+	while (spdk_fio_poll_thread(fio_thread) > 0) {}
+
+	spdk_free_thread();
+	spdk_ring_free(fio_thread->ring);
+	free(fio_thread->iocq);
+	free(fio_thread);
+}
+
 static void *
 spdk_init_thread_poll(void *arg)
 {
@@ -436,26 +456,6 @@ spdk_fio_init(struct thread_data *td)
 	}
 
 	return 0;
-}
-
-static void
-spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
-{
-	struct spdk_fio_target *target, *tmp;
-
-	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
-		TAILQ_REMOVE(&fio_thread->targets, target, link);
-		spdk_put_io_channel(target->ch);
-		spdk_bdev_close(target->desc);
-		free(target);
-	}
-
-	while (spdk_fio_poll_thread(fio_thread) > 0) {}
-
-	spdk_free_thread();
-	spdk_ring_free(fio_thread->ring);
-	free(fio_thread->iocq);
-	free(fio_thread);
 }
 
 static void
