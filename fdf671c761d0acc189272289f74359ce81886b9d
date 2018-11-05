@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f367c460_3bb0c1ee",
+        "filename": "lib/ocssd/ocssd_anm.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-05T22:49:18Z",
+      "side": 1,
+      "message": "I think this library would be useful in more contexts than just as a bdev module if instead of spawning a thread to poll these, it simply exposed a function that polled them one time and returned. That gives users control over when these events are processed.\n\nIn the bdev module that uses this library, you can start a poller that runs every 100us and calls that new function. That\u0027s equivalent to the behavior you have here.",
+      "revId": "fdf671c761d0acc189272289f74359ce81886b9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
