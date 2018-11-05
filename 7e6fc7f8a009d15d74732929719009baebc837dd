@@ -159,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "569e1def_132eb204",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T17:44:17Z",
+      "side": 1,
+      "message": "regarding spdk_poller_register() - the bdev fio_plugin *does* support this model; see how the bdev fio_plugin calls spdk_allocate_thread, with functions to start and stop pollers - note that this changed maybe 3-6 months ago?  so it\u0027s possible that when you started this module, it was not supported, but it is now\n\nNote that the application framework and the SPDK thread library have been separated.  The bdev fio_plugin does not use application framework but does use the SPDK thread library.\n\nBen\u0027s right - it really is important for this module to use the spdk_poller framework.",
+      "parentUuid": "e00189ff_bcccb0cf",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a2ca515_961d2217",
         "filename": "lib/ocssd/ocssd_utils.h",
         "patchSetId": 2
