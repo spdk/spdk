@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea8bd37b_4a69fa8f",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-05T09:23:27Z",
+      "side": 1,
+      "message": "ctx-\u003epoller_in is not unregistered anywhere, probably should be added somewhere.",
+      "revId": "1aa6d6099ec406f6837261a78b52a7b414074c8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
