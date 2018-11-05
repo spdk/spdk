@@ -22,6 +22,30 @@
       "revId": "c31d06a625a103b5c905cb0efa7ed29a70dcd8f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "429d1c93_f29016c8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T22:32:45Z",
+      "side": 1,
+      "message": "Bravo Pawel.  -2 to me for missing that one.",
+      "parentUuid": "dfd39d2b_2fdce08f",
+      "range": {
+        "startLine": 539,
+        "startChar": 1,
+        "endLine": 539,
+        "endChar": 45
+      },
+      "revId": "c31d06a625a103b5c905cb0efa7ed29a70dcd8f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
