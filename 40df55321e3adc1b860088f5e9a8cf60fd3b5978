@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb5854a4_b5344090",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-05T23:19:44Z",
+      "side": 1,
+      "message": "Will you move the line 621 to the 631?\n\nI think the following ordering looks natural.\n\nrc \u003d vbdev_passthru_insert_name(bdev_name, vbdev_name);\nif (rc) {\n  return rc;\n}\n\nbdev \u003d spdk_bdev_get_by_name(bdev_name);\nif (!bdev) {\n  /* Add a comment (e.g. \"the bdev will show up soon\") */\n  return 0;  \n}\n\nvbdev_passthru_register(bdev);\n\nreturn 0;",
+      "revId": "40df55321e3adc1b860088f5e9a8cf60fd3b5978",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
