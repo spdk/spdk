@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3a395a68_ade4e9fa",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-05T16:26:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6caef507_8eafd377",
+      "revId": "0428684c25076dcb6555c9c08e06c816e081e624",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac1b6f1e_2860e529",
         "filename": "lib/event/subsystems/nvmf/conf.c",
         "patchSetId": 10
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "49136e2f_abaf0bca",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-05T16:26:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ac1b6f1e_2860e529",
+      "revId": "0428684c25076dcb6555c9c08e06c816e081e624",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9f877e6_ecbb39fc",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 10
@@ -47,6 +83,24 @@
       "writtenOn": "2018-11-02T18:03:52Z",
       "side": 1,
       "message": "Similar to what I suggested in the configuration file - can you keep an RPC with the name \"set_nvmf_target_options\" registered but have it always fail with an error that says to call set_nvmf_target_max_subsystems and set nvmf_transport_options instead?",
+      "revId": "0428684c25076dcb6555c9c08e06c816e081e624",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11857eef_f448ae66",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1338,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-05T16:26:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9f877e6_ecbb39fc",
       "revId": "0428684c25076dcb6555c9c08e06c816e081e624",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
