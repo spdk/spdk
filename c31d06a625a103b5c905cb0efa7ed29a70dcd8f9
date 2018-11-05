@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfd39d2b_2fdce08f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-05T19:20:56Z",
+      "side": 1,
+      "message": ".. \u0026\u0026 bdev_io-\u003estatus \u003d\u003d SUCCESS) {\n\nOtherwise you will put in iov data that was read by other IO. You know, security and other boring stuff.",
+      "range": {
+        "startLine": 539,
+        "startChar": 1,
+        "endLine": 539,
+        "endChar": 45
+      },
+      "revId": "c31d06a625a103b5c905cb0efa7ed29a70dcd8f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
