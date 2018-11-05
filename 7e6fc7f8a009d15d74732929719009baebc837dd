@@ -87,6 +87,24 @@
     },
     {
       "key": {
+        "uuid": "e00189ff_bcccb0cf",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-05T12:24:17Z",
+      "side": 1,
+      "message": "We were thinking about spdk_poller_register but this enforce user to use \"Application Framework\" with spdk_app_start. Some of existing applications (e.g. spdk/examples/bdev/fio_plugin) which don\u0027t support this model will not be able to use our library. Currently we are using fio_plugin as part of our functional tests.\n\nPeriodic garbage collection (reloc module is a part of it) is not the only task that needs to be run on separate thread/reactor. We have also separate (global) thread responsible for retrieving asynchronous media management events and dispatching them to the appropriate devices.\n\nAlso due to specific of open channel and NAND media itself we need to perform write operations with the specific restrictions. For instance we need to send erase command before we start writing to specific chunk and all blocks inside chunk needs to be written sequentially. We also grouping together chunks that are on the same position inside parallel unit (LUN) into band and we write some specific FTL metadata on band’s head and tail.\n\nWe also need to collect sufficient number of blocks from user before we sent them to the drive (there are minimal and optimal write size values returned from drive geometry which are multiple of 4K block size). This require from us maintaining write buffer (ocssd_rwb) to which we copy data from user. On the separate thread we are processing this buffer with constraints described above.\n\nWe will prepare documentation (as you suggested in previous comment) that describes more deeply our thread model and write/read path to discuss this concepts in more details.",
+      "parentUuid": "e54f6cef_3f3d3967",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a2ca515_961d2217",
         "filename": "lib/ocssd/ocssd_utils.h",
         "patchSetId": 2
@@ -104,6 +122,24 @@
     },
     {
       "key": {
+        "uuid": "8616b5f0_c296fae5",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-05T12:24:17Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9a2ca515_961d2217",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88c6049a_219a39d7",
         "filename": "lib/ocssd/ocssd_utils.h",
         "patchSetId": 2
@@ -115,6 +151,24 @@
       "writtenOn": "2018-11-01T22:51:31Z",
       "side": 1,
       "message": "SPDK_COUNTOF in include/spdk/util.h",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "679f12af_7717f851",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-05T12:24:17Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "88c6049a_219a39d7",
       "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
