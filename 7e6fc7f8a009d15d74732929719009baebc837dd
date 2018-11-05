@@ -190,6 +190,24 @@
       "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3967e7de_01c4a984",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-05T13:54:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "679f12af_7717f851",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
