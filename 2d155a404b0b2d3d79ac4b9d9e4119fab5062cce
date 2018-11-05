@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcebf177_2671ede3",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T15:37:41Z",
+      "side": 1,
+      "message": "Don\u0027t lines 269-271 duplicate a lot of what is already said on lines 264-268?\n\nShuhei, Tomek and I had already voted +2 or +1 on the previous revision of the patch too.  I guess I\u0027m not sure why you decided to modify it again.",
+      "revId": "2d155a404b0b2d3d79ac4b9d9e4119fab5062cce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
