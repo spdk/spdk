@@ -193,8 +193,9 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 		total_lba_size = from_le32(&mbr->partitions[primary_partition].size_lba);
 		if ((total_lba_size != ((uint32_t) gpt->total_sectors - 1)) &&
 		    (total_lba_size != 0xFFFFFFFF)) {
-			SPDK_ERRLOG("GPT Primary MBR size does not equal: (record_size %u != actual_size %u)!\n",
-				    total_lba_size, (uint32_t) gpt->total_sectors - 1);
+			SPDK_DEBUGLOG(SPDK_LOG_GPT_PARSE,
+				      "GPT Primary MBR size does not equal: (record_size %u != actual_size %u)!\n",
+				      total_lba_size, (uint32_t) gpt->total_sectors - 1);
 			return -1;
 		}
 	} else {
