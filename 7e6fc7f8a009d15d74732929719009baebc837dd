@@ -140,6 +140,24 @@
     },
     {
       "key": {
+        "uuid": "f13c9f3f_f1a644de",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-05T13:24:36Z",
+      "side": 1,
+      "message": "I looked closely to bit array.h interface and it seems that it doesn\u0027t fit to our needs. We have use case where we need to serialize/deserialize one of our bitmaps to/from disk as a part of metadata and this interface dosen\u0027t support such operations directly.",
+      "parentUuid": "8616b5f0_c296fae5",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88c6049a_219a39d7",
         "filename": "lib/ocssd/ocssd_utils.h",
         "patchSetId": 2
