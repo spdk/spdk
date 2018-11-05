@@ -55,10 +55,11 @@ timing_exit start_nvmf_tgt
 
 modprobe -v nvme-rdma
 
+touch $testdir/bdevperf.conf
+echo "[Nvme]" > $testdir/bdevperf.conf
+
 lvol_stores=()
 lvol_bdevs=()
-# Create the first LVS from a Raid-0 bdev, which is created from two malloc bdevs
-# Create remaining LVSs from a malloc bdev, respectively
 for i in `seq 1 $SUBSYS_NR`; do
 	if [ $i -eq 1 ]; then
 		# construct RAID bdev and put its name in $bdev
@@ -88,21 +89,14 @@ for i in `seq 1 $SUBSYS_NR`; do
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i $bdev
 	done
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+
+	echo "  TransportID \"trtype:RDMA adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT\" Nvme$i" >> $testdir/bdevperf.conf
 done
 
-for i in `seq 1 $SUBSYS_NR`; do
-	k=$[$i-1]
-	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
-
-	for j in `seq 1 $LVOL_BDEVS_NR`; do
-		waitforblk "nvme${k}n${j}"
-	done
-done
-
-$testdir/../fio/nvmf_fio.py 262144 64 randwrite 10 verify
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10
+rm -rf $testdir/bdevperf.conf
 
 sync
-disconnect_nvmf
 
 for i in `seq 1 $SUBSYS_NR`; do
     $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i
