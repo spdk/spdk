@@ -228,6 +228,12 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 	free(fio_thread);
 }
 
+static void
+spdk_fio_module_finish_done(void *cb_arg)
+{
+	*(bool *)cb_arg = true;
+}
+
 static void *
 spdk_init_thread_poll(void *arg)
 {
@@ -731,12 +737,6 @@ struct ioengine_ops ioengine = {
 static void fio_init spdk_fio_register(void)
 {
 	register_ioengine(&ioengine);
-}
-
-static void
-spdk_fio_module_finish_done(void *cb_arg)
-{
-	*(bool *)cb_arg = true;
 }
 
 static void
