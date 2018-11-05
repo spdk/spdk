@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15bfaab6_da70936b",
+        "filename": "lib/ocssd/ocssd_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:36:14Z",
+      "side": 1,
+      "message": "this assert seems racy - io-\u003edev-\u003enum_inflight could get decremented between this assert and the atomic_fetch_sub at line 71 (I\u0027m assuming you are doing atomic_fetch_sub because multiple threads could be modifying it in parallel)",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21a674c6_39cdd218",
+        "filename": "lib/ocssd/ocssd_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:36:14Z",
+      "side": 1,
+      "message": "should this function be static and internal to this file?  I don\u0027t see it getting called anywhere outside of this file\n\nI see that ocssd_band.c calls ocssd_io_init_internal() - should the external function be called ocssd_io_init()?  and then this function here be changed to ocssd_io_init_internal since it is only called internally to this file?",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbe46845_cf62c0f3",
+        "filename": "lib/ocssd/ocssd_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:36:14Z",
+      "side": 1,
+      "message": "we should have pools of these data structures pre-allocated, so that we don\u0027t have to do calloc() in the I/O path\n\ncan you describe the different paths where these calloc() operations will occur?  for example, is it for I/O operations going to the SSD?  or is it related to I/O operations from the user?",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f123bb15_0cd6e6a3",
+        "filename": "lib/ocssd/ocssd_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:36:14Z",
+      "side": 1,
+      "message": "can you describe why this level of indirection is needed?  do you see cases where we would have other implementation of any of these functions?\n\nI think if we don\u0027t need the indirection, let\u0027s just remove it, and have the code call the spdk_nvme_* functions directly",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
