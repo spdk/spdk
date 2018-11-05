@@ -87,6 +87,24 @@
     },
     {
       "key": {
+        "uuid": "f0c78a98_712d20e5",
+        "filename": "lib/ocssd/ocssd_rwb.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-05T18:46:08Z",
+      "side": 1,
+      "message": "this is fine, using atomic_fetch_sub() - ignore my previous comment",
+      "parentUuid": "4d054f88_4cfed0a6",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7936ff52_f40a1e66",
         "filename": "lib/ocssd/ocssd_rwb.h",
         "patchSetId": 4
