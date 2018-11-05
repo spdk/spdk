@@ -63,10 +63,12 @@ for ((x=0; x<2;x++)); do
 	for i in `seq 1 $num_subsystems`; do
 		nvme_connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 	done
+	sleep 3
 	# Disconnect the subsystems in reverse order
 	for i in `seq $num_subsystems -1 1`; do
 		nvme disconnect -n nqn.2016-06.io.spdk:cnode${i}
 	done
+	sleep 3
 done
 
 # Start a series of connects right before disconnecting
