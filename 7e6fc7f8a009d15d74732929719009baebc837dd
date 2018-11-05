@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d6b98e0c_6787e5e2",
+        "filename": "include/spdk/ocssd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-05T16:42:54Z",
+      "side": 1,
+      "message": "Yep, we intentionally created this callback\u0027s struct, having in mind extension module to the ftl.",
+      "parentUuid": "94dc3796_5381e92c",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca9b6c2b_fcd743a9",
         "filename": "include/spdk/ocssd.h",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "bad6116b_43080446",
+        "filename": "include/spdk/ocssd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-05T16:42:54Z",
+      "side": 1,
+      "message": "Done, I have removed ocssd_cb from public API but it is convenient to use the structure internaly. Is it ok?",
+      "parentUuid": "ca9b6c2b_fcd743a9",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e8388764_05fbd2e1",
         "filename": "include/spdk/ocssd.h",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2018-11-01T22:13:57Z",
       "side": 1,
       "message": "Please add doxygen comments describing these public API functions. We automatically generate API documentation and update https://spdk.io/doc accordingly.",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46bf9f7b_634fe71b",
+        "filename": "include/spdk/ocssd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-05T16:42:54Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e8388764_05fbd2e1",
       "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
