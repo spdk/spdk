@@ -71,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "5b1181f7_3f2671bc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1585,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-06T01:26:55Z",
+      "side": 1,
+      "message": "thanks Seth, clear to me now.",
+      "parentUuid": "22b33db6_6fe84dbc",
+      "revId": "c174163d4fc5b1c988306ed462b2573ed3acb39c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a63ed173_47447dab",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 10
