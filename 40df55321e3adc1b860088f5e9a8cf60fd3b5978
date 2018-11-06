@@ -16,6 +16,24 @@
       "revId": "40df55321e3adc1b860088f5e9a8cf60fd3b5978",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05bf43bd_5db4b775",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-06T00:33:08Z",
+      "side": 1,
+      "message": "Sure, I will give that a shot.  Agree, we want the code flow in *the* example for vbdevs to be as clear as possible.  I\u0027ll add the comment as well.",
+      "parentUuid": "eb5854a4_b5344090",
+      "revId": "40df55321e3adc1b860088f5e9a8cf60fd3b5978",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
