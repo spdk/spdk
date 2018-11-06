@@ -386,6 +386,11 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 			return -1;
 		}
 
+		if (ctrlr->quirks & NVME_QUIRK_MINIMUM_IO_QUEUE_SIZE) {
+			ctrlr->opts.io_queue_size = spdk_max(ctrlr->opts.io_queue_size,
+							     DEFAULT_IO_QUEUE_SIZE_FOR_QUIRK);
+		}
+
 		TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, ctrlr, tailq);
 		return 0;
 	}
