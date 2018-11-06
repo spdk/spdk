@@ -16,6 +16,24 @@
       "revId": "8dbb916fa7098c860c824987cc02147f53680aba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58176534_963cae0c",
+        "filename": "test/spdkcli/iscsi.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-11-06T11:24:29Z",
+      "side": 1,
+      "message": "It is my mistake. Thanks for letting me know!",
+      "parentUuid": "83177549_8dda0062",
+      "revId": "8dbb916fa7098c860c824987cc02147f53680aba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
