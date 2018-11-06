@@ -41,6 +41,9 @@
 #include <rte_mempool.h>
 #include <rte_memzone.h>
 #include <rte_version.h>
+#include <rte_power.h>
+
+static bool g_power_enabled = false;
 
 static uint64_t
 virt_to_phys(void *vaddr)
@@ -416,4 +419,78 @@ spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 #else
 	return rte_ring_dequeue_burst((struct rte_ring *)ring, objs, count, NULL);
 #endif
+}
+
+int
+spdk_power_init(void)
+{
+	unsigned int core;
+
+	SPDK_ENV_FOREACH_CORE(core) {
+		if (rte_power_init(core) < 0) {
+			return -1;
+		}
+	}
+
+	g_power_enabled = true;
+
+	return 0;
+}
+
+int
+spdk_power_exit(void)
+{
+	unsigned int core;
+
+	if (g_power_enabled == false) {
+		return -1;
+	}
+
+	SPDK_ENV_FOREACH_CORE(core) {
+		if (rte_power_exit(core) < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_power_freq_up(unsigned int core)
+{
+	if (g_power_enabled == false) {
+		return -1;
+	}
+
+	return rte_power_freq_up(core);
+}
+
+int
+spdk_power_freq_down(unsigned int core)
+{
+	if (g_power_enabled == false) {
+		return -1;
+	}
+
+	return rte_power_freq_down(core);
+}
+
+uint32_t
+spdk_power_get_freq(unsigned int core)
+{
+	if (g_power_enabled == false) {
+		return -1;
+	}
+
+	return rte_power_get_freq(core);
+}
+
+int
+spdk_power_set_freq(unsigned int core, uint32_t level)
+{
+	if (g_power_enabled == false) {
+		return -1;
+	}
+
+	return rte_power_set_freq(core, level);
 }

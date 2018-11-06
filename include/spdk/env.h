@@ -1075,6 +1075,57 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+/**
+ * Initialize the power management.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_power_init(void);
+
+/**
+ * Cleanup the power management.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_power_exit(void);
+
+/**
+ * Increase a level of frequency on required core.
+ *
+ * \param core Core id.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_power_freq_up(unsigned int core);
+
+/**
+ * Decrease a level of frequency on required core.
+ *
+ * \param core Core id.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_power_freq_down(unsigned int core);
+
+/**
+ * Get a level of frequency on required core.
+ *
+ * \param core Core id.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+uint32_t spdk_power_get_freq(unsigned int core);
+
+/**
+ * Set a level of frequency on required core.
+ *
+ * \param core Core id.
+ * \param level Frequency level.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_power_set_freq(unsigned int core, uint32_t level);
+
 #ifdef __cplusplus
 }
 #endif
