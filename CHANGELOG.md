@@ -14,6 +14,15 @@ Related to the previous change, the rpc `set_nvmf_target_options` has been renam
 `set_nvmf_target_max_subsystems` to indicate that this is the only target option available for the user to edit.
 Usage of this rpc is still confined to the time prior to application subsystem initialization.
 
+## v18.10.1:
+
+### bdev
+
+On shutdwon, bdev unregister now proceeds in top-down fashion, with claimed
+bdevs skipped. This allows virtual bdevs to be shut down cleanly as opposed
+to the previous behavior that didn't differentiate between hotremove and
+planned shutdown.
+
 ## v18.10:
 
 ### nvme
