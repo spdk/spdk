@@ -566,6 +566,11 @@ int main(int argc, char **argv)
 		}
 	}
 
+	/* unregister AER callback so we don't fail on aborted AERs when we close out qpairs. */
+	foreach_dev(dev) {
+		spdk_nvme_ctrlr_register_aer_callback(dev->ctrlr, NULL, NULL);
+	}
+
 	for (i = 0; i < num_devs; i++) {
 		struct dev *dev = &devs[i];
 
