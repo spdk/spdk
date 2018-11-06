@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee23793c_8ff9c6d0",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T23:29:45Z",
+      "side": 1,
+      "message": "negative or negate?",
+      "range": {
+        "startLine": 74,
+        "startChar": 39,
+        "endLine": 74,
+        "endChar": 41
+      },
+      "revId": "26d0484d62d5fc23c7299f7e1fb1d364f1097a88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ef7e905_47c0da1b",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T23:29:45Z",
+      "side": 1,
+      "message": "negative or negate?",
+      "range": {
+        "startLine": 83,
+        "startChar": 43,
+        "endLine": 83,
+        "endChar": 45
+      },
+      "revId": "26d0484d62d5fc23c7299f7e1fb1d364f1097a88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
