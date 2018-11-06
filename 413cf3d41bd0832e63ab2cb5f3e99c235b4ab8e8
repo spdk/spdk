@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14858f7a_a7756b03",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-06T05:58:28Z",
+      "side": 1,
+      "message": "Why we need include \"spdk/endian.h\"? The build successfully even if this include is removed.",
+      "revId": "413cf3d41bd0832e63ab2cb5f3e99c235b4ab8e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3d60285_a6ca5d9d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-06T05:58:28Z",
+      "side": 1,
+      "message": "Where is DISCARD? Is this a typo?",
+      "range": {
+        "startLine": 322,
+        "startChar": 25,
+        "endLine": 322,
+        "endChar": 32
+      },
+      "revId": "413cf3d41bd0832e63ab2cb5f3e99c235b4ab8e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0013bd18_43263d40",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 924,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-06T05:58:28Z",
+      "side": 1,
+      "message": "If spdk_vhost_dev_register() failed in Line 886, we shouldn\u0027t call spdk_vhost_dev_unregister().",
+      "revId": "413cf3d41bd0832e63ab2cb5f3e99c235b4ab8e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
