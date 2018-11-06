@@ -87,6 +87,8 @@ else
 DPDK_CONFIG := $(DPDK_CONFIG)-gcc
 endif
 
+DPDK_CONFIG += CONFIG_RTE_LIBRTE_POWER=y
+
 DPDK_CFLAGS = -fPIC
 
 ifeq ($(CONFIG_DEBUG),y)
