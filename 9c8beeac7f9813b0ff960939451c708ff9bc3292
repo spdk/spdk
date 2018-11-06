@@ -16,6 +16,29 @@
       "revId": "9c8beeac7f9813b0ff960939451c708ff9bc3292",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57c51e5a_45e9ba8e",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-06T20:21:14Z",
+      "side": 1,
+      "message": "How about adding one inline function named ftl_nvme_unregister_aer_callback in ftl_nvme.h",
+      "range": {
+        "startLine": 277,
+        "startChar": 1,
+        "endLine": 277,
+        "endChar": 58
+      },
+      "revId": "9c8beeac7f9813b0ff960939451c708ff9bc3292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
