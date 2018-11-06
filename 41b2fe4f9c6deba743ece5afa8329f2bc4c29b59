@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "650401e3_d89799ef",
+        "filename": "doc/vscode.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-06T12:57:01Z",
+      "side": 1,
+      "message": "we\u0027re technically c99\n\nI have no idea what this option does though.",
+      "range": {
+        "startLine": 57,
+        "startChar": 30,
+        "endLine": 57,
+        "endChar": 33
+      },
+      "revId": "41b2fe4f9c6deba743ece5afa8329f2bc4c29b59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
