@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d51cb97b_015ffc23",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1495,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-06T12:36:51Z",
+      "side": 1,
+      "message": "missing newline at the end",
+      "revId": "a396e4f92ff9640c835cd4127673a46f9d9b6cc6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12dfb3b4_d61b1897",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1500,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-06T12:36:51Z",
+      "side": 1,
+      "message": "same here, missing \\n",
+      "revId": "a396e4f92ff9640c835cd4127673a46f9d9b6cc6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
