@@ -486,6 +486,7 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.mem_size = opts->mem_size;
 	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
 	env_opts.unlink_hugepage = opts->unlink_hugepage;
+	env_opts.hugedir = opts->hugedir;
 	env_opts.no_pci = opts->no_pci;
 	env_opts.num_pci_addr = opts->num_pci_addr;
 	env_opts.pci_blacklist = opts->pci_blacklist;
