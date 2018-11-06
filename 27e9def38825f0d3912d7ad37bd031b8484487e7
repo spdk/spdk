@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "915d1402_d35fb00c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-06T18:42:57Z",
+      "side": 1,
+      "message": "we can juct check it at the beginning of this function. but can\u0027t return immediately. Since at least previous \"ctrlr-\u003eactive_ns_list\" should be freed. \"nvme_ctrlr_identify_active_ns\" is called  only in \"nvme_ctrlr_process_init\".\n\nSine a drive with cdata.nn\u003d0 is already one abnormal device, so I would like to consider maybe cdata.nn will become none-zero after some operations on it.\nAnd maybe someday there will be a drive with some NS, but after some operations, it is set to be cdata.nn\u003d0.",
+      "parentUuid": "3701f321_866b30d5",
+      "revId": "27e9def38825f0d3912d7ad37bd031b8484487e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4553161a_04831fd8",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-06T17:30:45Z",
       "side": 1,
       "message": "maybe we can simplify this - and just check cdata.nn here?  if it is zero, advance directly to NVME_CTRLR_STATE_CONFIGURE_AER state - skipping all of the namespace-related states\n\nI think the WARNLOG could go here too",
+      "revId": "27e9def38825f0d3912d7ad37bd031b8484487e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0021657_f6f4579b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1194,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-06T18:42:57Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "4553161a_04831fd8",
       "revId": "27e9def38825f0d3912d7ad37bd031b8484487e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
