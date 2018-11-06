@@ -22,6 +22,30 @@
       "revId": "6f3e36cdaa9bbb129e0117404ab55300e5155273",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15d753f6_d1fa4956",
+        "filename": "doc/compression.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-06T23:12:11Z",
+      "side": 1,
+      "message": "Good catch Shuhei - will try to remember to fix this later.  :-)",
+      "parentUuid": "891357e3_12cffd89",
+      "range": {
+        "startLine": 10,
+        "startChar": 20,
+        "endLine": 10,
+        "endChar": 26
+      },
+      "revId": "6f3e36cdaa9bbb129e0117404ab55300e5155273",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
