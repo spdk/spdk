@@ -712,7 +712,11 @@ usage(void (*app_usage)(void))
 	printf(" -n, --mem-channels <num>  channel number of memory channels used for DPDK\n");
 	printf(" -p, --master-core <id>    master (primary) core for DPDK\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
-	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: all hugepage memory)\n");
+#ifdef __linux__
+	printf(" -s, --mem-size <size>     pre-reserved memory size in MB for DPDK (default: 0)\n");
+#else
+	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: all hugepage memory)");
+#endif
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
 	printf(" -u, --no-pci              disable PCI access\n");
 	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");

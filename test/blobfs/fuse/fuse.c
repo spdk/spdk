@@ -333,7 +333,6 @@ int main(int argc, char **argv)
 	opts.name = "spdk_fuse";
 	opts.config_file = argv[1];
 	opts.reactor_mask = "0x3";
-	opts.mem_size = 6144;
 	opts.shutdown_cb = spdk_fuse_shutdown;
 
 	g_bdev_name = argv[2];
