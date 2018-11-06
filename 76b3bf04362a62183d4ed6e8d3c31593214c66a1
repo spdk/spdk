@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c2eab6b_371ca5ff",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T22:53:21Z",
+      "side": 1,
+      "message": "I think this unlock and lock can be removed.",
+      "range": {
+        "startLine": 333,
+        "startChar": 0,
+        "endLine": 335,
+        "endChar": 33
+      },
+      "revId": "76b3bf04362a62183d4ed6e8d3c31593214c66a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d177dcf3_5786b882",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T22:53:21Z",
+      "side": 1,
+      "message": "this falls in infinite loop if done is false?\n\nFrom the line 352 to 358, the following refactoring is possible?\n\nif (!done) {\n  do {\n    count \u003d spdk_fio_poll_thread(fio_thread);\n  } while (count \u003e 0);\n}",
+      "range": {
+        "startLine": 352,
+        "startChar": 0,
+        "endLine": 354,
+        "endChar": 17
+      },
+      "revId": "76b3bf04362a62183d4ed6e8d3c31593214c66a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c5f712d_3242126d",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T22:53:21Z",
+      "side": 1,
+      "message": "same as the above.",
+      "revId": "76b3bf04362a62183d4ed6e8d3c31593214c66a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
