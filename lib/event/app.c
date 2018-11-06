@@ -694,6 +694,8 @@ spdk_app_stop(int rc)
 	 * was called.
 	 */
 	spdk_event_call(spdk_event_allocate(g_init_lcore, _spdk_app_stop, NULL, NULL));
+
+	spdk_power_exit();
 }
 
 static void

@@ -54,6 +54,7 @@ DEFINE_STUB_V(spdk_subsystem_config, (FILE *fp));
 DEFINE_STUB_V(spdk_subsystem_init, (struct spdk_event *app_start_event));
 DEFINE_STUB_V(spdk_subsystem_fini, (struct spdk_event *app_stop_event));
 DEFINE_STUB(spdk_env_init, int, (const struct spdk_env_opts *opts), 0);
+DEFINE_STUB(spdk_power_exit, int, (void), 0);
 DEFINE_STUB_V(spdk_env_opts_init, (struct spdk_env_opts *opts));
 DEFINE_STUB(spdk_env_get_core_count, uint32_t, (void), 1);
 DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_handler func,

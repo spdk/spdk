@@ -396,6 +396,9 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 		fprintf(stderr, "Failed to initialize vtophys\n");
 		return -1;
 	}
+	if (spdk_power_init() < 0) {
+		fprintf(stderr, "Failed to initialize power and ignore it.\n");
+	}
 
 	return 0;
 }
