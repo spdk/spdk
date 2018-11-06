@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09322857_fe0fb51b",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-06T12:32:39Z",
+      "side": 1,
+      "message": "This doesn\u0027t need to be whitelist specific. You could run\nDRIVER_OVERRIDE\u003duio_pci_generic ./setup.sh\njust as well.\n\nCould we describe this option as something like:\n\"Disable automatic vfio-pci/uio_pci_generic selection and forcefully bind devices to the given driver\"",
+      "range": {
+        "startLine": 52,
+        "startChar": 74,
+        "endLine": 52,
+        "endChar": 87
+      },
+      "revId": "a83f5f0e96c72ae415340725920afbafc101a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92a5d6e6_f11bb6cd",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-06T12:32:39Z",
+      "side": 1,
+      "message": "I\u0027m pretty sure you can just modify this part and set the proper driver_name",
+      "range": {
+        "startLine": 186,
+        "startChar": 1,
+        "endLine": 190,
+        "endChar": 3
+      },
+      "revId": "a83f5f0e96c72ae415340725920afbafc101a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8180db43_5020f003",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-06T12:32:39Z",
+      "side": 1,
+      "message": "and maybe remove the `|| true` here, so that providing an invalid DRIVER_OVERRIDE will fail straight away",
+      "revId": "a83f5f0e96c72ae415340725920afbafc101a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b412d4d_7406f4a9",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-06T12:32:39Z",
+      "side": 1,
+      "message": "does it need to be an array?\nIt looks like you don\u0027t support `${#DRIVER_OVERRIDE[@]} -gt 1`, so a simple variable should do.",
+      "revId": "a83f5f0e96c72ae415340725920afbafc101a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
