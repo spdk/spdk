@@ -2,6 +2,15 @@
 
 ## v19.01: (Upcoming Release)
 
+## v18.10.1:
+
+### bdev
+
+On shutdwon, bdev unregister now proceeds in top-down fashion, with claimed bdevs
+skipped. This allows virtual bdevs to be shut down cleanly as opposed to the
+previous behavior that didn't differentiate between hotremove and planned
+shutdown.
+
 ## v18.10:
 
 ### nvme
