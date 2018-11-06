@@ -132,7 +132,6 @@ int main(int argc, char **argv)
 	opts.name = "spdk_mkfs";
 	opts.config_file = argv[1];
 	opts.reactor_mask = "0x3";
-	opts.mem_size = 1024;
 	opts.shutdown_cb = NULL;
 
 	spdk_fs_set_cache_size(512);
