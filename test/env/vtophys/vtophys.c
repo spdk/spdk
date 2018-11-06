@@ -119,7 +119,6 @@ main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "vtophys";
 	opts.core_mask = "0x1";
-	opts.mem_size = 256;
 	if (spdk_env_init(&opts) < 0) {
 		printf("Err: Unable to initialize SPDK env\n");
 		return 1;
