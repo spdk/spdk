@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d26df7b4_dc108ce0",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T13:48:59Z",
+      "side": 1,
+      "message": "Please restore this.",
+      "range": {
+        "startLine": 489,
+        "startChar": 0,
+        "endLine": 492,
+        "endChar": 3
+      },
+      "revId": "799221706ad1a63cca20e5d88b711fbefb92fc96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
