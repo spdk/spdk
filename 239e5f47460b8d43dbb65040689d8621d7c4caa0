@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a8a2e51_87532fdd",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T20:59:05Z",
+      "side": 1,
+      "message": "Can you return whaever _validate_vol_params() is returning here?",
+      "range": {
+        "startLine": 127,
+        "startChar": 10,
+        "endLine": 127,
+        "endChar": 11
+      },
+      "revId": "239e5f47460b8d43dbb65040689d8621d7c4caa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbda4f09_e4d26ba4",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T20:59:05Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 143,
+        "startChar": 9,
+        "endLine": 143,
+        "endChar": 12
+      },
+      "revId": "239e5f47460b8d43dbb65040689d8621d7c4caa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
