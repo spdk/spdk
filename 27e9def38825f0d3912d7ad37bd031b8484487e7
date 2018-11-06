@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3701f321_866b30d5",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-06T17:30:45Z",
+      "side": 1,
+      "message": "should we just check ctrlr-\u003enum_ns at the beginning of this function, and return immediately if it is 0?\n\nwe don\u0027t need to calculate num_pages if ctrlr-\u003enum_ns is zero\n\nyou could also just add an assert(ctrlr-\u003enum_ns \u003e 0) at the beginning of this function - if you skip this state during initialization, this function should never get called since async events and attach/detach/delete ns are not possible when cdata.nn \u003d\u003d 0",
+      "revId": "27e9def38825f0d3912d7ad37bd031b8484487e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4553161a_04831fd8",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1194,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-06T17:30:45Z",
+      "side": 1,
+      "message": "maybe we can simplify this - and just check cdata.nn here?  if it is zero, advance directly to NVME_CTRLR_STATE_CONFIGURE_AER state - skipping all of the namespace-related states\n\nI think the WARNLOG could go here too",
+      "revId": "27e9def38825f0d3912d7ad37bd031b8484487e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cf1d70d_8e011b54",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1405,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-06T17:30:45Z",
+      "side": 1,
+      "message": "if you make the change above, then you could change this to:\n\nif (nn \u003d\u003d ctrlr-\u003enum_ns || nn \u003d\u003d 0)\n\nthe if (nn \u003d\u003d 0) could be removed on line 1411 then, reducing some complexity",
+      "revId": "27e9def38825f0d3912d7ad37bd031b8484487e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
