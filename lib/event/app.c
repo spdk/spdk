@@ -714,10 +714,13 @@ usage(void (*app_usage)(void))
 	printf(" -p, --master-core <id>    master (primary) core for DPDK\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: ");
-	if (g_default_opts.mem_size > 0) {
-		printf("%dMB)\n", g_default_opts.mem_size);
-	} else {
+#ifndef __linux__
+	if (g_default_opts.mem_size <= 0) {
 		printf("all hugepage memory)\n");
+	} else
+#endif
+	{
+		printf("%dMB)\n", g_default_opts.mem_size);
 	}
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
 	printf(" -u, --no-pci              disable PCI access\n");

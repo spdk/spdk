@@ -523,7 +523,6 @@ int main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "aer";
 	opts.core_mask = "0x1";
-	opts.mem_size = 64;
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		return 1;
