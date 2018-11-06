@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2b861bc_64caa896",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-06T10:23:38Z",
+      "side": 1,
+      "message": "will there be any API to translate frequency levels to real frequencies?",
+      "revId": "e1c6e677f141451fe3859debd3372c8465d4ffce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
