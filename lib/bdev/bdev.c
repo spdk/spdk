@@ -1081,7 +1081,7 @@ _spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	if (TAILQ_EMPTY(&g_bdev_mgr.bdevs)) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Done unregistering bdevs\n");
 		/*
-		 * Bdev module finish need to be deffered as we might be in the middle of some context
+		 * Bdev module finish need to be deferred as we might be in the middle of some context
 		 * (like bdev part free) that will use this bdev (or private bdev driver ctx data)
 		 * after returning.
 		 */
@@ -1090,12 +1090,38 @@ _spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	}
 
 	/*
-	 * Unregister the last bdev in the list.  The last bdev in the list should be a bdev
-	 * that has no bdevs that depend on it.
+	 * Unregister last unclaimed bdev in the list, to ensure that bdev subsystem
+	 * shutdown proceeds top-down. The goal is to give virtual bdevs an opportunity
+	 * to detect clean shutdown as opposed to run-time hot removal of the underlying
+	 * base bdevs.
+	 *
+	 * Also, walk the list in the reverse order.
 	 */
-	bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Unregistering bdev '%s'\n", bdev->name);
-	spdk_bdev_unregister(bdev, _spdk_bdev_finish_unregister_bdevs_iter, bdev);
+	for (bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
+	     bdev; bdev = TAILQ_PREV(bdev, spdk_bdev_list, internal.link)) {
+		if (bdev->internal.claim_module != NULL) {
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Skipping claimed bdev '%s'(<-'%s').\n",
+				      bdev->name, bdev->internal.claim_module->name);
+			continue;
+		}
+
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Unregistering bdev '%s'\n", bdev->name);
+		spdk_bdev_unregister(bdev, _spdk_bdev_finish_unregister_bdevs_iter, bdev);
+		return;
+	}
+
+	/*
+	 * If any bdev fails to unclaim underlying bdev properly, we may face the
+	 * case of bdev list consisting of claimed bdevs only (if claims are managed
+	 * correctly, this would mean there's a loop in the claims graph which is
+	 * clearly impossible). Warn and unregister last bdev on the list then.
+	 */
+	for (bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
+	     bdev; bdev = TAILQ_PREV(bdev, spdk_bdev_list, internal.link)) {
+		SPDK_ERRLOG("Unregistering claimed bdev '%s'!\n", bdev->name);
+		spdk_bdev_unregister(bdev, _spdk_bdev_finish_unregister_bdevs_iter, bdev);
+		return;
+	}
 }
 
 void
