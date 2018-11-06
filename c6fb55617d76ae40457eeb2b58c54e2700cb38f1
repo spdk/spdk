@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8558aff4_379a8c41",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-06T18:25:59Z",
+      "side": 1,
+      "message": "Functionally this code looks OK.  Let\u0027s add a comment here explaining why we\u0027re calling spdk_bdev_io_get_buf() though.",
+      "revId": "c6fb55617d76ae40457eeb2b58c54e2700cb38f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
