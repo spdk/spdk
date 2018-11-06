@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "1485e565_d4f61cb5",
+        "filename": "test/spdkcli/nvmf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-11-06T12:27:38Z",
+      "side": 1,
+      "message": "The same as below",
+      "parentUuid": "ecf2b507_5accf17c",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 105
+      },
+      "revId": "0a068a5d6e7240a065b17751cefcc74a04e992e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9022c6e_96294faa",
         "filename": "test/spdkcli/nvmf.sh",
         "patchSetId": 3
@@ -94,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "fe57c3ae_69ecdbe5",
+        "filename": "test/spdkcli/nvmf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-11-06T12:27:38Z",
+      "side": 1,
+      "message": "The same as below",
+      "parentUuid": "c9022c6e_96294faa",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 109
+      },
+      "revId": "0a068a5d6e7240a065b17751cefcc74a04e992e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc986b6a_e6f5eacf",
         "filename": "test/spdkcli/nvmf.sh",
         "patchSetId": 3
@@ -105,6 +153,30 @@
       "writtenOn": "2018-10-18T07:43:31Z",
       "side": 1,
       "message": "def ui_command_delete_all(self): @ line 62 does not take any arguments.\nSo why are we passing a nqn name here as an argument? Shouldnt this fail?",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 71
+      },
+      "revId": "0a068a5d6e7240a065b17751cefcc74a04e992e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e66698f3_da2d967f",
+        "filename": "test/spdkcli/nvmf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-11-06T12:27:38Z",
+      "side": 1,
+      "message": "Command delete_all does not take arguments.\n\"nqn.2014-08.org.spdk:cnode2\" is passed to check if this node was deleted.",
+      "parentUuid": "cc986b6a_e6f5eacf",
       "range": {
         "startLine": 71,
         "startChar": 0,
