@@ -90,7 +90,7 @@ Vagrant.configure(2) do |config|
     vb.memory = "#{vmram}"
     vb.cpus = "#{vmcpu}"
 
-    nvme_disk = 'nvme.vdi'
+    nvme_disk=(ENV['NVME_FILE'] || "nvme_disk.img")
     unless File.exist? (nvme_disk)
       vb.customize ["createhd", "--filename", nvme_disk, "--variant", "Fixed", "--size", "1024"]
       vb.customize ["storagectl", :id, "--name", "nvme", "--add", "pcie", "--controller", "NVMe", "--portcount", "1", "--bootable", "off"]
@@ -111,7 +111,12 @@ Vagrant.configure(2) do |config|
 
     # we put nvme_disk inside default pool to eliminate libvirt/SELinux Permissions Problems
     # and to be able to run vagrant from user $HOME directory
-    nvme_disk = '/var/lib/libvirt/images/nvme_disk.img'
+    if ENV['NVME_FILE']
+      nvme_disk="/var/lib/libvirt/images/" + ENV['NVME_FILE']
+    else
+      nvme_disk="/var/lib/libvirt/images/nvme_disk.img"
+    end
+
     unless File.exist? (nvme_disk)
       puts "If run with libvirt provider please execute create_nvme_img.sh"
     end
