@@ -115,6 +115,15 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_INTEL_QUIRK_NO_LOG_PAGES 0x100
 
+/*
+ * Some SSDs exhibit poor performance with the default SPDK NVMe IO queue size.
+ * This quirk will increase the default to 1024 which matches other operating
+ * systems, at the cost of some extra memory usage.  Users can still override
+ * the increased default by changing the spdk_nvme_io_qpair_opts when allocating
+ * a new queue pair.
+ */
+#define NVME_QUIRK_MINIMUM_IO_QUEUE_SIZE 0x200
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)
@@ -130,6 +139,7 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define DEFAULT_MAX_IO_QUEUES		(1024)
 #define DEFAULT_IO_QUEUE_SIZE		(256)
+#define DEFAULT_IO_QUEUE_SIZE_FOR_QUIRK	(1024) /* Matches Linux kernel driver */
 
 #define DEFAULT_ADMIN_QUEUE_REQUESTS	(32)
 #define DEFAULT_IO_QUEUE_REQUESTS	(512)
