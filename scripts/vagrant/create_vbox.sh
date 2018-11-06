@@ -184,15 +184,15 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv SPDK_DIR
 fi
 
-if [ -d "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}" ]; then
-	echo "Error: ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO} already exists!"
+if [ -d "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER}" ]; then
+	echo "Error: ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER} already exists!"
 	exit 1
 fi
 
 if [ ${DRY_RUN} != 1 ]; then
-	mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}"
-	cp ${DIR}/Vagrantfile ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}
-	pushd "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}"
+	mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER}"
+	cp ${DIR}/Vagrantfile ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER}
+	pushd "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER}"
 	if [ ! -z "${http_proxy}" ]; then
 		export http_proxy
 		export https_proxy
@@ -213,7 +213,7 @@ EOF
 	echo ""
 	echo "  SUCCESS!"
 	echo ""
-	echo "  cd to ${SPDK_VAGRANT_DISTRO} and type \"vagrant ssh\" to use."
+	echo "  cd to ${SPDK_VAGRANT_DISTRO}-${PROVIDER} and type \"vagrant ssh\" to use."
 	echo "  Use vagrant \"suspend\" and vagrant \"resume\" to stop and start."
 	echo "  Use vagrant \"destroy\" followed by \"rm -rf ${SPDK_VAGRANT_DISTRO}\" to destroy all trace of vm."
 	echo ""
