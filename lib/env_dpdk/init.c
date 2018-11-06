@@ -267,6 +267,14 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	/* use a specific hugetlbfs mount */
+	if (opts->hugedir) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--huge-dir=%s", opts->hugedir));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0) && RTE_VERSION < RTE_VERSION_NUM(18, 5, 1, 0)
 	/* Dynamic memory management is buggy in DPDK 18.05.0. Don't use it. */
 	args = spdk_push_arg(args, &argcount, _sprintf_alloc("--legacy-mem"));

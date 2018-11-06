@@ -113,6 +113,8 @@ static const struct option g_cmdline_options[] = {
 	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
 #define WAIT_FOR_RPC_OPT_IDX	258
 	{"wait-for-rpc",		no_argument,		NULL, WAIT_FOR_RPC_OPT_IDX},
+#define HUGE_DIR_OPT_IDX	259
+	{"huge-dir",			no_argument,		NULL, HUGE_DIR_OPT_IDX},
 };
 
 /* Global section */
@@ -486,6 +488,7 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.mem_size = opts->mem_size;
 	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
 	env_opts.unlink_hugepage = opts->unlink_hugepage;
+	env_opts.hugedir = opts->hugedir;
 	env_opts.no_pci = opts->no_pci;
 	env_opts.num_pci_addr = opts->num_pci_addr;
 	env_opts.pci_blacklist = opts->pci_blacklist;
@@ -727,6 +730,7 @@ usage(void (*app_usage)(void))
 	printf(" -R, --huge-unlink         unlink huge files after initialization\n");
 	printf(" -W, --pci-whitelist <bdf>\n");
 	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
+	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
 	spdk_tracelog_usage(stdout, "-L");
 	if (app_usage) {
 		app_usage();
@@ -917,6 +921,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				opts->pci_whitelist = NULL;
 				goto out;
 			}
+			break;
+		case HUGE_DIR_OPT_IDX:
+			opts->hugedir = optarg;
 			break;
 		case '?':
 			/*

@@ -82,6 +82,7 @@ struct spdk_env_opts {
 	bool			hugepage_single_segments;
 	bool			unlink_hugepage;
 	size_t			num_pci_addr;
+	const char		*hugedir;
 	struct spdk_pci_addr	*pci_blacklist;
 	struct spdk_pci_addr	*pci_whitelist;
 
