@@ -124,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "c38397ff_f8536bdc",
+        "filename": "include/spdk/ocssd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T09:18:46Z",
+      "side": 1,
+      "message": "The I/O functions might return EAGAIN, in which case the user is expected to call them again. The occsd_io is used as a handle for that particular I/O operation - it tracks how much data has been already processed.",
+      "parentUuid": "d02a8746_d49cc15c",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e54f6cef_3f3d3967",
         "filename": "lib/ocssd/ocssd_utils.h",
         "patchSetId": 2
