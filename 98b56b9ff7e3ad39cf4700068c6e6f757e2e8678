@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e151132_8e625c5d",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1002,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T08:19:20Z",
+      "side": 1,
+      "message": "check_format.sh should detect useless type casting.",
+      "range": {
+        "startLine": 1002,
+        "startChar": 37,
+        "endLine": 1002,
+        "endChar": 48
+      },
+      "revId": "98b56b9ff7e3ad39cf4700068c6e6f757e2e8678",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
