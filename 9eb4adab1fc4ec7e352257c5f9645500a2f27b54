@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2403afc6_95c77431",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:51:29Z",
+      "side": 1,
+      "message": "Pls add info from what kernel version this is supported (or update changelog and/or doc)",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 52
+      },
+      "revId": "9eb4adab1fc4ec7e352257c5f9645500a2f27b54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17b41512_2a43585d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:51:29Z",
+      "side": 1,
+      "message": "When we started adding blank lines before \u0027case\u0027 ?",
+      "revId": "9eb4adab1fc4ec7e352257c5f9645500a2f27b54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b464597_1a9afdb8",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:51:29Z",
+      "side": 1,
+      "message": "Why 16MiB? Is this some kind of hard limit? Also you blindly trust it in \u0027case VIRTIO_BLK_T_DISCARD\u0027.",
+      "range": {
+        "startLine": 776,
+        "startChar": 5,
+        "endLine": 776,
+        "endChar": 11
+      },
+      "revId": "9eb4adab1fc4ec7e352257c5f9645500a2f27b54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39212643_740bc007",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:51:29Z",
+      "side": 1,
+      "message": "This voids darsto fix for bdev hotremove (line 744)",
+      "range": {
+        "startLine": 781,
+        "startChar": 33,
+        "endLine": 781,
+        "endChar": 37
+      },
+      "revId": "9eb4adab1fc4ec7e352257c5f9645500a2f27b54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63f23387_43b41e57",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:51:29Z",
+      "side": 1,
+      "message": "spdk_min() ?",
+      "range": {
+        "startLine": 785,
+        "startChar": 25,
+        "endLine": 785,
+        "endChar": 71
+      },
+      "revId": "9eb4adab1fc4ec7e352257c5f9645500a2f27b54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
