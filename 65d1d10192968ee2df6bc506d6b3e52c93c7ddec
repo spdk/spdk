@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8526f125_5067610e",
+        "filename": "lib/ocssd/ocssd_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1245,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "It\u0027s set in ocssd_io_init_md(read|write).\n\nThe metadata referred by the OCSSD_IO_MD flag is not the one specified by the NVMe specification that is tied to a read or write. This is FTL\u0027s metadata that is transferred using regular reads/writes, which is used to restore the L2P from the SSD. It\u0027s written at the beginning of each band as well as its end. Dropping the support for this kind of metadata in the first patch and adding it in a later one would be really hard, as it\u0027s core to the whole operation of the FTL and would require substantial amount of work.",
+      "parentUuid": "b6620f22_c5c56e33",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "995f0804_3e62ad2e",
         "filename": "lib/ocssd/ocssd_core.c",
         "patchSetId": 6
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "6190adc0_ebc8a2af",
+        "filename": "lib/ocssd/ocssd_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1290,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "995f0804_3e62ad2e",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15bfaab6_da70936b",
         "filename": "lib/ocssd/ocssd_io.c",
         "patchSetId": 6
@@ -47,6 +83,24 @@
       "writtenOn": "2018-11-05T18:36:14Z",
       "side": 1,
       "message": "this assert seems racy - io-\u003edev-\u003enum_inflight could get decremented between this assert and the atomic_fetch_sub at line 71 (I\u0027m assuming you are doing atomic_fetch_sub because multiple threads could be modifying it in parallel)",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b51949b_ea187703",
+        "filename": "lib/ocssd/ocssd_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "15bfaab6_da70936b",
       "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "586aa7bc_e1556290",
+        "filename": "lib/ocssd/ocssd_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "You\u0027re right, there\u0027s no references to this function outside of this module, it should be static.\n\nThis function is supposed to do the most basic initialization of the IO structure and fill fields necessary for all types of IOs. The ocssd_io_init_internal is supposed to initialize the IOs internal the the FTL (e.g. metadata, garbage collection, etc.), so replacing the names makes little sense.",
+      "parentUuid": "21a674c6_39cdd218",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbe46845_cf62c0f3",
         "filename": "lib/ocssd/ocssd_io.c",
         "patchSetId": 6
@@ -81,6 +153,24 @@
       "writtenOn": "2018-11-05T18:36:14Z",
       "side": 1,
       "message": "we should have pools of these data structures pre-allocated, so that we don\u0027t have to do calloc() in the I/O path\n\ncan you describe the different paths where these calloc() operations will occur?  for example, is it for I/O operations going to the SSD?  or is it related to I/O operations from the user?",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d8b6a9e_6ccf5124",
+        "filename": "lib/ocssd/ocssd_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "As said in the comment above, this function is only used by the internal background IOs, so it\u0027s not on the user\u0027s IO path.\n\nSome of the internal IOs (those responsible by garbage collection) are already pre-allocated, some are not (metadata). The problem with having pools of this structures is that their length can vary - the metadata needs a few more fields than regular IOs (see ocssd_md_io in ocssd_band.c). However, we could probably have pools for each type of IOs.",
+      "parentUuid": "fbe46845_cf62c0f3",
       "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a038c850_0b08a898",
+        "filename": "lib/ocssd/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "62cb5945_95b9cbd2",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d52d0a7_71ca6067",
         "filename": "lib/ocssd/Makefile",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-05T18:07:36Z",
       "side": 1,
       "message": "these -D\u0027s should probably be removed from the Makefile - just add #define OCSSD_INTERNAL 1 in one of your header files if you need to keep that code around\n\nsame for OCSSD_TRACE_ENABLED",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "669ee60c_07d5cd97",
+        "filename": "lib/ocssd/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d52d0a7_71ca6067",
       "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "bd749d5a_82c3a95d",
+        "filename": "lib/ocssd/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c3b0a515_213c2c90",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f68e64d_333caa5f",
         "filename": "lib/ocssd/ocssd_rwb.c",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2018-11-05T18:07:36Z",
       "side": 1,
       "message": "let\u0027s remove this direct include of a DPDK header file\n\nwith SPDK, we intend people to be able to use a lot of libraries without requiring DPDK - there are some exceptions (for example the SPDK crypto module directly uses DPDK cryptodev), but for things like OCSSD, the DPDK dependency is not necessary\n\nare there specific things from DPDK that you need here?",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc73aeac_32caa3a2",
+        "filename": "lib/ocssd/ocssd_rwb.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f68e64d_333caa5f",
       "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -210,6 +282,24 @@
     },
     {
       "key": {
+        "uuid": "b33b9893_08b2ef97",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b3665ec_0d8f6ff7",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac37df6d_634ffee5",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 4
@@ -221,6 +311,24 @@
       "writtenOn": "2018-11-05T18:07:36Z",
       "side": 1,
       "message": "is this \"I\" change needed?  seems unrelated to the rest of this patch",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34d3667f_5beddeb8",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-06T17:24:07Z",
+      "side": 1,
+      "message": "It\u0027s not, it\u0027s just a simple optimization I was forced to add due to my setup - it took ages for grep to scan through all of the binaries. It shouldn\u0027t hurt anything though, the -I flag just skips processing binary files.",
+      "parentUuid": "ac37df6d_634ffee5",
       "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
