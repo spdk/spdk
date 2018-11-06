@@ -909,6 +909,12 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t				next_nsid = 0;
 	uint32_t				*new_ns_list = NULL;
 
+	if (ctrlr->num_ns == 0) {
+		spdk_dma_free(ctrlr->active_ns_list);
+		ctrlr->active_ns_list = NULL;
+
+		return 0;
+	}
 
 	/*
 	 * The allocated size must be a multiple of sizeof(struct spdk_nvme_ns_list)
@@ -1398,14 +1404,19 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
 	 * so check if we need to reallocate.
 	 */
-	if (nn != ctrlr->num_ns) {
-		nvme_ctrlr_destruct_namespaces(ctrlr);
-
+	if (nn == ctrlr->num_ns) {
 		if (nn == 0) {
 			SPDK_WARNLOG("controller has 0 namespaces\n");
-			return 0;
 		}
 
+		return 0;
+	}
+
+	nvme_ctrlr_destruct_namespaces(ctrlr);
+
+	if (nn == 0) {
+		SPDK_WARNLOG("controller has 0 namespaces\n");
+	} else {
 		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
 					 &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->ns == NULL) {
@@ -1419,10 +1430,9 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			rc = -ENOMEM;
 			goto fail;
 		}
-
-		ctrlr->num_ns = nn;
 	}
 
+	ctrlr->num_ns = nn;
 	return 0;
 
 fail:
