@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f59bbb82_cc9eeaf5",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-06T11:55:11Z",
+      "side": 0,
+      "message": "bdevperf, among some other apps, specifies a default mem size of 1GB.\n\nCan those defaults be removed? Let me push a patch.",
+      "range": {
+        "startLine": 44,
+        "startChar": 88,
+        "endLine": 44,
+        "endChar": 95
+      },
+      "revId": "08f64b5761763d5e7eef0621e198d0b664cff5ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
