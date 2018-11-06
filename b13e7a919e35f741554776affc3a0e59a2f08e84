@@ -16,6 +16,29 @@
       "revId": "b13e7a919e35f741554776affc3a0e59a2f08e84",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d625c8ee_1486ace4",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1412,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:21:22Z",
+      "side": 1,
+      "message": "If @joevannip comment is true, this is dead code now and should be moved as he suggested.",
+      "range": {
+        "startLine": 1411,
+        "startChar": 1,
+        "endLine": 1412,
+        "endChar": 48
+      },
+      "revId": "b13e7a919e35f741554776affc3a0e59a2f08e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
