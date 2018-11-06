@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5f673189_d2dd7534",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-06T01:19:57Z",
+      "side": 1,
+      "message": "T_OUT will be marked with DISCARD/WRITE ZEROES, here there need an update to unmask T_OUT first, this should be another patch, so just use (type \u003d\u003d VIRTIO_BLK_T_OUT) here.",
+      "parentUuid": "3d9f6b18_9e5a7337",
+      "range": {
+        "startLine": 288,
+        "startChar": 34,
+        "endLine": 288,
+        "endChar": 58
+      },
+      "revId": "c0cf072709ab59aec69c4c286a136cc6104632a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6a994583_812cca43",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-05T16:19:30Z",
       "side": 1,
       "message": "How do you handle case where len \u003c sizeof(blkcfg) ?\nDoes that situation can happen?\n\nWhat is the reason for copying blkcfg to config instead of assigning values directly?",
+      "range": {
+        "startLine": 774,
+        "startChar": 1,
+        "endLine": 774,
+        "endChar": 72
+      },
+      "revId": "c0cf072709ab59aec69c4c286a136cc6104632a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c383673_ef35fc3f",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-06T01:19:57Z",
+      "side": 1,
+      "message": "configuration section maybe smaller than the latest configuration space, so when \u0027len\u0027 is smaller, we just copy \u0027len\u0027 bytes.",
+      "parentUuid": "6a994583_812cca43",
       "range": {
         "startLine": 774,
         "startChar": 1,
