@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "83c0dada_86c5357c",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-06T22:56:17Z",
+      "side": 1,
+      "message": "you should put a break in the default case for correctness.",
+      "revId": "c6fb55617d76ae40457eeb2b58c54e2700cb38f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8558aff4_379a8c41",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 16
@@ -13,6 +30,24 @@
       "writtenOn": "2018-11-06T18:25:59Z",
       "side": 1,
       "message": "Functionally this code looks OK.  Let\u0027s add a comment here explaining why we\u0027re calling spdk_bdev_io_get_buf() though.",
+      "revId": "c6fb55617d76ae40457eeb2b58c54e2700cb38f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b74e6489_f1539789",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-06T22:56:17Z",
+      "side": 1,
+      "message": "Yeah - I only understand why you\u0027re doing this because I just reviewed the whole patch series. If I hadn\u0027t, I would have thought this was wrong, so a comment would really help.",
+      "parentUuid": "8558aff4_379a8c41",
       "revId": "c6fb55617d76ae40457eeb2b58c54e2700cb38f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
