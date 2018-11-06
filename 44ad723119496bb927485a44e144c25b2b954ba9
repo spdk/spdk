@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9f1df9d_e699267c",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T23:56:20Z",
+      "side": 1,
+      "message": "Can you add CU_ASSERT(g_volatile_pm_buf \u003d\u003d NULL) here?",
+      "revId": "44ad723119496bb927485a44e144c25b2b954ba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3eb7df1_6c013238",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T23:56:20Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "44ad723119496bb927485a44e144c25b2b954ba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
