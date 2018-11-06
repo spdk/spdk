@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1658bfe_f551aae5",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:04:25Z",
+      "side": 1,
+      "message": "In case of spdk_reduce_get_backing_device_size() return error this condition will be true.",
+      "range": {
+        "startLine": 168,
+        "startChar": 5,
+        "endLine": 168,
+        "endChar": 23
+      },
+      "revId": "8d7a44b22e5a10cc4263bb86f9cbccf81b6f5218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd86e937_0a061762",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:04:25Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 177,
+        "startChar": 5,
+        "endLine": 177,
+        "endChar": 23
+      },
+      "revId": "8d7a44b22e5a10cc4263bb86f9cbccf81b6f5218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
