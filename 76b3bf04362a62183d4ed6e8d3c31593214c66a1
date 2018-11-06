@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "3ae98879_da331f32",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-06T23:03:21Z",
+      "side": 1,
+      "message": "done is set to true inside of a callback triggered by spdk_bdev_finish, but now that I look at this, done needs to get set back to false before we call spdk_bdev_finish.",
+      "parentUuid": "d177dcf3_5786b882",
+      "range": {
+        "startLine": 352,
+        "startChar": 0,
+        "endLine": 354,
+        "endChar": 17
+      },
+      "revId": "76b3bf04362a62183d4ed6e8d3c31593214c66a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c5f712d_3242126d",
         "filename": "examples/bdev/fio_plugin/fio_plugin.c",
         "patchSetId": 3
