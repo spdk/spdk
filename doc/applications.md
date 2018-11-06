@@ -44,6 +44,7 @@ Param    | Long Param             | Type     | Default                | Descript
 -B       | --pci-blacklist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
 -W       | --pci-whitelist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
 -R       | --huge-unlink          | flag     |                        | @ref cmd_arg_huge_unlink
+|        | --huge-dir             | string   | the first discovered   | allocate hugepages from a specific mount
 -L       | --traceflag            | string   |                        | @ref cmd_arg_debug_log_flags
 
 
