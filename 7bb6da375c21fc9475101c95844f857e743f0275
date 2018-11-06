@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e76eef90_ca7ecaab",
+        "filename": "include/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:17:10Z",
+      "side": 1,
+      "message": "Where you use this?",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 18
+      },
+      "revId": "7bb6da375c21fc9475101c95844f857e743f0275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e4fb020_35464a9d",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:17:10Z",
+      "side": 1,
+      "message": "\u0027-z\u0027 ? I think this for testing if string is zero length not if directory is empty",
+      "range": {
+        "startLine": 283,
+        "startChar": 6,
+        "endLine": 283,
+        "endChar": 8
+      },
+      "revId": "7bb6da375c21fc9475101c95844f857e743f0275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42276fff_c18efc51",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:17:10Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 296,
+        "startChar": 6,
+        "endLine": 296,
+        "endChar": 8
+      },
+      "revId": "7bb6da375c21fc9475101c95844f857e743f0275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92ec6b2a_2c678f53",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-06T21:17:10Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 308,
+        "startChar": 6,
+        "endLine": 308,
+        "endChar": 8
+      },
+      "revId": "7bb6da375c21fc9475101c95844f857e743f0275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
