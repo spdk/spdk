@@ -105,6 +105,24 @@
     },
     {
       "key": {
+        "uuid": "67d2334d_1a4ad33b",
+        "filename": "lib/ocssd/ocssd_rwb.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-06T08:47:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f0c78a98_712d20e5",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7936ff52_f40a1e66",
         "filename": "lib/ocssd/ocssd_rwb.h",
         "patchSetId": 4
@@ -122,6 +140,24 @@
     },
     {
       "key": {
+        "uuid": "625063d0_3720cbbf",
+        "filename": "lib/ocssd/ocssd_rwb.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-06T08:47:51Z",
+      "side": 1,
+      "message": "We are using write buffer structure as temporary buffer for collecting user and internal writes before they are submitted to disk but it also is used as a cache for read operations. This valid flag indicates if entry is still valid in l2p table (l2p table keeps entry offset instead ppa address in case entry is cached). Read and eviction from cache could happen simultaneously and need to be protected by atomics/locks.",
+      "parentUuid": "7936ff52_f40a1e66",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "35cf1d2e_3ea0c0f1",
         "filename": "lib/ocssd/ocssd_rwb.h",
         "patchSetId": 4
@@ -133,6 +169,24 @@
       "writtenOn": "2018-11-05T18:07:36Z",
       "side": 1,
       "message": "same here - does this need to be atomic?",
+      "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fd9550a_4e7620cf",
+        "filename": "lib/ocssd/ocssd_rwb.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-06T08:47:51Z",
+      "side": 1,
+      "message": "Please look at my previous comment.",
+      "parentUuid": "35cf1d2e_3ea0c0f1",
       "revId": "085cf95eeb2c27bf2ecff5df123abca7c6a92cf3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
