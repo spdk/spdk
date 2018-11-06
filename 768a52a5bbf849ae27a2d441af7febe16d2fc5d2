@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7830c28_f47a8297",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-06T20:17:56Z",
+      "side": 1,
+      "message": "Paul, quick thought - is it possible to implement this if one does not want to take the dpdk route? Would it be possible to have the interface at this point generic or abstracted so to enable one to directly offload to a different device from here? Is it possible to keep the dependency on dpdk minimal at this point to make this more generally usable with say other devices that come with their own eal etc. (Was looking at the Oracle ORAENV and no telling when that approach could be useful for others as well). So maybe if there was a general abstraction for the functions before branching into dpdk, maybe it would be possible for one to branch off from here into a different device env if needed. I think that approach would surely help us and make this really generic. Wanted to hear your thoughts while I chew on these calls a bit more.",
+      "revId": "768a52a5bbf849ae27a2d441af7febe16d2fc5d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
