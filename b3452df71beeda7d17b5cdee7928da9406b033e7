@@ -142,6 +142,24 @@
     },
     {
       "key": {
+        "uuid": "a7bfb513_8ae077aa",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-06T21:20:08Z",
+      "side": 1,
+      "message": "Surely that would help.",
+      "parentUuid": "6a3c0823_3a6885ed",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47651190_f3b90d62",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -244,6 +262,24 @@
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f34079bc_8ed63c00",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-06T21:20:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c15fbb9a_cf9eb5ce",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -352,6 +388,24 @@
     },
     {
       "key": {
+        "uuid": "9e54e00e_3b5b77c4",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-06T21:20:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4e855b6b_f4d51a45",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b461e77_2cf44837",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -405,6 +459,24 @@
     },
     {
       "key": {
+        "uuid": "0e7efaeb_a352dc54",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-06T21:20:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6dfc4d61_c352c07d",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4841d4c_2f5f4d72",
         "filename": "doc/compression.md",
         "patchSetId": 4
@@ -437,6 +509,24 @@
       "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df0f4a76_4da3a813",
+        "filename": "doc/compression.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1015365
+      },
+      "writtenOn": "2018-11-06T21:20:08Z",
+      "side": 1,
+      "message": "Thanks for the explanations Jim. Mostly makes sense to me.",
+      "parentUuid": "2cafbc8f_888dd0a1",
+      "revId": "b3452df71beeda7d17b5cdee7928da9406b033e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
