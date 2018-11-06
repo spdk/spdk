@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "238b63b8_17480a5d",
+        "filename": "test/nvmf/lvol/nvmf_lvol.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T14:00:20Z",
+      "side": 1,
+      "message": "I think using RAID bdev doesn\u0027t increase the test time.",
+      "revId": "e2af209c1f799c8194c89ee45f52a83b9e51c9e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d84a445_347e51a2",
+        "filename": "test/nvmf/lvol/nvmf_lvol.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T14:00:20Z",
+      "side": 1,
+      "message": "originally 256K?",
+      "range": {
+        "startLine": 87,
+        "startChar": 73,
+        "endLine": 87,
+        "endChar": 77
+      },
+      "revId": "e2af209c1f799c8194c89ee45f52a83b9e51c9e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63750007_0229ffab",
+        "filename": "test/nvmf/lvol/nvmf_lvol.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-06T14:00:20Z",
+      "side": 1,
+      "message": "originally 64?",
+      "range": {
+        "startLine": 87,
+        "startChar": 66,
+        "endLine": 87,
+        "endChar": 69
+      },
+      "revId": "e2af209c1f799c8194c89ee45f52a83b9e51c9e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
