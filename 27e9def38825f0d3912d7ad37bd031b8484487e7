@@ -50,6 +50,24 @@
       "revId": "27e9def38825f0d3912d7ad37bd031b8484487e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32538982_da73b4da",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1405,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-06T18:21:01Z",
+      "side": 1,
+      "message": "Previously, nvme_ctrlr_construct_namespaces is also used to reconstruct (or update) namespaces.\nSo, there is one (nn !\u003d ctrlr-\u003enum_ns) comparison and nvme_ctrlr_destruct_namespaces(ctrlr).\nThis change will keep the original logic that if \"cdata.nn\" is changed, then memory pointers are realloced and num_ns is updated.\n\nFrom current code, it seems the reconstruct work is wholly covered by \"nvme_ctrlr_update_namespaces\". If we can confirm in the future \"nvme_ctrlr_construct_namespaces\" will be only used when the first time SPDK probe it, then commented change is better.",
+      "parentUuid": "4cf1d70d_8e011b54",
+      "revId": "27e9def38825f0d3912d7ad37bd031b8484487e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
