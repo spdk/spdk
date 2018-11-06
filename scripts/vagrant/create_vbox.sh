@@ -15,10 +15,11 @@ SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
 # The command line help
 display_help() {
 	echo
-	echo " Usage: ${0##*/} [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrld] <distro>"
+	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrld] <distro>"
 	echo
 	echo "  distro = <centos7 | ubuntu16 | ubuntu18 | fedora26 | fedora27 | freebsd11> "
 	echo
+	echo "  -b <nvme-backing-file>    default: ${NVME_FILE}"
 	echo "  -s <ram-size> in kb       default: ${SPDK_VAGRANT_VMRAM}"
 	echo "  -n <num-cpus> 1 to 4      default: ${SPDK_VAGRANT_VMCPU}"
 	echo "  -x <http-proxy>           default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
@@ -54,8 +55,9 @@ SPDK_VAGRANT_DISTRO="distro"
 SPDK_VAGRANT_VMCPU=4
 SPDK_VAGRANT_VMRAM=4096
 OPTIND=1
+NVME_FILE="nvme_disk.img"
 
-while getopts ":n:s:x:p:vrldh-:" opt; do
+while getopts ":b:n:s:x:p:vrldh-:" opt; do
 	case "${opt}" in
 		-)
 		case "${OPTARG}" in
@@ -93,6 +95,9 @@ while getopts ":n:s:x:p:vrldh-:" opt; do
 		;;
 		d)
 			DEPLOY_TEST_VM=1
+		;;
+		b)
+			NVME_FILE=$OPTARG
 		;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
@@ -147,6 +152,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo VAGRANT_TARGET=${VAGRANT_TARGET}
 	echo HELP=$HELP
 	echo DRY_RUN=$DRY_RUN
+	echo NVME_FILE=$NVME_FILE
 	echo SPDK_VAGRANT_DISTRO=$SPDK_VAGRANT_DISTRO
 	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
 	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
@@ -162,6 +168,7 @@ export SPDK_VAGRANT_VMRAM
 export SPDK_DIR
 export COPY_SPDK_DIR
 export DEPLOY_TEST_VM
+export NVME_FILE
 
 if [ -n "$PROVIDER" ]; then
     provider="--provider=${PROVIDER}"
