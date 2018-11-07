@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c67c02a3_602a5435",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-07T08:01:26Z",
+      "side": 1,
+      "message": "We will change this part of code accordingly to Ben Walker suggestion from previous patchset.",
+      "parentUuid": "9757f567_b48f4b67",
+      "revId": "9c8beeac7f9813b0ff960939451c708ff9bc3292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "57c51e5a_45e9ba8e",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 12
@@ -30,6 +48,30 @@
       "writtenOn": "2018-11-06T20:21:14Z",
       "side": 1,
       "message": "How about adding one inline function named ftl_nvme_unregister_aer_callback in ftl_nvme.h",
+      "range": {
+        "startLine": 277,
+        "startChar": 1,
+        "endLine": 277,
+        "endChar": 58
+      },
+      "revId": "9c8beeac7f9813b0ff960939451c708ff9bc3292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7571d8a_5cf5b37c",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-07T08:01:26Z",
+      "side": 1,
+      "message": "Not sure if we need such wrapper for function that is used only in one place. This function calls directly spdk_nvme_ctrlr_register_aer_callback and we don\u0027t have unregister API in nvme.h",
+      "parentUuid": "57c51e5a_45e9ba8e",
       "range": {
         "startLine": 277,
         "startChar": 1,
