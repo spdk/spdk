@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb075283_63ebd705",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1585,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-07T18:42:36Z",
+      "side": 1,
+      "message": "For each I/O, you may need up to (SPDK_NVMF_MAX_SGL_ENTRIES * 2) data buffers with the worst possible alignment scenario. Previously, we allocated enough buffers to handle 4 * max_queue_depth worth of requests. With this change, we can only handle max_queue_depth * 2 worth of requests in the worst case. This should be:\n\nopts-\u003emax_queue_depth * (SPDK_NVMF_MAX_SGL_ENTRIES * 2) * 4;",
+      "revId": "0f4a7f7471811e7c6026b969bcb7202185b36c87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
