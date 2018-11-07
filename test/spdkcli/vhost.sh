@@ -4,7 +4,6 @@ set -xe
 MATCH_FILE="spdkcli_vhost.test"
 SPDKCLI_BRANCH="/"
 testdir=$(readlink -f $(dirname $0))
-. $testdir/../json_config/common.sh
 . $testdir/common.sh
 
 timing_enter spdk_cli_vhost
@@ -62,7 +61,7 @@ check_match
 timing_exit spdkcli_check_match
 
 timing_enter spdkcli_save_config
-$spdkcli_job "'save_config $testdir/config.json'
+$spdkclil_job "'save_config $testdir/config.json'
 'save_subsystem_config $testdir/config_bdev.json bdev'
 'save_subsystem_config $testdir/config_vhost.json vhost'
 "
@@ -106,9 +105,13 @@ $spdkcli_job "'load_config $testdir/config.json'
 '/lvol_stores create lvs1 Malloc5' 'lvs1' True
 '/bdevs/logical_volume create lvol0 16 lvs0' 'lvs0/lvol0' True
 '/bdevs/logical_volume create lvol1 16 lvs0' 'lvs0/lvol1' True
+'save_config $testdir/reloaded_config.json'
 "
-check_match
-$spdk_clear_config_py clear_config
+
+$spdkcli_job ""
+$json_diff "$testdir/config.json" "$testdir/reloaded_config.json"
+
+$clear_config_py
 # FIXME: remove this sleep when NVMe driver will be fixed to wait for reset to complete
 sleep 2
 $spdkcli_job "'load_subsystem_config $testdir/config_bdev.json'
@@ -117,9 +120,12 @@ $spdkcli_job "'load_subsystem_config $testdir/config_bdev.json'
 '/lvol_stores create lvs1 Malloc5' 'lvs1' True
 '/bdevs/logical_volume create lvol0 16 lvs0' 'lvs0/lvol0' True
 '/bdevs/logical_volume create lvol1 16 lvs0' 'lvs0/lvol1' True
+'save_config $testdir/reloaded_config.json'
 "
-check_match
-$spdk_clear_config_py clear_config
+
+$json_diff "$testdir/config.json" "$testdir/reloaded_config.json"
+
+rm -f $testdir/config.json $testdir/reloaded_config.json
 rm -f $testdir/config.json
 rm -f $testdir/config_bdev.json
 rm -f $testdir/config_vhost.json
