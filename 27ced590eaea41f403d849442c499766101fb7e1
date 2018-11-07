@@ -16,6 +16,24 @@
       "revId": "27ced590eaea41f403d849442c499766101fb7e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdeb7157_b0b9a8e7",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1400,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-07T18:39:16Z",
+      "side": 0,
+      "message": "Previous code works well if it is just used to do new allocate.\nFrom the note above, it is also used for reallocation. And for reallocation, with condition ctrlr-\u003enum_ns !\u003d 0, but nn \u003d\u003d 0, setting ctrlr-num_ns \u003d 0 is missing in previous code.",
+      "parentUuid": "9512bbf3_e3d470a5",
+      "revId": "27ced590eaea41f403d849442c499766101fb7e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
