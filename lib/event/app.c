@@ -67,7 +67,6 @@ static int g_init_lcore;
 static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
-static struct spdk_app_opts g_default_opts;
 
 int
 spdk_app_get_shm_id(void)
@@ -701,7 +700,7 @@ usage(void (*app_usage)(void))
 {
 	printf("%s [options]\n", g_executable_name);
 	printf("options:\n");
-	printf(" -c, --config <config>     config file (default %s)\n", g_default_opts.config_file);
+	printf(" -c, --config <config>     config file (default: none)\n");
 	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
 	printf(" -e, --tpoint-group-mask <mask>\n");
 	printf("                           tracepoint group mask for spdk trace buffers (default 0x0)\n");
@@ -713,12 +712,7 @@ usage(void (*app_usage)(void))
 	printf(" -n, --mem-channels <num>  channel number of memory channels used for DPDK\n");
 	printf(" -p, --master-core <id>    master (primary) core for DPDK\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
-	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: ");
-	if (g_default_opts.mem_size > 0) {
-		printf("%dMB)\n", g_default_opts.mem_size);
-	} else {
-		printf("all hugepage memory)\n");
-	}
+	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: all hugepage memory)\n");
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
 	printf(" -u, --no-pci              disable PCI access\n");
 	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
@@ -743,8 +737,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	struct option *cmdline_options;
 	char *cmdline_short_opts = NULL;
 	enum spdk_app_parse_args_rvals retval = SPDK_APP_PARSE_ARGS_FAIL;
-
-	memcpy(&g_default_opts, opts, sizeof(g_default_opts));
 
 	if (opts->config_file && access(opts->config_file, F_OK) != 0) {
 		opts->config_file = NULL;
