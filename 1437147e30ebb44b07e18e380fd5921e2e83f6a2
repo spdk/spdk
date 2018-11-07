@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "405f0980_379ac085",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-07T17:29:22Z",
+      "side": 1,
+      "message": "On this line, we create a new RDMA CM event channel for each queue pair. Unfortunately, it\u0027s too expensive to poll for CM events every time we reap completions. Instead, we need to create an RDMA CM channel for the entire controller and share it between all qpairs on that controller. Then, we can poll that one shared channel any time the admin queue is polled.\n\nThis gets complicated quickly.",
+      "revId": "1437147e30ebb44b07e18e380fd5921e2e83f6a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63794f01_1fcb0d6b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1742,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-07T17:29:22Z",
+      "side": 1,
+      "message": "You only want to do this for the admin queue - it\u0027s too big of a performance hit otherwise.",
+      "revId": "1437147e30ebb44b07e18e380fd5921e2e83f6a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
