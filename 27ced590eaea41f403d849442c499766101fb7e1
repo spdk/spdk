@@ -34,6 +34,24 @@
       "revId": "27ced590eaea41f403d849442c499766101fb7e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06a1e6cb_8833f0cc",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1400,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-07T22:51:13Z",
+      "side": 0,
+      "message": "Taking the case where ctrlr-\u003enum_ns !\u003d and nn \u003d\u003d 0, the condition on line 1401 is true. Then nvme_ctrlr_destruct_namespaces is called. That\u0027s going to then set ctrlr-\u003enum_ns to 0.",
+      "parentUuid": "bdeb7157_b0b9a8e7",
+      "revId": "27ced590eaea41f403d849442c499766101fb7e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
