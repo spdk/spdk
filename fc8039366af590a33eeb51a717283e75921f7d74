@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cae55b36_13adb99f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 912,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-07T17:14:01Z",
+      "side": 1,
+      "message": "This should probably be:\n\nctrlr-\u003eactive_ns_list \u003d NULL;\n\nnew_ns_list is set to NULL, but it\u0027s clearer to directly assign.",
+      "revId": "fc8039366af590a33eeb51a717283e75921f7d74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
