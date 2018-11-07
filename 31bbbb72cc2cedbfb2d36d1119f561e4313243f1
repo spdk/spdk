@@ -16,6 +16,29 @@
       "revId": "31bbbb72cc2cedbfb2d36d1119f561e4313243f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff35ddf7_822c0ea1",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-07T10:48:54Z",
+      "side": 1,
+      "message": "VIRTIO_BLK_T_DISCARD is a standalone type, no masking is needed here (right now the result equals VIRTIO_BLK_T_DISCARD anyway).\n\nFrom the virtio spec:\n\n```\nThe type of the request is either a read (VIRTIO_BLK_T_IN), a write\n(VIRTIO_BLK_T_OUT), a discard (VIRTIO_BLK_T_DISCARD), a write zeroes\n(VIRTIO_BLK_T_WRITE_ZEROES) or a flush (VIRTIO_BLK_T_FLUSH).\n\n#define VIRTIO_BLK_T_OUT          1\n#define VIRTIO_BLK_T_DISCARD      11\n```",
+      "range": {
+        "startLine": 171,
+        "startChar": 15,
+        "endLine": 171,
+        "endChar": 54
+      },
+      "revId": "31bbbb72cc2cedbfb2d36d1119f561e4313243f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
