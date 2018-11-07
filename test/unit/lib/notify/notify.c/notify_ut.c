@@ -31,19 +31,82 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/mock.h"
+#include "spdk/stdinc.h"
+#include "spdk_cunit.h"
+#include "common/lib/test_env.c"
+#include "unit/lib/json_mock.c"
+#include "notify/notify.c"
 
-DEFINE_WRAPPER(calloc, void *, (size_t nmemb, size_t size), (nmemb, size))
 
-DEFINE_WRAPPER(pthread_mutex_init, int,
-	       (pthread_mutex_t *mtx, const pthread_mutexattr_t *attr),
-	       (mtx, attr))
+struct spdk_notify *g_notify;
 
-DEFINE_WRAPPER(pthread_mutexattr_init, int,
-	       (pthread_mutexattr_t *attr), (attr))
+static void
+notify(void)
+{
+	struct spdk_notify_type *n, *n1, *n2;
+	const struct spdk_notify_event *event;
+	const char *name;
+	int rc;
+	uint64_t idx;
+	uint64_t i;
 
-DEFINE_STUB(spdk_notify_send, __attribute__((weak)) uint64_t,
-	    (const char *type, const char *ctx), 0)
+	n1 = spdk_notify_type_register("one");
+	n2 = spdk_notify_type_register("two");
 
-DEFINE_STUB(spdk_notify_type_register, __attribute__((weak)) struct spdk_notify_type *,
-	    (const char *type), NULL)
+	name = spdk_notify_type_get_name(n1);
+	CU_ASSERT(!strcmp(name, "one"));
+
+	name = spdk_notify_type_get_name(n2);
+	CU_ASSERT(!strcmp(name, "two"));
+
+	n = spdk_notify_type_first();
+	SPDK_CU_ASSERT_FATAL(n != NULL);
+	n = spdk_notify_type_next(n);
+	SPDK_CU_ASSERT_FATAL(n != NULL);
+	n = spdk_notify_type_next(n);
+	SPDK_CU_ASSERT_FATAL(n == NULL);
+
+	idx = spdk_notify_send("one", "context");
+	idx = spdk_notify_send("two", "context2");
+
+	for (i = 0; i < idx; i++) {
+		event = spdk_notify_get_event(i);
+		SPDK_CU_ASSERT_FATAL(event != NULL);
+	}
+
+	/* This event should not exist yet */
+	event = spdk_notify_get_event(idx + 1);
+	SPDK_CU_ASSERT_FATAL(event == NULL);
+}
+
+int
+main(int argc, char **argv)
+{
+	CU_pSuite suite = NULL;
+	unsigned int num_failures;
+
+	if (CU_initialize_registry() != CUE_SUCCESS) {
+		return CU_get_error();
+	}
+
+	suite = CU_add_suite("app_suite", NULL, NULL);
+	if (suite == NULL) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	if (
+		CU_add_test(suite, "notify",
+			    notify) == NULL
+	) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	CU_basic_set_mode(CU_BRM_VERBOSE);
+	CU_basic_run_tests();
+	num_failures = CU_get_number_of_failures();
+	CU_cleanup_registry();
+
+	return num_failures;
+}

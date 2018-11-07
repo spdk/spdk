@@ -123,6 +123,8 @@ $valgrind $testdir/lib/scsi/scsi_bdev.c/scsi_bdev_ut
 
 $valgrind $testdir/lib/lvol/lvol.c/lvol_ut
 
+$valgrind $testdir/lib/notify/notify.c/notify_ut
+
 $valgrind $testdir/lib/iscsi/conn.c/conn_ut
 $valgrind $testdir/lib/iscsi/param.c/param_ut
 $valgrind $testdir/lib/iscsi/tgt_node.c/tgt_node_ut $testdir/lib/iscsi/tgt_node.c/tgt_node.conf
