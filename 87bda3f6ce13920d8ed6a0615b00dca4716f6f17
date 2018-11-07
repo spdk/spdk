@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26055e35_aff1f82d",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-07T20:45:38Z",
+      "side": 1,
+      "message": "I\u0027m not understanding the use case for this function pointer. Why can\u0027t you just call _spdk_jsonrpc_client_poll directly?",
+      "revId": "87bda3f6ce13920d8ed6a0615b00dca4716f6f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
