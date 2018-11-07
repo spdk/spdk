@@ -43,6 +43,9 @@ if check_ip_is_soft_roce "$NVMF_FIRST_TARGET_IP"; then
 	num_subsystems=2
 fi
 
+touch $testdir/bdevperf.conf
+echo "[Nvme]" > $testdir/bdevperf.conf
+
 # Create subsystems
 for i in `seq 1 $num_subsystems`
 do
@@ -52,36 +55,49 @@ do
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i $bdev
 	done
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+
+	echo "  TransportID \"trtype:RDMA adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT\" Nvme$i" >> $testdir/bdevperf.conf
 done
 
 modprobe -v nvme-rdma
 modprobe -v nvme-fabrics
 
-# Repeatedly connect and disconnect
-for ((x=0; x<2;x++)); do
-	# Connect kernel host to subsystems
-	for i in `seq 1 $num_subsystems`; do
-		nvme_connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
-	done
-	# Disconnect the subsystems in reverse order
-	for i in `seq $num_subsystems -1 1`; do
-		nvme disconnect -n nqn.2016-06.io.spdk:cnode${i}
-	done
-done
+# Test 1: Kill initiator unexpectedly
 
-# Start a series of connects right before disconnecting
-for i in `seq 1 $num_subsystems`; do
-	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
-done
+# Run bdevperf
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
+perfpid=$!
+sleep 5
 
-waitforblk "nvme0n1"
+# Kill bdevperf half way through
+killprocess $perfpid
 
-# Kill nvmf tgt without removing any subsystem to check whether it can shutdown correctly
-rm -f ./local-job0-0-verify.state
+# Verify the target stays up
+sleep 1
+kill -0 $pid
 
-trap - SIGINT SIGTERM EXIT
+# Test 2: Kill the target unexpectedly
 
+# Run bdevperf
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
+perfpid=$!
+
+# Expand the trap to clean up bdevperf if something goes wrong
+trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; kill -9 $perfpid; nvmfcleanup; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+
+# Kill the target half way through
+sleep 5
 killprocess $pid
+
+# Verify bdevperf exits successfully
+sleep 1
+# TODO: Right now the NVMe-oF initiator will not correctly detect broken connections
+# and so it will never shut down. Just kill it.
+kill -9 $perfpid
+
+rm -f ./local-job0-0-verify.state
+rm -rf $testdir/bdevperf.conf
+trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 nvmftestfini $1
