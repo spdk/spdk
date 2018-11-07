@@ -16,6 +16,24 @@
       "revId": "f54063dec6a06f1c9026a5e21ad9a00bbbe9a7e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e9854b1_47f1bcec",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1570,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-11-07T12:26:41Z",
+      "side": 1,
+      "message": "Thanks! I will post change to check also IBV_EVENT_QP_FATAL and after I add CM events handling I will also add case for CM event.",
+      "parentUuid": "7de2b740_7c4a48d4",
+      "revId": "f54063dec6a06f1c9026a5e21ad9a00bbbe9a7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
