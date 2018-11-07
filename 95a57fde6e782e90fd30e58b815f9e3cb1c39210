@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "104e2c30_ec5e4a38",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-07T01:29:59Z",
+      "side": 1,
+      "message": "need to change to -EINVAL here.",
+      "revId": "95a57fde6e782e90fd30e58b815f9e3cb1c39210",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
