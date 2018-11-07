@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "87e99813_a7f325cb",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-07T02:30:54Z",
+      "side": 1,
+      "message": "nice to move similar API to util.c, this can be in an separate patch.",
+      "revId": "95a57fde6e782e90fd30e58b815f9e3cb1c39210",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "104e2c30_ec5e4a38",
         "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
         "patchSetId": 11
