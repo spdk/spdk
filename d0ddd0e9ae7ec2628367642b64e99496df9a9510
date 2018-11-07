@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ea9a3a7_b9bbaf27",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-07T08:16:11Z",
+      "side": 1,
+      "message": "and you should declare here the metadata is big-endian, maybe __le32 or __le16 for each variable.",
+      "revId": "d0ddd0e9ae7ec2628367642b64e99496df9a9510",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca65f298_546d8d7a",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-07T08:16:11Z",
+      "side": 1,
+      "message": "may need add __attribute to check equals to 8 or not.",
+      "revId": "d0ddd0e9ae7ec2628367642b64e99496df9a9510",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
