@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82db4858_c705704d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1009,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-07T13:43:23Z",
+      "side": 1,
+      "message": "If a bdev happens to be in the middle of getting unregistered already (e.g. unregistered by the app itself), then we\u0027ll never complete our bdev module finish routine. This code expects the bdev to be unregistered with a _spdk_bdev_finish_unregister_bdevs_iter finish callback, but that\u0027s not always guaranteed.",
+      "revId": "c661f66396cadd7f79e7db687a4730520fe0dde0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
