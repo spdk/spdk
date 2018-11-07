@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d2619c6_7d1cf709",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-07T10:03:35Z",
+      "side": 1,
+      "message": "seems like we no longer set req-\u003etype to VIRTIO_BLK_T_IN anywhere.\n\nI know that VIRTIO_BLK_T_IN \u003d\u003d 0 and hence it\u0027s set automatically after zeroing the req struct, but that\u0027s a bit unintuitive.\n\nI\u0027d vote for a separate function for sending discards. That would make the code a bit clearer.",
+      "revId": "31bbbb72cc2cedbfb2d36d1119f561e4313243f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
