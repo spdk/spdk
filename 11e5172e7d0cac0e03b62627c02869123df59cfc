@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35111111_4f424852",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-07T10:47:24Z",
+      "side": 1,
+      "message": "VIRTIO_BLK_T_WRITE_ZEROES is a standalone type, no masking is needed here (right now the result equals VIRTIO_BLK_T_WRITE_ZEROES anyway).\n\nFrom the virtio spec:\n\n```\nThe type of the request is either a read (VIRTIO_BLK_T_IN), a write\n(VIRTIO_BLK_T_OUT), a discard (VIRTIO_BLK_T_DISCARD), a write zeroes\n(VIRTIO_BLK_T_WRITE_ZEROES) or a flush (VIRTIO_BLK_T_FLUSH).\n\n#define VIRTIO_BLK_T_OUT          1\n#define VIRTIO_BLK_T_DISCARD      11\n#define VIRTIO_BLK_T_WRITE_ZEROES 13\n```",
+      "range": {
+        "startLine": 319,
+        "startChar": 1,
+        "endLine": 320,
+        "endChar": 53
+      },
+      "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14e486fd_92f86b21",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-07T10:47:24Z",
+      "side": 1,
+      "message": "This might now try to call spdk_vhost_dev_unregister() on a non-registered vdev. That\u0027s not supported and will likely segfault.",
+      "range": {
+        "startLine": 884,
+        "startChar": 2,
+        "endLine": 884,
+        "endChar": 11
+      },
+      "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
