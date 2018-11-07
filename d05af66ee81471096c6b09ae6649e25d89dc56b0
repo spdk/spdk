@@ -22,6 +22,30 @@
       "revId": "d05af66ee81471096c6b09ae6649e25d89dc56b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00c29003_6c5cb153",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-07T18:00:52Z",
+      "side": 1,
+      "message": "there is some precedence for this, but it usually does a \u003d\u003d NULL rather than !",
+      "parentUuid": "851e2ea7_3b562787",
+      "range": {
+        "startLine": 679,
+        "startChar": 6,
+        "endLine": 679,
+        "endChar": 49
+      },
+      "revId": "d05af66ee81471096c6b09ae6649e25d89dc56b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
