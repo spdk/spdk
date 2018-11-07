@@ -4,7 +4,6 @@ set -xe
 MATCH_FILE="spdkcli_vhost.test"
 SPDKCLI_BRANCH="/"
 testdir=$(readlink -f $(dirname $0))
-. $testdir/../json_config/common.sh
 . $testdir/common.sh
 
 timing_enter spdk_cli_vhost
@@ -99,8 +98,11 @@ $spdkcli_job "/lvol_stores create lvs0 Malloc0" "lvs0" True
 $spdkcli_job "/lvol_stores create lvs1 Malloc5" "lvs1" True
 $spdkcli_job "/bdevs/logical_volume create lvol0 16 lvs0" "lvs0/lvol0" True
 $spdkcli_job "/bdevs/logical_volume create lvol1 16 lvs0" "lvs0/lvol1" True
-check_match
-$spdk_clear_config_py clear_config
+
+$spdkcli_job "save_config $testdir/reloaded_config.json"
+$json_diff "$testdir/config.json" "$testdir/reloaded_config.json"
+
+$clear_config_py
 # FIXME: remove this sleep when NVMe driver will be fixed to wait for reset to complete
 sleep 2
 $spdkcli_job "load_subsystem_config $testdir/config_bdev.json"
@@ -109,7 +111,11 @@ $spdkcli_job "/lvol_stores create lvs0 Malloc0" "lvs0" True
 $spdkcli_job "/lvol_stores create lvs1 Malloc5" "lvs1" True
 $spdkcli_job "/bdevs/logical_volume create lvol0 16 lvs0" "lvs0/lvol0" True
 $spdkcli_job "/bdevs/logical_volume create lvol1 16 lvs0" "lvs0/lvol1" True
-check_match
+
+$spdkcli_job "save_config $testdir/reloaded_config.json"
+$json_diff "$testdir/config.json" "$testdir/reloaded_config.json"
+
+rm -f $testdir/config.json $testdir/reloaded_config.json
 rm -f $testdir/config.json
 rm -f $testdir/config_bdev.json
 rm -f $testdir/config_vhost.json
