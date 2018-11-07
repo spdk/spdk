@@ -16,6 +16,24 @@
       "revId": "768a52a5bbf849ae27a2d441af7febe16d2fc5d2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d4ba8f4_6c8731d0",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-07T16:34:45Z",
+      "side": 1,
+      "message": "Hi Anand,\n\nThanks for the comment! So we\u0027re doing here what we did in crypto - rely on DPDK to provide a generic abstraction for the interfaces (CryptoDev and CompressDev) so that SPDK only has one interface and can take advantage of multiple different SW and HW solutions for either crypto or compression with little effort. It sounds like you are suggesting essentially moving that layer into SPDK and have DPDK and its set of abstraction as one option. I think in general a better course of action for wanting to add a new HW or SW crypto or compression engine would be to write a DPDK driver for it and then we (a) take advantage of all the goodness and testing in that open source community and (b) minimize the effort for SPDK to adopt new drivers, offload engines, etc. \n\nHere\u0027s the compressdev info: https://doc.dpdk.org/guides/prog_guide/compressdev.html \nand here\u0027s their current list of drivers that we can get for very little cost to this vbdev module per driver: https://doc.dpdk.org/guides/compressdevs/index.html",
+      "parentUuid": "d7830c28_f47a8297",
+      "revId": "768a52a5bbf849ae27a2d441af7febe16d2fc5d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
