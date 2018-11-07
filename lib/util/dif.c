@@ -284,3 +284,45 @@ spdk_t10dif_payload_checkv(struct iovec *iovs, int iovcnt,
 		return -1;
 	}
 }
+
+int
+spdk_t10dif_payload_setup(void *buf, uint32_t start_blocks, uint32_t num_blocks,
+			  uint32_t data_block_size, uint32_t metadata_size,
+			  uint32_t dif_chk_flags, uint16_t app_tag)
+{
+	uint32_t block_size, offset_blocks, ref_tag;
+
+	block_size = data_block_size + metadata_size;
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		ref_tag = start_blocks + offset_blocks;
+
+		prepare_and_update_dif(buf + (offset_blocks * block_size), ref_tag,
+				       data_block_size, dif_chk_flags, app_tag);
+	}
+
+	return 0;
+}
+
+int
+spdk_t10dif_payload_check(void *buf, uint32_t start_blocks, uint32_t num_blocks,
+			  uint32_t data_block_size, uint32_t metadata_size,
+			  uint32_t dif_chk_flags, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t block_size, offset_blocks, ref_tag;
+	uint16_t guard;
+
+	block_size = data_block_size + metadata_size;
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		ref_tag = start_blocks + offset_blocks;
+
+		guard = spdk_crc16_t10dif(buf + (offset_blocks * block_size), data_block_size);
+		if (!check_dif(buf + (offset_blocks * block_size) + data_block_size,
+			       dif_chk_flags, guard, ref_tag, apptag_mask, app_tag)) {
+			return false;
+		}
+	}
+
+	return true;
+}
