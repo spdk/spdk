@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c8d37e20_9b172214",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 718,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-07T16:03:53Z",
+      "side": 1,
+      "message": "I missed a newline here.",
+      "revId": "2aa958d2a9674c04e67a3945f51620041bb3006f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
