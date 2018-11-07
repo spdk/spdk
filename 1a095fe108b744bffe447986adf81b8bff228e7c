@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc8fdb28_775b80ab",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-07T17:25:57Z",
+      "side": 1,
+      "message": "This context is shared between all devices, so technically you only need to do this one time when the transport is initialized. But I think this will work.",
+      "revId": "1a095fe108b744bffe447986adf81b8bff228e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a5b5a83_8b2302dc",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1602,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-07T17:25:57Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to get the flags here - the fd is always in NONBLOCK mode.",
+      "revId": "1a095fe108b744bffe447986adf81b8bff228e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c07d233d_b04d13c7",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-07T17:25:57Z",
+      "side": 1,
+      "message": "You only want to do this if it\u0027s an admin queue (nvme_qpair_is_admin_queue())",
+      "revId": "1a095fe108b744bffe447986adf81b8bff228e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
