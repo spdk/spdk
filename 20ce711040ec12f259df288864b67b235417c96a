@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3ccb3ad_a5f6fc7f",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-07T17:30:15Z",
+      "side": 1,
+      "message": "I think this will cause the nvmf target to not start.  Ben\u0027s comment suggested we should only print a warning message if the deprecated options are detected, but otherwise not impact starting of the target.\n\nI do think it would be better to more explicitly describe the fix in the warning message as well.",
+      "revId": "20ce711040ec12f259df288864b67b235417c96a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
