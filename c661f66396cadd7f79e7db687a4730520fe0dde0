@@ -16,6 +16,24 @@
       "revId": "c661f66396cadd7f79e7db687a4730520fe0dde0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4f145fe_27f4793d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1009,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-11-07T15:09:29Z",
+      "side": 1,
+      "message": "I don\u0027t think it has anything to do with the patch itself. REMOVING status guarantees that iterator will continue once the last descriptor for the bdev in question is closed. If that doesn\u0027t happen, it\u0027s the problem of the application and descriptor management, not of this patch. Furthermore, restarting the iterator under such a circumstances won\u0027t help anyway.",
+      "parentUuid": "82db4858_c705704d",
+      "revId": "c661f66396cadd7f79e7db687a4730520fe0dde0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
