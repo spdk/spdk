@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae20bc85_5908a620",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-07T17:19:31Z",
+      "side": 1,
+      "message": "Will this delete lvol stores as well?  Or just the lvols?",
+      "revId": "d72c9b375f03ed8b0c5b1069842baa62df5bafe9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
