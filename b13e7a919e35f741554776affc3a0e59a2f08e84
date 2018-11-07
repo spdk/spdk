@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "7b316b57_edd2b6b9",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-07T08:00:25Z",
+      "side": 1,
+      "message": "this should be moved to before the above comment?\nAnd the comment from the line 964 to 967 is not applied to this case?\n\nHence the following may be better?\n\nif (ctrlr-\u003enum_ns \u003d\u003d 0) {\n  spdk_dma_free(ctrlr-\u003eactive_ns_list);\n  ctrlr-\u003eactive_ns_list \u003d NULL;\n \n  return 0;\n}",
+      "range": {
+        "startLine": 915,
+        "startChar": 0,
+        "endLine": 917,
+        "endChar": 2
+      },
+      "revId": "b13e7a919e35f741554776affc3a0e59a2f08e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b43824a9_b7b551d8",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
