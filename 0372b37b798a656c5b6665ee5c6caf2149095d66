@@ -117,6 +117,29 @@
     },
     {
       "key": {
+        "uuid": "007be2b4_d1004766",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-07T21:31:05Z",
+      "side": 1,
+      "message": "Please use /* */ as \u0027//\u0027 fail current codding style check (latest patches enforce /* */)",
+      "range": {
+        "startLine": 834,
+        "startChar": 3,
+        "endLine": 834,
+        "endChar": 5
+      },
+      "revId": "0372b37b798a656c5b6665ee5c6caf2149095d66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fcb605a_0672113f",
         "filename": "scripts/rpc.py",
         "patchSetId": 7
