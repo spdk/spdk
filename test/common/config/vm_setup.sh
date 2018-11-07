@@ -310,6 +310,7 @@ cd ~
 : ${GIT_REPO_VPP=https://gerrit.fd.io/r/vpp}; export GIT_REPO_VPP
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}; export GIT_REPO_LIBISCSI
 : ${GIT_REPO_SPDK_NVME_CLI=https://github.com/spdk/nvme-cli}; export GIT_REPO_SPDK_NVME_CLI
+: ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}; export GIT_REPO_INTEL_IPSEC_MB
 
 jobs=$(($(nproc)*2))
 
@@ -329,10 +330,11 @@ else
     git -C spdk_repo clone "${GIT_REPO_SPDK}"
 fi
 git -C spdk_repo/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
+git -C spdk_repo/spdk config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSEC_MB}"
 git -C spdk_repo/spdk submodule update --init --recursive
 
 if $INSTALL; then
-    sudo spdk_repo/spdk/scripts/pkgdep.sh
+    sudo spdk_repo/spdk/scripts/pkgdep.sh -i
 
     if echo $CONF | grep -q tsocks; then
         sudo dnf install -y tsocks
