@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "f5944c7d_80181311",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-07T00:45:25Z",
+      "side": 1,
+      "message": "Oh, I missed the logic. Sorry for my wrong review. I understood that done is set to true by the callback spdk_fio_bdev_init_done. And thank you for completing initialization of done.",
+      "parentUuid": "3ae98879_da331f32",
+      "range": {
+        "startLine": 352,
+        "startChar": 0,
+        "endLine": 354,
+        "endChar": 17
+      },
+      "revId": "76b3bf04362a62183d4ed6e8d3c31593214c66a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c5f712d_3242126d",
         "filename": "examples/bdev/fio_plugin/fio_plugin.c",
         "patchSetId": 3
