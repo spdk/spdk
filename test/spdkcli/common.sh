@@ -3,6 +3,9 @@ set -xe
 testdir=$(readlink -f $(dirname $0))
 SPDKCLI_BUILD_DIR=$(readlink -f $testdir/../..)
 spdkcli_job="$SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job.py"
+json_diff="$SPDKCLI_BUILD_DIR/test/json_config/json_diff.sh"
+clear_config_py="$SPDKCLI_BUILD_DIR/test/json_config/clear_config.py clear_config"
+
 . $SPDKCLI_BUILD_DIR/test/common/autotest_common.sh
 
 function on_error_exit() {
