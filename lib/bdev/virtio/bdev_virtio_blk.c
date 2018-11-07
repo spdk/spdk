@@ -55,13 +55,16 @@ struct virtio_blk_dev {
 	struct virtio_dev		vdev;
 	struct spdk_bdev		bdev;
 	bool				readonly;
+	bool				unmap;
 };
 
 struct virtio_blk_io_ctx {
-	struct iovec			iov_req;
-	struct iovec			iov_resp;
-	struct virtio_blk_outhdr	req;
-	uint8_t				resp;
+	struct iovec				iov_req;
+	struct iovec				iov_resp;
+	struct iovec				iov_unmap;
+	struct virtio_blk_outhdr		req;
+	struct virtio_blk_discard_write_zeroes	unmap;
+	uint8_t					resp;
 };
 
 struct bdev_virtio_blk_io_channel {
@@ -80,6 +83,7 @@ struct bdev_virtio_blk_io_channel {
 	 1ULL << VIRTIO_BLK_F_TOPOLOGY		|	\
 	 1ULL << VIRTIO_BLK_F_MQ		|	\
 	 1ULL << VIRTIO_BLK_F_RO		|	\
+	 1ULL << VIRTIO_BLK_F_DISCARD		|	\
 	 1ULL << VIRTIO_RING_F_EVENT_IDX	|	\
 	 1ULL << VHOST_USER_F_PROTOCOL_FEATURES)
 
@@ -102,16 +106,22 @@ bdev_virtio_blk_init_io_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 {
 	struct virtio_blk_outhdr *req;
 	uint8_t *resp;
+	struct virtio_blk_discard_write_zeroes *desc;
+
 	struct virtio_blk_io_ctx *io_ctx = (struct virtio_blk_io_ctx *)bdev_io->driver_ctx;
 
 	req = &io_ctx->req;
 	resp = &io_ctx->resp;
+	desc = &io_ctx->unmap;
 
 	io_ctx->iov_req.iov_base = req;
 	io_ctx->iov_req.iov_len = sizeof(*req);
 
 	io_ctx->iov_resp.iov_base = resp;
 	io_ctx->iov_resp.iov_len = sizeof(*resp);
+
+	io_ctx->iov_unmap.iov_base = desc;
+	io_ctx->iov_unmap.iov_len = sizeof(*desc);
 
 	memset(req, 0, sizeof(*req));
 	return io_ctx;
@@ -135,22 +145,38 @@ bdev_virtio_blk_send_io(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	}
 
 	virtqueue_req_add_iovs(vq, &io_ctx->iov_req, 1, SPDK_VIRTIO_DESC_RO);
-	virtqueue_req_add_iovs(vq, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-			       bdev_io->type == SPDK_BDEV_IO_TYPE_READ ?
-			       SPDK_VIRTIO_DESC_WR : SPDK_VIRTIO_DESC_RO);
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP) {
+		virtqueue_req_add_iovs(vq, &io_ctx->iov_unmap, 1, SPDK_VIRTIO_DESC_RO);
+	} else {
+		virtqueue_req_add_iovs(vq, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+				       bdev_io->type == SPDK_BDEV_IO_TYPE_READ ?
+				       SPDK_VIRTIO_DESC_WR : SPDK_VIRTIO_DESC_RO);
+	}
 	virtqueue_req_add_iovs(vq, &io_ctx->iov_resp, 1, SPDK_VIRTIO_DESC_WR);
 
 	virtqueue_req_flush(vq);
 }
 
 static void
-bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_virtio_command(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct virtio_blk_io_ctx *io_ctx = bdev_virtio_blk_init_io_vreq(ch, bdev_io);
 	struct virtio_blk_outhdr *req = &io_ctx->req;
+	struct virtio_blk_discard_write_zeroes	*desc = &io_ctx->unmap;
 
-	req->type = bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE ?
-		    VIRTIO_BLK_T_OUT : VIRTIO_BLK_T_IN;
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		req->type = VIRTIO_BLK_T_IN;
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		req->type = VIRTIO_BLK_T_OUT;
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP) {
+		req->type = VIRTIO_BLK_T_DISCARD;
+		desc->sector = bdev_io->u.bdev.offset_blocks *
+			       spdk_bdev_get_block_size(bdev_io->bdev) / 512;
+		desc->num_sectors = bdev_io->u.bdev.num_blocks *
+				    spdk_bdev_get_block_size(bdev_io->bdev) / 512;
+		desc->flags = 0;
+	}
 
 	req->sector = bdev_io->u.bdev.offset_blocks *
 		      spdk_bdev_get_block_size(bdev_io->bdev) / 512;
@@ -165,20 +191,26 @@ _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_rw,
+		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_command,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		if (bvdev->readonly) {
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		} else {
-			bdev_virtio_rw(ch, bdev_io);
+			bdev_virtio_command(ch, bdev_io);
 		}
 		return 0;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		if (bvdev->unmap) {
+			bdev_virtio_command(ch, bdev_io);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+		return 0;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	default:
 		return -1;
@@ -206,8 +238,9 @@ bdev_virtio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return true;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return !bvdev->readonly;
-	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return bvdev->unmap;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 	default:
 		return false;
 	}
@@ -422,6 +455,10 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 
 	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_RO)) {
 		bvdev->readonly = true;
+	}
+
+	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_DISCARD)) {
+		bvdev->unmap = true;
 	}
 
 	if (max_queues == 0) {
