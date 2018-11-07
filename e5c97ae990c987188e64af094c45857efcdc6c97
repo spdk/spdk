@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff797033_4ee18c05",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-07T06:37:11Z",
+      "side": 1,
+      "message": "Seems like there\u0027s a missing `fi`",
+      "revId": "e5c97ae990c987188e64af094c45857efcdc6c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
