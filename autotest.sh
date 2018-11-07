@@ -109,12 +109,6 @@ timing_enter lib
 
 if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 	run_test suite test/bdev/blockdev.sh
-	if [ $(uname -s) = Linux ]; then
-		run_test suite test/bdev/bdevjson/json_config.sh
-		if modprobe -n nbd; then
-			run_test suite test/bdev/nbdjson/json_config.sh
-		fi
-	fi
 fi
 
 if [ $SPDK_TEST_JSON -eq 1 ]; then
@@ -150,7 +144,6 @@ timing_exit lib
 
 if [ $SPDK_TEST_ISCSI -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
-	run_test suite ./test/iscsi_tgt/iscsijson/json_config.sh
 	run_test suite ./test/spdkcli/iscsi.sh
 fi
 
@@ -161,7 +154,6 @@ fi
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	run_test suite ./test/nvmf/nvmf.sh
-	run_test suite ./test/nvmf/nvmfjson/json_config.sh
 	run_test suite ./test/spdkcli/nvmf.sh
 fi
 
@@ -170,10 +162,6 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter negative
 	run_test suite ./test/vhost/spdk_vhost.sh --negative
 	timing_exit negative
-
-	timing_enter vhost_json_config
-	run_test suite ./test/vhost/json_config/json_config.sh
-	timing_exit vhost_json_config
 
 	timing_enter vhost_boot
 	run_test suite ./test/vhost/spdk_vhost.sh --boot
@@ -246,7 +234,6 @@ fi
 if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 	timing_enter vhost_initiator
 	run_test suite ./test/vhost/initiator/blockdev.sh
-	run_test suite ./test/vhost/initiator/json_config.sh
 	run_test suite ./test/spdkcli/virtio.sh
 	report_test_completion "vhost_initiator"
 	timing_exit vhost_initiator
@@ -254,14 +241,14 @@ fi
 
 if [ $SPDK_TEST_PMDK -eq 1 ]; then
 	run_test suite ./test/pmem/pmem.sh -x
-	run_test suite ./test/pmem/json_config/json_config.sh
 	run_test suite ./test/spdkcli/pmem.sh
 fi
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
-	run_test suite ./test/bdev/bdevjson/rbd_json_config.sh
 	run_test suite ./test/spdkcli/rbd.sh
 fi
+
+run_test suite ./test/json_config/json_config.sh
 
 timing_enter cleanup
 autotest_cleanup
