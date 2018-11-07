@@ -2,6 +2,39 @@
 # Please run this script as root.
 
 set -e
+
+function usage()
+{
+	echo ""
+	echo "This script is intended to automate the installation of package dependencies to build SPDK."
+	echo "Please run this script as root user."
+	echo ""
+	echo "$0"
+	echo "  -h --help"
+	echo "  -i --install-crypto Install ipsec dependencies"
+	echo ""
+	exit 0
+}
+
+INSTALL_CRYPTO=false
+
+while getopts 'hi-:' optchar; do
+	case "$optchar" in
+		-)
+		case "$OPTARG" in
+			help) usage;;
+			install-crypto) INSTALL_CRYPTO=true;;
+			*) echo "Invalid argument '$OPTARG'"
+			usage;;
+		esac
+		;;
+	h) usage;;
+	i) INSTALL_CRYPTO=true;;
+	*) echo "Invalid argument '$OPTARG'"
+	usage;;
+	esac
+done
+
 trap 'set +e; trap - ERR; echo "Error!"; exit 1;' ERR
 
 scriptsdir=$(readlink -f $(dirname $0))
@@ -81,21 +114,25 @@ else
 fi
 
 # Only crypto needs nasm and this lib but because the lib requires root to
-# install we do it here.
-nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
-if [ $nasm_ver -lt "21202" ]; then
-		echo Crypto requires NASM version 2.12.02 or newer.  Please install
-		echo or upgrade and re-run this script if you are going to use Crypto.
-else
-	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
-	if [ "$ipsec" == "" ]; then
-		ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
-		if [ "$ipsec_submodule_cloned" != "" ]; then
-			su - $SUDO_USER -c "make -C $rootdir/intel-ipsec-mb"
-			make -C $rootdir/intel-ipsec-mb install
-		else
-			echo "The intel-ipsec-mb submodule has not been cloned and will not be installed."
-			echo "To enable crypto, run 'git submodule update --init' and then run this script again."
+# install we do it here - when asked.
+
+if $INSTALL_CRYPTO; then
+
+	nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
+	if [ $nasm_ver -lt "21202" ]; then
+			echo Crypto requires NASM version 2.12.02 or newer.  Please install
+			echo or upgrade and re-run this script if you are going to use Crypto.
+	else
+		ipsec="$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)"
+		if [ "$ipsec" == "" ]; then
+			ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
+			if [ "$ipsec_submodule_cloned" != "" ]; then
+				su - $SUDO_USER -c "make -C $rootdir/intel-ipsec-mb"
+				make -C $rootdir/intel-ipsec-mb install
+			else
+				echo "The intel-ipsec-mb submodule has not been cloned and will not be installed."
+				echo "To enable crypto, run 'git submodule update --init' and then run this script again."
+			fi
 		fi
 	fi
 fi
