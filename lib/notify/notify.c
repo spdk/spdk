@@ -156,7 +156,7 @@ spdk_notify_alloc(struct spdk_notify_type *type)
 
 	notify = calloc(1, sizeof(*notify));
 	notify->type = type;
-	notify->refcnt++;
+	spdk_notify_get(notify);
 
 	return notify;
 }
@@ -173,8 +173,7 @@ spdk_notify_put(struct spdk_notify *notify)
 	assert(notify != NULL);
 	assert(notify->refcnt > 0);
 
-	notify->refcnt--;
-	if (notify->refcnt == 0) {
+	if (!(--notify->refcnt)) {
 		free(notify);
 	}
 }
