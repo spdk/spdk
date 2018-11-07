@@ -4,7 +4,6 @@ set -xe
 MATCH_FILE="spdkcli_vhost.test"
 SPDKCLI_BRANCH="/"
 testdir=$(readlink -f $(dirname $0))
-. $testdir/../json_config/common.sh
 . $testdir/common.sh
 
 timing_enter spdk_cli_vhost

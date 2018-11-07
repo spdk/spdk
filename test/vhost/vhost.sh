@@ -8,10 +8,6 @@ timing_enter negative
 run_test suite ./test/vhost/spdk_vhost.sh --negative
 timing_exit negative
 
-timing_enter vhost_json_config
-run_test suite ./test/vhost/json_config/json_config.sh
-timing_exit vhost_json_config
-
 timing_enter vhost_boot
 run_test suite ./test/vhost/spdk_vhost.sh --boot
 timing_exit vhost_boot
