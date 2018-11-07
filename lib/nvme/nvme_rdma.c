@@ -756,6 +756,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
 	int family;
+	int flags;
 
 	rqpair->cm_channel = rdma_create_event_channel();
 	if (rqpair->cm_channel == NULL) {
@@ -846,6 +847,19 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to register memory for RDMA\n");
 		return -1;
+	}
+
+	/* After connection is established we can switch to non-blocking CM events */
+	flags = fcntl(rqpair->cm_channel->fd, F_GETFL);
+	if (flags < 0) {
+		SPDK_ERRLOG("Failed to get CM channel decriptor flags\n");
+		return flags;
+	}
+
+	rc = fcntl(rqpair->cm_channel->fd, F_SETFL, flags | O_NONBLOCK);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to set non-blocking CM events\n");
+		return rc;
 	}
 
 	rc = nvme_fabric_qpair_connect(&rqpair->qpair, rqpair->num_entries);
@@ -1592,6 +1606,76 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+#ifdef DEBUG
+static const char *CM_EVENT_STR[] = {
+	"RDMA_CM_EVENT_ADDR_RESOLVED",
+	"RDMA_CM_EVENT_ADDR_ERROR",
+	"RDMA_CM_EVENT_ROUTE_RESOLVED",
+	"RDMA_CM_EVENT_ROUTE_ERROR",
+	"RDMA_CM_EVENT_CONNECT_REQUEST",
+	"RDMA_CM_EVENT_CONNECT_RESPONSE",
+	"RDMA_CM_EVENT_CONNECT_ERROR",
+	"RDMA_CM_EVENT_UNREACHABLE",
+	"RDMA_CM_EVENT_REJECTED",
+	"RDMA_CM_EVENT_ESTABLISHED",
+	"RDMA_CM_EVENT_DISCONNECTED",
+	"RDMA_CM_EVENT_DEVICE_REMOVAL",
+	"RDMA_CM_EVENT_MULTICAST_JOIN",
+	"RDMA_CM_EVENT_MULTICAST_ERROR",
+	"RDMA_CM_EVENT_ADDR_CHANGE",
+	"RDMA_CM_EVENT_TIMEWAIT_EXIT"
+};
+#endif /* DEBUG */
+
+static int
+nvme_rdma_cm_event_handler(struct nvme_rdma_qpair *rqpair)
+{
+	struct rdma_cm_event *event;
+	int rc;
+	int flags;
+
+	flags = fcntl(rqpair->cm_channel->fd, F_GETFL);
+	if (flags < 0) {
+		return flags;
+	}
+
+	rc = rdma_get_cm_event(rqpair->cm_channel, &event);
+	if (rc && !(flags & O_NONBLOCK)) {
+		return -rc;
+	} else if (rc && (flags & O_NONBLOCK)) {
+		return 0;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "CM event: %s\n", CM_EVENT_STR[event->event]);
+
+	switch (event->event) {
+	case RDMA_CM_EVENT_ADDR_RESOLVED:
+	case RDMA_CM_EVENT_ADDR_ERROR:
+	case RDMA_CM_EVENT_ROUTE_RESOLVED:
+	case RDMA_CM_EVENT_ROUTE_ERROR:
+	case RDMA_CM_EVENT_CONNECT_REQUEST:
+	case RDMA_CM_EVENT_CONNECT_RESPONSE:
+	case RDMA_CM_EVENT_CONNECT_ERROR:
+	case RDMA_CM_EVENT_UNREACHABLE:
+	case RDMA_CM_EVENT_REJECTED:
+	case RDMA_CM_EVENT_ESTABLISHED:
+	case RDMA_CM_EVENT_DISCONNECTED:
+	case RDMA_CM_EVENT_DEVICE_REMOVAL:
+	case RDMA_CM_EVENT_MULTICAST_JOIN:
+	case RDMA_CM_EVENT_MULTICAST_ERROR:
+	case RDMA_CM_EVENT_ADDR_CHANGE:
+	case RDMA_CM_EVENT_TIMEWAIT_EXIT:
+		break;
+	default:
+		SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
+		return -1;
+	}
+
+	rdma_ack_cm_event(event);
+
+	return 0;
+}
+
 static int
 nvme_rdma_ibv_event_handler(struct nvme_rdma_qpair *rqpair)
 {
@@ -1655,6 +1739,12 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	int			i, rc, batch_size;
 	uint32_t		reaped;
 	struct ibv_cq		*cq;
+
+	/* Read cm events */
+	rc = nvme_rdma_cm_event_handler(rqpair);
+	if (rc != 0) {
+		return rc;
+	}
 
 	/* Read ibv events */
 	rc = nvme_rdma_ibv_event_handler(rqpair);
