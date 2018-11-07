@@ -89,6 +89,7 @@ spdk_notify_send(struct spdk_notify *notify, void *ctx)
 	if (client) {
 		client->cb(notify, client->ctx);
 		TAILQ_REMOVE(&g_notify_clients, client, tailq);
+		free(client);
 	}
 }
 
