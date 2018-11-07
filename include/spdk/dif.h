@@ -91,4 +91,45 @@ int spdk_t10dif_payload_checkv(struct iovec *iovs, int iovcnt,
 			       uint32_t data_block_size, uint32_t metadata_size,
 			       uint32_t dif_chk_flags, uint16_t apptag_mask, uint16_t app_tag);
 
+/**
+ * Generate and set T10 DIF to each block of the payload.
+ *
+ * Currently only T10 DIF Type 1 is suppported and T10 DIF is limited to append
+ * to the first eight byte of the metadata. This API is used before write I/O.
+ *
+ * \param buf The buffer to be written from.
+ * \param start_blocks The offset from the start, in blocks.
+ * \param num_blocks The number of blocks to be written to.
+ * \param data_block_size The data block size in a block.
+ * \param metadata_size The metadata size in a block.
+ * \param dif_chk_flags The flag to specify the T10 DIF action.
+ * \param app_tag Application tag.
+ *
+ * \return 0 on success and negated error otherwise..
+ */
+int spdk_t10dif_payload_setup(void *buf, uint32_t start_blocks, uint32_t num_blocks,
+			      uint32_t data_block_size, uint32_t metadata_size,
+			      uint32_t dif_chk_flags, uint16_t app_tag);
+
+/**
+ * Get and verify T10 DIF to each sector of the payload.
+ *
+ * Currently only T10 DIF Type 1 is suppported and T10 DIF is limited to append
+ * to the first eight byte of the metadata. This API is used after failure of read I/O.
+ *
+ * \param buf The buffer to be read to
+ * \param start_blocks The offset from the start, in blocks.
+ * \param num_blocks The number of blocks to be written to.
+ * \param data_block_size The data block size in a block.
+ * \param metadata_size The metadata size in a block.
+ * \param dif_chk_flags The flag to specify the T10 DIF action.
+ * \param apptag_mask Application tag mask.
+ * \param app_tag Application tag.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_t10dif_payload_check(void *buf, uint32_t start_blocks, uint32_t num_blocks,
+			      uint32_t data_block_size, uint32_t metadata_size,
+			      uint32_t dif_chk_flags, uint16_t apptag_mask, uint16_t app_tag);
+
 #endif /* SPDK_T10DIF_H */
