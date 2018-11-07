@@ -74,7 +74,6 @@ struct spdk_notify {
 	char *uuid;
 };
 
-
 /**
  * This call provides ability to register notify type
  */
