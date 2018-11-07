@@ -332,7 +332,7 @@ function waitforlisten() {
 	$shell_restore_x
 	if [ $ret -ne 0 ]; then
 		exit 1
-	fi 
+	fi
 }
 
 function waitfornbd() {
