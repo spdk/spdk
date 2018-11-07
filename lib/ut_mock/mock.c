@@ -42,8 +42,8 @@ DEFINE_WRAPPER(pthread_mutex_init, int,
 DEFINE_WRAPPER(pthread_mutexattr_init, int,
 	       (pthread_mutexattr_t *attr), (attr))
 
-DEFINE_STUB(spdk_notify_send, uint64_t,
+DEFINE_STUB(spdk_notify_send, __attribute__((weak)) uint64_t,
 	    (const char *type, const char *ctx), 0)
 
-DEFINE_STUB(spdk_notify_type_register, struct spdk_notify_type *,
+DEFINE_STUB(spdk_notify_type_register, __attribute__((weak)) struct spdk_notify_type *,
 	    (const char *type), NULL)
