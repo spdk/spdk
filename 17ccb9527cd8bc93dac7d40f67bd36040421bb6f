@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fb1d0ad_2af6919f",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-08T15:27:22Z",
+      "side": 1,
+      "message": "We try to keep lines no longer than 100 characters.  astyle tries to enforce this, but doesn\u0027t for quotes.\n\nBetter way to do this is something like:\n\nSPDK_ERRLOG(\"Deprecated options detected.  The following options are deprecated\\n\"\n                          \"MaxQueueDepth, MaxQueuesPerSession, etc.\\n\"\n                          \"You may also...\\n\");",
+      "revId": "17ccb9527cd8bc93dac7d40f67bd36040421bb6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
