@@ -16,6 +16,24 @@
       "revId": "ca8e73de096a1870bf65d2947143fefe0ef6de4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87b04afa_4467b1a6",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T23:32:51Z",
+      "side": 1,
+      "message": "Done. Thanks, also applied Ben\u0027s comments.",
+      "parentUuid": "7e1c9337_256d3856",
+      "revId": "ca8e73de096a1870bf65d2947143fefe0ef6de4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
