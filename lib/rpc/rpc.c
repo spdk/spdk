@@ -66,6 +66,12 @@ spdk_rpc_set_state(uint32_t state)
 	g_rpc_state = state;
 }
 
+uint32_t
+spdk_rpc_get_state(void)
+{
+	return g_rpc_state;
+}
+
 static void
 spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *method,

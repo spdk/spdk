@@ -98,6 +98,12 @@ static void __attribute__((constructor)) rpc_register_##func(void) \
  */
 void spdk_rpc_set_state(uint32_t state_mask);
 
+/**
+ * Get the current state of the RPC server.
+ *
+ * \return The current state of the RPC server.
+ */
+uint32_t spdk_rpc_get_state(void);
 
 #ifdef __cplusplus
 }

@@ -59,7 +59,7 @@ DEFINE_STUB(spdk_env_get_core_count, uint32_t, (void), 1);
 DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_handler func,
 		uint32_t state_mask));
 DEFINE_STUB_V(spdk_rpc_set_state, (uint32_t state));
-
+DEFINE_STUB(spdk_rpc_get_state, uint32_t, (void), SPDK_RPC_RUNTIME);
 
 static void
 unittest_usage(void)
