@@ -701,7 +701,8 @@ usage(void (*app_usage)(void))
 {
 	printf("%s [options]\n", g_executable_name);
 	printf("options:\n");
-	printf(" -c, --config <config>     config file (default %s)\n", g_default_opts.config_file);
+	printf(" -c, --config <config>     config file (default %s)\n",
+	       g_default_opts.config_file ? g_default_opts.config_file : "none");
 	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
 	printf(" -e, --tpoint-group-mask <mask>\n");
 	printf("                           tracepoint group mask for spdk trace buffers (default 0x0)\n");
@@ -720,7 +721,7 @@ usage(void (*app_usage)(void))
 	} else
 #endif
 	{
-		printf("%dMB)\n", g_default_opts.mem_size);
+		printf("%dMB)\n", g_default_opts.mem_size >= 0 ? g_default_opts.mem_size : 0);
 	}
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
 	printf(" -u, --no-pci              disable PCI access\n");
