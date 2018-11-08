@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "80734721_e1782035",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-08T01:00:59Z",
+      "side": 1,
+      "message": "No, I debugged it before, WRITE ZEROES will be added with T_OUT too.",
+      "parentUuid": "35111111_4f424852",
+      "range": {
+        "startLine": 319,
+        "startChar": 1,
+        "endLine": 320,
+        "endChar": 53
+      },
+      "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "14e486fd_92f86b21",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-07T10:47:24Z",
       "side": 1,
       "message": "This might now try to call spdk_vhost_dev_unregister() on a non-registered vdev. That\u0027s not supported and will likely segfault.",
+      "range": {
+        "startLine": 884,
+        "startChar": 2,
+        "endLine": 884,
+        "endChar": 11
+      },
+      "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f362553_b259cfac",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-08T01:00:59Z",
+      "side": 1,
+      "message": "Why? it will return at first check point.",
+      "parentUuid": "14e486fd_92f86b21",
       "range": {
         "startLine": 884,
         "startChar": 2,
