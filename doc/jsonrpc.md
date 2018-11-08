@@ -164,6 +164,39 @@ Example response:
 }
 ~~~
 
+## wait_subsystem_init {#rpc_wait_subsystem_init}
+
+Do not return until all subsystems have been initialized and the RPC system state is running.
+If the application is already running, this call will return immediately. This RPC can be called at any time.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+Returns True when subsystems have been initialized.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "wait_subsystem_init"
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## get_rpc_methods {#rpc_get_rpc_methods}
 
 Get an array of supported RPC methods.
