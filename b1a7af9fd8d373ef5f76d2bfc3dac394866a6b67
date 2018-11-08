@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "654ef817_4b9e805c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 595,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-08T18:06:21Z",
+      "side": 1,
+      "message": "It\u0027s not fatal, but it is indicative of something going not quite as planned. It\u0027s a useful message to see if later on something crashes referencing a bad address. But there are also scenarios where nothing will reference the address later and releasing the qpair here is the right choice.",
+      "parentUuid": "729a5892_e7c1eed6",
+      "revId": "b1a7af9fd8d373ef5f76d2bfc3dac394866a6b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6edbac6c_91aecd32",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 11
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-08T17:18:53Z",
       "side": 1,
       "message": "The qpair has already been forced into SPDK_NVMF_QPAIR_DEACTIVATING by _spdk_nvmf_qpair_destroy before this WR was enqueued. I think that it should take care of itself. It really doesn\u0027t make a difference to me whether this is a continue or a break, but if you were actually hitting the disconnect path on line 2583 after receiving this request, that might be indicative of larger issues in the generic nvmf qpair state machine.",
+      "revId": "b1a7af9fd8d373ef5f76d2bfc3dac394866a6b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d6fcd71_322f97e3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2567,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-08T18:06:21Z",
+      "side": 1,
+      "message": "This is left over from before I added the if (qpair.state \u003d\u003d ACTIVE) check. You\u0027re right - this could be a break now.",
+      "parentUuid": "6edbac6c_91aecd32",
       "revId": "b1a7af9fd8d373ef5f76d2bfc3dac394866a6b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
