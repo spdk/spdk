@@ -16,6 +16,24 @@
       "revId": "3ad5fa0e32f96442ec25e2c3a8bcbc1ec84848d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79b070aa_17b2890a",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-08T13:11:00Z",
+      "side": 1,
+      "message": "It doesn\u0027t really make a difference. Since I do not have any preference, I removed the entire line. We\u0027ll now use whatever spdk_app_opts_init() set (0).",
+      "parentUuid": "780aef75_bc81b6b6",
+      "revId": "3ad5fa0e32f96442ec25e2c3a8bcbc1ec84848d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
