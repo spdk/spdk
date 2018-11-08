@@ -106,6 +106,12 @@ __spdk_histogram_get_count(const struct spdk_histogram_data *h, uint32_t range, 
 	return h->bucket[(range << SPDK_HISTOGRAM_BUCKET_SHIFT(h)) + index];
 }
 
+static inline uint64_t *
+__spdk_histogram_get_bucket(const struct spdk_histogram_data *h, uint32_t range, uint32_t index)
+{
+	return &h->bucket[(range << SPDK_HISTOGRAM_BUCKET_SHIFT(h)) + index];
+}
+
 static inline void
 spdk_histogram_data_reset(struct spdk_histogram_data *histogram)
 {
@@ -199,6 +205,21 @@ spdk_histogram_data_iterate(const struct spdk_histogram_data *histogram,
 			last_bucket = bucket;
 			bucket = __spdk_histogram_data_get_bucket_start(histogram, i, j);
 			fn(ctx, last_bucket, bucket, count, total, so_far);
+		}
+	}
+}
+
+static inline void
+spdk_histogram_data_merge(const struct spdk_histogram_data *dst,
+			  const struct spdk_histogram_data *src)
+{
+	uint64_t i, j, *bucket;
+
+
+	for (i = 0; i < SPDK_HISTOGRAM_NUM_BUCKET_RANGES(dst); i++) {
+		for (j = 0; j < SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(dst); j++) {
+			bucket = __spdk_histogram_get_bucket(dst, i, j);
+			*bucket += __spdk_histogram_get_count(src, i, j);
 		}
 	}
 }
