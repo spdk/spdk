@@ -22,6 +22,57 @@
       "revId": "b7ec831f257774a043ea6f92c208b3a39d140119",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbb77da9_7d5a9dc0",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:56:56Z",
+      "side": 1,
+      "message": "We should use the spdk_nvmf_transport_opts structure when working with transports. tgt_opts is being deprecated. With the introduction of additional transports, we need to make sure we have valid values for each one. \nsee: https://review.gerrithub.io/#/c/spdk/spdk/+/430161/",
+      "revId": "b7ec831f257774a043ea6f92c208b3a39d140119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86ca4a2f_b95884e5",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:56:56Z",
+      "side": 1,
+      "message": "spdk_nvmf_transport_create are already called from spdk_nvmf_parse_transports. I don\u0027t think we need to do this again.",
+      "revId": "b7ec831f257774a043ea6f92c208b3a39d140119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13f768c8_d42b7a9e",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:56:56Z",
+      "side": 1,
+      "message": "I think that having a trid in the subsystem that doesn\u0027t match one of the transports defined at the top level under the target should be an error.\nThe reason I feel this way is because I don\u0027t believe we can actually specify all of the transport opts at the subsystem level while we can in the top level declaration.",
+      "revId": "b7ec831f257774a043ea6f92c208b3a39d140119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
