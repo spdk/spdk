@@ -311,3 +311,31 @@ spdk_bit_array_count_clear(const struct spdk_bit_array *ba)
 {
 	return ba->bit_count - spdk_bit_array_count_set(ba);
 }
+
+uint32_t
+spdk_bit_array_mask_size(const struct spdk_bit_array *ba)
+{
+	return spdk_bit_array_word_count(ba->bit_count) * sizeof(spdk_bit_array_word);
+}
+
+int
+spdk_bit_array_store_mask(const struct spdk_bit_array *ba, void *mask, uint32_t size)
+{
+	if (size > spdk_bit_array_mask_size(ba)) {
+		return -EINVAL;
+	}
+
+	memcpy(mask, ba->words, size);
+	return 0;
+}
+
+int
+spdk_bit_array_load_mask(struct spdk_bit_array *ba, const void *mask, uint32_t size)
+{
+	if (size > spdk_bit_array_mask_size(ba)) {
+		return -EINVAL;
+	}
+
+	memcpy(ba->words, mask, size);
+	return 0;
+}
