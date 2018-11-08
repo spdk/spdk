@@ -16,6 +16,24 @@
       "revId": "45a094ebd078e1695995023e62c2bcfb2f083b42",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f857184_a3784bff",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-08T21:14:28Z",
+      "side": 1,
+      "message": "The man page says \"Don\u0027t descend directories on other filesystems\". Can you explain why you added this here? Are there setups where there is some symbolic link under usr that points to a network share or something?",
+      "parentUuid": "b097a5c3_d6e417c8",
+      "revId": "45a094ebd078e1695995023e62c2bcfb2f083b42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
