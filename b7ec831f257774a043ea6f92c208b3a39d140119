@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "14967c14_38613bde",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-08T23:30:34Z",
+      "side": 1,
+      "message": "is the patch merged？I can refactor later",
+      "parentUuid": "fbb77da9_7d5a9dc0",
+      "revId": "b7ec831f257774a043ea6f92c208b3a39d140119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86ca4a2f_b95884e5",
         "filename": "lib/event/subsystems/nvmf/conf.c",
         "patchSetId": 2
@@ -59,6 +77,24 @@
     },
     {
       "key": {
+        "uuid": "f7f8fa4b_1f2a35e8",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-08T23:30:34Z",
+      "side": 1,
+      "message": "yes， I see this function， however it does not work， since tranport related info is not mandotory in conf file, we should make it created by mandory, otherwise this issue is not solved, and we should have change log to update that.",
+      "parentUuid": "86ca4a2f_b95884e5",
+      "revId": "b7ec831f257774a043ea6f92c208b3a39d140119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13f768c8_d42b7a9e",
         "filename": "lib/event/subsystems/nvmf/conf.c",
         "patchSetId": 2
@@ -70,6 +106,24 @@
       "writtenOn": "2018-11-08T16:56:56Z",
       "side": 1,
       "message": "I think that having a trid in the subsystem that doesn\u0027t match one of the transports defined at the top level under the target should be an error.\nThe reason I feel this way is because I don\u0027t believe we can actually specify all of the transport opts at the subsystem level while we can in the top level declaration.",
+      "revId": "b7ec831f257774a043ea6f92c208b3a39d140119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "119b76d4_b9bf8e5b",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-08T23:30:34Z",
+      "side": 1,
+      "message": "Currently, top level transports are not mandory in conf file parse, you can check that. We need to fix it, and update the change log. Why I do here, since there is no transport constructed",
+      "parentUuid": "13f768c8_d42b7a9e",
       "revId": "b7ec831f257774a043ea6f92c208b3a39d140119",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
