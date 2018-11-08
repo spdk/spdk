@@ -299,6 +299,11 @@ spdk_pci_device_cfg_read(struct spdk_pci_device *dev, void *value, uint32_t len,
 #else
 	rc = rte_eal_pci_read_config(dev, value, len, offset);
 #endif
+
+#if defined(__FreeBSD__) && RTE_VERSION < RTE_VERSION_NUM(18, 11, 0, 0)
+	/* Older DPDKs return 0 on success and -1 on failure */
+	return rc;
+#endif
 	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
 }
 
@@ -311,6 +316,11 @@ spdk_pci_device_cfg_write(struct spdk_pci_device *dev, void *value, uint32_t len
 	rc = rte_pci_write_config(dev, value, len, offset);
 #else
 	rc = rte_eal_pci_write_config(dev, value, len, offset);
+#endif
+
+#ifdef __FreeBSD__
+	/* DPDK returns 0 on success and -1 on failure */
+	return rc;
 #endif
 	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
 }
