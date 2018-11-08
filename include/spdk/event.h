@@ -110,13 +110,6 @@ struct spdk_app_opts {
 	struct spdk_pci_addr	*pci_blacklist;
 	struct spdk_pci_addr	*pci_whitelist;
 
-	/* The maximum latency allowed when passing an event
-	 * from one core to another. A value of 0
-	 * means all cores continually poll. This is
-	 * specified in microseconds.
-	 */
-	uint64_t		max_delay_us;
-
 	/* Wait for the associated RPC before initializing subsystems
 	 * when this flag is enabled.
 	 */

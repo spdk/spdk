@@ -105,16 +105,12 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "reactor_perf";
-	opts.max_delay_us = 1000;
 
 	g_time_in_sec = 0;
 	g_queue_depth = 1;
 
-	while ((op = getopt(argc, argv, "d:q:t:")) != -1) {
+	while ((op = getopt(argc, argv, "q:t:")) != -1) {
 		switch (op) {
-		case 'd':
-			opts.max_delay_us = atoi(optarg);
-			break;
 		case 'q':
 			g_queue_depth = atoi(optarg);
 			break;

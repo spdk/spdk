@@ -113,8 +113,6 @@ struct spdk_reactor {
 
 	/* Pointer to the per-socket g_spdk_event_mempool for this reactor. */
 	struct spdk_mempool				*event_mempool;
-
-	uint64_t					max_delay_us;
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor *g_reactors;
@@ -123,8 +121,7 @@ static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
 static bool g_context_switch_monitor_enabled = true;
 
-static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
-				   uint64_t max_delay_us);
+static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore);
 
 static struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
 
@@ -489,7 +486,7 @@ _spdk_reactor_run(void *arg)
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);
 
-	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	sleep_cycles = 0;
 	if (g_context_switch_monitor_enabled) {
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 	}
@@ -554,7 +551,7 @@ _spdk_reactor_run(void *arg)
 		/* Determine if the thread can sleep */
 		if (sleep_cycles && !took_action) {
 			now = spdk_get_ticks();
-			sleep_us = reactor->max_delay_us;
+			sleep_us = 0;
 
 			poller = TAILQ_FIRST(&reactor->timer_pollers);
 			if (poller) {
@@ -586,12 +583,11 @@ _spdk_reactor_run(void *arg)
 }
 
 static void
-spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t max_delay_us)
+spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 {
 	reactor->lcore = lcore;
 	reactor->socket_id = spdk_env_get_socket_id(lcore);
 	assert(reactor->socket_id < SPDK_MAX_SOCKET);
-	reactor->max_delay_us = max_delay_us;
 
 	TAILQ_INIT(&reactor->active_pollers);
 	TAILQ_INIT(&reactor->timer_pollers);
@@ -690,7 +686,7 @@ spdk_reactors_stop(void *arg1, void *arg2)
 }
 
 int
-spdk_reactors_init(unsigned int max_delay_us)
+spdk_reactors_init(void)
 {
 	int rc;
 	uint32_t i, j, last_core;
@@ -770,7 +766,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
-		spdk_reactor_construct(reactor, i, max_delay_us);
+		spdk_reactor_construct(reactor, i);
 	}
 
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;

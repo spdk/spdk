@@ -44,7 +44,7 @@ DEFINE_STUB_V(spdk_rpc_finish, (void));
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB_V(spdk_reactors_start, (void));
 DEFINE_STUB_V(spdk_reactors_stop, (void *arg1, void *arg2));
-DEFINE_STUB(spdk_reactors_init, int, (unsigned int max_delay_us), 0);
+DEFINE_STUB(spdk_reactors_init, int, (void), 0);
 DEFINE_STUB_V(spdk_reactors_fini, (void));
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *, (uint32_t core, spdk_event_fn fn, void *arg1,
 		void *arg2), NULL);
