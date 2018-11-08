@@ -364,6 +364,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 {
 	uint32_t msg_count;
 	struct spdk_poller *poller;
+	int rc;
 	int aggregate_rc = 0;
 
 	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
@@ -375,7 +376,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 	if (poller) {
 		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		poller->state = SPDK_POLLER_STATE_RUNNING;
-		poller->fn(poller->arg);
+		rc = poller->fn(poller->arg);
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			free(poller);
 		} else {
@@ -383,9 +384,16 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 			TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
 		}
 
-		/* To match the previous behavior, having any continuous
-		 * pollers registered will always report as busy. */
-		aggregate_rc = 1;
+#ifdef DEBUG
+		if (rc == -1) {
+			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Poller %p returned -1\n", poller);
+		}
+#endif
+
+		if (rc == 1) {
+			aggregate_rc = 1;
+
+		}
 	}
 
 	poller = TAILQ_FIRST(&thread->timer_pollers);
@@ -395,7 +403,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 		if (now >= poller->next_run_tick) {
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 			poller->state = SPDK_POLLER_STATE_RUNNING;
-			poller->fn(poller->arg);
+			rc = poller->fn(poller->arg);
 			if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 				free(poller);
 			} else {
@@ -403,9 +411,16 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 				_spdk_poller_insert_timer(thread, poller, now);
 			}
 
-			/* To match the previous behavior, if a timer is processed here
-			 * this will report as busy. */
-			aggregate_rc = 1;
+#ifdef DEBUG
+			if (rc == -1) {
+				SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Poller %p returned -1\n", poller);
+			}
+#endif
+
+			if (rc == 1) {
+				aggregate_rc = 1;
+
+			}
 		}
 	}
 
