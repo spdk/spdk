@@ -471,8 +471,6 @@ _spdk_reactor_run(void *arg)
 	struct spdk_poller	*poller;
 	uint32_t		event_count;
 	uint64_t		now;
-	uint64_t		sleep_cycles;
-	uint32_t		sleep_us;
 	int			rc = -1;
 	char			thread_name[32];
 
@@ -486,7 +484,6 @@ _spdk_reactor_run(void *arg)
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);
 
-	sleep_cycles = 0;
 	if (g_context_switch_monitor_enabled) {
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 	}
@@ -494,14 +491,11 @@ _spdk_reactor_run(void *arg)
 	reactor->tsc_last = now;
 
 	while (1) {
-		bool took_action = false;
-
 		event_count = _spdk_event_queue_run_batch(reactor);
 		if (event_count > 0) {
 			rc = 1;
 			now = spdk_get_ticks();
 			spdk_reactor_add_tsc_stats(reactor, rc, now);
-			took_action = true;
 		}
 
 		poller = TAILQ_FIRST(&reactor->active_pollers);
@@ -517,14 +511,11 @@ _spdk_reactor_run(void *arg)
 				poller->state = SPDK_POLLER_STATE_WAITING;
 				TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 			}
-			took_action = true;
 		}
 
 		poller = TAILQ_FIRST(&reactor->timer_pollers);
 		if (poller) {
-			if (took_action == false) {
-				now = spdk_get_ticks();
-			}
+			now = spdk_get_ticks();
 
 			if (now >= poller->next_run_tick) {
 				uint64_t tmp_timer_tsc;
@@ -544,31 +535,6 @@ _spdk_reactor_run(void *arg)
 					poller->state = SPDK_POLLER_STATE_WAITING;
 					_spdk_poller_insert_timer(reactor, poller, tmp_timer_tsc);
 				}
-				took_action = true;
-			}
-		}
-
-		/* Determine if the thread can sleep */
-		if (sleep_cycles && !took_action) {
-			now = spdk_get_ticks();
-			sleep_us = 0;
-
-			poller = TAILQ_FIRST(&reactor->timer_pollers);
-			if (poller) {
-				/* There are timers registered, so don't sleep beyond
-				 * when the next timer should fire */
-				if (poller->next_run_tick < (now + sleep_cycles)) {
-					if (poller->next_run_tick <= now) {
-						sleep_us = 0;
-					} else {
-						sleep_us = ((poller->next_run_tick - now) *
-							    SPDK_SEC_TO_USEC) / spdk_get_ticks_hz();
-					}
-				}
-			}
-
-			if (sleep_us > 0) {
-				usleep(sleep_us);
 			}
 		}
 
