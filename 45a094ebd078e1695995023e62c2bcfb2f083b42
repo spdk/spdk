@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b097a5c3_d6e417c8",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-08T20:22:45Z",
+      "side": 1,
+      "message": "what\u0027s the -xdev do?",
+      "revId": "45a094ebd078e1695995023e62c2bcfb2f083b42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
