@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bbe9e6d_f3ff7359",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-08T18:44:02Z",
+      "side": 1,
+      "message": "On some distributions packages are not installed as root (I think Arch - which there is a patch out to add support for). I\u0027m not opposed to adding this check to the distributions that require it, but it needs to only happen for those. It should also probably be a separate patch.",
+      "revId": "96388ca6ecb387dc6f970f49610a54231419ae36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
