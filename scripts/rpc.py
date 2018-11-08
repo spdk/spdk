@@ -49,6 +49,13 @@ if __name__ == "__main__":
     p.set_defaults(func=start_subsystem_init)
 
     @call_cmd
+    def wait_subsystem_init(args):
+        rpc.wait_subsystem_init(args.client)
+
+    p = subparsers.add_parser('wait_subsystem_init', help='Block until subsystems have been initialized')
+    p.set_defaults(func=wait_subsystem_init)
+
+    @call_cmd
     def get_rpc_methods(args):
         print_dict(rpc.get_rpc_methods(args.client,
                                        current=args.current))

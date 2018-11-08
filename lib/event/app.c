@@ -996,3 +996,56 @@ spdk_rpc_start_subsystem_init(struct spdk_jsonrpc_request *request,
 	spdk_subsystem_init(cb_event);
 }
 SPDK_RPC_REGISTER("start_subsystem_init", spdk_rpc_start_subsystem_init, SPDK_RPC_STARTUP)
+
+struct subsystem_init_poller_ctx {
+	struct spdk_poller *init_poller;
+	struct spdk_jsonrpc_request *request;
+};
+
+static int
+spdk_rpc_subsystem_init_poller_ctx(void *ctx)
+{
+	struct spdk_json_write_ctx *w;
+	struct subsystem_init_poller_ctx *poller_ctx = ctx;
+
+	if (spdk_rpc_get_state() == SPDK_RPC_RUNTIME) {
+		w = spdk_jsonrpc_begin_result(poller_ctx->request);
+		if (w == NULL) {
+			return 1;
+		}
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(poller_ctx->request, w);
+		spdk_poller_unregister(&poller_ctx->init_poller);
+		free(poller_ctx);
+	}
+
+	return 1;
+}
+
+static void
+spdk_rpc_wait_subsystem_init(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct subsystem_init_poller_ctx *ctx;
+
+	if (spdk_rpc_get_state() == SPDK_RPC_RUNTIME) {
+		w = spdk_jsonrpc_begin_result(request);
+		if (w == NULL) {
+			return;
+		}
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	} else {
+		ctx = malloc(sizeof(struct subsystem_init_poller_ctx));
+		if (ctx == NULL) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Unable to allocate memory for the request context\n");
+			return;
+		}
+		ctx->request = request;
+		ctx->init_poller = spdk_poller_register(spdk_rpc_subsystem_init_poller_ctx, ctx, 0);
+	}
+}
+SPDK_RPC_REGISTER("wait_subsystem_init", spdk_rpc_wait_subsystem_init,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)

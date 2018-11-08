@@ -22,6 +22,11 @@ def start_subsystem_init(client):
     return client.call('start_subsystem_init')
 
 
+def wait_subsystem_init(client):
+    """Block until subsystems have been initialized"""
+    return client.call('wait_subsystem_init')
+
+
 def get_rpc_methods(client, current=None):
     """Get list of supported RPC methods.
     Args:
