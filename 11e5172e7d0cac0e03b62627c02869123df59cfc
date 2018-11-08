@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "e9e789f5_6696e12f",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-08T04:59:23Z",
+      "side": 1,
+      "message": "(13 | 1) \u003d\u003d 13\n\nThe spec says WRITE_ZEROES is a standalone type, so it should be one. Am I missing something?",
+      "parentUuid": "80734721_e1782035",
+      "range": {
+        "startLine": 319,
+        "startChar": 1,
+        "endLine": 320,
+        "endChar": 53
+      },
+      "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "14e486fd_92f86b21",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 6
