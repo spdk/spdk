@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "780aef75_bc81b6b6",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-08T00:05:32Z",
+      "side": 1,
+      "message": "i\u0027m thinking this should stay 1024 + cache_size_in_mb; or we should just remove this altogether and just set it to 0\n\nthe idea was that we need the cache_size_in_mb, plus another 1GB for other types of data structures allocated from DPDK memory; I\u0027m thinking we should either still include both, or include neither",
+      "revId": "3ad5fa0e32f96442ec25e2c3a8bcbc1ec84848d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
