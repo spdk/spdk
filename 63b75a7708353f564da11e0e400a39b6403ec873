@@ -16,6 +16,24 @@
       "revId": "63b75a7708353f564da11e0e400a39b6403ec873",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "638afcb6_60f87034",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-08T16:48:36Z",
+      "side": 1,
+      "message": "No. Good catch.",
+      "parentUuid": "8cf3a9c0_165bd37d",
+      "revId": "63b75a7708353f564da11e0e400a39b6403ec873",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
