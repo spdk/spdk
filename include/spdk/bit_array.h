@@ -173,6 +173,29 @@ uint32_t spdk_bit_array_count_set(const struct spdk_bit_array *ba);
  */
 uint32_t spdk_bit_array_count_clear(const struct spdk_bit_array *ba);
 
+/**
+ * Store bitmask from bit array.
+ *
+ * \param ba Bit array.
+ * \param mask Destination mask. Mask and bit array capacity must be equal.
+ */
+void spdk_bit_array_store_mask(const struct spdk_bit_array *ba, void *mask);
+
+/**
+ * Load bitmask to bit array.
+ *
+ * \param ba Bit array.
+ * \param mask Source mask. Mask and bit array capacity must be equal.
+ */
+void spdk_bit_array_load_mask(struct spdk_bit_array *ba, const void *mask);
+
+/**
+ * Clear (to 0) bit array bitmask.
+ *
+ * \param ba Bit array.
+ */
+void spdk_bit_array_clear_mask(struct spdk_bit_array *ba);
+
 #ifdef __cplusplus
 }
 #endif
