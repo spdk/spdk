@@ -93,6 +93,30 @@
       "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7342362_8be912f1",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-08T02:11:05Z",
+      "side": 1,
+      "message": "\u003e it will return at first check point.\n\nIt maybe true for now. But if we update the public interface spdk_vhost_dev_unregister(), we cannot assure it anymore and we have great chance to forget update caller of spdk_vhost_dev_unregister().",
+      "parentUuid": "1f362553_b259cfac",
+      "range": {
+        "startLine": 884,
+        "startChar": 2,
+        "endLine": 884,
+        "endChar": 11
+      },
+      "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
