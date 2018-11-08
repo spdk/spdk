@@ -69,6 +69,24 @@
       "revId": "b1a7af9fd8d373ef5f76d2bfc3dac394866a6b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "883ee2bb_b0bc42ae",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2567,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T18:10:47Z",
+      "side": 1,
+      "message": "Like I said, I am fine either way. I think this patch has been held up long enough. We can just remove the vestigial comments later.\nI am just glad you weren\u0027t actually hitting that line.",
+      "parentUuid": "8d6fcd71_322f97e3",
+      "revId": "b1a7af9fd8d373ef5f76d2bfc3dac394866a6b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
