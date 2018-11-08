@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4f7fe48b_ff032539",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:05:00Z",
+      "side": 1,
+      "message": "IP addresses -\u003e IP address",
+      "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dd608f3_b04749f7",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:05:00Z",
+      "side": 1,
+      "message": "result each -\u003e result in each",
+      "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb607615_e43f6bc9",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:05:00Z",
+      "side": 1,
+      "message": "drives is located -\u003e drives are located\n\nIf a user doesn\u0027t evenly split their drives between NUMA nodes, will they get uneven results? I thought of this since we are round robin allocating CPUs on all NUMA nodes on which we have drives, but it\u0027s possible a user could put 7 drives on one NUMA node and 1 on the other. I just don\u0027t know off the top of my head if we do anything inside of SPDK to make sure that our pollers are polling drives on the same NUMA node as the core.",
+      "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cd85cfd_0fa59137",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:05:00Z",
+      "side": 1,
+      "message": "The system wide package won\u0027t work if running in SPDK mode right?",
+      "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ecc746e_91371c9e",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:05:00Z",
+      "side": 1,
+      "message": "to connect to -\u003e to connect",
+      "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1435a08c_31dc35b2",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:05:00Z",
+      "side": 1,
+      "message": "Is this print intentional?",
+      "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbc6418b_0a937b03",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-08T16:05:00Z",
+      "side": 1,
+      "message": "This is just something that looked off to me, but I could easily be wrong about it. Feel free to ignore it if this is the behavior most people will want.\nThe way I read this is that if the user specifies a conf file that looks like this:\nbs: [4k, 8k]\nqd: [32, 128]\nrw: [r, rw, w]\n\nwe would run 12 benchmarks:\n4k, 32, r - 4k, 128, r - 4k, 32, w - 4k, 128, w - 4k, 32, rw - 4k, 128, rw\nand then all of the 8k ones.\nIs that the bahavior we want? The more straight forward behavior to me would be to read each column as a job, and force the rows to each have the same number of entries. Thus, three columns \u003d three jobs. That way you don\u0027t end up running any jobs you didn\u0027t mean to.",
+      "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
