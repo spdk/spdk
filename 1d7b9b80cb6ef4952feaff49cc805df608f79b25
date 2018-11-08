@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19beab27_d5565ee3",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-08T23:19:40Z",
+      "side": 1,
+      "message": "client",
+      "range": {
+        "startLine": 260,
+        "startChar": 38,
+        "endLine": 260,
+        "endChar": 45
+      },
+      "revId": "1d7b9b80cb6ef4952feaff49cc805df608f79b25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f2c162f_4d389cb6",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-08T23:19:40Z",
+      "side": 1,
+      "message": "client",
+      "range": {
+        "startLine": 263,
+        "startChar": 20,
+        "endLine": 263,
+        "endChar": 27
+      },
+      "revId": "1d7b9b80cb6ef4952feaff49cc805df608f79b25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f223305_07da4cc6",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-08T23:19:40Z",
+      "side": 1,
+      "message": "cliennt -\u003e server\n\nor \n\nsomething like \"failed to wait for the termination of the server thread\" ?",
+      "range": {
+        "startLine": 279,
+        "startChar": 38,
+        "endLine": 279,
+        "endChar": 45
+      },
+      "revId": "1d7b9b80cb6ef4952feaff49cc805df608f79b25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9d50e49_e2d37000",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-08T23:19:40Z",
+      "side": 1,
+      "message": "cliennt -\u003e server \n\nor \n\nsomething like \"server thread terminated with failure (thread rc: %d)\\n\" ?",
+      "range": {
+        "startLine": 282,
+        "startChar": 20,
+        "endLine": 282,
+        "endChar": 27
+      },
+      "revId": "1d7b9b80cb6ef4952feaff49cc805df608f79b25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
