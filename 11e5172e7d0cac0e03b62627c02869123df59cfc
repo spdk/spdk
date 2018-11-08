@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "bbe2ad6b_91839e0c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-08T09:31:15Z",
+      "side": 1,
+      "message": "Then you should change the spec. Right now it states the type of the request is *either* VIRTIO_BLK_T_OUT or VIRTIO_BLK_T_WRITE_ZEROES, but never both at the same time.\n\nVIRTIO_BLK_T_WRITE_ZEROES implicitly contains VIRTIO_BLK_T_OUT, so checking against just VIRTIO_BLK_T_WRITE_ZEROES is fine.",
+      "parentUuid": "9d6634e1_3fabefc1",
+      "range": {
+        "startLine": 319,
+        "startChar": 1,
+        "endLine": 320,
+        "endChar": 53
+      },
+      "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "14e486fd_92f86b21",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 6
