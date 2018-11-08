@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cf38237_bffaa219",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1432,
+      "author": {
+        "id": 1015408
+      },
+      "writtenOn": "2018-11-08T19:33:25Z",
+      "side": 1,
+      "message": "My previous copy has this code below.\n\n        rc \u003d nvme_ctrlr_update_namespaces(ctrlr);\n        if (rc) {\n                goto fail;\n        }\n        return 0;\n\nRemoving this part of the code and just adding a checkpoint for 0 namespace on nvme_ctrlr_identify_active_ns is cleaner, though WARNLOG for 0 namespace was removed.",
+      "revId": "4ea119016366b1aa7c44c1f9792099f1cb565ba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
