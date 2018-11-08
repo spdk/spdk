@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "22f19076_9348e8c4",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5f62081a_2f84786c",
+      "range": {
+        "startLine": 654,
+        "startChar": 1,
+        "endLine": 655,
+        "endChar": 1
+      },
+      "revId": "0372b37b798a656c5b6665ee5c6caf2149095d66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d785beb_d608252e",
         "filename": "lib/bdev/rbd/bdev_rbd.c",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-07T21:28:40Z",
       "side": 1,
       "message": "^",
+      "range": {
+        "startLine": 666,
+        "startChar": 1,
+        "endLine": 666,
+        "endChar": 2
+      },
+      "revId": "0372b37b798a656c5b6665ee5c6caf2149095d66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2fca59a_59208285",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0d785beb_d608252e",
       "range": {
         "startLine": 666,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "78ec65ca_f841fd4b",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "911565a5_7f2537a1",
+      "range": {
+        "startLine": 671,
+        "startChar": 0,
+        "endLine": 671,
+        "endChar": 0
+      },
+      "revId": "0372b37b798a656c5b6665ee5c6caf2149095d66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3b12bcb_a59e52ed",
         "filename": "lib/bdev/rbd/bdev_rbd.c",
         "patchSetId": 7
@@ -82,6 +154,30 @@
       "writtenOn": "2018-11-07T21:28:40Z",
       "side": 1,
       "message": "need blank line",
+      "range": {
+        "startLine": 719,
+        "startChar": 1,
+        "endLine": 720,
+        "endChar": 1
+      },
+      "revId": "0372b37b798a656c5b6665ee5c6caf2149095d66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3443bbf7_e2431ac1",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d3b12bcb_a59e52ed",
       "range": {
         "startLine": 719,
         "startChar": 1,
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "0129fc67_a14b8b8a",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ba2df756_e089efaa",
+      "range": {
+        "startLine": 834,
+        "startChar": 2,
+        "endLine": 834,
+        "endChar": 43
+      },
+      "revId": "0372b37b798a656c5b6665ee5c6caf2149095d66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fcb605a_0672113f",
         "filename": "scripts/rpc.py",
         "patchSetId": 7
@@ -151,6 +271,30 @@
       "writtenOn": "2018-11-07T21:28:40Z",
       "side": 1,
       "message": "Is this not asserted by this  `metavar\u003d\u0027key\u003dvalue\u0027` magic ?\n\nAlso how this will work with your example in jsonrpc.md\n\n\u003e key\u003dAQDwf8db7zR1GRAA5k7NKXjS5S5V4mntwUDnGQ\u003d\u003d\n\nI think you should look for first \u0027\u003d\u0027 and split using  position of this character.",
+      "range": {
+        "startLine": 321,
+        "startChar": 16,
+        "endLine": 322,
+        "endChar": 80
+      },
+      "revId": "0372b37b798a656c5b6665ee5c6caf2149095d66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05ab9164_83f06cab",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "No. metavar is just informative, i.e. it gets included in the --help output. It has no effect whatsoever on the handling of the parameter string.\n\nentry.split(\u0027\u003d\u0027, 1) does exactly what you described: it splits at the first \u003d character, and only at that because splitting is limited via that second parameter.",
+      "parentUuid": "9fcb605a_0672113f",
       "range": {
         "startLine": 321,
         "startChar": 16,

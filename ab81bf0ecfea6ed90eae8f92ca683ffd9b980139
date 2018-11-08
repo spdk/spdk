@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "b5cc0ea5_50ecbd1b",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1113,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "985f6d92_bdf9e533",
+      "range": {
+        "startLine": 1113,
+        "startChar": 56,
+        "endLine": 1113,
+        "endChar": 99
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92f6909c_a4e85d46",
         "filename": "lib/bdev/rbd/bdev_rbd.c",
         "patchSetId": 3
@@ -132,6 +156,30 @@
       "side": 1,
       "message": "\"free(NULL)\" can\u0027t crash on any OS we support. This a rule of thumb I strictly follow.",
       "parentUuid": "17858ac4_ed0e05fe",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 97,
+        "endChar": 2
+      },
+      "revId": "ab81bf0ecfea6ed90eae8f92ca683ffd9b980139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74df2f15_2d88310f",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d92a44d6_0e08657d",
       "range": {
         "startLine": 95,
         "startChar": 1,

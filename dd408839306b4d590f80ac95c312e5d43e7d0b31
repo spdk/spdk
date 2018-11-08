@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a06164ce_174cc85b",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "Then the same check should be removed also from the other decode functions, for the sake of consistency and to catch situations faster where NULL is passed incorrectly.\n\nBut sure, I can remove it here.",
+      "parentUuid": "a0049b8a_7419906a",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 2
+      },
+      "revId": "dd408839306b4d590f80ac95c312e5d43e7d0b31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2862e782_c89fe87a",
         "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-26T16:40:24Z",
       "side": 1,
       "message": "I admit, this looks ugly. Need to think how to deal with that but lets leave it for now.",
+      "range": {
+        "startLine": 131,
+        "startChar": 8,
+        "endLine": 131,
+        "endChar": 30
+      },
+      "revId": "dd408839306b4d590f80ac95c312e5d43e7d0b31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cc7d77e_094826a9",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-11-08T10:46:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2862e782_c89fe87a",
       "range": {
         "startLine": 131,
         "startChar": 8,
