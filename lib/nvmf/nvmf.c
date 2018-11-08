@@ -232,6 +232,12 @@ spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 	_nvmf_tgt_disconnect_next_qpair(ctx);
 }
 
+void
+spdk_nvmf_tgt_get_opts(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_tgt_opts *opts)
+{
+	*opts = tgt->opts;
+}
+
 struct spdk_nvmf_tgt *
 spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 {

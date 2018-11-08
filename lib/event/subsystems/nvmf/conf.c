@@ -206,6 +206,44 @@ spdk_nvmf_tgt_listen_done(void *cb_arg, int status)
 	}
 }
 
+static void
+spdk_nvmf_tgt_add_transport_by_trid_done(void *cb_arg, int status)
+{
+}
+
+static int
+spdk_nvmf_tgt_create_transport_by_trid(struct spdk_nvmf_tgt *tgt,
+				       struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_tgt_opts tgt_opts;
+	struct spdk_nvmf_transport_opts	opts;
+
+	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trtype);
+	if (transport) {
+		return 0;
+	}
+
+	spdk_nvmf_tgt_get_opts(tgt, &tgt_opts);
+
+	opts.max_queue_depth = tgt_opts.max_queue_depth;
+	opts.max_qpairs_per_ctrlr = tgt_opts.max_qpairs_per_ctrlr;
+	opts.in_capsule_data_size = tgt_opts.in_capsule_data_size;
+	opts.max_io_size = tgt_opts.max_io_size;
+	opts.io_unit_size = tgt_opts.io_unit_size;
+	/* use max_queue depth since tgt. opts. doesn't have max_aq_depth */
+	opts.max_aq_depth = tgt_opts.max_queue_depth;
+
+	transport = spdk_nvmf_transport_create(trid->trtype, &opts);
+	if (!transport) {
+		return -1;
+	}
+
+	spdk_nvmf_tgt_add_transport(tgt, transport, spdk_nvmf_tgt_add_transport_by_trid_done, NULL);
+
+	return 0;
+}
+
 static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
@@ -381,6 +419,13 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", port);
 		}
 		free(address_dup);
+
+		ret = spdk_nvmf_tgt_create_transport_by_trid(g_spdk_nvmf_tgt, &trid);
+		if (ret < 0) {
+			SPDK_ERRLOG("Unable to obtain transport by trid=%p with type = %d\n",
+				    &trid, trid.trtype);
+			continue;
+		}
 
 		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid, spdk_nvmf_tgt_listen_done, NULL);
 

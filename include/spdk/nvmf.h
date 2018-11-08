@@ -97,6 +97,14 @@ void spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts);
  */
 struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts);
 
+/**
+ * Get the Opts options from an NVMe-oF target.
+ *
+ * \param tgt The target to get the opts Options.
+ * \param opts Options.
+ */
+void spdk_nvmf_tgt_get_opts(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_tgt_opts *opts);
+
 typedef void (spdk_nvmf_tgt_destroy_done_fn)(void *ctx, int status);
 
 /**
