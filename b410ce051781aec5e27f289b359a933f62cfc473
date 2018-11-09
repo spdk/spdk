@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5575bee_49f25436",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-09T09:25:06Z",
+      "side": 1,
+      "message": "REDUCE_PM_SIZE_ALIGNMENT?",
+      "range": {
+        "startLine": 89,
+        "startChar": 42,
+        "endLine": 89,
+        "endChar": 44
+      },
+      "revId": "b410ce051781aec5e27f289b359a933f62cfc473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4d2e07c_e57dc9f9",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-09T09:25:06Z",
+      "side": 1,
+      "message": "this is ensured to be 4K ? (at least divisor to 4K.)\n\nI saw the following in the document, but I didn\u0027t find the corresponding code to ensure it.\n\nStorage from the backing storage device will be allocated, read, and written to in 4KB units for best NVMe performance.  These 4KB units are called \"backing IO units\".",
+      "range": {
+        "startLine": 201,
+        "startChar": 38,
+        "endLine": 201,
+        "endChar": 64
+      },
+      "revId": "b410ce051781aec5e27f289b359a933f62cfc473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
