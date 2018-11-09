@@ -81,7 +81,42 @@ check_values(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 			break;
 		}
 	}
+	CU_ASSERT(count == 0);
+}
 
+static void
+check_merged_values(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+		    uint64_t total, uint64_t so_far)
+{
+	uint64_t **values = ctx;
+
+	if (count == 0) {
+		return;
+	}
+
+	CU_ASSERT(so_far == (g_total * 2 + count));
+
+	/*
+	 * The bucket for this iteration does not include end, but
+	 *  subtract one anyways to account for the last bucket
+	 *  which will have end = 0x0 (UINT64_MAX + 1).
+	 */
+	end--;
+
+	while (1) {
+		CU_ASSERT(**values >= start);
+		/*
+		 * We subtracted one from end above, so it's OK here for
+		 *  **values to equal end.
+		 */
+		CU_ASSERT(**values <= end);
+		g_total++;
+		count -= 2;
+		(*values)++;
+		if (*values == g_values_end || **values > end) {
+			break;
+		}
+	}
 	CU_ASSERT(count == 0);
 }
 
@@ -104,6 +139,30 @@ histogram_test(void)
 	spdk_histogram_data_free(h);
 }
 
+static void
+histogram_merge(void)
+{
+	struct spdk_histogram_data *h1, *h2;
+	uint64_t *values = g_values;
+	uint32_t i;
+
+	h1 = spdk_histogram_data_alloc();
+	h2 = spdk_histogram_data_alloc();
+
+	for (i = 0; i < SPDK_COUNTOF(g_values); i++) {
+		spdk_histogram_data_tally(h1, g_values[i]);
+		spdk_histogram_data_tally(h2, g_values[i]);
+	}
+
+	spdk_histogram_data_merge(h1, h2);
+
+	g_total = 0;
+	spdk_histogram_data_iterate(h1, check_merged_values, &values);
+
+	spdk_histogram_data_free(h1);
+	spdk_histogram_data_free(h2);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -121,7 +180,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "histogram_test", histogram_test) == NULL
+		CU_add_test(suite, "histogram_test", histogram_test) == NULL ||
+		CU_add_test(suite, "histogram_merge", histogram_merge) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
