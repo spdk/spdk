@@ -53,6 +53,7 @@ DIRS-y += $(ENV_NAME)
 endif
 
 DEPDIRS-iscsi := scsi
+DEPDIRS-bdev := notify
 
 .PHONY: all clean $(DIRS-y)
 

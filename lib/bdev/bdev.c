@@ -46,6 +46,7 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/util.h"
 #include "spdk/trace.h"
+#include "spdk/notify.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -269,6 +270,22 @@ struct spdk_bdev_iostat_ctx {
 	spdk_bdev_get_device_stat_cb cb;
 	void *cb_arg;
 };
+
+static void bdev_registered_handler(struct spdk_notify_type *notify,
+				    void *ctx)
+{
+	/* TODO: Provide info about registered bdev */
+}
+
+static void bdev_unregistered_handler(struct spdk_notify_type *notify,
+				      void *ctx)
+{
+	/* TODO: Provide info about unregistered bdev */
+}
+
+SPDK_NOTIFY_REGISTER("bdev_registered", bdev_registered_handler);
+SPDK_NOTIFY_REGISTER("bdev_unregistered", bdev_unregistered_handler);
+
 
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
@@ -3497,6 +3514,9 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 	}
 
 	spdk_bdev_start(vbdev);
+
+	spdk_send_notify("bdev_registered", NULL);
+
 	return 0;
 }
 
@@ -3530,6 +3550,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	struct spdk_thread	*thread;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
+
+	spdk_send_notify("bdev_unregistered", NULL);
 
 	thread = spdk_get_thread();
 	if (!thread) {
