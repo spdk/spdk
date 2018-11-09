@@ -343,7 +343,7 @@ error_return:
 	}
 	conn->logout_timer = NULL;
 	conn->shutdown_timer = NULL;
-	SPDK_NOTICELOG("Launching connection on acceptor thread\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 	conn->pending_activate_event = false;
 
@@ -463,7 +463,8 @@ static void spdk_iscsi_remove_conn(struct spdk_iscsi_conn *conn)
 		sess->connections--;
 	}
 
-	SPDK_NOTICELOG("Terminating connections(tsih %d): %d\n", sess->tsih, sess->connections);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Terminating connections(tsih %d): %d\n",
+		      sess->tsih, sess->connections);
 
 	if (sess->connections == 0) {
 		/* cleanup last connection */
