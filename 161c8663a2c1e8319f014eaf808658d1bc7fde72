@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "d19d3306_c1133b2b",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-09T17:22:29Z",
+      "side": 1,
+      "message": "did you mean to use REDUCE_PM_SIZE_ALIGNMENT here?",
+      "revId": "161c8663a2c1e8319f014eaf808658d1bc7fde72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fe3080bf_7f6c7fa5",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 2
