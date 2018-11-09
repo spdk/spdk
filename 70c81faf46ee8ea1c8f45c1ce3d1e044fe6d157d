@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62d55006_128fc305",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-09T16:48:15Z",
+      "side": 1,
+      "message": "the Doxygen comments say that passing max_msgs means all events will be processed, but if I\u0027m reading this correctly, only 8 will be processed",
+      "revId": "70c81faf46ee8ea1c8f45c1ce3d1e044fe6d157d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
