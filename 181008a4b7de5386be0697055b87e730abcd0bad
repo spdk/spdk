@@ -16,6 +16,24 @@
       "revId": "181008a4b7de5386be0697055b87e730abcd0bad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ea3e81a_c014cb78",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-09T15:03:53Z",
+      "side": 1,
+      "message": "I should change this.  I think when I was originally writing this patch set, I was thinking we would write the path and the superblock in parallel, but that is not safe - we must write the patch first.",
+      "parentUuid": "6a8b1188_5bcad6f4",
+      "revId": "181008a4b7de5386be0697055b87e730abcd0bad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
