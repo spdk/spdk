@@ -60,13 +60,22 @@
 
 # Define NVMf protocol global options
 [Nvmf]
-  # Set the maximum number of submission and completion queues per session.
-  # Setting this to '8', for example, allows for 8 submission and 8 completion queues
-  # per session.
-  MaxQueuesPerSession 4
+  # Set how often the acceptor polls for incoming connections. The acceptor is also
+  # responsible for polling existing connections that have gone idle. 0 means continuously
+  # poll. Units in microseconds.
+  AcceptorPollRate 10000
+
+[Transport]
+  # Set a transport type, this is mandatory
+  Type RDMA
 
   # Set the maximum number of outstanding I/O per queue.
   #MaxQueueDepth 128
+
+  # Set the maximum number of submission and completion queues per session.
+  # Setting this to '8', for example, allows for 8 submission and 8 completion queues
+  # per session.
+  #MaxQueuesPerSession 4
 
   # Set the maximum in-capsule data size. Must be a multiple of 16.
   # 0 is a valid choice.
@@ -75,10 +84,11 @@
   # Set the maximum I/O size. Must be a multiple of 4096.
   #MaxIOSize 131072
 
-  # Set how often the acceptor polls for incoming connections. The acceptor is also
-  # responsible for polling existing connections that have gone idle. 0 means continuously
-  # poll. Units in microseconds.
-  AcceptorPollRate 10000
+  # Set the I/O unit size, and this value should not be larger than MaxIOSize
+  #IOUnitSize 131072
+
+  # Set the maximum number of IO for admin queue
+  #MaxAQDepth 32
 
 [Nvme]
   # NVMe Device Whitelist
