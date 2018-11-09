@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42817a9d_e8b3c910",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-09T16:44:17Z",
+      "side": 1,
+      "message": "I don\u0027t think this is right.  Previous behavior would collect the value of poller-\u003efn(poller-\u003earg).\n\nSame for the timer poller below.\n\nMaybe you do something like:\n\naggregate_rc \u003d 0;\nif (poller) {\n  aggregate_rc \u003d poller-\u003efn(poller-\u003earg);\n}\nif (timer_poller) {\n  timer_rc \u003d poller-\u003efn(poller-\u003earg);\n  if (timer_rc \u003e aggregate_rc) {\n    aggregate_rc \u003d timer_rc;\n  }\n}\n\nThere\u0027s no perfect way to do it, but this would be fine for now.  I think once you\u0027re done with all of the thread refactoring, we\u0027ll want to move the stats from the reactor to the thread anyways - we\u0027ll need that to be able to do the scheduling.",
+      "revId": "648b57e839a9f5829617edca5e6c932d6c464560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0368c5bc_1754c403",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-09T16:44:17Z",
+      "side": 1,
+      "message": "is \"now\" parameter needed?",
+      "revId": "648b57e839a9f5829617edca5e6c932d6c464560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
