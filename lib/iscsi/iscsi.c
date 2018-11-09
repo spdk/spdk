@@ -1940,29 +1940,29 @@ spdk_iscsi_op_login_notify_session_info(struct spdk_iscsi_conn *conn,
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		/* normal session */
-		SPDK_NOTICELOG("Login from %s (%s) on %s tgt_node%d"
-			       " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
-			       " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
-			       conn->initiator_name, conn->initiator_addr,
-			       conn->target->name, conn->target->num,
-			       portal->host, portal->port, portal->group->tag,
-			       conn->sess->isid, conn->sess->tsih, conn->cid,
-			       (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
-				? "on" : "off"),
-			       (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
-				? "on" : "off"));
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Login from %s (%s) on %s tgt_node%d"
+			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
+			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
+			      conn->initiator_name, conn->initiator_addr,
+			      conn->target->name, conn->target->num,
+			      portal->host, portal->port, portal->group->tag,
+			      conn->sess->isid, conn->sess->tsih, conn->cid,
+			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
+			       ? "on" : "off"),
+			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
+			       ? "on" : "off"));
 	} else if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		/* discovery session */
-		SPDK_NOTICELOG("Login(discovery) from %s (%s) on"
-			       " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
-			       " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
-			       conn->initiator_name, conn->initiator_addr,
-			       portal->host, portal->port, portal->group->tag,
-			       conn->sess->isid, conn->sess->tsih, conn->cid,
-			       (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
-				? "on" : "off"),
-			       (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
-				? "on" : "off"));
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Login(discovery) from %s (%s) on"
+			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
+			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
+			      conn->initiator_name, conn->initiator_addr,
+			      portal->host, portal->port, portal->group->tag,
+			      conn->sess->isid, conn->sess->tsih, conn->cid,
+			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
+			       ? "on" : "off"),
+			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
+			       ? "on" : "off"));
 	} else {
 		SPDK_ERRLOG("unknown session type\n");
 		/* Initiator error */
