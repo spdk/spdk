@@ -445,6 +445,27 @@ spdk_vfio_enabled(void)
 #endif
 }
 
+/* Check if IOMMU is enabled on the system */
+static bool
+has_iommu_groups(void)
+{
+	struct dirent *d;
+	int count = 0;
+	DIR *dir = opendir("/sys/kernel/iommu_groups");
+
+	if (dir == NULL) {
+		return false;
+	}
+
+	while (count < 3 && (d = readdir(dir)) != NULL) {
+		count++;
+	}
+
+	closedir(dir);
+	/* there will always be ./ and ../ entries */
+	return count > 2;
+}
+
 static void
 spdk_vtophys_iommu_init(void)
 {
@@ -454,7 +475,7 @@ spdk_vtophys_iommu_init(void)
 	DIR *dir;
 	struct dirent *d;
 
-	if (!spdk_vfio_enabled()) {
+	if (!spdk_vfio_enabled() || !has_iommu_groups()) {
 		return;
 	}
 
