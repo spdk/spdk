@@ -523,12 +523,12 @@ vbdev_passthru_base_bdev_hotremove_cb(void *ctx)
 /* Create and register the passthru vbdev if we find it in our list of bdev names.
  * This can be called either by the examine path or RPC method.
  */
-static void
+static int
 vbdev_passthru_register(struct spdk_bdev *bdev)
 {
 	struct bdev_names *name;
 	struct vbdev_passthru *pt_node;
-	int rc;
+	int rc = 0;
 
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the pt_node & bdev accordingly.
@@ -541,6 +541,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		SPDK_NOTICELOG("Match on %s\n", bdev->name);
 		pt_node = calloc(1, sizeof(struct vbdev_passthru));
 		if (!pt_node) {
+			rc = -1;
 			SPDK_ERRLOG("could not allocate pt_node\n");
 			break;
 		}
@@ -549,6 +550,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		pt_node->base_bdev = bdev;
 		pt_node->pt_bdev.name = strdup(name->vbdev_name);
 		if (!pt_node->pt_bdev.name) {
+			rc = -1;
 			SPDK_ERRLOG("could not allocate pt_bdev name\n");
 			free(pt_node);
 			break;
@@ -609,6 +611,8 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		SPDK_NOTICELOG("pt_bdev registered\n");
 		SPDK_NOTICELOG("created pt_bdev for: %s\n", name->vbdev_name);
 	}
+
+	return rc;
 }
 
 /* Create the passthru disk from the given bdev and vbdev name. */
@@ -634,9 +638,7 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 		return 0;
 	}
 
-	vbdev_passthru_register(bdev);
-
-	return 0;
+	return vbdev_passthru_register(bdev);
 }
 
 void
