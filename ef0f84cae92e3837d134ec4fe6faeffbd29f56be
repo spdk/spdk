@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d6a7a44_413f2122",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T19:11:33Z",
+      "side": 1,
+      "message": "No need to init",
+      "range": {
+        "startLine": 154,
+        "startChar": 28,
+        "endLine": 154,
+        "endChar": 32
+      },
+      "revId": "ef0f84cae92e3837d134ec4fe6faeffbd29f56be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ba1ed80_63bf2f6a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T19:11:33Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 157,
+        "startChar": 28,
+        "endLine": 157,
+        "endChar": 32
+      },
+      "revId": "ef0f84cae92e3837d134ec4fe6faeffbd29f56be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15789739_64b1e46b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T19:11:33Z",
+      "side": 1,
+      "message": "This is const data. Can be moved to declaration or as global variable \u0027static const\u0027.",
+      "range": {
+        "startLine": 254,
+        "startChar": 0,
+        "endLine": 264,
+        "endChar": 4
+      },
+      "revId": "ef0f84cae92e3837d134ec4fe6faeffbd29f56be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "042073f1_ab976007",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T19:11:33Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 275,
+        "startChar": 0,
+        "endLine": 283,
+        "endChar": 4
+      },
+      "revId": "ef0f84cae92e3837d134ec4fe6faeffbd29f56be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f88cf712_f67d16d5",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T19:11:33Z",
+      "side": 1,
+      "message": "this should be done first.",
+      "range": {
+        "startLine": 798,
+        "startChar": 0,
+        "endLine": 808,
+        "endChar": 2
+      },
+      "revId": "ef0f84cae92e3837d134ec4fe6faeffbd29f56be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73d8b4fd_c91bc1f4",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T19:11:33Z",
+      "side": 1,
+      "message": "you can squash these lables as free() can handle NULL",
+      "range": {
+        "startLine": 814,
+        "startChar": 0,
+        "endLine": 819,
+        "endChar": 23
+      },
+      "revId": "ef0f84cae92e3837d134ec4fe6faeffbd29f56be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb4a9fa5_216a67b5",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1074,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T19:11:33Z",
+      "side": 1,
+      "message": "If you move this after claim_bdev() you can remove TAILQ_REMOVE() from \u0027error_open\u0027 label",
+      "range": {
+        "startLine": 1074,
+        "startChar": 2,
+        "endLine": 1074,
+        "endChar": 52
+      },
+      "revId": "ef0f84cae92e3837d134ec4fe6faeffbd29f56be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "965c42eb_20736343",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T19:11:33Z",
+      "side": 1,
+      "message": "not related to this patch but someone should make this function return error code.",
+      "range": {
+        "startLine": 1076,
+        "startChar": 2,
+        "endLine": 1076,
+        "endChar": 25
+      },
+      "revId": "ef0f84cae92e3837d134ec4fe6faeffbd29f56be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f4c17d4_699c4270",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1155,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T19:11:33Z",
+      "side": 1,
+      "message": "No need for _SAFE version here.",
+      "range": {
+        "startLine": 1155,
+        "startChar": 1,
+        "endLine": 1155,
+        "endChar": 19
+      },
+      "revId": "ef0f84cae92e3837d134ec4fe6faeffbd29f56be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
