@@ -222,15 +222,17 @@ function timing() {
 }
 
 function timing_enter() {
+	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 	timing "enter" "$1"
-	set -x
+	$shell_restore_x
 }
 
 function timing_exit() {
+	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 	timing "exit" "$1"
-	set -x
+	$shell_restore_x
 }
 
 function timing_finish() {
@@ -304,17 +306,19 @@ function waitforlisten() {
 		exit 1
 	fi
 
-	rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
+	local rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
 
 	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
+	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
-	ret=1
-	while [ $ret -ne 0 ]; do
+	local ret=0
+	while true; do
 		# if the process is no longer running, then exit the script
 		#  since it means the application crashed
 		if ! kill -s 0 $1; then
-			exit 1
+			ret=1
+			break
 		fi
 
 		namespace=$(ip netns identify $1)
@@ -324,16 +328,20 @@ function waitforlisten() {
 
 		if hash ss; then
 			if $ns_cmd ss -ln | egrep -q "\s+$rpc_addr\s+"; then
-				ret=0
+				break
 			fi
 		else
 			# if system doesn't have ss, just assume it has netstat
 			if $ns_cmd netstat -an | grep -iw LISTENING | egrep -q "\s+$rpc_addr\$"; then
-				ret=0
+				break
 			fi
 		fi
 	done
-	set -x
+
+	$shell_restore_x
+	if [ $ret -ne 0 ]; then
+		exit 1
+	fi
 }
 
 function waitfornbd() {
@@ -462,19 +470,20 @@ function kill_stub() {
 }
 
 function run_test() {
+	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 	local test_type="$(echo $1 | tr 'a-z' 'A-Z')"
 	shift
 	echo "************************************"
 	echo "START TEST $test_type $@"
 	echo "************************************"
-	set -x
+	$shell_restore_x
 	time "$@"
 	set +x
 	echo "************************************"
 	echo "END TEST $test_type $@"
 	echo "************************************"
-	set -x
+	$shell_restore_x
 }
 
 function print_backtrace() {
