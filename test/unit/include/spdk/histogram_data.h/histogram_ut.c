@@ -47,6 +47,7 @@ uint64_t g_values[] = {
 
 uint64_t *g_values_end = &g_values[SPDK_COUNTOF(g_values)];
 uint64_t g_total;
+uint64_t g_number_of_merged_histograms;
 
 static void
 check_values(void *ctx, uint64_t start, uint64_t end, uint64_t count,
@@ -74,14 +75,13 @@ check_values(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 		 *  **values to equal end.
 		 */
 		CU_ASSERT(**values <= end);
-		g_total++;
-		count--;
+		g_total += g_number_of_merged_histograms;
+		count -= g_number_of_merged_histograms;
 		(*values)++;
 		if (*values == g_values_end || **values > end) {
 			break;
 		}
 	}
-
 	CU_ASSERT(count == 0);
 }
 
@@ -97,11 +97,36 @@ histogram_test(void)
 	for (i = 0; i < SPDK_COUNTOF(g_values); i++) {
 		spdk_histogram_data_tally(h, g_values[i]);
 	}
-
 	g_total = 0;
+	g_number_of_merged_histograms = 1;
 	spdk_histogram_data_iterate(h, check_values, &values);
 
 	spdk_histogram_data_free(h);
+}
+
+static void
+histogram_merge(void)
+{
+	struct spdk_histogram_data *h1, *h2;
+	uint64_t *values = g_values;
+	uint32_t i;
+
+	h1 = spdk_histogram_data_alloc();
+	h2 = spdk_histogram_data_alloc();
+
+	for (i = 0; i < SPDK_COUNTOF(g_values); i++) {
+		spdk_histogram_data_tally(h1, g_values[i]);
+		spdk_histogram_data_tally(h2, g_values[i]);
+	}
+
+	spdk_histogram_data_merge(h1, h2);
+
+	g_total = 0;
+	g_number_of_merged_histograms = 2;
+	spdk_histogram_data_iterate(h1, check_values, &values);
+
+	spdk_histogram_data_free(h1);
+	spdk_histogram_data_free(h2);
 }
 
 int
@@ -121,7 +146,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "histogram_test", histogram_test) == NULL
+		CU_add_test(suite, "histogram_test", histogram_test) == NULL ||
+		CU_add_test(suite, "histogram_merge", histogram_merge) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
