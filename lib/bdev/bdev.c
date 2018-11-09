@@ -46,6 +46,7 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/util.h"
 #include "spdk/trace.h"
+#include "spdk/notifications.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -268,6 +269,14 @@ struct spdk_bdev_iostat_ctx {
 	struct spdk_bdev_io_stat *stat;
 	spdk_bdev_get_device_stat_cb cb;
 	void *cb_arg;
+};
+
+static struct spdk_notification_type bdev_registered = {
+	.name = "bdev_registered",
+};
+
+static struct spdk_notification_type bdev_unregistered = {
+	.name = "bdev_unregistered",
 };
 
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
@@ -873,6 +882,9 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	char mempool_name[32];
 
 	assert(cb_fn != NULL);
+
+	spdk_register_notification_type(&bdev_registered);
+	spdk_register_notification_type(&bdev_unregistered);
 
 	sp = spdk_conf_find_section(NULL, "Bdev");
 	if (sp != NULL) {
@@ -3497,6 +3509,9 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 	}
 
 	spdk_bdev_start(vbdev);
+
+	spdk_send_notification(&bdev_registered, NULL);
+
 	return 0;
 }
 
@@ -3530,6 +3545,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	struct spdk_thread	*thread;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
+
+	spdk_send_notification(&bdev_unregistered, NULL);
 
 	thread = spdk_get_thread();
 	if (!thread) {
