@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d7c8273f_29815296",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-09T05:58:14Z",
+      "side": 1,
+      "message": "I see virtio uses in its header file.\n\n__le32 and __le16 are linux\u0027s typedef? This feature is not related with Linux and I don\u0027t think __le32 and __le16 are necessary.\n\nWhen generating DIF field, conversion to big endian is used.\nWhen verifying DIF field, conversion to little endian is used.\nSPDK\u0027s conversion library don\u0027t use __le32 and __le16.\n\n\nIf we should change them to __le32 and __le16, I think we should change include/spdk/nvme_spec.h first.\n\nCurrent definition is OK for you?",
+      "parentUuid": "5ea9a3a7_b9bbaf27",
+      "revId": "d0ddd0e9ae7ec2628367642b64e99496df9a9510",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca65f298_546d8d7a",
         "filename": "include/spdk/dif.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-07T08:16:11Z",
       "side": 1,
       "message": "may need add __attribute to check equals to 8 or not.",
+      "revId": "d0ddd0e9ae7ec2628367642b64e99496df9a9510",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75900aac_8427a97e",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-09T05:58:14Z",
+      "side": 1,
+      "message": "Thank you, I got it.",
+      "parentUuid": "ca65f298_546d8d7a",
       "revId": "d0ddd0e9ae7ec2628367642b64e99496df9a9510",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
