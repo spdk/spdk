@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02f2dc7b_bf82cf0e",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-09T06:41:03Z",
+      "side": 1,
+      "message": "I think should be lba_count * backing_dev-\u003eblocklen here.",
+      "revId": "2a51b399d35d3e5e3e3dbb3ea4b64273756d9172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
