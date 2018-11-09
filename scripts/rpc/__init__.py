@@ -80,6 +80,10 @@ def load_config(client, fd):
 
     # check if methods in the config file are known
     allowed_methods = client.call('get_rpc_methods')
+    if not subsystems and 'start_subsystem_init' in allowed_methods:
+        start_subsystem_init(client)
+        return
+
     for subsystem in list(subsystems):
         config = subsystem['config']
         for elem in list(config):
@@ -104,7 +108,7 @@ def load_config(client, fd):
                 subsystems.remove(subsystem)
 
         if 'start_subsystem_init' in allowed_methods:
-            client.call('start_subsystem_init')
+            start_subsystem_init(client)
             allowed_found = True
 
         if not allowed_found:
