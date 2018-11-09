@@ -42,7 +42,7 @@ C_SRCS := nvmf_main.c
 
 SPDK_LIB_LIST = event_bdev event_copy event_nvmf
 SPDK_LIB_LIST += nvmf event log trace conf thread util bdev copy rpc jsonrpc json
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
+SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc notifications
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd

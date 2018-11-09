@@ -40,7 +40,7 @@ C_SRCS := blobcli.c
 
 SPDK_LIB_LIST = event_bdev event_copy
 SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event thread util conf trace \
-		log jsonrpc json rpc
+		log jsonrpc json rpc notifications
 
 LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_NO_LVOL_MODULES_LINKER_ARGS) $(SOCK_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
