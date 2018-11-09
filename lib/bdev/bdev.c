@@ -46,6 +46,7 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/util.h"
 #include "spdk/trace.h"
+#include "spdk/notify.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -269,6 +270,38 @@ struct spdk_bdev_iostat_ctx {
 	spdk_bdev_get_device_stat_cb cb;
 	void *cb_arg;
 };
+
+static void
+construct_bdev_type_info_cb(struct spdk_json_write_ctx *w,
+			    struct spdk_notify_type *type, void *ctx)
+{
+
+}
+
+static void
+construct_bdev_info_cb(struct spdk_json_write_ctx *w,
+		       struct spdk_notify *notify, void *ctx)
+{
+
+}
+
+static void
+delete_bdev_type_info_cb(struct spdk_json_write_ctx *w,
+			 struct spdk_notify_type *type, void *ctx)
+{
+
+}
+
+static void
+delete_bdev_info_cb(struct spdk_json_write_ctx *w,
+		    struct spdk_notify *notify, void *ctx)
+{
+
+}
+
+SPDK_NOTIFY_REGISTER("construct_bdev", construct_bdev_type_info_cb, construct_bdev_info_cb);
+SPDK_NOTIFY_REGISTER("delete_bdev", delete_bdev_type_info_cb, delete_bdev_info_cb);
+
 
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
@@ -3517,6 +3550,7 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 int
 spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
 {
+	struct spdk_notify *notify;
 	int rc;
 
 	rc = spdk_bdev_init(vbdev);
@@ -3525,6 +3559,7 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 	}
 
 	spdk_bdev_start(vbdev);
+
 	return 0;
 }
 
@@ -3558,6 +3593,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	struct spdk_thread	*thread;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
+
+	spdk_notify_send("bdev_unregistered", NULL);
 
 	thread = spdk_get_thread();
 	if (!thread) {
