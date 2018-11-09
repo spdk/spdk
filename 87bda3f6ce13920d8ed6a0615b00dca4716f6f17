@@ -34,6 +34,23 @@
       "revId": "87bda3f6ce13920d8ed6a0615b00dca4716f6f17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "193208c1_a4b961d2",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-09T00:08:10Z",
+      "side": 1,
+      "message": "only adding \"|| !r-\u003eready\" is simpler ?\n\nr \u003d client-\u003eresp;\nif (r \u003d\u003d NULL || !r-\u003eready) {\n  return NULL;\n}\nclient-\u003eresp \u003d NULL;\nreturn \u0026r-\u003ejsonrpc;",
+      "revId": "87bda3f6ce13920d8ed6a0615b00dca4716f6f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
