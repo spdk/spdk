@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "64127743_17a6676a",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-11-09T13:20:07Z",
+      "side": 1,
+      "message": "I need a clarification: do we want to create one _additional_ cm channel for that purpose, or we want to create one channel for all qpairs _instead_of_ all channels that we create right now?",
+      "parentUuid": "eb6b87cf_40858a32",
+      "revId": "1437147e30ebb44b07e18e380fd5921e2e83f6a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "63794f01_1fcb0d6b",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 1
