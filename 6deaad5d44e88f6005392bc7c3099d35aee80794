@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "844c0067_4ddf324e",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-11-09T10:44:19Z",
+      "side": 1,
+      "message": "If there is no content in [Transport], SPDK will reports ERROR:\nconf.c: 519:spdk_nvmf_parse_transport: *ERROR*: Transport missing Type\nsubsystem.c: 120:spdk_subsystem_init_next: *ERROR*: Init subsystem nvmf failed\napp.c: 689:spdk_app_stop: *WARNING*: spdk_app_stop\u0027d on non-zero\nIf [Transport] have contents, nvmf_tgt can be started.",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 11
+      },
+      "revId": "6deaad5d44e88f6005392bc7c3099d35aee80794",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
