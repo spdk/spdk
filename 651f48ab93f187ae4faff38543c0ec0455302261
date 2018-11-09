@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d13fcd8a_5777c939",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-11-09T12:46:12Z",
+      "side": 1,
+      "message": "Instead of code from line 83 we can add here:\n\n    else:\n        if \u0027start_subsystem_init\u0027 in allowed_methods:\n            start_subsystem_init(client)\n\nBut this optional.\nIn general code looks good.",
+      "revId": "651f48ab93f187ae4faff38543c0ec0455302261",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
