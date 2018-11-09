@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fd1882b_6758072c",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 6
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-09T15:55:28Z",
+      "side": 1,
+      "message": "I would like to apologize. I didn\u0027t realize that this template existed before and that is what people were using as a basis for their configuration files. I see now how it could seem like broken behavior.",
+      "revId": "f75c6c832f42e1ed9d33c7ff37d9fcd58cb746e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d49add2_d611ab81",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-09T15:55:28Z",
+      "side": 1,
+      "message": "Maybe something like this:\nWhen using a configuration file, at least one valid transport must be defined. You may refer to the [Transport] section in spdk/etc/spdk/nvmf.conf.in as an example.",
+      "revId": "f75c6c832f42e1ed9d33c7ff37d9fcd58cb746e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
