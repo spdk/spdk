@@ -378,6 +378,13 @@ vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name)
 {
 	struct bdev_names *name;
 
+	TAILQ_FOREACH(name, &g_bdev_names, link) {
+		if (strcmp(vbdev_name, name->vbdev_name) == 0) {
+			SPDK_ERRLOG("passthru bdev %s already exists\n", vbdev_name);
+			return -EEXIST;
+		}
+	}
+
 	name = calloc(1, sizeof(struct bdev_names));
 	if (!name) {
 		SPDK_ERRLOG("could not allocate bdev_names\n");
