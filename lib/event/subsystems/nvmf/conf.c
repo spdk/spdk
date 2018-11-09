@@ -544,6 +544,13 @@ spdk_nvmf_parse_transports(spdk_nvmf_parse_conf_done_fn cb_fn)
 
 	ctx->cb_fn = cb_fn;
 	ctx->sp = spdk_conf_first_section(NULL);
+	if (ctx->sp == NULL) {
+		free(ctx);
+		cb_fn(0);
+
+		return 0;
+	}
+
 	while (ctx->sp != NULL) {
 		if (spdk_conf_section_match_prefix(ctx->sp, "Transport")) {
 			spdk_nvmf_parse_transport(ctx);
@@ -554,7 +561,10 @@ spdk_nvmf_parse_transports(spdk_nvmf_parse_conf_done_fn cb_fn)
 
 	/* if we get here, there are no transports defined in conf file */
 	free(ctx);
-	cb_fn(spdk_nvmf_parse_subsystems());
+	SPDK_ERRLOG("\nNo valid transport is defined yet.\n"
+		    "When using configuration file, at least one valid transport must be defined.\n"
+		    "You can may refer the [Transport] section in spdk/etc/spdk/nvmf.conf.in as an example.\n");
+	cb_fn(-1);
 
 	return 0;
 }
