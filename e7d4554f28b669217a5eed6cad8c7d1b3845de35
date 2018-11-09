@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b456d80_ccc2c3a4",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-09T16:56:40Z",
+      "side": 1,
+      "message": "could you add this MOCK_SET to the earlier unit tests where reset_time() was removed?\n\nit wasn\u0027t clear why we only needed to add the MOCK_SET here and not the previous tests",
+      "revId": "e7d4554f28b669217a5eed6cad8c7d1b3845de35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
