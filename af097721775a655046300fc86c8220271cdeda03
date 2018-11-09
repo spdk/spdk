@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5aef8b9_fd98bf70",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-09T19:48:13Z",
+      "side": 1,
+      "message": "-ENOMEM?",
+      "revId": "af097721775a655046300fc86c8220271cdeda03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a7f2a1d_e856c6b2",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-09T19:48:13Z",
+      "side": 1,
+      "message": "-ENOMEM?",
+      "revId": "af097721775a655046300fc86c8220271cdeda03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
