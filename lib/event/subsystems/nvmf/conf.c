@@ -554,7 +554,12 @@ spdk_nvmf_parse_transports(spdk_nvmf_parse_conf_done_fn cb_fn)
 
 	/* if we get here, there are no transports defined in conf file */
 	free(ctx);
-	cb_fn(spdk_nvmf_parse_subsystems());
+
+	SPDK_NOTICELOG("\nNo transport is defined yet.\n"
+		       "If using configuration file, at least an valid transport should be explictly stated.\n"
+		       "you can refer etc/spdk/nvmf.conf.in your spdk directory as an example.\n"
+		       "If not using configuration, you can create a transport by RPC later.\n");
+	cb_fn(0);
 
 	return 0;
 }
