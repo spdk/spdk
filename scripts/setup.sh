@@ -302,6 +302,8 @@ function cleanup_linux {
 
 function configure_linux {
 	configure_linux_pci
+	return 0
+	exit
 	hugetlbfs_mounts=$(linux_hugetlbfs_mounts)
 
 	if [ -z "$hugetlbfs_mounts" ]; then
