@@ -16,6 +16,24 @@
       "revId": "651f48ab93f187ae4faff38543c0ec0455302261",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "683e86cb_a7f8c439",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-09T13:28:30Z",
+      "side": 1,
+      "message": "No, subsystems will empty an we never enter into while loop.",
+      "parentUuid": "d13fcd8a_5777c939",
+      "revId": "651f48ab93f187ae4faff38543c0ec0455302261",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
