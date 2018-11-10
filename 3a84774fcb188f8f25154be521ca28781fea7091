@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b9ac3c61_c7b0fded",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-11-10T16:36:43Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "466ca2a6_65212c18",
+      "range": {
+        "startLine": 1011,
+        "startChar": 2,
+        "endLine": 1011,
+        "endChar": 11
+      },
+      "revId": "3a84774fcb188f8f25154be521ca28781fea7091",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66b1a942_e295a707",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "3a84774fcb188f8f25154be521ca28781fea7091",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4c6973b_3c42a77d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-11-10T16:36:43Z",
+      "side": 1,
+      "message": "There\u0027s no reason for it to fail. The idea of skipping claimed bdevs when shutting down the bdev subsystem is just about the correct order of the unregister sequence.",
+      "parentUuid": "66b1a942_e295a707",
+      "range": {
+        "startLine": 1018,
+        "startChar": 24,
+        "endLine": 1018,
+        "endChar": 72
+      },
+      "revId": "3a84774fcb188f8f25154be521ca28781fea7091",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
