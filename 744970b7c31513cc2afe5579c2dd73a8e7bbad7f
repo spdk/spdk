@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fc2ddb7_0e23b24d",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-11T11:28:35Z",
+      "side": 1,
+      "message": "This could be `else if` just like the case above",
+      "revId": "744970b7c31513cc2afe5579c2dd73a8e7bbad7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
