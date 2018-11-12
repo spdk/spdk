@@ -115,22 +115,6 @@ spdk_iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
 {
 }
 
-struct spdk_sock *
-spdk_sock_listen(const char *ip, int port)
-{
-	static int g_sock;
-
-	return (struct spdk_sock *)&g_sock;
-}
-
-int
-spdk_sock_close(struct spdk_sock **sock)
-{
-	*sock = NULL;
-
-	return 0;
-}
-
 static struct spdk_cpuset *g_app_core_mask;
 
 struct spdk_cpuset *

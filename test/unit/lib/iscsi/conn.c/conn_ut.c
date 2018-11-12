@@ -86,63 +86,6 @@ spdk_event_call(struct spdk_event *event)
 {
 }
 
-int
-spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
-		  char *caddr, int clen, uint16_t *cport)
-{
-	return 0;
-}
-
-int
-spdk_sock_close(struct spdk_sock **sock)
-{
-	*sock = NULL;
-	return 0;
-}
-
-ssize_t
-spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
-{
-	return 0;
-}
-
-ssize_t
-spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
-{
-	return 0;
-}
-
-int
-spdk_sock_set_recvlowat(struct spdk_sock *s, int nbytes)
-{
-	return 0;
-}
-
-int
-spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz)
-{
-	return 0;
-}
-
-int
-spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
-{
-	return 0;
-}
-
-int
-spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
-			 spdk_sock_cb cb_fn, void *cb_arg)
-{
-	return 0;
-}
-
-int
-spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
-{
-	return 0;
-}
-
 void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
