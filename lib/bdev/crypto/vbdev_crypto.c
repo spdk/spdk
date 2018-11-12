@@ -1507,7 +1507,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			goto error_claim;
 		}
 
-		SPDK_NOTICELOG("registered crypto_bdev for: %s\n", name->vbdev_name);
+		SPDK_NOTICELOG("registered io_device for: %s\n", name->vbdev_name);
 	}
 
 	return rc;
@@ -1574,7 +1574,11 @@ vbdev_crypto_examine(struct spdk_bdev *bdev)
 	struct vbdev_crypto *crypto_bdev, *tmp;
 	int rc;
 
-	vbdev_crypto_claim(bdev);
+	rc = vbdev_crypto_claim(bdev);
+	if (rc) {
+		spdk_bdev_module_examine_done(&crypto_if);
+		return;
+	}
 
 	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
 		if (strcmp(crypto_bdev->base_bdev->name, bdev->name) == 0) {
