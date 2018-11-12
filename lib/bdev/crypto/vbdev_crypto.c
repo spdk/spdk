@@ -1242,6 +1242,7 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 				SPDK_ERRLOG("could not register crypto_bdev\n");
 				spdk_bdev_close(crypto_bdev->base_desc);
 				TAILQ_REMOVE(&g_vbdev_crypto, crypto_bdev, link);
+				spdk_io_device_unregister(crypto_bdev, NULL);
 				free(crypto_bdev->crypto_bdev.name);
 				free(crypto_bdev->key);
 				free(crypto_bdev);
