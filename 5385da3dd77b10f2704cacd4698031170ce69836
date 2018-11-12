@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37f98ef0_56efc27f",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-12T11:59:33Z",
+      "side": 1,
+      "message": "Some of these tests are enabled on FreeBSD but they fail. Why they are enabled?",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 29
+      },
+      "revId": "5385da3dd77b10f2704cacd4698031170ce69836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82353809_1d86ec64",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-12T11:59:33Z",
+      "side": 1,
+      "message": "void this requirement",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 1
+      },
+      "revId": "5385da3dd77b10f2704cacd4698031170ce69836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94bda695_927a04b1",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-12T11:59:33Z",
+      "side": 1,
+      "message": "This is failing. Why?",
+      "range": {
+        "startLine": 213,
+        "startChar": 0,
+        "endLine": 215,
+        "endChar": 3
+      },
+      "revId": "5385da3dd77b10f2704cacd4698031170ce69836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45bed0f6_25c52015",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-12T11:59:33Z",
+      "side": 1,
+      "message": "FreeBSD complain that python3 is missing. How to fix this?",
+      "range": {
+        "startLine": 363,
+        "startChar": 27,
+        "endLine": 363,
+        "endChar": 39
+      },
+      "revId": "5385da3dd77b10f2704cacd4698031170ce69836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
