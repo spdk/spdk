@@ -193,7 +193,7 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 	/* disable shared configuration files when in single process mode. This allows for cleaner shutdown */
-	if (opts->shm_id < 0) {
+	if (opts->shm_id < 0 && !opts->hugepage_single_segments) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s", "--no-shconf"));
 		if (args == NULL) {
 			return -1;
