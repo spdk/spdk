@@ -16,6 +16,24 @@
       "revId": "decf3063c717a13d3eb975638217e09e680b30ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4689e5e2_88567e2a",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1025,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-12T16:14:36Z",
+      "side": 1,
+      "message": "Yeah, good point.",
+      "parentUuid": "a25f1c04_24eb1b53",
+      "revId": "decf3063c717a13d3eb975638217e09e680b30ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
