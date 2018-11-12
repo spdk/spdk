@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4e1b4dd_8b3ca7c9",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-12T22:30:02Z",
+      "side": 1,
+      "message": "Same comment from previous review still applies.",
+      "revId": "bfae5f0be6102550216ab19ad5c63ea0047f021d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
