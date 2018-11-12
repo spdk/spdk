@@ -31,11 +31,7 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-LVOL_MODULES_LIST = bdev_lvol
-# Modules below are added as dependency for bdev_lvol
-LVOL_MODULES_LIST += blob blob_bdev lvol
-
-BLOCKDEV_MODULES_LIST = $(LVOL_MODULES_LIST)
+BLOCKDEV_MODULES_LIST = bdev_lvol blobfs blob blob_bdev lvol
 BLOCKDEV_MODULES_LIST += bdev_malloc bdev_null bdev_nvme nvme bdev_passthru bdev_error bdev_gpt bdev_split
 BLOCKDEV_MODULES_LIST += bdev_raid
 
@@ -92,7 +88,7 @@ BLOCKDEV_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 
 BLOCKDEV_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(BLOCKDEV_MODULES_LIST))
 
-BLOCKDEV_NO_LVOL_MODULES_LIST = $(filter-out $(LVOL_MODULES_LIST),$(BLOCKDEV_MODULES_LIST))
+BLOCKDEV_NO_LVOL_MODULES_LIST = $(filter-out bdev_lvol,$(BLOCKDEV_MODULES_LIST))
 BLOCKDEV_NO_LVOL_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			       $(BLOCKDEV_NO_LVOL_MODULES_LIST:%=-lspdk_%) \
 			       -Wl,--no-whole-archive \
