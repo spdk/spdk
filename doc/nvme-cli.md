@@ -23,8 +23,8 @@ git clone -b spdk-1.6 https://github.com/spdk/nvme-cli.git
 spdk=0
 Default to 0 (off) and change to 1 (on) after switching to SPDK via "<spdk_folder>/scripts/setup.sh".
 
-core_mask=0x100
-Default to use the 9th core for the nvme-cli running.
+core_mask=0x1
+Default to use the first core for the nvme-cli running.
 
 mem_size=512
 Default to use 512MB memory allocated.
