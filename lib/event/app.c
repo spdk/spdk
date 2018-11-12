@@ -709,8 +709,8 @@ usage(void (*app_usage)(void))
 	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
 	printf(" -e, --tpoint-group-mask <mask>\n");
 	printf("                           tracepoint group mask for spdk trace buffers (default 0x0)\n");
-	printf(" -g, --single-file-segments\n");
-	printf("                           force creating just one hugetlbfs file\n");
+	printf(" -g, --single-file-segments-no\n");
+	printf("                           not using one hugetlbfs file\n");
 	printf(" -h, --help                show this usage\n");
 	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
 	printf(" -m, --cpumask <mask>      core mask for DPDK\n");
@@ -809,7 +809,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->tpoint_group_mask = optarg;
 			break;
 		case SINGLE_FILE_SEGMENTS_OPT_IDX:
-			opts->hugepage_single_segments = true;
+			opts->hugepage_single_segments = false;
 			break;
 		case HELP_OPT_IDX:
 			usage(app_usage);
