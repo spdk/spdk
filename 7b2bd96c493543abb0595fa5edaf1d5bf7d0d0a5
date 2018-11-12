@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fa3863e_d6954d7d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-12T18:31:13Z",
+      "side": 1,
+      "message": "maybe just nvme_transport_ctrlr_check_exists",
+      "revId": "7b2bd96c493543abb0595fa5edaf1d5bf7d0d0a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f662af42_b81edbf0",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 934,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-12T18:31:13Z",
+      "side": 1,
+      "message": "You should probably read CSTS instead of CC. I\u0027ve seen cases where CC is temporarily unavailable (which is a device bug, but we should handle it as best we can).",
+      "revId": "7b2bd96c493543abb0595fa5edaf1d5bf7d0d0a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
