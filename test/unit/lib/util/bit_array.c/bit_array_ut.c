@@ -36,18 +36,7 @@
 #include "spdk_cunit.h"
 
 #include "util/bit_array.c"
-
-void *
-spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
-{
-	return realloc(buf, size);
-}
-
-void
-spdk_dma_free(void *buf)
-{
-	free(buf);
-}
+#include "common/lib/test_env.c"
 
 static void
 test_1bit(void)
