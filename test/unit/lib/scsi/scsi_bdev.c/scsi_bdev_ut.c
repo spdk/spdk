@@ -35,6 +35,7 @@
 
 #include "scsi/task.c"
 #include "scsi/scsi_bdev.c"
+#include "common/lib/test_env.c"
 
 #include "spdk_cunit.h"
 
@@ -51,34 +52,6 @@ int g_scsi_cb_called = 0;
 
 TAILQ_HEAD(, spdk_bdev_io_wait_entry) g_io_wait_queue;
 bool g_bdev_io_pool_full = false;
-
-void *
-spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
-{
-	void *buf = malloc(size);
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
-	}
-
-	return buf;
-}
-
-void *
-spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
-{
-	void *buf = calloc(size, 1);
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
-	}
-
-	return buf;
-}
-
-void
-spdk_dma_free(void *buf)
-{
-	free(buf);
-}
 
 bool
 spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
