@@ -124,6 +124,24 @@
       "revId": "0d813ac5419f852744def41c1ea057a06235ab10",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "769b63be_8711a37a",
+        "filename": "lib/notifications/notifications.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-12T22:54:57Z",
+      "side": 1,
+      "message": "oh never mind - the name is specifying which type of event to listen for\n\nbut I thought we agreed we would just listen for all types to start?  and filter on the client side?",
+      "parentUuid": "652939b5_a0d10bc6",
+      "revId": "0d813ac5419f852744def41c1ea057a06235ab10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
