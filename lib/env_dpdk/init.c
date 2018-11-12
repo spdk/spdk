@@ -283,6 +283,13 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	if (args == NULL) {
 		return -1;
 	}
+#else
+	if (opts->hugepage_single_segments) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--legacy-mem"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
 #endif
 
 	if (opts->num_pci_addr) {
