@@ -39,6 +39,7 @@
 #include "scsi/lun.c"
 
 #include "spdk_internal/mock.h"
+#include "common/lib/test_env.c"
 
 /* Unit test bdev mockup */
 struct spdk_bdev {
@@ -52,24 +53,6 @@ struct spdk_scsi_globals g_spdk_scsi;
 static bool g_lun_execute_fail = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 static uint32_t g_task_count = 0;
-
-struct spdk_poller *
-spdk_poller_register(spdk_poller_fn fn,
-		     void *arg,
-		     uint64_t period_microseconds)
-{
-	return NULL;
-}
-
-void
-spdk_poller_unregister(struct spdk_poller **ppoller)
-{
-}
-
-void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
-{
-}
 
 struct spdk_trace_histories *g_trace_histories;
 void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
@@ -96,32 +79,6 @@ ut_init_task(struct spdk_scsi_task *task)
 	spdk_scsi_task_construct(task, spdk_lun_ut_cpl_task,
 				 spdk_lun_ut_free_task);
 	g_task_count++;
-}
-
-void *
-spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
-{
-	void *buf = malloc(size);
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
-	}
-	return buf;
-}
-
-void *
-spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
-{
-	void *buf = calloc(size, 1);
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
-	}
-	return buf;
-}
-
-void
-spdk_dma_free(void *buf)
-{
-	free(buf);
 }
 
 void
@@ -189,14 +146,6 @@ spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
 	return NULL;
 }
-
-void
-spdk_put_io_channel(struct spdk_io_channel *ch)
-{
-}
-
-DEFINE_STUB(spdk_io_channel_get_thread, struct spdk_thread *, (struct spdk_io_channel *ch), NULL)
-DEFINE_STUB(spdk_get_thread, struct spdk_thread *, (void), NULL)
 
 static _spdk_scsi_lun *
 lun_construct(void)
