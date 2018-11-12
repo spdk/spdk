@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "30ebd0c1_5a1a0677",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-12T07:00:56Z",
+      "side": 1,
+      "message": "Or lba + lba_count \u003c backing_dev-\u003eblockcnt should be checked at the top of this function?",
+      "parentUuid": "18784b17_31b65c4a",
+      "revId": "34c663249b03ebb7c7f45b3a0a46dee68eafbe9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6cfae9e_6f92acbe",
         "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-12T04:31:40Z",
       "side": 1,
       "message": "Same as above. By using remaining or something like that may make overflow check possible.\n\nlen \u003d spdk_min(iov[i].iov_len, remaining);\nmemcpy(offset, iov]i].iov_base, len);\noffset +\u003d len;\nremaining -\u003d len;",
+      "revId": "34c663249b03ebb7c7f45b3a0a46dee68eafbe9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f93a6fb_87b6d1c4",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-12T07:00:56Z",
+      "side": 1,
+      "message": "Same as above.",
+      "parentUuid": "e6cfae9e_6f92acbe",
       "revId": "34c663249b03ebb7c7f45b3a0a46dee68eafbe9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
