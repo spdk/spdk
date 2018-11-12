@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6cfffca1_1b775908",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1447,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-12T23:54:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a9b12f0_ad803110",
+      "range": {
+        "startLine": 1447,
+        "startChar": 2,
+        "endLine": 1447,
+        "endChar": 23
+      },
+      "revId": "49a8d6f2c079a258499ed4124a29ae6909c6ed6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b44b790_d9f0a8ce",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-07T07:43:27Z",
       "side": 1,
       "message": "This is a little confusing to me.\n\ncontainer_of may be necessary to check if the nvme_ctrlr is of the nvme_rdma_ctrlr.\n\nBut checking the result of creation by \"if (ctrlr-\u003eadminq)\" may look natural.\n\nOr should we use rctrlr-\u003ectrlr throughout in this function?",
+      "range": {
+        "startLine": 1449,
+        "startChar": 0,
+        "endLine": 1452,
+        "endChar": 30
+      },
+      "revId": "49a8d6f2c079a258499ed4124a29ae6909c6ed6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6eec68b2_f5d6360c",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1452,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-12T23:54:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6b44b790_d9f0a8ce",
       "range": {
         "startLine": 1449,
         "startChar": 0,
