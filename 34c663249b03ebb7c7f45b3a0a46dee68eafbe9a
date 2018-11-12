@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18784b17_31b65c4a",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-12T04:31:40Z",
+      "side": 1,
+      "message": "This is UT code but checking overflow of the buffer may be safe manner?\n\noffset \u003d g_backing_dev_buf + lba * backing_dev-\u003eblocklen;\nremaining \u003d backing_dev-\u003eblockcnt - backing_dev-\u003eblocklen - offset;\n\nfor (i \u003d 0; i \u003c iovcnt; i++) {\n  len \u003d spdk_min(iovs[i].iov_len, remaining);\n  memcpy(iov[i].iov_base, offset, len);\n  offset +\u003d len;\n  remaining -\u003d len;\n}",
+      "revId": "34c663249b03ebb7c7f45b3a0a46dee68eafbe9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6cfae9e_6f92acbe",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-12T04:31:40Z",
+      "side": 1,
+      "message": "Same as above. By using remaining or something like that may make overflow check possible.\n\nlen \u003d spdk_min(iov[i].iov_len, remaining);\nmemcpy(offset, iov]i].iov_base, len);\noffset +\u003d len;\nremaining -\u003d len;",
+      "revId": "34c663249b03ebb7c7f45b3a0a46dee68eafbe9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
