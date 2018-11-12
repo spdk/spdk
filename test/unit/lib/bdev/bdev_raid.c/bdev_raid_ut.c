@@ -258,49 +258,6 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	return 0;
 }
 
-void
-spdk_put_io_channel(struct spdk_io_channel *ch)
-{
-	CU_ASSERT(ch == (void *)1);
-}
-
-struct spdk_io_channel *
-spdk_get_io_channel(void *io_device)
-{
-	return NULL;
-}
-
-void
-spdk_poller_unregister(struct spdk_poller **ppoller)
-{
-}
-
-struct spdk_poller *
-spdk_poller_register(spdk_poller_fn fn,
-		     void *arg,
-		     uint64_t period_microseconds)
-{
-	return (void *)1;
-}
-
-void
-spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregister_cb)
-{
-}
-
-char *
-spdk_sprintf_alloc(const char *format, ...)
-{
-	return strdup(format);
-}
-
-void
-spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
-			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size,
-			const char *name)
-{
-}
-
 int
 spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
 {
@@ -378,25 +335,6 @@ struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
 	return (void *)1;
-}
-
-void
-spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
-{
-	fn(ctx);
-	cpl(ctx);
-}
-
-struct spdk_thread *
-spdk_get_thread(void)
-{
-	return NULL;
-}
-
-void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
-{
-	fn(ctx);
 }
 
 uint32_t
@@ -655,12 +593,6 @@ spdk_bdev_get_by_name(const char *bdev_name)
 		}
 	}
 
-	return NULL;
-}
-
-const char *
-spdk_strerror(int errnum)
-{
 	return NULL;
 }
 
