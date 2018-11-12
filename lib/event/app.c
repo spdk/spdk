@@ -273,6 +273,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 	opts->delay_subsystem_init = false;
+	opts->hugepage_single_segments = true;
 }
 
 static int
@@ -709,8 +710,8 @@ usage(void (*app_usage)(void))
 	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
 	printf(" -e, --tpoint-group-mask <mask>\n");
 	printf("                           tracepoint group mask for spdk trace buffers (default 0x0)\n");
-	printf(" -g, --single-file-segments\n");
-	printf("                           force creating just one hugetlbfs file\n");
+	printf(" -g, --single-file-segments-no\n");
+	printf("                           using seperate hugetlbfs files\n");
 	printf(" -h, --help                show this usage\n");
 	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
 	printf(" -m, --cpumask <mask>      core mask for DPDK\n");
@@ -809,7 +810,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->tpoint_group_mask = optarg;
 			break;
 		case SINGLE_FILE_SEGMENTS_OPT_IDX:
-			opts->hugepage_single_segments = true;
+			opts->hugepage_single_segments = false;
 			break;
 		case HELP_OPT_IDX:
 			usage(app_usage);
