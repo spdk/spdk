@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73f66e4e_08543f3e",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-12T03:08:06Z",
+      "side": 1,
+      "message": "Unncessary line",
+      "revId": "892d21a15406bd8183dd5b708d1dd78f66605e75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79ffbb35_4f00f7aa",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-12T03:08:06Z",
+      "side": 1,
+      "message": "Can we put this definition before line 61",
+      "range": {
+        "startLine": 171,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 33
+      },
+      "revId": "892d21a15406bd8183dd5b708d1dd78f66605e75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
