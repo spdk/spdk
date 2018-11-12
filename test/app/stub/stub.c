@@ -106,6 +106,7 @@ main(int argc, char **argv)
 
 	opts.name = "stub";
 	opts.rpc_addr = NULL;
+	opts.hugepage_single_segments = true;
 
 	while ((ch = getopt(argc, argv, "i:m:n:p:s:H")) != -1) {
 		switch (ch) {
