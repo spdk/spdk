@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92421fce_a60be637",
+        "filename": "test/unit/lib/thread/thread.c/thread_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-12T22:33:03Z",
+      "side": 1,
+      "message": "I see that the create_cb has asserts to check that we get two distinct channels, but maybe we should have ch1 and ch2 in this function, and assert here that ch1 !\u003d ch2? (as well as ch2 !\u003d NULL)?",
+      "revId": "9cb28a3e69dac3cb2eb599005c251c3e65fc2a6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
