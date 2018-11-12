@@ -251,6 +251,7 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+#if RTE_VERSION < RTE_VERSION_NUM(18, 05, 0, 0)
 	/* create just one hugetlbfs file */
 	if (opts->hugepage_single_segments) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--single-file-segments"));
@@ -258,6 +259,7 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 			return -1;
 		}
 	}
+#endif
 
 	/* unlink hugepages after initialization */
 	if (opts->unlink_hugepage) {
