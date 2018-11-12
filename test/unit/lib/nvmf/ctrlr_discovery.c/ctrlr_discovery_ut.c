@@ -50,6 +50,9 @@ DEFINE_STUB(spdk_bdev_module_claim_bdev,
 DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 	      (struct spdk_bdev *bdev));
 
+DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 512);
+
 uint32_t
 spdk_env_get_current_core(void)
 {

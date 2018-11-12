@@ -49,6 +49,9 @@ DEFINE_STUB(spdk_bdev_module_claim_bdev,
 DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 	      (struct spdk_bdev *bdev));
 
+DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 512);
+
 static void
 _subsystem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
