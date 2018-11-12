@@ -995,6 +995,12 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		return 0;
 	}
 
+	if (spdk_bdev_get_block_size(bdev) % 512) {
+		SPDK_ERRLOG("Block size %u for Bdev %s is not supported now\n",
+			    spdk_bdev_get_block_size(bdev), spdk_bdev_get_name(bdev));
+		return 0;
+	}
+
 	spdk_nvmf_ns_opts_get_defaults(&opts, sizeof(opts));
 	if (user_opts) {
 		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
