@@ -2,6 +2,91 @@
   "comments": [
     {
       "key": {
+        "uuid": "171ae48b_048e9ed9",
+        "filename": "include/spdk/notifications.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-12T22:48:54Z",
+      "side": 1,
+      "message": "do we need two different typedefs for same function signature?",
+      "revId": "0d813ac5419f852744def41c1ea057a06235ab10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4df664df_36cd19fc",
+        "filename": "include/spdk/notifications.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-12T22:48:54Z",
+      "side": 1,
+      "message": "is this needed?  I\u0027m guessing not, since spdk_subsystem is spelled wrong :-)",
+      "revId": "0d813ac5419f852744def41c1ea057a06235ab10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15b098cb_0c850b4a",
+        "filename": "include/spdk/notifications.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-12T22:48:54Z",
+      "side": 1,
+      "message": "could we use constructor functions for registration, similar to what we do for RPCs?  something like SPDK_NOTIFY_REGISTER or SPDK_NOTIFY_REGISTER_TYPE",
+      "revId": "0d813ac5419f852744def41c1ea057a06235ab10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4abec27_2f484894",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-12T22:48:54Z",
+      "side": 1,
+      "message": "What if we used \"notify\" instead of \"notification\"?  (In general - not just here.)\n\nI know that \"notify\" is not a noun, but it sure is a lot shorter.",
+      "revId": "0d813ac5419f852744def41c1ea057a06235ab10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c1b2617_e203e4e2",
+        "filename": "lib/event/app.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-12T22:48:54Z",
+      "side": 1,
+      "message": "since the notify code is in lib/notify, we should define a subsystem for notify instead of explicitly calling spdk_notify_initialize here - this is similar to how other lib/event/* libraries work",
+      "revId": "0d813ac5419f852744def41c1ea057a06235ab10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ad42d3fd_a01c80fc",
         "filename": "lib/event/notifications.c",
         "patchSetId": 6
@@ -22,6 +107,23 @@
       "revId": "0d813ac5419f852744def41c1ea057a06235ab10",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "652939b5_a0d10bc6",
+        "filename": "lib/notifications/notifications.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-12T22:48:54Z",
+      "side": 1,
+      "message": "instead of specifying a name, could the user allocate and pass its own spdk_notification_client structure here?  then we also don\u0027t need to do an allocation here, then when user wants to stop, they just pass the client pointer and we don\u0027t have to search for a client with the specified name",
+      "revId": "0d813ac5419f852744def41c1ea057a06235ab10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
