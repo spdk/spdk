@@ -40,12 +40,13 @@
 #include <rte_config.h>
 #include <rte_eal.h>
 
-#define SPDK_ENV_DPDK_DEFAULT_NAME		"spdk"
-#define SPDK_ENV_DPDK_DEFAULT_SHM_ID		-1
-#define SPDK_ENV_DPDK_DEFAULT_MEM_SIZE		-1
-#define SPDK_ENV_DPDK_DEFAULT_MASTER_CORE	-1
-#define SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL	-1
-#define SPDK_ENV_DPDK_DEFAULT_CORE_MASK		"0x1"
+#define SPDK_ENV_DPDK_DEFAULT_NAME			"spdk"
+#define SPDK_ENV_DPDK_DEFAULT_SHM_ID			-1
+#define SPDK_ENV_DPDK_DEFAULT_MEM_SIZE			-1
+#define SPDK_ENV_DPDK_DEFAULT_MASTER_CORE		-1
+#define SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL		-1
+#define SPDK_ENV_DPDK_DEFAULT_CORE_MASK			"0x1"
+#define SPDK_ENV_DPDK_DEFAULT_HUGEPAGE_SINGLE_SEGEMENTS	true
 
 static char **eal_cmdline;
 static int eal_cmdline_argcount;
@@ -132,6 +133,7 @@ spdk_env_opts_init(struct spdk_env_opts *opts)
 	opts->mem_size = SPDK_ENV_DPDK_DEFAULT_MEM_SIZE;
 	opts->master_core = SPDK_ENV_DPDK_DEFAULT_MASTER_CORE;
 	opts->mem_channel = SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL;
+	opts->hugepage_single_segments = SPDK_ENV_DPDK_DEFAULT_HUGEPAGE_SINGLE_SEGEMENTS;
 }
 
 static void
