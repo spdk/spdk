@@ -39,16 +39,19 @@ APP = blobcli
 C_SRCS := blobcli.c
 
 SPDK_LIB_LIST = event_bdev event_copy
-SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event thread util conf trace \
+SPDK_LIB_LIST += bdev copy event thread util conf trace \
 		log jsonrpc json rpc
 
-LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_NO_LVOL_MODULES_LINKER_ARGS) $(SOCK_MODULES_LINKER_ARGS)
+# Don't link bdev_lvol in blobcli - otherwise this utility cannot operate on an lvolstore
+BLOCKDEV_MODULES_LIST := $(filter-out bdev_lvol,$(BLOCKDEV_MODULES_LIST))
+
+LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS) $(SOCK_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
 all : $(APP)
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(COPY_MODULES_FILES) $(BLOCKDEV_NO_LVOL_MODULES_FILES) $(SOCK_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(COPY_MODULES_FILES) $(BLOCKDEV_MODULES_FILES) $(SOCK_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :
