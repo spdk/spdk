@@ -62,18 +62,6 @@ DEFINE_STUB(spdk_scsi_lun_get_id,
 	    (const struct spdk_scsi_lun *lun),
 	    0);
 
-bool
-spdk_sock_is_ipv6(struct spdk_sock *sock)
-{
-	return false;
-}
-
-bool
-spdk_sock_is_ipv4(struct spdk_sock *sock)
-{
-	return false;
-}
-
 struct spdk_iscsi_portal_grp *
 spdk_iscsi_portal_grp_find_by_tag(int tag)
 {
