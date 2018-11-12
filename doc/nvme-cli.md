@@ -25,9 +25,9 @@ Indicates whether or not to use spdk. Can be 0 (off) or 1 (on).
 Defaults to 1 which assumes that you have run "<spdk_folder>/scripts/setup.sh", unbinding your drives from the kernel.
 
 
-core_mask=0x100
+core_mask=0x1
 A bitmask representing which core(s) to use for nvme-cli operations.
-Defaults to core 8.
+Defaults to core 1.
 
 mem_size=512
 The amount of reserved hugepage memory to use for nvme-cli (in MB).
