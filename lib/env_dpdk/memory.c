@@ -57,6 +57,8 @@
 #define MAP_256TB_IDX(vfn_2mb)	((vfn_2mb) >> (SHIFT_1GB - SHIFT_2MB))
 #define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB)) - 1))
 
+#define _2MB_OFFSET(ptr)	(((uintptr_t)(ptr)) &  (VALUE_2MB - 1))
+
 /* Page is registered */
 #define REG_MAP_REGISTERED	(1ULL << 62)
 
@@ -612,9 +614,9 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		return map->default_translation;
 	}
 
-	cur_size = VALUE_2MB;
+	cur_size = VALUE_2MB - _2MB_OFFSET(vaddr);
 	if (size != NULL) {
-		*size = VALUE_2MB;
+		*size = cur_size;
 	}
 
 	map_2mb = &map_1gb->map[idx_1gb];
