@@ -70,6 +70,19 @@ char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 
 char *spdk_vsprintf_alloc(const char *format, va_list args);
 
 /**
+ * strcat with automatic buffer allocation.
+ *
+ * Note that the dst pointer needs to point to a buffer and shoul never be a
+ * pointer of a constant string.
+ *
+ * \param dst Pointer to destination buffer.
+ * \param src Pointer to source string which will be appended to dst string.
+ *
+ * \return a pointer to the result string or NULL on failure.
+ */
+char *spdk_strcat_alloc(char *dst, char *src);
+
+/**
  * Convert string to lowercase in place.
  *
  * \param s String to convert to lowercase.
