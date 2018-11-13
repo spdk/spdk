@@ -1510,6 +1510,8 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 		   void *cb_arg)
 {
 	struct bdev_names *name;
+	struct vbdev_crypto *crypto_bdev = SPDK_CONTAINEROF(bdev, struct vbdev_crypto,
+					   crypto_bdev);
 
 	if (!bdev || bdev->module != &crypto_if) {
 		cb_fn(cb_arg, -ENODEV);
@@ -1532,6 +1534,7 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 		}
 	}
 
+	spdk_io_device_unregister(crypto_bdev, NULL);
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
