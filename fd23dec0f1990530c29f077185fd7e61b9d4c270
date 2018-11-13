@@ -16,6 +16,24 @@
       "revId": "fd23dec0f1990530c29f077185fd7e61b9d4c270",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0dc6d0dd_def2cb85",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-13T21:20:35Z",
+      "side": 1,
+      "message": "True, thanks!",
+      "parentUuid": "be35cecc_9ff7435c",
+      "revId": "fd23dec0f1990530c29f077185fd7e61b9d4c270",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
