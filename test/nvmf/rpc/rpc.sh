@@ -3,6 +3,7 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
+source $rootdir/scripts/common.sh
 source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
@@ -41,6 +42,36 @@ fi
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
+
+# Test get_nvme_controllers cmd with nvme backend
+bdfs=$(iter_pci_class_code 01 08 02)
+nvme_num=$(echo $bdfs | awk '{ print NF }')
+if [ $nvme_num -gt 0 ]; then
+    nvme0_traddr=$(echo $bdfs | cut -d ' ' -f 1)
+    $rpc_py construct_nvme_bdev -b Nvme0 -t PCIe -a $nvme0_traddr
+
+    # Display the get_nvme_controllers outputs with examples
+    nvme_controller_result=$($rpc_py get_nvme_controllers -n Nvme0)
+    jq -r -S '.[]' <<< $nvme_controller_result > $rootdir/test/nvmf/rpc/get_nvme_controllers_nvmf.test
+    $rootdir/test/app/match/match -v $rootdir/test/nvmf/rpc/get_nvme_controllers_nvmf.test.match
+    rm -f $rootdir/test/nvmf/rpc/get_nvme_controllers_nvmf.test
+
+    # Test get_nvme_controllers cmd with name Nvme0
+    bdev_traddr=$(jq -r '.[] .trid .traddr' <<< $nvme_controller_result)
+    if [ $bdev_traddr != $nvme0_traddr ]; then
+        echo "The name or the traddr is different from which used to be created"
+        exit 1
+    fi
+    $rpc_py delete_nvme_controller Nvme0
+fi
+
+# Test get_nvme_controllers cmd with invalid name
+! $rpc_py get_nvme_controllers -n err
+! $rpc_py get_nvme_controllers -n Nvme0
+
+# Test get_nvme_controllers cmd with invalid parameter
+! $rpc_py get_nvme_controllers --err
+
 
 bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
