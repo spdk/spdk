@@ -652,6 +652,8 @@ void
 delete_passthru_disk(struct spdk_bdev *bdev, spdk_delete_passthru_complete cb_fn, void *cb_arg)
 {
 	struct bdev_names *name;
+	struct vbdev_passthru *pt_bdev = SPDK_CONTAINEROF(bdev, struct vbdev_passthru,
+					 pt_bdev);
 
 	if (!bdev || bdev->module != &passthru_if) {
 		cb_fn(cb_arg, -ENODEV);
@@ -672,6 +674,8 @@ delete_passthru_disk(struct spdk_bdev *bdev, spdk_delete_passthru_complete cb_fn
 		}
 	}
 
+	SPDK_NOTICELOG("delete pr bdev %s (%p)\n", bdev->name, pt_bdev);
+	spdk_io_device_unregister(pt_bdev, NULL);
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
