@@ -308,12 +308,25 @@ function waitforlisten() {
 
 	local rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
 
+	if hash ip; then
+		local have_ip_cmd=true
+	else
+		local have_ip_cmd=false
+	fi
+
+	if hash ss; then
+		local have_ss_cmd=true
+	else
+		local have_ss_cmd=false
+	fi
+
 	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 	local ret=0
-	while true; do
+
+	while sleep 0.5; do
 		# if the process is no longer running, then exit the script
 		#  since it means the application crashed
 		if ! kill -s 0 $1; then
@@ -321,12 +334,15 @@ function waitforlisten() {
 			break
 		fi
 
-		namespace=$(ip netns identify $1)
-		if [ -n "$namespace" ]; then
-			ns_cmd="ip netns exec $namespace"
+		# FIXME: don't know how to fix this for FreeBSD
+		if $have_ip_cmd; then
+			namespace=$(ip netns identify $1)
+			if [ -n "$namespace" ]; then
+				ns_cmd="ip netns exec $namespace"
+			fi
 		fi
 
-		if hash ss; then
+		if $have_ss_cmd; then
 			if $ns_cmd ss -ln | egrep -q "\s+$rpc_addr\s+"; then
 				break
 			fi
