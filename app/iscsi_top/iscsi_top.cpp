@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 	memset(last_tasks_done, 0, sizeof(last_tasks_done));
 
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
-		history = &histories->per_lcore_history[i];
+		history = spdk_get_per_lcore_history(histories, i, histories->flags.num_entries);
 		last_tasks_done[i] = history->tpoint_count[TRACE_ISCSI_TASK_DONE];
 	}
 
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
 		printf("=============\n");
 		total_tasks_done_per_sec = 0;
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
-			history = &histories->per_lcore_history[i];
+			history = spdk_get_per_lcore_history(histories, i, histories->flags.num_entries);
 			tasks_done = history->tpoint_count[TRACE_ISCSI_TASK_DONE];
 			tasks_done_delta = tasks_done - last_tasks_done[i];
 			if (tasks_done_delta == 0) {
