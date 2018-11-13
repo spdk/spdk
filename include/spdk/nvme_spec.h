@@ -1640,32 +1640,57 @@ enum spdk_nvme_reservation_acquire_action {
 
 struct __attribute__((packed)) spdk_nvme_reservation_status_data {
 	/** reservation action generation counter */
-	uint32_t		generation;
+	uint32_t		gen;
 	/** reservation type */
-	uint8_t			type;
+	uint8_t			rtype;
 	/** number of registered controllers */
-	uint16_t		nr_regctl;
+	uint16_t		regctl;
 	uint16_t		reserved1;
 	/** persist through power loss state */
-	uint8_t			ptpl_state;
+	uint8_t			ptpls;
 	uint8_t			reserved[14];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_status_data) == 24, "Incorrect size");
 
-struct __attribute__((packed)) spdk_nvme_reservation_ctrlr_data {
-	uint16_t		ctrlr_id;
+struct __attribute__((packed)) spdk_nvme_reservation_status_extended_data {
+	struct spdk_nvme_reservation_status_data	data;
+	uint8_t						reserved[40];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_status_extended_data) == 64,
+		   "Incorrect size");
+
+struct __attribute__((packed)) spdk_nvme_registered_ctrlr_data {
+	/** controller id */
+	uint16_t		cntlid;
 	/** reservation status */
 	struct {
 		uint8_t		status    : 1;
 		uint8_t		reserved1 : 7;
 	} rcsts;
 	uint8_t			reserved2[5];
-	/** host identifier */
-	uint64_t		host_id;
+	/** 64-bit host identifier */
+	uint64_t		hostid;
 	/** reservation key */
-	uint64_t		key;
+	uint64_t		rkey;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_ctrlr_data) == 24, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_registered_ctrlr_data) == 24, "Incorrect size");
+
+struct __attribute__((packed)) spdk_nvme_registered_ctrlr_extended_data {
+	/** controller id */
+	uint16_t		cntlid;
+	/** reservation status */
+	struct {
+		uint8_t		status    : 1;
+		uint8_t		reserved1 : 7;
+	} rcsts;
+	uint8_t			reserved2[5];
+	/** reservation key */
+	uint64_t		rkey;
+	/** 128-bit host identifier */
+	uint8_t			hostid[16];
+	uint8_t			reserved3[32];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_registered_ctrlr_extended_data) == 64, "Incorrect size");
 
 /**
  * Change persist through power loss state for
