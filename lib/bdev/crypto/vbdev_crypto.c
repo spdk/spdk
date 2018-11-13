@@ -1513,6 +1513,7 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 	struct bdev_names *name;
 
 	if (!bdev || bdev->module != &crypto_if) {
+		SPDK_NOTICELOG("error return\n");
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
@@ -1532,7 +1533,7 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 			break;
 		}
 	}
-
+	SPDK_NOTICELOG("delete crypto bdev %s\n", bdev->name);
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
