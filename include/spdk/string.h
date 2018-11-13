@@ -70,6 +70,16 @@ char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 
 char *spdk_vsprintf_alloc(const char *format, va_list args);
 
 /**
+ * strcat with automatic buffer allocation.
+ *
+ * \param str1 Pointer to str1 which will be the first part of the result str.
+ * \param str2 Pointer to str2 which will be the last part of the result str.
+ *
+ * \return a pointer to the result string or NULL on failure.
+ */
+char *spdk_strcat_alloc(char *str1, char *str2);
+
+/**
  * Convert string to lowercase in place.
  *
  * \param s String to convert to lowercase.

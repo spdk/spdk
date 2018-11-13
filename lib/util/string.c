@@ -93,6 +93,24 @@ spdk_sprintf_alloc(const char *format, ...)
 }
 
 char *
+spdk_strcat_alloc(char *str1, char *str2)
+{
+	size_t str1_len = strlen(str1);
+	size_t str2_len = strlen(str2);
+	char *ret;
+
+	ret = calloc(1, str1_len + str2_len + 1);
+	if (!ret) {
+		return NULL;
+	}
+
+	ret = strncat(ret, str1, str1_len);
+	ret = strncat(ret, str2, str2_len);
+
+	return ret;
+}
+
+char *
 spdk_strlwr(char *s)
 {
 	char *p;
