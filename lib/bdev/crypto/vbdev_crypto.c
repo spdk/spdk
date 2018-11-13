@@ -1589,6 +1589,7 @@ vbdev_crypto_examine(struct spdk_bdev *bdev)
 				SPDK_ERRLOG("could not register crypto_bdev\n");
 				spdk_bdev_close(crypto_bdev->base_desc);
 				TAILQ_REMOVE(&g_vbdev_crypto, crypto_bdev, link);
+				spdk_io_device_unregister(crypto_bdev, NULL);
 				free(crypto_bdev->crypto_bdev.name);
 				free(crypto_bdev->key);
 				free(crypto_bdev);
