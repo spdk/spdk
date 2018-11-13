@@ -974,6 +974,19 @@ vbdev_crypto_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	}
 }
 
+/* Callback for unregistering the IO device. */
+static void
+_device_unregister_cb(void *io_device)
+{
+	struct vbdev_crypto *crypto_bdev = io_device;
+
+	/* Done with this crypto_bdev. */
+	free(crypto_bdev->drv_name);
+	free(crypto_bdev->key);
+	free(crypto_bdev->crypto_bdev.name);
+	free(crypto_bdev);
+}
+
 /* Called after we've unregistered following a hot remove callback.
  * Our finish entry point will be called next.
  */
@@ -982,18 +995,18 @@ vbdev_crypto_destruct(void *ctx)
 {
 	struct vbdev_crypto *crypto_bdev = (struct vbdev_crypto *)ctx;
 
+	/* Remove this device from the internal list */
+	TAILQ_REMOVE(&g_vbdev_crypto, crypto_bdev, link);
+
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(crypto_bdev->base_bdev);
 
 	/* Close the underlying bdev. */
 	spdk_bdev_close(crypto_bdev->base_desc);
 
-	/* Done with this crypto_bdev. */
-	TAILQ_REMOVE(&g_vbdev_crypto, crypto_bdev, link);
-	free(crypto_bdev->drv_name);
-	free(crypto_bdev->key);
-	free(crypto_bdev->crypto_bdev.name);
-	free(crypto_bdev);
+	/* Unregister the io_device. */
+	spdk_io_device_unregister(crypto_bdev, _device_unregister_cb);
+
 	return 0;
 }
 
@@ -1544,6 +1557,7 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 		}
 	}
 
+	/* Additional cleanup happens in the destruct callback. */
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
