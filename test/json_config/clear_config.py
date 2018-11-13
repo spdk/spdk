@@ -34,6 +34,7 @@ def delete_subbdevs(args, bdev, rpc_bdevs):
     bdev_name = get_bdev_name(bdev)
     if bdev_name and 'method' in bdev:
         construct_method = bdev['method']
+        print("delete_subbdevs cm " + construct_method)
         if construct_method == 'construct_nvme_bdev':
             for rpc_bdev in rpc_bdevs:
                 if bdev_name in rpc_bdev['name'] and rpc_bdev['product_name'] == "NVMe disk":
@@ -73,6 +74,8 @@ def clear_bdev_subsystem(args, bdev_config):
         bdev_name_key = get_bdev_name_key(bdev)
         bdev_name = get_bdev_name(bdev)
         destroy_method = get_bdev_destroy_method(bdev)
+        print("destroy")
+        print(bdev_name)
         if destroy_method:
             args.client.call(destroy_method, {bdev_name_key: bdev_name})
 
