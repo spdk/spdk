@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "151d8e71_3341d64c",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 5
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-13T17:20:43Z",
+      "side": 1,
+      "message": "The no_lvol_modules portion of this variable name is confusing to me now that it isn\u0027t actually removing the lvol related modules from the list, just lvol_bdev.\nMaybe BLOCKDEV_MODULES_LIST_NO_LVOL_BDEV would be better?",
+      "revId": "d2a79ea14bdef987d1f2d602477ff20b71d18722",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
