@@ -118,6 +118,24 @@
       "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "180c5e73_91164d2c",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-11-13T14:19:40Z",
+      "side": 1,
+      "message": "Not sure if I understand, so on the example you proposed:\n\nbs: [4k, 8k]\nqd: [32, 128]\nrw: [r, rw, w]\n\nWould result in an error because rows are not the same length?\nAnd if we removed \"w\" from rw modes, then we\u0027d run: 4k-32-r and 8k-128-w. Correct?\n\nI\u0027m not sure if we want that. I mean this approach is not better or worse than what I have now, it\u0027s just different. Mine is better for running many combinations, as it will run all possible combinations of bs/qd/rw. But yours is better for specific configurations.\nI don\u0027t know to be honest, I guess someone else would need to give their opinion:)",
+      "parentUuid": "fbc6418b_0a937b03",
+      "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
