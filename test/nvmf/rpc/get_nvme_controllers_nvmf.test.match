@@ -1,0 +1,7 @@
+{
+  "name": "Nvme0",
+  "trid": {
+    "traddr": $(S),
+    "trtype": "PCIe"
+  }
+}
