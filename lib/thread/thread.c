@@ -380,13 +380,14 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device == io_device) {
-			SPDK_ERRLOG("io_device %p already registered\n", io_device);
+			SPDK_ERRLOG("io_device %p (%s) already registered\n", io_device, dev->name);
 			free(dev->name);
 			free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
 			return;
 		}
 	}
+	SPDK_NOTICELOG("io_device %p (%s) registered\n", io_device, dev->name);
 	TAILQ_INSERT_TAIL(&g_io_devices, dev, tailq);
 	pthread_mutex_unlock(&g_devlist_mutex);
 }
@@ -426,7 +427,7 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	struct spdk_thread *thread;
 
 	thread = spdk_get_thread();
-
+	SPDK_NOTICELOG("entry\n");
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		if (dev->io_device == io_device) {
@@ -454,11 +455,13 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregister_thread = thread;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
+	SPDK_NOTICELOG("io_devce %p (%s) UNregistered\n", dev, dev->name);
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Unregistering io_device %s (%p) from thread %s\n",
 		      dev->name, dev->io_device, thread->name);
 
 	if (refcnt > 0) {
 		/* defer deletion */
+		SPDK_NOTICELOG("defer\n");
 		return;
 	}
 
