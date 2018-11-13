@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ff7445f1_369ac727",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-13T08:03:58Z",
+      "side": 1,
+      "message": "no, this is a test. It means when this enabling, we should use put --legacy support",
+      "parentUuid": "13e2cbfb_1e04f742",
+      "range": {
+        "startLine": 288,
+        "startChar": 56,
+        "endLine": 288,
+        "endChar": 68
+      },
+      "revId": "0aa0663db0597eb75065f01e7dff601b084ceac1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4cb4f5c_c67d4431",
         "filename": "lib/event/app.c",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-13T07:59:22Z",
       "side": 1,
       "message": "this name seems strange and how about the compatible with those app already initialzied with -g parameter?",
+      "range": {
+        "startLine": 713,
+        "startChar": 16,
+        "endLine": 713,
+        "endChar": 39
+      },
+      "revId": "0aa0663db0597eb75065f01e7dff601b084ceac1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a364954a_69e3c15d",
+        "filename": "lib/event/app.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-13T08:03:58Z",
+      "side": 1,
+      "message": "It means that you do not want to enable it, it should enable default.",
+      "parentUuid": "e4cb4f5c_c67d4431",
       "range": {
         "startLine": 713,
         "startChar": 16,
