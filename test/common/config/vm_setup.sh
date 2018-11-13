@@ -24,7 +24,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
-CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli"
+CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat"
 
 function install_rxe_cfg()
 {
@@ -80,6 +80,40 @@ function install_iscsi_adm()
             else
                 echo "custom open-iscsi install located, not reinstalling"
             fi
+        fi
+    fi
+}
+
+function install_qat()
+{
+    if echo $CONF | grep -q qat; then
+        qat_tarball=$(basename $DRIVER_LOCATION_QAT)
+        kernel_maj=$(uname -r | cut -d'.' -f1)
+        kernel_min=$(uname -r | cut -d'.' -f2)
+
+        sudo modprobe -r qat_c62x
+        if [ -d /QAT ]; then
+            sudo rm -rf /QAT/
+        fi
+
+        sudo mkdir /QAT
+
+        wget $DRIVER_LOCATION_QAT
+        sudo cp $qat_tarball /QAT/
+        (cd /QAT && sudo tar zxof /QAT/$qat_tarball)
+
+        #The driver version 1.7.l.4.3.0-00033 contains a reference to a deprecated function. Remove it so the build won't fail.
+        if [ $kernel_maj -le 4 ]; then
+            if [ $kernel_min -le 17 ]; then
+                sudo sed -i 's/rdtscll(timestamp);/timestamp = rdtsc_ordered();/g' \
+                /QAT/quickassist/utilities/osal/src/linux/kernel_space/OsalServices.c || true
+            fi
+        fi
+
+        (cd /QAT && sudo ./configure --enable-icp-sriov=host && sudo make install)
+
+        if sudo service qat_service start; then
+            echo "failed to start the qat service. Something may be wrong with your device or package."
         fi
     fi
 }
@@ -311,6 +345,7 @@ cd ~
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}; export GIT_REPO_LIBISCSI
 : ${GIT_REPO_SPDK_NVME_CLI=https://github.com/spdk/nvme-cli}; export GIT_REPO_SPDK_NVME_CLI
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}; export GIT_REPO_INTEL_IPSEC_MB
+: ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads/intelr-quickassist-technology/qat1.7.l.4.3.0-00033.tar.gz}; export DRIVER_LOCATION_QAT
 
 jobs=$(($(nproc)*2))
 
@@ -387,6 +422,7 @@ install_qemu&
 install_vpp&
 install_nvmecli&
 install_libiscsi&
+install_qat&
 
 wait
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.

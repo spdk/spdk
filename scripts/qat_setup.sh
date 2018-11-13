@@ -11,9 +11,6 @@ allowed_drivers=("igb_uio" "uio_pci_generic")
 bad_driver=true
 driver_to_bind=uio_pci_generic
 num_vfs=16
-firmware_download_url=http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree
-qat_binary=qat_895xcc.bin
-qat_mmp_binary=qat_895xcc_mmp.bin
 
 qat_pci_bdfs=( $(lspci -Dd:37c8 | awk '{print $1}') )
 if [ ${#qat_pci_bdfs[@]} -eq 0 ]; then
@@ -37,21 +34,9 @@ if $bad_driver; then
 	exit 1
 fi
 
-# Fetch firmware if needed.
-if [ ! -f /lib/firmware/$qat_binary ]; then
-	echo "installing qat firmware"
-	if ! wget $firmware_download_url/$qat_binary -O /lib/firmware/$qat_binary; then
-		echo "Cannot download the qat binary $qat_binary from <$firmware_download_url/$qat_binary>"
-		exit 1
-	fi
-fi
-
-if [ ! -f /lib/firmware/$qat_mmp_binary ]; then
-	echo "installing qat mmp firmware"
-	if ! wget $firmware_download_url/$qat_mmp_binary -O /lib/firmware/$qat_mmp_binary; then
-		echo "Cannot download the qat mmp binary $qat_mmp_binary from <$firmware_download_url/$qat_mmp_binary>"
-		exit 1
-	fi
+# try starting the qat service. If this doesn't work, just treat it as a warning for now.
+if service qat_service start; then
+	echo "failed to start the qat service. Something may be wrong with your 01.org driver."
 fi
 
 # configure virtual functions for the QAT cards.
