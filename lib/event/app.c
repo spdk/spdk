@@ -47,6 +47,7 @@
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
 #define SPDK_APP_DEFAULT_BACKTRACE_LOG_LEVEL	SPDK_LOG_ERROR
+#define SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES	SPDK_NUM_TRACE_ENTRIES
 
 #define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		-1
 #define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	-1
@@ -115,6 +116,8 @@ static const struct option g_cmdline_options[] = {
 	{"wait-for-rpc",		no_argument,		NULL, WAIT_FOR_RPC_OPT_IDX},
 #define HUGE_DIR_OPT_IDX	259
 	{"huge-dir",			no_argument,		NULL, HUGE_DIR_OPT_IDX},
+#define NUM_TRACE_ENTRIES_OPT_IDX	260
+	{"num-trace-entries",			required_argument,	NULL, NUM_TRACE_ENTRIES_OPT_IDX},
 };
 
 /* Global section */
@@ -272,6 +275,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->num_trace_entries = SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES;
 	opts->delay_subsystem_init = false;
 }
 
@@ -518,7 +522,7 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)getpid());
 	}
 
-	if (spdk_trace_init(shm_name) != 0) {
+	if (spdk_trace_init(shm_name, opts->num_trace_entries) != 0) {
 		return -1;
 	}
 
@@ -735,6 +739,8 @@ usage(void (*app_usage)(void))
 	printf(" -W, --pci-whitelist <bdf>\n");
 	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
 	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
+	printf("      --num-trace-entries <num>   number of trace entries for each core (default %d)\n",
+	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	spdk_tracelog_usage(stdout, "-L");
 	if (app_usage) {
 		app_usage();
@@ -928,6 +934,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case HUGE_DIR_OPT_IDX:
 			opts->hugedir = optarg;
+			break;
+		case NUM_TRACE_ENTRIES_OPT_IDX:
+			opts->num_trace_entries = strtoull(optarg, NULL, 0);
+			if (opts->num_trace_entries == ULLONG_MAX || opts->num_trace_entries == 0) {
+				fprintf(stderr, "Invalid num_trace_entries %s\n", optarg);
+				usage(app_usage);
+				goto out;
+			}
 			break;
 		case '?':
 			/*
