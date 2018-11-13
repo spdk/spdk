@@ -170,7 +170,7 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 	int ret, i;
 	uint8_t *payload;
 	struct spdk_nvme_reservation_status_data *status;
-	struct spdk_nvme_reservation_ctrlr_data *cdata;
+	struct spdk_nvme_registered_ctrlr_data *cdata;
 	struct spdk_nvme_ns *ns;
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
@@ -204,17 +204,18 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 	}
 
 	status = (struct spdk_nvme_reservation_status_data *)payload;
-	fprintf(stdout, "Reservation Generation Counter                  %u\n", status->generation);
-	fprintf(stdout, "Reservation type                                %u\n", status->type);
-	fprintf(stdout, "Reservation Number of Registered Controllers    %u\n", status->nr_regctl);
-	fprintf(stdout, "Reservation Persist Through Power Loss State    %u\n", status->ptpl_state);
-	for (i = 0; i < status->nr_regctl; i++) {
-		cdata = (struct spdk_nvme_reservation_ctrlr_data *)(payload + sizeof(struct
-				spdk_nvme_reservation_status_data) * (i + 1));
-		fprintf(stdout, "Controller ID                           %u\n", cdata->ctrlr_id);
+	fprintf(stdout, "Reservation Generation Counter                  %u\n", status->gen);
+	fprintf(stdout, "Reservation type                                %u\n", status->rtype);
+	fprintf(stdout, "Reservation Number of Registered Controllers    %u\n", status->regctl);
+	fprintf(stdout, "Reservation Persist Through Power Loss State    %u\n", status->ptpls);
+	for (i = 0; i < status->regctl; i++) {
+		cdata = (struct spdk_nvme_registered_ctrlr_data *)(payload +
+				sizeof(struct spdk_nvme_reservation_status_data) +
+				sizeof(struct spdk_nvme_registered_ctrlr_data) * i);
+		fprintf(stdout, "Controller ID                           %u\n", cdata->cntlid);
 		fprintf(stdout, "Controller Reservation Status           %u\n", cdata->rcsts.status);
-		fprintf(stdout, "Controller Host ID                      0x%"PRIx64"\n", cdata->host_id);
-		fprintf(stdout, "Controller Reservation Key              0x%"PRIx64"\n", cdata->key);
+		fprintf(stdout, "Controller Host ID                      0x%"PRIx64"\n", cdata->hostid);
+		fprintf(stdout, "Controller Reservation Key              0x%"PRIx64"\n", cdata->rkey);
 	}
 
 	spdk_dma_free(payload);
