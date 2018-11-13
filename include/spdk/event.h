@@ -122,6 +122,11 @@ struct spdk_app_opts {
 	 * when this flag is enabled.
 	 */
 	bool			delay_subsystem_init;
+
+	/* Number of trace entries can be contained for tracing on
+	 * each core.
+	 */
+	uint64_t		trace_size;
 };
 
 struct spdk_reactor_tsc_stats {

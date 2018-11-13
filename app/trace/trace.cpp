@@ -210,7 +210,7 @@ process_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 }
 
 static int
-populate_events(struct spdk_trace_history *history)
+populate_events(struct spdk_trace_history *history, uint64_t trace_size)
 {
 	int i, num_entries, num_entries_filled;
 	struct spdk_trace_entry *e;
@@ -218,7 +218,7 @@ populate_events(struct spdk_trace_history *history)
 
 	lcore = history->lcore;
 
-	num_entries = SPDK_COUNTOF(history->entries);
+	num_entries = trace_size;
 
 	e = history->entries;
 
@@ -295,6 +295,7 @@ int main(int argc, char **argv)
 	int			op;
 	char			shm_name[64];
 	int			shm_id = -1, shm_pid = -1;
+	uint64_t		trace_size;
 
 	g_exe_name = argv[0];
 	while ((op = getopt(argc, argv, "c:f:i:p:qs:")) != -1) {
@@ -358,6 +359,7 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
+	/* Map the header of trace file */
 	history_ptr = mmap(NULL, sizeof(*g_histories), PROT_READ, MAP_SHARED, fd, 0);
 	if (history_ptr == MAP_FAILED) {
 		fprintf(stderr, "Could not mmap shm %s.\n", shm_name);
@@ -374,29 +376,44 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
+	trace_size = g_histories->flags.trace_size;
+
 	if (g_verbose) {
 		printf("TSC Rate: %ju\n", g_tsc_rate);
+		printf("Trace Size: %ju\n", trace_size);
 	}
 
-	history_entries = (struct spdk_trace_history *)malloc(sizeof(g_histories->per_lcore_history));
+	/* Remap the entire trace file */
+	munmap(history_ptr, sizeof(*g_histories));
+	history_ptr = mmap(NULL, get_trace_histories_size(trace_size), PROT_READ, MAP_SHARED, fd, 0);
+	if (history_ptr == MAP_FAILED) {
+		fprintf(stderr, "Could not mmap shm %s.\n", shm_name);
+		usage();
+		exit(-1);
+	}
+
+	g_histories = (struct spdk_trace_histories *)history_ptr;
+
+	history_entries = (struct spdk_trace_history *)malloc(get_trace_history_size(
+				  trace_size) * SPDK_TRACE_MAX_LCORE);
 	if (history_entries == NULL) {
 		goto cleanup;
 	}
 	memcpy(history_entries, g_histories->per_lcore_history,
-	       sizeof(g_histories->per_lcore_history));
+	       get_trace_history_size(trace_size) * SPDK_TRACE_MAX_LCORE);
 
 	if (lcore == SPDK_TRACE_MAX_LCORE) {
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
-			history = &history_entries[i];
+			history = get_per_lcore_history(g_histories, i, trace_size);
 			if (history->entries[0].tsc == 0) {
 				continue;
 			}
-			populate_events(history);
+			populate_events(history, trace_size);
 		}
 	} else {
-		history = &history_entries[lcore];
+		history = get_per_lcore_history(g_histories, lcore, trace_size);
 		if (history->entries[0].tsc != 0) {
-			populate_events(history);
+			populate_events(history, trace_size);
 		}
 	}
 
@@ -411,7 +428,7 @@ int main(int argc, char **argv)
 	free(history_entries);
 
 cleanup:
-	munmap(history_ptr, sizeof(*g_histories));
+	munmap(history_ptr, get_trace_histories_size(trace_size));
 	close(fd);
 
 	return (0);
