@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96fee140_f9719b4b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1537,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-13T23:29:19Z",
+      "side": 1,
+      "message": "I think you want to wait to do this until after the bdev unregister callback is invoked.\n\nThe simplest way to do this is to add a delete_cb_fn and delete_cb_arg member to vbdev_crypto.  Set those members here, and then create your own callback function for spdk_bdev_unregister.  In that callback, call spdk_io_device_unregister and then call the users callback.\n\nBut this does bring up another issue I think - when does the crypto_bdev get freed?",
+      "revId": "932d88619c803b8e247dee95453156410d689efc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
