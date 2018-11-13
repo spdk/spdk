@@ -313,7 +313,7 @@ function waitforlisten() {
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 	local ret=0
-	while true; do
+	while sleep 0.5; do
 		# if the process is no longer running, then exit the script
 		#  since it means the application crashed
 		if ! kill -s 0 $1; then
@@ -321,9 +321,12 @@ function waitforlisten() {
 			break
 		fi
 
-		namespace=$(ip netns identify $1)
-		if [ -n "$namespace" ]; then
-			ns_cmd="ip netns exec $namespace"
+		# FIXME: don't know how to fix this for FreeBSD
+		if hash ip; then
+			namespace=$(ip netns identify $1)
+			if [ -n "$namespace" ]; then
+				ns_cmd="ip netns exec $namespace"
+			fi
 		fi
 
 		if hash ss; then
