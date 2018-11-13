@@ -136,6 +136,24 @@
       "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d8095c9_74ed77d4",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-13T17:00:59Z",
+      "side": 1,
+      "message": "Yeah, that is correct. I agree that it is just a different approach. I only called it out because it was different than what I expected. If most people using this script will want to specify a large matrix of jobs then your way is the right way to go.",
+      "parentUuid": "180c5e73_91164d2c",
+      "revId": "6b7ba27fe1fa29d3788caaf3dadc9b0ae0b7ba0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
