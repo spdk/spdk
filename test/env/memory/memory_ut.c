@@ -257,6 +257,12 @@ test_mem_map_translation(void)
 	CU_ASSERT(addr == 0);
 	CU_ASSERT(mapping_length == VALUE_2MB * 3)
 
+	/* Translate an unaligned address */
+	mapping_length = VALUE_2MB * 3 - VALUE_4KB;
+	addr = spdk_mem_map_translate(map, VALUE_4KB, &mapping_length);
+	CU_ASSERT(addr == 0);
+	CU_ASSERT(mapping_length == VALUE_2MB * 3 - VALUE_4KB);
+
 	/* Clear translation for the middle page of the larger region. */
 	rc = spdk_mem_map_clear_translation(map, VALUE_2MB, VALUE_2MB);
 	CU_ASSERT(rc == 0);
