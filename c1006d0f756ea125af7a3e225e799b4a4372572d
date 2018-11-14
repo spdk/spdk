@@ -22,6 +22,30 @@
       "revId": "c1006d0f756ea125af7a3e225e799b4a4372572d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d06904f_21ecc70d",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-14T19:17:28Z",
+      "side": 1,
+      "message": "argh - good catch",
+      "parentUuid": "827ff4cb_2139a293",
+      "range": {
+        "startLine": 394,
+        "startChar": 48,
+        "endLine": 394,
+        "endChar": 63
+      },
+      "revId": "c1006d0f756ea125af7a3e225e799b4a4372572d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
