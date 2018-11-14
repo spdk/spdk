@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "688de8af_7fad1463",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1579,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T22:02:29Z",
+      "side": 1,
+      "message": "You need to wait for the callback before releasing the memory.",
+      "revId": "358e58ddc2316556870e14732d6cdb4d0eb017fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
