@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "3327833c_65d50417",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-11-14T08:48:25Z",
+      "side": 1,
+      "message": "If return 1+(int)(UINT8_MAX*rand()/(RAND_MAX+1.0)), I think these random numbers will be more evenly distributed.",
+      "range": {
+        "startLine": 153,
+        "startChar": 1,
+        "endLine": 153,
+        "endChar": 27
+      },
+      "revId": "35bc9e8a93ae24bf3095831193ff39d089198362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25a69154_da364061",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 8
