@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31b43378_abf7f5d2",
+        "filename": "configure",
+        "patchSetId": 16
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-14T16:55:26Z",
+      "side": 1,
+      "message": "I think \"will include SPDK reduce library\" is on the wrong line.Should be up on the compress line.",
+      "revId": "f2bafbdd62d8c81cdfe0a58101268ef531e1e61e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9a648ab_0229c789",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-14T16:55:26Z",
+      "side": 1,
+      "message": "You have flipped the install_crypto and install_compress flags. You should check install_compress before cloning ISA-L and install_crypto before cloning ipsec.",
+      "revId": "f2bafbdd62d8c81cdfe0a58101268ef531e1e61e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
