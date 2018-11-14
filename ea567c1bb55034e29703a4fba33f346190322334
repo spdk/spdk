@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "419b878e_d946cbfa",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-14T22:57:04Z",
+      "side": 1,
+      "message": "They were basically correct, but we were doing confusing things like not using NVMF_DEFAULT_DATA_SGE to determine how many data sges to allocate and using SPDK_NVMF_MAX_SGL_ENTRIES to initialize max_tx_sge value in the qpair. That same SPDK_NVMF_MAX_SGL_ENTRIES value is used to allocate iovecs up one layer. This patch was designed to uncouple the upper layer value SPDK_NVMF_MAX_SGL_ENTRIES from the lower level protocols, and recouple the TX and RX defines with the max_tx_sge and max_rx_sge values for the qpair.",
+      "parentUuid": "f2cb0988_06461692",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d9f1729_4e806f5b",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-14T21:22:04Z",
       "side": 1,
       "message": "I think NVMF_DEFAULT_DATA_SGE should be defined as (SPDK_NVMF_MAX_SGL_ENTRIES * 2).",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8be1bf3d_1623db12",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-14T22:57:04Z",
+      "side": 1,
+      "message": "I agree with this, but will make that change in the same patch where I start splitting iovecs along mr keys to keep it consistent.",
+      "parentUuid": "4d9f1729_4e806f5b",
       "revId": "ea567c1bb55034e29703a4fba33f346190322334",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "745ce342_d9ab1b69",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-14T22:57:04Z",
+      "side": 1,
+      "message": "What I want to do is clarify that NVMF_DEFAULT_TX_SGE should be our desired value for max_tx_sge. It will be the value that caps our memory allocations for wr sges and data buffers. This is what we previously called the default_data_sge.",
+      "parentUuid": "5176b940_3f182bd4",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec07ec53_dbe4a706",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "c937778b_a79f578f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-14T22:57:04Z",
+      "side": 1,
+      "message": "This was a mistake. I meant to set these to NVMF_DEFAULT_TX_SGE. See my comment above.",
+      "parentUuid": "ec07ec53_dbe4a706",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10847bab_69582ae5",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -81,6 +153,24 @@
       "writtenOn": "2018-11-14T21:22:04Z",
       "side": 1,
       "message": "The RDMA SGEs are a negotiation only with your local NIC. If the local NIC can\u0027t support what we\u0027re requesting, I think we should just fail to initialize. The only exception may be the DATA SGEs, but to start with let\u0027s just fail that too.",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a15ff847_6c93a10b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-14T22:57:04Z",
+      "side": 1,
+      "message": "I store these because when we initialize a qpair, it may give back a value larger than what we request in the ibv_init_attr.cap. This value is updated every time we query the qp data. By stashing the value here, We can make sure we don\u0027t overshoot our number of allocated SGEs by relying on the value returned in the ibv_init_attr structure.",
+      "parentUuid": "10847bab_69582ae5",
       "revId": "ea567c1bb55034e29703a4fba33f346190322334",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
