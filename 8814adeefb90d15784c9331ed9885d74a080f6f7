@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "14316550_01c4625e",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-14T04:19:16Z",
+      "side": 1,
+      "message": "No, struct virtio_blk_discard_write_zeroes is the embedded data structure for DISCARD command, req is always required for all the virtio_blk commands.",
+      "parentUuid": "99b94ee1_97064e8e",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 46
+      },
+      "revId": "8814adeefb90d15784c9331ed9885d74a080f6f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba0c6875_5c25929e",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-13T11:15:37Z",
       "side": 1,
       "message": "I think it would be better to just do:\n\n  switch(bdev_io-\u003etype) {\n  case UNMAP:\n    io_ctx-\u003eiov_req.iov_base \u003d \u0026io_ctx-\u003eunmap;\n    io_ctx-\u003eiov_req.iov_len \u003d sizeof(io_ctx-\u003eunmap);\n    break;\n  default:\n    io_ctx-\u003eiov_req.iov_base \u003d \u0026io_ctx-\u003ereq;\n    io_ctx-\u003eiov_req.iov_len \u003d sizeof(io_ctx-\u003ereq);\n  }\n\nThis will make this code ready for WRITE_ZEROS also don\u0027t require you to modify `bdev_virtio_blk_send_io()`",
+      "range": {
+        "startLine": 116,
+        "startChar": 1,
+        "endLine": 117,
+        "endChar": 40
+      },
+      "revId": "8814adeefb90d15784c9331ed9885d74a080f6f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7bd4e6d_f112cc66",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-14T04:19:16Z",
+      "side": 1,
+      "message": "This is incorrect, see my previous comments.",
+      "parentUuid": "ba0c6875_5c25929e",
       "range": {
         "startLine": 116,
         "startChar": 1,
@@ -82,6 +130,30 @@
       "writtenOn": "2018-11-13T11:15:37Z",
       "side": 1,
       "message": "Something doesn\u0027t look right here. `req` is not used in case of UNMAP.",
+      "range": {
+        "startLine": 180,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 54
+      },
+      "revId": "8814adeefb90d15784c9331ed9885d74a080f6f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f135c43a_07b01758",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-14T04:19:16Z",
+      "side": 1,
+      "message": "The backend will ignore req-\u003esector field for DISCARD command.",
+      "parentUuid": "429fcdd7_7dfc0284",
       "range": {
         "startLine": 180,
         "startChar": 0,
