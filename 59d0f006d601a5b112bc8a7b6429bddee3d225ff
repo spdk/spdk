@@ -152,6 +152,24 @@
       "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fda98b39_659535c2",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T20:14:59Z",
+      "side": 1,
+      "message": "I took a closer look at this and I think the original implementation is actually broken. If you pass an event from a reactor on one socket to a reactor on another socket, it releases the event in a different mempool than it got it from. I\u0027ll fix that first.",
+      "parentUuid": "e36e517a_e7600e79",
+      "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
