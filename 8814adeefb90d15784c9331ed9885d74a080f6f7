@@ -66,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "bd3f450e_7d32b049",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-14T09:02:36Z",
+      "side": 1,
+      "message": "yeah, should enable the DISCARD feature here, don\u0027t worry about the test, I will add autotest scripts.",
+      "parentUuid": "6c9a0834_3d0afc16",
+      "revId": "8814adeefb90d15784c9331ed9885d74a080f6f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ba0c6875_5c25929e",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 4
