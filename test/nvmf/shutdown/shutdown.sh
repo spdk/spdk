@@ -59,7 +59,26 @@ do
 	echo "  TransportID \"trtype:RDMA adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT\" Nvme$i" >> $testdir/bdevperf.conf
 done
 
-# Test 1: Kill initiator unexpectedly
+# Test 1: Kill the initiator unexpectedly with no I/O outstanding
+
+# Run bdev_svc, which connects but does not issue I/O
+$rootdir/test/app/bdev_svc/bdev_svc -i 1 -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf &
+perfpid=$!
+waitforlisten $perfpid /var/tmp/bdevperf.sock
+$rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
+
+# Kill bdev_svc
+kill -9 $perfpid
+rm -f /var/run/spdk_bdev1
+
+# Verify the target stays up
+sleep 1
+kill -0 $pid
+
+# Connect with bdevperf and confirm it works
+$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 1
+
+# Test 2: Kill initiator unexpectedly with I/O outstanding
 
 # Run bdevperf
 $rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
@@ -77,7 +96,7 @@ killprocess $perfpid
 sleep 1
 kill -0 $pid
 
-# Test 2: Kill the target unexpectedly
+# Test 3: Kill the target unexpectedly with I/O outstanding
 
 # Run bdevperf
 $rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -i 0 -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
