@@ -52,3 +52,25 @@ def get_nvme_controllers(client, name=None):
     if name:
         params['name'] = name
     return client.call('get_nvme_controllers', params)
+
+
+def nvme_security_receive(client, name, nssf, secp, spsp, recvlen):
+    """Receive security protocol data from NVMe controller.
+
+    Args:
+        name: Name of the corresponding NVMe bdev.
+        nssf: NVMe Security Specific field.
+        secp: Security Protocol that is used.
+        spsp: Security Protocol Specific field.
+        recvlen: Receive length.
+
+    Returns:
+        Security protocol data received.
+    """
+    params = {'name': name,
+              'nssf': nssf,
+              'secp': secp,
+              'spsp': spsp,
+              'recvlen': recvlen,
+              }
+    return client.call('nvme_security_receive', params)
