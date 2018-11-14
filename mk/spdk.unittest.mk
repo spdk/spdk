@@ -42,7 +42,7 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -ffunction-sections
 LDFLAGS += -Wl,--gc-sections
 
-SPDK_LIB_LIST += thread util log sock
+SPDK_LIB_LIST += thread util log sock notify
 
 LIBS += -lcunit $(SPDK_STATIC_LIB_LINKER_ARGS)
 
