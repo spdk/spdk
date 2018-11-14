@@ -53,6 +53,40 @@
     },
     {
       "key": {
+        "uuid": "539f0d6e_7dd2f5a5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-14T18:12:38Z",
+      "side": 1,
+      "message": "This second paragraph seems to duplicate some of what is said in the first paragraph.  For now, I would just say \"reverse order\" since we don\u0027t detect things like newly added paths for a multi-path device, or a RAID volume that got expanded with a new bdev.",
+      "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3202e6_d10c4e4f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-14T18:12:38Z",
+      "side": 1,
+      "message": "Let\u0027s make this an SPDK_ERRLOG.  I think you could just remove this SPDK_WARNLOG, and change the SPDK_DEBUGLOG below to an SPDK_ERRLOG (we don\u0027t need both).  The important thing is that we get the name of the bdev that is still claimed in the SPDK_ERRLOG.",
+      "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54546944_8b72589a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
