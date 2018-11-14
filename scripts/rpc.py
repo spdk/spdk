@@ -1841,6 +1841,27 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int, default=0)
     p.set_defaults(func=send_nvme_cmd)
 
+    # Notifications
+    @call_cmd
+    def get_notification_types(args):
+        print_dict(rpc.notify.get_notification_types(args.client))
+
+    p = subparsers.add_parser('get_notification_types', help='List available notifications that user can subscribe to.')
+    p.set_defaults(func=get_notification_types)
+
+    @call_cmd
+    def get_notifications(args):
+        print_dict(rpc.notify.get_notification_types(args.client))
+
+    p = subparsers.add_parser('get_notifications', help='Wait for notifications')
+    p.add_argument('-b', '--batch', help="""How many event requests send to server. Default: 3""", type=int, default=3)
+    p.add_argument('-e', '--notification-types', help="""Comma separated list of notification types. Default: all""")
+    p.add_argument('-T', '--event-timeout-ms', help="""Time (for remote side) from peaking the event from queue to
+    completeting it, in milliseconds, if 0, don't track timeout""", type=int, default=500)
+    p.add_argument('-w', '--wait-time-ms',
+                   help="""Total time to for events. After this time connection will be colsed. Default=1000""", type=int, default=1000)
+    p.set_defaults(func=get_notifications)
+
     args = parser.parse_args()
 
     try:

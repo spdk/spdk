@@ -11,7 +11,6 @@ class JSONRPCException(Exception):
     def __init__(self, message):
         self.message = message
 
-
 class JSONRPCClient(object):
     def __init__(self, addr, port=None, verbose=False, timeout=60.0):
         self.verbose = verbose
@@ -35,7 +34,7 @@ class JSONRPCClient(object):
     def __del__(self):
         self.sock.close()
 
-    def call(self, method, params={}, verbose=False):
+    def send(self, method, params={}, id=1):
         req = {}
         req['jsonrpc'] = '2.0'
         req['method'] = method
@@ -44,19 +43,19 @@ class JSONRPCClient(object):
             req['params'] = params
         reqstr = json.dumps(req)
 
-        verbose = verbose or self.verbose
-
-        if verbose:
+        if self.verbose:
             print("request:")
             print(json.dumps(req, indent=2))
 
         self.sock.sendall(reqstr.encode("utf-8"))
+        return req
+
+    def recv(self):
         buf = ''
-        closed = False
         response = {}
         start_time = time.clock()
 
-        while not closed:
+        while True:
             try:
                 timeout = self.timeout - (time.clock() - start_time)
                 if timeout <= 0.0:
@@ -64,37 +63,36 @@ class JSONRPCClient(object):
 
                 self.sock.settimeout(timeout)
                 newdata = self.sock.recv(4096)
-                if (newdata == b''):
-                    closed = True
-
                 buf += newdata.decode("utf-8")
                 response = json.loads(buf)
             except socket.timeout:
-                break
+                raise JSONRPCException("Timeout while waiting for response:\n%s\n" % buf)
+            except socket.error as e:
+                self.socket.close()
+                self.socket = None
+                raise JSONRPCException("Connection closed with partial response:\n%s\n" % buf)
             except ValueError:
                 continue  # incomplete response; keep buffering
             break
 
-        if not response:
-            if method == "kill_instance":
-                return {}
-            if closed:
-                msg = "Connection closed with partial response:"
-            else:
-                msg = "Timeout while waiting for response:"
-            msg = "\n".join([msg, buf])
-            raise JSONRPCException(msg)
-
-        if verbose:
+        if self.verbose:
             print("response:")
             print(json.dumps(response, indent=2))
 
         if 'error' in response:
             msg = "\n".join(["Got JSON-RPC error response",
-                             "request:",
-                             json.dumps(req, indent=2),
                              "response:",
-                             json.dumps(response['error'], indent=2)])
+                             json.dumps(['error'], indent=2)])
             raise JSONRPCException(msg)
+        return response
 
-        return response['result']
+    def call(self, method, params={}, id=None):
+        req = self.send(method, params, id)
+        try:
+            return self.recv()['result']
+        except JSONRPCException as e:
+            """ Don't expect response to kill """
+            if not self.socket and method == "kill_instance":
+                return {}
+            else:
+                raise e

@@ -120,6 +120,10 @@ spdk_jsonrpc_server_conn_close(struct spdk_jsonrpc_server_conn *conn)
 		close(conn->sockfd);
 		conn->sockfd = -1;
 	}
+
+	if (conn->conn_closed) {
+		conn->conn_closed(conn, conn->conn_closed_ctx);
+	}
 }
 
 static void
@@ -134,6 +138,14 @@ spdk_jsonrpc_server_conn_remove(struct spdk_jsonrpc_server_conn *conn)
 
 	TAILQ_REMOVE(&server->conns, conn, link);
 	TAILQ_INSERT_HEAD(&server->free_conns, conn, link);
+}
+
+void
+spdk_jsonrpc_conn_set_close_cb(struct spdk_jsonrpc_server_conn *conn,
+			       spdk_jsonrpc_conn_closed_fn cb, void *ctx)
+{
+	conn->conn_closed = cb;
+	conn->conn_closed_ctx = ctx;
 }
 
 static int

@@ -89,6 +89,10 @@ typedef void (*spdk_jsonrpc_handle_request_fn)(
 	const struct spdk_json_val *method,
 	const struct spdk_json_val *params);
 
+struct spdk_jsonrpc_server_conn;
+
+typedef void (*spdk_jsonrpc_conn_closed_fn)(struct spdk_jsonrpc_server_conn *conn, void *arg);
+
 /**
  * Function for specific RPC method response parsing handlers.
  *
@@ -133,6 +137,9 @@ int spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server);
  * \param server JSON-RPC server.
  */
 void spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server);
+
+void spdk_jsonrpc_conn_set_close_cb(struct spdk_jsonrpc_server_conn *conn,
+				    spdk_jsonrpc_conn_closed_fn cb, void *ctx);
 
 /**
  * Begin building a response to a JSON-RPC request.
