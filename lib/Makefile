@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += bdev blob blobfs conf copy event json jsonrpc \
           log lvol net rpc sock thread trace util nvme nvmf scsi ioat \
-	  ut_mock iscsi
+          ut_mock iscsi notify
 ifeq ($(OS),Linux)
 DIRS-y += nbd
 DIRS-$(CONFIG_VHOST) += vhost
@@ -54,6 +54,7 @@ DIRS-y += $(ENV_NAME)
 endif
 
 DEPDIRS-iscsi := scsi
+DEPDIRS-bdev := notify
 
 .PHONY: all clean $(DIRS-y)
 
