@@ -1049,7 +1049,9 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	assert(req->payload.next_sge_fn != NULL);
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
-	max_num_sgl = req->qpair->ctrlr->max_sges;
+	/* We lied to the ULP earlier to give ourselves a buffer. Rely on the real number here. */
+	max_num_sgl = spdk_min(rqpair->qpair.ctrlr->cdata.nvmf_specific.msdbd,
+			       NVME_RDMA_MAX_SGL_DESCRIPTORS);
 
 	remaining_size = req->payload_size;
 	num_sgl_desc = 0;
@@ -1062,31 +1064,33 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 		sge_length = spdk_min(remaining_size, sge_length);
 		mr_length = sge_length;
 
-		if (!g_nvme_hooks.get_rkey) {
-			mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map,
-					(uint64_t)virt_addr,
-					&mr_length);
-			if (mr == NULL) {
-				return -1;
+		while (sge_length && num_sgl_desc < max_num_sgl) {
+			if (!g_nvme_hooks.get_rkey) {
+				mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map,
+						(uint64_t)virt_addr,
+						&mr_length);
+				if (mr == NULL) {
+					return -1;
+				}
+				cmd->sgl[num_sgl_desc].keyed.key = mr->rkey;
+			} else {
+				cmd->sgl[num_sgl_desc].keyed.key = spdk_mem_map_translate(rqpair->mr_map->map,
+								   (uint64_t)virt_addr,
+								   &mr_length);
 			}
-			cmd->sgl[num_sgl_desc].keyed.key = mr->rkey;
-		} else {
-			cmd->sgl[num_sgl_desc].keyed.key = spdk_mem_map_translate(rqpair->mr_map->map,
-							   (uint64_t)virt_addr,
-							   &mr_length);
+
+			mr_length = spdk_min(mr_length, sge_length);
+
+			cmd->sgl[num_sgl_desc].keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+			cmd->sgl[num_sgl_desc].keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+			cmd->sgl[num_sgl_desc].keyed.length = mr_length;
+			cmd->sgl[num_sgl_desc].address = (uint64_t)virt_addr;
+
+			remaining_size -= mr_length;
+			sge_length -= mr_length;
+			virt_addr = (void *)((char *)virt_addr + mr_length);
+			num_sgl_desc++;
 		}
-
-		if (mr_length < sge_length) {
-			return -1;
-		}
-
-		cmd->sgl[num_sgl_desc].keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
-		cmd->sgl[num_sgl_desc].keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
-		cmd->sgl[num_sgl_desc].keyed.length = sge_length;
-		cmd->sgl[num_sgl_desc].address = (uint64_t)virt_addr;
-
-		remaining_size -= sge_length;
-		num_sgl_desc++;
 	} while (remaining_size > 0 && num_sgl_desc < max_num_sgl);
 
 
@@ -1704,7 +1708,11 @@ nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 uint16_t
 nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return spdk_min(ctrlr->cdata.nvmf_specific.msdbd, NVME_RDMA_MAX_SGL_DESCRIPTORS);
+	/* Return at most half of the total number of descriptors we have available.
+	 * This will ensure that we can split each SGE across 2 MRs and still have
+	 * enough resources to complete the I/O.
+	 */
+	return spdk_min(ctrlr->cdata.nvmf_specific.msdbd, NVME_RDMA_MAX_SGL_DESCRIPTORS / 2);
 }
 
 void *
