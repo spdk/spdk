@@ -78,6 +78,30 @@
     },
     {
       "key": {
+        "uuid": "616c338e_6012d9fe",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T17:50:50Z",
+      "side": 1,
+      "message": "I bet you did mean that. I just copied this exactly from the old code.",
+      "parentUuid": "f641d75d_4b712fed",
+      "range": {
+        "startLine": 170,
+        "startChar": 4,
+        "endLine": 170,
+        "endChar": 15
+      },
+      "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0d8aa33c_b49d1cb5",
         "filename": "lib/thread/thread.c",
         "patchSetId": 15
@@ -107,6 +131,24 @@
       "side": 1,
       "message": "It\u0027s probably worth benchmarking bdev QOS, which uses spdk_thread_send_msg() extensively.",
       "parentUuid": "0d8aa33c_b49d1cb5",
+      "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e36e517a_e7600e79",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T17:50:50Z",
+      "side": 1,
+      "message": "SPDK_ENV_SOCKET_ID_ANY will select the socket that the thread is currently running on. The old code would create a mempool per-socket. However, I think that might be broken now that I look at it carefully. If you pass a message from one socket to another, won\u0027t it take events from one pool and put them back into another? I don\u0027t see a NUMA-friendly way to pass messages across socket boundaries.\n\nAlso, there is definitely a big performance hit from over-using spdk_thread_send_msg() today. In an upcoming patch, I\u0027m going introduce caches of message objects on the thread object itself, implemented as a TAILQ. On average, the same number of messages come in as come out of a thread, so the cache stays populated. It will have to handle conditions related to running out or building up too many by going to the central pool of course.",
+      "parentUuid": "c59429dd_48e9026e",
       "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
