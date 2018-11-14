@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6911b59_0a44ecc0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-14T05:14:57Z",
+      "side": 1,
+      "message": "We backported this functionality to our spdk-18.02 branch.\nSee here https://github.com/spdk/dpdk/commit/8ba8947e0dd6e145daa8131118ad13dae6a41086\n\nNevertheless, this patch doesn\u0027t look right to me. If the user asks for single file segments and the DPDK underneath doesn\u0027t support them, we should print a message and exit - and that\u0027s what DPDK does already. Silently not using single file segments just masks the problem. They *are* required in some cases.\n\nInstead, we might want to describe --single-file-segments availability in doc/applications.md.",
+      "revId": "a89c3a7a795b5cee393b06206c6455c60f5d9bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
