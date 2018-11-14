@@ -55,6 +55,29 @@
     },
     {
       "key": {
+        "uuid": "f641d75d_4b712fed",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-14T13:16:34Z",
+      "side": 1,
+      "message": "I think I meant contiguity here :)\n\nMost of this can be probably removed, as with dynamic memory management there shouldn\u0027t be any physical address contiguity requirements. I\u0027ll check it out later.",
+      "range": {
+        "startLine": 170,
+        "startChar": 4,
+        "endLine": 170,
+        "endChar": 15
+      },
+      "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0d8aa33c_b49d1cb5",
         "filename": "lib/thread/thread.c",
         "patchSetId": 15
@@ -66,6 +89,24 @@
       "writtenOn": "2018-11-14T05:00:12Z",
       "side": 1,
       "message": "I think maybe there are some performance drop if we created the mempool without socket id hint.  But if we decide to use just one mempool for all thread\u0027s event messages, the \u0027socket_count\u0027 parameter can be removed.",
+      "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c59429dd_48e9026e",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-14T13:16:34Z",
+      "side": 1,
+      "message": "It\u0027s probably worth benchmarking bdev QOS, which uses spdk_thread_send_msg() extensively.",
+      "parentUuid": "0d8aa33c_b49d1cb5",
       "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
