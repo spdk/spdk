@@ -1735,6 +1735,22 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int, default=0)
     p.set_defaults(func=send_nvme_cmd)
 
+    def nvme_security_receive(args):
+        print(rpc.nvme.nvme_security_receive(args.client,
+                                             name=args.name,
+                                             nssf=args.nssf,
+                                             secp=args.secp,
+                                             spsp=args.spsp,
+                                             recvlen=args.recvlen))
+    p = subparsers.add_parser('nvme_security_receive',
+                              help='Receive security procotol data from NVMe controller')
+    p.add_argument('-b', '--name', help='Name of the NVMe bdev', required=True)
+    p.add_argument('-n', '--nssf', help='NVMe Security Protocol Field', type=int, required=True)
+    p.add_argument('-p', '--secp', help='Security Protocol', type=int, required=True)
+    p.add_argument('-s', '--spsp', help='Security Protocol Specific field', type=int, required=True)
+    p.add_argument('-l', '--recvlen', help='Receive length', type=int, required=True)
+    p.set_defaults(func=nvme_security_receive)
+
     args = parser.parse_args()
 
     try:
