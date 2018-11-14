@@ -890,20 +890,19 @@ nvme_rdma_build_null_request(struct spdk_nvme_rdma_req *rdma_req)
 	return 0;
 }
 
-
-/* This function assumes that the 0th element of the wr sgl is occupied by the NVMe command. */
 static int
 nvme_rdma_prep_wr_sgl(struct nvme_rdma_qpair *rqpair,
 		      struct spdk_nvme_rdma_req *rdma_req,
 		      void *payload,
-		      uint32_t payload_size)
+		      uint32_t payload_size,
+		      uint32_t current_num_sge)
 {
 	struct ibv_mr *mr;
 	uint64_t requested_size, remaining_payload;
 	uint32_t num_sge, i;
 
 	remaining_payload = payload_size;
-	num_sge = 1;
+	num_sge = current_num_sge;
 
 	while (num_sge < rqpair->max_send_sge && remaining_payload > 0) {
 		requested_size = remaining_payload;
@@ -911,6 +910,7 @@ nvme_rdma_prep_wr_sgl(struct nvme_rdma_qpair *rqpair,
 				(uint64_t)payload, &requested_size);
 
 		if (mr == NULL) {
+			/* This function assumes that the 0th element of the wr sgl is occupied by the NVMe command. */
 			for (i = 1; i < num_sge; i++) {
 				rdma_req->send_sgl[i].addr = 0;
 				rdma_req->send_sgl[i].length = 0;
@@ -959,7 +959,7 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 	 * the NVMe command and the rest describee the data
 	 * payload. */
 	rdma_req->send_wr.num_sge = nvme_rdma_prep_wr_sgl(rqpair, rdma_req,
-				    req->payload.contig_or_cb_arg + req->payload_offset, req->payload_size);
+				    req->payload.contig_or_cb_arg + req->payload_offset, req->payload_size, 1);
 
 	if (rdma_req->send_wr.num_sge < 0) {
 		return -1;
@@ -1147,6 +1147,7 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 {
 	struct nvme_request *req = rdma_req->req;
 	uint32_t length;
+	uint32_t remaining_payload;
 	void *virt_addr;
 	int rc;
 
@@ -1156,31 +1157,34 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	assert(req->payload.next_sge_fn != NULL);
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
-	/* TODO: for now, we only support a single SGL entry */
-	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
-	if (rc) {
-		return -1;
-	}
-
-	if (length < req->payload_size) {
-		SPDK_ERRLOG("multi-element SGL currently not supported for RDMA\n");
-		return -1;
-	}
+	remaining_payload = req->payload_size;
+	rdma_req->send_wr.num_sge = 1;
 
 	/* The first element of this SGL is pointing at an
-	 * spdk_nvmf_cmd object. For this particular command,
-	 * we only need the first 64 bytes corresponding to
-	 * the NVMe command. */
+	* spdk_nvmf_cmd object. For this particular command,
+	* we only need the first 64 bytes corresponding to
+	* the NVMe command. */
 	rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
 
-	/* The RDMA SGL contains multiple elements. The first describes
-	 * the NVMe command and the rest describe the data
-	 * payload. */
-	rdma_req->send_wr.num_sge = nvme_rdma_prep_wr_sgl(rqpair, rdma_req, virt_addr, length);
+	do {
+		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
+		if (rc) {
+			return -1;
+		}
 
-	if (rdma_req->send_wr.num_sge < 0) {
-		return -1;
-	}
+		assert(length <= remaining_payload);
+
+		/* The RDMA SGL contains multiple elements. The first describes
+		* the NVMe command and the rest describe the data
+		* payload. */
+		rdma_req->send_wr.num_sge = nvme_rdma_prep_wr_sgl(rqpair, rdma_req, virt_addr, length,
+					    rdma_req->send_wr.num_sge);
+
+		if (rdma_req->send_wr.num_sge < 0) {
+			return -1;
+		}
+		remaining_payload -= length;
+	} while (remaining_payload > 0);
 
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
