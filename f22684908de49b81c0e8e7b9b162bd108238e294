@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "d4194592_780059b1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-14T18:09:17Z",
+      "side": 1,
+      "message": "The commit message should describe the patch, independently of the 427294 patch (especially since if we merge this one, then 427294 won\u0027t be merged).\n\nYou can probably lift a lot of the commit message from 427294.",
+      "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d52207c_4f97f3f1",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-14T18:09:17Z",
+      "side": 1,
+      "message": "Hi Andrey,\n\nThis should go into the v19.01 section instead.\n\nWhen we cherry pick this commit into the 18.10 branch, we will put together a separate CHANGELOG on that branch.\n\n-Jim",
+      "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0a369e7_8b31f340",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-14T18:09:17Z",
+      "side": 1,
+      "message": "shutdown\n\nI don\u0027t think \"top-down\" will be obvious to most people who read this.  It may be better to briefly describe an example instead.",
+      "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54546944_8b72589a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
