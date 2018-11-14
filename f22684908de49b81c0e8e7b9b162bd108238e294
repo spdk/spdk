@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "1cb67fcd_8d641894",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-11-14T18:35:54Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "539f0d6e_7dd2f5a5",
+      "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3202e6_d10c4e4f",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -81,6 +99,24 @@
       "writtenOn": "2018-11-14T18:12:38Z",
       "side": 1,
       "message": "Let\u0027s make this an SPDK_ERRLOG.  I think you could just remove this SPDK_WARNLOG, and change the SPDK_DEBUGLOG below to an SPDK_ERRLOG (we don\u0027t need both).  The important thing is that we get the name of the bdev that is still claimed in the SPDK_ERRLOG.",
+      "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "934b91a1_89035b2c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-11-14T18:35:54Z",
+      "side": 1,
+      "message": "OK, but I guess we should add \u0027claimed\u0027 to the DEBUGLOG went ERRLOG message so that we know what the error is.",
+      "parentUuid": "5a3202e6_d10c4e4f",
       "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -107,6 +143,30 @@
       "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83dfaf69_cdf0ffe8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-11-14T18:35:54Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "54546944_8b72589a",
+      "range": {
+        "startLine": 1126,
+        "startChar": 0,
+        "endLine": 1126,
+        "endChar": 8
+      },
+      "revId": "f22684908de49b81c0e8e7b9b162bd108238e294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
