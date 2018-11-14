@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7d3b130a_e849dbb2",
+        "filename": "include/spdk/bit_array.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-14T09:08:21Z",
+      "side": 1,
+      "message": "We return size in bytes. I will add this information.",
+      "parentUuid": "49d2ea17_2953c264",
+      "range": {
+        "startLine": 181,
+        "startChar": 11,
+        "endLine": 181,
+        "endChar": 38
+      },
+      "revId": "83311fd2d57cbb6f381721673b400ce8e99596d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e9078535_5a5675d5",
         "filename": "lib/util/bit_array.c",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "2f2b93a4_d7610734",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-14T09:08:21Z",
+      "side": 1,
+      "message": "Please look on my next comment.",
+      "parentUuid": "e9078535_5a5675d5",
+      "range": {
+        "startLine": 324,
+        "startChar": 0,
+        "endLine": 326,
+        "endChar": 2
+      },
+      "revId": "83311fd2d57cbb6f381721673b400ce8e99596d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86bc3dc4_37ea3f23",
         "filename": "lib/util/bit_array.c",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2018-11-13T16:03:24Z",
       "side": 1,
       "message": "From doc text I was tought that bitmask is `size` in ** bits ** and copy # of` size` bits there. But now I see that is just copying the buffer. This is not OK as the array is using 0x10 (see line 125) to mask end of bit array.\n\nI think that this call should resize the mask to `size` ** bits ** and copy these bits from` mask` rather than returning error here.",
+      "range": {
+        "startLine": 335,
+        "startChar": 0,
+        "endLine": 337,
+        "endChar": 2
+      },
+      "revId": "83311fd2d57cbb6f381721673b400ce8e99596d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8be3031c_09b51566",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-14T09:08:21Z",
+      "side": 1,
+      "message": "This interface provides fast way to serialize/deserialize bitmask stored inside bit array. spdk_bit_array_mask_size() returns number of bytes used for storing this bitmask without this additional word used for _find_() functions optimization. If we call resize() and copy bits from mask one by one we don\u0027t get any benefits from this interface. This interface assumes that someone call spdk_bit_array_create() with correct size and then call this function. Also I think that we should use bytes instead bits because common use of this will be calling spdk_bit_array_mask_size() to get size for buffer allocation and then storing bitmask to this buffer with spdk_bit_array_load_mask().",
+      "parentUuid": "86bc3dc4_37ea3f23",
       "range": {
         "startLine": 335,
         "startChar": 0,
