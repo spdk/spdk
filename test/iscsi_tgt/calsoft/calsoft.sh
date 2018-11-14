@@ -6,7 +6,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 delete_tmp_conf_files() {
 	rm -f /usr/local/etc/its.conf
-	rm -f /usr/local/etc/auth.conf
 }
 
 if [ ! -d /usr/local/calsoft ]; then
@@ -25,7 +24,6 @@ calsoft_py="$testdir/calsoft.py"
 # Copy the calsoft config file to /usr/local/etc
 mkdir -p /usr/local/etc
 cp $testdir/its.conf /usr/local/etc/
-cp $testdir/auth.conf /usr/local/etc/
 
 # Append target ip to calsoft config
 echo "IP=$TARGET_IP" >> /usr/local/etc/its.conf
@@ -45,6 +43,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
+$rpc_py add_iscsi_auth_group 1 -c 'user:root secret:tester'
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_malloc_bdev -b MyBdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
