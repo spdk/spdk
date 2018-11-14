@@ -937,6 +937,44 @@ nvme_rdma_prep_wr_sgl(struct nvme_rdma_qpair *rqpair,
 	return (int)num_sge;
 }
 
+static void
+nvme_rdma_construct_cmd_from_sgl(struct nvme_rdma_qpair *rqpair,
+				 struct spdk_nvme_rdma_req *rdma_req, int num_sge)
+{
+	struct nvme_request *req = rdma_req->req;
+	struct spdk_nvmf_cmd *cmd = &rqpair->cmds[rdma_req->id];
+
+	/*
+	 * If only one SGL descriptor is required, it can be embedded directly in the command
+	 * as a data block descriptor.
+	 */
+	if (num_sge == 1) {
+		/* The first element of this SGL is pointing at an
+		 * spdk_nvmf_cmd object. For this particular command,
+		 * we only need the first 64 bytes corresponding to
+		 * the NVMe command. */
+		rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
+
+		req->cmd.dptr.sgl1.keyed.type = cmd->sgl[0].keyed.type;
+		req->cmd.dptr.sgl1.keyed.subtype = cmd->sgl[0].keyed.subtype;
+		req->cmd.dptr.sgl1.keyed.length = cmd->sgl[0].keyed.length;
+		req->cmd.dptr.sgl1.keyed.key = cmd->sgl[0].keyed.key;
+		req->cmd.dptr.sgl1.address = cmd->sgl[0].address;
+	} else {
+		/*
+		 * Otherwise, The SGL descriptor embedded in the command must point to the list of
+		 * SGL descriptors used to describe the operation. In that case it is a last segment descriptor.
+		 */
+		rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd) + sizeof(struct
+					       spdk_nvme_sgl_descriptor) * num_sge;
+
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+		req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
+		req->cmd.dptr.sgl1.unkeyed.length = num_sge * sizeof(struct spdk_nvme_sgl_descriptor);
+		req->cmd.dptr.sgl1.address = (uint64_t)0;
+	}
+}
+
 /*
  * Build inline SGL describing contiguous payload buffer.
  */
@@ -985,45 +1023,55 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 {
 	struct nvme_request *req = rdma_req->req;
 	void *payload = req->payload.contig_or_cb_arg + req->payload_offset;
+	struct spdk_nvmf_cmd *cmd = &rqpair->cmds[rdma_req->id];
 	struct ibv_mr *mr;
-	uint64_t requested_size;
+	uint64_t requested_size, remaining_payload;
+	int max_num_sgl, num_sgl_desc;
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
-	requested_size = req->payload_size;
-	if (!g_nvme_hooks.get_rkey) {
+	rdma_req->send_wr.num_sge = 1;
 
-		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload,
-				&requested_size);
-		if (mr == NULL) {
-			return -1;
+	remaining_payload = req->payload_size;
+	num_sgl_desc = 0;
+
+	/* We lied to the ULP earlier to give ourselves a buffer. Rely on the real number here. */
+	max_num_sgl = spdk_min(rqpair->qpair.ctrlr->cdata.nvmf_specific.msdbd,
+			       NVME_RDMA_MAX_SGL_DESCRIPTORS);
+	do {
+		requested_size = remaining_payload;
+		if (!g_nvme_hooks.get_rkey) {
+			mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload,
+					&requested_size);
+			if (mr == NULL) {
+				return -1;
+			}
+			req->cmd.dptr.sgl1.keyed.key = mr->rkey;
+		} else {
+			req->cmd.dptr.sgl1.keyed.key = spdk_mem_map_translate(rqpair->mr_map->map,
+						       (uint64_t)payload,
+						       &requested_size);
 		}
-		req->cmd.dptr.sgl1.keyed.key = mr->rkey;
-	} else {
-		req->cmd.dptr.sgl1.keyed.key = spdk_mem_map_translate(rqpair->mr_map->map,
-					       (uint64_t)payload,
-					       &requested_size);
-	}
 
-	if (requested_size < req->payload_size) {
+		requested_size = spdk_min(requested_size, remaining_payload);
+
+		cmd->sgl[num_sgl_desc].keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+		cmd->sgl[num_sgl_desc].keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+		cmd->sgl[num_sgl_desc].keyed.length = requested_size;
+		cmd->sgl[num_sgl_desc].address = (uint64_t)payload;
+
+		payload = (void *)((char *)payload + requested_size);
+		remaining_payload -= requested_size;
+		num_sgl_desc++;
+	} while (remaining_payload > 0 && num_sgl_desc < max_num_sgl);
+
+	if (remaining_payload > 0) {
 		return -1;
 	}
 
-	/* The first element of this SGL is pointing at an
-	 * spdk_nvmf_cmd object. For this particular command,
-	 * we only need the first 64 bytes corresponding to
-	 * the NVMe command. */
-	rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
-
-	/* The RDMA SGL needs one element describing the NVMe command. */
-	rdma_req->send_wr.num_sge = 1;
-
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
-	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
-	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
-	req->cmd.dptr.sgl1.keyed.length = req->payload_size;
-	req->cmd.dptr.sgl1.address = (uint64_t)payload;
+	nvme_rdma_construct_cmd_from_sgl(rqpair, rdma_req, num_sgl_desc);
 
 	return 0;
 }
@@ -1105,35 +1153,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	 * of the spdk_nvmf_cmd structure. */
 	rdma_req->send_wr.num_sge = 1;
 
-	/*
-	 * If only one SGL descriptor is required, it can be embedded directly in the command
-	 * as a data block descriptor.
-	 */
-	if (num_sgl_desc == 1) {
-		/* The first element of this SGL is pointing at an
-		 * spdk_nvmf_cmd object. For this particular command,
-		 * we only need the first 64 bytes corresponding to
-		 * the NVMe command. */
-		rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
-
-		req->cmd.dptr.sgl1.keyed.type = cmd->sgl[0].keyed.type;
-		req->cmd.dptr.sgl1.keyed.subtype = cmd->sgl[0].keyed.subtype;
-		req->cmd.dptr.sgl1.keyed.length = cmd->sgl[0].keyed.length;
-		req->cmd.dptr.sgl1.keyed.key = cmd->sgl[0].keyed.key;
-		req->cmd.dptr.sgl1.address = cmd->sgl[0].address;
-	} else {
-		/*
-		 * Otherwise, The SGL descriptor embedded in the command must point to the list of
-		 * SGL descriptors used to describe the operation. In that case it is a last segment descriptor.
-		 */
-		rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd) + sizeof(struct
-					       spdk_nvme_sgl_descriptor) * num_sgl_desc;
-
-		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
-		req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
-		req->cmd.dptr.sgl1.unkeyed.length = num_sgl_desc * sizeof(struct spdk_nvme_sgl_descriptor);
-		req->cmd.dptr.sgl1.address = (uint64_t)0;
-	}
+	nvme_rdma_construct_cmd_from_sgl(rqpair, rdma_req, num_sgl_desc);
 
 	return 0;
 }
