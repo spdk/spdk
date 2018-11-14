@@ -685,6 +685,8 @@ if __name__ == "__main__":
                         item['method']].append(item)
         elif section == "Global":
             pass
+        elif section == "Ioat":
+            pass
         elif section == "VirtioPci":
             print("Please use spdk target flags.")
             exit(1)
