@@ -16,6 +16,24 @@
       "revId": "4ddde46445d5af76516b8a1a920e06c22c01d847",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71eaff3f_f9c952e5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1232,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T22:11:46Z",
+      "side": 1,
+      "message": "Nevermind - the io device was registered earlier in this function so nothing could have happened that would cause spdk_io_device_unregister to become asynchronous.",
+      "parentUuid": "dabbab5f_3a78ffdb",
+      "revId": "4ddde46445d5af76516b8a1a920e06c22c01d847",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
