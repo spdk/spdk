@@ -102,6 +102,9 @@ struct spdk_trace_history {
 	/** Index to next spdk_trace_entry to fill in the circular buffer. */
 	uint32_t			next_entry;
 
+	/** Index to trace port message. */
+	uint32_t			trace_msg_idx;
+
 	/**
 	 * Circular buffer of spdk_trace_entry structures for tracing
 	 *  tpoints on this core.  Debug tool spdk_trace reads this
@@ -124,6 +127,22 @@ struct spdk_trace_flags {
 extern struct spdk_trace_flags *g_trace_flags;
 extern struct spdk_trace_histories *g_trace_histories;
 
+#define SPDK_TRACE_MSGKEY_PATHNAME	"/dev/shm"
+#define SPDK_TRACE_MSGKEY_PROJ_ID	1234
+#define SPDK_TRACE_MSGTYPE		4321
+
+enum spdk_trace_msg_port_type {
+	SPDK_TRACE_MSG_PORT_FISRT	= 0x0,
+	SPDK_TRACE_MSG_PORT_LAST	= 0x1,
+	SPDK_TRACE_MSG_PORT_COMPLETION	= 0x2,
+};
+
+struct spdk_trace_port_msg {
+	long		mtype;
+	int		port_type;
+	int		lcore;
+	uint64_t	msg_idx;
+};
 
 struct spdk_trace_histories {
 	struct spdk_trace_flags flags;

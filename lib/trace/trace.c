@@ -39,6 +39,7 @@
 
 static int g_trace_fd = -1;
 static char g_shm_name[64];
+static int g_msgid = -1;
 
 struct spdk_trace_histories *g_trace_histories;
 
@@ -49,6 +50,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	struct spdk_trace_history *lcore_history;
 	struct spdk_trace_entry *next_entry;
 	unsigned lcore;
+	struct spdk_trace_port_msg trace_msg = {.mtype = SPDK_TRACE_MSGTYPE,};
 
 	lcore = spdk_env_get_current_core();
 	if (lcore >= SPDK_TRACE_MAX_LCORE) {
@@ -72,7 +74,28 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	next_entry->arg1 = arg1;
 
 	lcore_history->next_entry++;
+
+	/* Send out MSG about the full of front half */
+	if (g_msgid >= 0 && lcore_history->next_entry == g_trace_histories->flags.trace_size / 2) {
+		trace_msg.port_type = SPDK_TRACE_MSG_PORT_FISRT;
+		trace_msg.lcore = lcore;
+		trace_msg.msg_idx = lcore_history->trace_msg_idx++;
+		if (msgsnd(g_msgid, &trace_msg, sizeof(trace_msg) - sizeof(long), IPC_NOWAIT) == -1) {
+			fprintf(stderr, "Failed to send out trace msg - %s\n", spdk_strerror(errno));
+		}
+	}
+
 	if (lcore_history->next_entry == g_trace_histories->flags.trace_size) {
+		/* Send out MSG about the full of last half */
+		if (g_msgid >= 0) {
+			trace_msg.port_type = SPDK_TRACE_MSG_PORT_LAST;
+			trace_msg.lcore = lcore;
+			trace_msg.msg_idx = lcore_history->trace_msg_idx++;
+			if (msgsnd(g_msgid, &trace_msg, sizeof(trace_msg) - sizeof(long), IPC_NOWAIT) == -1) {
+				fprintf(stderr, "Failed to send out trace msg - %s\n", spdk_strerror(errno));
+			}
+		}
+
 		lcore_history->next_entry = 0;
 	}
 }
@@ -82,6 +105,7 @@ spdk_trace_init(const char *shm_name, uint64_t trace_size)
 {
 	int i = 0;
 	int histories_size = get_trace_histories_size(trace_size);
+	key_t msgkey;
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
@@ -133,6 +157,17 @@ spdk_trace_init(const char *shm_name, uint64_t trace_size)
 
 	spdk_trace_flags_init();
 
+	/* Create message queue to notify trace-porter do the trace port work */
+	msgkey = ftok(SPDK_TRACE_MSGKEY_PATHNAME, SPDK_TRACE_MSGKEY_PROJ_ID);
+	if (msgkey == -1) {
+		fprintf(stderr, "Failed to convert a msgkey - %s.\n", spdk_strerror(errno));
+	}
+
+	g_msgid = msgget(msgkey, IPC_CREAT | IPC_NOWAIT | 0600);
+	if (g_msgid == -1) {
+		fprintf(stderr, "Failed to get a msg identifier - %s.\n", spdk_strerror(errno));
+	}
+
 	return 0;
 
 trace_init_err:
@@ -152,6 +187,7 @@ void
 spdk_trace_cleanup(void)
 {
 	bool unlink;
+	struct spdk_trace_port_msg trace_msg = {.mtype = SPDK_TRACE_MSGTYPE,};
 
 	if (g_trace_histories == NULL) {
 		return;
@@ -166,6 +202,18 @@ spdk_trace_cleanup(void)
 	munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
 	g_trace_histories = NULL;
 	close(g_trace_fd);
+
+	if (g_msgid >= 0) {
+		/* Send out MSG about the completion of trace */
+		trace_msg.port_type = SPDK_TRACE_MSG_PORT_COMPLETION;
+		if (msgsnd(g_msgid, &trace_msg, sizeof(trace_msg) - sizeof(long), 0) == -1) {
+			fprintf(stderr, "Failed to send out trace completion msg - %s\n", spdk_strerror(errno));
+		}
+
+		if (msgctl(g_msgid, IPC_RMID, 0) == -1) {
+			fprintf(stderr, "Failed to remove msg identifier - %s.\n", spdk_strerror(errno));
+		}
+	}
 
 	if (unlink) {
 		shm_unlink(g_shm_name);
