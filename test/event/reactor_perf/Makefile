@@ -37,6 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 APP = reactor_perf
 C_SRCS := reactor_perf.c
 
-SPDK_LIB_LIST = event trace conf thread util log rpc jsonrpc json sock
+SPDK_LIB_LIST = event trace conf thread util log rpc jsonrpc json sock notify
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
