@@ -140,6 +140,30 @@
       "revId": "83311fd2d57cbb6f381721673b400ce8e99596d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4ddda41_70ed412b",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-14T09:50:11Z",
+      "side": 1,
+      "message": "\u003e This interface assumes that someone call spdk_bit_array_create() with correct size and then call this function\n\nAnd\n\n\u003e This interface assumes that someone call spdk_bit_array_create() with correct size and then call this function.\n\nSo you for the user to store both - bit_count and spdk_bit_array_mask_size()? Otherwise if one of these information is lost you can\u0027t recreate bitmap.\n\nAlso as of sanity/security reasons I don\u0027t think that storing internal state in user buffer and loading it without validation is a good idea. If buffer gets corrupted (the trailing 0b10) the best thing you will get is a crash in _spdk_bit_array_find_first().\n\n\u003e  If we call resize() and copy bits from mask one by one we don\u0027t get any benefits from this interface.\n\nYou should use memcpy() but only for (bit_count / 8) bytes. Then copy the remaining (bit_count % 8) bits by hand or by spdk_bit_array_set/spdk_bit_array_clear API. Your call.\n\nAnd oposite operation should be done on load.\n\n\u003e Also I think that we should use bytes instead bits because common use of this will be calling spdk_bit_array_mask_size() to get size for buffer allocation and then storing bitmask to this buffer with spdk_bit_array_load_mask().\n\nOr you can just do \n\n  size \u003d (spdk_bit_array_capacity() + 7) / 8\n\ngot get needed size.",
+      "parentUuid": "8be3031c_09b51566",
+      "range": {
+        "startLine": 335,
+        "startChar": 0,
+        "endLine": 337,
+        "endChar": 2
+      },
+      "revId": "83311fd2d57cbb6f381721673b400ce8e99596d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
