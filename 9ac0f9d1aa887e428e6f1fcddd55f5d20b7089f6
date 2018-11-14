@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c841b1bb_95ba62c5",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-14T01:30:26Z",
+      "side": 1,
+      "message": "\"may be able to\" or just \"can\"",
+      "range": {
+        "startLine": 566,
+        "startChar": 11,
+        "endLine": 566,
+        "endChar": 18
+      },
+      "revId": "9ac0f9d1aa887e428e6f1fcddd55f5d20b7089f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
