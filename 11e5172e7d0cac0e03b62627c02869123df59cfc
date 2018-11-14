@@ -237,6 +237,30 @@
       "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3926d696_b0963b3a",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-14T08:19:42Z",
+      "side": 1,
+      "message": "This still looks relevant to me. I agree with wuzhouhui.",
+      "parentUuid": "4e394f99_dde4782d",
+      "range": {
+        "startLine": 884,
+        "startChar": 2,
+        "endLine": 884,
+        "endChar": 11
+      },
+      "revId": "11e5172e7d0cac0e03b62627c02869123df59cfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
