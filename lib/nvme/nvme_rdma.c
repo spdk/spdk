@@ -92,13 +92,15 @@ struct nvme_rdma_ctrlr {
 struct nvme_rdma_qpair {
 	struct spdk_nvme_qpair			qpair;
 
-	struct rdma_event_channel		*cm_channel;
-
 	struct rdma_cm_id			*cm_id;
 
 	struct ibv_cq				*cq;
 
 	struct	spdk_nvme_rdma_req		*rdma_reqs;
+
+	uint32_t				max_send_sge;
+
+	uint32_t				max_recv_sge;
 
 	uint16_t				num_entries;
 
@@ -124,6 +126,9 @@ struct nvme_rdma_qpair {
 
 	TAILQ_HEAD(, spdk_nvme_rdma_req)	free_reqs;
 	TAILQ_HEAD(, spdk_nvme_rdma_req)	outstanding_reqs;
+
+	/* Placed at the end of the struct since it is not used frequently */
+	struct rdma_event_channel		*cm_channel;
 };
 
 struct spdk_nvme_rdma_req {
@@ -245,7 +250,14 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 {
 	int			rc;
 	struct ibv_qp_init_attr	attr;
-	struct nvme_rdma_ctrlr *rctrlr;
+	struct ibv_device_attr	dev_attr;
+	struct nvme_rdma_ctrlr	*rctrlr;
+
+	rc = ibv_query_device(rqpair->cm_id->verbs, &dev_attr);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
+		return -1;
+	}
 
 	rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, rqpair->num_entries * 2, rqpair, NULL, 0);
 	if (!rqpair->cq) {
@@ -266,14 +278,20 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	attr.recv_cq		= rqpair->cq;
 	attr.cap.max_send_wr	= rqpair->num_entries; /* SEND operations */
 	attr.cap.max_recv_wr	= rqpair->num_entries; /* RECV operations */
-	attr.cap.max_send_sge	= NVME_RDMA_DEFAULT_TX_SGE;
-	attr.cap.max_recv_sge	= NVME_RDMA_DEFAULT_RX_SGE;
+	attr.cap.max_send_sge	= spdk_min(NVME_RDMA_DEFAULT_TX_SGE, dev_attr.max_sge);
+	attr.cap.max_recv_sge	= spdk_min(NVME_RDMA_DEFAULT_RX_SGE, dev_attr.max_sge);
 
 	rc = rdma_create_qp(rqpair->cm_id, rctrlr->pd, &attr);
+
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
 		return -1;
 	}
+
+	/* ibv_create_qp will change the values in attr.cap. Make sure we store the proper value. */
+	rqpair->max_send_sge = spdk_min(NVME_RDMA_DEFAULT_TX_SGE, attr.cap.max_send_sge);
+	rqpair->max_recv_sge = spdk_min(NVME_RDMA_DEFAULT_RX_SGE, attr.cap.max_recv_sge);
+
 	rctrlr->pd = rqpair->cm_id->qp->pd;
 
 	rqpair->cm_id->context = &rqpair->qpair;
