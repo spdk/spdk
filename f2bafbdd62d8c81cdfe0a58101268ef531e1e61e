@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1d05534d_12f13801",
+        "filename": "configure",
+        "patchSetId": 16
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-14T17:13:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "31b43378_abf7f5d2",
+      "revId": "f2bafbdd62d8c81cdfe0a58101268ef531e1e61e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9a648ab_0229c789",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 16
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-14T16:55:26Z",
       "side": 1,
       "message": "You have flipped the install_crypto and install_compress flags. You should check install_compress before cloning ISA-L and install_crypto before cloning ipsec.",
+      "revId": "f2bafbdd62d8c81cdfe0a58101268ef531e1e61e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc32e478_6738cdef",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-14T17:13:04Z",
+      "side": 1,
+      "message": "thanks!!",
+      "parentUuid": "c9a648ab_0229c789",
       "revId": "f2bafbdd62d8c81cdfe0a58101268ef531e1e61e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
