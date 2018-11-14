@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec091611_c9d19312",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T21:58:12Z",
+      "side": 1,
+      "message": "You don\u0027t need a function pointer here - just call the function. If you end up needing a function pointer later on, add it in the patch that requires it.",
+      "revId": "14c6d5a53ab5db1301a1d896861d3d51d9b33ce1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
