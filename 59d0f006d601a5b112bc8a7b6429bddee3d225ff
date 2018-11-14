@@ -34,6 +34,41 @@
       "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77b95082_94d940f8",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-14T05:00:12Z",
+      "side": 1,
+      "message": "that\u0027s fine, :).",
+      "parentUuid": "5f254eb7_d95de8b9",
+      "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d8aa33c_b49d1cb5",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-14T05:00:12Z",
+      "side": 1,
+      "message": "I think maybe there are some performance drop if we created the mempool without socket id hint.  But if we decide to use just one mempool for all thread\u0027s event messages, the \u0027socket_count\u0027 parameter can be removed.",
+      "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
