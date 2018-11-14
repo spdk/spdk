@@ -34,6 +34,24 @@
       "revId": "a89c3a7a795b5cee393b06206c6455c60f5d9bca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7c2ffc6_5831f655",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-14T06:15:57Z",
+      "side": 1,
+      "message": "We do want to support it and we do want to exit with an error if the underlying DPDK can\u0027t handle it.\n\nImplicitly disabling single file segments doesn\u0027t help us in any way. The user could have requested them because of either\n - trying to run vhost initiator with 2MB hugepages, or\n - trying to overcome ulimits\n\nMasking out the --single-file-segments option will make us progress in the initialization one step further just to fail on something else later. We can\u0027t do it.",
+      "parentUuid": "dbdfbedd_c1fc98c9",
+      "revId": "a89c3a7a795b5cee393b06206c6455c60f5d9bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
