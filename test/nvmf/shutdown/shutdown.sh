@@ -62,9 +62,13 @@ done
 # Test 1: Kill initiator unexpectedly
 
 # Run bdevperf
-$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 20 &
+$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
 perfpid=$!
-sleep 10
+waitforlisten $perfpid /var/tmp/bdevperf.sock
+$rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
+
+# Sleep for a few seconds to allow I/O to begin
+sleep 5
 
 # Kill bdevperf half way through
 killprocess $perfpid
@@ -76,14 +80,18 @@ kill -0 $pid
 # Test 2: Kill the target unexpectedly
 
 # Run bdevperf
-$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 20 &
+$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -i 0 -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
 perfpid=$!
+waitforlisten $perfpid /var/tmp/bdevperf.sock
+$rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
 
 # Expand the trap to clean up bdevperf if something goes wrong
 trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; kill -9 $perfpid; nvmfcleanup; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
+# Sleep for a few seconds to allow I/O to begin
+sleep 5
+
 # Kill the target half way through
-sleep 10
 killprocess $pid
 
 # Verify bdevperf exits successfully
