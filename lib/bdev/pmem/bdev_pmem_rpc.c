@@ -205,6 +205,9 @@ spdk_rpc_create_pmem_pool(struct spdk_jsonrpc_request *request,
 
 	pbp = pmemblk_create(req.pmem_file, req.block_size, pool_size, 0666);
 	if (pbp == NULL) {
+		const char *msg = pmemblk_errormsg();
+
+		SPDK_ERRLOG("pmemblk_create() failed: %s\n", msg ? msg : "(logs disabled)");
 		goto invalid;
 	}
 
@@ -317,6 +320,7 @@ spdk_rpc_delete_pmem_pool(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_pmem_pool req = {};
 	struct spdk_json_write_ctx *w;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_delete_pmem_pool_decoders,
 				    SPDK_COUNTOF(rpc_delete_pmem_pool_decoders),
@@ -326,7 +330,11 @@ spdk_rpc_delete_pmem_pool(struct spdk_jsonrpc_request *request,
 	}
 
 	/* Check if file is actually pmem pool */
-	if (pmemblk_check(req.pmem_file, 0) != 1) {
+	rc = pmemblk_check(req.pmem_file, 0);
+	if (rc != 1) {
+		const char *msg = pmemblk_errormsg();
+
+		SPDK_ERRLOG("pmemblk_check() failed (%d): %s\n", rc, msg ? msg : "(logs disabled)");
 		goto invalid;
 	}
 
