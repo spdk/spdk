@@ -16,6 +16,24 @@
       "revId": "a89c3a7a795b5cee393b06206c6455c60f5d9bca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dbdfbedd_c1fc98c9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-14T05:51:43Z",
+      "side": 1,
+      "message": "The single-file-segment option is in our SPDK code base. And I checked the DPDK support. Only DPDK version \u003e\u003d18.05 has such feature. I do not think that this patch is breaking anything. If we do not want to support such feature, all the code related this in SPDK should be removed.",
+      "parentUuid": "a6911b59_0a44ecc0",
+      "revId": "a89c3a7a795b5cee393b06206c6455c60f5d9bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
