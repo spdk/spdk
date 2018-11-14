@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabbab5f_3a78ffdb",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1232,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T22:01:13Z",
+      "side": 1,
+      "message": "I don\u0027t think it is safe to free the crypto_bdev until the spdk_io_device_unregister callback has executed - just like in the normal shutdown path.",
+      "revId": "4ddde46445d5af76516b8a1a920e06c22c01d847",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
