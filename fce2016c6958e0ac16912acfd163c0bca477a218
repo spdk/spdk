@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4be7366b_4f86f75c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1577,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-14T19:26:20Z",
+      "side": 1,
+      "message": "do you need to unregister the io_device here too?",
+      "revId": "fce2016c6958e0ac16912acfd163c0bca477a218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
