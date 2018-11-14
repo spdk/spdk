@@ -164,6 +164,30 @@
       "revId": "83311fd2d57cbb6f381721673b400ce8e99596d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6536482_90eceba5",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-14T15:39:54Z",
+      "side": 1,
+      "message": "Ok, I will change interface from bytes to bits and prevent from copying unnecessary bits.",
+      "parentUuid": "f4ddda41_70ed412b",
+      "range": {
+        "startLine": 335,
+        "startChar": 0,
+        "endLine": 337,
+        "endChar": 2
+      },
+      "revId": "83311fd2d57cbb6f381721673b400ce8e99596d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
