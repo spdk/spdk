@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f2a50ce_45d30efe",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 27
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-14T19:15:22Z",
+      "side": 1,
+      "message": "lets change this to \"master\"",
+      "revId": "eafd7a4cc0116a6f45f2630385f3db1671cdbe59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adc9bf49_3950cc4f",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 27
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-14T19:15:22Z",
+      "side": 1,
+      "message": "let\u0027s just spell out master.tar.gz here instead of using the ${version} variable, since the %{version} variable doesn\u0027t work due to the \"v\" on tags",
+      "revId": "eafd7a4cc0116a6f45f2630385f3db1671cdbe59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
