@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2cb0988_06461692",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T21:22:04Z",
+      "side": 1,
+      "message": "These values are all for the RDMA SGL\u0027s and I think they were correct. You could clarify their names if you wanted.",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d9f1729_4e806f5b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T21:22:04Z",
+      "side": 1,
+      "message": "I think NVMF_DEFAULT_DATA_SGE should be defined as (SPDK_NVMF_MAX_SGL_ENTRIES * 2).",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5176b940_3f182bd4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T21:22:04Z",
+      "side": 1,
+      "message": "You could rename NVMF_DEFAULT_TX_SGE to NVMF_DEFAULT_RSP_SGE to be clearer, but I don\u0027t think there needs to be two values for those things.",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec07ec53_dbe4a706",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T21:22:04Z",
+      "side": 1,
+      "message": "This is wrong - it should be NVMF_DEFAULT_DATA_SGE.",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10847bab_69582ae5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-14T21:22:04Z",
+      "side": 1,
+      "message": "The RDMA SGEs are a negotiation only with your local NIC. If the local NIC can\u0027t support what we\u0027re requesting, I think we should just fail to initialize. The only exception may be the DATA SGEs, but to start with let\u0027s just fail that too.",
+      "revId": "ea567c1bb55034e29703a4fba33f346190322334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
