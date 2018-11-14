@@ -485,3 +485,188 @@ invalid:
 	return;
 }
 SPDK_RPC_REGISTER("send_nvme_cmd", spdk_rpc_send_nvme_cmd, SPDK_RPC_RUNTIME)
+
+struct rpc_nvme_security_receive_req {
+	char *name;
+	uint16_t nssf;
+	uint16_t secp;
+	uint32_t spsp;
+	uint32_t translen;
+};
+
+struct rpc_nvme_security_receive_ctx {
+	struct spdk_jsonrpc_request *jsonrpc_request;
+	struct rpc_nvme_security_receive_req req;
+	void    *sec_buffer;
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_io_channel *ch;
+};
+
+static void
+free_rpc_nvme_security_receive(struct rpc_nvme_security_receive_ctx *ctx)
+{
+	if (ctx) {
+		free(ctx->req.name);
+		free(ctx->sec_buffer);
+		free(ctx);
+	}
+}
+
+static const struct spdk_json_object_decoder rpc_nvme_security_receive_decoders[] = {
+	{"name", offsetof(struct rpc_nvme_security_receive_req, name), spdk_json_decode_string},
+	{"nssf", offsetof(struct rpc_nvme_security_receive_req, nssf), spdk_json_decode_uint16},
+	{"secp", offsetof(struct rpc_nvme_security_receive_req, secp), spdk_json_decode_uint16},
+	{"spsp", offsetof(struct rpc_nvme_security_receive_req, spsp), spdk_json_decode_uint32},
+	{"translen", offsetof(struct rpc_nvme_security_receive_req, translen), spdk_json_decode_uint32},
+};
+
+static char *dump_sec_buf(char *buf, int length)
+{
+	int offset = 0, i;
+	char *tmp = NULL;
+
+	tmp = spdk_sprintf_alloc("NVMe Security Receive Command Success\n | Offset | ");
+	if (!tmp) {
+		goto mem_err;
+	}
+
+	for (i = 0; i <= 15; i++) {
+		tmp = spdk_strcat_alloc(tmp, spdk_sprintf_alloc(" %x ", i));
+		if (!tmp) {
+			goto mem_err;
+		}
+	}
+
+	for (i = 0; i < length; i++) {
+		if (i % 16 == 0) {
+			tmp = spdk_strcat_alloc(tmp, spdk_sprintf_alloc("\n   0x%04x:  ", offset));
+			if (!tmp) {
+				goto mem_err;
+			}
+			offset += 16;
+		}
+		tmp = spdk_strcat_alloc(tmp, spdk_sprintf_alloc(" %02x", buf[i]));
+		if (!tmp) {
+			goto mem_err;
+		}
+	}
+
+	tmp = spdk_strcat_alloc(tmp, "\n");
+	if (!tmp) {
+		goto mem_err;
+	}
+
+	return tmp;
+
+mem_err:
+	SPDK_ERRLOG("No enough memory\n");
+	return NULL;
+}
+
+static void
+spdk_nvme_security_receive_complete(struct rpc_nvme_security_receive_ctx *ctx,
+				    const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_json_write_ctx *w;
+	char *tmp;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_WARNLOG("NVMe Security Receive Completion Error\nSC 0x%x SCT 0x%x\n",
+			     cpl->status.sc, cpl->status.sct);
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(ctx->jsonrpc_request);
+	if (w == NULL) {
+		free_rpc_nvme_security_receive(ctx);
+		return;
+	}
+
+	tmp = dump_sec_buf(ctx->sec_buffer, ctx->req.translen);
+	spdk_json_write_string(w, tmp);
+	spdk_jsonrpc_end_result(ctx->jsonrpc_request, w);
+
+	if (tmp) {
+		free(tmp);
+	}
+	free_rpc_nvme_security_receive(ctx);
+}
+
+static void
+spdk_nvme_security_receive_cb(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct rpc_nvme_security_receive_ctx *ctx = (struct rpc_nvme_security_receive_ctx *)ref;
+
+	if (ctx->ch) {
+		spdk_put_io_channel(ctx->ch);
+		ctx->ch = NULL;
+	}
+
+	spdk_nvme_security_receive_complete(ctx, cpl);
+}
+
+static void
+spdk_rpc_nvme_security_receive(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct spdk_bdev *bdev;
+	struct rpc_nvme_security_receive_ctx *ctx;
+	int rc = 0, error_code = 0;
+	static void *sec_buffer;
+
+	ctx = calloc(1, sizeof(struct rpc_nvme_security_receive_ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Failed to malloc ctx\n");
+		error_code = SPDK_JSONRPC_ERROR_INTERNAL_ERROR;
+		goto invalid;
+	}
+
+	if (spdk_json_decode_object(params, rpc_nvme_security_receive_decoders,
+				    SPDK_COUNTOF(rpc_nvme_security_receive_decoders), &(ctx->req))) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		error_code = SPDK_JSONRPC_ERROR_INVALID_PARAMS;
+		goto invalid;
+	}
+
+	ctx->jsonrpc_request = request;
+
+	sec_buffer = calloc(1, ctx->req.translen);
+	if (!sec_buffer) {
+		SPDK_ERRLOG("Failed to malloc sec_buffer\n");
+		error_code = SPDK_JSONRPC_ERROR_INTERNAL_ERROR;
+		rc = -ENOMEM;
+		goto invalid;
+	}
+	ctx->sec_buffer = sec_buffer;
+
+	bdev = spdk_bdev_get_by_name(ctx->req.name);
+	if (!bdev) {
+		SPDK_ERRLOG("Failed at device lookup\n");
+		error_code = SPDK_JSONRPC_ERROR_INVALID_PARAMS;
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	ctx->ctrlr = spdk_bdev_nvme_get_ctrlr(bdev);
+	if (!ctx->ctrlr) {
+		SPDK_ERRLOG("Failed to get ctrlr\n");
+		error_code = SPDK_JSONRPC_ERROR_INTERNAL_ERROR;
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	ctx->ch = spdk_get_io_channel(ctx->ctrlr);
+	rc = spdk_nvme_ctrlr_cmd_security_receive(ctx->ctrlr, (uint8_t)ctx->req.secp, ctx->req.spsp,
+			(uint8_t)ctx->req.nssf, ctx->sec_buffer, ctx->req.translen, spdk_nvme_security_receive_cb, ctx);
+	if (rc) {
+		goto invalid;
+	}
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, error_code, spdk_strerror(-rc));
+	free_rpc_nvme_security_receive(ctx);
+}
+
+SPDK_RPC_REGISTER("nvme_security_receive", spdk_rpc_nvme_security_receive, SPDK_RPC_RUNTIME)
