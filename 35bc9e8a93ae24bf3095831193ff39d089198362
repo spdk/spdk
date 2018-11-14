@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25a69154_da364061",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-11-14T07:01:56Z",
+      "side": 1,
+      "message": "If run nvme_fuzz with \"-h\", it will report \"*ERROR*: Failed to parse the arguments \", this is unexpected.",
+      "range": {
+        "startLine": 308,
+        "startChar": 1,
+        "endLine": 308,
+        "endChar": 41
+      },
+      "revId": "35bc9e8a93ae24bf3095831193ff39d089198362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35495705_cd403076",
+        "filename": "test/nvmf/fuzz/fuzz.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-11-14T07:01:56Z",
+      "side": 1,
+      "message": "\"fuzz.sh\" failed in local server. It reports \"EAL: Cannot get hugepage information. Failed to initialize DPDK\".\nIf we run $NVMF_APP -s 1024(or other size) -m..., and run $rootdir/test/app/fuzz/nvme_fuzz -s 512 -c..., then it passed.\nI don\u0027t know why it can pass in autotest.",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 9
+      },
+      "revId": "35bc9e8a93ae24bf3095831193ff39d089198362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d3bab9a_71165823",
+        "filename": "test/nvmf/fuzz/fuzz.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-11-14T07:01:56Z",
+      "side": 1,
+      "message": "As above, + \"-s 512\".",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 32
+      },
+      "revId": "35bc9e8a93ae24bf3095831193ff39d089198362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
