@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95bd949b_ef9c24e1",
+        "filename": "include/spdk/rpc.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T23:02:45Z",
+      "side": 1,
+      "message": "I don\u0027t think these changes are correct.  spdk_rpc_get_state() just returns the current state.\n\nthe state mask applies to a method, not the server",
+      "revId": "e7641bc7691e6e6728add4563d8fe3ad21f6496d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51b5c1c4_9a1eba53",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T23:02:45Z",
+      "side": 1,
+      "message": "I don\u0027t understand this function.  The state_mask parameter isn\u0027t used at all.\n\nI *think* you want to determine if function X is allowed when the server is in state Y.  Then the check should be if ((m-\u003estate_mask \u0026 state) \u003d\u003d state).  But I could be wrong.",
+      "revId": "e7641bc7691e6e6728add4563d8fe3ad21f6496d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
