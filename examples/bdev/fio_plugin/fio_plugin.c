@@ -41,6 +41,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
+#include "spdk/util.h"
 
 #include "config-host.h"
 #include "fio.h"
@@ -85,7 +86,8 @@ struct spdk_fio_thread {
 	struct thread_data		*td; /* fio thread context */
 	struct spdk_thread		*thread; /* spdk thread context */
 	struct spdk_ring		*ring; /* ring for passing messages to this thread */
-	TAILQ_HEAD(, spdk_fio_poller)	pollers; /* List of registered pollers on this thread */
+	uint64_t			timeout; /* polling timeout */
+	TAILQ_HEAD(, spdk_fio_poller)	pollers; /* list of registered pollers on this thread */
 
 	TAILQ_HEAD(, spdk_fio_target)	targets;
 
@@ -99,6 +101,9 @@ static bool g_spdk_env_initialized = false;
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
 static size_t spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
+
+/* Default polling timeout (us) */
+#define SPDK_FIO_POLLING_TIMEOUT 1000000UL
 
 static void
 spdk_fio_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
@@ -143,6 +148,7 @@ spdk_fio_start_poller(void *thread_ctx,
 	fio_poller->cb_fn = fn;
 	fio_poller->cb_arg = arg;
 	fio_poller->period_microseconds = period_microseconds;
+	fio_thread->timeout = spdk_min(fio_thread->timeout, period_microseconds);
 
 	TAILQ_INSERT_TAIL(&fio_thread->pollers, fio_poller, link);
 
@@ -154,10 +160,19 @@ spdk_fio_stop_poller(struct spdk_poller *poller, void *thread_ctx)
 {
 	struct spdk_fio_poller *fio_poller;
 	struct spdk_fio_thread *fio_thread = thread_ctx;
+	uint64_t timeout = SPDK_FIO_POLLING_TIMEOUT;
 
 	fio_poller = (struct spdk_fio_poller *)poller;
 
 	TAILQ_REMOVE(&fio_thread->pollers, fio_poller, link);
+
+	if (fio_thread->timeout == fio_poller->period_microseconds) {
+		TAILQ_FOREACH(fio_poller, &fio_thread->pollers, link) {
+			timeout = spdk_min(timeout, fio_poller->period_microseconds);
+		}
+
+		fio_thread->timeout = timeout;
+	}
 
 	free(fio_poller);
 }
@@ -201,6 +216,8 @@ spdk_fio_init_thread(struct thread_data *td)
 	fio_thread->iocq = calloc(fio_thread->iocq_size, sizeof(struct io_u *));
 	assert(fio_thread->iocq != NULL);
 
+	fio_thread->timeout = SPDK_FIO_POLLING_TIMEOUT;
+
 	TAILQ_INIT(&fio_thread->targets);
 
 	return 0;
@@ -230,6 +247,16 @@ static void
 spdk_fio_module_finish_done(void *cb_arg)
 {
 	*(bool *)cb_arg = true;
+}
+
+static void
+spdk_fio_calc_timeout(struct timespec *ts, uint64_t us)
+{
+	uint64_t timeout = ts->tv_sec * 1000000000UL + ts->tv_nsec;
+
+	timeout += us * 1000;
+	ts->tv_sec  = timeout / 1000000000UL;
+	ts->tv_nsec = timeout % 1000000000UL;
 }
 
 static pthread_t g_init_thread_id = 0;
@@ -336,7 +363,7 @@ spdk_init_thread_poll(void *arg)
 		spdk_fio_poll_thread(fio_thread);
 
 		clock_gettime(CLOCK_REALTIME, &ts);
-		ts.tv_sec += 1;
+		spdk_fio_calc_timeout(&ts, fio_thread->timeout);
 		rc = pthread_cond_timedwait(&g_init_cond, &g_init_mtx, &ts);
 
 		if (rc != ETIMEDOUT) {

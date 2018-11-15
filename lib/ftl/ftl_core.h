@@ -56,6 +56,7 @@ struct ftl_restore;
 struct ftl_wptr;
 struct ftl_flush;
 struct ftl_reloc;
+struct ftl_anm_event;
 
 struct ftl_stats {
 	/* Number of writes scheduled directly by the user */
@@ -77,29 +78,36 @@ struct ftl_punit {
 	struct ftl_ppa				start_ppa;
 };
 
-enum ftl_thread_id {
-	FTL_THREAD_ID_CORE,
-	FTL_THREAD_ID_READ,
-	FTL_THREAD_ID_MAX,
+enum ftl_task_id {
+	FTL_TASK_ID_CORE,
+	FTL_TASK_ID_READ,
+	FTL_TASK_ID_MAX,
 };
 
-struct ftl_io_thread {
+struct ftl_task {
 	/* Owner */
 	struct ftl_dev				*dev;
-
-	/* Thread descriptor */
-	struct ftl_thread			*thread;
-
-	/* I/O pair */
+	/* I/O queue pair */
 	struct ftl_nvme_qpair			*qpair;
+
+	/* Thread on which the poller is running */
+	struct spdk_thread			*thread;
+	/* Thread id */
+	pthread_t				tid;
+
+	/* Poller */
+	struct spdk_poller			*poller;
+	/* Poller's function */
+	spdk_poller_fn				poller_fn;
+	/* Poller's frequency */
+	uint64_t				period_us;
 };
 
 struct ftl_global_md {
 	/* Device instance */
 	struct spdk_uuid			uuid;
-
 	/* Size of the l2p table */
-	uint64_t				l2p_len;
+	uint64_t				num_lbas;
 };
 
 struct ftl_dev {
@@ -109,6 +117,23 @@ struct ftl_dev {
 	char					*name;
 	/* Configuration */
 	struct ftl_conf				conf;
+
+	/* Indicates the device is fully initialized */
+	int					initialized;
+	/* Indicates the device is about to be stopped */
+	int					halt;
+
+	/* Init/halt callback */
+	ftl_init_fn				init_cb;
+	/* Init/halt callback's context */
+	void					*init_arg;
+
+	/* Halt callback */
+	ftl_fn					halt_cb;
+	/* Halt callback's context */
+	void					*halt_arg;
+	/* Halt poller, checks if the device has been halted */
+	struct spdk_poller			*halt_poller;
 
 	/* NVMe controller */
 	struct ftl_nvme_ctrlr			*ctrlr;
@@ -148,7 +173,7 @@ struct ftl_dev {
 	/* Logical -> physical table */
 	void					*l2p;
 	/* Size of the l2p table */
-	uint64_t				l2p_len;
+	uint64_t				num_lbas;
 
 	/* PPA format */
 	struct ftl_ppa_fmt			ppaf;
@@ -180,33 +205,32 @@ struct ftl_dev {
 	/* Manages data relocation */
 	struct ftl_reloc			*reloc;
 
-	/* Array of io threads */
-	struct ftl_io_thread			thread[FTL_THREAD_ID_MAX];
+	/* Task array */
+	struct ftl_task				tasks[FTL_TASK_ID_MAX];
 
 	/* Devices' list */
 	STAILQ_ENTRY(ftl_dev)			stailq;
 };
 
+typedef void (*ftl_restore_fn)(struct ftl_dev *, struct ftl_restore *, int);
+
 void	ftl_apply_limits(struct ftl_dev *dev);
-void	ftl_core_thread(void *ctx);
 int	ftl_io_read(struct ftl_io *io);
 int	ftl_io_write(struct ftl_io *io);
 int	ftl_io_erase(struct ftl_io *io);
 int	ftl_io_flush(struct ftl_io *io);
 int	ftl_current_limit(const struct ftl_dev *dev);
 int	ftl_invalidate_addr(struct ftl_dev *dev, struct ftl_ppa ppa);
-void	ftl_core_thread(void *ctx);
-void	ftl_read_thread(void *ctx);
+int	ftl_task_core(void *ctx);
+int	ftl_task_read(void *ctx);
+void	ftl_process_anm_event(struct ftl_anm_event *event);
 size_t	ftl_tail_md_num_lbks(const struct ftl_dev *dev);
 size_t	ftl_tail_md_hdr_num_lbks(const struct ftl_dev *dev);
 size_t	ftl_vld_map_num_lbks(const struct ftl_dev *dev);
 size_t	ftl_lba_map_num_lbks(const struct ftl_dev *dev);
 size_t	ftl_head_md_num_lbks(const struct ftl_dev *dev);
-struct ftl_restore *ftl_restore_init(struct ftl_dev *dev);
-int	ftl_restore_check_device(struct ftl_dev *dev,
-				 struct ftl_restore *restore);
-int	ftl_restore_state(struct ftl_dev *dev, struct ftl_restore *restore);
-void	ftl_restore_free(struct ftl_restore *restore);
+int	ftl_restore_md(struct ftl_dev *dev, ftl_restore_fn cb);
+int	ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb);
 
 #define ftl_to_ppa(addr) \
 	(struct ftl_ppa) { .ppa = (uint64_t)(addr) }
@@ -214,28 +238,28 @@ void	ftl_restore_free(struct ftl_restore *restore);
 #define ftl_to_ppa_packed(addr) \
 	(struct ftl_ppa) { .pack.ppa = (uint32_t)(addr) }
 
-static inline struct ftl_thread *
+static inline struct spdk_thread *
 ftl_get_core_thread(const struct ftl_dev *dev)
 {
-	return dev->thread[FTL_THREAD_ID_CORE].thread;
+	return dev->tasks[FTL_TASK_ID_CORE].thread;
 }
 
 static inline struct ftl_nvme_qpair *
 ftl_get_write_qpair(const struct ftl_dev *dev)
 {
-	return dev->thread[FTL_THREAD_ID_CORE].qpair;
+	return dev->tasks[FTL_TASK_ID_CORE].qpair;
 }
 
-static inline struct ftl_thread *
+static inline struct spdk_thread *
 ftl_get_read_thread(const struct ftl_dev *dev)
 {
-	return dev->thread[FTL_THREAD_ID_READ].thread;
+	return dev->tasks[FTL_TASK_ID_READ].thread;
 }
 
 static inline struct ftl_nvme_qpair *
 ftl_get_read_qpair(const struct ftl_dev *dev)
 {
-	return dev->thread[FTL_THREAD_ID_READ].qpair;
+	return dev->tasks[FTL_TASK_ID_READ].qpair;
 }
 
 static inline int
@@ -360,7 +384,7 @@ ftl_lba_invalid(uint64_t lba)
 static inline void
 ftl_l2p_set(struct ftl_dev *dev, uint64_t lba, struct ftl_ppa ppa)
 {
-	assert(dev->l2p_len > lba);
+	assert(dev->num_lbas > lba);
 
 	if (ftl_ppa_packed(dev)) {
 		_ftl_l2p_set32(dev->l2p, lba, ftl_ppa_to_packed(dev, ppa).ppa);
@@ -372,7 +396,7 @@ ftl_l2p_set(struct ftl_dev *dev, uint64_t lba, struct ftl_ppa ppa)
 static inline struct ftl_ppa
 ftl_l2p_get(struct ftl_dev *dev, uint64_t lba)
 {
-	assert(dev->l2p_len > lba);
+	assert(dev->num_lbas > lba);
 
 	if (ftl_ppa_packed(dev)) {
 		return ftl_ppa_from_packed(dev, ftl_to_ppa_packed(

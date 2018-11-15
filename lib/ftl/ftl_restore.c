@@ -33,6 +33,8 @@
 
 #include <spdk/stdinc.h>
 #include <spdk/ftl.h>
+#include <spdk/util.h>
+#include <spdk/likely.h>
 #include "ftl_core.h"
 #include "ftl_band.h"
 #include "ftl_io.h"
@@ -40,184 +42,31 @@
 struct ftl_restore_band {
 	struct ftl_restore		*parent;
 
+	struct ftl_band			*band;
+
 	enum ftl_md_status		md_status;
 };
 
 struct ftl_restore {
+	struct ftl_dev			*dev;
+
+	ftl_restore_fn			cb;
+
 	atomic_uint			num_ios;
 
-	struct ftl_band			**bands;
+	unsigned int			current;
 
-	struct ftl_restore_band		*io;
+	struct ftl_restore_band		*bands;
 
 	void				*md_buf;
 
 	void				*lba_map;
 };
 
-static void
-ftl_restore_cb(void *ctx, int status)
-{
-	unsigned int cnt __attribute__((unused));
-	struct ftl_restore_band *io = ctx;
-
-	io->md_status = status;
-	cnt = atomic_fetch_sub(&io->parent->num_ios, 1);
-	assert(cnt);
-}
+static int
+ftl_restore_tail_md(struct ftl_restore_band *rband);
 
 static void
-ftl_restore_wait_io_cmpl(struct ftl_restore *restore)
-{
-	while (atomic_load(&restore->num_ios));
-}
-
-static int
-ftl_band_cmp(const void *lband, const void *rband)
-{
-	uint64_t lseq = ((*(struct ftl_band **)lband))->md.seq;
-	uint64_t rseq = ((*(struct ftl_band **)rband))->md.seq;
-
-	if (lseq < rseq) {
-		return -1;
-	} else {
-		return 1;
-	}
-}
-
-static int
-ftl_restore_l2p(struct ftl_band *band)
-{
-	struct ftl_dev *dev = band->dev;
-	struct ftl_ppa ppa;
-	uint64_t lba;
-
-	for (size_t i = 0; i < ftl_num_band_lbks(band->dev); ++i) {
-		if (!ftl_get_bit(i, band->md.vld_map)) {
-			continue;
-		}
-
-		lba = band->md.lba_map[i];
-		if (lba >= dev->l2p_len) {
-			return -1;
-		}
-
-		ppa = ftl_l2p_get(dev, lba);
-
-		if (!ftl_ppa_invalid(ppa)) {
-			ftl_invalidate_addr(dev, ppa);
-		}
-
-		ppa = ftl_band_ppa_from_lbkoff(band, i);
-
-		ftl_band_set_addr(band, lba, ppa);
-		ftl_l2p_set(dev, lba, ppa);
-	}
-
-	band->md.lba_map = NULL;
-	return 0;
-}
-
-static int
-ftl_restore_head_md(struct ftl_dev *dev, struct ftl_restore *restore)
-{
-	struct ftl_band	*band;
-	void			*head_buf;
-	int			rc;
-	int			head_found = 0;
-	struct ftl_cb		cb = {
-		.fn = ftl_restore_cb,
-	};
-
-	head_buf = spdk_dma_zmalloc(ftl_dev_num_bands(dev) * ftl_head_md_num_lbks(dev) *
-				    FTL_BLOCK_SIZE, FTL_BLOCK_SIZE, NULL);
-	if (!head_buf) {
-		return -ENOMEM;
-	}
-
-	restore->num_ios = dev->num_bands;
-
-	LIST_FOREACH(band, &dev->shut_bands, list_entry) {
-		cb.ctx = &restore->io[band->id];
-		rc = ftl_band_read_head_md(band, &band->md, head_buf + band->id *
-					   ftl_head_md_num_lbks(dev) * FTL_BLOCK_SIZE, &cb);
-		if (rc) {
-			SPDK_ERRLOG("Unable to read head metadata\n");
-			break;
-		}
-	}
-
-	ftl_restore_wait_io_cmpl(restore);
-
-	LIST_FOREACH(band, &dev->shut_bands, list_entry) {
-		if (!restore->io[band->id].md_status) {
-			head_found = 1;
-			break;
-		}
-	}
-
-	if (!head_found) {
-		rc = -1;
-		SPDK_ERRLOG("Unable to find head metadata header\n");
-		goto out;
-	}
-out:
-	spdk_dma_free(head_buf);
-	return rc;
-}
-
-static int
-ftl_restore_head_md_valid(struct ftl_dev *dev, struct ftl_restore *restore)
-{
-	struct ftl_band	*band;
-	enum ftl_md_status	status;
-
-	LIST_FOREACH(band, &dev->shut_bands, list_entry) {
-		status = restore->io[band->id].md_status;
-		if (status != FTL_MD_SUCCESS &&
-		    status != FTL_MD_NO_MD &&
-		    status != FTL_MD_IO_FAILURE) {
-			SPDK_ERRLOG("Inconsistent head metadata found on band %u\n", band->id);
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
-static int
-ftl_restore_read_tail_md(struct ftl_band *band, struct ftl_restore_band *io)
-{
-	void *buf = io->parent->md_buf;
-	struct ftl_cb cb = {
-		.fn = ftl_restore_cb,
-		.ctx = io
-	};
-
-	io->parent->num_ios = 1;
-	if (ftl_band_read_tail_md(band, &band->md, buf, band->tail_md_ppa, &cb)) {
-		SPDK_ERRLOG("Unable to read tail metadata\n");
-		return -1;
-	}
-
-	/* TODO: try to use this wait only in one place */
-	ftl_restore_wait_io_cmpl(io->parent);
-
-	return io->md_status;
-}
-
-static int
-ftl_restore_tail_md(struct ftl_band *band, struct ftl_restore_band *io)
-{
-	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
-	if (!ftl_restore_read_tail_md(band, io)) {
-		return 0;
-	}
-
-	return -1;
-}
-
-void
 ftl_restore_free(struct ftl_restore *restore)
 {
 	if (!restore) {
@@ -227,39 +76,41 @@ ftl_restore_free(struct ftl_restore *restore)
 	spdk_dma_free(restore->md_buf);
 	free(restore->lba_map);
 	free(restore->bands);
-	free(restore->io);
 	free(restore);
 }
 
-struct ftl_restore *
-ftl_restore_init(struct ftl_dev *dev)
+static struct ftl_restore *
+ftl_restore_init(struct ftl_dev *dev, ftl_restore_fn cb)
 {
 	struct ftl_restore *restore;
-	size_t i;
+	struct ftl_restore_band *rband;
+	size_t md_size;
 
 	restore = calloc(1, sizeof(*restore));
 	if (!restore) {
 		goto error;
 	}
 
-	restore->io = calloc(ftl_dev_num_bands(dev), sizeof(*restore->io));
-	if (!restore->io) {
-		goto error;
-	}
+	restore->dev = dev;
+	restore->cb = cb;
 
 	restore->bands = calloc(ftl_dev_num_bands(dev), sizeof(*restore->bands));
 	if (!restore->bands) {
 		goto error;
 	}
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
-		restore->bands[i] = &dev->bands[i];
-		restore->io[i].parent = restore;
-		restore->io[i].md_status = FTL_MD_NO_MD;
+	for (size_t i = 0; i < ftl_dev_num_bands(dev); ++i) {
+		rband = &restore->bands[i];
+		rband->band = &dev->bands[i];
+		rband->parent = restore;
+		rband->md_status = FTL_MD_NO_MD;
 	}
 
-	restore->md_buf = spdk_dma_zmalloc(ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE,
-					   FTL_BLOCK_SIZE, NULL);
+	/* Allocate buffer capable of holding either tail md or head mds of all bands */
+	md_size = spdk_max(ftl_dev_num_bands(dev) * ftl_head_md_num_lbks(dev) * FTL_BLOCK_SIZE,
+			   ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE);
+
+	restore->md_buf = spdk_dma_zmalloc(md_size, FTL_BLOCK_SIZE, NULL);
 	if (!restore->md_buf) {
 		goto error;
 	}
@@ -275,81 +126,286 @@ error:
 	return NULL;
 }
 
-static int
-ftl_restore_check_md_seq(const struct ftl_dev *dev, const struct ftl_restore *restore)
+static void
+ftl_restore_complete(struct ftl_restore *restore, int status)
 {
-	struct ftl_band *band, *nband;
+	struct ftl_restore *ctx = status ? NULL : restore;
 
-	LIST_FOREACH(band, &dev->shut_bands, list_entry) {
-		if (restore->io[band->id].md_status) {
+	restore->cb(restore->dev, ctx, status);
+	if (status) {
+		ftl_restore_free(restore);
+	}
+}
+
+static int
+ftl_band_cmp(const void *lband, const void *rband)
+{
+	uint64_t lseq = ((struct ftl_restore_band *)lband)->band->md.seq;
+	uint64_t rseq = ((struct ftl_restore_band *)rband)->band->md.seq;
+
+	if (lseq < rseq) {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
+static int
+ftl_restore_check_seq(const struct ftl_restore *restore)
+{
+	const struct ftl_dev *dev = restore->dev;
+	const struct ftl_restore_band *rband;
+	const struct ftl_band *next_band;
+
+	for (size_t i = 0; i < ftl_dev_num_bands(dev); ++i) {
+		rband = &restore->bands[i];
+
+		if (rband->md_status != FTL_MD_SUCCESS) {
 			continue;
 		}
 
-		nband = LIST_NEXT(band, list_entry);
-		if (nband && band->md.seq == nband->md.seq) {
+		next_band = LIST_NEXT(rband->band, list_entry);
+		if (next_band && rband->band->md.seq == next_band->md.seq) {
 			return -1;
 		}
 	}
+
 	return 0;
 }
 
-int
-ftl_restore_check_device(struct ftl_dev *dev, struct ftl_restore *restore)
+static int
+ftl_restore_head_valid(struct ftl_dev *dev, struct ftl_restore *restore, size_t *num_valid)
 {
-	int rc = 0;
+	struct ftl_restore_band *rband;
 
-	rc = ftl_restore_head_md(dev, restore);
-	if (rc) {
+	for (size_t i = 0; i < ftl_dev_num_bands(dev); ++i) {
+		rband = &restore->bands[i];
+
+		if (rband->md_status != FTL_MD_SUCCESS &&
+		    rband->md_status != FTL_MD_NO_MD &&
+		    rband->md_status != FTL_MD_IO_FAILURE) {
+			SPDK_ERRLOG("Inconsistent head metadata found on band %u\n",
+				    rband->band->id);
+			return 0;
+		}
+
+		if (rband->md_status == FTL_MD_SUCCESS) {
+			(*num_valid)++;
+		}
+	}
+
+	return 1;
+}
+
+static void
+ftl_restore_head_complete(struct ftl_restore *restore)
+{
+	struct ftl_dev *dev = restore->dev;
+	size_t num_valid = 0;
+	int status = -EIO;
+
+	if (!ftl_restore_head_valid(dev, restore, &num_valid)) {
 		goto out;
 	}
 
-	if (!ftl_restore_head_md_valid(dev, restore)) {
-		rc = -1;
+	if (num_valid == 0) {
+		SPDK_ERRLOG("Couldn't find any valid bands\n");
 		goto out;
 	}
 
 	/* Sort bands in sequence number ascending order */
-	qsort(restore->bands, ftl_dev_num_bands(dev), sizeof(struct ftl_band *),
+	qsort(restore->bands, ftl_dev_num_bands(dev), sizeof(struct ftl_restore_band),
 	      ftl_band_cmp);
 
-	if (ftl_restore_check_md_seq(dev, restore)) {
-		rc = -1;
+	if (ftl_restore_check_seq(restore)) {
+		SPDK_ERRLOG("Band sequence consistency failed\n");
 		goto out;
 	}
 
-	dev->l2p_len = dev->global_md.l2p_len;
-
+	dev->num_lbas = dev->global_md.num_lbas;
+	status = 0;
 out:
-	return rc;
+	ftl_restore_complete(restore, status);
 }
 
-int
-ftl_restore_state(struct ftl_dev *dev, struct ftl_restore *restore)
+static void
+ftl_restore_head_cb(void *ctx, int status)
 {
-	int				rc = 0;
-	struct ftl_band		*band;
-	struct ftl_restore_band	*io;
+	struct ftl_restore_band *rband = ctx;
+	struct ftl_restore *restore = rband->parent;
+	unsigned int num_ios;
 
-	/* Read end metadata sequentially for bands where valid start metadata was found */
+	rband->md_status = status;
+	num_ios = atomic_fetch_sub(&restore->num_ios, 1);
+	assert(num_ios > 0);
+
+	if (num_ios == 1) {
+		ftl_restore_head_complete(restore);
+	}
+}
+
+static int
+ftl_restore_head_md(struct ftl_restore *restore)
+{
+	struct ftl_dev *dev = restore->dev;
+	struct ftl_restore_band *rband;
+	struct ftl_cb cb;
+	char *head_buf = restore->md_buf;
+	unsigned int num_failed = 0, num_ios;
+
+	cb.fn = ftl_restore_head_cb;
+	restore->num_ios = ftl_dev_num_bands(dev);
+
 	for (size_t i = 0; i < ftl_dev_num_bands(dev); ++i) {
-		band = restore->bands[i];
-		io = &restore->io[band->id];
-		if (!band->num_chunks || io->md_status) {
-			ftl_band_md_clear(&band->md);
-			continue;
+		rband = &restore->bands[i];
+		cb.ctx = rband;
+
+		if (ftl_band_read_head_md(rband->band, &rband->band->md, head_buf, &cb)) {
+			SPDK_ERRLOG("Unable to send head metadata read\n");
+
+			/* Set status to invalid crc to force the head_valid check to fail */
+			rband->md_status = FTL_MD_INVALID_CRC;
+			num_failed++;
+
+			/* If the first IO fails, don't bother sending anything else */
+			if (i == 0) {
+				ftl_restore_free(restore);
+				return -EIO;
+			}
 		}
 
-		band->md.lba_map = restore->lba_map;
-		rc = ftl_restore_tail_md(band, io);
-		if (rc) {
-			break;
-		}
+		head_buf += ftl_head_md_num_lbks(dev) * FTL_BLOCK_SIZE;
+	}
 
-		rc = ftl_restore_l2p(band);
-		if (rc) {
-			break;
+	if (spdk_unlikely(num_failed > 0)) {
+		num_ios = atomic_fetch_sub(&restore->num_ios, num_failed);
+		if (num_ios == num_failed) {
+			ftl_restore_free(restore);
+			return -EIO;
 		}
 	}
 
-	return rc;
+	return 0;
+}
+
+int
+ftl_restore_md(struct ftl_dev *dev, ftl_restore_fn cb)
+{
+	struct ftl_restore *restore;
+
+	restore = ftl_restore_init(dev, cb);
+	if (!restore) {
+		return -ENOMEM;
+	}
+
+	return ftl_restore_head_md(restore);
+}
+
+static int
+ftl_restore_l2p(struct ftl_band *band)
+{
+	struct ftl_dev *dev = band->dev;
+	struct ftl_ppa ppa;
+	uint64_t lba;
+
+	for (size_t i = 0; i < ftl_num_band_lbks(band->dev); ++i) {
+		if (!ftl_get_bit(i, band->md.vld_map)) {
+			continue;
+		}
+
+		lba = band->md.lba_map[i];
+		if (lba >= dev->num_lbas) {
+			return -1;
+		}
+
+		ppa = ftl_l2p_get(dev, lba);
+		if (!ftl_ppa_invalid(ppa)) {
+			ftl_invalidate_addr(dev, ppa);
+		}
+
+		ppa = ftl_band_ppa_from_lbkoff(band, i);
+
+		ftl_band_set_addr(band, lba, ppa);
+		ftl_l2p_set(dev, lba, ppa);
+	}
+
+	band->md.lba_map = NULL;
+	return 0;
+}
+
+static struct ftl_restore_band *
+ftl_restore_next_band(struct ftl_restore *restore)
+{
+	struct ftl_restore_band *rband;
+
+	for (; restore->current < ftl_dev_num_bands(restore->dev); ++restore->current) {
+		rband = &restore->bands[restore->current];
+
+		if (spdk_likely(ftl_band_has_chunks(rband->band)) &&
+		    rband->md_status == FTL_MD_SUCCESS) {
+			restore->current++;
+			return rband;
+		}
+	}
+
+	return NULL;
+}
+
+static void
+ftl_restore_tail_md_cb(void *ctx, int status)
+{
+	struct ftl_restore_band *rband = ctx;
+	struct ftl_restore *restore = rband->parent;
+
+	if (status) {
+		ftl_restore_complete(restore, status);
+		return;
+	}
+
+	if (ftl_restore_l2p(rband->band)) {
+		ftl_restore_complete(restore, -ENOTRECOVERABLE);
+		return;
+	}
+
+	rband = ftl_restore_next_band(restore);
+	if (!rband) {
+		ftl_restore_complete(restore, 0);
+		return;
+	}
+
+	ftl_restore_tail_md(rband);
+}
+
+static int
+ftl_restore_tail_md(struct ftl_restore_band *rband)
+{
+	struct ftl_restore *restore = rband->parent;
+	struct ftl_band *band = rband->band;
+	struct ftl_cb cb = { .fn = ftl_restore_tail_md_cb,
+		       .ctx = rband
+	};
+
+	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
+	band->md.lba_map = restore->lba_map;
+
+	if (ftl_band_read_tail_md(band, &band->md, restore->md_buf, band->tail_md_ppa, &cb)) {
+		SPDK_ERRLOG("Failed to send tail metadata read\n");
+		ftl_restore_complete(restore, -EIO);
+		return -EIO;
+	}
+
+	return 0;
+}
+
+int
+ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb)
+{
+	struct ftl_restore_band *rband;
+
+	restore->current = 0;
+	restore->cb = cb;
+
+	/* If restore_device is called, there must be at least one valid band */
+	rband = ftl_restore_next_band(restore);
+	return ftl_restore_tail_md(rband);
 }

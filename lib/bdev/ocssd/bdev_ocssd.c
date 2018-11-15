@@ -42,6 +42,7 @@
 #include <spdk_internal/log.h>
 #include <spdk/util.h>
 #include <spdk/ftl.h>
+#include <stdatomic.h>
 #include "bdev_ocssd.h"
 
 #define OCSSD_COMPLETION_RING_SIZE 4096
@@ -62,6 +63,10 @@ struct ocssd_bdev {
 	struct ocssd_bdev_ctrlr		*ctrlr;
 
 	struct ftl_dev			*dev;
+
+	ocssd_bdev_init_fn		init_cb;
+
+	void				*init_arg;
 
 	TAILQ_ENTRY(ocssd_bdev)		tailq;
 };
@@ -93,9 +98,11 @@ struct ocssd_bdev_io {
 struct ocssd_probe_ctx {
 	struct ocssd_bdev_init_opts	*opts;
 
-	size_t				count;
+	ocssd_bdev_init_fn		init_cb;
 
-	struct ocssd_bdev_info          *bdev_info;
+	void				*init_arg;
+
+	size_t				count;
 };
 
 enum timeout_action {
@@ -104,11 +111,16 @@ enum timeout_action {
 	TIMEOUT_ACTION_ABORT,
 };
 
+typedef void (*bdev_ocssd_finish_fn)(void);
+
 static enum timeout_action		g_action_on_timeout = TIMEOUT_ACTION_NONE;
 static int				g_timeout = 0;
 static TAILQ_HEAD(, ocssd_bdev)		g_ocssd_bdevs = TAILQ_HEAD_INITIALIZER(g_ocssd_bdevs);
 static TAILQ_HEAD(, ocssd_bdev_ctrlr)	g_ocssd_bdev_ctrlrs =
 	TAILQ_HEAD_INITIALIZER(g_ocssd_bdev_ctrlrs);
+static bdev_ocssd_finish_fn		g_finish_cb;
+static atomic_uint			g_bdev_count;
+static bool				g_module_init = true;
 
 static int bdev_ocssd_initialize(void);
 static void bdev_ocssd_finish(void);
@@ -120,8 +132,10 @@ bdev_ocssd_get_ctx_size(void)
 	return sizeof(struct ocssd_bdev_io);
 }
 
-static struct spdk_bdev_module ocssd_if = {
+static struct spdk_bdev_module g_ocssd_if = {
 	.name		= "ocssd",
+	.async_init	= true,
+	.async_fini	= true,
 	.module_init	= bdev_ocssd_initialize,
 	.module_fini	= bdev_ocssd_finish,
 	.config_text	= bdev_ocssd_get_spdk_running_config,
@@ -129,7 +143,7 @@ static struct spdk_bdev_module ocssd_if = {
 };
 
 #ifndef OCSSD_UNIT_TEST
-SPDK_BDEV_MODULE_REGISTER(&ocssd_if)
+SPDK_BDEV_MODULE_REGISTER(&g_ocssd_if)
 #endif
 
 static struct ocssd_bdev_ctrlr *
@@ -170,20 +184,33 @@ out:
 	return ocssd_ctrlr;
 }
 
-static int
-bdev_ocssd_destruct(void *ctx)
+static void
+bdev_ocssd_free_cb(void *ctx, int status)
 {
 	struct ocssd_bdev *bdev = ctx;
 
 	TAILQ_REMOVE(&g_ocssd_bdevs, bdev, tailq);
-	--bdev->ctrlr->ref_cnt;
+	bdev->ctrlr->ref_cnt--;
 
-	spdk_ftl_dev_free(bdev->dev);
+	spdk_bdev_destruct_done(&bdev->bdev, status);
 
 	free(bdev->bdev.name);
 	free(bdev);
 
-	return 0;
+	if (TAILQ_EMPTY(&g_ocssd_bdevs) && g_finish_cb) {
+		g_finish_cb();
+		g_finish_cb = NULL;
+	}
+}
+
+static int
+bdev_ocssd_destruct(void *ctx)
+{
+	struct ocssd_bdev *bdev = ctx;
+	spdk_ftl_dev_free(bdev->dev, bdev_ocssd_free_cb, bdev);
+
+	/* return 1 to indicate that the destruction is asynchronous */
+	return 1;
 }
 
 static void
@@ -662,46 +689,29 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	/* TODO: wmalikow */
 }
 
-static struct ocssd_bdev *
-bdev_ocssd_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid,
-		  const char *name, struct ftl_punit_range *range,
-		  unsigned int mode, const struct spdk_uuid *uuid)
+static void
+bdev_ocssd_dev_init_cb(struct ftl_dev *dev, void *ctx, int status)
 {
-	struct ocssd_bdev	*bdev;
-	struct ftl_init_opts	opts;
+	struct ocssd_bdev	*bdev = ctx;
+	struct ocssd_bdev_info	info = {};
 	struct ftl_attrs	attrs;
+	ocssd_bdev_init_fn	init_cb = bdev->init_cb;
+	void			*init_arg = bdev->init_arg;
 	int			rc;
 
-	bdev = calloc(1, sizeof(*bdev));
-	if (!bdev) {
-		SPDK_ERRLOG("Could not allocate ocssd_bdev\n");
-		return NULL;
-	}
-
-	bdev->bdev.name = strdup(name);
-	if (!bdev->bdev.name) {
+	if (status) {
+		SPDK_ERRLOG("Failed to create OCSSD FTL device (%d)\n", status);
+		rc = status;
 		goto error_dev;
 	}
 
-	opts.conf = NULL;
-	opts.ctrlr = ctrlr;
-	opts.trid = *trid;
-	opts.range = *range;
-	opts.mode = mode;
-	opts.uuid = *uuid;
-	opts.name = bdev->bdev.name;
-
-	bdev->dev = spdk_ftl_dev_init(&opts);
-	if (!bdev->dev) {
-		SPDK_ERRLOG("Could not create OCSSD device\n");
-		goto error_bdev;
-	}
-
-	if (spdk_ftl_dev_get_attrs(bdev->dev, &attrs)) {
-		SPDK_ERRLOG("Failed to retrieve OCSSD device's attrs\n");
+	if (spdk_ftl_dev_get_attrs(dev, &attrs)) {
+		SPDK_ERRLOG("Failed to retrieve OCSSD FTL device's attrs\n");
+		rc = -ENODEV;
 		goto error_dev;
 	}
 
+	bdev->dev = dev;
 	bdev->bdev.product_name = "OCSSD disk";
 	bdev->bdev.write_cache = 0;
 	bdev->bdev.blocklen = attrs.lbk_size;
@@ -712,11 +722,12 @@ bdev_ocssd_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpor
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "Creating bdev %s:\n", bdev->bdev.name);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "\tblock_len:\t%zu\n", attrs.lbk_size);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "\tblock_cnt:\t%"PRIu64"\n", attrs.lbk_cnt);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "\tpunits:\t\t%u-%u\n", range->begin, range->end);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "\tpunits:\t\t%u-%u\n", attrs.range.begin,
+		      attrs.range.end);
 
 	bdev->bdev.ctxt = bdev;
 	bdev->bdev.fn_table = &ocssd_fn_table;
-	bdev->bdev.module = &ocssd_if;
+	bdev->bdev.module = &g_ocssd_if;
 
 	spdk_io_device_register(bdev, bdev_ocssd_create_cb, bdev_ocssd_destroy_cb,
 				sizeof(struct ocssd_io_channel),
@@ -727,49 +738,85 @@ bdev_ocssd_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpor
 		goto error_unregister;
 	}
 
-	bdev->ctrlr = bdev_ocssd_add_ctrlr(ctrlr, trid);
-	if (!bdev->ctrlr) {
-		spdk_bdev_unregister(&bdev->bdev, NULL, NULL);
-		goto error_unregister;
-	}
+	info.name = bdev->bdev.name;
+	info.uuid = bdev->bdev.uuid;
 
-	return bdev;
+	TAILQ_INSERT_TAIL(&g_ocssd_bdevs, bdev, tailq);
+
+	init_cb(&info, init_arg, 0);
+	return;
 
 error_unregister:
 	spdk_io_device_unregister(bdev, NULL);
 	free(bdev->bdev.name);
 error_dev:
-	spdk_ftl_dev_free(bdev->dev);
-error_bdev:
-	free(bdev);
-	return NULL;
+	spdk_ftl_dev_free(dev, NULL, NULL);
+
+	init_cb(NULL, init_arg, rc);
 }
 
-static size_t
-bdev_ocssd_create_bdevs(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid,
-			const char *name, size_t nranges,
-			struct ftl_punit_range *ranges, unsigned int mode,
-			const struct spdk_uuid *uuid, struct ocssd_bdev **bdevs)
+static struct ocssd_bdev *
+bdev_ocssd_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid,
+		  const char *name, struct ftl_punit_range *range, unsigned int mode,
+		  const struct spdk_uuid *uuid, ocssd_bdev_init_fn cb, void *cb_arg)
 {
-	size_t i, num_bdevs = 0;
+	struct ocssd_bdev *bdev;
+	struct ftl_init_opts opts = {};
 
-	for (i = 0; i < nranges; ++i, ++num_bdevs) {
-		bdevs[i] = bdev_ocssd_create(ctrlr, trid, name, &ranges[i], mode, uuid);
-		if (!bdevs[i]) {
-			break;
-		}
-
-		TAILQ_INSERT_TAIL(&g_ocssd_bdevs, bdevs[i], tailq);
+	bdev = calloc(1, sizeof(*bdev));
+	if (!bdev) {
+		SPDK_ERRLOG("Could not allocate ocssd_bdev\n");
+		return NULL;
 	}
 
-	return num_bdevs;
+	if (g_module_init) {
+		atomic_fetch_add(&g_bdev_count, 1);
+	}
+
+	bdev->bdev.name = strdup(name);
+	if (!bdev->bdev.name) {
+		goto error;
+	}
+
+	bdev->init_cb = cb;
+	bdev->init_arg = cb_arg;
+	bdev->ctrlr = bdev_ocssd_add_ctrlr(ctrlr, trid);
+	if (!bdev->ctrlr) {
+		SPDK_ERRLOG("Could not initialize OCSSD conroller\n");
+		goto error;
+	}
+
+	opts.conf = NULL;
+	opts.ctrlr = ctrlr;
+	opts.trid = *trid;
+	opts.range = *range;
+	opts.mode = mode;
+	opts.uuid = *uuid;
+	opts.name = bdev->bdev.name;
+	/* TODO: set threads based on config */
+	opts.core_thread = opts.read_thread = spdk_get_thread();
+
+	if (spdk_ftl_dev_init(&opts, bdev_ocssd_dev_init_cb, bdev)) {
+		SPDK_ERRLOG("Could not create OCSSD device\n");
+		goto error;
+	}
+
+	return bdev;
+error:
+	if (g_module_init) {
+		atomic_fetch_sub(&g_bdev_count, 1);
+	}
+
+	free(bdev->bdev.name);
+	free(bdev);
+	return NULL;
 }
 
 static size_t
 bdev_ocssd_ctrlr_create(struct ocssd_probe_ctx *ctx, struct spdk_nvme_ctrlr *ctrlr,
 			const struct spdk_nvme_transport_id *trid)
 {
-	struct ocssd_bdev *bdevs[OCSSD_MAX_INSTANCES];
+	struct ocssd_bdev *bdev;
 	struct ocssd_bdev_init_opts *opts = ctx->opts;
 	size_t i, j, num_bdevs = 0;
 
@@ -783,16 +830,16 @@ bdev_ocssd_ctrlr_create(struct ocssd_probe_ctx *ctx, struct spdk_nvme_ctrlr *ctr
 		return 0;
 	}
 
-	num_bdevs = bdev_ocssd_create_bdevs(ctrlr, trid, opts->names[i], opts->range_count[i],
-					    opts->punit_ranges[i], opts->mode, &opts->uuids[i],
-					    bdevs);
-
-	for (j = 0; j < num_bdevs; ++j) {
-		if (ctx->bdev_info) {
-			ctx->bdev_info[ctx->count].name = bdevs[j]->bdev.name;
-			ctx->bdev_info[ctx->count].uuid = bdevs[j]->bdev.uuid;
+	for (j = 0; j < opts->range_count[i]; ++j) {
+		bdev = bdev_ocssd_create(ctrlr, trid, opts->names[i], &opts->punit_ranges[i][j],
+					 opts->mode, &opts->uuids[i], ctx->init_cb, ctx->init_arg);
+		if (!bdev) {
+			SPDK_ERRLOG("Failed to create OCSSD bdev\n");
+			ctx->init_cb(NULL, ctx->init_arg, -ENODEV);
+			continue;
 		}
-		ctx->count++;
+
+		num_bdevs++;
 	}
 
 	return num_bdevs;
@@ -811,8 +858,27 @@ bdev_ocssd_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (g_action_on_timeout != TIMEOUT_ACTION_NONE) {
-		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
-				timeout_cb, NULL);
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout, timeout_cb, NULL);
+	}
+}
+
+static void
+bdev_ocssd_init_cb(const struct ocssd_bdev_info *info, void *ctx, int status)
+{
+	unsigned int bdev_cnt;
+
+	(void) info;
+	(void) ctx;
+
+	if (status) {
+		SPDK_ERRLOG("Failed to create OCSSD bdev\n");
+	}
+
+	bdev_cnt = atomic_fetch_sub(&g_bdev_count, 1);
+	assert(bdev_cnt > 0);
+
+	if (bdev_cnt == 1) {
+		spdk_bdev_module_init_done(&g_ocssd_if);
 	}
 }
 
@@ -821,15 +887,21 @@ bdev_ocssd_initialize(void)
 {
 	struct spdk_conf_section *sp;
 	struct ocssd_bdev_init_opts *opts = NULL;
+	struct ftl_module_init_opts ftl_opts = {};
+	unsigned int bdev_cnt = 0;
 	int rc = 0;
 
-	rc = spdk_ftl_init();
+	/* TODO: retrieve this from config */
+	ftl_opts.anm_thread = spdk_get_thread();
+
+	rc = spdk_ftl_init(&ftl_opts);
 	if (rc) {
 		goto end;
 	}
 
 	sp = spdk_conf_find_section(NULL, "Ocssd");
 	if (!sp) {
+		spdk_bdev_module_init_done(&g_ocssd_if);
 		return 0;
 	}
 
@@ -848,24 +920,36 @@ bdev_ocssd_initialize(void)
 	}
 
 	if (opts->count > 0) {
-		if (bdev_ocssd_init_bdevs(opts, NULL, NULL)) {
+		/* Keep bdev_count at 1, so only after all bdevs are initialized
+		 * module_init_done can be called */
+		atomic_store(&g_bdev_count, 1);
+
+		if (bdev_ocssd_init_bdevs(opts, NULL, bdev_ocssd_init_cb, NULL)) {
 			rc = -1;
+		}
+
+		bdev_cnt = atomic_fetch_sub(&g_bdev_count, 1);
+		assert(bdev_cnt > 0);
+
+		if (bdev_cnt == 1) {
+			spdk_bdev_module_init_done(&g_ocssd_if);
 		}
 	}
 end:
+	g_module_init = false;
 	free(opts);
 	return rc;
 }
 
 int
-bdev_ocssd_init_bdevs(struct ocssd_bdev_init_opts *opts,
-		      size_t *count, struct ocssd_bdev_info *bdev_info)
+bdev_ocssd_init_bdevs(struct ocssd_bdev_init_opts *opts, size_t *count,
+		      ocssd_bdev_init_fn cb, void *cb_arg)
 {
 	struct ocssd_probe_ctx *probe_ctx;
 	struct ocssd_bdev_ctrlr *ctrlr;
 	int rc = 0;
 
-	if (!opts) {
+	if (!opts || !cb) {
 		return -EINVAL;
 	}
 
@@ -879,8 +963,9 @@ bdev_ocssd_init_bdevs(struct ocssd_bdev_init_opts *opts,
 	}
 
 	probe_ctx->opts = opts;
-	probe_ctx->bdev_info = bdev_info;
 	probe_ctx->count = 0;
+	probe_ctx->init_cb = cb;
+	probe_ctx->init_arg = cb_arg;
 
 	/* Initialize bdevs on existing ctrlrs */
 	TAILQ_FOREACH(ctrlr, &g_ocssd_bdev_ctrlrs, tailq) {
@@ -891,11 +976,11 @@ bdev_ocssd_init_bdevs(struct ocssd_bdev_init_opts *opts,
 		rc = -ENODEV;
 		goto out;
 	}
-
 out:
 	if (count) {
 		*count = probe_ctx->count;
 	}
+
 	free(probe_ctx);
 	return rc;
 }
@@ -911,19 +996,25 @@ bdev_ocssd_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb
 			return;
 		}
 	}
+
 	cb_fn(cb_arg, -ENODEV);
+}
+
+static void
+bdev_ocssd_finish_cb(void)
+{
+	spdk_ftl_deinit();
+	spdk_bdev_module_finish_done();
 }
 
 static void
 bdev_ocssd_finish(void)
 {
-	struct ocssd_bdev *bdev, *tmp;
-
-	TAILQ_FOREACH_SAFE(bdev, &g_ocssd_bdevs, tailq, tmp) {
-		spdk_bdev_unregister(&bdev->bdev, NULL, NULL);
+	if (TAILQ_EMPTY(&g_ocssd_bdevs)) {
+		bdev_ocssd_finish_cb();
+	} else {
+		g_finish_cb = bdev_ocssd_finish_cb;
 	}
-
-	spdk_ftl_deinit();
 }
 
 static void
