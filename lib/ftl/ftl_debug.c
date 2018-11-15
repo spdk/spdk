@@ -96,7 +96,7 @@ ftl_dev_dump_bands(struct ftl_dev *dev)
 		}
 
 		if (!dev->bands[i].num_chunks) {
-			ftl_debug(" Band %3zu: lack of good blocks\n", i + 1);
+			ftl_debug(" Band %3zu: all chunks are offline\n", i + 1);
 			continue;
 		}
 

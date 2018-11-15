@@ -88,6 +88,8 @@ static const struct ftl_conf	g_default_conf = {
 	.trace_path = "/var/log/ocssd.log",
 };
 
+static void ftl_dev_free_sync(struct ftl_dev *dev);
+
 static void
 ftl_admin_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
@@ -162,7 +164,7 @@ ftl_retrieve_bbt_page(struct ftl_dev *dev, uint64_t offset,
 	}
 
 	while (!cmpl.complete) {
-		usleep(100);
+		ftl_nvme_process_admin_completions(dev->ctrlr);
 	}
 
 	if (spdk_nvme_cpl_is_error(&cmpl.status)) {
@@ -377,7 +379,7 @@ ftl_dev_retrieve_geo(struct ftl_dev *dev)
 
 	/* TODO: add a timeout */
 	while (!cmpl.complete) {
-		usleep(100);
+		ftl_nvme_process_admin_completions(dev->ctrlr);
 	}
 
 	dev->geo = *buf;
@@ -559,88 +561,64 @@ ftl_init_bands_state(struct ftl_dev *dev)
 		return -1;
 	}
 
-	ftl_thread_send_msg(ftl_get_core_thread(dev), _ftl_init_bands_state, dev);
+	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_init_bands_state, dev);
 	return 0;
 }
 
-static int
-ftl_wait_threads_initialized(struct ftl_dev *dev)
+static void
+_ftl_dev_init_task(void *ctx)
 {
-	struct timespec timeout, now;
+	struct ftl_task *task = ctx;
+	struct ftl_dev *dev = task->dev;
 
-	if (clock_gettime(CLOCK_MONOTONIC, &timeout)) {
-		SPDK_ERRLOG("Unable to retrieve current time\n");
-		return -1;
+	task->tid = pthread_self();
+
+	task->poller = spdk_poller_register(task->poller_fn, task, task->period_us);
+	if (!task->poller) {
+		SPDK_ERRLOG("Unable to register poller\n");
+		assert(0);
 	}
 
-	timeout.tv_sec += FTL_INIT_TIMEOUT;
-
-	while (!ftl_thread_initialized(ftl_get_core_thread(dev)) ||
-	       !ftl_thread_initialized(ftl_get_read_thread(dev))) {
-		if (clock_gettime(CLOCK_MONOTONIC, &now)) {
-			SPDK_ERRLOG("Unable to retrieve current time\n");
-			return -1;
-		}
-
-		if (now.tv_sec > timeout.tv_sec) {
-			SPDK_ERRLOG("Thread initialization timed out\n");
-			return -1;
-		}
-
-		usleep(100);
+	if (spdk_get_thread() == ftl_get_core_thread(dev)) {
+		ftl_anm_register_device(dev, ftl_process_anm_event);
 	}
-
-	return 0;
 }
 
 static int
-ftl_dev_init_io_thread(struct ftl_dev *dev, struct ftl_io_thread *io_thread,
-		       const char *name, ftl_thread_fn fn)
+ftl_dev_init_task(struct ftl_dev *dev, struct ftl_task *task, struct spdk_thread *thread,
+		  spdk_poller_fn fn, uint64_t period_us)
 {
-	io_thread->dev = dev;
-	io_thread->thread = ftl_thread_init(name, FTL_CORE_RING_SIZE,
-					    fn, dev, 0);
-	if (!io_thread->thread) {
-		SPDK_ERRLOG("Unable to initialize thread\n");
-		return -1;
-	}
+	task->dev = dev;
+	task->poller_fn = fn;
+	task->thread = thread;
+	task->period_us = period_us;
 
-	io_thread->qpair = ftl_nvme_alloc_io_qpair(dev->ctrlr, NULL, 0);
-	if (!io_thread->qpair) {
+	task->qpair = ftl_nvme_alloc_io_qpair(dev->ctrlr, NULL, 0);
+	if (!task->qpair) {
 		SPDK_ERRLOG("Unable to initialize qpair\n");
 		return -1;
 	}
 
-	if (ftl_thread_start(io_thread->thread)) {
-		SPDK_ERRLOG("Unable to start core thread\n");
-		return -1;
-	}
-
+	spdk_thread_send_msg(thread, _ftl_dev_init_task, task);
 	return 0;
 }
 
 static int
-ftl_dev_init_threads(struct ftl_dev *dev, int read_thread)
+ftl_dev_init_tasks(struct ftl_dev *dev, const struct ftl_init_opts *opts)
 {
-	if (ftl_dev_init_io_thread(dev, &dev->thread[FTL_THREAD_ID_CORE],
-				   "ftl_core", ftl_core_thread)) {
-		SPDK_ERRLOG("Unable to initialize core thread\n");
+	if (!opts->core_thread || !opts->read_thread) {
 		return -1;
 	}
 
-	if (!read_thread) {
-		dev->thread[FTL_THREAD_ID_READ].thread = ftl_get_core_thread(dev);
-		dev->thread[FTL_THREAD_ID_READ].qpair = ftl_get_write_qpair(dev);
-	} else {
-		if (ftl_dev_init_io_thread(dev, &dev->thread[FTL_THREAD_ID_READ],
-					   "ftl_read", ftl_read_thread)) {
-			SPDK_ERRLOG("Unable to initialize read thread\n");
-			return -1;
-		}
+	if (ftl_dev_init_task(dev, &dev->tasks[FTL_TASK_ID_CORE],
+			      opts->core_thread, ftl_task_core, 0)) {
+		SPDK_ERRLOG("Unable to initialize core task\n");
+		return -1;
 	}
 
-	if (ftl_wait_threads_initialized(dev)) {
-		SPDK_ERRLOG("Unable to start threads\n");
+	if (ftl_dev_init_task(dev, &dev->tasks[FTL_TASK_ID_READ],
+			      opts->read_thread, ftl_task_read, 0)) {
+		SPDK_ERRLOG("Unable to initialize read task\n");
 		return -1;
 	}
 
@@ -648,13 +626,11 @@ ftl_dev_init_threads(struct ftl_dev *dev, int read_thread)
 }
 
 static void
-ftl_dev_free_io_thread(struct ftl_dev *dev, struct ftl_io_thread *thread)
+ftl_dev_free_task(struct ftl_dev *dev, struct ftl_task *task)
 {
-	ftl_thread_join(thread->thread);
-	ftl_thread_free(thread->thread);
-	ftl_nvme_free_io_qpair(dev->ctrlr, thread->qpair);
-	thread->thread = NULL;
-	thread->qpair = NULL;
+	ftl_nvme_free_io_qpair(dev->ctrlr, task->qpair);
+	task->thread = NULL;
+	task->qpair = NULL;
 }
 
 static int
@@ -663,7 +639,7 @@ ftl_dev_l2p_alloc(struct ftl_dev *dev)
 	size_t addr_size;
 	uint64_t i;
 
-	if (dev->l2p_len == 0) {
+	if (dev->num_lbas == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Invalid l2p table size\n");
 		return -1;
 	}
@@ -673,13 +649,13 @@ ftl_dev_l2p_alloc(struct ftl_dev *dev)
 	}
 
 	addr_size = dev->ppa_len >= 32 ? 8 : 4;
-	dev->l2p = malloc(dev->l2p_len * addr_size);
+	dev->l2p = malloc(dev->num_lbas * addr_size);
 	if (!dev->l2p) {
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Failed to allocate l2p table\n");
 		return -1;
 	}
 
-	for (i = 0; i < dev->l2p_len; ++i) {
+	for (i = 0; i < dev->num_lbas; ++i) {
 		ftl_l2p_set(dev, i, ftl_to_ppa(FTL_PPA_INVALID));
 	}
 
@@ -687,61 +663,149 @@ ftl_dev_l2p_alloc(struct ftl_dev *dev)
 }
 
 static void
+ftl_init_complete(struct ftl_dev *dev)
+{
+	pthread_mutex_lock(&g_ftl_queue_lock);
+	STAILQ_INSERT_HEAD(&g_ftl_queue, dev, stailq);
+	pthread_mutex_unlock(&g_ftl_queue_lock);
+
+	dev->initialized = 1;
+
+	if (dev->init_cb) {
+		dev->init_cb(dev, dev->init_arg, 0);
+	}
+
+	dev->init_cb = NULL;
+	dev->init_arg = NULL;
+}
+
+static int
 ftl_setup_initial_state(struct ftl_dev *dev)
 {
 	struct ftl_conf *conf = &dev->conf;
 
 	spdk_uuid_generate(&dev->uuid);
 
-	dev->l2p_len = 0;
-
+	dev->num_lbas = 0;
 	for (size_t i = 0; i < ftl_dev_num_bands(dev); ++i) {
-		dev->l2p_len += ftl_band_num_usable_lbks(&dev->bands[i]);
+		dev->num_lbas += ftl_band_num_usable_lbks(&dev->bands[i]);
 	}
 
-	dev->l2p_len = (dev->l2p_len * (100 - conf->lba_rsvd)) / 100;
+	dev->num_lbas = (dev->num_lbas * (100 - conf->lba_rsvd)) / 100;
+
+	if (ftl_dev_l2p_alloc(dev)) {
+		SPDK_ERRLOG("Unable to init l2p table\n");
+		return -1;
+	}
+
+	if (ftl_init_bands_state(dev)) {
+		SPDK_ERRLOG("Unable to finish the initialization\n");
+		return -1;
+	}
+
+	ftl_init_complete(dev);
+	return 0;
 }
 
-static struct ftl_restore *
-ftl_setup_restore_state(struct ftl_dev *dev, const struct ftl_init_opts *opts)
+struct ftl_init_fail_cb {
+	ftl_init_fn	cb;
+	void		*arg;
+};
+
+static void
+ftl_restore_fail_cb(void *ctx, int status)
 {
-	struct ftl_restore *restore = NULL;
-	struct spdk_uuid zero_uuid = { .u = {{0}} };
+	struct ftl_init_fail_cb *fail_cb = ctx;
 
-	if (spdk_uuid_compare(&opts->uuid, &zero_uuid) == 0) {
-		SPDK_ERRLOG("Non-zero UUID required in restore mode\n");
-		goto err;
-	}
-	dev->uuid = opts->uuid;
-	restore = ftl_restore_init(dev);
-	if (!restore) {
-		SPDK_ERRLOG("Unable to initialize restore structures\n");
-		goto err;
-	}
-	if (ftl_restore_check_device(dev, restore)) {
-		SPDK_ERRLOG("Unable to recover valid ocssd data\n");
-		goto err;
-	}
-
-	return restore;
-err:
-	ftl_restore_free(restore);
-	return NULL;
+	fail_cb->cb(NULL, fail_cb->arg, -ENODEV);
+	free(fail_cb);
 }
 
-struct ftl_dev *
-spdk_ftl_dev_init(const struct ftl_init_opts *opts)
+static void
+ftl_restore_fail(struct ftl_dev *dev)
+{
+	struct ftl_init_fail_cb *fail_cb;
+
+	fail_cb = malloc(sizeof(*fail_cb));
+	if (!fail_cb) {
+		SPDK_ERRLOG("Unable to allocate context to free the device\n");
+		return;
+	}
+
+	fail_cb->cb = dev->init_cb;
+	fail_cb->arg = dev->init_arg;
+
+	spdk_ftl_dev_free(dev, ftl_restore_fail_cb, fail_cb);
+}
+
+static void
+ftl_restore_device_cb(struct ftl_dev *dev, struct ftl_restore *restore, int status)
+{
+	if (status) {
+		SPDK_ERRLOG("Failed to restore the device from the SSD\n");
+		goto error;
+	}
+
+	if (ftl_init_bands_state(dev)) {
+		SPDK_ERRLOG("Unable to finish the initialization\n");
+		goto error;
+	}
+
+	ftl_init_complete(dev);
+	return;
+error:
+	ftl_restore_fail(dev);
+}
+
+static void
+ftl_restore_md_cb(struct ftl_dev *dev, struct ftl_restore *restore, int status)
+{
+	if (status) {
+		SPDK_ERRLOG("Failed to restore the metadata from the SSD\n");
+		goto error;
+	}
+
+	/* After the metadata is read it should be possible to allocate the L2P */
+	if (ftl_dev_l2p_alloc(dev)) {
+		SPDK_ERRLOG("Failed to allocate the L2P\n");
+		goto error;
+	}
+
+	if (ftl_restore_device(restore, ftl_restore_device_cb)) {
+		SPDK_ERRLOG("Failed to start device restoration from the SSD\n");
+		goto error;
+	}
+
+	return;
+error:
+	ftl_restore_fail(dev);
+}
+
+static int
+ftl_restore_state(struct ftl_dev *dev, const struct ftl_init_opts *opts)
+{
+	dev->uuid = opts->uuid;
+
+	if (ftl_restore_md(dev, ftl_restore_md_cb)) {
+		SPDK_ERRLOG("Failed to start metadata restoration from the SSD\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+int
+spdk_ftl_dev_init(const struct ftl_init_opts *opts, ftl_init_fn cb, void *cb_arg)
 {
 	struct ftl_dev *dev;
-	struct ftl_restore *restore = NULL;
 
 	if (!opts || !opts->ctrlr) {
-		return NULL;
+		return -EINVAL;
 	}
 
 	dev = calloc(1, sizeof(*dev));
 	if (!dev) {
-		return NULL;
+		return -ENOMEM;
 	}
 
 	spdk_ftl_conf_init_defaults(&dev->conf);
@@ -754,6 +818,8 @@ spdk_ftl_dev_init(const struct ftl_init_opts *opts)
 		memcpy(&dev->conf, opts->conf, sizeof(dev->conf));
 	}
 
+	dev->init_cb = cb;
+	dev->init_arg = cb_arg;
 	dev->range = opts->range;
 	dev->limit = FTL_LIMIT_MAX;
 	dev->name = strdup(opts->name);
@@ -772,7 +838,7 @@ spdk_ftl_dev_init(const struct ftl_init_opts *opts)
 		goto err;
 	}
 
-	/* In case of errors, we free all of the memory in spdk_ftl_dev_free(), */
+	/* In case of errors, we free all of the memory in ftl_dev_free_sync(), */
 	/* so we don't have to clean up in each of the init functions. */
 	if (ftl_dev_retrieve_geo(dev)) {
 		SPDK_ERRLOG("Unable to retrieve geometry\n");
@@ -819,93 +885,61 @@ spdk_ftl_dev_init(const struct ftl_init_opts *opts)
 		goto err;
 	}
 
-	if (ftl_dev_init_threads(dev, opts->mode & FTL_MODE_READ_ISOLATION)) {
+	if (ftl_dev_init_tasks(dev, opts)) {
 		SPDK_ERRLOG("Unable to initialize device threads\n");
 		goto err;
 	}
 
-	/* In case of Create just initialize L2P size and allocate L2P later; */
-	/* When restoring we want to read enough to verify the data is correct, get L2P size and */
-	/* allocate it, then restore the full state (including L2P itself) */
-	/* L2P size needs to be saved in case a bad chunk appears - we want to surface a constant */
-	/* LBA range */
 	if (opts->mode & FTL_MODE_CREATE) {
-		ftl_setup_initial_state(dev);
+		if (ftl_setup_initial_state(dev)) {
+			SPDK_ERRLOG("Failed to setup initial state of the device\n");
+			goto err;
+		}
+
 	} else {
-		restore = ftl_setup_restore_state(dev, opts);
-		if (!restore) {
-			SPDK_ERRLOG("Failed to initialize restore state\n");
+		if (ftl_restore_state(dev, opts)) {
+			SPDK_ERRLOG("Unable to restore device's state from the SSD\n");
 			goto err;
 		}
 	}
 
-	if (ftl_dev_l2p_alloc(dev)) {
-		SPDK_ERRLOG("Unable to init l2p table\n");
-		goto err;
-	}
-
-	if (!(opts->mode & FTL_MODE_CREATE)) {
-		if (ftl_restore_state(dev, restore)) {
-			SPDK_ERRLOG("Unable to recover ocssd l2p\n");
-			goto err;
-		}
-	}
-
-	if (ftl_init_bands_state(dev)) {
-		SPDK_ERRLOG("Unable to finish the initialization\n");
-		goto err;
-	}
-
-	pthread_mutex_lock(&g_ftl_queue_lock);
-	STAILQ_INSERT_HEAD(&g_ftl_queue, dev, stailq);
-	pthread_mutex_unlock(&g_ftl_queue_lock);
-
-	ftl_restore_free(restore);
-	return dev;
+	return 0;
 err:
-	ftl_restore_free(restore);
-	spdk_ftl_dev_free(dev);
-	return NULL;
+	ftl_dev_free_sync(dev);
+	return -ENOMEM;
 }
 
 static void
 _ftl_halt_defrag(void *arg)
 {
-	struct ftl_dev *dev = arg;
-	ftl_reloc_halt(dev->reloc);
+	ftl_reloc_halt(((struct ftl_dev *)arg)->reloc);
 }
 
 static void
 ftl_free_threads(struct ftl_dev *dev)
 {
-	struct ftl_thread *t_core, *t_read;
+	struct ftl_task *t_core, *t_read;
 
-	t_core = ftl_get_core_thread(dev);
-	t_read = ftl_get_read_thread(dev);
+	t_core = &dev->tasks[FTL_TASK_ID_CORE];
+	t_read = &dev->tasks[FTL_TASK_ID_READ];
 
-	/* Read thread is valid if and only if core thread is initialized */
-	/* so we can return immediately */
-	if (!t_core) {
-		assert(t_read == NULL);
-		return;
+	if (t_core->poller) {
+		spdk_poller_unregister(&t_core->poller);
 	}
 
-	ftl_thread_stop(t_core);
-	ftl_thread_stop(t_read);
-
-	/* Make sure both threads are already stopped before freeing them */
-	ftl_thread_join(t_core);
-
-	if (ftl_get_read_thread(dev) != t_core) {
-		ftl_thread_join(t_read);
-		ftl_dev_free_io_thread(dev, &dev->thread[FTL_THREAD_ID_READ]);
+	if (t_read->poller) {
+		spdk_poller_unregister(&t_read->poller);
 	}
 
-	ftl_dev_free_io_thread(dev, &dev->thread[FTL_THREAD_ID_CORE]);
+	if (ftl_get_read_thread(dev) != t_core->thread) {
+		ftl_dev_free_task(dev, t_read);
+	}
+
+	ftl_dev_free_task(dev, t_core);
 }
 
-void
-spdk_ftl_dev_free(struct ftl_dev *dev)
+static void
+ftl_dev_free_sync(struct ftl_dev *dev)
 {
 	struct ftl_dev *iter;
 
@@ -922,15 +956,8 @@ spdk_ftl_dev_free(struct ftl_dev *dev)
 	}
 	pthread_mutex_unlock(&g_ftl_queue_lock);
 
-	if (ftl_get_core_thread(dev)) {
-		ftl_thread_send_msg(ftl_get_core_thread(dev), _ftl_halt_defrag, dev);
-	}
-
 	ftl_free_threads(dev);
 	ftl_trace_free(dev->stats.trace);
-
-	/* Keep this after the threads are stopped, to make sure the device is */
-	/* unregistered before unregistering the ctrlr. */
 	ftl_anm_unregister_ctrlr(dev->ctrlr);
 
 	assert(LIST_EMPTY(&dev->wptr_list));
@@ -958,10 +985,65 @@ spdk_ftl_dev_free(struct ftl_dev *dev)
 	free(dev);
 }
 
-int
-spdk_ftl_init(void)
+static int
+ftl_halt_poller(void *ctx)
 {
-	return ftl_anm_init();
+	struct ftl_dev *dev = ctx;
+	struct ftl_task *t_core, *t_read;
+	ftl_fn halt_cb = dev->halt_cb;
+	void *halt_arg = dev->halt_arg;
+
+	t_core = &dev->tasks[FTL_TASK_ID_CORE];
+	t_read = &dev->tasks[FTL_TASK_ID_READ];
+
+	if (!t_core->poller && !t_read->poller) {
+		spdk_poller_unregister(&dev->halt_poller);
+
+		ftl_anm_unregister_device(dev);
+		ftl_dev_free_sync(dev);
+
+		if (halt_cb) {
+			halt_cb(halt_arg, 0);
+		}
+	}
+
+	return 0;
+}
+
+static void
+ftl_add_halt_poller(void *ctx)
+{
+	struct ftl_dev *dev = ctx;
+
+	_ftl_halt_defrag(dev);
+
+	assert(!dev->halt_poller);
+	dev->halt_poller = spdk_poller_register(ftl_halt_poller, dev, 100);
+}
+
+int
+spdk_ftl_dev_free(struct ftl_dev *dev, ftl_fn cb, void *cb_arg)
+{
+	if (!dev || !cb) {
+		return -EINVAL;
+	}
+
+	if (dev->halt_cb) {
+		return -EBUSY;
+	}
+
+	dev->halt_cb = cb;
+	dev->halt_arg = cb_arg;
+	dev->halt = 1;
+
+	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_add_halt_poller, dev);
+	return 0;
+}
+
+int
+spdk_ftl_init(struct spdk_thread *anm_thread)
+{
+	return ftl_anm_init(anm_thread);
 }
 
 void
