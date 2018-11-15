@@ -16,6 +16,24 @@
       "revId": "bbe6c5653314ea2792872eb173ff98b9fbfb1041",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e3ade53_3bcc6639",
+        "filename": "configure",
+        "patchSetId": 19
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-15T21:29:23Z",
+      "side": 1,
+      "message": "we\u0027re treating these as having a one way dependency, compress needs reduce but reduce does not need compress.  This is pretty future thinking, reduce may be used as an ingredient library for some other thing like depue or whatever. So the idea is to \"hide\" the fact that the reduce lib is being used and let the compress flag pull in ISA-L, reduce, and the DPDK compressDev stuff",
+      "parentUuid": "ca0de07c_7097cf64",
+      "revId": "bbe6c5653314ea2792872eb173ff98b9fbfb1041",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
