@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45a75bea_883b3873",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T17:09:31Z",
+      "side": 1,
+      "message": "leftover placeholder text? This is probably the only real thing that needs to be fixed in the patch, the rest of my comments are really just nitpicking.",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e2e4310_497cc600",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T17:09:31Z",
+      "side": 1,
+      "message": "I think \"the\" can be removed.",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ead9a748_03dfb7d5",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T17:09:31Z",
+      "side": 1,
+      "message": "`spdk` a full -\u003e `spdk` full",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "742f8e9d_28c53463",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T17:09:31Z",
+      "side": 1,
+      "message": "to IOMMU -\u003e to the IOMMU",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed16aaa3_750fcb0a",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T17:09:31Z",
+      "side": 1,
+      "message": "with following -\u003e with the following",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d55b4515_21336c65",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T17:09:31Z",
+      "side": 1,
+      "message": "below of what -\u003e below what",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd90eabd_1bd43f3a",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T17:09:31Z",
+      "side": 1,
+      "message": "one the -\u003e one of the",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef2d9bca_d304df5a",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T17:09:31Z",
+      "side": 1,
+      "message": "logout the -\u003e logout from the target user account.",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
