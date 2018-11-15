@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "bb8153a2_dc30cbaa",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-15T09:25:08Z",
+      "side": 1,
+      "message": "Because this is a split that Jim requested of bigger patch. Check here for how this is used finally.\n\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/430095/13/lib/jsonrpc/jsonrpc_client_tcp.c@199",
+      "parentUuid": "772280a9_1a869bd4",
+      "revId": "87bda3f6ce13920d8ed6a0615b00dca4716f6f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "193208c1_a4b961d2",
         "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
         "patchSetId": 10
@@ -66,6 +84,24 @@
       "writtenOn": "2018-11-09T00:08:10Z",
       "side": 1,
       "message": "only adding \"|| !r-\u003eready\" is simpler ?\n\nr \u003d client-\u003eresp;\nif (r \u003d\u003d NULL || !r-\u003eready) {\n  return NULL;\n}\nclient-\u003eresp \u003d NULL;\nreturn \u0026r-\u003ejsonrpc;",
+      "revId": "87bda3f6ce13920d8ed6a0615b00dca4716f6f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38289044_fb5f5103",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-15T09:25:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "193208c1_a4b961d2",
       "revId": "87bda3f6ce13920d8ed6a0615b00dca4716f6f17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
