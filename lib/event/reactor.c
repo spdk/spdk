@@ -74,9 +74,6 @@ struct spdk_reactor {
 
 	struct spdk_ring				*events;
 
-	/* Pointer to the per-socket g_spdk_event_mempool for this reactor. */
-	struct spdk_mempool				*event_mempool;
-
 	uint64_t					max_delay_us;
 } __attribute__((aligned(64)));
 
@@ -89,7 +86,7 @@ static bool g_context_switch_monitor_enabled = true;
 static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
 				   uint64_t max_delay_us);
 
-static struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
+static struct spdk_mempool *g_spdk_event_mempool = NULL;
 
 static struct spdk_cpuset *g_spdk_app_core_mask;
 
@@ -112,7 +109,7 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 		return NULL;
 	}
 
-	event = spdk_mempool_get(reactor->event_mempool);
+	event = spdk_mempool_get(g_spdk_event_mempool);
 	if (event == NULL) {
 		assert(false);
 		return NULL;
@@ -168,7 +165,7 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 		event->fn(event->arg1, event->arg2);
 	}
 
-	spdk_mempool_put_bulk(reactor->event_mempool, events, count);
+	spdk_mempool_put_bulk(g_spdk_event_mempool, events, count);
 
 	return count;
 }
@@ -391,8 +388,6 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 						   SPDK_ENV_SOCKET_ID_ANY);
 	}
 	assert(reactor->events != NULL);
-
-	reactor->event_mempool = g_spdk_event_mempool[reactor->socket_id];
 }
 
 int
@@ -479,7 +474,7 @@ int
 spdk_reactors_init(unsigned int max_delay_us)
 {
 	int rc;
-	uint32_t i, j, last_core;
+	uint32_t i, last_core;
 	struct spdk_reactor *reactor;
 	uint64_t socket_mask = 0x0;
 	uint8_t socket_count = 0;
@@ -498,43 +493,16 @@ spdk_reactors_init(unsigned int max_delay_us)
 		return -1;
 	}
 
-	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
-		if ((1ULL << i) & socket_mask) {
-			snprintf(mempool_name, sizeof(mempool_name), "evtpool%d_%d", i, getpid());
-			g_spdk_event_mempool[i] = spdk_mempool_create(mempool_name,
-						  _spdk_reactor_get_max_event_cnt(socket_count),
-						  sizeof(struct spdk_event),
-						  SPDK_MEMPOOL_DEFAULT_CACHE_SIZE, i);
+	snprintf(mempool_name, sizeof(mempool_name), "evtpool_%d", getpid());
+	g_spdk_event_mempool = spdk_mempool_create(mempool_name,
+			       _spdk_reactor_get_max_event_cnt(socket_count),
+			       sizeof(struct spdk_event),
+			       SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+			       SPDK_ENV_SOCKET_ID_ANY);
 
-			if (g_spdk_event_mempool[i] == NULL) {
-				SPDK_NOTICELOG("Event_mempool creation failed on preferred socket %d.\n", i);
-
-				/*
-				 * Instead of failing the operation directly, try to create
-				 * the mempool on any available sockets in the case that
-				 * memory is not evenly installed on all sockets. If still
-				 * fails, free all allocated memory and exits.
-				 */
-				g_spdk_event_mempool[i] = spdk_mempool_create(
-								  mempool_name,
-								  _spdk_reactor_get_max_event_cnt(socket_count),
-								  sizeof(struct spdk_event),
-								  SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-								  SPDK_ENV_SOCKET_ID_ANY);
-
-				if (g_spdk_event_mempool[i] == NULL) {
-					for (j = i - 1; j < i; j--) {
-						if (g_spdk_event_mempool[j] != NULL) {
-							spdk_mempool_free(g_spdk_event_mempool[j]);
-						}
-					}
-					SPDK_ERRLOG("spdk_event_mempool creation failed\n");
-					return -1;
-				}
-			}
-		} else {
-			g_spdk_event_mempool[i] = NULL;
-		}
+	if (g_spdk_event_mempool == NULL) {
+		SPDK_ERRLOG("spdk_event_mempool creation failed\n");
+		return -1;
 	}
 
 	/* struct spdk_reactor must be aligned on 64 byte boundary */
@@ -544,11 +512,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not allocate array size=%u for g_reactors\n",
 			    last_core + 1);
-		for (i = 0; i < SPDK_MAX_SOCKET; i++) {
-			if (g_spdk_event_mempool[i] != NULL) {
-				spdk_mempool_free(g_spdk_event_mempool[i]);
-			}
-		}
+		spdk_mempool_free(g_spdk_event_mempool);
 		return -1;
 	}
 
@@ -577,11 +541,7 @@ spdk_reactors_fini(void)
 		}
 	}
 
-	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
-		if (g_spdk_event_mempool[i] != NULL) {
-			spdk_mempool_free(g_spdk_event_mempool[i]);
-		}
-	}
+	spdk_mempool_free(g_spdk_event_mempool);
 
 	free(g_reactors);
 	g_reactors = NULL;
