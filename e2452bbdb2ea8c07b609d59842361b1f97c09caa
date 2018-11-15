@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ecff23e_5e03a155",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-15T13:03:59Z",
+      "side": 1,
+      "message": "\u003e Changing config_converter to ignore the [AIO] section may not be good fix.\n\nWhy is that? Did it bring up any other issues?",
+      "revId": "e2452bbdb2ea8c07b609d59842361b1f97c09caa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
