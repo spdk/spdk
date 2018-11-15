@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "f4d40c92_415486fc",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-15T21:34:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fac12a27_031bf105",
+      "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "250e235b_65767241",
         "filename": "include/spdk/event.h",
         "patchSetId": 3
@@ -47,6 +65,24 @@
       "writtenOn": "2018-11-15T20:42:26Z",
       "side": 1,
       "message": "how about num_trace_entries?\n\nmy only concern with \"trace_size\" is that it is not clear if it means the size in bytes or the size in number of entries\n\nsimilar changes should be made in trace.h (including trace_size parameter names - num_entries is probably a better name)",
+      "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96e40478_1e45d2f0",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-15T21:34:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "250e235b_65767241",
       "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "9b2c92e6_68362178",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-15T21:34:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8fd2b86e_301ab2b3",
+      "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f62fe5a_a7d4be03",
         "filename": "lib/trace/trace.c",
         "patchSetId": 3
@@ -81,6 +135,24 @@
       "writtenOn": "2018-11-15T20:42:26Z",
       "side": 1,
       "message": "let\u0027s break this into two lines:\n\nstruct spdk_trace_history *lcore_history;\n\nlcore_history \u003d get_per_lcore_history(g_trace_histories, i, trace_size);",
+      "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02c5990d_23cc11f6",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-15T21:34:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f62fe5a_a7d4be03",
       "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
