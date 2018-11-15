@@ -115,6 +115,18 @@ struct passthru_bdev_io {
 static void
 vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
+
+/* Callback for unregistering the IO device. */
+static void
+_device_unregister_cb(void *io_device)
+{
+	struct vbdev_passthru *pt_node  = io_device;
+
+	/* Done with this pt_node. */
+	free(pt_node->pt_bdev.name);
+	free(pt_node);
+}
+
 /* Called after we've unregistered following a hot remove callback.
  * Our finish entry point will be called next.
  */
@@ -123,16 +135,21 @@ vbdev_passthru_destruct(void *ctx)
 {
 	struct vbdev_passthru *pt_node = (struct vbdev_passthru *)ctx;
 
+	/* It is important to follow this exact sequence of steps for destroying
+	 * a vbdev...
+	 */
+
+	TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
+
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(pt_node->base_bdev);
 
 	/* Close the underlying bdev. */
 	spdk_bdev_close(pt_node->base_desc);
 
-	/* Done with this pt_node. */
-	TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
-	free(pt_node->pt_bdev.name);
-	free(pt_node);
+	/* Unregister the io_device. */
+	spdk_io_device_unregister(pt_node, _device_unregister_cb);
+
 	return 0;
 }
 
@@ -589,6 +606,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		if (rc) {
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
 			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
+			spdk_io_device_unregister(pt_node, NULL);
 			free(pt_node->pt_bdev.name);
 			free(pt_node);
 			break;
@@ -600,6 +618,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
 			spdk_bdev_close(pt_node->base_desc);
 			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
+			spdk_io_device_unregister(pt_node, NULL);
 			free(pt_node->pt_bdev.name);
 			free(pt_node);
 			break;
@@ -611,6 +630,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 			SPDK_ERRLOG("could not register pt_bdev\n");
 			spdk_bdev_close(pt_node->base_desc);
 			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
+			spdk_io_device_unregister(pt_node, NULL);
 			free(pt_node->pt_bdev.name);
 			free(pt_node);
 			break;
@@ -672,6 +692,7 @@ delete_passthru_disk(struct spdk_bdev *bdev, spdk_delete_passthru_complete cb_fn
 		}
 	}
 
+	/* Additional cleanup happens in the destruct callback. */
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
