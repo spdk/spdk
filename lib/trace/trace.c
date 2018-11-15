@@ -56,7 +56,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	}
 
 	lcore_history = get_per_lcore_history(g_trace_histories, lcore,
-					      g_trace_histories->flags.trace_size);
+					      g_trace_histories->flags.trace_sizes);
 	if (tsc == 0) {
 		tsc = spdk_get_ticks();
 	}
@@ -72,7 +72,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	next_entry->arg1 = arg1;
 
 	lcore_history->next_entry++;
-	if (lcore_history->next_entry == g_trace_histories->flags.trace_size) {
+	if (lcore_history->next_entry == g_trace_histories->flags.trace_sizes[lcore]) {
 		lcore_history->next_entry = 0;
 	}
 }
@@ -81,7 +81,14 @@ int
 spdk_trace_init(const char *shm_name, uint64_t trace_size)
 {
 	int i = 0;
-	int histories_size = get_trace_histories_size(trace_size);
+	int histories_size;
+	uint64_t trace_sizes[SPDK_TRACE_MAX_LCORE];
+
+	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+		trace_sizes[i] = trace_size;
+	}
+
+	histories_size = get_trace_histories_size(SPDK_TRACE_MAX_LCORE, trace_sizes);
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
@@ -123,12 +130,12 @@ spdk_trace_init(const char *shm_name, uint64_t trace_size)
 	g_trace_flags = &g_trace_histories->flags;
 
 	g_trace_flags->tsc_rate = spdk_get_ticks_hz();
-	g_trace_flags->trace_size = trace_size;
-
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		struct spdk_trace_history *lcore_history = get_per_lcore_history(g_trace_histories, i,
-				trace_size);
+				trace_sizes);
+
 		lcore_history->lcore = i;
+		g_trace_flags->trace_sizes[i] = trace_sizes[i];
 	}
 
 	spdk_trace_flags_init();

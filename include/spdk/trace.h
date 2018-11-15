@@ -115,11 +115,13 @@ struct spdk_trace_history {
 
 struct spdk_trace_flags {
 	uint64_t			tsc_rate;
-	uint64_t			trace_size;
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
 	struct spdk_trace_owner		owner[UCHAR_MAX + 1];
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
+
+	/** Number of trace_entries contained in each trace_history. */
+	uint64_t			trace_sizes[SPDK_TRACE_MAX_LCORE];
 };
 extern struct spdk_trace_flags *g_trace_flags;
 extern struct spdk_trace_histories *g_trace_histories;
@@ -144,24 +146,32 @@ get_trace_history_size(uint64_t trace_size)
 }
 
 static inline uint64_t
-get_trace_histories_size(uint64_t trace_size)
+get_trace_histories_size(int lcore_num, uint64_t trace_sizes[])
 {
-	int size;
+	uint64_t size;
+	int i;
 
 	size = sizeof(struct spdk_trace_flags);
-	size += get_trace_history_size(trace_size) * SPDK_TRACE_MAX_LCORE;
+
+	for (i = 0; i < lcore_num; i++) {
+		size += get_trace_history_size(trace_sizes[i]);
+	}
 
 	return size;
 }
 
 static inline struct spdk_trace_history *
-get_per_lcore_history(struct spdk_trace_histories *trace_histories, unsigned lcore,
-		      uint64_t trace_size)
+get_per_lcore_history(struct spdk_trace_histories *trace_histories, int lcore_idx,
+		      uint64_t trace_sizes[])
 {
 	char *lcore_history_offset;
+	int i;
 
 	lcore_history_offset = (char *)trace_histories->per_lcore_history;
-	lcore_history_offset += lcore * get_trace_history_size(trace_size);
+
+	for (i = 0; i < lcore_idx; i++) {
+		lcore_history_offset += get_trace_history_size(trace_sizes[i]);
+	}
 
 	return (struct spdk_trace_history *)lcore_history_offset;
 }
