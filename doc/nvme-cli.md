@@ -20,18 +20,23 @@ git clone -b spdk-1.6 https://github.com/spdk/nvme-cli.git
 
 6. Update the "spdk.conf" file under nvme-cli folder to properly configure the SPDK. Notes as following:
 ~~~{.sh}
-spdk=0
-Default to 0 (off) and change to 1 (on) after switching to SPDK via "<spdk_folder>/scripts/setup.sh".
+spdk=1
+Indicates whether or not to use spdk. Can be 0 (off) or 1 (on).
+Defaults to 1 which assumes that you have run "<spdk_folder>/scripts/setup.sh", unbinding your drives from the kernel.
+
 
 core_mask=0x100
-Default to use the 9th core for the nvme-cli running.
+A bitmask representing which core(s) to use for nvme-cli operations.
+Defaults to core 8.
 
 mem_size=512
-Default to use 512MB memory allocated.
+The amount of reserved hugepage memory to use for nvme-cli (in MB).
+Defaults to 512MB.
 
-shm_id=1
-Default to 1. If other running SPDK application has configured with this same 1 shm_id.
-This nvme-cli will access those devices from that running SPDK application.
+shm_id=0
+Indicates the shared memory ID for the spdk application with which your NVMe drives are associated,
+and should be adjusted accordingly.
+Defaults to 0.
 ~~~
 
 7. Run the "./nvme list" command to get the domain:bus:device.function for each found NVMe SSD.
