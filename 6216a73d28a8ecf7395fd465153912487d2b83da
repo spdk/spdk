@@ -22,6 +22,30 @@
       "revId": "6216a73d28a8ecf7395fd465153912487d2b83da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f973592_9485a9dd",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1175,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T16:46:18Z",
+      "side": 1,
+      "message": "You\u0027re right. I got a little careless in my desire to reuse as much code as possible.\nI\u0027ve refactored the function to take in the arguments necessary to make it generic enough for both use cases.\nAlso, thank you for pointing this out! This is one of those things where I was thinking about it wrong and it would have taken me a long time to root it out myself.",
+      "parentUuid": "64a2b7f0_d7cde882",
+      "range": {
+        "startLine": 1175,
+        "startChar": 29,
+        "endLine": 1175,
+        "endChar": 50
+      },
+      "revId": "6216a73d28a8ecf7395fd465153912487d2b83da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
