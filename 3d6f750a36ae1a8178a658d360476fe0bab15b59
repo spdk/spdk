@@ -88,6 +88,24 @@
       "revId": "3d6f750a36ae1a8178a658d360476fe0bab15b59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aff468df_26783dc8",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-15T21:35:05Z",
+      "side": 1,
+      "message": "Hi Chen,\n\nThank you for reading the code carefully. I think as the line 41 in this file says, only disks specified in the option will be used. Hence adding raid0, 1, 2 into the \"conf.json\" will be OK.\n\nHow about the following?\n\n- You create a lvol store and a lvol bdev on top of the first raid bdev, and use the lvol bdev.\n- The comment is \"create and use lvol store on the first raid bdev\"\n\nThanks,\nShuhei",
+      "parentUuid": "91ad3a57_ebcbdc9a",
+      "revId": "3d6f750a36ae1a8178a658d360476fe0bab15b59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
