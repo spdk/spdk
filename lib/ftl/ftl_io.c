@@ -36,8 +36,8 @@
 #include "ftl_utils.h"
 #include "ftl_io.h"
 #include "ftl_core.h"
-#include "ftl_band.h"
 #include "ftl_rwb.h"
+#include "ftl_band.h"
 
 size_t
 ftl_io_inc_req(struct ftl_io *io)
@@ -187,17 +187,17 @@ struct ftl_io *
 ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 {
 	struct ftl_io *io = opts->io;
+	struct ftl_dev *dev = opts->dev;
 
 	if (!io) {
-		assert(opts->size);
-		io = calloc(1, opts->size);
+		io = ftl_io_get(dev->ioch);
 		if (!io) {
 			return NULL;
 		}
 	}
 
 	ftl_io_clear(io);
-	ftl_io_init(io, opts->dev, opts->fn, io, opts->flags | FTL_IO_INTERNAL, opts->type);
+	ftl_io_init(io, dev, opts->fn, io, opts->flags | FTL_IO_INTERNAL, opts->type);
 
 	io->lbk_cnt = opts->iov_cnt * opts->req_size;
 	io->rwb_batch = opts->rwb_batch;
@@ -206,7 +206,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 
 	if (ftl_io_init_iovec(io, opts->data, opts->iov_cnt, opts->req_size)) {
 		if (!opts->io) {
-			free(io);
+			ftl_io_free(io);
 		}
 		return NULL;
 	}
@@ -224,7 +224,7 @@ ftl_io_rwb_init(struct ftl_dev *dev, struct ftl_band *band,
 		.rwb_batch	= batch,
 		.band		= band,
 		.size		= sizeof(struct ftl_io),
-		.flags		= FTL_IO_MEMORY,
+		.flags		= 0,
 		.type		= FTL_IO_WRITE,
 		.iov_cnt	= 1,
 		.req_size	= dev->xfer_size,
@@ -246,7 +246,7 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_fn cb)
 		.rwb_batch	= NULL,
 		.band		= band,
 		.size		= sizeof(struct ftl_io),
-		.flags		= FTL_IO_MEMORY | FTL_IO_PPA_MODE,
+		.flags		= FTL_IO_PPA_MODE,
 		.type		= FTL_IO_ERASE,
 		.iov_cnt	= 0,
 		.req_size	= 1,
@@ -262,7 +262,7 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_fn cb)
 }
 
 void
-ftl_io_user_init(struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
+ftl_io_user_init(struct ftl_dev *dev, struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
 		 struct iovec *iov, size_t iov_cnt,
 		 const ftl_fn cb_fn, void *cb_arg, int type)
 {
@@ -270,7 +270,7 @@ ftl_io_user_init(struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
 		return;
 	}
 
-	ftl_io_init(io, io->dev, cb_fn, cb_arg, 0, type);
+	ftl_io_init(io, dev, cb_fn, cb_arg, 0, type);
 
 	io->lba = lba;
 	io->lbk_cnt = lbk_cnt;
@@ -288,13 +288,13 @@ ftl_io_user_init(struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
 void
 ftl_io_complete(struct ftl_io *io)
 {
-	int mem_free = ftl_io_mem_free(io);
+	int keep_alive = ftl_io_keep_alive(io);
 
 	ftl_io_clear_flags(io, FTL_IO_INITIALIZED);
 	io->cb.fn(io->cb.ctx, io->status);
 
-	if (mem_free) {
-		spdk_ftl_io_free(io);
+	if (!keep_alive) {
+		ftl_io_free(io);
 	}
 }
 
@@ -321,16 +321,18 @@ ftl_io_get_md(const struct ftl_io *io)
 }
 
 struct ftl_io *
-spdk_ftl_io_alloc(struct ftl_dev *dev)
+ftl_io_get(struct spdk_io_channel *ch)
 {
 	struct ftl_io *io;
+	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(ch);
 
-	io = calloc(1, sizeof(*io));
+	io = spdk_mempool_get(ioch->io_pool);
 	if (!io) {
 		return NULL;
 	}
 
-	io->dev = dev;
+	memset(io, 0, ioch->elem_size);
+	io->ch = ch;
 	return io;
 }
 
@@ -342,8 +344,10 @@ ftl_io_reinit(struct ftl_io *io, ftl_fn fn, void *ctx, int flags, int type)
 }
 
 void
-spdk_ftl_io_free(struct ftl_io *io)
+ftl_io_free(struct ftl_io *io)
 {
+	struct ftl_io_channel *ioch;
+
 	if (!io) {
 		return;
 	}
@@ -352,5 +356,6 @@ spdk_ftl_io_free(struct ftl_io *io)
 		free(io->iovs);
 	}
 
-	free(io);
+	ioch = spdk_io_channel_get_ctx(io->ch);
+	spdk_mempool_put(ioch->io_pool, io);
 }

@@ -50,7 +50,7 @@ struct ftl_band_reloc {
 	struct ftl_reloc			*parent;
 
 	/* Band being relocated */
-	struct ftl_band			*band;
+	struct ftl_band				*band;
 
 	/* Number of logical blocks to be relocated */
 	size_t					num_lbks;
@@ -84,7 +84,7 @@ struct ftl_band_reloc {
 
 struct ftl_reloc {
 	/* Device associated with relocate */
-	struct ftl_dev			*dev;
+	struct ftl_dev				*dev;
 
 	/* Indicates relocate is about to halt */
 	int					halt;
@@ -98,9 +98,6 @@ struct ftl_reloc {
 	/* Maximum transfer size per single IO */
 	size_t					xfer_size;
 
-	/* IO memory pool */
-	struct spdk_mempool			*io_pool;
-
 	/* Array of band relocates */
 	struct ftl_band_reloc			*brelocs;
 
@@ -113,7 +110,7 @@ struct ftl_reloc {
 	/* Active band relocates queue */
 	TAILQ_HEAD(, ftl_band_reloc)		active_queue;
 
-	/* Pending band relocates  queue */
+	/* Pending band relocates queue */
 	TAILQ_HEAD(, ftl_band_reloc)		pending_queue;
 };
 
@@ -166,9 +163,10 @@ _ftl_reloc_prep(struct ftl_band_reloc *breloc)
 {
 	struct ftl_io *io;
 	struct ftl_reloc *reloc = breloc->parent;
+	struct ftl_dev *dev = reloc->dev;
 
 	for (size_t i = 0; i < ftl_reloc_max_ios(reloc); ++i) {
-		io = spdk_mempool_get(breloc->parent->io_pool);
+		io = ftl_io_get(dev->ioch);
 		spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1);
 	}
 }
@@ -178,11 +176,9 @@ ftl_reloc_read_lba_map_cb(void *arg, int status)
 {
 	struct ftl_io *io = arg;
 	struct ftl_band_reloc *breloc = ftl_io_get_band_reloc(io);
-	struct ftl_reloc *reloc = breloc->parent;
 
 	assert(status == 0);
 	spdk_dma_free(breloc->md_buf);
-	spdk_mempool_put(reloc->io_pool, io);
 	_ftl_reloc_prep(breloc);
 }
 
@@ -191,7 +187,7 @@ ftl_reloc_read_lba_map(struct ftl_band_reloc *breloc)
 {
 	struct ftl_band *band = breloc->band;
 	struct ftl_dev *dev = band->dev;
-	struct ftl_io *io = spdk_mempool_get(breloc->parent->io_pool);
+	struct ftl_io *io = ftl_io_get(dev->ioch);
 
 	io->dev = dev;
 	io->band = band;
@@ -421,7 +417,7 @@ ftl_reloc_write(struct ftl_band_reloc *breloc, struct ftl_io *io)
 {
 	if (!ftl_io_initialized(io)) {
 		ftl_reloc_io_reinit(io, breloc, ftl_reloc_write_cb,
-				    FTL_IO_WRITE, FTL_IO_WEAK | FTL_IO_VECTOR_LBA);
+				    FTL_IO_WRITE, FTL_IO_KEEP_ALIVE | FTL_IO_WEAK | FTL_IO_VECTOR_LBA);
 	}
 
 	int rc = ftl_io_write(io);
@@ -443,7 +439,7 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_io *io,
 		.rwb_batch	= NULL,
 		.band		= breloc->band,
 		.size		= sizeof(*io),
-		.flags		= FTL_IO_INTERNAL | FTL_IO_PPA_MODE,
+		.flags		= FTL_IO_KEEP_ALIVE | FTL_IO_INTERNAL | FTL_IO_PPA_MODE,
 		.type		= FTL_IO_READ,
 		.iov_cnt	= 1,
 		.req_size	= num_lbks,
@@ -527,7 +523,7 @@ ftl_reloc_release_io(struct ftl_band_reloc *breloc)
 				    ftl_reloc_max_ios(reloc));
 
 	for (size_t i = 0; i < num_ios; ++i) {
-		spdk_mempool_put(reloc->io_pool, io[i]);
+		ftl_io_free(io[i]);
 	}
 }
 
@@ -670,16 +666,6 @@ ftl_reloc_init(struct ftl_dev *dev)
 		return NULL;
 	}
 
-	/* Add one to max_active band to handle priority bands */
-	reloc->io_pool = spdk_mempool_create(pool_name,
-					     reloc->max_qdepth * (reloc->max_active + 1),
-					     sizeof(struct ftl_io),
-					     SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					     SPDK_ENV_SOCKET_ID_ANY);
-	if (!reloc->io_pool) {
-		goto error;
-	}
-
 	TAILQ_INIT(&reloc->pending_queue);
 	TAILQ_INIT(&reloc->active_queue);
 	TAILQ_INIT(&reloc->prio_queue);
@@ -701,7 +687,6 @@ ftl_reloc_free(struct ftl_reloc *reloc)
 		ftl_band_reloc_free(&reloc->brelocs[i]);
 	}
 
-	spdk_mempool_free(reloc->io_pool);
 	free(reloc->brelocs);
 	free(reloc);
 }

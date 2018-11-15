@@ -107,13 +107,6 @@ ftl_rwb_entry_weak(const struct ftl_rwb_entry *entry)
 	return entry->flags & FTL_IO_WEAK;
 }
 
-static int
-ftl_check_task(struct ftl_dev *dev, enum ftl_task_id id)
-{
-	assert(id < FTL_TASK_ID_MAX);
-	return dev->tasks[id].tid == pthread_self();
-}
-
 static void
 ftl_wptr_free(struct ftl_wptr *wptr)
 {
@@ -1095,7 +1088,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 		/* TODO: we need some recovery here */
 		assert(0 && "Write submit failed");
 		if (ftl_io_done(io)) {
-			spdk_ftl_io_free(io);
+			ftl_io_free(io);
 		}
 	}
 
@@ -1327,11 +1320,32 @@ ftl_io_write(struct ftl_io *io)
 	return 0;
 }
 
+static void
+_spdk_ftl_write(void *ctx)
+{
+	int rc = 0;
+	struct ftl_io *io = ctx;
+
+	rc = ftl_io_write(io);
+	if (rc == -EAGAIN) {
+		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ch),
+				     _spdk_ftl_write, io);
+		return;
+	}
+
+	if (rc) {
+		ftl_io_free(io);
+	}
+}
+
 int
-spdk_ftl_write(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
+spdk_ftl_write(struct ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
 	       struct iovec *iov, size_t iov_cnt, const ftl_fn cb_fn, void *cb_arg)
 {
-	if (!io || !iov || !cb_fn || !io->dev) {
+	int rc;
+	struct ftl_io *io;
+
+	if (!iov || !cb_fn || !dev) {
 		return -EINVAL;
 	}
 
@@ -1347,12 +1361,25 @@ spdk_ftl_write(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
 		return -EINVAL;
 	}
 
-	if (!io->dev->initialized) {
+	if (!dev->initialized) {
 		return -EBUSY;
 	}
 
-	ftl_io_user_init(io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
-	return ftl_io_write(io);
+	io = ftl_io_get(ch);
+	if (!io) {
+		return -ENOMEM;
+	}
+
+	ftl_io_user_init(dev, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
+	rc = ftl_io_write(io);
+
+	if (rc == -EAGAIN) {
+		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ch),
+				     _spdk_ftl_write, io);
+		return 0;
+	}
+
+	return rc;
 }
 
 int
@@ -1382,10 +1409,12 @@ _ftl_read(void *arg)
 }
 
 int
-spdk_ftl_read(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
+spdk_ftl_read(struct ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
 	      struct iovec *iov, size_t iov_cnt, const ftl_fn cb_fn, void *cb_arg)
 {
-	if (!io || !iov || !cb_fn || !io->dev) {
+	struct ftl_io *io;
+
+	if (!iov || !cb_fn || !dev) {
 		return -EINVAL;
 	}
 
@@ -1401,11 +1430,16 @@ spdk_ftl_read(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
 		return -EINVAL;
 	}
 
-	if (!io->dev->initialized) {
+	if (!dev->initialized) {
 		return -EBUSY;
 	}
 
-	ftl_io_user_init(io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
+	io = ftl_io_get(ch);
+	if (!io) {
+		return -ENOMEM;
+	}
+
+	ftl_io_user_init(dev, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
 	return ftl_io_read(io);
 }
 
@@ -1486,6 +1520,13 @@ ftl_process_anm_event(struct ftl_anm_event *event)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Unconsumed ANM received for dev: %p...\n", event->dev);
 	ftl_anm_event_complete(event);
+}
+
+int
+ftl_check_task(struct ftl_dev *dev, enum ftl_task_id id)
+{
+	assert(id < FTL_TASK_ID_MAX);
+	return dev->tasks[id].tid == pthread_self();
 }
 
 int

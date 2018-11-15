@@ -44,6 +44,7 @@
 #include <sys/queue.h>
 #include <spdk/ftl.h>
 #include "ftl_ppa.h"
+#include "ftl_io.h"
 #include "ftl_nvme.h"
 #include "ftl_utils.h"
 #include "ftl_trace.h"
@@ -134,6 +135,9 @@ struct ftl_dev {
 	void					*halt_arg;
 	/* Halt poller, checks if the device has been halted */
 	struct spdk_poller			*halt_poller;
+
+	/* IO channel */
+	struct spdk_io_channel			*ioch;
 
 	/* NVMe controller */
 	struct ftl_nvme_ctrlr			*ctrlr;
@@ -231,6 +235,7 @@ size_t	ftl_lba_map_num_lbks(const struct ftl_dev *dev);
 size_t	ftl_head_md_num_lbks(const struct ftl_dev *dev);
 int	ftl_restore_md(struct ftl_dev *dev, ftl_restore_fn cb);
 int	ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb);
+int	ftl_check_task(struct ftl_dev *dev, enum ftl_task_id id);
 
 #define ftl_to_ppa(addr) \
 	(struct ftl_ppa) { .ppa = (uint64_t)(addr) }

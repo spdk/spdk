@@ -82,6 +82,10 @@ static const struct ftl_conf	g_default_conf = {
 	.max_reloc_qdepth = 32,
 	/* Max 3 active band relocates */
 	.max_active_relocs = 3,
+	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
+	.user_thread_io_pool_size = 2048,
+	/* Internal IO pool size (IO used for data relocations + metadata and erase IO) */
+	.internal_io_pool_size = (32 * 3) + 256,
 	/* Enable traces */
 	.trace = 0,
 	/* Default trace path */
@@ -799,6 +803,40 @@ ftl_restore_state(struct ftl_dev *dev, const struct ftl_dev_init_opts *opts)
 	return 0;
 }
 
+static int
+ftl_io_channel_create_cb(void *io_device, void *ctx)
+{
+	struct ftl_io_channel *ch = ctx;
+	char mempool_name[32];
+	struct ftl_dev *dev = io_device;
+	uint32_t pool_size = dev->conf.user_thread_io_pool_size;
+
+	if (ftl_check_task(dev, FTL_TASK_ID_CORE)) {
+		pool_size += dev->conf.internal_io_pool_size;
+	}
+
+	snprintf(mempool_name, sizeof(mempool_name), "ftl_io_%p", ch);
+	ch->elem_size = sizeof(struct ftl_md_io);
+	ch->io_pool = spdk_mempool_create(mempool_name,
+					  pool_size,
+					  ch->elem_size,
+					  0,
+					  SPDK_ENV_SOCKET_ID_ANY);
+
+	if (!ch->io_pool) {
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+ftl_io_channel_destroy_cb(void *io_device, void *ctx)
+{
+	struct ftl_io_channel *ch = ctx;
+	spdk_mempool_free(ch->io_pool);
+}
+
 int
 spdk_ftl_dev_init(const struct ftl_dev_init_opts *opts, ftl_init_fn cb, void *cb_arg)
 {
@@ -823,6 +861,11 @@ spdk_ftl_dev_init(const struct ftl_dev_init_opts *opts, ftl_init_fn cb, void *cb
 		memcpy(&dev->conf, opts->conf, sizeof(dev->conf));
 	}
 
+	spdk_io_device_register(dev, ftl_io_channel_create_cb, ftl_io_channel_destroy_cb,
+				sizeof(struct ftl_io_channel),
+				NULL);
+
+	dev->ioch = spdk_get_io_channel(dev);
 	dev->init_cb = cb;
 	dev->init_arg = cb_arg;
 	dev->range = opts->range;
