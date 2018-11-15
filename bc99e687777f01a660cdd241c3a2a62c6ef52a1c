@@ -34,6 +34,24 @@
       "revId": "bc99e687777f01a660cdd241c3a2a62c6ef52a1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee162fb2_b177a7e2",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 28
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-11-15T18:56:52Z",
+      "side": 1,
+      "message": "I personally would prefer the spdk- prefix, but I certainly understand the desire to maintain the historical naming convention.   FWIW, virtually all (if not all) other packages I\u0027ve built adhere to the naming convention where the compressed tarball is prefixed with the package name. To reiterate, it\u0027s a minor point I can live with.\n\nOur automated package builds are in isolation -- i.e. per package -- so to your \"...safe to assume that a package builder understands how to separate out RPMs\" it is a non-issue for our production environment.   It\u0027s only when I build locally with a single rpmbuild tree that I can and often do have a co-mingling of packages.   It\u0027s not a problem.   I\u0027ve never run into a naming collision or anything.   I just prefer when the filenames are more obvious reflecting their content.",
+      "parentUuid": "727509ef_25a3290d",
+      "revId": "bc99e687777f01a660cdd241c3a2a62c6ef52a1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
