@@ -70,6 +70,24 @@
       "revId": "3d6f750a36ae1a8178a658d360476fe0bab15b59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91ad3a57_ebcbdc9a",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-11-15T08:26:00Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI have checked the vhost autotest and the conf.json has been used in the function \"spdk_vhost_run\" and \"spdk/test/vhost/common/common.sh\" file line 187.\n\nI found there are other test cases used the conf.json file to run the Vhost application.\nJust like \"migration\", \"perf_bench\", \"hotplug\" test cases and so on.\n\nSo do you think should we add the raid bdevs into the \"conf.json\" or create a new \"conf.json\" file instead of it in this case?",
+      "parentUuid": "7c1c7cae_46064d47",
+      "revId": "3d6f750a36ae1a8178a658d360476fe0bab15b59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
