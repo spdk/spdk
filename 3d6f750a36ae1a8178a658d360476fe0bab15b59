@@ -16,6 +16,24 @@
       "revId": "3d6f750a36ae1a8178a658d360476fe0bab15b59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a8ebf49_3c8f5694",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-11-15T02:47:43Z",
+      "side": 1,
+      "message": "I want to do the raid-0 bdev(including different backends) vhost fio tests here.\nThe \"raid0\", \"raid1\", \"raid2\" just the name of different test cases here. Not the disk_type will be created, They all used the RAID-0 disk_type and just different backends.",
+      "parentUuid": "61764d74_e7137d9f",
+      "revId": "3d6f750a36ae1a8178a658d360476fe0bab15b59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
