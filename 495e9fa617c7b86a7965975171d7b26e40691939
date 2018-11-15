@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5e7aad4_7478d2d2",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:00:53Z",
+      "side": 1,
+      "message": "How big are chunks here? An order of magnitude is all I\u0027m looking for.\n\nI\u0027m guessing they are on the order of 100\u0027s of megabytes. If I\u0027m correct about that, do you really write to the entirety of chunk 1 prior to beginning writes onto chunk 2, or do you build a more complex striping pattern where the first 16k go onto chunk 1, the second 16k on to chunk 2, etc.?",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3af37e4c_21b639fc",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:00:53Z",
+      "side": 1,
+      "message": "This obviously isn\u0027t power-fail safe, so the device will need to indicate that it does volatile write caching and requires flushes.",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "111a9ac9_88c2d95c",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:00:53Z",
+      "side": 1,
+      "message": "Is the reporting for read disturb on a chunk or block granularity?",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0502604a_1901a754",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:00:53Z",
+      "side": 1,
+      "message": "So the defragmentation only occurs in units of bands? What would be the challenges involved in a design that performs defragmentation in units of chunks?",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
