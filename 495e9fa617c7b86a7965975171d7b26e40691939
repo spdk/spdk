@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f26d2b36_63cc65ca",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:44:17Z",
+      "side": 1,
+      "message": "Is there any sort of parity or replication internally happening here too?",
+      "parentUuid": "c5e7aad4_7478d2d2",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3af37e4c_21b639fc",
         "filename": "doc/ftl.md",
         "patchSetId": 10
