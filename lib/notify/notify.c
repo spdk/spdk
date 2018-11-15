@@ -103,7 +103,7 @@ spdk_notify_listen(const char *name,
 	struct spdk_notify_client *client;
 	struct spdk_notify_type *ntype;
 	TAILQ_FOREACH(ntype, &g_notify_types, tailq) {
-		if (!strcmp(ntype->name, name)) {
+		if (name == NULL || !strcmp(ntype->name, name)) {
 			client = calloc(1, sizeof(*client));
 			if (client == NULL) {
 				return -ENOMEM;
