@@ -160,24 +160,6 @@ _set_thread_name(const char *thread_name)
 #endif
 }
 
-static size_t
-_spdk_thread_lib_get_max_msg_cnt(uint8_t socket_count)
-{
-	size_t cnt;
-
-	/* Try to make message ring fill at most 2MB of memory,
-	 * as some ring implementations may require physical address
-	 * contingency. We don't want to introduce a requirement of
-	 * at least 2 physically contiguous 2MB hugepages.
-	 */
-	cnt = spdk_min(262144 / socket_count, 262144 / 2);
-	/* Take into account one extra element required by
-	 * some ring implementations.
-	 */
-	cnt -= 1;
-	return cnt;
-}
-
 int
 spdk_thread_lib_init(void)
 {
@@ -185,7 +167,7 @@ spdk_thread_lib_init(void)
 
 	snprintf(mempool_name, sizeof(mempool_name), "msgpool_%d", getpid());
 	g_spdk_msg_mempool = spdk_mempool_create(mempool_name,
-			     _spdk_thread_lib_get_max_msg_cnt(1),
+			     262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
 			     sizeof(struct spdk_msg),
 			     SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 			     SPDK_ENV_SOCKET_ID_ANY);
