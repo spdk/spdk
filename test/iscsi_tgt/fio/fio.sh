@@ -6,15 +6,13 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
 delete_tmp_files() {
-	rm -f $testdir/iscsi.conf
+	rm -f $testdir/iscsi2.json
 	rm -f ./local-job0-0-verify.state
 }
 
 function running_config() {
-	# generate a config file from the running iscsi_tgt
-	#  running_config.sh will leave the file at /tmp/iscsi.conf
-	$testdir/running_config.sh $pid
-	sleep 1
+	# dump a config file from the running iscsi_tgt
+	$rpc_py save_config > $testdir/iscsi2.json
 
 	# now start iscsi_tgt again using the generated config file
 	# keep the same iscsiadm configuration to confirm that the
@@ -24,11 +22,14 @@ function running_config() {
 
 	timing_enter start_iscsi_tgt2
 
-	$ISCSI_APP -c /tmp/iscsi.conf &
+	$ISCSI_APP --wait-for-rpc &
 	pid=$!
 	echo "Process pid: $pid"
 	trap "iscsicleanup; killprocess $pid; delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
 	waitforlisten $pid
+
+	$rpc_py load_config < $testdir/iscsi2.json
+
 	echo "iscsi_tgt is listening. Running tests..."
 
 	timing_exit start_iscsi_tgt2
@@ -49,8 +50,6 @@ fi
 
 timing_enter fio
 
-cp $testdir/iscsi.conf.in $testdir/iscsi.conf
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
@@ -63,9 +62,12 @@ $ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; rm -f $testdir/iscsi.conf; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+
+$rpc_py load_config < $testdir/iscsi.json
+
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
@@ -93,15 +95,14 @@ $fio_py 4096 1 randrw 1 verify
 $fio_py 131072 32 randrw 1 verify
 $fio_py 524288 128 randrw 1 verify
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
+#if [ $RUN_NIGHTLY -eq 1 ]; then
 	$fio_py 4096 1 write 300 verify
 
 	# Run the running_config test which will generate a config file from the
 	#  running iSCSI target, then kill and restart the iSCSI target using the
 	#  generated config file
-	# Temporarily disabled
-	# running_config
-fi
+	running_config
+#fi
 
 # Start hotplug test case.
 $fio_py 1048576 128 rw 10 &
