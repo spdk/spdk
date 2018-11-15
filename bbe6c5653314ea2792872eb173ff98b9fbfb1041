@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca0de07c_7097cf64",
+        "filename": "configure",
+        "patchSetId": 19
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T20:18:49Z",
+      "side": 1,
+      "message": "Why do we need both compress and reduce?",
+      "revId": "bbe6c5653314ea2792872eb173ff98b9fbfb1041",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
