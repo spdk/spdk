@@ -22,6 +22,30 @@
       "revId": "db0d61299e70a3d4bf050439266d652a0e659169",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41ec0a25_4d97b89e",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-15T17:13:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4dc9d77f_d727bde9",
+      "range": {
+        "startLine": 135,
+        "startChar": 67,
+        "endLine": 135,
+        "endChar": 69
+      },
+      "revId": "db0d61299e70a3d4bf050439266d652a0e659169",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
