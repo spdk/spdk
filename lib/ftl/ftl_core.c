@@ -62,19 +62,16 @@ struct ftl_wptr {
 	struct ftl_band			*band;
 
 	/* Current logical block's offset */
-	uint64_t				offset;
+	uint64_t			offset;
 
 	/* Current erase block */
-	struct ftl_chunk			*chunk;
-
-	/* Halt flag - once set no writes are sent to the SSD */
-	int					halt;
+	struct ftl_chunk		*chunk;
 
 	/* Metadata DMA buffer */
-	void					*md_buf;
+	void				*md_buf;
 
 	/* List link */
-	LIST_ENTRY(ftl_wptr)			list_entry;
+	LIST_ENTRY(ftl_wptr)		list_entry;
 };
 
 struct ftl_flush {
@@ -82,16 +79,16 @@ struct ftl_flush {
 	struct ftl_dev			*dev;
 
 	/* Number of batches to wait for */
-	size_t					num_req;
+	size_t				num_req;
 
 	/* Callback */
-	struct ftl_cb				cb;
+	struct ftl_cb			cb;
 
 	/* Batch bitmap */
-	void					*bmap;
+	void				*bmap;
 
 	/* List link */
-	LIST_ENTRY(ftl_flush)			list_entry;
+	LIST_ENTRY(ftl_flush)		list_entry;
 };
 
 typedef int (*ftl_next_ppa_fn)(struct ftl_io *, struct ftl_ppa *, size_t, void *);
@@ -111,13 +108,10 @@ ftl_rwb_entry_weak(const struct ftl_rwb_entry *entry)
 }
 
 static int
-ftl_check_thread(struct ftl_dev *dev, enum ftl_thread_id id)
+ftl_check_task(struct ftl_dev *dev, enum ftl_task_id id)
 {
-	pthread_t tid = pthread_self();
-
-	assert(id < FTL_THREAD_ID_MAX);
-
-	return dev->thread[id].thread->tid == tid;
+	assert(id < FTL_TASK_ID_MAX);
+	return dev->tasks[id].tid == pthread_self();
 }
 
 static void
@@ -344,12 +338,11 @@ ftl_io_erase(struct ftl_io *io)
 {
 	struct ftl_dev *dev = io->dev;
 
-	if (ftl_check_thread(dev, FTL_THREAD_ID_CORE)) {
+	if (ftl_check_task(dev, FTL_TASK_ID_CORE)) {
 		return ftl_submit_erase(io);
 	}
 
-	ftl_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_erase, io);
-
+	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_erase, io);
 	return 0;
 }
 
@@ -717,10 +710,10 @@ static int
 ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 		void *ctx)
 {
-	struct ftl_dev	*dev = io->dev;
-	struct ftl_ppa	ppa;
-	size_t			lbk = 0;
-	int			rc = 0, lbk_cnt;
+	struct ftl_dev *dev = io->dev;
+	struct ftl_ppa ppa;
+	size_t lbk = 0;
+	int rc = 0, lbk_cnt;
 
 	while (lbk < io->lbk_cnt) {
 		/* We might hit the cache here, if so, skip the read */
@@ -1049,19 +1042,18 @@ ftl_flush_pad_batch(struct ftl_dev *dev)
 static int
 ftl_wptr_process_writes(struct ftl_wptr *wptr)
 {
-	struct ftl_dev	*dev = wptr->dev;
+	struct ftl_dev		*dev = wptr->dev;
 	struct ftl_rwb_batch	*batch;
 	struct ftl_rwb_entry	*entry;
 	struct ftl_io		*io;
-	struct ftl_ppa	ppa;
-	int			rc;
+	struct ftl_ppa		ppa;
 
 	/* Make sure the band is prepared for writing */
 	if (!ftl_wptr_ready(wptr)) {
 		return 0;
 	}
 
-	if (!ftl_thread_running(ftl_get_core_thread(dev))) {
+	if (dev->halt) {
 		ftl_process_shutdown(dev);
 	}
 
@@ -1089,16 +1081,17 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 		/* invalidating the entry clear the metadata as well */
 		ftl_band_set_addr(wptr->band, entry->lba, entry->ppa);
 		ftl_rwb_entry_set_valid(entry);
+
 		ftl_trace(rwb_pop, ftl_dev_trace(dev), entry);
 		ftl_update_rwb_stats(dev, entry);
+
 		ppa = ftl_band_next_ppa(wptr->band, ppa, 1);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write ppa:%lx, %lx\n", wptr->ppa.ppa,
 		      ftl_ppa_addr_pack(dev, wptr->ppa));
 
-	rc = ftl_submit_write(wptr, io);
-	if (rc) {
+	if (ftl_submit_write(wptr, io)) {
 		/* TODO: we need some recovery here */
 		assert(0 && "Write submit failed");
 		if (ftl_io_done(io)) {
@@ -1113,9 +1106,8 @@ error:
 }
 
 static int
-ftl_process_writes(void *arg)
+ftl_process_writes(struct ftl_dev *dev)
 {
-	struct ftl_dev *dev = arg;
 	struct ftl_wptr *wptr, *twptr;
 	size_t num_active = 0;
 
@@ -1274,38 +1266,17 @@ ftl_select_defrag_band(struct ftl_dev *dev)
 }
 
 static int
-ftl_process_relocs(void *arg)
+ftl_process_relocs(struct ftl_dev *dev)
 {
-	struct ftl_dev *dev = arg;
-
 	if (ftl_dev_needs_defrag(dev)) {
 		dev->df_band = ftl_select_defrag_band(dev);
 		if (dev->df_band) {
-			ftl_reloc_add(dev->reloc, dev->df_band, 0,
-				      ftl_num_band_lbks(dev), 0);
+			ftl_reloc_add(dev->reloc, dev->df_band, 0, ftl_num_band_lbks(dev), 0);
 		}
 	}
 
 	ftl_reloc(dev->reloc);
 	return 0;
-}
-
-static int
-ftl_process_completions(void *arg)
-{
-	struct ftl_io_thread *thread = arg;
-	struct ftl_dev *dev = thread->dev;
-
-	return ftl_nvme_process_completions(dev->ctrlr, thread->qpair, 1);
-}
-
-static int
-ftl_dev_running(void *ctx)
-{
-	struct ftl_dev *dev = ctx;
-	return ftl_thread_running(ftl_get_core_thread(dev)) ||
-	       ftl_thread_running(ftl_get_read_thread(dev)) ||
-	       !ftl_shutdown_complete(dev);
 }
 
 int
@@ -1322,8 +1293,9 @@ spdk_ftl_dev_get_attrs(const struct ftl_dev *dev, struct ftl_attrs *attrs)
 	}
 
 	attrs->uuid = dev->uuid;
-	attrs->lbk_cnt = dev->l2p_len;
+	attrs->lbk_cnt = dev->num_lbas;
 	attrs->lbk_size = FTL_BLOCK_SIZE;
+	attrs->range = dev->range;
 
 	return 0;
 }
@@ -1346,11 +1318,11 @@ ftl_io_write(struct ftl_io *io)
 
 	/* Metadata has its own buffer, so it doesn't have to be copied, so just */
 	/* send it the the core thread and schedule the write immediately */
-	if (ftl_check_thread(dev, FTL_THREAD_ID_CORE)) {
+	if (ftl_check_task(dev, FTL_TASK_ID_CORE)) {
 		return ftl_submit_write(ftl_wptr_from_band(io->band), io);
 	}
 
-	ftl_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_write, io);
+	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_write, io);
 
 	return 0;
 }
@@ -1359,7 +1331,7 @@ int
 spdk_ftl_write(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
 	       struct iovec *iov, size_t iov_cnt, const ftl_fn cb_fn, void *cb_arg)
 {
-	if (!io || !iov || !cb_fn) {
+	if (!io || !iov || !cb_fn || !io->dev) {
 		return -EINVAL;
 	}
 
@@ -1375,6 +1347,10 @@ spdk_ftl_write(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
 		return -EINVAL;
 	}
 
+	if (!io->dev->initialized) {
+		return -EBUSY;
+	}
+
 	ftl_io_user_init(io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
 	return ftl_io_write(io);
 }
@@ -1385,7 +1361,7 @@ ftl_io_read(struct ftl_io *io)
 	struct ftl_dev	*dev = io->dev;
 	ftl_next_ppa_fn	next_ppa;
 
-	if (ftl_check_thread(dev, FTL_THREAD_ID_READ)) {
+	if (ftl_check_task(dev, FTL_TASK_ID_READ)) {
 		if (ftl_io_mode_ppa(io)) {
 			next_ppa = ftl_ppa_read_next_ppa;
 		} else {
@@ -1395,7 +1371,7 @@ ftl_io_read(struct ftl_io *io)
 		return ftl_submit_read(io, next_ppa, NULL);
 	}
 
-	ftl_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
+	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
 	return 0;
 }
 
@@ -1409,7 +1385,7 @@ int
 spdk_ftl_read(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
 	      struct iovec *iov, size_t iov_cnt, const ftl_fn cb_fn, void *cb_arg)
 {
-	if (!io || !iov || !cb_fn) {
+	if (!io || !iov || !cb_fn || !io->dev) {
 		return -EINVAL;
 	}
 
@@ -1425,10 +1401,12 @@ spdk_ftl_read(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
 		return -EINVAL;
 	}
 
-	ftl_io_user_init(io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
+	if (!io->dev->initialized) {
+		return -EBUSY;
+	}
 
-	ftl_thread_send_msg(ftl_get_read_thread(io->dev), _ftl_read, io);
-	return 0;
+	ftl_io_user_init(io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
+	return ftl_io_read(io);
 }
 
 static struct ftl_flush *
@@ -1490,81 +1468,62 @@ spdk_ftl_flush(struct ftl_dev *dev, const ftl_fn cb_fn, void *cb_arg)
 		return -EINVAL;
 	}
 
+	if (!dev->initialized) {
+		return -EBUSY;
+	}
+
 	flush = ftl_flush_init(dev, cb_fn, cb_arg);
 	if (!flush) {
 		return -ENOMEM;
 	}
 
-	ftl_thread_send_msg(ftl_get_core_thread(dev), _ftl_flush, flush);
+	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_flush, flush);
 	return 0;
 }
 
-static void
-ftl_anm_event_cb(struct ftl_anm_event *event)
+void
+ftl_process_anm_event(struct ftl_anm_event *event)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Unconsumed ANM received for dev: %p...\n", event->dev);
 	ftl_anm_event_complete(event);
 }
 
-void
-ftl_read_thread(void *ctx)
+int
+ftl_task_read(void *ctx)
 {
-	struct ftl_dev *dev = ctx;
-	struct ftl_io_thread *io_thread = &dev->thread[FTL_THREAD_ID_READ];
-	struct spdk_poller *poller;
+	struct ftl_task *task = ctx;
+	struct ftl_dev *dev = task->dev;
+	struct ftl_nvme_qpair *qpair = ftl_get_read_qpair(dev);
 
-	poller = spdk_poller_register(ftl_process_completions, io_thread, 0);
-	if (!poller) {
-		return;
+	if (dev->halt) {
+		if (ftl_shutdown_complete(dev)) {
+			spdk_poller_unregister(&task->poller);
+			return 0;
+		}
 	}
 
-	ftl_thread_set_initialized(io_thread->thread);
-
-	while (ftl_dev_running(dev)) {
-		ftl_thread_process(io_thread->thread);
-	}
-
-	spdk_poller_unregister(&poller);
-	spdk_free_thread();
+	return ftl_nvme_process_completions(dev->ctrlr, qpair, 1);
 }
 
-void
-ftl_core_thread(void *ctx)
+int
+ftl_task_core(void *ctx)
 {
-	struct ftl_dev *dev = ctx;
-	struct ftl_io_thread *io_thread = &dev->thread[FTL_THREAD_ID_CORE];
-	struct {
-		spdk_poller_fn fn;
-		void *ctx;
-	} pollers[] = {
-		{ ftl_process_writes, dev },
-		{ ftl_process_completions, io_thread },
-		{ ftl_process_relocs, dev }
-	};
-	struct spdk_poller *spdk_pollers[SPDK_COUNTOF(pollers)];
+	struct ftl_task *task = ctx;
+	struct ftl_dev *dev = task->dev;
+	struct ftl_nvme_qpair *qpair = ftl_get_write_qpair(dev);
 
-	for (size_t i = 0; i < SPDK_COUNTOF(pollers); ++i) {
-		spdk_pollers[i] = spdk_poller_register(pollers[i].fn, pollers[i].ctx, 0);
+	if (dev->halt) {
+		if (ftl_shutdown_complete(dev)) {
+			spdk_poller_unregister(&task->poller);
+			return 0;
+		}
 	}
 
-	if (ftl_anm_register_device(dev, ftl_anm_event_cb)) {
-		SPDK_ERRLOG("Unable to register to anm thread\n");
-		return;
-	}
+	ftl_process_writes(dev);
+	ftl_nvme_process_completions(dev->ctrlr, qpair, 1);
+	ftl_process_relocs(dev);
 
-	ftl_thread_set_initialized(io_thread->thread);
-
-	while (ftl_dev_running(dev)) {
-		ftl_thread_process(io_thread->thread);
-	}
-
-	ftl_anm_unregister_device(dev);
-
-	for (size_t i = 0; i < SPDK_COUNTOF(pollers); ++i) {
-		spdk_poller_unregister(&spdk_pollers[i]);
-	}
-
-	spdk_free_thread();
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("ftl_core", SPDK_LOG_FTL_CORE)

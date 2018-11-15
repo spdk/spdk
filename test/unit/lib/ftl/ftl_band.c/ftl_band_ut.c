@@ -68,11 +68,6 @@ DEFINE_STUB(ftl_rwb_batch_get_offset, size_t, (const struct ftl_rwb_batch *batch
 DEFINE_STUB(ftl_rwb_entry_cnt, size_t, (const struct ftl_rwb *rwb), 0);
 DEFINE_STUB(ftl_rwb_batch_empty, int, (struct ftl_rwb_batch *batch), 0);
 DEFINE_STUB(ftl_rwb_pop, struct ftl_rwb_batch *, (struct ftl_rwb *rwb), 0);
-DEFINE_STUB_V(ftl_thread_send_msg, (struct ftl_thread *thread, spdk_thread_fn fn, void *ctx));
-DEFINE_STUB_V(ftl_thread_process, (struct ftl_thread *thread));
-DEFINE_STUB_V(ftl_thread_set_initialized, (struct ftl_thread *thread));
-DEFINE_STUB(ftl_thread_initialized, int, (struct ftl_thread *thread), 0);
-DEFINE_STUB(ftl_thread_running, int, (const struct ftl_thread *thread), 0);
 DEFINE_STUB(ftl_nvme_process_completions, int32_t, (struct ftl_nvme_ctrlr *ctrlr,
 		struct ftl_nvme_qpair *qpair,
 		uint32_t max_completions), 0);

@@ -67,14 +67,18 @@ struct ocssd_bdev_init_opts {
 	struct spdk_uuid		uuids[OCSSD_MAX_CONTROLLERS];
 };
 
+typedef void (*ocssd_bdev_init_fn)(const struct ocssd_bdev_info *, void *, int);
+
 int
 bdev_ocssd_parse_punits(struct ftl_punit_range *range_array,
 			size_t num_ranges, const char *range_string);
-
 int
-bdev_ocssd_init_bdevs(struct ocssd_bdev_init_opts *opts,
-		      size_t *count, struct ocssd_bdev_info *bdev_info);
+bdev_ocssd_init_bdevs(struct ocssd_bdev_init_opts *opts, size_t *count,
+		      ocssd_bdev_init_fn cb, void *cb_arg);
 void
 bdev_ocssd_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
+
+bool
+bdev_ocssd_module_init_done(void);
 
 #endif /* SPDK_BDEV_OCSSD_H */
