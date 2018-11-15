@@ -98,8 +98,8 @@ DEFINE_STUB_V(ftl_io_update_iovec, (struct ftl_io *io, size_t lbk_cnt));
 DEFINE_STUB(ftl_iovec_num_lbks, size_t, (struct iovec *iov, size_t iov_cnt), 0);
 DEFINE_STUB(ftl_io_iovec_addr, void *, (struct ftl_io *io), NULL);
 DEFINE_STUB(ftl_io_iovec_len_left, size_t, (struct ftl_io *io), 0);
-DEFINE_STUB_V(ftl_io_user_init, (struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
-				 struct iovec *iov, size_t iov_cnt,
+DEFINE_STUB_V(ftl_io_user_init, (struct ftl_io *io, struct ftl_dev *dev, uint64_t lba,
+				 size_t lbk_cnt, struct iovec *iov, size_t iov_cnt,
 				 const ftl_fn cb_fn, void *cb_arg, int type));
 DEFINE_STUB(ftl_io_get_md, void *, (const struct ftl_io *io), NULL);
 DEFINE_STUB_V(ftl_io_complete, (struct ftl_io *io));
@@ -109,7 +109,9 @@ DEFINE_STUB(ftl_io_erase_init, struct ftl_io *, (struct ftl_band *band, size_t l
 DEFINE_STUB(ftl_io_iovec, struct iovec *, (struct ftl_io *io), NULL);
 DEFINE_STUB(ftl_io_rwb_init, struct ftl_io *, (struct ftl_dev *dev, struct ftl_band *band,
 		struct ftl_rwb_batch *batch, ftl_fn cb), NULL);
-DEFINE_STUB_V(spdk_ftl_io_free, (struct ftl_io *io));
+DEFINE_STUB(ftl_io_get, struct ftl_io *, (struct spdk_io_channel *ch), NULL);
+DEFINE_STUB(ftl_io_get_internal, struct ftl_io *, (struct ftl_dev *dev), NULL);
+DEFINE_STUB_V(ftl_io_free, (struct ftl_io *io));
 
 static struct spdk_ocssd_geometry_data g_geo = {
 	.num_grp	= 4,

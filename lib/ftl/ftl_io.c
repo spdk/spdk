@@ -36,7 +36,6 @@
 #include "ftl_utils.h"
 #include "ftl_io.h"
 #include "ftl_core.h"
-#include "ftl_band.h"
 #include "ftl_rwb.h"
 
 size_t
@@ -184,13 +183,26 @@ ftl_io_init(struct ftl_io *io, struct ftl_dev *dev,
 }
 
 struct ftl_io *
+ftl_io_get_internal(struct ftl_dev *dev)
+{
+	struct ftl_io *io;
+
+	io = spdk_mempool_get(dev->io_pool.pool);
+	if (!io) {
+		return NULL;
+	}
+
+	memset(io, 0, dev->io_pool.size);
+	return io;
+}
+
+struct ftl_io *
 ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 {
 	struct ftl_io *io = opts->io;
 
 	if (!io) {
-		assert(opts->size);
-		io = calloc(1, opts->size);
+		io = ftl_io_get_internal(opts->dev);
 		if (!io) {
 			return NULL;
 		}
@@ -262,7 +274,7 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_fn cb)
 }
 
 void
-ftl_io_user_init(struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
+ftl_io_user_init(struct ftl_io *io, struct ftl_dev *dev, uint64_t lba, size_t lbk_cnt,
 		 struct iovec *iov, size_t iov_cnt,
 		 const ftl_fn cb_fn, void *cb_arg, int type)
 {
@@ -270,7 +282,7 @@ ftl_io_user_init(struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
 		return;
 	}
 
-	ftl_io_init(io, io->dev, cb_fn, cb_arg, 0, type);
+	ftl_io_init(io, dev, cb_fn, cb_arg, FTL_IO_MEMORY, type);
 
 	io->lba = lba;
 	io->lbk_cnt = lbk_cnt;
@@ -294,7 +306,7 @@ ftl_io_complete(struct ftl_io *io)
 	io->cb.fn(io->cb.ctx, io->status);
 
 	if (mem_free) {
-		spdk_ftl_io_free(io);
+		ftl_io_free(io);
 	}
 }
 
@@ -321,16 +333,20 @@ ftl_io_get_md(const struct ftl_io *io)
 }
 
 struct ftl_io *
-spdk_ftl_io_alloc(struct ftl_dev *dev)
+ftl_io_get(struct spdk_io_channel *ch)
 {
 	struct ftl_io *io;
+	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(ch);
 
-	io = calloc(1, sizeof(*io));
+	io = spdk_mempool_get(ioch->io_pool);
+
+	assert(io);
 	if (!io) {
 		return NULL;
 	}
 
-	io->dev = dev;
+	memset(io, 0, sizeof(*io));
+	io->ch = ch;
 	return io;
 }
 
@@ -342,8 +358,10 @@ ftl_io_reinit(struct ftl_io *io, ftl_fn fn, void *ctx, int flags, int type)
 }
 
 void
-spdk_ftl_io_free(struct ftl_io *io)
+ftl_io_free(struct ftl_io *io)
 {
+	struct ftl_io_channel *ioch;
+
 	if (!io) {
 		return;
 	}
@@ -352,5 +370,11 @@ spdk_ftl_io_free(struct ftl_io *io)
 		free(io->iovs);
 	}
 
-	free(io);
+	if (io->ch) {
+		ioch = spdk_io_channel_get_ctx(io->ch);
+		spdk_mempool_put(ioch->io_pool, io);
+		return;
+	}
+
+	spdk_mempool_put(io->dev->io_pool.pool, io);
 }

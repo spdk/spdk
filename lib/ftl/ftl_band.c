@@ -43,26 +43,6 @@
 /* TODO: define some signature for meta version */
 #define FTL_MD_VER 1
 
-typedef int (*ftl_md_pack_fn)(struct ftl_dev *, struct ftl_md *, void *);
-
-/* Metadata IO */
-struct ftl_md_io {
-	/* Parent IO structure */
-	struct ftl_io		io;
-
-	/* Destination metadata pointer */
-	struct ftl_md		*md;
-
-	/* Metadata's buffer */
-	void			*buf;
-
-	/* Serialization/deserialization callback */
-	ftl_md_pack_fn	pack_fn;
-
-	/* User's callback */
-	struct ftl_cb		cb;
-};
-
 struct __attribute__((packed)) ftl_md_hdr {
 	/* Device instance */
 	struct spdk_uuid	uuid;
