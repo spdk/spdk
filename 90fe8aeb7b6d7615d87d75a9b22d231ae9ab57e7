@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "284e07d8_7129a1fb",
+        "filename": "app/iscsi_tgt/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-15T13:32:17Z",
+      "side": 1,
+      "message": "We don\u0027t specify install target here, so why would we specify uninstall?\nCan we move it to the generic *.mk files that we include here?",
+      "revId": "90fe8aeb7b6d7615d87d75a9b22d231ae9ab57e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
