@@ -46,7 +46,7 @@
 
 /* Structure aggregating ANM callback registered by ftl device */
 struct ftl_anm_poller {
-	struct ftl_dev				*dev;
+	struct ftl_dev					*dev;
 
 	ftl_anm_fn					fn;
 
@@ -58,16 +58,19 @@ struct ftl_anm_ctrlr {
 	struct ftl_nvme_ctrlr				*ctrlr;
 
 	/* Outstanding ANM event counter */
-	volatile int					anm_outstanding;
+	int						anm_outstanding;
 
 	/* Indicates if get log page command has been submitted to controller */
-	volatile int					processing;
+	int						processing;
 
 	/* Notification counter */
 	uint64_t					nc;
 
 	/* DMA allocated buffer for log pages */
 	struct spdk_ocssd_chunk_notification_entry	*log;
+
+	/* Protects ctrlr against process_admin_completions from multiple threads */
+	pthread_mutex_t					lock;
 
 	/* List link */
 	LIST_ENTRY(ftl_anm_ctrlr)			list_entry;
@@ -77,13 +80,14 @@ struct ftl_anm_ctrlr {
 };
 
 struct ftl_anm {
-	/* Thread descriptor */
-	struct ftl_thread			*thread;
+	struct spdk_thread				*thread;
+	struct spdk_poller				*poller;
 
-	pthread_mutex_t				lock;
+	int						halt;
 
+	pthread_mutex_t					lock;
 	/* List of registered controllers */
-	LIST_HEAD(, ftl_anm_ctrlr)		ctrlrs;
+	LIST_HEAD(, ftl_anm_ctrlr)			ctrlrs;
 };
 
 static struct ftl_anm g_anm = { .lock = PTHREAD_MUTEX_INITIALIZER };
@@ -165,17 +169,17 @@ ftl_anm_log_page_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct ftl_anm_ctrlr *ctrlr = ctx;
 	struct ftl_anm_poller *poller;
 
-	ctrlr->processing = 0;
+	pthread_mutex_lock(&ctrlr->lock);
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		SPDK_ERRLOG("Unexpected status code: [%d], status code type: [%d]\n",
 			    cpl->status.sc, cpl->status.sct);
-		return;
+		goto out;
 	}
 
 	for (size_t i = 0; i < FTL_ANM_LOG_ENTRIES; ++i) {
 		if (!ftl_anm_log_valid(ctrlr, &ctrlr->log[i])) {
-			return;
+			goto out;
 		}
 
 		LIST_FOREACH(poller, &ctrlr->pollers, list_entry) {
@@ -188,6 +192,10 @@ ftl_anm_log_page_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	/* We increment anm_outstanding counter in case there are more logs in controller */
 	/* than we get in single log page call */
 	ctrlr->anm_outstanding++;
+out:
+	ctrlr->processing = 0;
+
+	pthread_mutex_unlock(&ctrlr->lock);
 }
 
 static void
@@ -202,10 +210,14 @@ ftl_anm_aer_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
+	pthread_mutex_lock(&ctrlr->lock);
+
 	if (event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_VENDOR &&
 	    event.bits.log_page_identifier == SPDK_OCSSD_LOG_CHUNK_NOTIFICATION) {
 		ctrlr->anm_outstanding++;
 	}
+
+	pthread_mutex_unlock(&ctrlr->lock);
 }
 
 static int
@@ -220,34 +232,43 @@ ftl_anm_get_log_page(struct ftl_anm_ctrlr *ctrlr)
 	}
 
 	ctrlr->processing = 1;
-
 	return 0;
 }
 
-static void
-ftl_anm_thread(void *ctx)
+static int
+ftl_anm_poller_cb(void *ctx)
 {
 	struct ftl_anm *anm = ctx;
 	struct ftl_anm_ctrlr *ctrlr;
+	int rc = 0, num_processed = 0;
 
-	while (anm->thread->running) {
-		pthread_mutex_lock(&anm->lock);
-		LIST_FOREACH(ctrlr, &anm->ctrlrs, list_entry) {
-			ftl_nvme_process_admin_completions(ctrlr->ctrlr);
+	if (anm->halt) {
+		spdk_poller_unregister(&anm->poller);
+		return 0;
+	}
 
-			if (ctrlr->anm_outstanding && !ctrlr->processing) {
-				if (ftl_anm_get_log_page(ctrlr)) {
-					SPDK_ERRLOG("Failed to get log page from controller %p",
-						    ctrlr->ctrlr);
-				}
-			}
+	pthread_mutex_lock(&anm->lock);
+	LIST_FOREACH(ctrlr, &anm->ctrlrs, list_entry) {
+		rc = ftl_nvme_process_admin_completions(ctrlr->ctrlr);
+		if (rc < 0) {
+			SPDK_ERRLOG("Processing admin completions failed\n");
+			break;
 		}
 
-		pthread_mutex_unlock(&anm->lock);
+		num_processed += rc;
 
-		/* TODO this value need to be adjusted and should be configurable */
-		usleep(100);
+		pthread_mutex_lock(&ctrlr->lock);
+		if (ctrlr->anm_outstanding && !ctrlr->processing) {
+			if (ftl_anm_get_log_page(ctrlr)) {
+				SPDK_ERRLOG("Failed to get log page from controller %p",
+					    ctrlr->ctrlr);
+			}
+		}
+		pthread_mutex_unlock(&ctrlr->lock);
 	}
+
+	pthread_mutex_unlock(&anm->lock);
+	return num_processed;
 }
 
 static struct ftl_anm_poller *
@@ -278,6 +299,7 @@ ftl_anm_ctrlr_free(struct ftl_anm_ctrlr *ctrlr)
 
 	LIST_REMOVE(ctrlr, list_entry);
 
+	pthread_mutex_destroy(&ctrlr->lock);
 	spdk_dma_free(ctrlr->log);
 	free(ctrlr);
 }
@@ -295,10 +317,12 @@ ftl_anm_ctrlr_alloc(struct ftl_nvme_ctrlr *nvme_ctrlr)
 	ctrlr->log = spdk_dma_zmalloc(sizeof(*ctrlr->log) * FTL_ANM_LOG_ENTRIES,
 				      PAGE_SIZE, NULL);
 	if (!ctrlr->log) {
-		free(ctrlr);
-		return NULL;
+		goto free_ctrlr;
 	}
 
+	if (pthread_mutex_init(&ctrlr->lock, NULL)) {
+		goto free_log;
+	}
 
 	/* Set the outstanding counter to force log page retrieval */
 	/* to consume events already present on the controller */
@@ -308,6 +332,12 @@ ftl_anm_ctrlr_alloc(struct ftl_nvme_ctrlr *nvme_ctrlr)
 
 	ftl_nvme_register_aer_callback(ctrlr->ctrlr, ftl_anm_aer_cb, ctrlr);
 	return ctrlr;
+
+free_log:
+	free(ctrlr->log);
+free_ctrlr:
+	free(ctrlr);
+	return NULL;
 }
 
 static struct ftl_anm_ctrlr *
@@ -330,7 +360,10 @@ ftl_anm_add_poller_to_ctrlr(struct ftl_anm *anm, struct ftl_anm_poller *poller)
 	struct ftl_anm_ctrlr *anm_ctrlr;
 
 	anm_ctrlr = ftl_anm_find_ctrlr(anm, poller->dev->ctrlr);
+
+	pthread_mutex_lock(&anm_ctrlr->lock);
 	LIST_INSERT_HEAD(&anm_ctrlr->pollers, poller, list_entry);
+	pthread_mutex_unlock(&anm_ctrlr->lock);
 }
 
 void
@@ -368,6 +401,8 @@ ftl_anm_unregister_device(struct ftl_dev *dev)
 	pthread_mutex_lock(&g_anm.lock);
 	ctrlr = ftl_anm_find_ctrlr(&g_anm, dev->ctrlr);
 
+	pthread_mutex_lock(&ctrlr->lock);
+
 	LIST_FOREACH_SAFE(poller, &ctrlr->pollers, list_entry, temp_poller) {
 		if (poller->dev == dev) {
 			LIST_REMOVE(poller, list_entry);
@@ -375,6 +410,7 @@ ftl_anm_unregister_device(struct ftl_dev *dev)
 		}
 	}
 
+	pthread_mutex_unlock(&ctrlr->lock);
 	pthread_mutex_unlock(&g_anm.lock);
 }
 
@@ -415,29 +451,33 @@ ftl_anm_unregister_ctrlr(struct ftl_nvme_ctrlr *ctrlr)
 	pthread_mutex_unlock(&g_anm.lock);
 }
 
-int
-ftl_anm_init(void)
+static void
+ftl_anm_register_poller_cb(void *ctx)
 {
-	g_anm.thread = ftl_thread_init("anm_thread", 4096,
-				       ftl_anm_thread, &g_anm, 0);
+	struct ftl_anm *anm = ctx;
 
-	if (!g_anm.thread) {
-		return -1;
+	/* TODO: adjust polling timeout */
+	anm->poller = spdk_poller_register(ftl_anm_poller_cb, ctx, 1000);
+	if (!anm->poller) {
+		SPDK_ERRLOG("Unable to register ANM poller\n");
+		assert(0);
+	}
+}
+
+int
+ftl_anm_init(struct spdk_thread *thread)
+{
+	if (!thread) {
+		return -EINVAL;
 	}
 
-	return ftl_thread_start(g_anm.thread);
+	spdk_thread_send_msg(thread, ftl_anm_register_poller_cb, &g_anm);
+
+	return 0;
 }
 
 void
 ftl_anm_free(void)
 {
-	if (!g_anm.thread) {
-		return;
-	}
-
-	ftl_thread_stop(g_anm.thread);
-	ftl_thread_join(g_anm.thread);
-	ftl_thread_free(g_anm.thread);
-
-	g_anm.thread = NULL;
+	g_anm.halt = 1;
 }

@@ -54,7 +54,7 @@ test_alloc_dev(size_t size)
 		return NULL;
 	}
 
-	dev->l2p_len = L2P_TABLE_SIZE;
+	dev->num_lbas = L2P_TABLE_SIZE;
 	dev->l2p = calloc(L2P_TABLE_SIZE, size);
 	if (!dev->l2p) {
 		free(dev);

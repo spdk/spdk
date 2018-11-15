@@ -34,6 +34,7 @@
 #ifndef FTL_ANM_H
 #define FTL_ANM_H
 
+#include <spdk/thread.h>
 #include "ftl_ppa.h"
 
 struct ftl_nvme_ctrlr;
@@ -60,7 +61,7 @@ struct ftl_anm_event {
 	enum ftl_anm_range		range;
 };
 
-int	ftl_anm_init(void);
+int	ftl_anm_init(struct spdk_thread *thread);
 void	ftl_anm_free(void);
 int	ftl_anm_register_device(struct ftl_dev *dev, ftl_anm_fn fn);
 void	ftl_anm_unregister_device(struct ftl_dev *dev);

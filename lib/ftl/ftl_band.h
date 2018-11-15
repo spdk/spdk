@@ -264,7 +264,7 @@ ftl_band_chunk_is_last(struct ftl_band *band, struct ftl_chunk *chunk)
 static inline int
 ftl_band_has_chunks(struct ftl_band *band)
 {
-	return (band->num_chunks > 0);
+	return band->num_chunks > 0;
 }
 
 static inline int
