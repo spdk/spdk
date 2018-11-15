@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64a2b7f0_d7cde882",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1175,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-15T12:49:33Z",
+      "side": 1,
+      "message": "seems like we can\u0027t use nvme_rdma_prep_wr_sgl here. That function uses req-\u003epayload.contig_or_cb_arg as a contiguous buffer, but in this case it\u0027s a cb_arg for next_sge_fn().\n\nBesides, what happens to virt_addr and length here?",
+      "range": {
+        "startLine": 1175,
+        "startChar": 29,
+        "endLine": 1175,
+        "endChar": 50
+      },
+      "revId": "6216a73d28a8ecf7395fd465153912487d2b83da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
