@@ -44,6 +44,7 @@
 #include <sys/queue.h>
 #include <spdk/ftl.h>
 #include "ftl_ppa.h"
+#include "ftl_io.h"
 #include "ftl_nvme.h"
 #include "ftl_utils.h"
 #include "ftl_trace.h"
@@ -134,6 +135,9 @@ struct ftl_dev {
 	void					*halt_arg;
 	/* Halt poller, checks if the device has been halted */
 	struct spdk_poller			*halt_poller;
+
+	/* Pool for internal IO */
+	struct ftl_io_pool			io_pool;
 
 	/* NVMe controller */
 	struct ftl_nvme_ctrlr			*ctrlr;

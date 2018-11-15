@@ -82,6 +82,10 @@ static const struct ftl_conf	g_default_conf = {
 	.max_reloc_qdepth = 32,
 	/* Max 3 active band relocates */
 	.max_active_relocs = 3,
+	/* IO pool size per user thread */
+	.user_thread_io_pool_size = 2048,
+	/* Internal IO pool size */
+	.internal_io_pool_size = 2048,
 	/* Enable traces */
 	.trace = 0,
 	/* Default trace path */
@@ -799,6 +803,54 @@ ftl_restore_state(struct ftl_dev *dev, const struct ftl_dev_init_opts *opts)
 	return 0;
 }
 
+static int
+ftl_io_channel_create_cb(void *io_device, void *ctx)
+{
+	struct ftl_io_channel *ch = ctx;
+	struct ftl_dev *dev = io_device;
+	char mempool_name[32];
+
+	snprintf(mempool_name, sizeof(mempool_name), "ftl_io_%p", ch);
+	ch->io_pool = spdk_mempool_create(mempool_name,
+					  dev->conf.user_thread_io_pool_size,
+					  sizeof(struct ftl_io),
+					  0,
+					  SPDK_ENV_SOCKET_ID_ANY);
+
+	if (!ch->io_pool) {
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+ftl_io_channel_destroy_cb(void *io_device, void *ctx)
+{
+	struct ftl_io_channel *ch = ctx;
+	spdk_mempool_free(ch->io_pool);
+}
+
+static int
+ftl_create_internal_io_pool(struct ftl_dev *dev)
+{
+	char mempool_name[32];
+	dev->io_pool.elem_size = sizeof(struct ftl_md_io);
+
+	snprintf(mempool_name, sizeof(mempool_name), "ftl_io_%p", dev);
+	dev->io_pool.pool = spdk_mempool_create(mempool_name,
+						dev->conf.internal_io_pool_size,
+						dev->io_pool.elem_size,
+						0,
+						SPDK_ENV_SOCKET_ID_ANY);
+
+	if (!dev->io_pool.pool) {
+		return -1;
+	}
+
+	return 0;
+}
+
 int
 spdk_ftl_dev_init(const struct ftl_dev_init_opts *opts, ftl_init_fn cb, void *cb_arg)
 {
@@ -823,6 +875,10 @@ spdk_ftl_dev_init(const struct ftl_dev_init_opts *opts, ftl_init_fn cb, void *cb
 		memcpy(&dev->conf, opts->conf, sizeof(dev->conf));
 	}
 
+	spdk_io_device_register(dev, ftl_io_channel_create_cb, ftl_io_channel_destroy_cb,
+				sizeof(struct ftl_io_channel),
+				NULL);
+
 	dev->init_cb = cb;
 	dev->init_arg = cb_arg;
 	dev->range = opts->range;
@@ -830,6 +886,11 @@ spdk_ftl_dev_init(const struct ftl_dev_init_opts *opts, ftl_init_fn cb, void *cb
 	dev->name = strdup(opts->name);
 	if (!dev->name) {
 		SPDK_ERRLOG("Unable to set device name\n");
+		goto fail_sync;
+	}
+
+	if (ftl_create_internal_io_pool(dev)) {
+		SPDK_ERRLOG("Unable to create internal IO pool\n");
 		goto fail_sync;
 	}
 
@@ -973,6 +1034,7 @@ ftl_dev_free_sync(struct ftl_dev *dev)
 	}
 
 	spdk_mempool_free(dev->lba_pool);
+	spdk_mempool_free(dev->io_pool.pool);
 
 	ftl_nvme_ctrlr_free(dev->ctrlr);
 	ftl_rwb_free(dev->rwb);
