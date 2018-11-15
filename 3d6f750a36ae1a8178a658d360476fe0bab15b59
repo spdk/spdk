@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61764d74_e7137d9f",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-15T00:07:40Z",
+      "side": 1,
+      "message": "Why you create raid bdevs here?\n\nNvme0n1p0 is name of bdev but raid0, raid1, raid2 are the disk_type that will be created?\n\nHow about the following idea?\n\n1. add information about raid0 and raid1 to config.json. you can create raid0 and raid1 by config.json.\n\n2. raid2 needs call of construct_lvol_store and construct_lvol_bdev here. But I think adding another option may be better:\n- Add disk_type.\n- If disk_type is lvol, then construct_lvol_store() and construct_lvol_bdev() for the disk.\n- If disk_type is not lvol, use the disk as it is.",
+      "revId": "3d6f750a36ae1a8178a658d360476fe0bab15b59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
