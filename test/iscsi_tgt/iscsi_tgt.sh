@@ -40,6 +40,7 @@ run_test suite ./test/iscsi_tgt/rpc_config/rpc_config.sh $TEST_TYPE
 run_test suite ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test suite ./test/iscsi_tgt/fio/fio.sh
 run_test suite ./test/iscsi_tgt/qos/qos.sh
+run_test suite ./test/iscsi_tgt/trace_porter/trace_porter.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	if [ $SPDK_TEST_PMDK -eq 1 ]; then

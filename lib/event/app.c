@@ -738,7 +738,7 @@ usage(void (*app_usage)(void))
 	printf(" -W, --pci-whitelist <bdf>\n");
 	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
 	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
-	printf("      --num-trace-entries <num>   number of trace entries for each core (default %d)\n",
+	printf("      --num-trace-entries <num>   number of trace entries for each core, should be power of 2. (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
@@ -938,7 +938,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case NUM_TRACE_ENTRIES_OPT_IDX:
 			opts->num_entries = strtoull(optarg, NULL, 0);
 			if (opts->num_entries == ULLONG_MAX || opts->num_entries == 0) {
-				fprintf(stderr, "Invalid num_entries %s\n", optarg);
+				fprintf(stderr, "Invalid num-trace-entries %s\n", optarg);
+				usage(app_usage);
+				goto out;
+			}
+
+			if (opts->num_entries & (opts->num_entries - 1)) {
+				fprintf(stderr, "num-trace-entries should be power of 2\n");
 				usage(app_usage);
 				goto out;
 			}
