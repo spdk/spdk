@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23ff899a_de14bd1a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T16:42:06Z",
+      "side": 1,
+      "message": "Yeah - I think scan-build is getting confused by TAILQ_EMPTY v. TAILQ_LAST.\n\nYou could try doing:\n\nbdev \u003d TAILQ_LAST(\u0026g_bdev_mgr.bdevs, spdk_bdev_list);\nif (bdev \u003d\u003d NULL) {\n\nthen change the for loop to a while (bdev !\u003d NULL) loop.",
+      "revId": "e70975ccc41761064400ac615414430cdbf0d03c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
