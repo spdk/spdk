@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc162e68_331178f4",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-15T12:54:40Z",
+      "side": 1,
+      "message": "requested_size\u003d spdk_min(requested_size, remaining_payload);",
+      "revId": "da3781b7414bdf209dd027b8d56a0cb95bef1474",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
