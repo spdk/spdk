@@ -45,7 +45,7 @@
 
 # Users must change this section to match the /dev/sdX devices to be
 #  exported as vhost scsi drives. The devices are accessed using Linux AIO.
-[AIO]
+#[AIO]
   #AIO /dev/sdb AIO0
   #AIO /dev/sdc AIO1
 
