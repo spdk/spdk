@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cba44635_758788c2",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T21:10:37Z",
+      "side": 1,
+      "message": "Cast to a uintptr_t for pointer math.",
+      "revId": "0b4aeef1d412d29900ab542d8bdd4f6b660301a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d065e3cf_196ce3d4",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T21:10:37Z",
+      "side": 1,
+      "message": "describee",
+      "revId": "0b4aeef1d412d29900ab542d8bdd4f6b660301a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
