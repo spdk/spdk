@@ -325,7 +325,7 @@ ftl_pack_head_md(struct ftl_dev *dev, struct ftl_md *md, void *data)
 	struct ftl_head_md *head = data;
 
 	head->wr_cnt = md->wr_cnt;
-	head->lba_cnt = dev->l2p_len;
+	head->lba_cnt = dev->num_lbas;
 	head->xfer_size = dev->xfer_size;
 	ftl_set_md_hdr(dev, &head->hdr, md, ftl_dev_head_md_size());
 
@@ -431,11 +431,11 @@ ftl_unpack_head_md(struct ftl_dev *dev, struct ftl_md *md, void *data)
 	md->seq = head->hdr.seq;
 	md->wr_cnt = head->wr_cnt;
 
-	if (dev->global_md.l2p_len == 0) {
-		dev->global_md.l2p_len = head->lba_cnt;
+	if (dev->global_md.num_lbas == 0) {
+		dev->global_md.num_lbas = head->lba_cnt;
 	}
 
-	if (dev->global_md.l2p_len != head->lba_cnt) {
+	if (dev->global_md.num_lbas != head->lba_cnt) {
 		return FTL_MD_INVALID_SIZE;
 	}
 

@@ -66,19 +66,46 @@ static const struct spdk_json_object_decoder rpc_construct_ocssd_decoders[] = {
 };
 
 #define OCSSD_RANGE_MAX_LENGTH 32
+
+static void
+_spdk_rpc_construct_ocssd_bdev_cb(const struct ocssd_bdev_info *bdev_info, void *ctx, int status)
+{
+	struct spdk_jsonrpc_request *request = ctx;
+	char bdev_uuid[SPDK_UUID_STRING_LEN];
+	struct spdk_json_write_ctx *w;
+
+	if (status) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (!w) {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "spdk_json_begin_result failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Internal error");
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	spdk_uuid_fmt_lower(bdev_uuid, sizeof(bdev_uuid), &bdev_info->uuid);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", bdev_info->name);
+	spdk_json_write_named_string(w, "uuid", bdev_uuid);
+	spdk_json_write_object_end(w);
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+
 static void
 spdk_rpc_construct_ocssd_bdev(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct rpc_construct_ocssd req = {};
-	struct spdk_json_write_ctx *w;
-	struct ocssd_bdev_info bdev_info[OCSSD_MAX_INSTANCES];
 	char ranges[OCSSD_MAX_INSTANCES * OCSSD_RANGE_MAX_LENGTH];
-	char bdev_uuid[SPDK_UUID_STRING_LEN];
 	struct ocssd_bdev_init_opts *opts;
-	size_t count = 0;
 	int rc;
-	size_t i;
 
 	opts = calloc(1, sizeof(*opts));
 	if (!opts) {
@@ -92,6 +119,11 @@ spdk_rpc_construct_ocssd_bdev(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_construct_ocssd_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (!bdev_ocssd_module_init_done()) {
+		SPDK_ERRLOG("OCSSD bdev module is not yet initialized\n");
 		goto invalid;
 	}
 
@@ -115,9 +147,9 @@ spdk_rpc_construct_ocssd_bdev(struct spdk_jsonrpc_request *request,
 
 	snprintf(ranges, sizeof(ranges), "%s", req.punits);
 
-	opts->range_count[0] = bdev_ocssd_parse_punits(opts->punit_ranges[0], OCSSD_MAX_CONTROLLERS,
-			       req.punits);
-	if (opts->range_count[0] == 0) {
+	opts->range_count[0] = bdev_ocssd_parse_punits(opts->punit_ranges[0],
+			       OCSSD_MAX_CONTROLLERS, req.punits);
+	if (opts->range_count[0] != 1) {
 		SPDK_ERRLOG("Failed to parse parallel unit range\n");
 		goto invalid;
 	}
@@ -131,32 +163,12 @@ spdk_rpc_construct_ocssd_bdev(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	if (bdev_ocssd_init_bdevs(opts, &count, bdev_info) || !count) {
+	if (bdev_ocssd_init_bdevs(opts, NULL, _spdk_rpc_construct_ocssd_bdev_cb, request)) {
 		SPDK_ERRLOG("Failed to create OCSSD bdev\n");
 		goto invalid;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "spdk_json_begin_result failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Internal error");
-		goto free_rpc;
-	}
-
-	spdk_json_write_array_begin(w);
-	for (i = 0; i < count; i++) {
-		spdk_uuid_fmt_lower(bdev_uuid, sizeof(bdev_uuid), &bdev_info[i].uuid);
-
-		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "name", bdev_info[i].name);
-		spdk_json_write_named_string(w, "uuid", bdev_uuid);
-		spdk_json_write_object_end(w);
-	}
-	spdk_json_write_array_end(w);
-	spdk_jsonrpc_end_result(request, w);
 	goto free_rpc;
-
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 "Invalid parameters");
@@ -174,7 +186,6 @@ struct rpc_delete_ocssd {
 static const struct spdk_json_object_decoder rpc_delete_ocssd_decoders[] = {
 	{"name", offsetof(struct rpc_construct_ocssd, name), spdk_json_decode_string},
 };
-
 
 static void
 _spdk_rpc_delete_ocssd_bdev_cb(void *cb_arg, int bdeverrno)

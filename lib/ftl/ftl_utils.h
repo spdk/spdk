@@ -37,52 +37,6 @@
 #include <spdk/thread.h>
 #include <stdatomic.h>
 
-typedef void (*ftl_thread_fn)(void *ctx);
-typedef int (*ftl_poller_fn)(void *ctx);
-
-struct ftl_poller;
-
-struct ftl_thread {
-	/* Spdk thread */
-	struct spdk_thread			*thread;
-
-	/* Thread's name */
-	const char				*name;
-
-	/* Thread's id */
-	pthread_t				tid;
-
-	/* Communication pipe */
-	struct spdk_ring			*ring;
-
-	/* Running flag */
-	atomic_int				running;
-
-	/* Initialize flag */
-	atomic_int				init;
-
-	/* Thread's loop */
-	ftl_thread_fn				fn;
-
-	/* Loop's context */
-	void					*ctx;
-
-	/* Poller list */
-	LIST_HEAD(, ftl_poller)			pollers;
-};
-
-struct ftl_thread *ftl_thread_init(const char *name, size_t qsize, ftl_thread_fn fn,
-				   void *ctx, int start);
-void	ftl_thread_send_msg(struct ftl_thread *thread, spdk_thread_fn fn, void *ctx);
-void	ftl_thread_process(struct ftl_thread *thread);
-int	ftl_thread_initialized(struct ftl_thread *thread);
-void	ftl_thread_set_initialized(struct ftl_thread *thread);
-void	ftl_thread_free(struct ftl_thread *thread);
-int	ftl_thread_start(struct ftl_thread *thread);
-int	ftl_thread_running(const struct ftl_thread *thread);
-void	ftl_thread_stop(struct ftl_thread *thread);
-void	ftl_thread_join(struct ftl_thread *thread);
-
 static inline void
 ftl_set_bit(unsigned int bit, void *bitmap)
 {
