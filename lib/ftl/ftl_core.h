@@ -84,6 +84,11 @@ enum ftl_task_id {
 	FTL_TASK_ID_MAX,
 };
 
+struct ftl_io_channel {
+	/* IO pool */
+	struct spdk_mempool			*io_pool;
+};
+
 struct ftl_task {
 	/* Owner */
 	struct ftl_dev				*dev;
@@ -110,6 +115,14 @@ struct ftl_global_md {
 	uint64_t				num_lbas;
 };
 
+struct ftl_io_pool {
+	/* Size of pool */
+	size_t					size;
+
+	/* IO pool */
+	struct spdk_mempool			*pool;
+};
+
 struct ftl_dev {
 	/* Device instance */
 	struct spdk_uuid			uuid;
@@ -134,6 +147,9 @@ struct ftl_dev {
 	void					*halt_arg;
 	/* Halt poller, checks if the device has been halted */
 	struct spdk_poller			*halt_poller;
+
+	/* Pool for internal IO */
+	struct ftl_io_pool			io_pool;
 
 	/* NVMe controller */
 	struct ftl_nvme_ctrlr			*ctrlr;
