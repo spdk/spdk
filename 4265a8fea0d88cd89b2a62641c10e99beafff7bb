@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bb9d531_22272c2f",
+        "filename": "test/nvmf/shutdown/shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-15T23:18:43Z",
+      "side": 1,
+      "message": "This brought up one question in my mind. We have at least two IP addresses (probably more since we initialize soft-roce) associated with RNICs on this system. We specify which one the target is going to use by stating the address in the add listener RPC. How do we dictate what address we extend connection requests from in the host applications?\nThe only reason this is relevant is because we need to make sure that bdevperf and bdevio are trying to connect from the same IP address. That is what makes this test interesting right?",
+      "revId": "4265a8fea0d88cd89b2a62641c10e99beafff7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
