@@ -37,6 +37,7 @@
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
+#include "spdk/barrier.h"
 
 static int g_trace_fd = -1;
 static char g_shm_name[64];
@@ -50,6 +51,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	struct spdk_trace_history *lcore_history;
 	struct spdk_trace_entry *next_entry;
 	unsigned lcore;
+	uint64_t next_circular_entry;
 
 	lcore = spdk_env_get_current_core();
 	if (lcore >= SPDK_TRACE_MAX_LCORE) {
@@ -63,7 +65,9 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 
 	lcore_history->tpoint_count[tpoint_id]++;
 
-	next_entry = &lcore_history->entries[lcore_history->next_entry];
+	/* Get next entry index in the circular buffer */
+	next_circular_entry = lcore_history->next_entry & (lcore_history->num_entries - 1);
+	next_entry = &lcore_history->entries[next_circular_entry];
 	next_entry->tsc = tsc;
 	next_entry->tpoint_id = tpoint_id;
 	next_entry->poller_id = poller_id;
@@ -71,10 +75,9 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	next_entry->object_id = object_id;
 	next_entry->arg1 = arg1;
 
+	/* Ensure all elements of the trace entry are visible to outside trace tools */
+	spdk_wmb();
 	lcore_history->next_entry++;
-	if (lcore_history->next_entry == lcore_history->num_entries) {
-		lcore_history->next_entry = 0;
-	}
 }
 
 int

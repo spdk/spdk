@@ -102,8 +102,8 @@ struct spdk_trace_history {
 	 */
 	uint64_t			tpoint_count[SPDK_TRACE_MAX_TPOINT_ID];
 
-	/** Index to next spdk_trace_entry to fill in the circular buffer. */
-	uint32_t			next_entry;
+	/** Index to next spdk_trace_entry to fill linear. */
+	uint64_t			next_entry;
 
 	/**
 	 * Circular buffer of spdk_trace_entry structures for tracing
