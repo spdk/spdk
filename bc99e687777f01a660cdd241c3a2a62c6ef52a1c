@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5777640_9f7d164a",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 28
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-11-15T16:27:47Z",
+      "side": 1,
+      "message": "So apparently github produces not only a master.zip but also a master.tar.gz upon each each newly merged commit.   I just wget\u0027d for both names so looks like we\u0027re fine here.   However, all that said, I\u0027ve not commented about the naming convention owing to the precedence of these source balls in the past, but I am curious if it\u0027s possible that instead of just \"master.tar.gz\" or in the case of a release, v%{version}.tar.gz, whether we might consider shifting to prepending those names on github with \u0027spdk-\u0027?   The reason for my inquiry is because if one has an rpmbuild tree initialized wherein one is building a number of different rpm\u0027s, then an inspection of the SOURCES directory that has something like just \u0027master.tar.gz\u0027 or \u0027v%{version}.tar.gz\u0027 doesn\u0027t provide the user obvious knowledge that the contents therein are for the SPDK.   This is a minor nit, and something I haven\u0027t and won\u0027t object to, but admittedly I have a preference for prepending those names to make them more obviously intelligible.",
+      "revId": "bc99e687777f01a660cdd241c3a2a62c6ef52a1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
