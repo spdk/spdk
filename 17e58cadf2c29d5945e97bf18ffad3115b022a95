@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee5eb3cf_3c0656cb",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T20:50:17Z",
+      "side": 1,
+      "message": "unfortunately I think this will be too much output - it will be 128 lines since SPDK_TRACE_MAX_LCORE \u003d 128\n\nmaybe instead, check the first entry in each lcore\u0027s history - if it\u0027s tsc \u003d\u003d 0, then it means this lcore\u0027s history was not used at all; skip these cores\n\nthen we only print this out for each core that had data",
+      "revId": "17e58cadf2c29d5945e97bf18ffad3115b022a95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07450bdd_56ec25d2",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T20:50:17Z",
+      "side": 1,
+      "message": "this method will not be efficient\n\nfor example, if we add a trace event on lcore 100, get_per_lcore_history will need to loop 100 times to get the history pointer",
+      "revId": "17e58cadf2c29d5945e97bf18ffad3115b022a95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
