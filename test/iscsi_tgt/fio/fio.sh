@@ -6,7 +6,6 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
 delete_tmp_files() {
-	rm -f $testdir/iscsi.conf
 	rm -f ./local-job0-0-verify.state
 }
 
@@ -49,8 +48,6 @@ fi
 
 timing_enter fio
 
-cp $testdir/iscsi.conf.in $testdir/iscsi.conf
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
@@ -59,13 +56,16 @@ fio_py="$rootdir/scripts/fio.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -c $testdir/iscsi.conf &
+$ISCSI_APP --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; rm -f $testdir/iscsi.conf; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+
+$rpc_py load_config < $testdir/iscsi.json
+
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
