@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "a969f1ed_59d9a6f9",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1602,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-11-15T05:57:06Z",
+      "side": 1,
+      "message": "Using event handler in separate thread in only right way to add handling events.\nAPI should prevent fetching events in \"Data path\"",
+      "parentUuid": "59351558_9ca831ee",
+      "revId": "1a095fe108b744bffe447986adf81b8bff228e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c07d233d_b04d13c7",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 9
