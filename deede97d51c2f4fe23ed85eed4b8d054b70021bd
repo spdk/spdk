@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e359982_7fbf2861",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T22:57:10Z",
+      "side": 1,
+      "message": "\"retrive it\" \u003d\u003e \"to retrieve it\"\n\n(add \"to\", fix \"retrive\")",
+      "revId": "deede97d51c2f4fe23ed85eed4b8d054b70021bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a620b298_64771da5",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T22:57:10Z",
+      "side": 1,
+      "message": "How about:\n\nIf no error occurred, this function returns a non-negative number indicating how many ready responses can be retrieved.\n\nIf an error occurred, this function returns one of the following negated errno values.",
+      "revId": "deede97d51c2f4fe23ed85eed4b8d054b70021bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63afba45_451847c9",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T22:57:10Z",
+      "side": 1,
+      "message": "response",
+      "revId": "deede97d51c2f4fe23ed85eed4b8d054b70021bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9b0bbe3_3bcc1c72",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T22:57:10Z",
+      "side": 1,
+      "message": "receive, retrieve",
+      "revId": "deede97d51c2f4fe23ed85eed4b8d054b70021bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "230614d0_2f954752",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T22:57:10Z",
+      "side": 1,
+      "message": "can we still use recv_buf_expand here, or some variation of it?  would certainly reduce the size of this very large diff",
+      "revId": "deede97d51c2f4fe23ed85eed4b8d054b70021bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
