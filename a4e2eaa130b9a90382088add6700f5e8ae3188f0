@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ed270ac_a32342df",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:24:11Z",
+      "side": 1,
+      "message": "This doesn\u0027t appear anywhere in the public API, so you can put it into the .c file along with the two types above.",
+      "revId": "a4e2eaa130b9a90382088add6700f5e8ae3188f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55250f2d_e3fe859c",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:24:11Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to expose this global publicly either.",
+      "revId": "a4e2eaa130b9a90382088add6700f5e8ae3188f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67040896_89d5e465",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:24:11Z",
+      "side": 1,
+      "message": "This also does not seem to need to be in the public API.",
+      "revId": "a4e2eaa130b9a90382088add6700f5e8ae3188f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa6b995b_419c1044",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:24:11Z",
+      "side": 1,
+      "message": "Our typical pattern is spdk_noun_verb for function names. So you\u0027d name this spdk_notify_register_type. Same for the functions below.",
+      "revId": "a4e2eaa130b9a90382088add6700f5e8ae3188f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f5347bc_14aa63c4",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:24:11Z",
+      "side": 1,
+      "message": "Why can\u0027t these be in the public API? Also I don\u0027t see anything actually calling these.",
+      "revId": "a4e2eaa130b9a90382088add6700f5e8ae3188f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
