@@ -37,6 +37,59 @@
 #include "spdk/queue.h"
 #include "spdk/notify.h"
 
+/* MOC
+ * TODO: imeplement
+*/
+static void
+spdk_notify_unlisten(uint32_t listen_id)
+{
+
+}
+
+/* MOC
+ * TODO: imeplement - get connection from request
+ */
+static struct spdk_jsonrpc_server_conn *
+spdk_jsonrpc_get_conn(struct spdk_jsonrpc_request *request)
+{
+	return NULL;
+}
+
+/* MOC
+ * TODO: implement - register connection close hook
+ */
+static int
+spdk_jsonrpc_add_conn_close_hook(struct spdk_jsonrpc_server_conn *conn, void (*cb)(void *), void *ctx)
+{
+	return -ENOSYS;
+}
+
+/* MOC
+ * TODO: implement - remove connection close hook
+ */
+static int
+spdk_jsonrpc_del_conn_close_hook(struct spdk_jsonrpc_server_conn *conn, void (*cb)(void *), void *ctx)
+{
+	return -ENOSYS;
+}
+
+struct notify_request {
+	struct spdk_jsonrpc_request *request;
+	STAILQ_ENTRY(notify_request) link;
+};
+
+struct notify_ctx {
+	/* Notification listen ID for unregister */
+	uint32_t listen_id;
+
+	struct spdk_jsonrpc_server_conn *conn;
+
+	STAILQ_HEAD(, notify_request) requests;
+
+	STAILQ_ENTRY(notify_ctx) link;
+};
+
+static STAILQ_HEAD(, notify_ctx) notify_listeners = STAILQ_HEAD_INITIALIZER(notify_listeners);
 
 
 static void
@@ -67,4 +120,106 @@ spdk_rpc_get_notification_types(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_notification_types", spdk_rpc_get_notification_types,
+		  SPDK_RPC_RUNTIME | SPDK_RPC_STARTUP)
+
+static void
+rpc_notication_conn_close_cb(struct spdk_jsonrpc_server_conn *srv, void *arg)
+{
+	struct notify_ctx *ctx = arg;
+
+	/* TODO:
+	 * 1. undo spdk_notify_listen(spdk_notify_listen, ctx);
+	 * 2. abort all ctx->requests
+	 * 3. free ctx
+	 */
+
+	spdk_notify_unlisten(ctx->listen_id);
+}
+
+static void
+rpc_notication_cb(struct spdk_notify_type *notify, void *arg)
+{
+	struct notify_ctx *ctx = arg;
+
+	(void)ctx;
+	/* TODO: write notification */
+}
+
+static void
+spdk_rpc_listen_notifications(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct notify_ctx *ctx = NULL;
+	int rc;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "No parameters required (yet)");
+		return;
+	}
+
+	/* TODO:
+	 * Check if we are already listening for events on this connection. If yes,
+	 * just modify or throw error.
+	 */
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		rc = -ENOMEM;
+		goto invalid;
+	}
+
+	ctx->conn = spdk_jsonrpc_get_conn(request);
+	rc = spdk_jsonrpc_add_conn_close_hook(ctx->conn, rpc_notication_conn_close_cb, ctx);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	rc = spdk_notify_listen(NULL, spdk_notify_listen, ctx);
+	if (rc < 0) {
+		spdk_jsonrpc_del_conn_close_hook(ctx->conn, rpc_notication_conn_close_cb, ctx);
+		goto invalid;
+	}
+
+	STAILQ_INIT(&ctx->requests);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+	free(ctx);
+}
+SPDK_RPC_REGISTER("listen_notifications", spdk_rpc_listen_notifications,
+		  SPDK_RPC_RUNTIME | SPDK_RPC_STARTUP)
+
+static void
+spdk_rpc_get_notifications(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct notify_ctx *ctx = NULL;
+	int rc;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "No parameters required (yet)");
+		return;
+	}
+
+	/* TODO:
+	 * 0. Check if notification are listen on this connection
+	 * 1. alloc struct notify_request
+	 * 2. add it to list of requests for this connection
+	 * 3. Done, wait for connections.
+	 */
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("get_notifications", spdk_rpc_get_notifications,
 		  SPDK_RPC_RUNTIME | SPDK_RPC_STARTUP)
