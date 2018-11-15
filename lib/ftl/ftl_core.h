@@ -84,6 +84,11 @@ enum ftl_task_id {
 	FTL_TASK_ID_MAX,
 };
 
+struct ftl_io_channel {
+	/* IO pool */
+	struct spdk_mempool			*io_pool;
+};
+
 struct ftl_task {
 	/* Owner */
 	struct ftl_dev				*dev;
@@ -134,6 +139,9 @@ struct ftl_dev {
 	void					*halt_arg;
 	/* Halt poller, checks if the device has been halted */
 	struct spdk_poller			*halt_poller;
+
+	/* IO channel */
+	struct spdk_io_channel			*ioch;
 
 	/* NVMe controller */
 	struct ftl_nvme_ctrlr			*ctrlr;

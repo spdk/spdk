@@ -262,7 +262,7 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_fn cb)
 }
 
 void
-ftl_io_user_init(struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
+ftl_io_user_init(struct ftl_io *io, struct ftl_dev *dev, uint64_t lba, size_t lbk_cnt,
 		 struct iovec *iov, size_t iov_cnt,
 		 const ftl_fn cb_fn, void *cb_arg, int type)
 {
@@ -270,7 +270,7 @@ ftl_io_user_init(struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
 		return;
 	}
 
-	ftl_io_init(io, io->dev, cb_fn, cb_arg, 0, type);
+	ftl_io_init(io, dev, cb_fn, cb_arg, FTL_IO_MEMORY, type);
 
 	io->lba = lba;
 	io->lbk_cnt = lbk_cnt;
@@ -294,7 +294,7 @@ ftl_io_complete(struct ftl_io *io)
 	io->cb.fn(io->cb.ctx, io->status);
 
 	if (mem_free) {
-		spdk_ftl_io_free(io);
+		ftl_io_free(io);
 	}
 }
 
@@ -321,16 +321,20 @@ ftl_io_get_md(const struct ftl_io *io)
 }
 
 struct ftl_io *
-spdk_ftl_io_alloc(struct ftl_dev *dev)
+ftl_io_get(struct spdk_io_channel *ch)
 {
 	struct ftl_io *io;
+	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(ch);
 
-	io = calloc(1, sizeof(*io));
+	io = spdk_mempool_get(ioch->io_pool);
+
+	assert(io);
 	if (!io) {
 		return NULL;
 	}
 
-	io->dev = dev;
+	memset(io, 0, sizeof(*io));
+	io->ch = ch;
 	return io;
 }
 
@@ -342,14 +346,22 @@ ftl_io_reinit(struct ftl_io *io, ftl_fn fn, void *ctx, int flags, int type)
 }
 
 void
-spdk_ftl_io_free(struct ftl_io *io)
+ftl_io_free(struct ftl_io *io)
 {
+	struct ftl_io_channel *ioch;
+
 	if (!io) {
 		return;
 	}
 
 	if (ftl_io_internal(io) && io->iov_cnt > 1) {
 		free(io->iovs);
+	}
+
+	if (io->ch) {
+		ioch = spdk_io_channel_get_ctx(io->ch);
+		spdk_mempool_put(ioch->io_pool, io);
+		return;
 	}
 
 	free(io);

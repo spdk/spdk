@@ -123,6 +123,9 @@ struct ftl_io {
 	/* Device */
 	struct ftl_dev				*dev;
 
+	/* IO channel */
+	struct spdk_io_channel			*ch;
+
 	union {
 		/* LBA table */
 		uint64_t			*lbas;
@@ -238,6 +241,8 @@ struct ftl_io {
 #define ftl_io_done(io) \
 	(!((struct ftl_io *)(io))->req_cnt)
 
+struct ftl_io *ftl_io_get(struct spdk_io_channel *ch);
+void	ftl_io_free(struct ftl_io *io);
 struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
 void	ftl_io_reinit(struct ftl_io *io, ftl_fn cb,
 		      void *ctx, int flags, int type);
@@ -255,7 +260,7 @@ struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
 struct ftl_io *ftl_io_rwb_init(struct ftl_dev *dev, struct ftl_band *band,
 			       struct ftl_rwb_batch *entry, ftl_fn cb);
 struct ftl_io	*ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_fn cb);
-void	ftl_io_user_init(struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
+void	ftl_io_user_init(struct ftl_io *io, struct ftl_dev *dev,  uint64_t lba, size_t lbk_cnt,
 			 struct iovec *iov, size_t iov_cnt,
 			 const ftl_fn cb_fn, void *cb_arg, int type);
 void	*ftl_io_get_md(const struct ftl_io *io);
