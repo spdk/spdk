@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_RPC_CONFIG_H_
-#define SPDK_RPC_CONFIG_H_
+#ifndef SPDK_NOTIFY_H_
+#define SPDK_NOTIFY_H_
 
 #include "spdk/stdinc.h"
 #include "event.h"
@@ -106,4 +106,4 @@ static void __attribute__((constructor)) notify_register_##func(void) \
 }
 #endif
 
-#endif
+#endif /* SPDK_NOTIFY_H_ */
