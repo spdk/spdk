@@ -284,7 +284,8 @@ static void usage(void)
 int main(int argc, char **argv)
 {
 	void			*history_ptr;
-	struct spdk_trace_history *history_entries, *history;
+	struct spdk_trace_history *history;
+	struct spdk_trace_histories *histories;
 	int			fd, i;
 	int			lcore = SPDK_TRACE_MAX_LCORE;
 	uint64_t		tsc_offset;
@@ -293,9 +294,7 @@ int main(int argc, char **argv)
 	int			op;
 	char			shm_name[64];
 	int			shm_id = -1, shm_pid = -1;
-	uint64_t		num_entries;
 	uint64_t		trace_histories_size;
-	uint64_t		lcore_history_size;
 
 	g_exe_name = argv[0];
 	while ((op = getopt(argc, argv, "c:f:i:p:qs:")) != -1) {
@@ -375,15 +374,12 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-	num_entries = g_histories->flags.num_entries;
-
 	if (g_verbose) {
 		printf("TSC Rate: %ju\n", g_tsc_rate);
-		printf("Number Trace Entries per lcore: %ju\n", num_entries);
 	}
 
 	/* Remap the entire trace file */
-	trace_histories_size = spdk_get_trace_histories_size(num_entries);
+	trace_histories_size = spdk_get_trace_histories_size(g_histories);
 	munmap(history_ptr, sizeof(*g_histories));
 	history_ptr = mmap(NULL, trace_histories_size, PROT_READ, MAP_SHARED, fd, 0);
 	if (history_ptr == MAP_FAILED) {
@@ -394,26 +390,34 @@ int main(int argc, char **argv)
 
 	g_histories = (struct spdk_trace_histories *)history_ptr;
 
-	lcore_history_size = spdk_get_trace_history_size(num_entries);
-	history_entries = (struct spdk_trace_history *)malloc(lcore_history_size * SPDK_TRACE_MAX_LCORE);
-	if (history_entries == NULL) {
+	histories = (struct spdk_trace_histories *)malloc(trace_histories_size);
+	if (histories == NULL) {
 		goto cleanup;
 	}
-	memcpy(history_entries, g_histories->per_lcore_history,
-	       lcore_history_size * SPDK_TRACE_MAX_LCORE);
+
+	memcpy(histories, g_histories, trace_histories_size);
 
 	if (lcore == SPDK_TRACE_MAX_LCORE) {
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
-			history = spdk_get_per_lcore_history(g_histories, i, num_entries);
+			history = spdk_get_per_lcore_history(histories, i);
 			if (history->entries[0].tsc == 0) {
 				continue;
 			}
-			populate_events(history, num_entries);
+
+			if (g_verbose && history->num_entries) {
+				printf("Trace Size of lcore (%d): %ju\n", i, history->num_entries);
+			}
+
+			populate_events(history, history->num_entries);
 		}
 	} else {
-		history = spdk_get_per_lcore_history(g_histories, lcore, num_entries);
+		history = spdk_get_per_lcore_history(histories, lcore);
 		if (history->entries[0].tsc != 0) {
-			populate_events(history, num_entries);
+			if (g_verbose && history->num_entries) {
+				printf("Trace Size of lcore (%d): %ju\n", lcore, history->num_entries);
+			}
+
+			populate_events(history, history->num_entries);
 		}
 	}
 
@@ -425,7 +429,7 @@ int main(int argc, char **argv)
 		process_event(it->second, g_tsc_rate, tsc_offset, it->first.lcore);
 	}
 
-	free(history_entries);
+	free(histories);
 
 cleanup:
 	munmap(history_ptr, trace_histories_size);
