@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2602032c_6f3c026d",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T19:44:12Z",
+      "side": 1,
+      "message": "You don\u0027t need this cast.",
+      "revId": "66c6e7ea382c68aa1f65e5e3b510bd8c59274ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5964b220_3af11355",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T19:44:12Z",
+      "side": 1,
+      "message": "this second strncat has to start where dest ends (i.e. update ret with the return value of the previous strncat)",
+      "revId": "66c6e7ea382c68aa1f65e5e3b510bd8c59274ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a18f7db4_76991705",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T19:44:12Z",
+      "side": 1,
+      "message": "We shouldn\u0027t be releasing the user\u0027s memory.",
+      "revId": "66c6e7ea382c68aa1f65e5e3b510bd8c59274ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
