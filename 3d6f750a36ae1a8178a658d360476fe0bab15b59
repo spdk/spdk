@@ -34,6 +34,24 @@
       "revId": "3d6f750a36ae1a8178a658d360476fe0bab15b59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "680b5ea7_51fc044e",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-15T03:26:51Z",
+      "side": 1,
+      "message": "Hi Chen,\n\nI\u0027m sorry that my comment was not clear.\n\nYes, what you want to do is clear.\n\nBut you can create raid0, raid1, and raid2 by loading JSON config file. On the other hand, Nvme0n1p0 exists already by loading JSON config file.\n\nWhat you must do here is only creating lvol store and lvol bdev on top of the raid2. You can move other operations to config.json.\n\nIf config.json is shared among multiple tests and adding new config is not good for other tests, the current your patch is OK for me.\n\nPlease give your thought.\n\nThanks,\nShuhei",
+      "parentUuid": "2a8ebf49_3c8f5694",
+      "revId": "3d6f750a36ae1a8178a658d360476fe0bab15b59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
