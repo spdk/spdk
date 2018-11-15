@@ -92,6 +92,9 @@ struct spdk_trace_history {
 	/** Logical core number associated with this structure instance. */
 	int				lcore;
 
+	/** Number of trace_entries contained in each trace_history. */
+	uint64_t			num_trace_entries;
+
 	/**
 	 * Running count of number of occurrences of each tracepoint on this
 	 *  lcore.  Debug tools can use this to easily count tracepoints such as
@@ -115,11 +118,15 @@ struct spdk_trace_history {
 
 struct spdk_trace_flags {
 	uint64_t			tsc_rate;
-	uint64_t			num_trace_entries;
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
 	struct spdk_trace_owner		owner[UCHAR_MAX + 1];
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
+
+	/** Offset of each trace_history from per_lcore_history in the shm file.
+	 * The last one is the offset of the file end.
+	 */
+	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE + 1];
 };
 extern struct spdk_trace_flags *g_trace_flags;
 extern struct spdk_trace_histories *g_trace_histories;
@@ -144,24 +151,23 @@ spdk_get_trace_history_size(uint64_t num_trace_entries)
 }
 
 static inline uint64_t
-spdk_get_trace_histories_size(uint64_t num_trace_entries)
+spdk_get_trace_histories_size(struct spdk_trace_histories *trace_histories)
 {
-	int size;
+	uint64_t size;
 
 	size = sizeof(struct spdk_trace_flags);
-	size += spdk_get_trace_history_size(num_trace_entries) * SPDK_TRACE_MAX_LCORE;
+	size += trace_histories->flags.lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
 
 	return size;
 }
 
 static inline struct spdk_trace_history *
-spdk_get_per_lcore_history(struct spdk_trace_histories *trace_histories, unsigned lcore,
-			   uint64_t num_trace_entries)
+spdk_get_per_lcore_history(struct spdk_trace_histories *trace_histories, unsigned lcore)
 {
 	char *lcore_history_offset;
 
 	lcore_history_offset = (char *)trace_histories->per_lcore_history;
-	lcore_history_offset += lcore * spdk_get_trace_history_size(num_trace_entries);
+	lcore_history_offset += trace_histories->flags.lcore_history_offsets[lcore];
 
 	return (struct spdk_trace_history *)lcore_history_offset;
 }
