@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50da7954_8db219ed",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T18:47:27Z",
+      "side": 1,
+      "message": "You\u0027ve changed the meaning of NVMF_DEFAULT_TX_SGE - it used to be the number of SGEs used to send the response. Now it\u0027s the number used to send the data. They\u0027re both transmit operations so it isn\u0027t wrong. I think this TX and RX stuff should all be renamed at some point though.",
+      "revId": "ccbea38328710f2297d04dfcb6e9d66dfee61610",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
