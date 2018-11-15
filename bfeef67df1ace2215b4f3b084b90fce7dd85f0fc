@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "753957f1_b51d4bec",
+        "filename": "include/spdk/histogram_data.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T21:58:56Z",
+      "side": 1,
+      "message": "I still have the same question from my previous review.  What happens if dst and src have different bucket shifts?  Can we at least assert here?",
+      "revId": "bfeef67df1ace2215b4f3b084b90fce7dd85f0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
