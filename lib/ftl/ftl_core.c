@@ -93,6 +93,7 @@ struct ftl_flush {
 
 typedef int (*ftl_next_ppa_fn)(struct ftl_io *, struct ftl_ppa *, size_t, void *);
 static void _ftl_read(void *);
+static void _ftl_write(void *);
 
 static int
 ftl_rwb_flags_from_io(const struct ftl_io *io)
@@ -105,13 +106,6 @@ static int
 ftl_rwb_entry_weak(const struct ftl_rwb_entry *entry)
 {
 	return entry->flags & FTL_IO_WEAK;
-}
-
-static int
-ftl_check_task(struct ftl_dev *dev, enum ftl_task_id id)
-{
-	assert(id < FTL_TASK_ID_MAX);
-	return dev->tasks[id].tid == pthread_self();
 }
 
 static void
@@ -325,6 +319,13 @@ ftl_submit_erase(struct ftl_io *io)
 	}
 
 	return rc;
+}
+
+static int
+ftl_check_task(struct ftl_dev *dev, enum ftl_task_id id)
+{
+	assert(id < FTL_TASK_ID_MAX);
+	return dev->tasks[id].tid == pthread_self();
 }
 
 static void
@@ -1095,7 +1096,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 		/* TODO: we need some recovery here */
 		assert(0 && "Write submit failed");
 		if (ftl_io_done(io)) {
-			spdk_ftl_io_free(io);
+			ftl_io_free(io);
 		}
 	}
 
@@ -1327,11 +1328,40 @@ ftl_io_write(struct ftl_io *io)
 	return 0;
 }
 
+
+
+static int
+_spdk_ftl_write(struct ftl_io *io)
+{
+	int rc;
+
+	rc = ftl_io_write(io);
+	if (rc == -EAGAIN) {
+		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ch),
+				     _ftl_write, io);
+		return 0;
+	}
+
+	if (rc) {
+		ftl_io_free(io);
+	}
+
+	return rc;
+}
+
+static void
+_ftl_write(void *ctx)
+{
+	_spdk_ftl_write(ctx);
+}
+
 int
-spdk_ftl_write(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
+spdk_ftl_write(struct ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
 	       struct iovec *iov, size_t iov_cnt, const ftl_fn cb_fn, void *cb_arg)
 {
-	if (!io || !iov || !cb_fn || !io->dev) {
+	struct ftl_io *io;
+
+	if (!iov || !cb_fn || !dev) {
 		return -EINVAL;
 	}
 
@@ -1347,12 +1377,17 @@ spdk_ftl_write(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
 		return -EINVAL;
 	}
 
-	if (!io->dev->initialized) {
+	if (!dev->initialized) {
 		return -EBUSY;
 	}
 
-	ftl_io_user_init(io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
-	return ftl_io_write(io);
+	io = ftl_io_alloc(ch);
+	if (!io) {
+		return -ENOMEM;
+	}
+
+	ftl_io_user_init(dev, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
+	return _spdk_ftl_write(io);
 }
 
 int
@@ -1382,10 +1417,12 @@ _ftl_read(void *arg)
 }
 
 int
-spdk_ftl_read(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
+spdk_ftl_read(struct ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
 	      struct iovec *iov, size_t iov_cnt, const ftl_fn cb_fn, void *cb_arg)
 {
-	if (!io || !iov || !cb_fn || !io->dev) {
+	struct ftl_io *io;
+
+	if (!iov || !cb_fn || !dev) {
 		return -EINVAL;
 	}
 
@@ -1401,11 +1438,16 @@ spdk_ftl_read(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
 		return -EINVAL;
 	}
 
-	if (!io->dev->initialized) {
+	if (!dev->initialized) {
 		return -EBUSY;
 	}
 
-	ftl_io_user_init(io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
+	io = ftl_io_alloc(ch);
+	if (!io) {
+		return -ENOMEM;
+	}
+
+	ftl_io_user_init(dev, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
 	return ftl_io_read(io);
 }
 

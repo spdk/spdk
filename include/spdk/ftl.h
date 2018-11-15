@@ -38,6 +38,7 @@
 #include <spdk/nvme.h>
 #include <spdk/nvme_ocssd.h>
 #include <spdk/uuid.h>
+#include <spdk/thread.h>
 
 struct ftl_dev;
 struct ftl_io;
@@ -80,6 +81,9 @@ struct ftl_conf {
 
 	/* Maximum active band relocates */
 	size_t					max_active_relocs;
+
+	/* IO pool size per user thread */
+	size_t					user_io_pool_size;
 
 	struct {
 		/* Lowest percentage of invalid lbks for a band to be defragged */
@@ -271,7 +275,8 @@ int	spdk_ftl_dev_get_attrs(const struct ftl_dev *dev, struct ftl_attrs *attr);
 /**
  * Submits a read to the specified device.
  *
- * \param io I/O handle
+ * \param dev Device
+ * \param ch I/O channel
  * \param lba Starting LBA to read the data
  * \param lba_cnt Number of sectors to read
  * \param iov Single IO vector or pointer to IO vector table
@@ -281,13 +286,14 @@ int	spdk_ftl_dev_get_attrs(const struct ftl_dev *dev, struct ftl_attrs *attr);
  *
  * \return 0 if successfully submitted, negated EINVAL otherwise.
  */
-int	spdk_ftl_read(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
+int	spdk_ftl_read(struct ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
 		      struct iovec *iov, size_t iov_cnt, const ftl_fn cb_fn, void *cb_arg);
 
 /**
  * Submits a write to the specified device.
  *
- * \param io I/O handle
+ * \param dev Device
+ * \param ch I/O channel
  * \param lba Starting LBA to write the data
  * \param lba_cnt Number of sectors to write
  * \param iov Single IO vector or pointer to IO vector table
@@ -298,7 +304,7 @@ int	spdk_ftl_read(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
  * \return 0 if successfully submitted, negative values otherwise.
  */
 int
-spdk_ftl_write(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
+spdk_ftl_write(struct ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
 	       struct iovec *iov, size_t iov_cnt, const ftl_fn cb_fn, void *cb_arg);
 
 /**
@@ -311,22 +317,6 @@ spdk_ftl_write(struct ftl_io *io, uint64_t lba, size_t lba_cnt,
  * \return 0 if successfully submitted, negated EINVAL or ENOMEM otherwise.
  */
 int	spdk_ftl_flush(struct ftl_dev *dev, const ftl_fn cb_fn, void *cb_arg);
-
-/**
- * Allocate FTL I/O structure for given device.
- *
- * \param dev device
- *
- * \return Pointer to FTL I/O handle, NULL otherwise.
- */
-struct ftl_io *spdk_ftl_io_alloc(struct ftl_dev *dev);
-
-/**
- * Free FTL I/O handle.
- *
- * \param io FTL I/O handle to free
- */
-void	spdk_ftl_io_free(struct ftl_io *io);
 
 /**
  * Initialize and register NVMe driver for a given FTL device.

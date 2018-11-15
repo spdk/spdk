@@ -81,12 +81,12 @@ struct ocssd_io_channel {
 
 	/* Completion ring */
 	struct spdk_ring		*ring;
+
+	struct spdk_io_channel		*ioch;
 };
 
 struct ocssd_bdev_io {
 	struct ocssd_bdev		*bdev;
-
-	struct ftl_io			*io;
 
 	struct spdk_ring		*ring;
 
@@ -247,9 +247,6 @@ bdev_ocssd_cb(void *arg, int status)
 
 	io->status = status;
 
-	spdk_ftl_io_free(io->io);
-	io->io = NULL;
-
 	cnt = spdk_ring_enqueue(io->ring, (void **)&io, 1);
 	assert(cnt == 1);
 }
@@ -261,11 +258,6 @@ bdev_ocssd_fill_bio(struct ocssd_bdev *bdev, struct spdk_io_channel *ch,
 	struct ocssd_io_channel *ioch = spdk_io_channel_get_ctx(ch);
 
 	memset(io, 0, sizeof(*io));
-
-	io->io = spdk_ftl_io_alloc(bdev->dev);
-	if (!io->io) {
-		return -ENOMEM;
-	}
 
 	io->orig_thread = spdk_io_channel_get_thread(ch);
 	io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -279,6 +271,7 @@ bdev_ocssd_readv(struct ocssd_bdev *bdev, struct spdk_io_channel *ch,
 		 struct ocssd_bdev_io *io)
 {
 	struct spdk_bdev_io *bio;
+	struct ocssd_io_channel *ioch = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	bio = spdk_bdev_io_from_ctx(io);
@@ -288,34 +281,11 @@ bdev_ocssd_readv(struct ocssd_bdev *bdev, struct spdk_io_channel *ch,
 		return rc;
 	}
 
-	return spdk_ftl_read(io->io,
+	return spdk_ftl_read(bdev->dev,
+			     ioch->ioch,
 			     bio->u.bdev.offset_blocks,
 			     bio->u.bdev.num_blocks,
 			     bio->u.bdev.iovs, bio->u.bdev.iovcnt, bdev_ocssd_cb, io);
-}
-
-static void
-_bdev_ocssd_write(void *ctx)
-{
-	struct ocssd_bdev_io *io = ctx;
-	struct spdk_bdev_io *bio;
-	int rc;
-
-	bio = spdk_bdev_io_from_ctx(io);
-
-	rc = spdk_ftl_write(io->io,
-			    bio->u.bdev.offset_blocks,
-			    bio->u.bdev.num_blocks,
-			    bio->u.bdev.iovs, bio->u.bdev.iovcnt, bdev_ocssd_cb, io);
-
-	if (rc == -EAGAIN) {
-		spdk_thread_send_msg(io->orig_thread, _bdev_ocssd_write, io);
-	} else if (spdk_unlikely(rc != 0)) {
-		/* We can fail the request immediately and not worry about the */
-		/* completion routines, as it's never called when the spdk_ftl_write */
-		/* returns an error. */
-		bdev_ocssd_complete_io(io, rc);
-	}
 }
 
 static int
@@ -323,27 +293,23 @@ bdev_ocssd_writev(struct ocssd_bdev *bdev, struct spdk_io_channel *ch,
 		  struct ocssd_bdev_io *io)
 {
 	struct spdk_bdev_io *bio;
+	struct ocssd_io_channel *ioch;
 	int rc;
 
 	bio = spdk_bdev_io_from_ctx(io);
+	ioch = spdk_io_channel_get_ctx(ch);
 
 	rc = bdev_ocssd_fill_bio(bdev, ch, io);
 	if (rc) {
 		return rc;
 	}
 
-	rc = spdk_ftl_write(io->io,
-			    bio->u.bdev.offset_blocks,
-			    bio->u.bdev.num_blocks,
-			    bio->u.bdev.iovs,
-			    bio->u.bdev.iovcnt, bdev_ocssd_cb, io);
-
-	if (rc == -EAGAIN) {
-		spdk_thread_send_msg(io->orig_thread, _bdev_ocssd_write, io);
-		return 0;
-	}
-
-	return rc;
+	return spdk_ftl_write(bdev->dev,
+			      ioch->ioch,
+			      bio->u.bdev.offset_blocks,
+			      bio->u.bdev.num_blocks,
+			      bio->u.bdev.iovs,
+			      bio->u.bdev.iovcnt, bdev_ocssd_cb, io);
 }
 
 static void
@@ -656,6 +622,8 @@ bdev_ocssd_create_cb(void *io_device, void *ctx)
 		spdk_ring_free(ch->ring);
 		return -ENOMEM;
 	}
+
+	ch->ioch = spdk_get_io_channel(bdev->dev);
 
 	return 0;
 }

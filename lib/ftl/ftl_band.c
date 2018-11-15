@@ -43,26 +43,6 @@
 /* TODO: define some signature for meta version */
 #define FTL_MD_VER 1
 
-typedef int (*ftl_md_pack_fn)(struct ftl_dev *, struct ftl_md *, void *);
-
-/* Metadata IO */
-struct ftl_md_io {
-	/* Parent IO structure */
-	struct ftl_io		io;
-
-	/* Destination metadata pointer */
-	struct ftl_md		*md;
-
-	/* Metadata's buffer */
-	void			*buf;
-
-	/* Serialization/deserialization callback */
-	ftl_md_pack_fn	pack_fn;
-
-	/* User's callback */
-	struct ftl_cb		cb;
-};
-
 struct __attribute__((packed)) ftl_md_hdr {
 	/* Device instance */
 	struct spdk_uuid	uuid;
@@ -730,7 +710,7 @@ ftl_io_init_md_read(struct ftl_dev *dev, struct ftl_md *md, void *data, struct f
 		.rwb_batch	= NULL,
 		.band		= band,
 		.size		= sizeof(*io),
-		.flags		= FTL_IO_MEMORY | FTL_IO_MD | FTL_IO_PPA_MODE,
+		.flags		= FTL_IO_MD | FTL_IO_PPA_MODE,
 		.type		= FTL_IO_READ,
 		.iov_cnt	= ftl_div_up(lbk_cnt, req_size),
 		.req_size	= req_size,
@@ -762,7 +742,7 @@ ftl_io_init_md_write(struct ftl_dev *dev, struct ftl_band *band,
 		.rwb_batch	= NULL,
 		.band		= band,
 		.size		= sizeof(struct ftl_io),
-		.flags		= FTL_IO_MEMORY | FTL_IO_MD | FTL_IO_PPA_MODE,
+		.flags		= FTL_IO_MD | FTL_IO_PPA_MODE,
 		.type		= FTL_IO_WRITE,
 		.iov_cnt	= req_cnt,
 		.req_size	= dev->xfer_size,
