@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a35f3cf_e33d7832",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T20:42:26Z",
+      "side": 1,
+      "message": "Hi Xiaodong,\n\nWe call get_trace_histories_size(trace_size) three times (here, line 397, line 403).  Let\u0027s do that once, store it in a local variable and then use that in all three cases.  It will especially make the malloc on line 397 easier to read.\n\n-Jim",
+      "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fac12a27_031bf105",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T20:42:26Z",
+      "side": 1,
+      "message": "Number of trace entries allocated for each core.",
+      "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "250e235b_65767241",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T20:42:26Z",
+      "side": 1,
+      "message": "how about num_trace_entries?\n\nmy only concern with \"trace_size\" is that it is not clear if it means the size in bytes or the size in number of entries\n\nsimilar changes should be made in trace.h (including trace_size parameter names - num_entries is probably a better name)",
+      "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fd2b86e_301ab2b3",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T20:42:26Z",
+      "side": 1,
+      "message": "anything in a public header should have an spdk_ prefix\n\ninstead of passing \"trace_size\", what if the user passes struct spdk_trace_history?  presumably the user must have already mapped the header to get the number of entries - just pass the entire data structure and let this function figure it out (it will also help in future patches when each lcore may have its own size)",
+      "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f62fe5a_a7d4be03",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T20:42:26Z",
+      "side": 1,
+      "message": "let\u0027s break this into two lines:\n\nstruct spdk_trace_history *lcore_history;\n\nlcore_history \u003d get_per_lcore_history(g_trace_histories, i, trace_size);",
+      "revId": "0d1dd27bb5cf450899febb3523ae5e9437f3c34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
