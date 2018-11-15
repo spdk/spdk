@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1b039cf_e994e734",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-15T12:42:42Z",
+      "side": 1,
+      "message": "Consider NUMA, especially for 4 CPU cores and above you should look at CPU masks that have CPU cores on both NUMA nodes.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 43
+      },
+      "revId": "d5fba4df15fd0c721e5b42cff53afcf5bd96035c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0eca654_e7fdbfa4",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-15T12:42:42Z",
+      "side": 1,
+      "message": "Most platforms don\u0027t usually have a perfect distribution of the number of disks between NUMA nodes. You always get some imbalance especially when you have a fully loaded system. I think this requirement is to use an equal amount of disks on NUMA node 0 and 1 is too restrictive. When we do this manually we try to NUMA balance but if we cannot then we use disks on the local NUMA node first before using those on the other NUMA node. For example in the last round of testing I did, my system had 22 SSDs (13 on NUMA node 1 and 9 on NUMA node 0). In the test with 4 CPU cores and 20 SSDs, I had 2 CPU cores on NUMA node 1 that were NUMA balanced and 1 CPU core on NUMA node 0 was NUMA balanced but the other CPU core on NUMA node 0 used 4 SSDs from NUMA node 0 and 1 SSD from NUMA node 1.\nAnd if I add 2 more SSDs to that test so that I am using all 22 SSDs, then I assign both of them to CPU cores on NUMA node 1. \nSo I think the way to handle this is to figure out how many SSDs are each NUMA node and that is probably what you use for $disks_per_numa. And then for the rest of the SSDs you can distribute them first along NUMA and then break NUMA",
+      "range": {
+        "startLine": 100,
+        "startChar": 3,
+        "endLine": 103,
+        "endChar": 9
+      },
+      "revId": "d5fba4df15fd0c721e5b42cff53afcf5bd96035c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32a04118_49e92a86",
+        "filename": "test/nvme/perf/config.fio",
+        "patchSetId": 24
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-15T12:42:42Z",
+      "side": 1,
+      "message": "This is more of a nitpicky.\nThis can be driver/bdev. You might want to build the description in the function where you generate the other fio parameters. This would allow you add a more descriptive header like \"4K Random Read IOPS test\"",
+      "range": {
+        "startLine": 9,
+        "startChar": 22,
+        "endLine": 9,
+        "endChar": 28
+      },
+      "revId": "d5fba4df15fd0c721e5b42cff53afcf5bd96035c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
