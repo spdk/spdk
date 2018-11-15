@@ -99,8 +99,6 @@ struct ftl_punit_range {
 enum ftl_mode {
 	/* Create new device */
 	FTL_MODE_CREATE		= (1 << 0),
-	/* Separated read thread */
-	FTL_MODE_READ_ISOLATION	= (1 << 1),
 };
 
 struct ftl_nvme_ops {
@@ -159,19 +157,21 @@ struct ftl_nvme_ops {
 	int	(*free_io_qpair)(struct spdk_nvme_qpair *qpair);
 };
 
-struct ftl_init_opts {
+struct ftl_dev_init_opts {
 	/* NVMe controller */
 	struct spdk_nvme_ctrlr			*ctrlr;
-
 	/* Controller's transport ID */
 	struct spdk_nvme_transport_id		trid;
 
+	/* Thread responsible for core tasks execution */
+	struct spdk_thread			*core_thread;
+	/* Thread responsible for read requests */
+	struct spdk_thread			*read_thread;
+
 	/* Device's config */
 	struct ftl_conf				*conf;
-
 	/* Device's name */
 	const char				*name;
-
 	/* Parallel unit range */
 	struct ftl_punit_range			range;
 
@@ -186,6 +186,9 @@ struct ftl_attrs {
 	/* Device's UUID */
 	struct spdk_uuid			uuid;
 
+	/* Parallel unit range */
+	struct ftl_punit_range			range;
+
 	/* Number of logical blocks */
 	uint64_t				lbk_cnt;
 
@@ -193,25 +196,33 @@ struct ftl_attrs {
 	size_t					lbk_size;
 };
 
+struct ftl_module_init_opts {
+	/* Thread on which to poll for ANM events */
+	struct spdk_thread			*anm_thread;
+};
+
 typedef void (*ftl_fn)(void *, int);
+typedef void (*ftl_init_fn)(struct ftl_dev *, void *, int);
 
 /**
  * Initialize the FTL module.
- * Covers initialization of ANM thread.
+ *
+ * \param opts module configuration
  *
  * \return 0 if successfully initialized, negative values if resources could not
  * be allocated.
  */
-int	spdk_ftl_init(void);
+int	spdk_ftl_module_init(const struct ftl_module_init_opts *opts);
 
 /**
  * Deinitialize the FTL module.
  * All FTL devices have to be unregistered prior to calling this function.
  */
-void	spdk_ftl_deinit(void);
+void	spdk_ftl_module_deinit(void);
 
 /**
- * Initialize the FTL on given NVMe device and parallel unit range.
+ * Initialize the FTL on given NVMe device and parallel unit range. If the callback is called with
+ * an error, the pointer returned by this functions is no longer valid.
  *
  * Covers the following:
  * - initialize and register NVMe ctrlr,
@@ -221,18 +232,24 @@ void	spdk_ftl_deinit(void);
  * - initialize internal thread(s),
  * - restore or create L2P table.
  *
- * \param opts Configuration for new device
+ * \param opts configuration for new device
+ * \param cb callback function to call when the device is created
+ * \param cb_arg callback's argument
  *
- * \return Pointer to device if successfully created, NULL otherwise.
+ * \return 0 if initialization was started successfully, negative errno otherwise.
  */
-struct ftl_dev *spdk_ftl_dev_init(const struct ftl_init_opts *opts);
+int	spdk_ftl_dev_init(const struct ftl_dev_init_opts *opts, ftl_init_fn cb, void *cb_arg);
 
 /**
  * Deinitialize and free given device.
  *
  * \param dev device
+ * \param cb callback function to call when the device is freed
+ * \param cb_arg callback's argument
+ *
+ * \return 0 if successfully scheduled free, negative errno otherwise.
  */
-void	spdk_ftl_dev_free(struct ftl_dev *dev);
+int	spdk_ftl_dev_free(struct ftl_dev *dev, ftl_fn cb, void *cb_arg);
 
 /**
  * Initialize FTL configuration structure with default values.
