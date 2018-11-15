@@ -16,6 +16,24 @@
       "revId": "bc99e687777f01a660cdd241c3a2a62c6ef52a1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "727509ef_25a3290d",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 28
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T18:12:53Z",
+      "side": 1,
+      "message": "We only have indirect control over these names.  We would have to move to \"spdk-master\" as the branch name to get spdk-master.tar.gz for example.  I don\u0027t think that\u0027s a change we\u0027re willing to make just for this case.\n\nFor the releases, we could use something like spdk-18.10.1 for our tag names (instead of v18.10.1).  We\u0027ve used the vXX.YY.Z format since SPDK started though, so my preference would be to keep it consistent.\n\nIs it safe to assume that a package builder understands how to separate out RPMs for different packages?",
+      "parentUuid": "e5777640_9f7d164a",
+      "revId": "bc99e687777f01a660cdd241c3a2a62c6ef52a1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
