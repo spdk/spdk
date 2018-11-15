@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47337b8d_32586ace",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-15T22:50:07Z",
+      "side": 1,
+      "message": "should mention that errno is set on failure (i think you missed this from my previous review)",
+      "revId": "499e33f72d4493a5e687ebf9052891a9e162e15c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
