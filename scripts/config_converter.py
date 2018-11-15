@@ -163,6 +163,8 @@ def get_aio_bdev_json(config, section):
     for option in config.options("AIO"):
         if option == "AIO":
             value = config.get("AIO", option).split("\n")
+    if value is None:
+        return aio_json
     for item in value:
         items = re.findall("\S+", item)
         params = {}
