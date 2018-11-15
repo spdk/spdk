@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f612ad8_7e4f6687",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:30:13Z",
+      "side": 1,
+      "message": "I thought a security receive was only ever sent as a follow up to a previous security send command. Where\u0027s the security send?",
+      "revId": "103f82258a112c0b21b49b055f1b6ecd682f4655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08be371e_bffd3a9c",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-15T22:30:13Z",
+      "side": 1,
+      "message": "Maybe we should name this \"nvme_unlock\" to be more intuitive?",
+      "revId": "103f82258a112c0b21b49b055f1b6ecd682f4655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
