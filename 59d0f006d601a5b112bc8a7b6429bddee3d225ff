@@ -170,6 +170,24 @@
       "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c486979_f17d6dc0",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-15T11:07:21Z",
+      "side": 1,
+      "message": "\u003e I\u0027m going introduce caches of message objects on the thread object itself, implemented as a TAILQ\n\nDoesn\u0027t DPDK do the same already? We set per-lcore cache_size to SPDK_MEMPOOL_DEFAULT_CACHE_SIZE after all.\n\nStill, that won\u0027t help us out if one socket caches memory taken from another socket. Accessing it will always introduce some latency overhead of the QPI.\n\nI could imagine this being implemented as multiple mempools, one per node. (Allocated maybe on thread allocation?) But I\u0027ll let the benchmarks speak here. This patch looks fine in this matter for now.",
+      "parentUuid": "fda98b39_659535c2",
+      "revId": "59d0f006d601a5b112bc8a7b6429bddee3d225ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
