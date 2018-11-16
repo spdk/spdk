@@ -231,6 +231,24 @@
     },
     {
       "key": {
+        "uuid": "6a190a57_296e5fc9",
+        "filename": "lib/ocssd/ocssd_utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-16T15:34:32Z",
+      "side": 1,
+      "message": "I\u0027ve replaced the threads with pollers, see https://review.gerrithub.io/#/c/spdk/spdk/+/433447/\n\nI\u0027ve pushed it as a separate patch, as the changes were quite significant, so it\u0027s easier to review it that way. Once you\u0027re fine with it, I\u0027ll apply it onto this series.",
+      "parentUuid": "fbb43f0c_9a4060d9",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a2ca515_961d2217",
         "filename": "lib/ocssd/ocssd_utils.h",
         "patchSetId": 2
