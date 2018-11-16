@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e520656e_44d9c1bd",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-16T15:04:01Z",
+      "side": 1,
+      "message": "I\u0027ve always wondered what \"a bunch\" was :)",
+      "revId": "3d02ebeb2aea43da869c01e718c9942889325e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
