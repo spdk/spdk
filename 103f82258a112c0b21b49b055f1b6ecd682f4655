@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1434bc6f_d0c1e409",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-11-16T02:15:24Z",
+      "side": 1,
+      "message": "Hi Ben, \n\nThanks for your review. \n\nSo besides what you mentioned, security receive can also be used in the security discovery process and is not associated with a Security Send command when security protocol field is set to 0x00 (NVMe_Spec_V1.3 5.25.2). \n\nAnd this is actually the reason I want to add this RPC method. Because it can tell users what security protocol the controller supports.\n\nFor NVMe security send, of course we can add it in the future.\nBut for now there is not really useful to expose that command.\n\nThanks",
+      "parentUuid": "5f612ad8_7e4f6687",
+      "revId": "103f82258a112c0b21b49b055f1b6ecd682f4655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08be371e_bffd3a9c",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 6
