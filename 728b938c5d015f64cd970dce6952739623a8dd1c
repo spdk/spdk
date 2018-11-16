@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b5ddb87_c71f89dc",
+        "filename": "include/spdk/bit_array.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T17:03:51Z",
+      "side": 1,
+      "message": "I think more precisely, num_bits means the size of the mask, and that\u0027s what you\u0027re checking in the code, making sure that the size of the mask buffer is big enough.\n\nWe will always store the number of bits that the bit array represents - this parameter doesn\u0027t really change that.",
+      "revId": "728b938c5d015f64cd970dce6952739623a8dd1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffa8f894_44f5d8a9",
+        "filename": "include/spdk/bit_array.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T17:03:51Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "728b938c5d015f64cd970dce6952739623a8dd1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c0435bc_6f228ec8",
+        "filename": "test/unit/lib/util/bit_array.c/bit_array_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T17:03:51Z",
+      "side": 1,
+      "message": "Good unit tests!  I think we should pick an uneven TEST_MASK_SIZE though, to make sure the remainder logic in the new functions is working correctly.",
+      "revId": "728b938c5d015f64cd970dce6952739623a8dd1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
