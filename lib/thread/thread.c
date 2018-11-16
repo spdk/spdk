@@ -648,6 +648,7 @@ void
 spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 {
 	struct call_thread *ct;
+	struct spdk_thread *thread;
 
 	ct = calloc(1, sizeof(*ct));
 	if (!ct) {
@@ -661,7 +662,14 @@ spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 	ct->cpl = cpl;
 
 	pthread_mutex_lock(&g_devlist_mutex);
-	ct->orig_thread = _get_thread();
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("No thread allocated\n");
+		free(ct);
+		cpl(ctx);
+		return;
+	}
+	ct->orig_thread = thread;
 	ct->cur_thread = TAILQ_FIRST(&g_threads);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
@@ -755,6 +763,11 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	struct spdk_thread *thread;
 
 	thread = spdk_get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("no thread allocated for io_device %p\n", io_device);
+		assert(false);
+		return;
+	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
