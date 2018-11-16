@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d69c105_5c638e45",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-16T18:06:53Z",
+      "side": 1,
+      "message": "Think about aligning this to the size of the super block just in case the backing device requires it.",
+      "revId": "5234fa338997b3f5e53c34879e47e5dc2f8bbcaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d352314e_c3f81f4f",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-16T18:06:53Z",
+      "side": 1,
+      "message": "Similar to my above comment, if this is not aligned to 4k the read will end up getting split at the NVMe layer if the NVMe device only supports PRP lists.",
+      "revId": "5234fa338997b3f5e53c34879e47e5dc2f8bbcaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
