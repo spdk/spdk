@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "1b7ac8bb_f139b464",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T08:00:40Z",
+      "side": 1,
+      "message": "Size of the chunk is defined by disk geometry but in our test we are emulating ~100 megabytes chunks. We are collecting group of chunks from different parallel units into bands and single writes are done from chunk 1 to chunk N inside band and then start from beginning to achieve maximum parallelism on disk. Size of the single write is defined by optimal write size value returned by disk e.g. 64KB.\nWe currently don\u0027t support any parity or replication.",
+      "parentUuid": "f26d2b36_63cc65ca",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3af37e4c_21b639fc",
         "filename": "doc/ftl.md",
         "patchSetId": 10
@@ -48,6 +66,24 @@
       "writtenOn": "2018-11-15T22:00:53Z",
       "side": 1,
       "message": "This obviously isn\u0027t power-fail safe, so the device will need to indicate that it does volatile write caching and requires flushes.",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8734b20_0914fb90",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T08:00:40Z",
+      "side": 1,
+      "message": "Yes, you are correct, current implementation requires flushes for power-fail safe.",
+      "parentUuid": "3af37e4c_21b639fc",
       "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -71,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "f0da0736_914bf54b",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T08:00:40Z",
+      "side": 1,
+      "message": "This depends on disk firmware implementation. ANM API allows for single block, chunk or even parallel unit granularity.",
+      "parentUuid": "111a9ac9_88c2d95c",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0502604a_1901a754",
         "filename": "doc/ftl.md",
         "patchSetId": 10
@@ -82,6 +136,24 @@
       "writtenOn": "2018-11-15T22:00:53Z",
       "side": 1,
       "message": "So the defragmentation only occurs in units of bands? What would be the challenges involved in a design that performs defragmentation in units of chunks?",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "615eb5b8_753c9d45",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T08:00:40Z",
+      "side": 1,
+      "message": "Data relocation could happen on single/multiple blocks or chunk (e. g. as result of ANM event). Defragmentation process operates on band granularity. Band is collection of chunks and could be in open/close/free state. We could write only to open band. When band is full it goes to close state and we need to pick free band for writing. Band defragmentation prevents us from situation where we don\u0027t have any free bands for writing.",
+      "parentUuid": "0502604a_1901a754",
       "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
