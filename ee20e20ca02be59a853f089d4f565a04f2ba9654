@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "1b21cdb4_f6da37e4",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T14:20:30Z",
+      "side": 1,
+      "message": "You are using this constant in three places so it will be easier to read some NANOSECONDS define instead counting number of zeros...",
+      "parentUuid": "4f30bfe3_f1fddbf4",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5ed230fc_65b36afd",
         "filename": "include/spdk/ftl.h",
         "patchSetId": 2
@@ -387,6 +405,24 @@
     },
     {
       "key": {
+        "uuid": "ad53f3ed_7132f9e6",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T14:20:30Z",
+      "side": 1,
+      "message": "Perhaps this is new gerrit layout...",
+      "parentUuid": "7fd47834_29e4cc28",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5f6fb8aa_648bd299",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 2
@@ -416,6 +452,24 @@
       "side": 1,
       "message": "Is there really a point in having this configurable?",
       "parentUuid": "5f6fb8aa_648bd299",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1df1c870_c5bce392",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T14:20:30Z",
+      "side": 1,
+      "message": "I won\u0027t insist that this should be configurable but probably this value need to be empirically adjusted so maybe it is worth to put some comment here.",
+      "parentUuid": "6e79907a_5642dcee",
       "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -492,6 +546,24 @@
     },
     {
       "key": {
+        "uuid": "1504a602_101be5fa",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T14:20:30Z",
+      "side": 1,
+      "message": "Probably not, but this could potentially take undefined umount of time and I was thinking that we should give back control from our pollers in predictable time.",
+      "parentUuid": "5d19d127_4ab5342f",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7cbf06c2_602f4755",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -521,6 +593,24 @@
       "side": 1,
       "message": "spdk_nvme_ctrlr_process_admin_completions is protected by a lock, so it\u0027s safe.",
       "parentUuid": "7cbf06c2_602f4755",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb339f63_da393c5d",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T14:20:30Z",
+      "side": 1,
+      "message": "I think that there were some strong arguments that we should pool admin completions in one place? Potentially anm poller could be on another thread?",
+      "parentUuid": "13df8ad2_7cc79475",
       "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -562,6 +652,24 @@
     },
     {
       "key": {
+        "uuid": "51095428_434ed31b",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T14:20:30Z",
+      "side": 1,
+      "message": "See the response above.",
+      "parentUuid": "c84ebf4d_21bc697d",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b4c39c34_a1f7c1b7",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -591,6 +699,24 @@
       "side": 1,
       "message": "It\u0027s just one element and doesn\u0027t need to be set to 0.",
       "parentUuid": "b4c39c34_a1f7c1b7",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a807bcc2_e5f2e0bc",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T14:20:30Z",
+      "side": 1,
+      "message": "Agree, but I think this is our common pattern in ftl so why no to be fit with it.",
+      "parentUuid": "59e8f4a7_0dee1132",
       "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
