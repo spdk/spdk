@@ -16,6 +16,24 @@
       "revId": "8a5032150a21b89b4380f7f7d3e648017884e67b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16fc8dba_ef462f9f",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T15:23:24Z",
+      "side": 1,
+      "message": "Will do.  I\u0027ll add a follow up patch to fix this.",
+      "parentUuid": "d257485c_8328f1de",
+      "revId": "8a5032150a21b89b4380f7f7d3e648017884e67b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
