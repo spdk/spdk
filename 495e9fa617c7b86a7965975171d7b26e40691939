@@ -157,6 +157,24 @@
       "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "040184ae_1033f3c5",
+        "filename": "doc/ftl.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-16T15:54:09Z",
+      "side": 1,
+      "message": "If we performed defragmentation in units of chunks, we\u0027d have to allow writing to a band that only has a few free chunks (and not all of them, like we do now). If we did that, we might end up with a band that only has one free chunk, so all of the writes need to be sequential (as opposed to current writing scheme jumping across the bands in optimal write size increments). So basically it comes down to having one chunk bands.",
+      "parentUuid": "0502604a_1901a754",
+      "revId": "495e9fa617c7b86a7965975171d7b26e40691939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
