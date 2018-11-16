@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a57d7798_7569e837",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T15:56:13Z",
+      "side": 1,
+      "message": "Hi Andrey,\n\nThe format for the first line should be something like:\n\nbdev: unregister bdevs top-down during shutdown\n\nRest of the commit message looks fine.",
+      "revId": "bd0dde0213879ca97c30902cbd0fb1e75deb3797",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98a775a4_b8172d75",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T15:56:13Z",
+      "side": 1,
+      "message": "This section needs to be moved to v19.01 section.",
+      "revId": "bd0dde0213879ca97c30902cbd0fb1e75deb3797",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e61b07ad_af6c9a93",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T15:56:13Z",
+      "side": 1,
+      "message": "shutdown",
+      "revId": "bd0dde0213879ca97c30902cbd0fb1e75deb3797",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
