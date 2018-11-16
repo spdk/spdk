@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b0af256_dac7915c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T15:50:05Z",
+      "side": 1,
+      "message": "I\u0027d remove the NVMe-oF comment.  This could apply to a hot-removed PCIe driver as well (and NVMe/TCP too).",
+      "revId": "4d840fd15f53568293dd49bde38b4572d1458c27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16621dd5_37bc63f8",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T15:50:05Z",
+      "side": 1,
+      "message": "I think this should be called something like nvme_transport_ctrlr_reset_reg_access().  \"check_exists\" doesn\u0027t adequately indicate that calling it is destructive in nature (since for fabrics it is deleting the adminq)",
+      "revId": "4d840fd15f53568293dd49bde38b4572d1458c27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfdced13_1dca76c4",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T15:50:05Z",
+      "side": 1,
+      "message": "did you look at trying to fix up nvme_fabric_prop_get_cmd so that it has a timeout?\n\nit\u0027s not as ideal from a timing perspective, but I\u0027m not sure having check_exists destroy the admin qpair is a good strategy.  nvme_transport_ctrlr_check_exists seems to indicate that we can call that function at any point to see if the controller still exists, which is fine in the reset path but if it was called anywhere else we\u0027d have a big problem\n\neven a name like nvme_transport_ctrlr_reset_register_access might be more descriptive - it indicates that we are actively resetting something and isn\u0027t safe to use except in a reset context\n\nI\u0027d like Ben to weigh in on this.",
+      "revId": "4d840fd15f53568293dd49bde38b4572d1458c27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
