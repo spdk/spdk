@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "0c3e6e26_aef34b5d",
+        "filename": "test/pkg/fedora_like.sh",
+        "patchSetId": 46
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-16T10:11:36Z",
+      "side": 1,
+      "message": "Recent distros (from about 10 years or more) expose standard /etc/os-release file and there is a sugestion to use it - so I did.",
+      "parentUuid": "8d3928a1_4fb80ce4",
+      "range": {
+        "startLine": 20,
+        "startChar": 7,
+        "endLine": 20,
+        "endChar": 10
+      },
+      "revId": "a94872a604100e31a52006f625c70be656358437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3fa47a1f_cca98660",
         "filename": "test/pkg/spdk_tgt_test.sh",
         "patchSetId": 46
