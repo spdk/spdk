@@ -148,8 +148,9 @@ typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int st
  *  spdk_io_channel function calls.
  */
 struct spdk_io_channel {
-	struct spdk_thread		*thread;
-	struct io_device		*dev;
+	struct spdk_thread			*thread;
+	struct io_device			*dev;
+	struct spdk_histogram_data	*histogram;
 	uint32_t			ref;
 	uint32_t			destroy_ref;
 	TAILQ_ENTRY(spdk_io_channel)	tailq;

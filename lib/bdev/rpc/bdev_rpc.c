@@ -36,6 +36,7 @@
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/histogram_data.h"
 
 #include "spdk/bdev_module.h"
 
@@ -585,3 +586,371 @@ exit:
 }
 
 SPDK_RPC_REGISTER("set_bdev_qos_limit", spdk_rpc_set_bdev_qos_limit, SPDK_RPC_RUNTIME)
+
+/* SPDK_RPC_HISTOGRAM_DISABLE */
+
+struct rpc_histogram_disable {
+	char *name;
+};
+
+static void
+free_histogram_disable(struct rpc_histogram_disable *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_histogram_disable_decoders[] = {
+	{"name", offsetof(struct rpc_histogram_disable, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_histogram_disable_bdev_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_jsonrpc_request *request = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, status == 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_histogram_disable(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+
+	if (ch->histogram != NULL) {
+		spdk_histogram_data_free(ch->histogram);
+	}
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+spdk_rpc_histogram_disable(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_histogram_disable req = {NULL};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_histogram_disable_decoders,
+				    SPDK_COUNTOF(rpc_histogram_disable_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	if (bdev->internal.histogram != NULL) {
+		spdk_histogram_data_free(bdev->internal.histogram);
+	}
+
+	spdk_for_each_channel(bdev, spdk_histogram_disable, request, _spdk_histogram_disable_bdev_cb);
+
+	free_histogram_disable(&req);
+	return;
+
+invalid:
+	free_histogram_disable(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+
+SPDK_RPC_REGISTER("histogram_disable", spdk_rpc_histogram_disable, SPDK_RPC_RUNTIME)
+
+/* SPDK_RPC_HISTOGRAM_DISABLE */
+
+struct rpc_histogram_enable {
+	char *name;
+};
+
+static void
+free_histogram_enable(struct rpc_histogram_enable *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_histogram_enable_decoders[] = {
+	{"name", offsetof(struct rpc_histogram_enable, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_histogram_enable_fallback(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_jsonrpc_request *request = spdk_io_channel_get_ctx(ch);
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+
+static void
+_spdk_histogram_enable_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_jsonrpc_request *request = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_json_write_ctx *w;
+
+	if (status != 0) {
+		spdk_for_each_channel(ch->dev, spdk_histogram_disable, request, _spdk_histogram_enable_fallback);
+	} else {
+		w = spdk_jsonrpc_begin_result(request);
+		if (w == NULL) {
+			return;
+		}
+
+		spdk_json_write_bool(w, status == 0);
+		spdk_jsonrpc_end_result(request, w);
+	}
+}
+
+static void
+spdk_histogram_enable(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	int status = 0;
+
+	if (ch->histogram == NULL) {
+		ch->histogram = spdk_histogram_data_alloc();
+		if (ch->histogram == NULL) {
+			status = -ENOMEM;
+		}
+	}
+
+	spdk_for_each_channel_continue(i, status);
+}
+
+static void
+spdk_rpc_histogram_enable(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_histogram_enable req = {NULL};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_histogram_enable_decoders,
+				    SPDK_COUNTOF(rpc_histogram_enable_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	/* Allocate histogram for bdev */
+	if (bdev->internal.histogram == NULL) {
+		bdev->internal.histogram = spdk_histogram_data_alloc();
+		if (bdev->internal.histogram == NULL) {
+			rc = -ENOMEM;
+			goto invalid;
+		}
+	}
+
+	/* Allocate histogram for each channel */
+	spdk_for_each_channel(bdev, spdk_histogram_enable, request, _spdk_histogram_enable_cb);
+
+	free_histogram_enable(&req);
+	return;
+
+invalid:
+	free_histogram_enable(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+
+SPDK_RPC_REGISTER("histogram_enable", spdk_rpc_histogram_enable, SPDK_RPC_RUNTIME)
+
+
+/* SPDK_RPC_HISTOGRAM_GET */
+
+struct rpc_histogram_get {
+	char *name;
+};
+
+static void
+free_histogram_get(struct rpc_histogram_get *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_histogram_get_decoders[] = {
+	{"name", offsetof(struct rpc_histogram_get, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_histogram_get_bdev_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_jsonrpc_request *request = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	/* TODO: Pass histogram instead of status */
+	spdk_json_write_bool(w, status == 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_histogram_get(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev *bdev = (struct spdk_bdev *)ch->dev;
+	int status = 0;
+
+	if (ch->histogram == NULL) {
+		status = -EOPNOTSUPP;
+	} else {
+		spdk_histogram_data_merge(bdev->internal.histogram, ch->histogram);
+	}
+
+	spdk_for_each_channel_continue(i, status);
+}
+
+static void
+spdk_rpc_histogram_get(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+	struct rpc_histogram_get req = {NULL};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_histogram_get_decoders,
+				    SPDK_COUNTOF(rpc_histogram_get_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	if (bdev->internal.histogram == NULL) {
+		rc = -EOPNOTSUPP;
+		goto invalid;
+	}
+
+	spdk_histogram_data_reset(bdev->internal.histogram);
+
+	spdk_for_each_channel(bdev, spdk_histogram_get, request, _spdk_histogram_get_bdev_cb);
+
+	free_histogram_get(&req);
+	return;
+
+invalid:
+	free_histogram_get(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+
+SPDK_RPC_REGISTER("histogram_get", spdk_rpc_histogram_get, SPDK_RPC_RUNTIME)
+
+/* SPDK_RPC_HISTOGRAM_RESEST */
+
+struct rpc_histogram_reset {
+	char *name;
+};
+
+static void
+free_histogram_reset(struct rpc_histogram_reset *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_histogram_reset_decoders[] = {
+	{"name", offsetof(struct rpc_histogram_reset, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_histogram_reset_bdev_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_jsonrpc_request *request = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, status == 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_histogram_reset(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	int status = 0;
+
+	if (ch->histogram == NULL) {
+		status = -EOPNOTSUPP;
+	} else {
+		spdk_histogram_data_reset(ch->histogram);
+	}
+
+	spdk_for_each_channel_continue(i, status);
+}
+
+static void
+spdk_rpc_histogram_reset(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct rpc_histogram_reset req = {NULL};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_histogram_reset_decoders,
+				    SPDK_COUNTOF(rpc_histogram_reset_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	if (bdev->internal.histogram == NULL) {
+		rc = -EOPNOTSUPP;
+		goto invalid;
+	}
+
+	spdk_for_each_channel(bdev, spdk_histogram_reset, request, _spdk_histogram_reset_bdev_cb);
+
+	free_histogram_reset(&req);
+	return;
+
+invalid:
+	free_histogram_reset(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+
+SPDK_RPC_REGISTER("histogram_reset", spdk_rpc_histogram_reset, SPDK_RPC_RUNTIME)

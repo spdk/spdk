@@ -44,6 +44,7 @@
 #include "spdk/nvme_spec.h"
 #include "spdk/json.h"
 #include "spdk/queue.h"
+#include "spdk/histogram_data.h"
 
 #ifdef __cplusplus
 extern "C" {
