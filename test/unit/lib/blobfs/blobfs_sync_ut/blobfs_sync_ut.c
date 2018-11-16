@@ -172,7 +172,6 @@ cache_write(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
 	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
@@ -198,7 +197,6 @@ cache_write(void)
 	CU_ASSERT(rc == -ENOENT);
 
 	spdk_fs_free_io_channel(channel);
-	spdk_free_thread();
 
 	ut_send_request(_fs_unload, NULL);
 }
@@ -212,7 +210,6 @@ cache_write_null_buffer(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
 	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
@@ -231,7 +228,6 @@ cache_write_null_buffer(void)
 	CU_ASSERT(rc == 0);
 
 	spdk_fs_free_io_channel(channel);
-	spdk_free_thread();
 
 	ut_send_request(_fs_unload, NULL);
 }
@@ -244,7 +240,6 @@ fs_create_sync(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	CU_ASSERT(channel != NULL);
 
@@ -259,7 +254,6 @@ fs_create_sync(void)
 	CU_ASSERT(rc == 0);
 
 	spdk_fs_free_io_channel(channel);
-	spdk_free_thread();
 
 	ut_send_request(_fs_unload, NULL);
 }
@@ -273,7 +267,6 @@ cache_append_no_cache(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
 	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
@@ -298,7 +291,6 @@ cache_append_no_cache(void)
 	CU_ASSERT(rc == 0);
 
 	spdk_fs_free_io_channel(channel);
-	spdk_free_thread();
 
 	ut_send_request(_fs_unload, NULL);
 }
@@ -311,7 +303,6 @@ fs_delete_file_without_close(void)
 	struct spdk_file *file;
 
 	ut_send_request(_fs_init, NULL);
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	CU_ASSERT(channel != NULL);
 
@@ -333,7 +324,6 @@ fs_delete_file_without_close(void)
 	CU_ASSERT(rc != 0);
 
 	spdk_fs_free_io_channel(channel);
-	spdk_free_thread();
 
 	ut_send_request(_fs_unload, NULL);
 
@@ -351,7 +341,7 @@ spdk_thread(void *arg)
 {
 	struct ut_request *req;
 
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
+	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread1");
 
 	while (1) {
 		pthread_mutex_lock(&g_mutex);
@@ -366,6 +356,8 @@ spdk_thread(void *arg)
 		}
 		pthread_mutex_unlock(&g_mutex);
 	}
+
+	spdk_free_thread();
 
 	return NULL;
 }
@@ -397,6 +389,8 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
+	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
+
 	pthread_create(&spdk_tid, NULL, spdk_thread, NULL);
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
@@ -406,5 +400,6 @@ int main(int argc, char **argv)
 	free(g_dev_buffer);
 	send_request(terminate_spdk_thread, NULL);
 	pthread_join(spdk_tid, NULL);
+	spdk_free_thread();
 	return num_failures;
 }
