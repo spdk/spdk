@@ -16,6 +16,58 @@
       "revId": "6c2b4285fe741a95fb96c46945c1a09e7936347c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5265852e_ac858d0b",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-16T14:50:51Z",
+      "side": 1,
+      "message": "Or is this already in _validate_vol_params()?  Not sure where that function is, will probably get it after a few more patches I suspect but I agree it should fully validate the input parms",
+      "parentUuid": "bd2bf417_9b8bb082",
+      "revId": "6c2b4285fe741a95fb96c46945c1a09e7936347c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98232cf7_6c193ec5",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-16T14:50:51Z",
+      "side": 1,
+      "message": "Are you going to put error handling in for these alloc failures at some point? It seems like there are lot of places where asserts are checking alloc failures or further below error codes",
+      "revId": "6c2b4285fe741a95fb96c46945c1a09e7936347c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f47ede62_e0b8874a",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-16T14:50:51Z",
+      "side": 1,
+      "message": "real error handling?",
+      "revId": "6c2b4285fe741a95fb96c46945c1a09e7936347c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
