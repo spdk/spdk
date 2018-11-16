@@ -51,6 +51,24 @@
       "revId": "103f82258a112c0b21b49b055f1b6ecd682f4655",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d079763c_4ae098d0",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-11-16T02:56:41Z",
+      "side": 1,
+      "message": "Thanks for your review. Well, we haven\u0027t reached the unlock function yet. I would like to insist using nvme_security_receive like what is used in nvme-cli.",
+      "parentUuid": "08be371e_bffd3a9c",
+      "revId": "103f82258a112c0b21b49b055f1b6ecd682f4655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
