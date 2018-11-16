@@ -423,6 +423,27 @@ if __name__ == "__main__":
         'bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')
     p.set_defaults(func=delete_bdev)
 
+    def bdev_histogram_disable(args):
+        rpc.bdev.bdev_histogram_disable(args.client, name=args.name)
+
+    p = subparsers.add_parser('bdev_histogram_disable', help='Disable histogram for specified bdev')
+    p.add_argument('name', help='bdev name')
+    p.set_defaults(func=bdev_histogram_disable)
+
+    def bdev_histogram_enable(args):
+        rpc.bdev.bdev_histogram_enable(args.client, name=args.name)
+
+    p = subparsers.add_parser('bdev_histogram_enable', help='Enable histogram for specified bdev')
+    p.add_argument('name', help='bdev name')
+    p.set_defaults(func=bdev_histogram_enable)
+
+    def bdev_histogram_get(args):
+        rpc.bdev.bdev_histogram_get(args.client, name=args.name)
+
+    p = subparsers.add_parser('bdev_histogram_get', help='Get histogram for specified bdev')
+    p.add_argument('name', help='bdev name')
+    p.set_defaults(func=bdev_histogram_get)
+
     def set_bdev_qd_sampling_period(args):
         rpc.bdev.set_bdev_qd_sampling_period(args.client,
                                              name=args.name,
