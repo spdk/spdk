@@ -16,6 +16,24 @@
       "revId": "4fc623b2976b6580c36bb775e5bbb47e3f11c778",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6ebd0ec_8143af29",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T15:25:28Z",
+      "side": 1,
+      "message": "The comment just before this describes the 0xFF.  There\u0027s no good #define for it - we are leveraging the fact that SPDK_EMPTY_MAP_ENTRY is 0xFFFF.FFFF.FFFF.FFFF here.",
+      "parentUuid": "d97d034f_d5fe7b96",
+      "revId": "4fc623b2976b6580c36bb775e5bbb47e3f11c778",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
