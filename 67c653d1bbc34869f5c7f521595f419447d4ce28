@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57e358a2_abaa1bfc",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-16T07:48:09Z",
+      "side": 1,
+      "message": "Ben will have better idea.\n\nNow looks that spdk_strcat_alloc appends the src string to the dst string in the newly allocated buffer?\n\nHence str1 and str2 instead of dst and src may be appropriate ?\nstr1 - First string in the concatenated string ?\nstr2 - Second string in the cocatenated string ?",
+      "revId": "67c653d1bbc34869f5c7f521595f419447d4ce28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
