@@ -87,7 +87,6 @@ fs_init(void)
 	struct spdk_bs_dev *dev;
 
 	dev = init_dev();
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
@@ -97,8 +96,6 @@ fs_init(void)
 	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
-
-	spdk_free_thread();
 }
 
 static void
@@ -131,7 +128,6 @@ fs_open(void)
 
 	dev = init_dev();
 	memset(name, 'a', sizeof(name) - 1);
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
@@ -177,8 +173,6 @@ fs_open(void)
 	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
-
-	spdk_free_thread();
 }
 
 static void
@@ -190,7 +184,6 @@ fs_create(void)
 
 	dev = init_dev();
 	memset(name, 'a', sizeof(name) - 1);
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
@@ -218,8 +211,6 @@ fs_create(void)
 	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
-
-	spdk_free_thread();
 }
 
 static void
@@ -229,7 +220,6 @@ fs_truncate(void)
 	struct spdk_bs_dev *dev;
 
 	dev = init_dev();
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
@@ -270,8 +260,6 @@ fs_truncate(void)
 	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
-
-	spdk_free_thread();
 }
 
 static void
@@ -282,7 +270,6 @@ fs_rename(void)
 	struct spdk_bs_dev *dev;
 
 	dev = init_dev();
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
@@ -346,8 +333,6 @@ fs_rename(void)
 	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
-
-	spdk_free_thread();
 }
 
 static void
@@ -435,7 +420,6 @@ channel_ops(void)
 	struct spdk_io_channel *channel;
 
 	dev = init_dev();
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
@@ -451,8 +435,6 @@ channel_ops(void)
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
 	g_fs = NULL;
-
-	spdk_free_thread();
 }
 
 static void
@@ -463,7 +445,6 @@ channel_ops_sync(void)
 	struct spdk_io_channel *channel;
 
 	dev = init_dev();
-	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
 
 	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
@@ -479,8 +460,6 @@ channel_ops_sync(void)
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
 	g_fs = NULL;
-
-	spdk_free_thread();
 }
 
 int main(int argc, char **argv)
@@ -512,11 +491,14 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
+	spdk_allocate_thread(_fs_send_msg, NULL, NULL, NULL, "thread0");
+
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 	free(g_dev_buffer);
+	spdk_free_thread();
 	return num_failures;
 }
