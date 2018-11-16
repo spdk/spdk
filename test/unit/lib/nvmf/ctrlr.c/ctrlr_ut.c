@@ -253,7 +253,6 @@ static void
 test_connect(void)
 {
 	struct spdk_nvmf_fabric_connect_data connect_data;
-	struct spdk_thread *thread;
 	struct spdk_nvmf_poll_group group;
 	struct spdk_nvmf_transport transport;
 	struct spdk_nvmf_subsystem subsystem;
@@ -273,11 +272,8 @@ test_connect(void)
 	const char hostnqn[] = "nqn.2016-06.io.spdk:host1";
 	int rc;
 
-	thread = spdk_allocate_thread(ctrlr_ut_pass_msg, NULL, NULL, NULL, "ctrlr_ut");
-	SPDK_CU_ASSERT_FATAL(thread != NULL);
-
 	memset(&group, 0, sizeof(group));
-	group.thread = thread;
+	group.thread = spdk_get_thread();
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.subsys = &subsystem;
@@ -307,7 +303,7 @@ test_connect(void)
 	snprintf(connect_data.hostnqn, sizeof(connect_data.hostnqn), "%s", hostnqn);
 
 	memset(&subsystem, 0, sizeof(subsystem));
-	subsystem.thread = thread;
+	subsystem.thread = spdk_get_thread();
 	subsystem.id = 1;
 	TAILQ_INIT(&subsystem.ctrlrs);
 	subsystem.tgt = &tgt;
@@ -552,7 +548,6 @@ test_connect(void)
 	MOCK_CLEAR(spdk_nvmf_poll_group_create);
 
 	spdk_bit_array_free(&ctrlr.qpair_mask);
-	spdk_free_thread();
 }
 
 static void
@@ -789,9 +784,14 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
+	spdk_allocate_thread(ctrlr_ut_pass_msg, NULL, NULL, NULL, "ctrlr_ut");
+
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+
+	spdk_free_thread();
+
 	return num_failures;
 }
