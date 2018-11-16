@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81b23b87_6653ecc0",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-16T05:11:40Z",
+      "side": 1,
+      "message": "Create a lvol store on raid2 and then a lvol bdev on the lvol store.\" ?",
+      "range": {
+        "startLine": 117,
+        "startChar": 11,
+        "endLine": 117,
+        "endChar": 61
+      },
+      "revId": "b5e28ab009ca3099332d16a60aaa45369303c2f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d445e82b_d67c3ab7",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-16T05:11:40Z",
+      "side": 1,
+      "message": "\"For raid2, the lvol bdev on raid2 is being used.\" ?",
+      "range": {
+        "startLine": 160,
+        "startChar": 4,
+        "endLine": 160,
+        "endChar": 61
+      },
+      "revId": "b5e28ab009ca3099332d16a60aaa45369303c2f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
