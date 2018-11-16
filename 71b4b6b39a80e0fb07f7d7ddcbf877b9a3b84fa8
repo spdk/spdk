@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a9c28fd1_caa2cf7d",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1665,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-11-16T07:53:46Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d4c98c8e_935223ce",
+      "range": {
+        "startLine": 1663,
+        "startChar": 0,
+        "endLine": 1665,
+        "endChar": 8
+      },
+      "revId": "71b4b6b39a80e0fb07f7d7ddcbf877b9a3b84fa8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "096362a8_01703936",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-15T15:05:16Z",
       "side": 1,
       "message": "Can you set rc here as well, and break instead of return?",
+      "range": {
+        "startLine": 1674,
+        "startChar": 2,
+        "endLine": 1674,
+        "endChar": 12
+      },
+      "revId": "71b4b6b39a80e0fb07f7d7ddcbf877b9a3b84fa8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89f99cfc_48a410cf",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1674,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-11-16T07:53:46Z",
+      "side": 1,
+      "message": "I cannot break here, because then we will call rdma_ack_cm_event(), but on error we should not do that.",
+      "parentUuid": "096362a8_01703936",
       "range": {
         "startLine": 1674,
         "startChar": 2,
