@@ -473,6 +473,46 @@ def delete_bdev(client, bdev_name):
     return client.call('delete_bdev', params)
 
 
+def histogram_enable(client, name):
+    """Enable histogram for specified bdev.
+
+    Args:
+        bdev_name: name of bdev
+    """
+    params = {'name': name}
+    return client.call('histogram_enable', params)
+
+
+def histogram_disable(client, name):
+    """Disable histogram for specified bdev.
+
+    Args:
+        bdev_name: name of bdev
+    """
+    params = {'name': name}
+    return client.call('histogram_disable', params)
+
+
+def histogram_get(client, name):
+    """Get histogram for specified bdev.
+
+    Args:
+        bdev_name: name of bdev
+    """
+    params = {'name': name}
+    return client.call('histogram_get', params)
+
+
+def histogram_reset(client, name):
+    """Reset histogram for specified bdev.
+
+    Args:
+        bdev_name: name of bdev
+    """
+    params = {'name': name}
+    return client.call('histogram_reset', params)
+
+
 def bdev_inject_error(client, name, io_type, error_type, num=1):
     """Inject an error via an error bdev.
 
