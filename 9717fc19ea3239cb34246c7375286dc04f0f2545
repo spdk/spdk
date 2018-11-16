@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2c7528a6_603256de",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:42:28Z",
+      "side": 1,
+      "message": "I will make changes that you suggested.",
+      "parentUuid": "c0530721_c7ab4677",
+      "range": {
+        "startLine": 329,
+        "startChar": 0,
+        "endLine": 333,
+        "endChar": 2
+      },
+      "revId": "9717fc19ea3239cb34246c7375286dc04f0f2545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9be9c219_05eaa2a6",
         "filename": "lib/util/bit_array.c",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "a61031d6_f1b9fd10",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:42:28Z",
+      "side": 1,
+      "message": "Ok, so I will leave it as it is.",
+      "parentUuid": "9be9c219_05eaa2a6",
+      "range": {
+        "startLine": 343,
+        "startChar": 0,
+        "endLine": 345,
+        "endChar": 2
+      },
+      "revId": "9717fc19ea3239cb34246c7375286dc04f0f2545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0be28331_30e1978f",
         "filename": "lib/util/bit_array.c",
         "patchSetId": 4
@@ -59,6 +107,30 @@
       "writtenOn": "2018-11-16T09:57:36Z",
       "side": 1,
       "message": "You must either set or clear bit. Only setting bit if not enought.\n\nWouldn\u0027t be easier to read you do something like that?\n\n  for (i \u003d 0; i \u003c remainder; i++) {\n    if (((char *)mask)[size] \u0026 (1U \u003c\u003c i)) {\n      spdk_bit_array_set(ba, i + size * CHAR_BIT);\n    } else {\n      spdk_bit_array_clear(ba, i + size * CHAR_BIT);\n    }\n  }",
+      "range": {
+        "startLine": 352,
+        "startChar": 0,
+        "endLine": 356,
+        "endChar": 2
+      },
+      "revId": "9717fc19ea3239cb34246c7375286dc04f0f2545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3ec8afc_8cb6c769",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:42:28Z",
+      "side": 1,
+      "message": "Yes, I agree with you. I assumed that bit_array is initialized with zeros, but this approach is safer. I will also change this for loop according to your suggestion because it looks more readable - thanks for that.",
+      "parentUuid": "0be28331_30e1978f",
       "range": {
         "startLine": 352,
         "startChar": 0,
