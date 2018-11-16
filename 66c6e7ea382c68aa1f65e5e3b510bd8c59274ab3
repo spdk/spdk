@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fa37f804_3c5d5a39",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-11-16T02:49:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2602032c_6f3c026d",
+      "revId": "66c6e7ea382c68aa1f65e5e3b510bd8c59274ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5964b220_3af11355",
         "filename": "lib/util/string.c",
         "patchSetId": 5
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "d355d3fd_6cc3fd1f",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-11-16T02:49:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5964b220_3af11355",
+      "revId": "66c6e7ea382c68aa1f65e5e3b510bd8c59274ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a18f7db4_76991705",
         "filename": "lib/util/string.c",
         "patchSetId": 5
@@ -47,6 +83,24 @@
       "writtenOn": "2018-11-15T19:44:12Z",
       "side": 1,
       "message": "We shouldn\u0027t be releasing the user\u0027s memory.",
+      "revId": "66c6e7ea382c68aa1f65e5e3b510bd8c59274ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cea538fe_9de4f993",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-11-16T02:49:36Z",
+      "side": 1,
+      "message": "Done. Thanks for your review.",
+      "parentUuid": "a18f7db4_76991705",
       "revId": "66c6e7ea382c68aa1f65e5e3b510bd8c59274ab3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
