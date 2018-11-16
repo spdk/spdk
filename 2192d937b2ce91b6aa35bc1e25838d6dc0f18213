@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8059d15_05f00e7a",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T17:18:31Z",
+      "side": 1,
+      "message": "just name the parameter num_entries (instead of num_trace_entries) - and remove the local variable and this line",
+      "revId": "2192d937b2ce91b6aa35bc1e25838d6dc0f18213",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05c18af7_d4aeb24d",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T17:18:31Z",
+      "side": 1,
+      "message": "historiy \u003d\u003e history",
+      "revId": "2192d937b2ce91b6aa35bc1e25838d6dc0f18213",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87bacbc2_a5058c2e",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T17:18:31Z",
+      "side": 1,
+      "message": "SPDK_DEFAULT_NUM_TRACE_ENTRIES",
+      "revId": "2192d937b2ce91b6aa35bc1e25838d6dc0f18213",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "277ca666_a0fe6031",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T17:18:31Z",
+      "side": 1,
+      "message": "I see why you made this change.  But I think describing it as an array of spdk_trace_history structures is invalid - this can *never* be accessed as an array now that the number of entries per lcore history is dynamic.\n\nI think uint8_t per_lcore_history[0] would be better.  It makes it clear that this can only be accessed by pointer math and not indexing an array.",
+      "revId": "2192d937b2ce91b6aa35bc1e25838d6dc0f18213",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7a0c56d_7288b6dc",
+        "filename": "lib/event/app.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T17:18:31Z",
+      "side": 1,
+      "message": "is required_argument aligned with earlier entries?  it looks like it has one extra tab",
+      "revId": "2192d937b2ce91b6aa35bc1e25838d6dc0f18213",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
